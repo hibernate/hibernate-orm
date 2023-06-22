@@ -58,6 +58,7 @@ import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.TreatedNavigablePath;
@@ -101,6 +102,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
 /**
  * @author Steve Ebersole
@@ -2393,5 +2396,70 @@ public class ToOneAttributeMapping
 				consumer,
 				session
 		);
+	}
+
+	@Override
+	public int hashCode(Object value, SessionFactoryImplementor sessionFactory) {
+		final EntityPersister persister = entityMappingType.getEntityPersister();
+		final Object id;
+		final LazyInitializer lazyInitializer = extractLazyInitializer( value );
+		if ( lazyInitializer != null ) {
+			id = lazyInitializer.getInternalIdentifier();
+		}
+		else {
+			final Class<?> mappedClass = persister.getMappedClass();
+			if ( mappedClass.isAssignableFrom( value.getClass() ) ) {
+				id = persister.getIdentifier( value, null );
+			}
+			else {
+				id = value;
+			}
+		}
+		return persister.getIdentifierMapping().hashCode( id, sessionFactory );
+	}
+
+	@Override
+	public boolean equals(Object x, Object y, SessionFactoryImplementor sessionFactory) {
+		if ( x == null || y == null ) {
+			return x == y;
+		}
+		if ( x == y ) {
+			return true;
+		}
+
+		final EntityPersister persister = entityMappingType.getEntityPersister();
+		final Class<?> mappedClass = persister.getMappedClass();
+		Object xid;
+		final LazyInitializer lazyInitializerX = extractLazyInitializer( x );
+		if ( lazyInitializerX != null ) {
+			xid = lazyInitializerX.getInternalIdentifier();
+		}
+		else {
+			if ( mappedClass.isAssignableFrom( x.getClass() ) ) {
+				xid = persister.getIdentifier( x, null );
+			}
+			else {
+				//JPA 2 case where @IdClass contains the id and not the associated entity
+				xid = x;
+			}
+		}
+
+		Object yid;
+		final LazyInitializer lazyInitializerY = extractLazyInitializer( y );
+		if ( lazyInitializerY != null ) {
+			yid = lazyInitializerY.getInternalIdentifier();
+		}
+		else {
+			if ( mappedClass.isAssignableFrom( y.getClass() ) ) {
+				yid = persister.getIdentifier( y, null );
+			}
+			else {
+				//JPA 2 case where @IdClass contains the id and not the associated entity
+				yid = y;
+			}
+		}
+
+		// Check for reference equality first as the type-specific checks by IdentifierType are sometimes non-trivial
+		return ( xid == yid ) || persister.getIdentifierMapping().equals( xid, yid, sessionFactory );
 	}
 }

@@ -17,6 +17,7 @@ import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -537,6 +538,51 @@ public class AnonymousTupleEmbeddableValuedModelPart implements EmbeddableValued
 				mapping.addToCacheKey( cacheKey, values[i], session );
 				i++;
 			}
+		}
+	}
+
+	@Override
+	public int hashCode(Object value, SessionFactoryImplementor sessionFactory) {
+		int hashCode = 17;
+		if ( value == null ) {
+			for ( ModelPart mapping : modelParts ) {
+				hashCode = hashCode * 37 + mapping.hashCode( null, sessionFactory );
+			}
+		}
+		else {
+			final Object[] values = getValues( value );
+			int i = 0;
+			for ( ModelPart mapping : modelParts ) {
+				final Object v = values[i];
+				hashCode *= 37;
+				if ( v != null ) {
+					hashCode += mapping.hashCode( v, sessionFactory );
+				}
+				i++;
+			}
+		}
+		return hashCode;
+	}
+
+	@Override
+	public boolean equals(Object value1, Object value2, SessionFactoryImplementor sessionFactory) {
+		if ( value1 == null ) {
+			return value2 == null;
+		}
+		else if ( value2 == null ) {
+			return false;
+		}
+		else {
+			int i = 0;
+			final Object[] values1 = getValues( value1 );
+			final Object[] values2 = getValues( value2 );
+			for ( ModelPart mapping : modelParts ) {
+				if ( !mapping.equals( values1[i], values2[i], sessionFactory ) ) {
+					return false;
+				}
+				i++;
+			}
+			return true;
 		}
 	}
 

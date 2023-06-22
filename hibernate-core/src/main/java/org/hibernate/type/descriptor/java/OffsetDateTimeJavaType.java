@@ -22,8 +22,11 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.CharSequenceHelper;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -77,6 +80,29 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 	@SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
 		return (TemporalJavaType<X>) this;
+	}
+
+	@Override
+	public int extractHashCode(OffsetDateTime value, SqlTypedMapping mapping, SessionFactoryImplementor sessionFactory) {
+		return extractHashCode( getValue( value, mapping, sessionFactory ) );
+	}
+
+	@Override
+	public boolean areEqual(OffsetDateTime one, OffsetDateTime another, SqlTypedMapping mapping, SessionFactoryImplementor sessionFactory) {
+		return areEqual(
+				getValue( one, mapping, sessionFactory ),
+				getValue( another, mapping, sessionFactory )
+		);
+	}
+
+	@Override
+	public OffsetDateTime getValue(OffsetDateTime value, SqlTypedMapping mapping, SessionFactoryImplementor sessionFactory) {
+		return DateTimeUtils.roundToPrecision(
+				value,
+				mapping.getPrecision() != null
+						? mapping.getPrecision()
+						: sessionFactory.getJdbcServices().getDialect().getDefaultTimestampPrecision()
+		);
 	}
 
 	@Override

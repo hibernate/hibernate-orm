@@ -57,8 +57,7 @@ public final class EntityKey implements Serializable {
 		int result = 17;
 		final String rootEntityName = persister.getRootEntityName();
 		result = 37 * result + ( rootEntityName != null ? rootEntityName.hashCode() : 0 );
-		result = 37 * result + persister.getIdentifierType().getHashCode( identifier, persister.getFactory() );
-		return result;
+		return  37 * result + persister.getIdentifierMapping().hashCode( identifier, persister.getFactory() );
 	}
 
 	public boolean isBatchLoadable(LoadQueryInfluencers influencers) {
@@ -98,7 +97,7 @@ public final class EntityKey implements Serializable {
 
 	private boolean sameIdentifier(final EntityKey otherKey) {
 		return this.identifier == otherKey.identifier ||
-			persister.getIdentifierType().isEqual( otherKey.identifier, this.identifier, persister.getFactory() );
+			persister.getIdentifierMapping().equals( otherKey.identifier, this.identifier, persister.getFactory() );
 	}
 
 	private boolean samePersistentType(final EntityKey otherKey) {

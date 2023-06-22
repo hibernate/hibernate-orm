@@ -20,6 +20,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CascadeStyle;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -622,6 +623,52 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
 				attributeMapping.addToCacheKey( cacheKey, attributeMapping.getValue( value ), session );
 			}
+		}
+	}
+
+	@Override
+	public int hashCode(Object value, SessionFactoryImplementor sessionFactory) {
+		final int size = attributeMappings.size();
+		int hashCode = 17;
+		if ( value == null ) {
+			for ( int i = 0; i < size; i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				hashCode = hashCode * 37 + attributeMapping.hashCode( null, sessionFactory );
+			}
+		}
+		else {
+			final Object[] values = getValues( value );
+			for ( int i = 0; i < size; i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final Object v = values[i];
+				hashCode *= 37;
+				if ( v != null ) {
+					hashCode += attributeMapping.hashCode( v, sessionFactory );
+				}
+			}
+		}
+		return hashCode;
+	}
+
+	@Override
+	public boolean equals(Object value1, Object value2, SessionFactoryImplementor sessionFactory) {
+		if ( value1 == null ) {
+			return value2 == null;
+		}
+		else if ( value2 == null ) {
+			return false;
+		}
+		else {
+			final int size = attributeMappings.size();
+			final Object[] values1 = getValues( value1 );
+			final Object[] values2 = getValues( value2 );
+			for ( int i = 0; i < size; i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				if ( !attributeMapping.equals( values1[i], values2[i], sessionFactory ) ) {
+					return false;
+				}
+			}
+			return true;
 		}
 	}
 

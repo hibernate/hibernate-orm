@@ -12,6 +12,7 @@ import java.util.function.BiConsumer;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -137,6 +138,16 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
 		identifierValueMapper.addToCacheKey( cacheKey, value, session );
+	}
+
+	@Override
+	public int hashCode(Object value, SessionFactoryImplementor sessionFactory) {
+		return identifierValueMapper.hashCode( value, sessionFactory );
+	}
+
+	@Override
+	public boolean equals(Object value1, Object value2, SessionFactoryImplementor sessionFactory) {
+		return identifierValueMapper.equals( value1, value2, sessionFactory );
 	}
 
 	@Override

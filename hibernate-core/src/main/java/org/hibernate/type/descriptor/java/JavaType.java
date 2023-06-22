@@ -15,10 +15,12 @@ import java.util.Objects;
 import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -202,6 +204,10 @@ public interface JavaType<T> extends Serializable {
 		return value.hashCode();
 	}
 
+	default int extractHashCode(T value, SqlTypedMapping mapping, SessionFactoryImplementor sessionFactory) {
+		return extractHashCode( value );
+	}
+
 	/**
 	 * Determine if two instances are equal
 	 *
@@ -212,6 +218,14 @@ public interface JavaType<T> extends Serializable {
 	 */
 	default boolean areEqual(T one, T another) {
 		return Objects.deepEquals( one, another );
+	}
+
+	default boolean areEqual(T one, T another, SqlTypedMapping mapping, SessionFactoryImplementor sessionFactory) {
+		return areEqual( one, another );
+	}
+
+	default T getValue(T value, SqlTypedMapping mapping, SessionFactoryImplementor sessionFactory) {
+		return value;
 	}
 
 	/**

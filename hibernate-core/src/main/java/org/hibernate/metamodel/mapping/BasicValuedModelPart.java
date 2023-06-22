@@ -6,7 +6,10 @@
  */
 package org.hibernate.metamodel.mapping;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Describes a ModelPart which is a basic value, either<ul>
@@ -58,5 +61,25 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ValuedModelPar
 	@Override
 	default boolean hasPartitionedSelectionMapping() {
 		return isPartitioned();
+	}
+
+	@Override
+	default int hashCode(Object value, SessionFactoryImplementor sessionFactory) {
+		return ( (JavaType<Object>) getJavaType() ).extractHashCode( value, this, sessionFactory );
+	}
+
+	@Override
+	default boolean equals(Object value1, Object value2, SessionFactoryImplementor sessionFactory) {
+		return ( (JavaType<Object>) getJavaType() ).areEqual( value1, value2, this, sessionFactory );
+	}
+
+	@Override
+	default Object disassemble(Object value, SharedSessionContractImplementor session) {
+		if ( session == null ) {
+			return getJdbcMapping().convertToRelationalValue( value );
+		}
+		return getJdbcMapping().convertToRelationalValue(
+				( (JavaType<Object>) getJavaType() ).getValue( value, this, session.getFactory() )
+		);
 	}
 }

@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.function.Consumer;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.property.access.spi.PropertyAccess;
@@ -185,4 +186,12 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState);
+
+	default int hashCode(Object value, SessionFactoryImplementor sessionFactory) {
+		return getEmbeddableTypeDescriptor().hashCode( value, sessionFactory );
+	}
+
+	default boolean equals(Object value1, Object value2, SessionFactoryImplementor sessionFactory) {
+		return getEmbeddableTypeDescriptor().equals( value1, value2, sessionFactory );
+	}
 }

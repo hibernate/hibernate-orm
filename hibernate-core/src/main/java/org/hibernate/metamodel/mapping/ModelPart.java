@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
@@ -76,6 +77,14 @@ public interface ModelPart extends MappingModelExpressible {
 	 * {@link #getPartMappingType()}
 	 */
 	JavaType<?> getJavaType();
+
+	default int hashCode(Object value, SessionFactoryImplementor sessionFactory) {
+		return ( (JavaType<Object>) getJavaType() ).extractHashCode( value, null, sessionFactory );
+	}
+
+	default boolean equals(Object value1, Object value2, SessionFactoryImplementor sessionFactory) {
+		return ( (JavaType<Object>) getJavaType() ).areEqual( value1, value2, null, sessionFactory );
+	}
 
 	/**
 	 * Whether this model part describes something that physically

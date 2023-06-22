@@ -452,14 +452,17 @@ public final class DateTimeUtils {
 	 * than what is supported by a column, which is to round the excess fractions.
 	 */
 	public static <T extends Temporal> T roundToDefaultPrecision(T temporal, Dialect d) {
-		final int defaultTimestampPrecision = d.getDefaultTimestampPrecision();
-		if ( defaultTimestampPrecision >= 9 || !temporal.isSupported( ChronoField.NANO_OF_SECOND ) ) {
+		return roundToPrecision( temporal, d.getDefaultTimestampPrecision() );
+	}
+
+	public static <T extends Temporal> T roundToPrecision(T temporal, int precision) {
+		if ( temporal == null || precision >= 9 || !temporal.isSupported( ChronoField.NANO_OF_SECOND ) ) {
 			return temporal;
 		}
 		//noinspection unchecked
 		return (T) temporal.with(
 				ChronoField.NANO_OF_SECOND,
-				roundToPrecision( temporal.get( ChronoField.NANO_OF_SECOND ), defaultTimestampPrecision )
+				roundToPrecision( temporal.get( ChronoField.NANO_OF_SECOND ), precision )
 		);
 	}
 

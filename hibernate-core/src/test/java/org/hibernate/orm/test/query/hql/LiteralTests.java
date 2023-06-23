@@ -77,7 +77,7 @@ public class LiteralTests {
 	public void testUntypedDecimalLiteral(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery( "select 1 from Human h where h.bigDecimalValue = 199999.99f" ).getResultList();
+					session.createQuery( "select 1 from Human h where h.bigDecimalValue = 199999.99" ).getResultList();
 				}
 		);
 	}

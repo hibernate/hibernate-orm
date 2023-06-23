@@ -6,13 +6,15 @@
  */
 package org.hibernate.boot.archive.scan.internal;
 
+import java.io.Serializable;
+
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.archive.scan.spi.PackageDescriptor;
 
 /**
  * @author Steve Ebersole
  */
-public class PackageDescriptorImpl implements PackageDescriptor {
+public class PackageDescriptorImpl implements PackageDescriptor, Serializable {
 	private final String name;
 	private final InputStreamAccess streamAccess;
 

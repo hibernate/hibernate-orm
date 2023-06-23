@@ -165,7 +165,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 			for ( int attributeIndex = 0; attributeIndex < versionability.length; attributeIndex++ ) {
 				final AttributeMapping attribute;
 				// only makes sense to lock on singular attributes which are not excluded from optimistic locking
-				if ( versionability[attributeIndex] && ( attribute = persister.getAttributeMapping( attributeIndex ) ) instanceof SingularAttributeMapping ) {
+				if ( versionability[attributeIndex] && !( attribute = persister.getAttributeMapping( attributeIndex ) ).isPluralAttributeMapping() ) {
 					final Object loadedValue = loadedState[attributeIndex];
 					if ( loadedValue != null ) {
 						final String mutationTableName = persister.getAttributeMutationTableName( attributeIndex );
@@ -424,7 +424,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 		for ( int attributeIndex = 0; attributeIndex < versionability.length; attributeIndex++ ) {
 			final AttributeMapping attribute;
 			// only makes sense to lock on singular attributes which are not excluded from optimistic locking
-			if ( versionability[attributeIndex] && ( attribute = persister.getAttributeMapping( attributeIndex ) ) instanceof SingularAttributeMapping ) {
+			if ( versionability[attributeIndex] && !( attribute = persister.getAttributeMapping( attributeIndex ) ).isPluralAttributeMapping() ) {
 				breakDownJdbcValues( mutationGroupBuilder, session, attribute, loadedState[attributeIndex] );
 			}
 		}

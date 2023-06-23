@@ -1,0 +1,24 @@
+[[credits]]
+== Credits
+
+The full list of contributors to Hibernate ORM can be found in the `copyright.txt` file
+in the Hibernate ORM sources, available in particular in our https://github.com/hibernate/hibernate-orm/[git repository].
+
+The following contributors were involved in this documentation:
+
+* Gail Badner
+* Christian Bauer
+* Emmanuel Bernard
+* Andrea Boriero
+* Chris Cranford
+* Steve Ebersole
+* Hardy Ferentschik
+* Sanne Grinovero
+* Louis Jacomet
+* Gavin King
+* Karel Maesen
+* Brett Meyer
+* Vlad Mihalcea
+* Gunnar Morling
+* Max Rydahl Andersen
+* Radim Vansa

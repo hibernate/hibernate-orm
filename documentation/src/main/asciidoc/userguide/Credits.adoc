@@ -8,6 +8,8 @@ The following contributors were involved in this documentation:
 
 * Gail Badner
 * Christian Bauer
+* Christian Beikov
+* Marco Belladelli
 * Emmanuel Bernard
 * Andrea Boriero
 * Chris Cranford
@@ -20,5 +22,9 @@ The following contributors were involved in this documentation:
 * Brett Meyer
 * Vlad Mihalcea
 * Gunnar Morling
+* Yoann Rodière
 * Max Rydahl Andersen
+* Jan Schatteman
+* Fábio Ueno
 * Radim Vansa
+* Nathan Xu

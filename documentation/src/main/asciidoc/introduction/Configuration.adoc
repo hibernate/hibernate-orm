@@ -241,6 +241,25 @@ This API is useful if you have very advanced requirements, for example, if you'r
 You'll find more information in the {native-bootstrap}[User Guide], and in the {boot}[package-level documentation] of `org.hibernate.boot`.
 ****
 
+[[configuration-properties]]
+=== Configuration using Hibernate properties file
+
+If we're using the Hibernate `Configuration` API, but we don't want to put certain configuration properties directly in the Java code, we can specify them in a file named `hibernate.properties`, and place the file in the root classpath.
+
+[source,properties]
+----
+# PostgreSQL
+jakarta.persistence.jdbc.url=jdbc:postgresql://localhost/example
+# Credentials
+jakarta.persistence.jdbc.user=hibernate
+jakarta.persistence.jdbc.password=zAh7mY$2MNshzAQ5
+
+# SQL statement logging
+hibernate.show_sql=true
+hibernate.format_sql=true
+hibernate.highlight_sql=true
+----
+
 [[basic-configuration-settings]]
 === Basic configuration settings
 

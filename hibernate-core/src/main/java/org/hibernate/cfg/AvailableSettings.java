@@ -1344,7 +1344,7 @@ public interface AvailableSettings {
 	 * Controls whether Hibernate can try to create beans other than converters
 	 * and listeners using CDI.  Only meaningful when a CDI {@link #BEAN_CONTAINER container}
 	 * is used.
-	 *
+	 * <p>
 	 * By default, Hibernate will only attempt to create converter and listener beans using CDI.
 	 *
 	 * @since 6.2
@@ -1654,12 +1654,14 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DATABASE_ACTION} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_DATABASE_ACTION = "javax.persistence.schema-generation.database.action";
 
 	/**
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_SCRIPTS_ACTION} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_SCRIPTS_ACTION = "javax.persistence.schema-generation.scripts.action";
 
 	/**
@@ -1674,6 +1676,7 @@ public interface AvailableSettings {
 	 * @see org.hibernate.tool.schema.SourceType
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_CREATE_SOURCE = "javax.persistence.schema-generation.create-source";
 
 	/**
@@ -1681,24 +1684,28 @@ public interface AvailableSettings {
 	 * @see org.hibernate.tool.schema.SourceType
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_DROP_SOURCE = "javax.persistence.schema-generation.drop-source";
 
 	/**
 	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_CREATE_SCRIPT_SOURCE = "javax.persistence.schema-generation.create-script-source";
 
 	/**
 	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_DROP_SCRIPT_SOURCE = "javax.persistence.schema-generation.drop-script-source";
 
 	/**
 	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_SCRIPTS_CREATE_TARGET = "javax.persistence.schema-generation.scripts.create-target";
 
 	/**
@@ -1717,6 +1724,7 @@ public interface AvailableSettings {
 	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_SCRIPTS_DROP_TARGET = "javax.persistence.schema-generation.scripts.drop-target";
 
 	/**
@@ -1897,7 +1905,7 @@ public interface AvailableSettings {
 	 * <p>
 	 * If no value is specified, a default is inferred as follows:
 	 * <ul>
-	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_CREATE_SOURCE},
+	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE},
 	 *     then {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
 	 *     <li>otherwise, {@link org.hibernate.tool.schema.SourceType#SCRIPT "metadata"} is
 	 *     assumed.
@@ -1914,8 +1922,8 @@ public interface AvailableSettings {
 	 * <p>
 	 * If no value is specified, a default is inferred as follows:
 	 * <ul>
-	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE}, then
-	 *     {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
+	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE},
+	 *     then {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
 	 *     <li>otherwise, {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "metadata"}
 	 *     is assumed.
 	 * </ul>
@@ -3120,6 +3128,7 @@ public interface AvailableSettings {
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
 	 */
 	@Deprecated(since = "6.2", forRemoval = true)
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String FLUSH_MODE = "org.hibernate.flushMode";
 
 	String CFG_XML_FILE = "hibernate.cfg_xml_file";

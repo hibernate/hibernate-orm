@@ -172,7 +172,7 @@ dependencyResolutionManagement {
             }
             String hsqldbVersion = settings.ext.find( "gradle.libs.versions.hsqldb" )
             if ( hsqldbVersion == null ) {
-                hsqldbVersion = "2.7.1"
+                hsqldbVersion = "2.7.2"
             }
             String derbyVersion = settings.ext.find( "gradle.libs.versions.derby" )
             if ( derbyVersion == null ) {

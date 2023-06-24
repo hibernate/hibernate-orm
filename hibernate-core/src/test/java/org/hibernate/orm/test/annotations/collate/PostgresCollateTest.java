@@ -27,7 +27,7 @@ public class PostgresCollateTest {
         @Id @GeneratedValue
         Long id;
         @Basic(optional = false)
-        @Collate("es_ES")
+        @Collate("en_US")
         @Column(length = 200)
         String text;
 

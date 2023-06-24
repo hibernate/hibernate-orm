@@ -622,6 +622,8 @@ predicate
 	: LEFT_PAREN predicate RIGHT_PAREN											# GroupedPredicate
 	| expression IS NOT? NULL													# IsNullPredicate
 	| expression IS NOT? EMPTY													# IsEmptyPredicate
+	| expression IS NOT? TRUE													# IsTruePredicate
+	| expression IS NOT? FALSE													# IsFalsePredicate
 	| expression NOT? IN inList													# InPredicate
 	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
 	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate

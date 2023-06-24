@@ -94,6 +94,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
@@ -930,6 +931,17 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 	public Object visitIsNullPredicate(SqmNullnessPredicate predicate) {
 		processStanza(
 				predicate.isNegated() ? "is-not-null" : "is-null",
+				true,
+				() -> predicate.getExpression().accept( this )
+		);
+
+		return null;
+	}
+
+	@Override
+	public Object visitIsTruePredicate(SqmTruthnessPredicate predicate) {
+		processStanza(
+				(predicate.isNegated() ? "is-not-" : "is-") + predicate.getBooleanValue(),
 				true,
 				() -> predicate.getExpression().accept( this )
 		);

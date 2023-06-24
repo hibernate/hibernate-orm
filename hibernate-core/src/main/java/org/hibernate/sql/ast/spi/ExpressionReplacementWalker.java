@@ -68,6 +68,7 @@ import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.predicate.ThruthnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -438,6 +439,22 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 		}
 		else {
 			returnedNode = nullnessPredicate;
+		}
+	}
+
+	@Override
+	public void visitThruthnessPredicate(ThruthnessPredicate thruthnessPredicate) {
+		final Expression expression = replaceExpression( thruthnessPredicate.getExpression() );
+		if ( expression != thruthnessPredicate.getExpression() ) {
+			returnedNode = new ThruthnessPredicate(
+					expression,
+					thruthnessPredicate.getBooleanValue(),
+					thruthnessPredicate.isNegated(),
+					thruthnessPredicate.getExpressionType()
+			);
+		}
+		else {
+			returnedNode = thruthnessPredicate;
 		}
 	}
 

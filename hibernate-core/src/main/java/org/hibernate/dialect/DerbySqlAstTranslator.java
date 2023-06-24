@@ -280,5 +280,4 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
-
 }

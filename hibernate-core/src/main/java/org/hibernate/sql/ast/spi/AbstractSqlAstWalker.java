@@ -70,6 +70,7 @@ import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.predicate.ThruthnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -233,6 +234,11 @@ public class AbstractSqlAstWalker implements SqlAstWalker {
 	@Override
 	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
 		nullnessPredicate.getExpression().accept( this );
+	}
+
+	@Override
+	public void visitThruthnessPredicate(ThruthnessPredicate thruthnessPredicate) {
+		thruthnessPredicate.getExpression().accept( this );
 	}
 
 	@Override

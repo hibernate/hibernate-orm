@@ -183,6 +183,11 @@ class ColumnDefinitions {
 				definition.append( ' ' ).append( columnType );
 			}
 
+			String collation = column.getCollation();
+			if ( collation != null ) {
+				definition.append(" collate ").append( dialect.quoteCollation( collation ) );
+			}
+
 			final String defaultValue = column.getDefaultValue();
 			if ( defaultValue != null ) {
 				definition.append( " default " ).append( defaultValue );
@@ -205,7 +210,7 @@ class ColumnDefinitions {
 	private static boolean isIdentityColumn(Column column, Table table, Metadata metadata, Dialect dialect) {
 		// Try to find out the name of the primary key in case the dialect needs it to create an identity
 		return isPrimaryKeyIdentity( table, metadata, dialect )
-				&& column.getQuotedName( dialect ).equals( getPrimaryKeyColumnName( table, dialect ) );
+			&& column.getQuotedName( dialect ).equals( getPrimaryKeyColumnName( table, dialect ) );
 	}
 
 	private static String getPrimaryKeyColumnName(Table table, Dialect dialect) {
@@ -221,13 +226,13 @@ class ColumnDefinitions {
 		//				&& table.getPrimaryKey().getColumn( 0 ).isIdentity();
 		MetadataImplementor metadataImplementor = (MetadataImplementor) metadata;
 		return table.hasPrimaryKey()
-				&& table.getIdentifierValue() != null
-				&& table.getIdentifierValue()
-						.isIdentityColumn(
-								metadataImplementor.getMetadataBuildingOptions()
-										.getIdentifierGeneratorFactory(),
-								dialect
-						);
+			&& table.getIdentifierValue() != null
+			&& table.getIdentifierValue()
+					.isIdentityColumn(
+							metadataImplementor.getMetadataBuildingOptions()
+									.getIdentifierGeneratorFactory(),
+							dialect
+					);
 	}
 
 	private static String stripArgs(String string) {

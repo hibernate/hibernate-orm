@@ -862,6 +862,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public String quoteCollation(String collation) {
+		return '\"' + collation + '\"';
+	}
+
+	@Override
 	public boolean supportsCommentOn() {
 		return true;
 	}

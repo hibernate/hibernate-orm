@@ -660,4 +660,9 @@ public class HSQLDialect extends Dialect {
 	public UniqueDelegate getUniqueDelegate() {
 		return uniqueDelegate;
 	}
+
+	@Override
+	public String quoteCollation(String collation) {
+		return '\"' + collation + '\"';
+	}
 }

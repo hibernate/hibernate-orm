@@ -3414,6 +3414,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Quote the given collation name if necessary.
+	 */
+	public String quoteCollation(String collation) {
+		return collation;
+	}
+
+	/**
 	 * Does this dialect support commenting on tables and columns?
 	 *
 	 * @return {@code true} if commenting is supported

@@ -36,6 +36,7 @@ public class AggregateColumn extends Column {
 			addCheckConstraint( constraint );
 		}
 		setComment( column.getComment() );
+		setCollation( column.getCollation() );
 		setDefaultValue( column.getDefaultValue() );
 		setGeneratedAs( column.getGeneratedAs() );
 		setAssignmentExpression( column.getAssignmentExpression() );

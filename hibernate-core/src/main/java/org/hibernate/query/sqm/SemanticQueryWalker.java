@@ -103,6 +103,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
@@ -360,6 +361,8 @@ public interface SemanticQueryWalker<T> {
 	T visitIsEmptyPredicate(SqmEmptinessPredicate predicate);
 
 	T visitIsNullPredicate(SqmNullnessPredicate predicate);
+
+	T visitIsTruePredicate(SqmTruthnessPredicate predicate);
 
 	T visitBetweenPredicate(SqmBetweenPredicate predicate);
 

@@ -164,6 +164,7 @@ import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.predicate.ThruthnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -389,7 +390,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	/**
 	 * A lazy session implementation that is needed for rendering literals.
 	 * Usually, only the {@link WrapperOptions} interface is needed,
-	 * but for creating LOBs, it might be to have a full blown session.
+	 * but for creating LOBs, it might be to have a full-blown session.
 	 */
 	private static class LazySessionWrapperOptions extends AbstractDelegatingWrapperOptions {
 
@@ -7369,13 +7370,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitNullnessPredicate(NullnessPredicate nullnessPredicate) {
 		final Expression expression = nullnessPredicate.getExpression();
-		final String predicateValue;
-		if ( nullnessPredicate.isNegated() ) {
-			predicateValue = " is not null";
-		}
-		else {
-			predicateValue = " is null";
-		}
+		final String predicateValue = nullnessPredicate.isNegated() ? " is not null" : " is null";
 		final SqlTuple tuple;
 		if ( ( tuple = SqlTupleContainer.getSqlTuple( expression ) ) != null ) {
 			String separator = NO_SEPARATOR;
@@ -7405,6 +7400,37 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			expression.accept( this );
 			appendSql( predicateValue );
+		}
+	}
+
+	@Override
+	public void visitThruthnessPredicate(ThruthnessPredicate thruthnessPredicate) {
+		if ( dialect.supportsIsTrue() ) {
+			thruthnessPredicate.getExpression().accept( this );
+			appendSql(" is ");
+			if ( thruthnessPredicate.isNegated() ) {
+				appendSql("not ");
+			}
+			appendSql( thruthnessPredicate.getBooleanValue() );
+		}
+		else {
+			String literalTrue = dialect.toBooleanValueString(true);
+			String literalFalse = dialect.toBooleanValueString(false);
+			appendSql("(case ");
+			thruthnessPredicate.getExpression().accept(this);
+			appendSql(" when ");
+			appendSql(thruthnessPredicate.getBooleanValue() ? literalTrue : literalFalse);
+			appendSql(" then ");
+			appendSql(thruthnessPredicate.isNegated()? literalFalse : literalTrue);
+			appendSql(" when ");
+			appendSql(thruthnessPredicate.getBooleanValue() ? literalFalse : literalTrue);
+			appendSql(" then ");
+			appendSql(thruthnessPredicate.isNegated()? literalTrue : literalFalse);
+			appendSql(" else ");
+			appendSql(thruthnessPredicate.isNegated()? literalTrue : literalFalse);
+			appendSql(" end = ");
+			appendSql(literalTrue);
+			appendSql(")");
 		}
 	}
 

@@ -1121,6 +1121,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIsTrue() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsCurrentTimestampSelection() {
 		return true;
 	}

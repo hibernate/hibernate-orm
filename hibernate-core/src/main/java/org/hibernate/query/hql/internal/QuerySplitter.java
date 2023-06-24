@@ -45,6 +45,7 @@ import org.hibernate.query.sqm.tree.expression.SqmEvery;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationOptions;
@@ -1172,6 +1173,16 @@ public class QuerySplitter {
 		public SqmNullnessPredicate visitIsNullPredicate(SqmNullnessPredicate predicate) {
 			return new SqmNullnessPredicate(
 					(SqmExpression<?>) predicate.getExpression().accept( this ),
+					predicate.isNegated(),
+					predicate.nodeBuilder()
+			);
+		}
+
+		@Override
+		public Object visitIsTruePredicate(SqmTruthnessPredicate predicate) {
+			return new SqmTruthnessPredicate(
+					(SqmExpression<?>) predicate.getExpression().accept( this ),
+					predicate.getBooleanValue(),
 					predicate.isNegated(),
 					predicate.nodeBuilder()
 			);

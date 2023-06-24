@@ -261,6 +261,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -365,6 +366,7 @@ import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.predicate.ThruthnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -7534,6 +7536,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	public NullnessPredicate visitIsNullPredicate(SqmNullnessPredicate predicate) {
 		return new NullnessPredicate(
 				(Expression) visitWithInferredType( predicate.getExpression(), () -> basicType( Object.class )),
+				predicate.isNegated(),
+				getBooleanType()
+		);
+	}
+
+	@Override
+	public Object visitIsTruePredicate(SqmTruthnessPredicate predicate) {
+		return new ThruthnessPredicate(
+				(Expression) visitWithInferredType( predicate.getExpression(), () -> basicType( Boolean.class )),
+				predicate.getBooleanValue(),
 				predicate.isNegated(),
 				getBooleanType()
 		);

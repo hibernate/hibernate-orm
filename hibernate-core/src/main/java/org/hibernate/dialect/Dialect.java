@@ -2925,6 +2925,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect support the {@code is true} and {@code is false}
+	 * operators?
+	 *
+	 * @return {@code true} if the database supports {@code is true} and
+	 *         {@code is false}, or {@code false} if it does not. The
+	 *         default is {@code is false}.
+	 */
+	public boolean supportsIsTrue() {
+		return false;
+	}
+
+	/**
 	 * Meant as a means for end users to affect the select strings being sent
 	 * to the database and perhaps manipulate them in some fashion.
 	 *

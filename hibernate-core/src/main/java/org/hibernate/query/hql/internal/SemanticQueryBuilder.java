@@ -188,6 +188,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmNegatablePredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.AbstractSqmSelectQuery;
 import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
@@ -2312,7 +2313,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmGroupedPredicate visitGroupedPredicate(HqlParser.GroupedPredicateContext ctx) {
 		return new SqmGroupedPredicate(
-				(SqmPredicate) ctx.getChild( 1 ).accept( this ),
+				(SqmPredicate) ctx.predicate().accept( this ),
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -2321,8 +2322,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPredicate visitAndPredicate(HqlParser.AndPredicateContext ctx) {
 		return junction(
 				Predicate.BooleanOperator.AND,
-				(SqmPredicate) ctx.getChild( 0 ).accept( this ),
-				(SqmPredicate) ctx.getChild( 2 ).accept( this )
+				(SqmPredicate) ctx.predicate( 0 ).accept( this ),
+				(SqmPredicate) ctx.predicate( 1 ).accept( this )
 		);
 	}
 
@@ -2330,8 +2331,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPredicate visitOrPredicate(HqlParser.OrPredicateContext ctx) {
 		return junction(
 				Predicate.BooleanOperator.OR,
-				(SqmPredicate) ctx.getChild( 0 ).accept( this ),
-				(SqmPredicate) ctx.getChild( 2 ).accept( this )
+				(SqmPredicate) ctx.predicate( 0 ).accept( this ),
+				(SqmPredicate) ctx.predicate( 1 ).accept( this )
 		);
 	}
 
@@ -2360,7 +2361,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPredicate visitNegatedPredicate(HqlParser.NegatedPredicateContext ctx) {
-		SqmPredicate predicate = (SqmPredicate) ctx.getChild( 1 ).accept( this );
+		SqmPredicate predicate = (SqmPredicate) ctx.predicate().accept( this );
 		if ( predicate instanceof SqmNegatablePredicate ) {
 			( (SqmNegatablePredicate) predicate ).negate();
 			return predicate;
@@ -2372,13 +2373,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmBetweenPredicate visitBetweenPredicate(HqlParser.BetweenPredicateContext ctx) {
-		final boolean negated = ( (TerminalNode) ctx.getChild( 1 ) ).getSymbol().getType() == HqlParser.NOT;
-		final int startIndex = negated ? 3 : 2;
 		return new SqmBetweenPredicate(
-				(SqmExpression<?>) ctx.getChild( 0 ).accept( this ),
-				(SqmExpression<?>) ctx.getChild( startIndex ).accept( this ),
-				(SqmExpression<?>) ctx.getChild( startIndex + 2 ).accept( this ),
-				negated,
+				(SqmExpression<?>) ctx.expression( 0 ).accept( this ),
+				(SqmExpression<?>) ctx.expression( 1 ).accept( this ),
+				(SqmExpression<?>) ctx.expression( 2 ).accept( this ),
+				ctx.NOT() != null,
 				creationContext.getNodeBuilder()
 		);
 	}
@@ -2386,28 +2385,46 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmNullnessPredicate visitIsNullPredicate(HqlParser.IsNullPredicateContext ctx) {
-		final boolean negated = ctx.getChildCount() == 4;
 		return new SqmNullnessPredicate(
 				(SqmExpression<?>) ctx.expression().accept( this ),
-				negated,
+				ctx.NOT() != null,
 				creationContext.getNodeBuilder()
 		);
 	}
 
 	@Override
 	public SqmEmptinessPredicate visitIsEmptyPredicate(HqlParser.IsEmptyPredicateContext ctx) {
-		final boolean negated = ctx.getChildCount() == 4;
 		SqmExpression<?> expression = (SqmExpression<?>) ctx.expression().accept(this);
 		if ( expression instanceof SqmPluralValuedSimplePath ) {
 			return new SqmEmptinessPredicate(
 					(SqmPluralValuedSimplePath<?>) expression,
-					negated,
+					ctx.NOT() != null,
 					creationContext.getNodeBuilder()
 			);
 		}
 		else {
 			throw new SemanticException( "Operand of 'is empty' operator must be a plural path" );
 		}
+	}
+
+	@Override
+	public Object visitIsTruePredicate(HqlParser.IsTruePredicateContext ctx) {
+		return new SqmTruthnessPredicate(
+				(SqmExpression<?>) ctx.expression().accept( this ),
+				true,
+				ctx.NOT() != null,
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	@Override
+	public Object visitIsFalsePredicate(HqlParser.IsFalsePredicateContext ctx) {
+		return new SqmTruthnessPredicate(
+				(SqmExpression<?>) ctx.expression().accept( this ),
+				false,
+				ctx.NOT() != null,
+				creationContext.getNodeBuilder()
+		);
 	}
 
 	@Override

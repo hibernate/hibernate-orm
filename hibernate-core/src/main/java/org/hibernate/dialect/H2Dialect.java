@@ -592,6 +592,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIsTrue() {
+		return true;
+	}
+
+	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		appender.appendSql( bool );
 	}

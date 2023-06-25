@@ -2443,12 +2443,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				return ComparisonOperator.GREATER_THAN;
 			case HqlLexer.GREATER_EQUAL:
 				return ComparisonOperator.GREATER_THAN_OR_EQUAL;
-			case HqlLexer.IS: {
-				final TerminalNode secondToken = (TerminalNode) ctx.getChild( 1 );
-				return secondToken.getSymbol().getType() == HqlLexer.NOT
-						? ComparisonOperator.NOT_DISTINCT_FROM
-						: ComparisonOperator.DISTINCT_FROM;
-			}
+			case HqlLexer.IS:
+				return ctx.NOT() == null
+						? ComparisonOperator.DISTINCT_FROM
+						: ComparisonOperator.NOT_DISTINCT_FROM;
 			default:
 				throw new ParsingException("Unrecognized comparison operator");
 		}
@@ -2456,11 +2454,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPredicate visitComparisonPredicate(HqlParser.ComparisonPredicateContext ctx) {
-		final ComparisonOperator comparisonOperator = (ComparisonOperator) ctx.getChild( 1 ).accept( this );
+		final ComparisonOperator comparisonOperator = (ComparisonOperator) ctx.comparisonOperator().accept( this );
 		final SqmExpression<?> left;
 		final SqmExpression<?> right;
-		final HqlParser.ExpressionContext leftExpressionContext = (HqlParser.ExpressionContext) ctx.getChild( 0 );
-		final HqlParser.ExpressionContext rightExpressionContext = (HqlParser.ExpressionContext) ctx.getChild( 2 );
+		final HqlParser.ExpressionContext leftExpressionContext = ctx.expression( 0 );
+		final HqlParser.ExpressionContext rightExpressionContext = ctx.expression( 1 );
 		switch (comparisonOperator) {
 			case EQUAL:
 			case NOT_EQUAL:
@@ -2498,24 +2496,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				else {
 					left = l;
 					right = r;
-				}
-
-				// This is something that we used to support before 6 which is also used in our testsuite
-				if ( left instanceof SqmLiteralNull<?> ) {
-					return new SqmNullnessPredicate(
-							right,
-							comparisonOperator == ComparisonOperator.NOT_EQUAL
-									|| comparisonOperator == ComparisonOperator.DISTINCT_FROM,
-							creationContext.getNodeBuilder()
-					);
-				}
-				else if ( right instanceof SqmLiteralNull<?> ) {
-					return new SqmNullnessPredicate(
-							left,
-							comparisonOperator == ComparisonOperator.NOT_EQUAL
-									|| comparisonOperator == ComparisonOperator.DISTINCT_FROM,
-							creationContext.getNodeBuilder()
-					);
 				}
 				break;
 			}
@@ -2582,15 +2562,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmPredicate visitLikePredicate(HqlParser.LikePredicateContext ctx) {
-		final boolean negated = ( (TerminalNode) ctx.getChild( 1 ) ).getSymbol().getType() == HqlParser.NOT;
-		final int startIndex = negated ? 3 : 2;
-		final boolean caseSensitive = ( (TerminalNode) ctx.getChild( negated ? 2 : 1 ) ).getSymbol()
-				.getType() == HqlParser.LIKE;
-		if ( ctx.getChildCount() == startIndex + 2 ) {
+		final boolean negated = ctx.NOT() != null;
+		final boolean caseSensitive = ctx.LIKE() != null;
+		if ( ctx.likeEscape() == null ) {
 			return new SqmLikePredicate(
-					(SqmExpression<?>) ctx.getChild( 0 ).accept( this ),
-					(SqmExpression<?>) ctx.getChild( startIndex ).accept( this ),
-					(SqmExpression<?>) ctx.getChild( startIndex + 1 ).accept( this ),
+					(SqmExpression<?>) ctx.expression(0).accept( this ),
+					(SqmExpression<?>) ctx.expression(1).accept( this ),
 					negated,
 					caseSensitive,
 					creationContext.getNodeBuilder()
@@ -2598,8 +2575,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		else {
 			return new SqmLikePredicate(
-					(SqmExpression<?>) ctx.getChild( 0 ).accept( this ),
-					(SqmExpression<?>) ctx.getChild( startIndex ).accept( this ),
+					(SqmExpression<?>) ctx.expression(0).accept( this ),
+					(SqmExpression<?>) ctx.expression(1).accept( this ),
+					(SqmExpression<?>) ctx.likeEscape().accept( this ),
 					negated,
 					caseSensitive,
 					creationContext.getNodeBuilder()

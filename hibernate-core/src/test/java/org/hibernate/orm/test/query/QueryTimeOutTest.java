@@ -68,7 +68,7 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 		final String baseQuery;
 		if ( DialectContext.getDialect() instanceof OracleDialect ) {
-			baseQuery = "update AnEntity a1_0 set a1_0.name=";
+			baseQuery = "update AnEntity ae1_0 set ae1_0.name=";
 		}
 		else {
 			baseQuery = "update AnEntity set name=";

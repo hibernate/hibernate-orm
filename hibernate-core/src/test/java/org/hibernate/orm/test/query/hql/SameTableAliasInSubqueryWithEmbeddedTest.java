@@ -99,8 +99,8 @@ public class SameTableAliasInSubqueryWithEmbeddedTest {
 			query.setParameter( "countryCode", "DE" );
 			query.setParameter( "nested", "NESTED_2" );
 			assertNotNull( query.getSingleResult() );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "m1_0", 6 );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "m2_0", 5 );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "mdfe1_0", 6 );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "mdfe2_0", 5 );
 		} );
 	}
 
@@ -118,8 +118,8 @@ public class SameTableAliasInSubqueryWithEmbeddedTest {
 			TypedQuery<PrimaryKey> query = session.createQuery( jpql, PrimaryKey.class );
 			query.setParameter( "nested", "NESTED_2" );
 			assertNotNull( query.getSingleResult() );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "m1_0", 4 );
-			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "m2_0", 3 );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "mdfe1_0", 4 );
+			statementInspector.assertNumberOfOccurrenceInQueryNoSpace( 0, "mdfe2_0", 3 );
 		} );
 	}
 

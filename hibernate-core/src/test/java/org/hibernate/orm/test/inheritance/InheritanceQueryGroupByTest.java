@@ -105,11 +105,7 @@ public class InheritanceQueryGroupByTest {
 		statementInspector.clear();
 		scope.inTransaction( session -> {
 			final MyPojo myPojo = session.createQuery(
-					String.format(
-							"select new %s(sum(e.amount), re) from MyEntity e join e.%s re group by re",
-							MyPojo.class.getName(),
-							parentProp
-					),
+					"select new MyPojo(sum(e.amount), re) from MyEntity e join e." + parentProp + " re group by re",
 					MyPojo.class
 			).getSingleResult();
 			assertThat( myPojo.getAmount() ).isEqualTo( 3L );

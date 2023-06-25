@@ -1593,7 +1593,7 @@ public interface AvailableSettings {
 
 	/**
 	 * When enabled, specifies that {@linkplain QueryPlan query plans} should be
-	 * {@linkplain org.hibernate.query.spi.QueryPlanCache cached}.
+	 * {@linkplain org.hibernate.query.spi.QueryInterpretationCache cached}.
 	 * <p>
 	 * By default, the query plan cache is disabled, unless one of the configuration
 	 * properties {@value #QUERY_PLAN_CACHE_MAX_SIZE} or
@@ -1603,14 +1603,13 @@ public interface AvailableSettings {
 
 	/**
 	 * The maximum number of entries in the
-	 * {@linkplain org.hibernate.query.spi.QueryPlanCache query plan cache} or
 	 * {@linkplain org.hibernate.query.spi.QueryInterpretationCache
 	 * query interpretation cache}.
 	 * <p>
 	 * The default maximum is
 	 * {@value org.hibernate.query.spi.QueryEngine#DEFAULT_QUERY_PLAN_MAX_COUNT}.
 	 *
-	 * @see org.hibernate.query.spi.QueryPlanCache
+	 * @see org.hibernate.query.spi.QueryInterpretationCache
 	 */
 	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
 

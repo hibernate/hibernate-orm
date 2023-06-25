@@ -271,7 +271,7 @@ The operator precedence is given by this table, from highest to lowest precedenc
 | Binary multiplicative | Binary infix | `*`, `/`, `%`
 | Binary additive | Binary infix | `+`, `-`
 | Concatenation | Binary infix | `\|\|`
-| Nullness | Unary postfix | `is null`, `is empty`
+| Nullness, emptiness, truth | Unary postfix | `is null`, `is empty`, `is true`, `is false`
 | Containment | Binary infix | `in`, `not in`
 | Between | Ternary infix | `between`, `not between`
 | Pattern matching | Binary infix | `like`, `ilike`, `not like`, `not ilike`

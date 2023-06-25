@@ -275,10 +275,13 @@ The operator precedence is given by this table, from highest to lowest precedenc
 | Containment | Binary infix | `in`, `not in`
 | Between | Ternary infix | `between`, `not between`
 | Pattern matching | Binary infix | `like`, `ilike`, `not like`, `not ilike`
+| Comparison operators | Binary infix | `=`, `<>`, `<`, `>`, `\<=`, `>=`
+| Nullsafe comparison | Binary infix | `is distinct from`, `is not distinct from`
 | Existence | Unary prefix | `exists`
 | Membership | Binary infix | `member of`, `not member of`
-| Unary logical | Unary prefix | `not`
-| Binary logical | Binary infix | `and`, `or`
+| Logical negation | Unary prefix | `not`
+| Logical conjunction | Binary infix | `and`
+| Logical disjunction | Binary infix | `or`
 |===
 
 [[concatenation]]

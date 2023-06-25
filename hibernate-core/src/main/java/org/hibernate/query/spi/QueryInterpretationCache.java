@@ -16,6 +16,7 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 /**
  * Cache for various parts of translating or interpreting queries.
  *
+ * @see org.hibernate.cfg.AvailableSettings#QUERY_PLAN_CACHE_ENABLED
  * @see org.hibernate.cfg.AvailableSettings#QUERY_PLAN_CACHE_MAX_SIZE
  *
  * @author Steve Ebersole

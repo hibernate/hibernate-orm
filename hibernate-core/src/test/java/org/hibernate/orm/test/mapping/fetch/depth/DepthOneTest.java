@@ -88,7 +88,7 @@ public class DepthOneTest {
 					assertThat( executedQueries.size() ).isEqualTo( 5 );
 
 					assertThat( executedQueries.get( 0 ).toLowerCase() ).isEqualTo(
-							"select a1_0.agency_id,a2_0.agency_id,a2_0.agency_detail,a1_0.agency_txt from agency_table a1_0 left join agency_detail_table a2_0 on a2_0.agency_id=a1_0.agency_id where a1_0.agency_id=?"
+							"select a1_0.agency_id,ad1_0.agency_id,ad1_0.agency_detail,a1_0.agency_txt from agency_table a1_0 left join agency_detail_table ad1_0 on ad1_0.agency_id=a1_0.agency_id where a1_0.agency_id=?"
 					);
 
 					assertThat( executedQueries.get( 1 ).toLowerCase() ).isEqualTo(
@@ -104,7 +104,7 @@ public class DepthOneTest {
 					);
 
 					assertThat( executedQueries.get( 4 ).toLowerCase() ).isEqualTo(
-							"select a1_0.agency_id,a1_0.agency_detail from agency_detail_table a1_0 where a1_0.agency_id=?"
+							"select ad1_0.agency_id,ad1_0.agency_detail from agency_detail_table ad1_0 where ad1_0.agency_id=?"
 					);
 				}
 		);

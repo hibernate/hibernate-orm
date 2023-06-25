@@ -78,13 +78,13 @@ public class TreatDisjunctionTest {
 					sqlStatementInterceptor.assertExecutedCount( 1 );
 					assertEquals(
 							"select " +
-									"p1_0.id," +
-									"p1_0.DTYPE," +
-									"p1_0.active," +
-									"p1_0.openldap " +
-									"from PAccountDirectory p1_0 " +
-									"where p1_0.active=? " +
-									"or p1_0.openldap=?",
+									"pd1_0.id," +
+									"pd1_0.DTYPE," +
+									"pd1_0.active," +
+									"pd1_0.openldap " +
+									"from PAccountDirectory pd1_0 " +
+									"where pd1_0.active=? " +
+									"or pd1_0.openldap=?",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
 				}

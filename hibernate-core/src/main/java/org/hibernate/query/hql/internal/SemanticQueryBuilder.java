@@ -2443,10 +2443,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				return ComparisonOperator.GREATER_THAN;
 			case HqlLexer.GREATER_EQUAL:
 				return ComparisonOperator.GREATER_THAN_OR_EQUAL;
-			case HqlLexer.IS:
-				return ctx.NOT() == null
-						? ComparisonOperator.DISTINCT_FROM
-						: ComparisonOperator.NOT_DISTINCT_FROM;
 			default:
 				throw new ParsingException("Unrecognized comparison operator");
 		}
@@ -2455,11 +2451,28 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmPredicate visitComparisonPredicate(HqlParser.ComparisonPredicateContext ctx) {
 		final ComparisonOperator comparisonOperator = (ComparisonOperator) ctx.comparisonOperator().accept( this );
-		final SqmExpression<?> left;
-		final SqmExpression<?> right;
 		final HqlParser.ExpressionContext leftExpressionContext = ctx.expression( 0 );
 		final HqlParser.ExpressionContext rightExpressionContext = ctx.expression( 1 );
-		switch (comparisonOperator) {
+		return createComparisonPredicate( comparisonOperator, leftExpressionContext, rightExpressionContext );
+	}
+
+	@Override
+	public SqmPredicate visitIsDistinctFromPredicate(HqlParser.IsDistinctFromPredicateContext ctx) {
+		final HqlParser.ExpressionContext leftExpressionContext = ctx.expression( 0 );
+		final HqlParser.ExpressionContext rightExpressionContext = ctx.expression( 1 );
+		final ComparisonOperator comparisonOperator = ctx.NOT() == null
+				? ComparisonOperator.DISTINCT_FROM
+				: ComparisonOperator.NOT_DISTINCT_FROM;
+		return createComparisonPredicate( comparisonOperator, leftExpressionContext, rightExpressionContext );
+	}
+
+	private SqmComparisonPredicate createComparisonPredicate(
+			ComparisonOperator comparisonOperator,
+			HqlParser.ExpressionContext leftExpressionContext,
+			HqlParser.ExpressionContext rightExpressionContext) {
+		final SqmExpression<?> right;
+		final SqmExpression<?> left;
+		switch ( comparisonOperator ) {
 			case EQUAL:
 			case NOT_EQUAL:
 			case DISTINCT_FROM:

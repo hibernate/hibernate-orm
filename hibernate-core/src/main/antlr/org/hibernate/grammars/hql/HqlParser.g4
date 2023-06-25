@@ -624,13 +624,14 @@ predicate
 	| expression IS NOT? EMPTY													# IsEmptyPredicate
 	| expression IS NOT? TRUE													# IsTruePredicate
 	| expression IS NOT? FALSE													# IsFalsePredicate
+	| expression IS NOT? DISTINCT FROM expression								# IsDistinctFromPredicate
+	| expression NOT? MEMBER OF? path											# MemberOfPredicate
 	| expression NOT? IN inList													# InPredicate
 	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
 	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate
 	| expression comparisonOperator expression									# ComparisonPredicate
 	| EXISTS collectionQuantifier LEFT_PAREN simplePath RIGHT_PAREN				# ExistsCollectionPartPredicate
 	| EXISTS expression															# ExistsPredicate
-	| expression NOT? MEMBER OF? path											# MemberOfPredicate
 	| NOT predicate																# NegatedPredicate
 	| predicate AND predicate													# AndPredicate
 	| predicate OR predicate													# OrPredicate
@@ -647,8 +648,6 @@ comparisonOperator
 	| GREATER_EQUAL
 	| LESS
 	| LESS_EQUAL
-	| IS DISTINCT FROM
-	| IS NOT DISTINCT FROM
 	;
 
 /**

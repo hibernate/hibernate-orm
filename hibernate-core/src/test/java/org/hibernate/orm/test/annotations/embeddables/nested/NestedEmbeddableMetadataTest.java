@@ -13,6 +13,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -44,7 +45,9 @@ public class NestedEmbeddableMetadataTest {
 			final Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( Customer.class )
 					.buildMetadata();
-			final TypeConfiguration typeConfiguration = metadata.getDatabase().getTypeConfiguration();
+			final NationalizationSupport nationalizationSupport = metadata.getDatabase()
+					.getDialect()
+					.getNationalizationSupport();
 
 			PersistentClass classMetadata = metadata.getEntityBinding( Customer.class.getName() );
 			Property investmentsProperty = classMetadata.getProperty( "investments" );
@@ -58,7 +61,10 @@ public class NestedEmbeddableMetadataTest {
 			SimpleValue currencyMetadata = (SimpleValue) amountMetadata.getProperty( "currency" ).getValue();
 			int[] currencySqlTypes = currencyMetadata.getType().getSqlTypeCodes( metadata );
 			assertEquals(1, currencySqlTypes.length);
-			assertJdbcTypeCode(new int[]{Types.VARCHAR, SqlTypes.ENUM}, currencySqlTypes[0]);
+			assertJdbcTypeCode(
+					new int[] { nationalizationSupport.getVarcharVariantCode(), SqlTypes.ENUM },
+					currencySqlTypes[0]
+			);
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( serviceRegistry );

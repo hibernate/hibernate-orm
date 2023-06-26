@@ -6,12 +6,11 @@
  */
 package org.hibernate.orm.test.annotations.embeddables.nested.fieldaccess;
 
-import java.sql.Types;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -20,7 +19,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.SqlTypes;
-import org.hibernate.type.spi.TypeConfiguration;
 
 import org.junit.jupiter.api.Test;
 
@@ -40,7 +38,9 @@ public class FieldAccessedNestedEmbeddableMetadataTest {
 			final Metadata metadata = new MetadataSources( ssr )
 					.addAnnotatedClass( Customer.class )
 					.buildMetadata();
-			final TypeConfiguration typeConfiguration = metadata.getDatabase().getTypeConfiguration();
+			final NationalizationSupport nationalizationSupport = metadata.getDatabase()
+					.getDialect()
+					.getNationalizationSupport();
 
 			PersistentClass classMetadata = metadata.getEntityBinding( Customer.class.getName() );
 			Property investmentsProperty = classMetadata.getProperty( "investments" );
@@ -55,7 +55,7 @@ public class FieldAccessedNestedEmbeddableMetadataTest {
 			int[] currencySqlTypes = currencyMetadata.getType().getSqlTypeCodes( metadata );
 			assertEquals( 1, currencySqlTypes.length );
 			assertJdbcTypeCode(
-					new int[]{Types.VARCHAR, SqlTypes.ENUM},
+					new int[] { nationalizationSupport.getVarcharVariantCode(), SqlTypes.ENUM },
 					currencySqlTypes[0]
 			);
 		}

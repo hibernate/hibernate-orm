@@ -5,7 +5,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.stream.Stream;
 
 import org.hibernate.LockMode;
+import org.hibernate.dialect.CockroachDialect;
 
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -23,6 +25,7 @@ import jakarta.persistence.Version;
 })
 @SessionFactory
 @TestForIssue(jiraKey = "HHH-16461")
+@SkipForDialect(value = CockroachDialect.class, comment = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
 public class OptimisticAndPessimisticLockTest {
 
 	public Stream<LockMode> pessimisticLockModes() {

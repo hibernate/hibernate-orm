@@ -568,7 +568,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 	}
 
 	private void addOrdering(SingularAttribute<? super R, ?> attribute, SortOrder order) {
-		sqm = sqm.copy( SqmCopyContext.simpleContext() );
+		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
 		NodeBuilder nodeBuilder = sqm.nodeBuilder();
 		List<Order> orders = new ArrayList<>( sqm.getOrderList() );
 		sqm.getQuerySpec().getRoots().forEach( root -> {
@@ -583,7 +583,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 
 	@Override
 	public SqmSelectionQuery<R> unordered() {
-		sqm = sqm.copy( SqmCopyContext.simpleContext() );
+		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
 		sqm.getQueryPart().setOrderByClause( null );
 		return this;
 	}

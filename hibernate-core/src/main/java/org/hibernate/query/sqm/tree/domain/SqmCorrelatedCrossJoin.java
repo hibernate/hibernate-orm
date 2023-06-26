@@ -39,7 +39,7 @@ public class SqmCorrelatedCrossJoin<T> extends SqmCrossJoin<T> implements SqmCor
 			SqmRoot<?> sqmRoot,
 			SqmCorrelatedRootJoin<T> correlatedRootJoin,
 			SqmCrossJoin<T> correlationParent) {
-		super( joinedEntityDescriptor, alias, sqmRoot );
+		super( correlationParent.getNavigablePath(), joinedEntityDescriptor, alias, sqmRoot );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}

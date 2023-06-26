@@ -766,7 +766,7 @@ public class SessionImpl
 					.fireEventOnEachListener( event, PersistEventListener::onPersist );
 		}
 		catch (MappingException e) {
-			originalException = getExceptionConverter().convert( new IllegalArgumentException( e.getMessage() ) );
+			originalException = getExceptionConverter().convert( new IllegalArgumentException( e.getMessage(), e ) );
 		}
 		catch (RuntimeException e) {
 			originalException = getExceptionConverter().convert( e );

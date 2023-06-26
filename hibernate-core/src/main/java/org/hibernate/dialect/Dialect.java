@@ -3522,6 +3522,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return ColumnAliasExtractor.COLUMN_LABEL_EXTRACTOR;
 	}
 
+	/**
+	 * Does this dialect support PostgreSQL-style table inheritance,
+	 * that is, the syntax {@code create table ... inherits ...}.
+	 *
+	 * @return {@code true} on PostgreSQL
+	 */
+	public boolean supportsTableInheritance() {
+		return false;
+	}
+
 	// Informational metadata ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	/**

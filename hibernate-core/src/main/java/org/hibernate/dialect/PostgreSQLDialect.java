@@ -706,6 +706,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsTableInheritance() {
+		return true;
+	}
+
+	@Override
 	public String getCurrentSchemaCommand() {
 		return "select current_schema()";
 	}

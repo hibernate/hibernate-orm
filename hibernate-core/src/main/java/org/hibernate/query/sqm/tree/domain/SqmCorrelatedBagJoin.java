@@ -47,7 +47,7 @@ public class SqmCorrelatedBagJoin<O, T> extends SqmBagJoin<O, T> implements SqmC
 			NodeBuilder nodeBuilder,
 			SqmCorrelatedRootJoin<O> correlatedRootJoin,
 			SqmBagJoin<O, T> correlationParent) {
-		super( lhs, attribute, alias, sqmJoinType, fetched, nodeBuilder );
+		super( lhs, correlationParent.getNavigablePath(), attribute, alias, sqmJoinType, fetched, nodeBuilder );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}

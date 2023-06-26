@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -39,6 +39,24 @@ public class SqmTreatedPluralPartJoin<O,T, S extends T> extends SqmPluralPartJoi
 		this.wrappedPath = wrappedPath;
 	}
 
+	private SqmTreatedPluralPartJoin(
+			NavigablePath navigablePath,
+			SqmPluralPartJoin<O,T> wrappedPath,
+			EntityDomainType<S> treatTarget,
+			String alias) {
+		//noinspection unchecked
+		super(
+				(SqmFrom<?, O>) wrappedPath.getLhs(),
+				navigablePath,
+				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
+				alias,
+				wrappedPath.getSqmJoinType(),
+				wrappedPath.nodeBuilder()
+		);
+		this.treatTarget = treatTarget;
+		this.wrappedPath = wrappedPath;
+	}
+
 	@Override
 	public SqmTreatedPluralPartJoin<O, T, S> copy(SqmCopyContext context) {
 		final SqmTreatedPluralPartJoin<O, T, S> existing = context.getCopy( this );
@@ -48,6 +66,7 @@ public class SqmTreatedPluralPartJoin<O,T, S extends T> extends SqmPluralPartJoi
 		final SqmTreatedPluralPartJoin<O, T, S> path = context.registerCopy(
 				this,
 				new SqmTreatedPluralPartJoin<>(
+						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
 						getExplicitAlias()

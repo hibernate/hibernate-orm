@@ -79,7 +79,7 @@ dependencyResolutionManagement {
             alias( "loggingProcessor" ).to ( "org.jboss.logging", "jboss-logging-processor" ).version( "2.2.1.Final" )
 
             alias( "hcann" ).to( "org.hibernate.common", "hibernate-commons-annotations" ).versionRef( "hcann" )
-            alias( "jandex" ).to("io.smallrye", "jandex" ).version( "3.1.1" )
+            alias( "jandex" ).to("io.smallrye", "jandex" ).version( "3.1.2" )
             alias( "classmate" ).to( "com.fasterxml", "classmate" ).version( "1.5.1" )
 
             alias( "jackson" ).to ( "com.fasterxml.jackson.core", "jackson-databind" ).version( "2.14.1" )

@@ -760,11 +760,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return currentSqmQueryPart;
 	}
 
-	@Override
-	public SqmStatement<?> getCurrentSqmStatement() {
-		return currentSqmStatement;
-	}
-
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Statements
 

@@ -12,7 +12,6 @@ import java.util.function.Supplier;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -33,8 +32,6 @@ public interface SqmToSqlAstConverter extends SemanticQueryWalker<Object>, SqlAs
 	Stack<Clause> getCurrentClauseStack();
 
 	SqmQueryPart<?> getCurrentSqmQueryPart();
-
-	SqmStatement<?> getCurrentSqmStatement();
 
 	void registerQueryTransformer(QueryTransformer transformer);
 

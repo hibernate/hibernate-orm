@@ -363,3 +363,17 @@ but has to be changed to the proper temporal literal now
 ```sql
 from MyEntity e where e.temporalAttribute > date 2020-01-01
 ```
+
+[[batch-fetching-changes]]
+== Batch Fetching and LockMode
+
+When LockMode is greater than READ Hibernate does not execute the batch fetching so existing uninitialized proxies will not be initialized.
+This because the lock mode is different from the one of the proxies in the batch fetch queue.
+
+E.g.
+
+`
+MyEntity proxy = session.getReference( MyEntity.class, 1 );
+MyEntity myEntity = session.find(MyEntity.class, 2, LockMode.WRITE);
+`
+only the entity with id equals to 2 will be loaded but the proxy will not be initialized.

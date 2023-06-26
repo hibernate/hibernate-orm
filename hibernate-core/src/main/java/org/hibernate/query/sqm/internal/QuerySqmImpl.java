@@ -963,7 +963,7 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> addOrdering(SingularAttribute<? super R, ?> attribute, SortOrder order) {
 		if ( sqm instanceof SqmSelectStatement ) {
-			sqm = sqm.copy( SqmCopyContext.simpleContext() );
+			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
 			NodeBuilder nodeBuilder = sqm.nodeBuilder();
 			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
 			List<Order> orders = new ArrayList<>( select.getOrderList() );
@@ -985,7 +985,7 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> unordered() {
 		if ( sqm instanceof SqmSelectStatement ) {
-			sqm = sqm.copy( SqmCopyContext.simpleContext() );
+			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
 			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
 			select.getQueryPart().setOrderByClause( null );
 

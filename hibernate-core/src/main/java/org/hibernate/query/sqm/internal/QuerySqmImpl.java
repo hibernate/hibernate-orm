@@ -88,6 +88,7 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -99,6 +100,7 @@ import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
@@ -974,6 +976,36 @@ public class QuerySqmImpl<R>
 				orders.add( nodeBuilder.sort( ref, order) );
 
 			} );
+			select.orderBy( orders );
+			return this;
+		}
+		else {
+			throw new IllegalStateException( "Not a select query" );
+		}
+	}
+
+	@Override
+	public SqmQueryImplementor<R> addOrdering(int element, SortOrder order) {
+		if ( sqm instanceof SqmSelectStatement ) {
+			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
+			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
+			int size = select.getSelection().getSelectionItems().size();
+			if ( element < 1) {
+				throw new IllegalArgumentException("Cannot order by element " + element + " (the first select item is element 1)");
+			}
+			if ( element > size) {
+				throw new IllegalArgumentException("Cannot order by element " + element + " (there are " + size + " select items)");
+			}
+			NodeBuilder nodeBuilder = sqm.nodeBuilder();
+			List<Order> orders = new ArrayList<>( select.getOrderList() );
+			orders.add( new SqmSortSpecification(
+					new SqmAliasedNodeRef(
+						element,
+						nodeBuilder.getTypeConfiguration().standardBasicTypeForJavaType( Integer.class ),
+						nodeBuilder
+					),
+					order
+			) );
 			select.orderBy( orders );
 			return this;
 		}

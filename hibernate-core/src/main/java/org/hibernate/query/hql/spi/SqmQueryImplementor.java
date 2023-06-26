@@ -136,7 +136,21 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 		return this;
 	}
 
+	@Override
+	default SqmQueryImplementor<R> ascending(int element) {
+		addOrdering( element, SortOrder.ASCENDING );
+		return this;
+	}
+
+	@Override
+	default SqmQueryImplementor<R> descending(int element) {
+		addOrdering( element, SortOrder.DESCENDING );
+		return this;
+	}
+
 	SqmQueryImplementor<R> addOrdering(SingularAttribute<? super R, ?> attribute, SortOrder order);
+
+	SqmQueryImplementor<R> addOrdering(int element, SortOrder order);
 
 	@Override
 	SqmQueryImplementor<R> unordered();

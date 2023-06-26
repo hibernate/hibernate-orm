@@ -906,6 +906,12 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	Query<R> descending(SingularAttribute<? super R, ?> attribute);
 
 	@Override
+	Query<R> ascending(int element);
+
+	@Override
+	Query<R> descending(int element);
+
+	@Override
 	Query<R> unordered();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

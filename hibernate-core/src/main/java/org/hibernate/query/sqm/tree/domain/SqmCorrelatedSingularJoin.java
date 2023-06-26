@@ -47,7 +47,7 @@ public class SqmCorrelatedSingularJoin<O, T> extends SqmSingularJoin<O, T> imple
 			NodeBuilder nodeBuilder,
 			SqmCorrelatedRootJoin<O> correlatedRootJoin,
 			SqmSingularJoin<O, T> correlationParent) {
-		super( lhs, joinedNavigable, alias, joinType, fetched, nodeBuilder );
+		super( lhs, correlationParent.getNavigablePath(), joinedNavigable, alias, joinType, fetched, nodeBuilder );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}

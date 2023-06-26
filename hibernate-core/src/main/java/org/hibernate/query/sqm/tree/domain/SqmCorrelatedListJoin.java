@@ -47,7 +47,7 @@ public class SqmCorrelatedListJoin<O, T> extends SqmListJoin<O, T> implements Sq
 			NodeBuilder nodeBuilder,
 			SqmCorrelatedRootJoin<O> correlatedRootJoin,
 			SqmListJoin<O, T> correlationParent) {
-		super( lhs, attribute, alias, sqmJoinType, fetched, nodeBuilder );
+		super( lhs, correlationParent.getNavigablePath(), attribute, alias, sqmJoinType, fetched, nodeBuilder );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}

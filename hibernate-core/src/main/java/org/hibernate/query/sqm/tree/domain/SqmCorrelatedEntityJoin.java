@@ -42,7 +42,7 @@ public class SqmCorrelatedEntityJoin<T> extends SqmEntityJoin<T> implements SqmC
 			SqmRoot<?> sqmRoot,
 			SqmCorrelatedRootJoin<T> correlatedRootJoin,
 			SqmEntityJoin<T> correlationParent) {
-		super( joinedEntityDescriptor, alias, joinType, sqmRoot );
+		super( correlationParent.getNavigablePath(), joinedEntityDescriptor, alias, joinType, sqmRoot );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}

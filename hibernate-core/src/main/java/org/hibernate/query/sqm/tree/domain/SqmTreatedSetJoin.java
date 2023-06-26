@@ -12,7 +12,7 @@ import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -42,6 +42,25 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 		this.wrappedPath = wrappedPath;
 	}
 
+	private SqmTreatedSetJoin(
+			NavigablePath navigablePath,
+			SqmSetJoin<O, T> wrappedPath,
+			EntityDomainType<S> treatTarget,
+			String alias) {
+		//noinspection unchecked
+		super(
+				wrappedPath.getLhs(),
+				navigablePath,
+				(SetPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				alias,
+				wrappedPath.getSqmJoinType(),
+				wrappedPath.isFetched(),
+				wrappedPath.nodeBuilder()
+		);
+		this.treatTarget = treatTarget;
+		this.wrappedPath = wrappedPath;
+	}
+
 	@Override
 	public SqmTreatedSetJoin<O, T, S> copy(SqmCopyContext context) {
 		final SqmTreatedSetJoin<O, T, S> existing = context.getCopy( this );
@@ -51,6 +70,7 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 		final SqmTreatedSetJoin<O, T, S> path = context.registerCopy(
 				this,
 				new SqmTreatedSetJoin<>(
+						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
 						getExplicitAlias()

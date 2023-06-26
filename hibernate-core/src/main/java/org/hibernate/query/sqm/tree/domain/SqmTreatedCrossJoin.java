@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -34,6 +34,22 @@ public class SqmTreatedCrossJoin<T, S extends T> extends SqmCrossJoin<S> impleme
 		this.treatTarget = treatTarget;
 	}
 
+	private SqmTreatedCrossJoin(
+			NavigablePath navigablePath,
+			SqmCrossJoin<T> wrappedPath,
+			EntityDomainType<S> treatTarget,
+			String alias) {
+		//noinspection unchecked
+		super(
+				navigablePath,
+				(EntityDomainType<S>) wrappedPath.getReferencedPathSource().getSqmPathType(),
+				alias,
+				wrappedPath.getRoot()
+		);
+		this.wrappedPath = wrappedPath;
+		this.treatTarget = treatTarget;
+	}
+
 	@Override
 	public SqmTreatedCrossJoin<T, S> copy(SqmCopyContext context) {
 		final SqmTreatedCrossJoin<T, S> existing = context.getCopy( this );
@@ -43,6 +59,7 @@ public class SqmTreatedCrossJoin<T, S extends T> extends SqmCrossJoin<S> impleme
 		final SqmTreatedCrossJoin<T, S> path = context.registerCopy(
 				this,
 				new SqmTreatedCrossJoin<>(
+						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
 						getExplicitAlias()

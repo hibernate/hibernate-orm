@@ -293,7 +293,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void addQueryMethods(List<ExecutableElement> queryMethods) {
 		for ( ExecutableElement method : queryMethods) {
-			addQueryMethod(method);
+			addQueryMethod( method );
 		}
 	}
 
@@ -309,27 +309,27 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					addQueryMethod(method, methodName, typeName, null);
 				}
 				else {
-					if (isLegalRawResultType(typeName)) {
-						addQueryMethod(method, methodName, null, typeName);
+					if ( isLegalRawResultType( typeName ) ) {
+						addQueryMethod( method, methodName, null, typeName );
 					}
 					else {
 						// probably a projection
-						addQueryMethod(method, methodName, typeName, null);
+						addQueryMethod( method, methodName, typeName, null );
 					}
 				}
 			}
 			else if ( typeArguments.size() == 1 ) {
 				final String containerTypeName = declaredType.asElement().toString();
 				final String returnTypeName = typeArguments.get(0).toString();
-				if (isLegalGenericResultType(containerTypeName)) {
-					addQueryMethod(method, methodName, returnTypeName, containerTypeName);
+				if ( isLegalGenericResultType( containerTypeName ) ) {
+					addQueryMethod( method, methodName, returnTypeName, containerTypeName );
 				}
 				else {
-					displayError(method, "incorrect return type '" + containerTypeName + "'");
+					displayError( method, "incorrect return type '" + containerTypeName + "'" );
 				}
 			}
 			else {
-				displayError(method, "incorrect return type '" + declaredType + "'");
+				displayError( method, "incorrect return type '" + declaredType + "'" );
 			}
 		}
 	}
@@ -352,13 +352,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			String methodName,
 			@Nullable String returnTypeName,
 			@Nullable String containerTypeName) {
-		final AnnotationMirror hql = getAnnotationMirror(method, Constants.HQL);
+		final AnnotationMirror hql = getAnnotationMirror( method, Constants.HQL );
 		if ( hql != null ) {
-			addQueryMethod(method, methodName, returnTypeName, containerTypeName, hql, false);
+			addQueryMethod( method, methodName, returnTypeName, containerTypeName, hql, false );
 		}
-		final AnnotationMirror sql = getAnnotationMirror(method, Constants.SQL);
+		final AnnotationMirror sql = getAnnotationMirror( method, Constants.SQL );
 		if ( sql != null ) {
-			addQueryMethod(method, methodName, returnTypeName, containerTypeName, sql, true);
+			addQueryMethod( method, methodName, returnTypeName, containerTypeName, sql, true );
 		}
 	}
 
@@ -371,16 +371,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			String containerTypeName,
 			AnnotationMirror mirror,
 			boolean isNative) {
-		final Object queryString = getAnnotationValue(mirror, "value" );
+		final Object queryString = getAnnotationValue( mirror, "value" );
 		if ( queryString instanceof String ) {
 			final List<String> paramNames =
 					method.getParameters().stream()
-							.map(param -> param.getSimpleName().toString())
-							.collect(toList());
+							.map( param -> param.getSimpleName().toString() )
+							.collect( toList() );
 			final List<String> paramTypes =
 					method.getParameters().stream()
-							.map(param -> param.asType().toString())
-							.collect(toList());
+							.map( param -> param.asType().toString() )
+							.collect( toList() );
 			final String hql = (String) queryString;
 			final QueryMethod attribute =
 					new QueryMethod(
@@ -395,9 +395,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					);
 			putMember( attribute.getPropertyName(), attribute );
 
-			checkParameters(method, paramNames, mirror, hql);
-			if (!isNative) {
-				checkHqlSyntax(method, mirror, hql);
+			checkParameters( method, paramNames, mirror, hql );
+			if ( !isNative ) {
+				checkHqlSyntax( method, mirror, hql );
 			}
 		}
 	}
@@ -406,8 +406,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		for (int i = 1; i <= paramNames.size(); i++) {
 			final String param = paramNames.get(i-1);
 			if ( !hql.contains(":" + param) && !hql.contains("?" + i) ) {
-				displayError(method, mirror, "missing query parameter for '" + param
-						+ "' (no parameter named :" + param + " or ?" + i + ")");
+				displayError( method, mirror, "missing query parameter for '" + param
+						+ "' (no parameter named :" + param + " or ?" + i + ")" );
 			}
 		}
 	}
@@ -416,8 +416,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		ANTLRErrorListener errorListener = new ANTLRErrorListener() {
 			@Override
 			public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String message, RecognitionException e) {
-				displayError(method, mirror, "illegal HQL syntax - "
-						+ prettifyAntlrError( offendingSymbol, line, charPositionInLine, message, e, queryString, false ));
+				displayError( method, mirror, "illegal HQL syntax - "
+						+ prettifyAntlrError( offendingSymbol, line, charPositionInLine, message, e, queryString, false ) );
 			}
 
 			@Override

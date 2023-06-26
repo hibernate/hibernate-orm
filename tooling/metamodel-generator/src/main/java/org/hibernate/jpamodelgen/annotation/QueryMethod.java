@@ -7,11 +7,13 @@
 package org.hibernate.jpamodelgen.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
 import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
@@ -104,7 +106,7 @@ public class QueryMethod implements MetaAttribute {
 				.append("entityManager.")
 				.append(isNative ? "createNativeQuery" :"createQuery")
 				.append("(")
-				.append(getUpperUnderscoreCaseFromLowerCamelCase(methodName));
+				.append(getConstantName());
 		if (returnTypeName != null) {
 			declaration
 					.append(", ")
@@ -144,11 +146,22 @@ public class QueryMethod implements MetaAttribute {
 	@Override
 	public String getAttributeNameDeclarationString() {
 		return new StringBuilder().append("public static final String ")
-				.append(getUpperUnderscoreCaseFromLowerCamelCase(methodName))
+				.append(getConstantName())
 				.append(" = \"")
 				.append(queryString)
 				.append("\";")
 				.toString();
+	}
+
+	private String getConstantName() {
+		String stem = getUpperUnderscoreCaseFromLowerCamelCase(methodName);
+		if ( paramTypes.isEmpty() ) {
+			return stem;
+		}
+		else {
+			return stem + "_" + StringHelper.join("_",
+					paramTypes.stream().map(StringHelper::unqualify).collect(toList()));
+		}
 	}
 
 	@Override

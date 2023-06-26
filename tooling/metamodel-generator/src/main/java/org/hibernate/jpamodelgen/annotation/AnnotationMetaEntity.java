@@ -393,7 +393,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							paramTypes,
 							isNative
 					);
-			putMember( attribute.getPropertyName(), attribute );
+			putMember( attribute.getPropertyName() + paramTypes, attribute );
 
 			checkParameters( method, paramNames, mirror, hql );
 			if ( !isNative ) {

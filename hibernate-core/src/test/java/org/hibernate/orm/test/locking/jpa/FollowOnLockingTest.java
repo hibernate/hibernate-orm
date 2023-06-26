@@ -9,6 +9,7 @@ package org.hibernate.orm.test.locking.jpa;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.query.spi.QueryImplementor;
 
@@ -35,6 +36,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 @DomainModel(annotatedClasses = { Employee.class, Department.class })
 @SessionFactory(useCollectingStatementInspector = true)
 @SkipForDialect(dialectClass = HSQLDialect.class, reason = "Seems HSQLDB doesn't cancel the query if it waits for a lock?!")
+@SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach allows the concurrent access but cancels one or both transactions at the end")
 public class FollowOnLockingTest {
 
 	@Test

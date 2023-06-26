@@ -6,29 +6,19 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Consumer;
-
 import org.hibernate.metamodel.MappingMetamodel;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ManagedMappingType;
-import org.hibernate.metamodel.mapping.MappingType;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.ModelPartContainer;
+import org.hibernate.metamodel.mapping.*;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
-import org.hibernate.query.sqm.tree.SqmStatement;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.select.SqmQueryPart;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -38,6 +28,10 @@ import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * @author Steve Ebersole
@@ -91,12 +85,12 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		// never the FK column, if the lhs is a SqmFrom i.e. something explicitly queried/joined
 		// and if this basic path is part of the group by clause
 		final Clause currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
-		final SqmStatement<?> sqmStatement = sqlAstCreationState.getCurrentSqmStatement();
+		final SqmQueryPart<?> sqmQueryPart = sqlAstCreationState.getCurrentSqmQueryPart();
 		if ( ( currentClause == Clause.GROUP || currentClause == Clause.SELECT || currentClause == Clause.ORDER || currentClause == Clause.HAVING )
 				&& sqmPath.getLhs() instanceof SqmFrom<?, ?>
 				&& modelPartContainer.getPartMappingType() instanceof ManagedMappingType
-				&& sqmStatement instanceof SqmSelectStatement<?>
-				&& ( (SqmSelectStatement<?>) sqmStatement ).getQuerySpec().groupByClauseContains( sqmPath.getNavigablePath() ) ) {
+				&& sqmQueryPart.isSimpleQueryPart()
+				&& sqmQueryPart.getFirstQuerySpec().groupByClauseContains( sqmPath.getNavigablePath() ) ) {
 			mapping = (BasicValuedModelPart) ( (ManagedMappingType) modelPartContainer.getPartMappingType() ).findSubPart(
 					sqmPath.getReferencedPathSource().getPathName(),
 					treatTarget

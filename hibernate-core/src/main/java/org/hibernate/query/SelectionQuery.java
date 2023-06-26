@@ -494,6 +494,28 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> descending(SingularAttribute<? super R, ?> attribute);
 
 	/**
+	 * Add an element of the select list to be used to order the query results
+	 * in ascending order.
+	 *
+	 * @param element an integer identifying an element of the select list
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> ascending(int element);
+
+	/**
+	 * Add an element of the select list to be used to order the query results
+	 * in descending order.
+	 *
+	 * @param element an integer identifying an element of the select list
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> descending(int element);
+
+	/**
 	 * Clear the ordering conditions for this query.
 	 *
 	 * @see #ascending(SingularAttribute)

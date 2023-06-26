@@ -61,11 +61,13 @@ import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKey
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
+import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -567,6 +569,18 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 		return this;
 	}
 
+	@Override
+	public SqmSelectionQuery<R> ascending(int element) {
+		addOrdering( element, SortOrder.ASCENDING );
+		return this;
+	}
+
+	@Override
+	public SqmSelectionQuery<R> descending(int element) {
+		addOrdering( element, SortOrder.DESCENDING );
+		return this;
+	}
+
 	private void addOrdering(SingularAttribute<? super R, ?> attribute, SortOrder order) {
 		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
 		NodeBuilder nodeBuilder = sqm.nodeBuilder();
@@ -578,6 +592,28 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 			orders.add( nodeBuilder.sort( ref, order ) );
 
 		} );
+		sqm.orderBy( orders );
+	}
+
+	private void addOrdering(int element, SortOrder order) {
+		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
+		int size = sqm.getSelection().getSelectionItems().size();
+		if ( element < 1) {
+			throw new IllegalArgumentException("Cannot order by element " + element + " (the first select item is element 1)");
+		}
+		if ( element > size) {
+			throw new IllegalArgumentException("Cannot order by element " + element + " (there are " + size + " select items)");
+		}
+		NodeBuilder nodeBuilder = sqm.nodeBuilder();
+		List<Order> orders = new ArrayList<>( sqm.getOrderList() );
+		orders.add( new SqmSortSpecification(
+				new SqmAliasedNodeRef(
+						element,
+						nodeBuilder.getTypeConfiguration().standardBasicTypeForJavaType( Integer.class ),
+						nodeBuilder
+				),
+				order
+		) );
 		sqm.orderBy( orders );
 	}
 

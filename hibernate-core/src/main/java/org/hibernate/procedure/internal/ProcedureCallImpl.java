@@ -1075,6 +1075,16 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public Query<R> ascending(int element) {
+		throw new UnsupportedOperationException( "Not supported for procedure calls" );
+	}
+
+	@Override
+	public Query<R> descending(int element) {
+		throw new UnsupportedOperationException( "Not supported for procedure calls" );
+	}
+
+	@Override
 	public Query<R> unordered() {
 		return this;
 	}

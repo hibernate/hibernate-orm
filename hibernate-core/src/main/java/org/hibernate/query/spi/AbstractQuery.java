@@ -39,7 +39,6 @@ import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NamedQueryMemento;
 
@@ -285,6 +284,16 @@ public abstract class AbstractQuery<R>
 
 	@Override
 	public Query<R> descending(SingularAttribute<? super R, ?> attribute) {
+		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
+	}
+
+	@Override
+	public Query<R> ascending(int element) {
+		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
+	}
+
+	@Override
+	public Query<R> descending(int element) {
 		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
 	}
 

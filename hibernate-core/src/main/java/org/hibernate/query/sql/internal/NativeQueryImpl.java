@@ -1511,6 +1511,16 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	public Query<R> ascending(int element) {
+		throw new UnsupportedOperationException("Not yet supported for native queries");
+	}
+
+	@Override
+	public Query<R> descending(int element) {
+		throw new UnsupportedOperationException("Not yet supported for native queries");
+	}
+
+	@Override
 	public Query<R> unordered() {
 		return this;
 	}

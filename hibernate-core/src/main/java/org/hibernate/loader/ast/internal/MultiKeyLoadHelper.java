@@ -6,6 +6,8 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import java.util.Arrays;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -56,4 +58,21 @@ public class MultiKeyLoadHelper {
 				typeConfiguration.getCurrentBaseSqlTypeIndicators()
 		);
 	}
+
+	static boolean hasSingleId(Object[] ids) {
+		for ( int i=1; i<ids.length; i++ ) {
+			if ( ids[i] != null ) {
+				return false;
+			}
+		}
+		return true;
+	}
+	static Object[] trimIdBatch(int length, Object[] keysToInitialize) {
+		int newLength = length;
+		while ( newLength>1 && keysToInitialize[newLength-1] == null ) {
+			newLength--;
+		}
+		return newLength < length ? Arrays.copyOf( keysToInitialize, newLength) : keysToInitialize;
+	}
+
 }

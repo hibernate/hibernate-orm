@@ -9,14 +9,13 @@ package org.hibernate.loader.ast.internal;
 import java.lang.reflect.Array;
 import java.util.Locale;
 
-import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.internal.BatchFetchQueueHelper;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.loader.ast.spi.EntityBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
@@ -29,6 +28,8 @@ import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
@@ -40,8 +41,8 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
  * @author Steve Ebersole
  */
 public class EntityBatchLoaderArrayParam<T>
-		extends SingleIdEntityLoaderSupport<T>
-		implements EntityBatchLoader<T>, SqlArrayMultiKeyLoader, Preparable {
+		extends AbstractEntityBatchLoader<T>
+		implements SqlArrayMultiKeyLoader, Preparable {
 	private final int domainBatchSize;
 
 	private BasicEntityIdentifierMapping identifierMapping;
@@ -94,27 +95,16 @@ public class EntityBatchLoaderArrayParam<T>
 			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), pkValue );
 		}
 
-		Object[] ids = resolveIdsToInitialize( pkValue, session );
+		final Object[] ids = resolveIdsToInitialize( pkValue, session );
+		if ( hasSingleId( ids ) || lockOptions.getLockMode() != LockMode.NONE ) {
+			return singleIdLoader.load( pkValue, entityInstance, lockOptions, readOnly, session );
+		}
+
 		initializeEntities( ids, pkValue, entityInstance, lockOptions, readOnly, session );
 
 		final EntityKey entityKey = session.generateEntityKey( pkValue, getLoadable().getEntityPersister() );
 		//noinspection unchecked
 		return (T) session.getPersistenceContext().getEntity( entityKey );
-	}
-
-	@Override
-	public T load(
-			Object pkValue,
-			Object entityInstance,
-			LockOptions lockOptions,
-			SharedSessionContractImplementor session) {
-		final T entity = load( pkValue, entityInstance, lockOptions, null, session );
-		if ( Hibernate.isInitialized( entity ) ) {
-			return entity;
-		}
-		else {
-			return null;
-		}
 	}
 
 	@SuppressWarnings( "unchecked" )
@@ -128,7 +118,7 @@ public class EntityBatchLoaderArrayParam<T>
 				pkValue,
 				getLoadable()
 		);
-		return idsToLoad;
+		return (X[]) trimIdBatch( domainBatchSize, idsToLoad );
 	}
 
 	private void initializeEntities(

@@ -10,7 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.BatchFetchQueue;
 import org.hibernate.engine.spi.EntityKey;
@@ -18,7 +18,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
-import org.hibernate.loader.ast.spi.EntityBatchLoader;
 import org.hibernate.loader.ast.spi.SqlInPredicateMultiKeyLoader;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -32,6 +31,7 @@ import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
@@ -46,8 +46,8 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
  * @author Steve Ebersole
  */
 public class EntityBatchLoaderInPredicate<T>
-		extends SingleIdEntityLoaderSupport<T>
-		implements EntityBatchLoader<T>, SqlInPredicateMultiKeyLoader, Preparable {
+		extends AbstractEntityBatchLoader<T>
+		implements SqlInPredicateMultiKeyLoader, Preparable {
 	private final int domainBatchSize;
 	private final int sqlBatchSize;
 
@@ -104,6 +104,9 @@ public class EntityBatchLoaderInPredicate<T>
 		}
 
 		final Object[] idsToInitialize = resolveIdsToLoad( pkValue, session );
+		if ( hasSingleId( idsToInitialize ) || lockOptions.getLockMode() != LockMode.NONE ) {
+			return singleIdLoader.load( pkValue, entityInstance, lockOptions, readOnly, session );
+		}
 		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
 			MULTI_KEY_LOAD_LOGGER.debugf( "Ids to batch-fetch initialize (`%s#%s`) %s", getLoadable().getEntityName(), pkValue, Arrays.toString(idsToInitialize) );
 		}
@@ -113,21 +116,6 @@ public class EntityBatchLoaderInPredicate<T>
 		final EntityKey entityKey = session.generateEntityKey( pkValue, getLoadable().getEntityPersister() );
 		//noinspection unchecked
 		return (T) session.getPersistenceContext().getEntity( entityKey );
-	}
-
-	@Override
-	public T load(
-			Object pkValue,
-			Object entityInstance,
-			LockOptions lockOptions,
-			SharedSessionContractImplementor session) {
-		final T entity = load( pkValue, entityInstance, lockOptions, null, session );
-		if ( Hibernate.isInitialized( entity ) ) {
-			return entity;
-		}
-		else {
-			return null;
-		}
 	}
 
 	protected Object[] resolveIdsToLoad(Object pkValue, SharedSessionContractImplementor session) {

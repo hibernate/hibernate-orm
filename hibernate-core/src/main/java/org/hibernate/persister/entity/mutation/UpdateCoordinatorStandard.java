@@ -1077,6 +1077,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 				if ( attributeAnalysis.includeInLocking() ) {
 					final boolean includeRestriction = includeInRestriction(
+							oldValues,
 							dirtinessChecker,
 							versionMapping,
 							versionability,
@@ -1156,6 +1157,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private static boolean includeInRestriction(
+			Object[] oldValues,
 			DirtinessChecker dirtinessChecker,
 			EntityVersionMapping versionMapping,
 			boolean[] versionability,
@@ -1163,10 +1165,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			int attributeIndex,
 			AttributeMapping attributeMapping,
 			AttributeAnalysis attributeAnalysis) {
+
 		if ( optimisticLockStyle == OptimisticLockStyle.VERSION
 				&& versionMapping != null
 				&& attributeMapping == versionMapping.getVersionAttribute() ) {
 			return true;
+		}
+		else if ( oldValues == null ) {
+			return false;
 		}
 		else if ( optimisticLockStyle == OptimisticLockStyle.ALL ) {
 			return versionability[attributeIndex];

@@ -9,25 +9,24 @@ package org.hibernate.orm.test.mapping;
 import java.sql.Statement;
 import java.sql.Types;
 
-import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
-import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.internal.BasicTypeImpl;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.type.internal.BasicTypeImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,10 +70,6 @@ public class SmokeTests {
 		final JdbcTypeRegistry jdbcTypeRegistry = entityDescriptor.getFactory()
 				.getTypeConfiguration()
 				.getJdbcTypeRegistry();
-		final NationalizationSupport nationalizationSupport = scope.getSessionFactory()
-				.getJdbcServices()
-				.getDialect()
-				.getNationalizationSupport();
 
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
 		assertThat(
@@ -127,7 +122,7 @@ public class SmokeTests {
 
 			assertThat(
 					jdbcMapping.getJdbcType().getJdbcTypeCode(),
-					isOneOf( SqlTypes.ENUM, nationalizationSupport.getVarcharVariantCode() )
+					isOneOf( SqlTypes.ENUM, jdbcTypeRegistry.getDescriptor( SqlTypes.VARCHAR ).getJdbcTypeCode() )
 			);
 		}
 

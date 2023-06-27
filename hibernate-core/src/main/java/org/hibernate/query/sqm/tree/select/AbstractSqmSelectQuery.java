@@ -211,6 +211,10 @@ public abstract class AbstractSqmSelectQuery<T>
 		return (Set) getQuerySpec().getRoots();
 	}
 
+	public List<Root<?>> getRootList() {
+		return (List) getQuerySpec().getRootList();
+	}
+
 	@Override
 	public <X> SqmRoot<X> from(Class<X> entityClass) {
 		return addRoot(

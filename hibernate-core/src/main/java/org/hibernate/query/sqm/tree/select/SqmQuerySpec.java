@@ -319,6 +319,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
+	public List<SqmRoot<?>> getRootList() {
+		assert getFromClause() != null;
+		return getFromClause().getRoots();
+	}
+
+	@Override
 	public SqmQuerySpec<T> addRoot(JpaRoot<?> root) {
 		if ( getFromClause() == null ) {
 			setFromClause( new SqmFromClause() );

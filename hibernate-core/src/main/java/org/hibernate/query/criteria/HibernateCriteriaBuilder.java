@@ -44,7 +44,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
  *
  * @author Steve Ebersole
  */
-
+@Incubating
 public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<X, T> JpaExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType);
@@ -75,7 +75,21 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	<T> JpaCriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity);
 
+	<T> JpaCriteriaInsertValues<T> createCriteriaInsertValues(Class<T> targetEntity);
+
 	<T> JpaCriteriaInsertSelect<T> createCriteriaInsertSelect(Class<T> targetEntity);
+
+	/**
+	 * Transform the given HQL {@code select} query to an equivalent criteria query.
+	 *
+	 * @param hql The HQL {@code select} query
+	 * @param resultClass The result type of the query
+	 *
+	 * @return The equivalent criteria query
+	 *
+	 * @since 6.3
+	 */
+	<T> JpaCriteriaQuery<T> createQuery(String hql, Class<T> resultClass);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Set operation

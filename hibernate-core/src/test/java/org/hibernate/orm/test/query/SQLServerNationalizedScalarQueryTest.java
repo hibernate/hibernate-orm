@@ -8,6 +8,8 @@ package org.hibernate.orm.test.query;
 
 import java.util.List;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Convert;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.dialect.SQLServerDialect;
 
@@ -28,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Vlad Mihalcea
  */
-@TestForIssue(jiraKey = "HHH-10183")
 @RequiresDialect(value = SQLServerDialect.class)
 @DomainModel(
 		annotatedClasses = SQLServerNationalizedScalarQueryTest.User.class
@@ -36,7 +37,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @SessionFactory
 public class SQLServerNationalizedScalarQueryTest {
 
+	@TestForIssue(jiraKey = "HHH-16857")
+	@Test
+	public void testLiteral(SessionFactoryScope scope) {
+		scope.inTransaction(session -> session.createSelectionQuery("from User where name = 'Gavin'").getResultList());
+		scope.inTransaction(session -> session.createSelectionQuery("from User where role = 'ADMIN'").getResultList());
+	}
 
+	@TestForIssue(jiraKey = "HHH-10183")
 	@Test
 	public void testScalarResult(SessionFactoryScope scope) {
 
@@ -49,10 +57,23 @@ public class SQLServerNationalizedScalarQueryTest {
 		} );
 
 		scope.inTransaction( session -> {
-			List<Object[]> users = session.createNativeQuery(
-					"select * from users" ).getResultList();
+			List<Object[]> users = session.createNativeQuery("select * from users" ).getResultList();
 			assertEquals( 2, users.size() );
 		} );
+	}
+
+	enum Role { ADMIN, USER, GUEST }
+
+	static class Converter implements AttributeConverter<Role,String> {
+		@Override
+		public String convertToDatabaseColumn(Role attribute) {
+			return attribute==null ? null : attribute.name();
+		}
+
+		@Override
+		public Role convertToEntityAttribute(String name) {
+			return name==null ? null : Role.valueOf(name);
+		}
 	}
 
 	@Entity(name = "User")
@@ -61,6 +82,7 @@ public class SQLServerNationalizedScalarQueryTest {
 
 		private Integer id;
 		private String name;
+		private Role role = Role.USER;
 
 		public User() {
 
@@ -90,5 +112,14 @@ public class SQLServerNationalizedScalarQueryTest {
 			this.name = name;
 		}
 
+		@Nationalized
+		@Convert(converter = Converter.class)
+		public Role getRole() {
+			return role;
+		}
+
+		public void setRole(Role role) {
+			this.role = role;
+		}
 	}
 }

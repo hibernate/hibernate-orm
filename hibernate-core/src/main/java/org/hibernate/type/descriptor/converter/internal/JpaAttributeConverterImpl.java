@@ -10,15 +10,12 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.PersistenceException;
 
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.RegistryHelper;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * Standard implementation of {@link JpaAttributeConverter}.
@@ -106,7 +103,7 @@ public class JpaAttributeConverterImpl<O,R> implements JpaAttributeConverter<O,R
 			throw pe;
 		}
 		catch (RuntimeException re) {
-			throw new PersistenceException( "Error attempting to apply AttributeConverter", re );
+			throw new PersistenceException( "Error attempting to apply AttributeConverter: " + re.getMessage(), re );
 		}
 	}
 

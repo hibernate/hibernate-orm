@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -40,7 +41,48 @@ import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
- * Hibernate extensions to the JPA {@link CriteriaBuilder}.
+ * A JPA {@link CriteriaBuilder} is a source of objects which may be composed
+ * to express a criteria query. The JPA-standard API defines all the operations
+ * needed express any query written in standard JPQL. This interface extends
+ * {@code CriteriaBuilder}, adding operations needed to express features of
+ * HQL which are not available in standard JPQL. For example:
+ * <ul>
+ * <li>JPQL does not have a {@code format()} function, so
+ *     {@link #format(Expression, String)} is declared here, and
+ * <li>since JPQL does not have {@code insert} statements, this interface
+ *     defines the operations {@link #createCriteriaInsertSelect(Class)} and
+ *     {@link #createCriteriaInsertValues(Class)}.
+ * </ul>
+ * <p>
+ * Furthermore, the operations of this interface return types defined in the
+ * package {@link org.hibernate.query.criteria}, which extend the equivalent
+ * types in {@link jakarta.persistence.criteria} with additional operations.
+ * For example {@link JpaCriteriaQuery} adds the methods:
+ * <ul>
+ * <li>{@link JpaCriteriaQuery#from(Subquery)}, which allows the use of a
+ *     subquery in the {@code from} clause of the query, and
+ * <li>{@link JpaCriteriaQuery#with(AbstractQuery)}, which allows the creation
+ *     of {@link JpaCteCriteria common table expressions}.
+ * </ul>
+ * <p>
+ * Finally, the method {@link #createQuery(String, Class)} allows a query
+ * written in HQL to be translated to a tree of criteria objects for further
+ * manipulation and execution.
+ * <p>
+ * An instance of this interface may be obtained by calling
+ * {@link org.hibernate.SessionFactory#getCriteriaBuilder()}.
+ *
+ * @see org.hibernate.SessionFactory#getCriteriaBuilder()
+ * @see JpaCriteriaQuery
+ * @see JpaCriteriaUpdate
+ * @see JpaCriteriaDelete
+ * @see JpaCriteriaInsertValues
+ * @see JpaCriteriaInsertSelect
+ * @see JpaCteCriteria
+ * @see JpaSubQuery
+ * @see JpaExpression
+ *
+ * @since 6.0
  *
  * @author Steve Ebersole
  */

@@ -75,6 +75,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 			RowProcessingState rowProcessingState,
 			ToOneAttributeMapping referencedModelPart,
 			FetchParentAccess parentAccess) {
+
 		if ( state != State.UNINITIALIZED ) {
 			return;
 		}

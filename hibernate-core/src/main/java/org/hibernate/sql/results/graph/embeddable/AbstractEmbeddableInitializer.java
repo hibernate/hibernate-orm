@@ -186,8 +186,8 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 			case NULL:
 				return;
 			case INITIAL:
-				if ( isParentInstanceNull() ) {
-					state = State.NULL;
+				state = determinInitialState();
+				if ( state != State.INITIAL ) {
 					return;
 				}
 
@@ -269,9 +269,24 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		);
 	}
 
-	private boolean isParentInstanceNull() {
+	private State determinInitialState(){
+		final EntityInitializer entityInitializer = getOwningEntityInitializer();
+		if ( entityInitializer != null ) {
+			if ( entityInitializer.getParentKey() == null ) {
+				// parent instance is null;
+				return State.NULL;
+			}
+			else if ( entityInitializer.isEntityInitialized() ) {
+				// parent instance has been initialized, we do not need to inject the state
+				return State.INJECTED;
+			}
+		}
+		return State.INITIAL;
+	}
+
+	private EntityInitializer getOwningEntityInitializer() {
 		if ( isPartOfKey ) {
-			return false;
+			return null;
 		}
 		FetchParentAccess parentAccess = fetchParentAccess;
 
@@ -280,16 +295,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 					: "isPartOfKey should have been true in this case";
 			parentAccess = parentAccess.getFetchParentAccess();
 		}
-
 		if ( parentAccess == null ) {
-			return false;
+			return null;
 		}
-
 		final EntityInitializer entityInitializer = parentAccess.asEntityInitializer();
-		if ( entityInitializer != null && entityInitializer.getParentKey() == null ) {
-			return true;
-		}
-		return false;
+		return entityInitializer;
 	}
 
 	private void extractRowState(RowProcessingState processingState) {

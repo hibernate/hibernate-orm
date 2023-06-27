@@ -46,6 +46,8 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 
 	Set<? extends JpaRoot<?>> getRoots();
 
+	List<? extends JpaRoot<?>> getRootList();
+
 	JpaQueryStructure addRoot(JpaRoot<?> root);
 
 

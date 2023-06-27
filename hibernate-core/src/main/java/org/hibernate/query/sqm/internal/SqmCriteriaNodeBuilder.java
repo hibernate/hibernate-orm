@@ -86,6 +86,7 @@ import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmQuery;
+import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteTableColumn;
@@ -125,6 +126,7 @@ import org.hibernate.query.sqm.tree.expression.SqmWindowFrame;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
@@ -350,6 +352,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public <T> SqmSelectStatement<T> createQuery(String hql, Class<T> resultClass) {
+		final SqmStatement<T> statement =
+				sessionFactory.get().getQueryEngine().getHqlTranslator()
+						.translate( hql, resultClass );
+		if ( statement instanceof SqmSelectStatement ) {
+			return (SqmSelectStatement<T>) statement;
+		}
+		else {
+			throw new IllegalArgumentException("Not a 'select' statement");
+		}
+	}
+
+	@Override
 	public SqmSelectStatement<Tuple> createTupleQuery() {
 		return new SqmSelectStatement<>( Tuple.class, this );
 	}
@@ -362,6 +377,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <T> SqmDeleteStatement<T> createCriteriaDelete(Class<T> targetEntity) {
 		return new SqmDeleteStatement<>( targetEntity, SqmQuerySource.CRITERIA, this );
+	}
+
+	@Override
+	public <T> SqmInsertValuesStatement<T> createCriteriaInsertValues(Class<T> targetEntity) {
+		return new SqmInsertValuesStatement<>( targetEntity, this );
 	}
 
 	@Override

@@ -10,4 +10,7 @@
  *
  * @see org.hibernate.query.criteria.HibernateCriteriaBuilder
  */
+@Incubating
 package org.hibernate.query.criteria;
+
+import org.hibernate.Incubating;

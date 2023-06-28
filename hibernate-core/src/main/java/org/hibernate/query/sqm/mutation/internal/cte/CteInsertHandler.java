@@ -34,11 +34,11 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.query.SortOrder;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
@@ -811,7 +811,7 @@ public class CteInsertHandler implements InsertHandler {
 				insertSelectSpec.addSortSpecification(
 						new SortSpecification(
 								rowNumberColumnReference,
-								SortOrder.ASCENDING
+								SortDirection.ASCENDING
 						)
 				);
 				dmlResultCte = new CteTable(
@@ -940,7 +940,7 @@ public class CteInsertHandler implements InsertHandler {
 				finalResultQuery.addSortSpecification(
 						new SortSpecification(
 								idColumnReference,
-								SortOrder.ASCENDING
+								SortDirection.ASCENDING
 						)
 				);
 				final SelectStatement finalResultStatement = new SelectStatement( finalResultQuery );

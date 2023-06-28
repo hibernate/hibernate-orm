@@ -14,8 +14,8 @@ import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
 import static org.hibernate.query.NullPrecedence.FIRST;
-import static org.hibernate.query.SortOrder.ASCENDING;
-import static org.hibernate.query.SortOrder.DESCENDING;
+import static org.hibernate.query.SortDirection.ASCENDING;
+import static org.hibernate.query.SortDirection.DESCENDING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.mockito.Mockito.mock;

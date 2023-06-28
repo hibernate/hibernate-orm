@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -889,14 +888,14 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	@Override
 	Query<R> setFirstResult(int startPosition);
 
-	@Override
+	@Override @Incubating
 	default Query<R> paginate(int pageSize, int pageNumber) {
 		setFirstResult( pageNumber * pageSize );
 		setMaxResults( pageSize );
 		return this;
 	}
 
-	@Override
+	@Override @Incubating
 	default Query<R> paginate(Page page) {
 		setMaxResults( page.getMaxResults() );
 		setFirstResult( page.getFirstResult() );
@@ -912,38 +911,11 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	@Override
 	Query<R> setLockMode(LockModeType lockMode);
 
-	@Override
-	Query<R> ascending(SingularAttribute<? super R, ?> attribute);
+	@Override @Incubating
+	Query<R> setOrder(List<Order<? super R>> orderList);
 
-	@Override
-	Query<R> descending(SingularAttribute<? super R, ?> attribute);
-
-	@Override
-	Query<R> sort(SortOrder sortOrder, SingularAttribute<? super R, ?> attribute);
-
-	@Override
-	default Query<R> sort(Sort<? super R>... sorts) {
-		for (Sort<? super R> sort: sorts) {
-			SingularAttribute<? super R,?> attribute = sort.getAttribute();
-			if ( attribute == null ) {
-				attribute =
-						getSession().getFactory().getMetamodel()
-								.entity( sort.getEntityClass() )
-								.getSingularAttribute( sort.getAttributeName() );
-			}
-			sort( sort.getOrder(), attribute );
-		}
-		return this;
-	}
-
-	@Override
-	Query<R> ascending(int element);
-
-	@Override
-	Query<R> descending(int element);
-
-	@Override
-	Query<R> clearOrder();
+	@Override @Incubating
+	Query<R> setOrder(Order<? super R> order);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// deprecated methods

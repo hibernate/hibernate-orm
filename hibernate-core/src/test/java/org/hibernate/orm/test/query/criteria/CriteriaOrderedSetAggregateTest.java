@@ -20,7 +20,7 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.SortDirection;
 
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -231,7 +231,7 @@ public class CriteriaOrderedSetAggregateTest {
 			JpaExpression<Integer> function = cb.percentileDisc(
 					cb.literal( 0.5 ),
 					root.get( "theInt" ),
-					SortOrder.ASCENDING,
+					SortDirection.ASCENDING,
 					NullPrecedence.NONE
 			);
 
@@ -260,7 +260,7 @@ public class CriteriaOrderedSetAggregateTest {
 					cb.literal( 0.5 ),
 					window,
 					root.get( "theInt" ),
-					SortOrder.ASCENDING,
+					SortDirection.ASCENDING,
 					NullPrecedence.NONE
 			);
 

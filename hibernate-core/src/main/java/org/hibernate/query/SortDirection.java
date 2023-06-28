@@ -13,13 +13,13 @@ import java.util.Locale;
  *
  * @author Steve Ebersole
  *
- * @see Sort
+ * @see Order
  */
-public enum SortOrder {
+public enum SortDirection {
 	ASCENDING,
 	DESCENDING;
 
-	public SortOrder reverse() {
+	public SortDirection reverse() {
 		switch (this) {
 			case ASCENDING:
 				return DESCENDING;
@@ -30,7 +30,7 @@ public enum SortOrder {
 		}
 	}
 
-	public static SortOrder interpret(String value) {
+	public static SortDirection interpret(String value) {
 		if ( value == null ) {
 			return null;
 		}

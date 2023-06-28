@@ -20,7 +20,7 @@ import java.util.Set;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
@@ -630,11 +630,11 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	@Override
 	SqmSortSpecification sort(
 			JpaExpression<?> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence);
 
 	@Override
-	SqmSortSpecification sort(JpaExpression<?> sortExpression, SortOrder sortOrder);
+	SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder);
 
 	@Override
 	SqmSortSpecification sort(JpaExpression<?> sortExpression);

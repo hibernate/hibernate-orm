@@ -18,7 +18,6 @@ import java.util.stream.Stream;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -493,85 +492,30 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setLockMode(String alias, LockMode lockMode);
 
 	/**
-	 * If the result type of this query is an entity class, add an attribute
-	 * of the entity to be used to order the query results in ascending order.
-	 *
-	 * @param attribute an attribute of the entity class returned by this query
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> ascending(SingularAttribute<? super R, ?> attribute);
-
-	/**
-	 * If the result type of this query is an entity class, add an attribute
-	 * of the entity to be used to order the query results in descending order.
-	 *
-	 * @param attribute an attribute of the entity class returned by this query
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> descending(SingularAttribute<? super R, ?> attribute);
-
-	/**
-	 * If the result type of this query is an entity class, add an attribute
-	 * of the entity to be used to order the query results in the given order.
-	 *
-	 * @param attribute an attribute of the entity class returned by this query
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> sort(SortOrder sortOrder, SingularAttribute<? super R, ?> attribute);
-
-	/**
 	 * If the result type of this query is an entity class, add one or more
-	 * {@linkplain Sort rules} for ordering the query results.
+	 * {@linkplain Order rules} for ordering the query results.
 	 *
-	 * @param sorts one or more instances of {@link Sort}
+	 * @param orderList one or more instances of {@link Order}
 	 *
-	 * @see Sort
+	 * @see Order
 	 *
 	 * @since 6.3
 	 */
 	@Incubating
-	SelectionQuery<R> sort(Sort<? super R>... sorts);
+	SelectionQuery<R> setOrder(List<Order<? super R>> orderList);
 
 	/**
-	 * Add an element of the select list to be used to order the query results
-	 * in ascending order.
+	 * If the result type of this query is an entity class, add a
+	 * {@linkplain Order rule} for ordering the query results.
 	 *
-	 * @param element an integer identifying an element of the select list
+	 * @param order an instance of {@link Order}
 	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> ascending(int element);
-
-	/**
-	 * Add an element of the select list to be used to order the query results
-	 * in descending order.
-	 *
-	 * @param element an integer identifying an element of the select list
+	 * @see Order
 	 *
 	 * @since 6.3
 	 */
 	@Incubating
-	SelectionQuery<R> descending(int element);
-
-	/**
-	 * Clear the ordering conditions for this query. Discards any ordering
-	 * conditions added via {@link #ascending}, {@link #descending}, or
-	 * {@link #sort}.
-	 *
-	 * @see #ascending(SingularAttribute)
-	 * @see #descending(SingularAttribute)
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> clearOrder();
+	SelectionQuery<R> setOrder(Order<? super R> order);
 
 	/**
 	 * Specify a {@link LockMode} to apply to a specific alias defined in the query

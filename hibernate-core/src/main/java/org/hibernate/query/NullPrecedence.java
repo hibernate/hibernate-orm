@@ -32,7 +32,7 @@ public enum NullPrecedence {
 	/**
 	 * Is this null precedence the default for the given sort order and null ordering.
 	 */
-	public boolean isDefaultOrdering(SortOrder sortOrder, NullOrdering nullOrdering) {
+	public boolean isDefaultOrdering(SortDirection sortOrder, NullOrdering nullOrdering) {
 		switch (this) {
 			case NONE:
 				return true;
@@ -43,9 +43,9 @@ public enum NullPrecedence {
 					case LAST:
 						return false;
 					case SMALLEST:
-						return sortOrder == SortOrder.ASCENDING;
+						return sortOrder == SortDirection.ASCENDING;
 					case GREATEST:
-						return sortOrder == SortOrder.DESCENDING;
+						return sortOrder == SortDirection.DESCENDING;
 					default:
 						throw new AssertionFailure("Unrecognized NullOrdering");
 				}
@@ -56,9 +56,9 @@ public enum NullPrecedence {
 					case FIRST:
 						return false;
 					case SMALLEST:
-						return sortOrder == SortOrder.DESCENDING;
+						return sortOrder == SortDirection.DESCENDING;
 					case GREATEST:
-						return sortOrder == SortOrder.ASCENDING;
+						return sortOrder == SortDirection.ASCENDING;
 					default:
 						throw new AssertionFailure("Unrecognized NullOrdering");
 				}

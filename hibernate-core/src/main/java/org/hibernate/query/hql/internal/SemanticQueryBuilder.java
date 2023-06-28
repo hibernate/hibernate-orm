@@ -54,10 +54,12 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.PathException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.SyntaxException;
 import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.criteria.JpaCteCriteria;
@@ -79,10 +81,9 @@ import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.FrameMode;
 import org.hibernate.query.sqm.LiteralNumberFormatException;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.ParsingException;
 import org.hibernate.query.sqm.SetOperator;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -864,7 +865,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 						)
 				);
 			}
-			SortOrder sortOrder = SortOrder.ASCENDING;
+			SortDirection sortOrder = SortDirection.ASCENDING;
 			NullPrecedence nullPrecedence = NullPrecedence.NONE;
 			int index = 1;
 			if ( index < specCtx.getChildCount() ) {
@@ -872,10 +873,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					final HqlParser.SortDirectionContext sortCtx = (HqlParser.SortDirectionContext) specCtx.getChild( index );
 					switch ( ( (TerminalNode) sortCtx.getChild( 0 ) ).getSymbol().getType() ) {
 						case HqlParser.ASC:
-							sortOrder = SortOrder.ASCENDING;
+							sortOrder = SortDirection.ASCENDING;
 							break;
 						case HqlParser.DESC:
-							sortOrder = SortOrder.DESCENDING;
+							sortOrder = SortDirection.DESCENDING;
 							break;
 						default:
 							throw new SemanticException( "Unrecognized sort ordering: " + sortCtx.getText() );
@@ -1593,7 +1594,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			HqlLogging.QUERY_LOGGER.debugf( "Questionable sorting by constant value : %s", sortExpression );
 		}
 
-		final SortOrder sortOrder;
+		final SortDirection sortOrder;
 		final NullPrecedence nullPrecedence;
 		int nextIndex = 1;
 		if ( nextIndex < ctx.getChildCount() ) {
@@ -1601,10 +1602,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			if ( parseTree instanceof HqlParser.SortDirectionContext ) {
 				switch ( ( (TerminalNode) parseTree.getChild( 0 ) ).getSymbol().getType() ) {
 					case HqlParser.ASC:
-						sortOrder = SortOrder.ASCENDING;
+						sortOrder = SortDirection.ASCENDING;
 						break;
 					case HqlParser.DESC:
-						sortOrder = SortOrder.DESCENDING;
+						sortOrder = SortDirection.DESCENDING;
 						break;
 					default:
 						throw new ParsingException( "Unrecognized sort ordering: " + parseTree.getText() );
@@ -1612,7 +1613,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				nextIndex++;
 			}
 			else {
-				sortOrder = SortOrder.ASCENDING;
+				sortOrder = SortDirection.ASCENDING;
 			}
 			parseTree = ctx.getChild( nextIndex );
 			if ( parseTree instanceof HqlParser.NullsPrecedenceContext ) {
@@ -1632,7 +1633,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 		}
 		else {
-			sortOrder = SortOrder.ASCENDING;
+			sortOrder = SortDirection.ASCENDING;
 			nullPrecedence = NullPrecedence.NONE;
 		}
 

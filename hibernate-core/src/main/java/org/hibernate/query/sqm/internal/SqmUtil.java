@@ -33,18 +33,27 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.IllegalSelectQueryException;
+import org.hibernate.query.Order;
+import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.spi.QueryParameterBinding;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.QueryParameterImplementor;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
@@ -474,6 +483,46 @@ public class SqmUtil {
 					return Collections.emptyMap();
 				}
 			};
+		}
+	}
+
+	static <T> JpaOrder sortSpecification(SqmSelectStatement<T> sqm, Order<? super T> order) {
+		final List<SqmSelectableNode<?>> items = sqm.getQuerySpec().getSelectClause().getSelectionItems();
+		int element = order.getElement();
+		if ( element < 1) {
+			throw new IllegalQueryOperationException("Cannot order by element " + element + " (the first select item is element 1)");
+		}
+		if ( element > items.size() ) {
+			throw new IllegalQueryOperationException("Cannot order by element " + element + " (there are only " + items.size() + " select items)");
+		}
+		final SqmSelectableNode<?> selected = items.get( element-1 );
+
+		final NodeBuilder builder = sqm.nodeBuilder();
+		if ( order.getEntityClass() == null ) {
+			// ordering by an element of the select list
+			return new SqmSortSpecification(
+					new SqmAliasedNodeRef( element, builder.getIntegerType(), builder ),
+					order.getDirection()
+			);
+		}
+		else {
+			// ordering by an attribute of the returned entity
+			if ( items.size() == 1) {
+				if ( selected instanceof SqmRoot) {
+					final SqmFrom<?,?> root = (SqmFrom<?,?>) selected;
+					if ( !order.getEntityClass().isAssignableFrom( root.getJavaType() ) ) {
+						throw new IllegalQueryOperationException("Select item was of wrong entity type");
+					}
+					final SqmPath<Object> path = root.get( order.getAttributeName() );
+					return builder.sort( path, order.getDirection(), order.getNullPrecedence() );
+				}
+				else {
+					throw new IllegalQueryOperationException("Select item was not an entity type");
+				}
+			}
+			else {
+				throw new IllegalQueryOperationException("Query has multiple items in the select list");
+			}
 		}
 	}
 

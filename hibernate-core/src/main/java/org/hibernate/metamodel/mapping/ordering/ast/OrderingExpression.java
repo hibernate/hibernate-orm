@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.mapping.ordering.ast;
 
 import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.sql.FakeSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -37,7 +37,7 @@ public interface OrderingExpression extends Node {
 			TableGroup tableGroup,
 			String collation,
 			String modelPartName,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState);
 

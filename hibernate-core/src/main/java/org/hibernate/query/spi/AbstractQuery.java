@@ -20,7 +20,6 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -36,10 +35,8 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.SortOrder;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NamedQueryMemento;
 
@@ -275,36 +272,6 @@ public abstract class AbstractQuery<R>
 		getSession().checkOpen();
 		super.setHibernateLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		return this;
-	}
-
-	@Override
-	public Query<R> ascending(SingularAttribute<? super R, ?> attribute) {
-		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
-	}
-
-	@Override
-	public Query<R> descending(SingularAttribute<? super R, ?> attribute) {
-		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
-	}
-
-	@Override
-	public Query<R> sort(SortOrder sortOrder, SingularAttribute<? super R, ?> attribute) {
-		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
-	}
-
-	@Override
-	public Query<R> ascending(int element) {
-		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
-	}
-
-	@Override
-	public Query<R> descending(int element) {
-		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
-	}
-
-	@Override
-	public Query<R> clearOrder() {
-		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
 	}
 
 	@Override

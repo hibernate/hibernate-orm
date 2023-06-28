@@ -17,7 +17,7 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ordering.ast.DomainPath;
 import org.hibernate.metamodel.mapping.ordering.ast.OrderingExpression;
 import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -120,7 +120,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			TableGroup tableGroup,
 			String collation,
 			String modelPartName,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		apply(
@@ -141,7 +141,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			TableGroup tableGroup,
 			String collation,
 			String modelPartName,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		if ( referenceModelPart instanceof BasicValuedModelPart ) {
@@ -210,7 +210,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			TableGroup tableGroup,
 			String collation,
 			String modelPartName,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		if ( embeddableValuedModelPart.getFetchableName()
@@ -249,7 +249,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			QuerySpec ast,
 			TableGroup tableGroup,
 			String collation,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		final TableReference tableReference = tableGroup.resolveTableReference( getNavigablePath(), selection.getContainingTableExpression() );

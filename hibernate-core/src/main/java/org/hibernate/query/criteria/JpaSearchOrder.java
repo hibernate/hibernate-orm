@@ -8,7 +8,7 @@ package org.hibernate.query.criteria;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.SortDirection;
 
 /**
  * Represents the search order for a recursive CTE (common table expression).
@@ -17,10 +17,10 @@ import org.hibernate.query.SortOrder;
  */
 @Incubating
 public interface JpaSearchOrder extends JpaCriteriaNode {
-	SortOrder getSortOrder();
+	SortDirection getSortOrder();
 
 	/**
-	 * Set the precedence for nulls for this search order element
+	 * Set the precedence of nulls for this search order element
 	 */
 	JpaSearchOrder nullPrecedence(NullPrecedence precedence);
 

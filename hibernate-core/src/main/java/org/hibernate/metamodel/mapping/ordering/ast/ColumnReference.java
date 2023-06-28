@@ -13,7 +13,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -87,7 +87,7 @@ public class ColumnReference implements OrderingExpression, SequencePart {
 			TableGroup tableGroup,
 			String collation,
 			String modelPartName,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		final Expression expression = resolve( ast, tableGroup, modelPartName, creationState );

@@ -11,7 +11,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.function.SelfRenderingWindowFunctionSqlAstExpression;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -65,7 +65,7 @@ public final class SqmInsertStrategyHelper {
 				if ( containsSelectionExpression( orderList, sqlSelection ) ) {
 					continue;
 				}
-				orderList.add( new SortSpecification( sqlSelection.getExpression(), SortOrder.ASCENDING ) );
+				orderList.add( new SortSpecification( sqlSelection.getExpression(), SortDirection.ASCENDING ) );
 			}
 		}
 		else {

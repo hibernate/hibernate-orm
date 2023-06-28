@@ -7,7 +7,7 @@
 package org.hibernate.metamodel.mapping.ordering.ast;
 
 import org.hibernate.query.NullPrecedence;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
@@ -44,7 +44,7 @@ public class SelfRenderingOrderingExpression extends SelfRenderingSqlFragmentExp
 			TableGroup tableGroup,
 			String collation,
 			String modelPartName,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		final Expression expression = resolve( ast, tableGroup, modelPartName, creationState );

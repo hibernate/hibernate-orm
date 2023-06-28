@@ -43,12 +43,12 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.NativeQuery;
+import org.hibernate.query.Order;
 import org.hibernate.query.ParameterMetadata;
 import org.hibernate.query.PathException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.SortOrder;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
@@ -1502,33 +1502,13 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public Query<R> ascending(SingularAttribute<? super R, ?> attribute) {
-		throw new UnsupportedOperationException("Not yet supported for native queries");
+	public Query<R> setOrder(List<Order<? super R>> orderList) {
+		throw new UnsupportedOperationException("Ordering not currently supported for native queries");
 	}
 
 	@Override
-	public Query<R> descending(SingularAttribute<? super R, ?> attribute) {
-		throw new UnsupportedOperationException("Not yet supported for native queries");
-	}
-
-	@Override
-	public Query<R> sort(SortOrder sortOrder, SingularAttribute<? super R, ?> attribute) {
-		throw new UnsupportedOperationException("Not yet supported for native queries");
-	}
-
-	@Override
-	public Query<R> ascending(int element) {
-		throw new UnsupportedOperationException("Not yet supported for native queries");
-	}
-
-	@Override
-	public Query<R> descending(int element) {
-		throw new UnsupportedOperationException("Not yet supported for native queries");
-	}
-
-	@Override
-	public Query<R> clearOrder() {
-		return this;
+	public Query<R> setOrder(Order<? super R> order) {
+		throw new UnsupportedOperationException("Ordering not currently supported for native queries");
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
@@ -22,14 +21,12 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.SqmQuery;
-import org.hibernate.query.SortOrder;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.transform.ResultTransformer;
 
@@ -124,43 +121,6 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 
 	@Override
 	SqmQueryImplementor<R> setLockMode(LockModeType lockMode);
-
-	@Override
-	default SqmQueryImplementor<R> ascending(SingularAttribute<? super R, ?> attribute) {
-		addOrdering( attribute, SortOrder.ASCENDING );
-		return this;
-	}
-
-	@Override
-	default SqmQueryImplementor<R> descending(SingularAttribute<? super R, ?> attribute) {
-		addOrdering( attribute, SortOrder.DESCENDING );
-		return this;
-	}
-
-	@Override
-	default SqmQueryImplementor<R> sort(SortOrder sortOrder, SingularAttribute<? super R, ?> attribute) {
-		addOrdering( attribute, sortOrder );
-		return this;
-	}
-
-	@Override
-	default SqmQueryImplementor<R> ascending(int element) {
-		addOrdering( element, SortOrder.ASCENDING );
-		return this;
-	}
-
-	@Override
-	default SqmQueryImplementor<R> descending(int element) {
-		addOrdering( element, SortOrder.DESCENDING );
-		return this;
-	}
-
-	SqmQueryImplementor<R> addOrdering(SingularAttribute<? super R, ?> attribute, SortOrder order);
-
-	SqmQueryImplementor<R> addOrdering(int element, SortOrder order);
-
-	@Override
-	SqmQueryImplementor<R> clearOrder();
 
 	@Override
 	SqmQueryImplementor<R> setParameter(String name, Object value);

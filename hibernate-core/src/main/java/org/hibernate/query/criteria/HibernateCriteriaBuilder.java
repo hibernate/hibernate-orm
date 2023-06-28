@@ -35,8 +35,8 @@ import jakarta.persistence.criteria.Subquery;
 
 import org.hibernate.Incubating;
 import org.hibernate.query.sqm.FrameKind;
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortOrder;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 

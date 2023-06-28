@@ -4,12 +4,16 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.query.sqm;
+package org.hibernate.query;
 
 import java.util.Locale;
 
 /**
+ * Enumerates the directions in which query results may be sorted.
+ *
  * @author Steve Ebersole
+ *
+ * @see Sort
  */
 public enum SortOrder {
 	ASCENDING,

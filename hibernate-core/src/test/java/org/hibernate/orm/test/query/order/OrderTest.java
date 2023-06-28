@@ -68,7 +68,7 @@ public class OrderTest {
             assertEquals("Hibernate in Action", titlesAsc.get(1));
             assertEquals("Java Persistence with Hibernate", titlesAsc.get(0));
             titlesAsc = session.createSelectionQuery("from Book order by isbn asc", Book.class)
-                    .unordered()
+                    .clearOrder()
                     .ascending(title)
                     .getResultList()
                     .stream().map(book -> book.title)
@@ -134,7 +134,7 @@ public class OrderTest {
             assertEquals("Java Persistence with Hibernate", titlesAsc.get(0));
             titlesAsc = session.createSelectionQuery("from Book where title like ?1 order by isbn asc", Book.class)
                     .setParameter(1, "%Hibernate%")
-                    .unordered()
+                    .clearOrder()
                     .ascending(title)
                     .getResultList()
                     .stream().map(book -> book.title)
@@ -200,7 +200,7 @@ public class OrderTest {
             assertEquals("Java Persistence with Hibernate", titlesAsc.get(0));
             titlesAsc = session.createSelectionQuery("from Book where title like :title order by isbn asc", Book.class)
                     .setParameter("title", "%Hibernate%")
-                    .unordered()
+                    .clearOrder()
                     .ascending(title)
                     .getResultList()
                     .stream().map(book -> book.title)

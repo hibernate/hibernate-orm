@@ -57,7 +57,7 @@ import jakarta.persistence.metamodel.Metamodel;
  * instance itself is lazily provided via a {@code Supplier}.
  * When the decorated instance is readily available, one
  * should prefer using {@code SessionDelegatorBaseImpl}.
- *
+ * <p>
  * Another difference with SessionDelegatorBaseImpl is that
  * this type only implements Session.
  *
@@ -66,6 +66,11 @@ import jakarta.persistence.metamodel.Metamodel;
 public class SessionLazyDelegator implements Session {
 
 	private final Supplier<Session> lazySession;
+
+	@Override
+	public SessionFactory getFactory() {
+		return lazySession.get().getFactory();
+	}
 
 	public SessionLazyDelegator(Supplier<Session> lazySessionLookup){
 		this.lazySession = lazySessionLookup;
@@ -505,7 +510,6 @@ public class SessionLazyDelegator implements Session {
 		return this.lazySession.get().getLobHelper();
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
 	public SharedSessionBuilder sessionWithOptions() {
 		return this.lazySession.get().sessionWithOptions();

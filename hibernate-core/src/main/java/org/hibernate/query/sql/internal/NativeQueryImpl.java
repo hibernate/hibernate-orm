@@ -48,6 +48,7 @@ import org.hibernate.query.PathException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.SortOrder;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.internal.ParameterMetadataImpl;
 import org.hibernate.query.internal.QueryOptionsImpl;
@@ -1511,6 +1512,11 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	public Query<R> sort(SortOrder sortOrder, SingularAttribute<? super R, ?> attribute) {
+		throw new UnsupportedOperationException("Not yet supported for native queries");
+	}
+
+	@Override
 	public Query<R> ascending(int element) {
 		throw new UnsupportedOperationException("Not yet supported for native queries");
 	}
@@ -1521,7 +1527,7 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
-	public Query<R> unordered() {
+	public Query<R> clearOrder() {
 		return this;
 	}
 

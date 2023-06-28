@@ -127,7 +127,6 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;

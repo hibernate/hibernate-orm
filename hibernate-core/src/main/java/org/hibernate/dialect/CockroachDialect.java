@@ -14,6 +14,7 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -1078,6 +1079,33 @@ public class CockroachDialect extends Dialect {
 			}
 		};
 	}
+
+	/**
+	 * Applies the hints to the query string.
+	 *
+	 * The hints can be <a href="https://www.cockroachlabs.com/docs/v23.1/table-expressions#force-index-selection">index selection hints</a>
+	 * or <a href="https://www.cockroachlabs.com/docs/stable/sql-grammar#opt_join_hint">join hints</a>.
+	 * <p>
+	 * For index selection hints, use the format {@code <tablename>@{FORCE_INDEX=<index>[,<DIRECTION>]}}
+	 * where the optional DIRECTION is either ASC (ascending) or DESC (descending). Multiple index hints can be provided.
+	 * The effect is that in the final SQL statement the hint is added to the table name mentioned in the hint.
+	 *<p>
+	 * For join hints, use the format {@code "<MERGE|HASH|LOOKUP|INVERTED> JOIN"}. Only one join hint will be added. It is
+	 * applied to all join statements in the SQL statement.
+	 * <p>
+	 * Hints are only added to select statements.
+	 *
+	 * @param query The query to which to apply the hint.
+	 * @param hintList The hints to apply
+	 *
+	 * @return the query with hints added
+	 */
+	@Override
+	public String getQueryHintString(String query, List<String> hintList) {
+		return new CockroachDialectQueryHints(query, hintList).getQueryHintString();
+	}
+
+
 
 // CockroachDB doesn't support this by default. See sql.multiple_modifications_of_table.enabled
 //

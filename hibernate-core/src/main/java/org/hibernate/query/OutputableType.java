@@ -14,8 +14,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
- * Specialization of DomainType for types that can be used as a
- * parameter output for a {@link org.hibernate.procedure.ProcedureCall}
+ * Specialization of {@link org.hibernate.metamodel.model.domain.DomainType} for types that
+ * can be used as a parameter output for a {@link org.hibernate.procedure.ProcedureCall}.
  *
  * @apiNote We assume a type that maps to exactly one SQL value, hence {@link #getJdbcType()}
  *

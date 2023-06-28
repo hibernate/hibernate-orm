@@ -434,22 +434,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmRoot<R> visitTargetEntity(HqlParser.TargetEntityContext dmlTargetContext) {
-		final HqlParser.EntityNameContext entityNameContext = (HqlParser.EntityNameContext) dmlTargetContext.getChild( 0 );
-		final String identificationVariable;
-		if ( dmlTargetContext.getChildCount() == 1 ) {
-			identificationVariable = null;
-		}
-		else {
-			identificationVariable = applyJpaCompliance(
-					visitVariable(
-							(HqlParser.VariableContext) dmlTargetContext.getChild( 1 )
-					)
-			);
-		}
+		final HqlParser.EntityNameContext entityNameContext = dmlTargetContext.entityName();
+		final HqlParser.VariableContext variable = dmlTargetContext.variable();
 		//noinspection unchecked
 		return new SqmRoot<>(
 				(EntityDomainType<R>) visitEntityName( entityNameContext ),
-				identificationVariable,
+				variable == null ? null : applyJpaCompliance( visitVariable( variable ) ),
 				false,
 				creationContext.getNodeBuilder()
 		);
@@ -457,17 +447,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmInsertStatement<R> visitInsertStatement(HqlParser.InsertStatementContext ctx) {
-		final int dmlTargetIndex;
-		if ( ctx.getChild( 1 ) instanceof HqlParser.TargetEntityContext ) {
-			dmlTargetIndex = 1;
-		}
-		else {
-			dmlTargetIndex = 2;
-		}
-		final HqlParser.TargetEntityContext dmlTargetContext = (HqlParser.TargetEntityContext) ctx.getChild( dmlTargetIndex );
-		final HqlParser.TargetFieldsContext targetFieldsSpecContext = (HqlParser.TargetFieldsContext) ctx.getChild(
-				dmlTargetIndex + 1
-		);
+		final HqlParser.TargetEntityContext dmlTargetContext = ctx.targetEntity();
+		final HqlParser.TargetFieldsContext targetFieldsSpecContext = ctx.targetFields();
 		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
 		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
 			throw new SemanticException(
@@ -480,7 +461,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final HqlParser.QueryExpressionContext queryExpressionContext = ctx.queryExpression();
 		if ( queryExpressionContext != null ) {
-			final SqmInsertSelectStatement<R> insertStatement = new SqmInsertSelectStatement<>( root, creationContext.getNodeBuilder() );
+			final SqmInsertSelectStatement<R> insertStatement =
+					new SqmInsertSelectStatement<>( root, creationContext.getNodeBuilder() );
 			parameterCollector = insertStatement;
 			final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
 					insertStatement,
@@ -517,7 +499,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		}
 		else {
-			final SqmInsertValuesStatement<R> insertStatement = new SqmInsertValuesStatement<>( root, creationContext.getNodeBuilder() );
+			final SqmInsertValuesStatement<R> insertStatement =
+					new SqmInsertValuesStatement<>( root, creationContext.getNodeBuilder() );
 			parameterCollector = insertStatement;
 			final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
 					insertStatement,
@@ -553,9 +536,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmUpdateStatement<R> visitUpdateStatement(HqlParser.UpdateStatementContext ctx) {
-		final boolean versioned = !( ctx.getChild( 1 ) instanceof HqlParser.TargetEntityContext );
-		final int dmlTargetIndex = versioned ? 2 : 1;
-		final HqlParser.TargetEntityContext dmlTargetContext = (HqlParser.TargetEntityContext) ctx.getChild( dmlTargetIndex );
+		final boolean versioned = ctx.VERSIONED() != null;
+		final HqlParser.TargetEntityContext dmlTargetContext = ctx.targetEntity();
 		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
 		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
 			throw new SemanticException(
@@ -577,12 +559,12 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		try {
 			updateStatement.versioned( versioned );
-			final HqlParser.SetClauseContext setClauseCtx = (HqlParser.SetClauseContext) ctx.getChild( dmlTargetIndex + 1 );
+			final HqlParser.SetClauseContext setClauseCtx = ctx.setClause();
 			for ( ParseTree subCtx : setClauseCtx.children ) {
 				if ( subCtx instanceof HqlParser.AssignmentContext ) {
 					final HqlParser.AssignmentContext assignmentContext = (HqlParser.AssignmentContext) subCtx;
 					//noinspection unchecked
-					final SqmPath<Object> targetPath = (SqmPath<Object>) consumeDomainPath( (HqlParser.SimplePathContext) assignmentContext.getChild( 0 ) );
+					final SqmPath<Object> targetPath = (SqmPath<Object>) consumeDomainPath( assignmentContext.simplePath() );
 					final Class<?> targetPathJavaType = targetPath.getJavaType();
 					final boolean isEnum = targetPathJavaType != null && targetPathJavaType.isEnum();
 					final ParseTree rightSide = assignmentContext.getChild( 2 );
@@ -604,10 +586,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				}
 			}
 
-			if ( dmlTargetIndex + 2 <= ctx.getChildCount() ) {
-				updateStatement.applyPredicate(
-						visitWhereClause( (HqlParser.WhereClauseContext) ctx.getChild( dmlTargetIndex + 2 ) )
-				);
+			final HqlParser.WhereClauseContext whereClauseContext = ctx.whereClause();
+			if ( whereClauseContext != null ) {
+				updateStatement.applyPredicate( visitWhereClause( whereClauseContext ) );
 			}
 
 			return updateStatement;
@@ -619,14 +600,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmDeleteStatement<R> visitDeleteStatement(HqlParser.DeleteStatementContext ctx) {
-		final int dmlTargetIndex;
-		if ( ctx.getChild( 1 ) instanceof HqlParser.TargetEntityContext ) {
-			dmlTargetIndex = 1;
-		}
-		else {
-			dmlTargetIndex = 2;
-		}
-		final HqlParser.TargetEntityContext dmlTargetContext = (HqlParser.TargetEntityContext) ctx.getChild( dmlTargetIndex );
+		final HqlParser.TargetEntityContext dmlTargetContext = ctx.targetEntity();
 		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
 
 		final SqmDeleteStatement<R> deleteStatement = new SqmDeleteStatement<>( root, SqmQuerySource.HQL, creationContext.getNodeBuilder() );
@@ -642,10 +616,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		processingStateStack.push( sqmDeleteCreationState );
 		try {
-			if ( dmlTargetIndex + 1 <= ctx.getChildCount() ) {
-				deleteStatement.applyPredicate(
-						visitWhereClause( (HqlParser.WhereClauseContext) ctx.getChild( dmlTargetIndex + 1 ) )
-				);
+			final HqlParser.WhereClauseContext whereClauseContext = ctx.whereClause();
+			if ( whereClauseContext != null ) {
+				deleteStatement.applyPredicate( visitWhereClause( whereClauseContext ) );
 			}
 
 			return deleteStatement;
@@ -2472,50 +2445,37 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			HqlParser.ExpressionContext rightExpressionContext) {
 		final SqmExpression<?> right;
 		final SqmExpression<?> left;
-		switch ( comparisonOperator ) {
-			case EQUAL:
-			case NOT_EQUAL:
-			case DISTINCT_FROM:
-			case NOT_DISTINCT_FROM: {
-				Map<Class<?>, Enum<?>> possibleEnumValues;
-				if ( ( possibleEnumValues = getPossibleEnumValues( leftExpressionContext ) ) != null ) {
-					right = (SqmExpression<?>) rightExpressionContext.accept( this );
-					left = resolveEnumShorthandLiteral(
-							leftExpressionContext,
-							possibleEnumValues,
-							right.getJavaType()
-					);
-					break;
-				}
-				else if ( ( possibleEnumValues = getPossibleEnumValues( rightExpressionContext ) ) != null ) {
-					left = (SqmExpression<?>) leftExpressionContext.accept( this );
-					right = resolveEnumShorthandLiteral(
-							rightExpressionContext,
-							possibleEnumValues,
-							left.getJavaType()
-					);
-					break;
-				}
-				final SqmExpression<?> l = (SqmExpression<?>) leftExpressionContext.accept( this );
-				final SqmExpression<?> r = (SqmExpression<?>) rightExpressionContext.accept( this );
-				if ( l instanceof AnyDiscriminatorSqmPath && r instanceof SqmLiteralEntityType ) {
-					left = l;
-					right = createDiscriminatorValue( (AnyDiscriminatorSqmPath<?>) left, rightExpressionContext );
-				}
-				else if ( r instanceof AnyDiscriminatorSqmPath && l instanceof SqmLiteralEntityType ) {
-					left = createDiscriminatorValue( (AnyDiscriminatorSqmPath<?>) r, leftExpressionContext );
-					right = r;
-				}
-				else {
-					left = l;
-					right = r;
-				}
-				break;
+		Map<Class<?>, Enum<?>> possibleEnumValues;
+		if ( ( possibleEnumValues = getPossibleEnumValues( leftExpressionContext ) ) != null ) {
+			right = (SqmExpression<?>) rightExpressionContext.accept( this );
+			left = resolveEnumShorthandLiteral(
+					leftExpressionContext,
+					possibleEnumValues,
+					right.getJavaType()
+			);
+		}
+		else if ( ( possibleEnumValues = getPossibleEnumValues( rightExpressionContext ) ) != null ) {
+			left = (SqmExpression<?>) leftExpressionContext.accept( this );
+			right = resolveEnumShorthandLiteral(
+					rightExpressionContext,
+					possibleEnumValues,
+					left.getJavaType()
+			);
+		}
+		else {
+			final SqmExpression<?> l = (SqmExpression<?>) leftExpressionContext.accept( this );
+			final SqmExpression<?> r = (SqmExpression<?>) rightExpressionContext.accept( this );
+			if ( l instanceof AnyDiscriminatorSqmPath && r instanceof SqmLiteralEntityType ) {
+				left = l;
+				right = createDiscriminatorValue( (AnyDiscriminatorSqmPath<?>) left, rightExpressionContext );
 			}
-			default: {
-				left = (SqmExpression<?>) leftExpressionContext.accept( this );
-				right = (SqmExpression<?>) rightExpressionContext.accept( this );
-				break;
+			else if ( r instanceof AnyDiscriminatorSqmPath && l instanceof SqmLiteralEntityType ) {
+				left = createDiscriminatorValue( (AnyDiscriminatorSqmPath<?>) r, leftExpressionContext );
+				right = r;
+			}
+			else {
+				left = l;
+				right = r;
 			}
 		}
 		SqmCriteriaNodeBuilder.assertComparable( left, right );

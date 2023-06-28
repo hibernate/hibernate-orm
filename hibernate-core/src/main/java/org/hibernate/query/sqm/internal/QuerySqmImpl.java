@@ -78,7 +78,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.SortOrder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -1004,7 +1004,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public SqmQueryImplementor<R> unordered() {
+	public SqmQueryImplementor<R> clearOrder() {
 		if ( sqm instanceof SqmSelectStatement ) {
 			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
 			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;

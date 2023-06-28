@@ -134,7 +134,7 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.InterpretationException;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.SortOrder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;

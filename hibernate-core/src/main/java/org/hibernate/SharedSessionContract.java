@@ -240,4 +240,8 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 		throw new UnsupportedOperationException();
 	}
 
+	/**
+	 * The factory which created this session.
+	 */
+	SessionFactory getFactory();
 }

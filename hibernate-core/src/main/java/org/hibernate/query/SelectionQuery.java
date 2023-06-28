@@ -494,6 +494,28 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> descending(SingularAttribute<? super R, ?> attribute);
 
 	/**
+	 * If the result type of this query is an entity class, add an attribute
+	 * of the entity to be used to order the query results in the given order.
+	 *
+	 * @param attribute an attribute of the entity class returned by this query
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> sort(SortOrder sortOrder, SingularAttribute<? super R, ?> attribute);
+
+	/**
+	 * If the result type of this query is an entity class, add one or more
+	 * {@linkplain Sort rules} for ordering the query results.
+	 *
+	 * @param sorts one or more instances of {@link Sort}
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> sort(Sort<? super R>... sorts);
+
+	/**
 	 * Add an element of the select list to be used to order the query results
 	 * in ascending order.
 	 *
@@ -516,7 +538,9 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> descending(int element);
 
 	/**
-	 * Clear the ordering conditions for this query.
+	 * Clear the ordering conditions for this query. Discards any ordering
+	 * conditions added via {@link #ascending}, {@link #descending}, or
+	 * {@link #sort}.
 	 *
 	 * @see #ascending(SingularAttribute)
 	 * @see #descending(SingularAttribute)
@@ -524,7 +548,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @since 6.3
 	 */
 	@Incubating
-	SelectionQuery<R> unordered();
+	SelectionQuery<R> clearOrder();
 
 	/**
 	 * Specify a {@link LockMode} to apply to a specific alias defined in the query

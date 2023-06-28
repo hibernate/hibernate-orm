@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.internal.util.QuotingHelper;
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortOrder;
 import org.hibernate.grammars.ordering.OrderingParser;
 import org.hibernate.grammars.ordering.OrderingParserBaseVisitor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;

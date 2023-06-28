@@ -35,8 +35,11 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.Query;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.SelectionQuery;
+import org.hibernate.query.Sort;
 import org.hibernate.query.criteria.internal.NamedCriteriaQueryMementoImpl;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.internal.QuerySplitter;
@@ -55,7 +58,7 @@ import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.SortOrder;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -570,6 +573,27 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 	}
 
 	@Override
+	public SelectionQuery<R> sort(SortOrder sortOrder, SingularAttribute<? super R, ?> attribute) {
+		addOrdering( attribute, sortOrder );
+		return null;
+	}
+
+	@Override @SafeVarargs
+	public final SqmSelectionQuery<R> sort(Sort<? super R>... sorts) {
+		for (Sort<? super R> sort: sorts) {
+			SingularAttribute<? super R,?> attribute = sort.getAttribute();
+			if ( attribute == null ) {
+				attribute =
+						getSession().getFactory().getMetamodel()
+								.entity( sort.getEntityClass() )
+								.getSingularAttribute( sort.getAttributeName() );
+			}
+			sort( sort.getOrder(), attribute );
+		}
+		return this;
+	}
+
+	@Override
 	public SqmSelectionQuery<R> ascending(int element) {
 		addOrdering( element, SortOrder.ASCENDING );
 		return this;
@@ -618,7 +642,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public SqmSelectionQuery<R> unordered() {
+	public SqmSelectionQuery<R> clearOrder() {
 		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
 		sqm.getQueryPart().setOrderByClause( null );
 		return this;

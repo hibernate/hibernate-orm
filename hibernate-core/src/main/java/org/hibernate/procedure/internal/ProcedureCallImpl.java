@@ -49,6 +49,7 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.OutputableType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.SortOrder;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.results.ResultSetMapping;
@@ -1075,6 +1076,11 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public Query<R> sort(SortOrder sortOrder, SingularAttribute<? super R, ?> attribute) {
+		throw new UnsupportedOperationException( "Not supported for procedure calls" );
+	}
+
+	@Override
 	public Query<R> ascending(int element) {
 		throw new UnsupportedOperationException( "Not supported for procedure calls" );
 	}
@@ -1085,7 +1091,7 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
-	public Query<R> unordered() {
+	public Query<R> clearOrder() {
 		return this;
 	}
 

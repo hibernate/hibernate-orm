@@ -906,13 +906,31 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	Query<R> descending(SingularAttribute<? super R, ?> attribute);
 
 	@Override
+	Query<R> sort(SortOrder sortOrder, SingularAttribute<? super R, ?> attribute);
+
+	@Override
+	default Query<R> sort(Sort<? super R>... sorts) {
+		for (Sort<? super R> sort: sorts) {
+			SingularAttribute<? super R,?> attribute = sort.getAttribute();
+			if ( attribute == null ) {
+				attribute =
+						getSession().getFactory().getMetamodel()
+								.entity( sort.getEntityClass() )
+								.getSingularAttribute( sort.getAttributeName() );
+			}
+			sort( sort.getOrder(), attribute );
+		}
+		return this;
+	}
+
+	@Override
 	Query<R> ascending(int element);
 
 	@Override
 	Query<R> descending(int element);
 
 	@Override
-	Query<R> unordered();
+	Query<R> clearOrder();
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// deprecated methods

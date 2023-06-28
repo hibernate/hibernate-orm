@@ -22,13 +22,14 @@ import org.hibernate.graph.RootGraph;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NameableQuery;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.SqmQuery;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.SortOrder;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.transform.ResultTransformer;
 
@@ -137,6 +138,12 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	}
 
 	@Override
+	default SqmQueryImplementor<R> sort(SortOrder sortOrder, SingularAttribute<? super R, ?> attribute) {
+		addOrdering( attribute, sortOrder );
+		return this;
+	}
+
+	@Override
 	default SqmQueryImplementor<R> ascending(int element) {
 		addOrdering( element, SortOrder.ASCENDING );
 		return this;
@@ -153,7 +160,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	SqmQueryImplementor<R> addOrdering(int element, SortOrder order);
 
 	@Override
-	SqmQueryImplementor<R> unordered();
+	SqmQueryImplementor<R> clearOrder();
 
 	@Override
 	SqmQueryImplementor<R> setParameter(String name, Object value);

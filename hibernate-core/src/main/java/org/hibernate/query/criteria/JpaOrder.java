@@ -8,8 +8,8 @@ package org.hibernate.query.criteria;
 
 import jakarta.persistence.criteria.Order;
 
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortOrder;
 
 /**
  * @author Steve Ebersole

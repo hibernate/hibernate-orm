@@ -13,9 +13,9 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import static org.hibernate.query.sqm.NullPrecedence.FIRST;
-import static org.hibernate.query.sqm.SortOrder.ASCENDING;
-import static org.hibernate.query.sqm.SortOrder.DESCENDING;
+import static org.hibernate.query.NullPrecedence.FIRST;
+import static org.hibernate.query.SortOrder.ASCENDING;
+import static org.hibernate.query.SortOrder.DESCENDING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.mockito.Mockito.mock;

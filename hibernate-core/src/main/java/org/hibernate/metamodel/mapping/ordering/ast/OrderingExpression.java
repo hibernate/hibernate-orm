@@ -6,8 +6,8 @@
  */
 package org.hibernate.metamodel.mapping.ordering.ast;
 
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortOrder;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.sql.FakeSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;

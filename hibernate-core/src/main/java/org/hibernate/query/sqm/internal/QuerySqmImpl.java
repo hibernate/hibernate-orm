@@ -18,8 +18,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import jakarta.persistence.criteria.Order;
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -49,7 +47,9 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.Order;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
@@ -77,8 +77,6 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.SortOrder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -88,7 +86,6 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -100,7 +97,6 @@ import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
@@ -114,6 +110,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 
+import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
@@ -129,6 +126,7 @@ import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOption
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.generateNonSelectKey;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
+import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
 import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsNonSelectStatement;
 import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 
@@ -952,70 +950,33 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public SqmQueryImplementor<R> addOrdering(SingularAttribute<? super R, ?> attribute, SortOrder order) {
+	public Query<R> setOrder(List<Order<? super R>> orderList) {
 		if ( sqm instanceof SqmSelectStatement ) {
 			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
-			NodeBuilder nodeBuilder = sqm.nodeBuilder();
 			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
-			List<Order> orders = new ArrayList<>( select.getOrderList() );
-			select.getQuerySpec().getRoots().forEach( root -> {
-				@SuppressWarnings("unchecked")
-				SqmRoot<R> singleRoot = (SqmRoot<R>) root;
-				SqmPath<?> ref = singleRoot.get( attribute );
-				orders.add( nodeBuilder.sort( ref, order) );
-
-			} );
-			select.orderBy( orders );
+			select.orderBy( orderList.stream().map( order -> sortSpecification( select, order ) ).collect( toList() ) );
 			return this;
 		}
 		else {
-			throw new IllegalStateException( "Not a select query" );
+			throw new IllegalSelectQueryException( "Not a select query" );
 		}
 	}
 
 	@Override
-	public SqmQueryImplementor<R> addOrdering(int element, SortOrder order) {
+	public Query<R> setOrder(Order<? super R> order) {
 		if ( sqm instanceof SqmSelectStatement ) {
 			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
 			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
-			int size = select.getSelection().getSelectionItems().size();
-			if ( element < 1) {
-				throw new IllegalArgumentException("Cannot order by element " + element + " (the first select item is element 1)");
-			}
-			if ( element > size) {
-				throw new IllegalArgumentException("Cannot order by element " + element + " (there are " + size + " select items)");
-			}
-			NodeBuilder nodeBuilder = sqm.nodeBuilder();
-			List<Order> orders = new ArrayList<>( select.getOrderList() );
-			orders.add( new SqmSortSpecification(
-					new SqmAliasedNodeRef(
-						element,
-						nodeBuilder.getTypeConfiguration().standardBasicTypeForJavaType( Integer.class ),
-						nodeBuilder
-					),
-					order
-			) );
-			select.orderBy( orders );
+			select.orderBy( sortSpecification( select, order ) );
 			return this;
 		}
 		else {
-			throw new IllegalStateException( "Not a select query" );
+			throw new IllegalSelectQueryException( "Not a select query" );
 		}
 	}
 
 	@Override
-	public SqmQueryImplementor<R> clearOrder() {
-		if ( sqm instanceof SqmSelectStatement ) {
-			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
-			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
-			select.getQueryPart().setOrderByClause( null );
-
-		}
-		return this;
-	}
-
-	@Override
-	public List<Order> getOrder() {
+	public List<jakarta.persistence.criteria.Order> getOrder() {
 		return sqm instanceof SqmSelectStatement
 				? ((SqmSelectStatement<R>) sqm).getOrderList()
 				: null;

@@ -134,7 +134,7 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.InterpretationException;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -4801,7 +4801,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								subQuerySpec.addSortSpecification(
 										new SortSpecification(
 												columnReference,
-												max ? SortOrder.DESCENDING : SortOrder.ASCENDING
+												max ? SortDirection.DESCENDING : SortDirection.ASCENDING
 										)
 								);
 							}

@@ -6,6 +6,8 @@
  */
 package org.hibernate.query;
 
+import org.hibernate.Incubating;
+
 /**
  * Identifies a page of query results by {@linkplain #size page size}
  * and {@linkplain #number page number}.
@@ -20,6 +22,7 @@ package org.hibernate.query;
  *
  * @author Gavin King
  */
+@Incubating
 public class Page {
 	private final int size;
 	private final int number;

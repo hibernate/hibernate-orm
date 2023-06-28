@@ -47,8 +47,10 @@ import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
@@ -69,9 +71,8 @@ import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.SetOperator;
-import org.hibernate.query.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -512,12 +513,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		return new SqmSortSpecification( (SqmExpression<?>) sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
-	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortOrder sortOrder) {
+	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder) {
 		return new SqmSortSpecification( (SqmExpression<?>) sortExpression, sortOrder );
 	}
 
@@ -528,19 +529,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmSortSpecification asc(Expression<?> x) {
-		return new SqmSortSpecification( (SqmExpression<?>) x, SortOrder.ASCENDING );
+		return new SqmSortSpecification( (SqmExpression<?>) x, SortDirection.ASCENDING );
 	}
 
 	@Override
 	public SqmSortSpecification desc(Expression<?> x) {
-		return new SqmSortSpecification( (SqmExpression<?>) x, SortOrder.DESCENDING );
+		return new SqmSortSpecification( (SqmExpression<?>) x, SortDirection.DESCENDING );
 	}
 
 	@Override
 	public JpaOrder asc(Expression<?> x, boolean nullsFirst) {
 		return new SqmSortSpecification(
 				(SqmExpression<?>) x,
-				SortOrder.ASCENDING,
+				SortDirection.ASCENDING,
 				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
 		);
 	}
@@ -549,41 +550,41 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public JpaOrder desc(Expression<?> x, boolean nullsFirst) {
 		return new SqmSortSpecification(
 				(SqmExpression<?>) x,
-				SortOrder.DESCENDING,
+				SortDirection.DESCENDING,
 				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
 		);
 	}
 
 	@Override
-	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
-	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression, SortOrder sortOrder) {
+	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression, SortDirection sortOrder) {
 		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, sortOrder, NullPrecedence.NONE );
 	}
 
 	@Override
 	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression) {
-		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, SortOrder.ASCENDING, NullPrecedence.NONE );
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, SortDirection.ASCENDING, NullPrecedence.NONE );
 	}
 
 	@Override
 	public JpaSearchOrder asc(JpaCteCriteriaAttribute x) {
-		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortOrder.ASCENDING, NullPrecedence.NONE );
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortDirection.ASCENDING, NullPrecedence.NONE );
 	}
 
 	@Override
 	public JpaSearchOrder desc(JpaCteCriteriaAttribute x) {
-		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortOrder.DESCENDING, NullPrecedence.NONE );
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortDirection.DESCENDING, NullPrecedence.NONE );
 	}
 
 	@Override
 	public JpaSearchOrder asc(JpaCteCriteriaAttribute x, boolean nullsFirst) {
 		return new SqmSearchClauseSpecification(
 				(SqmCteTableColumn)  x,
-				SortOrder.ASCENDING,
+				SortDirection.ASCENDING,
 				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
 		);
 	}
@@ -592,7 +593,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public JpaSearchOrder desc(JpaCteCriteriaAttribute x, boolean nullsFirst) {
 		return new SqmSearchClauseSpecification(
 				(SqmCteTableColumn) x,
-				SortOrder.DESCENDING,
+				SortDirection.DESCENDING,
 				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
 		);
 	}
@@ -3428,7 +3429,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmExpression<T> mode(Expression<T> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	public <T> SqmExpression<T> mode(Expression<T> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		return mode( null, null, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -3436,7 +3437,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <T> SqmExpression<T> mode(
 			JpaPredicate filter,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return mode( filter, null, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3445,7 +3446,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <T> SqmExpression<T> mode(
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return mode( null, window, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3456,7 +3457,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return (SqmExpression<T>) functionWithinGroup(
 				"mode",
@@ -3471,7 +3472,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <T> SqmExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return percentileCont( argument, null, null, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3481,7 +3482,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return percentileCont( argument, filter, null, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3491,7 +3492,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			Expression<? extends Number> argument,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return percentileCont( argument, null, window, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3503,7 +3504,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return (SqmExpression<T>) functionWithinGroup(
 				"percentile_cont",
@@ -3519,7 +3520,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <T> SqmExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return percentileDisc( argument, null, null, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3529,7 +3530,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return percentileDisc( argument, filter, null, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3539,7 +3540,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			Expression<? extends Number> argument,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return percentileDisc( argument, null, window, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3551,7 +3552,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return (SqmExpression<T>) functionWithinGroup(
 				"percentile_disc",

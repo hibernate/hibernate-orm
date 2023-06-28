@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -46,10 +45,10 @@ import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.Order;
 import org.hibernate.query.OutputableType;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
-import org.hibernate.query.SortOrder;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.query.results.ResultSetMapping;
@@ -401,6 +400,16 @@ public class ProcedureCallImpl<R>
 
 	public SessionFactoryImplementor getSessionFactory() {
 		return getSession().getFactory();
+	}
+
+	@Override
+	public Query<R> setOrder(List<Order<? super R>> orderList) {
+		throw new UnsupportedOperationException("Ordering not supported for stored procedure calls");
+	}
+
+	@Override
+	public Query<R> setOrder(Order<? super R> order) {
+		throw new UnsupportedOperationException("Ordering not supported for stored procedure calls");
 	}
 
 
@@ -1063,36 +1072,6 @@ public class ProcedureCallImpl<R>
 		}
 
 		throw new PersistenceException( "Unrecognized unwrap type : " + cls.getName() );
-	}
-
-	@Override
-	public Query<R> ascending(SingularAttribute<? super R, ?> attribute) {
-		throw new UnsupportedOperationException( "Not supported for procedure calls" );
-	}
-
-	@Override
-	public Query<R> descending(SingularAttribute<? super R, ?> attribute) {
-		throw new UnsupportedOperationException( "Not supported for procedure calls" );
-	}
-
-	@Override
-	public Query<R> sort(SortOrder sortOrder, SingularAttribute<? super R, ?> attribute) {
-		throw new UnsupportedOperationException( "Not supported for procedure calls" );
-	}
-
-	@Override
-	public Query<R> ascending(int element) {
-		throw new UnsupportedOperationException( "Not supported for procedure calls" );
-	}
-
-	@Override
-	public Query<R> descending(int element) {
-		throw new UnsupportedOperationException( "Not supported for procedure calls" );
-	}
-
-	@Override
-	public Query<R> clearOrder() {
-		return this;
 	}
 
 	@Override

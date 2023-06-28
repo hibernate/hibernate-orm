@@ -6,14 +6,15 @@
  */
 package org.hibernate.orm.test.jpa.criteria.nulliteral;
 
-import jakarta.persistence.EntityManager;
+import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
+
+import org.hibernate.testing.orm.junit.Jira;
+import org.junit.Test;
+
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaUpdate;
 
-import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
-
-import org.hibernate.testing.TestForIssue;
-import org.junit.Test;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
 /**
  * @author Andrea Boriero
@@ -22,33 +23,30 @@ public class NullLiteralExpression extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {Person.class, Subject.class};
+		return new Class[] { Person.class, Subject.class };
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-11159")
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-11159" )
 	public void testNullLiteralExpressionInCriteriaUpdate() {
-		EntityManager entityManager = getOrCreateEntityManager();
-		try {
-			entityManager.getTransaction().begin();
-
+		doInJPA( this::entityManagerFactory, entityManager -> {
 			CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 			CriteriaUpdate<Person> criteriaUpdate = builder.createCriteriaUpdate( Person.class );
-			criteriaUpdate.from(Person.class);
+			criteriaUpdate.from( Person.class );
 			criteriaUpdate.set( Person_.subject, builder.nullLiteral( Subject.class ) );
-
 			entityManager.createQuery( criteriaUpdate ).executeUpdate();
+		} );
+	}
 
-			entityManager.getTransaction().commit();
-		}
-		catch (Exception e) {
-			if ( entityManager.getTransaction().isActive() ) {
-				entityManager.getTransaction().rollback();
-			}
-			throw e;
-		}
-		finally {
-			entityManager.close();
-		}
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-16803" )
+	public void testEnumNullLiteralUpdate() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+			final CriteriaUpdate<Person> criteriaUpdate = builder.createCriteriaUpdate( Person.class );
+			criteriaUpdate.from( Person.class );
+			criteriaUpdate.set( Person_.eyeColor, builder.nullLiteral( EyeColor.class ) );
+			entityManager.createQuery( criteriaUpdate ).executeUpdate();
+		} );
 	}
 }

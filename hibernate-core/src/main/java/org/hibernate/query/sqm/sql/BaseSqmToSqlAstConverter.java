@@ -8256,7 +8256,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					offset = countIndividualSelections( ( (SqmDynamicInstantiation<?>) selectableNode ).getArguments() ) - 1;
 				}
 				else if ( selectableNode instanceof SqmJpaCompoundSelection<?> ) {
-					offset += ( (SqmJpaCompoundSelection<?>) selectableNode ).getSelectionItems().size() - 1;
+					for ( SqmSelectableNode<?> node : ( (SqmJpaCompoundSelection<?>) selectableNode ).getSelectionItems() ) {
+						if ( node instanceof SqmDynamicInstantiation<?> ) {
+							offset += countIndividualSelections( ( (SqmDynamicInstantiation<?>) node ).getArguments() ) ;
+						}
+						else {
+							offset += 1;
+						}
+					}
+					offset -= 1;
 				}
 			}
 			return offset + selections.size();

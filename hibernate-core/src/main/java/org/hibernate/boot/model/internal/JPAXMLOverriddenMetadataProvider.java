@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.hibernate.annotations.SequenceGeneratorExtension;
+import org.hibernate.annotations.TableGeneratorExtension;
 import org.hibernate.annotations.common.reflection.AnnotationReader;
 import org.hibernate.annotations.common.reflection.MetadataProvider;
 import org.hibernate.annotations.common.reflection.java.JavaMetadataProvider;
@@ -22,6 +24,7 @@ import org.hibernate.boot.jaxb.mapping.JaxbTableGenerator;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
+import org.hibernate.internal.util.StringHelper;
 
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.NamedNativeQuery;
@@ -30,6 +33,8 @@ import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.TableGenerator;
+
+import static org.hibernate.boot.model.internal.JPAXMLOverriddenAnnotationReader.buildSequenceGeneratorExtensionAnnotation;
 
 /**
  * MetadataProvider aware of the JPA Deployment descriptor (orm.xml, ...).
@@ -124,6 +129,16 @@ public class JPAXMLOverriddenMetadataProvider implements MetadataProvider {
 					}
 					for ( JaxbSequenceGenerator element : jaxbSequenceGenerators ) {
 						sequenceGenerators.add( JPAXMLOverriddenAnnotationReader.buildSequenceGeneratorAnnotation( element ) );
+						final SequenceGeneratorExtension sequenceGeneratorExtension = buildSequenceGeneratorExtensionAnnotation( element );
+						if ( sequenceGeneratorExtension != null ) {
+							List<SequenceGeneratorExtension> sequenceGeneratorExtensions = (List<SequenceGeneratorExtension>) defaults.get( SequenceGeneratorExtension.class );
+							if ( sequenceGeneratorExtensions == null ) {
+								sequenceGeneratorExtensions = new ArrayList<>();
+								defaults.put( SequenceGeneratorExtension.class, sequenceGeneratorExtensions );
+							}
+
+							sequenceGeneratorExtensions.add( sequenceGeneratorExtension );
+						}
 					}
 
 					List<JaxbTableGenerator> jaxbTableGenerators = entityMappings.getTableGenerators();
@@ -139,6 +154,19 @@ public class JPAXMLOverriddenMetadataProvider implements MetadataProvider {
 										xmlDefaults
 								)
 						);
+
+						final TableGeneratorExtension tableGeneratorExtension = JPAXMLOverriddenAnnotationReader.buildTableGeneratorExtensionAnnotation(
+								element,
+								xmlDefaults
+						);
+						if ( tableGeneratorExtension != null ) {
+							List<TableGeneratorExtension> tableGeneratorExtensions = (List<TableGeneratorExtension>) defaults.get( TableGeneratorExtension.class );
+							if ( tableGeneratorExtensions == null ) {
+								tableGeneratorExtensions = new ArrayList<>();
+								defaults.put( TableGeneratorExtension.class, tableGeneratorExtensions );
+							}
+							tableGeneratorExtensions.add( tableGeneratorExtension );
+						}
 					}
 
 					List<NamedQuery> namedQueries = ( List<NamedQuery> ) defaults.get( NamedQuery.class );

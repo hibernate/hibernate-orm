@@ -60,15 +60,4 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 	public long getDefaultSqlLength(Dialect dialect, JdbcType jdbcType) {
 		return 3;
 	}
-
-	@Override
-	public boolean isWider(JavaType<?> javaType) {
-		// This is necessary to allow comparing/assigning a currency attribute against a literal of the JdbcType
-		switch ( javaType.getJavaType().getTypeName() ) {
-			case "java.lang.String":
-				return true;
-			default:
-				return false;
-		}
-	}
 }

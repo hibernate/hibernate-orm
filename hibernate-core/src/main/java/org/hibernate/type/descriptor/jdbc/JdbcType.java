@@ -223,6 +223,12 @@ public interface JdbcType extends Serializable {
 		return isCharacterOrClobType( getDdlTypeCode() );
 	}
 
+	default boolean isStringLike() {
+		int ddlTypeCode = getDdlTypeCode();
+		return isCharacterOrClobType( ddlTypeCode )
+			|| isEnumType( ddlTypeCode );
+	}
+
 	default boolean isTemporal() {
 		return isTemporalType( getDdlTypeCode() );
 	}

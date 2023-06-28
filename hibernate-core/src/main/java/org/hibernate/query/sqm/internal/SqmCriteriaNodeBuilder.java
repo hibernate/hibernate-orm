@@ -1294,8 +1294,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T> nullLiteral(Class<T> resultClass) {
-		final TypeConfiguration typeConfiguration = getTypeConfiguration();
-		final BasicType<T> basicTypeForJavaType = typeConfiguration.getBasicTypeForJavaType( resultClass );
+		if ( resultClass.isEnum() ) {
+			// No basic types are registered for enum java types, we have to use an untyped null literal in this case
+			return new SqmLiteralNull<>( this );
+		}
+		final BasicType<T> basicTypeForJavaType = getTypeConfiguration().getBasicTypeForJavaType( resultClass );
+		// if there's no basic type, it might be an entity type
 		final SqmExpressible<T> sqmExpressible = basicTypeForJavaType == null
 				? getDomainModel().managedType( resultClass )
 				: basicTypeForJavaType;

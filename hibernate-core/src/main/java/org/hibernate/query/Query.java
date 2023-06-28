@@ -290,7 +290,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)}
 	 *          using {@link GraphSemantic#LOAD} as the semantic.
 	 */
-	@SuppressWarnings("UnusedDeclaration")
 	default Query<R> applyLoadGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		return applyGraph( graph, GraphSemantic.LOAD );
 	}
@@ -889,6 +888,20 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	@Override
 	Query<R> setFirstResult(int startPosition);
+
+	@Override
+	default Query<R> paginate(int pageSize, int pageNumber) {
+		setFirstResult( pageNumber * pageSize );
+		setMaxResults( pageSize );
+		return this;
+	}
+
+	@Override
+	default Query<R> paginate(Page page) {
+		setMaxResults( page.getMaxResults() );
+		setFirstResult( page.getFirstResult() );
+		return this;
+	}
 
 	@Override
 	Query<R> setHint(String hintName, Object value);

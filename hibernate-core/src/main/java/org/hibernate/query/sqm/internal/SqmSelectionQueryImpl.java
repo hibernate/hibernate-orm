@@ -35,7 +35,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.Query;
+import org.hibernate.query.Page;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.SelectionQuery;
@@ -279,6 +279,37 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 		return hql;
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// convenience methods
+
+	@Override
+	public SelectionQuery<R> paginate(int pageSize, int pageNumber) {
+		setFirstResult( pageNumber * pageSize );
+		setMaxResults( pageSize );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> paginate(Page page) {
+		setMaxResults( page.getMaxResults() );
+		setFirstResult( page.getFirstResult() );
+		return this;
+	}
+
+	@Override @SafeVarargs
+	public final SelectionQuery<R> sort(Sort<? super R>... sorts) {
+		for (Sort<? super R> sort: sorts) {
+			SingularAttribute<? super R,?> attribute = sort.getAttribute();
+			if ( attribute == null ) {
+				attribute =
+						getSession().getFactory().getMetamodel()
+								.entity( sort.getEntityClass() )
+								.getSingularAttribute( sort.getAttributeName() );
+			}
+			sort( sort.getOrder(), attribute );
+		}
+		return this;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// execution
@@ -576,21 +607,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 	public SelectionQuery<R> sort(SortOrder sortOrder, SingularAttribute<? super R, ?> attribute) {
 		addOrdering( attribute, sortOrder );
 		return null;
-	}
-
-	@Override @SafeVarargs
-	public final SqmSelectionQuery<R> sort(Sort<? super R>... sorts) {
-		for (Sort<? super R> sort: sorts) {
-			SingularAttribute<? super R,?> attribute = sort.getAttribute();
-			if ( attribute == null ) {
-				attribute =
-						getSession().getFactory().getMetamodel()
-								.entity( sort.getEntityClass() )
-								.getSingularAttribute( sort.getAttributeName() );
-			}
-			sort( sort.getOrder(), attribute );
-		}
-		return this;
 	}
 
 	@Override

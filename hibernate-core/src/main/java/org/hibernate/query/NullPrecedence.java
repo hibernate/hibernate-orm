@@ -6,10 +6,12 @@
  */
 package org.hibernate.query;
 
-import org.hibernate.query.sqm.NullOrdering;
+import org.hibernate.AssertionFailure;
+import org.hibernate.dialect.NullOrdering;
 
 /**
- * Defines precedence of null values within {@code ORDER BY} clause.
+ * Enumerates the possibilities for the precedence of null values within
+ * query result sets sorted by an {@code ORDER BY} clause.
  *
  * @author Lukasz Antoniak
  */
@@ -17,53 +19,53 @@ public enum NullPrecedence {
 	/**
 	 * Null precedence not specified. Relies on the RDBMS implementation.
 	 */
-	NONE {
-		@Override
-		public boolean isDefaultOrdering(SortOrder sortOrder, NullOrdering nullOrdering) {
-			return true;
-		}
-	},
-
+	NONE,
 	/**
 	 * Null values appear at the beginning of the sorted collection.
 	 */
-	FIRST {
-		@Override
-		public boolean isDefaultOrdering(SortOrder sortOrder, NullOrdering nullOrdering) {
-			switch ( nullOrdering ) {
-				case FIRST:
-					return true;
-				case SMALLEST:
-					return sortOrder == SortOrder.ASCENDING;
-				case GREATEST:
-					return sortOrder == SortOrder.DESCENDING;
-			}
-			return false;
-		}
-	},
-
+	FIRST,
 	/**
 	 * Null values appear at the end of the sorted collection.
 	 */
-	LAST {
-		@Override
-		public boolean isDefaultOrdering(SortOrder sortOrder, NullOrdering nullOrdering) {
-			switch ( nullOrdering ) {
-				case LAST:
-					return true;
-				case SMALLEST:
-					return sortOrder == SortOrder.DESCENDING;
-				case GREATEST:
-					return sortOrder == SortOrder.ASCENDING;
-			}
-			return false;
-		}
-	};
+	LAST;
 
 	/**
 	 * Is this null precedence the default for the given sort order and null ordering.
 	 */
-	public abstract boolean isDefaultOrdering(SortOrder sortOrder, NullOrdering nullOrdering);
+	public boolean isDefaultOrdering(SortOrder sortOrder, NullOrdering nullOrdering) {
+		switch (this) {
+			case NONE:
+				return true;
+			case FIRST:
+				switch ( nullOrdering ) {
+					case FIRST:
+						return true;
+					case LAST:
+						return false;
+					case SMALLEST:
+						return sortOrder == SortOrder.ASCENDING;
+					case GREATEST:
+						return sortOrder == SortOrder.DESCENDING;
+					default:
+						throw new AssertionFailure("Unrecognized NullOrdering");
+				}
+			case LAST:
+				switch ( nullOrdering ) {
+					case LAST:
+						return true;
+					case FIRST:
+						return false;
+					case SMALLEST:
+						return sortOrder == SortOrder.DESCENDING;
+					case GREATEST:
+						return sortOrder == SortOrder.ASCENDING;
+					default:
+						throw new AssertionFailure("Unrecognized NullOrdering");
+				}
+			default:
+				throw new AssertionFailure("Unrecognized NullPrecedence");
+		}
+	}
 
 	/**
 	 * Interprets a string representation of a NullPrecedence, returning {@code null} by default.  For
@@ -74,14 +76,10 @@ public enum NullPrecedence {
 	 * @return The recognized NullPrecedence, or {@code null}
 	 */
 	public static NullPrecedence parse(String name) {
-		if ( "none".equalsIgnoreCase( name ) ) {
-			return NullPrecedence.NONE;
-		}
-		else if ( "first".equalsIgnoreCase( name ) ) {
-			return NullPrecedence.FIRST;
-		}
-		else if ( "last".equalsIgnoreCase( name ) ) {
-			return NullPrecedence.LAST;
+		for ( NullPrecedence value : values() ) {
+			if ( value.name().equalsIgnoreCase( name ) ) {
+				return value;
+			}
 		}
 		return null;
 	}

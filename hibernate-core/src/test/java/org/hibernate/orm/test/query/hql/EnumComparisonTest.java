@@ -41,6 +41,8 @@ public class EnumComparisonTest {
             }
             catch (SemanticException se) {
             }
+            session.createSelectionQuery("select max(ordinalEnum) from WithEnum").getSingleResult();
+            session.createSelectionQuery("select max(stringEnum) from WithEnum").getSingleResult();
         });
     }
 

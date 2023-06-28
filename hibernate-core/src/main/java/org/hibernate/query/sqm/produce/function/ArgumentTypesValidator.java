@@ -10,10 +10,10 @@ import java.lang.reflect.Type;
 import java.sql.Types;
 import java.util.List;
 
-import org.hibernate.QueryException;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
@@ -95,16 +95,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			if ( nodeType != null ) {
 				JavaType<?> javaType = nodeType.getRelationalJavaType();
 				if (javaType != null) {
-					try {
-						checkType(
-								count, functionName, type,
-								getJdbcType( indicators, javaType ),
-								javaType.getJavaTypeClass()
-						);
-					}
-					catch (JdbcTypeRecommendationException e) {
-						// it's a converter or something like that, and we will check it later
-					}
+					checkArgumentType( functionName, count, argument, indicators, type, javaType );
 				}
 				switch (type) {
 					case TEMPORAL_UNIT:
@@ -134,9 +125,39 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		}
 	}
 
+	private void checkArgumentType(
+			String functionName,
+			int count,
+			SqmTypedNode<?> argument,
+			JdbcTypeIndicators indicators,
+			FunctionParameterType type,
+			JavaType<?> javaType) {
+		DomainType<?> domainType = argument.getExpressible().getSqmType();
+		if ( domainType instanceof JdbcMapping ) {
+			checkArgumentType(
+					count, functionName, type,
+					((JdbcMapping) domainType).getJdbcType().getDefaultSqlTypeCode(),
+					javaType.getJavaTypeClass()
+			);
+		}
+		else {
+			//TODO: this branch is now probably obsolete and can be deleted!
+			try {
+				checkArgumentType(
+						count, functionName, type,
+						getJdbcType( indicators, javaType ),
+						javaType.getJavaTypeClass()
+				);
+			}
+			catch (JdbcTypeRecommendationException e) {
+				// it's a converter or something like that, and we will check it later
+			}
+		}
+	}
+
 	private int getJdbcType(JdbcTypeIndicators indicators, JavaType<?> javaType) {
 		if ( javaType.getJavaTypeClass().isEnum() ) {
-			// magic value indicates it can be coerced STRING or ORDINAL
+			// we can't tell if the enum is mapped STRING or ORDINAL
 			return ENUM_UNKNOWN_JDBC_TYPE;
 		}
 		else {
@@ -177,7 +198,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			final JdbcMapping mapping = expressionType.getJdbcMapping( i );
 			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
 			if (type != null) {
-				checkType(
+				checkArgumentType(
 						count,
 						functionName,
 						type,
@@ -189,19 +210,21 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		return count;
 	}
 
-	private void checkType(int count, String functionName, FunctionParameterType type, int code, Type javaType) {
+	private void checkArgumentType(int count, String functionName, FunctionParameterType type, int code, Type javaType) {
 		switch (type) {
 			case COMPARABLE:
-				if ( !isCharacterType(code) && !isTemporalType(code) && !isNumericType(code) && code != UUID ) {
-					if ( javaType == java.util.UUID.class && ( code == Types.BINARY || isCharacterType( code ) ) ) {
-						// We also consider UUID to be comparable when it's a character or binary type
-						return;
-					}
+				if ( !isCharacterType(code) && !isTemporalType(code) && !isNumericType(code)
+						// both Java and the database consider UUIDs
+						// comparable, so go ahead and accept them
+						&& code != UUID
+						// as a special case, we consider a binary column
+						// comparable when it is mapped by a Java UUID
+						&& !( javaType == java.util.UUID.class && code == Types.BINARY ) ) {
 					throwError(type, javaType, functionName, count);
 				}
 				break;
 			case STRING:
-				if ( !isCharacterType(code) && !isEnumType(code) && code != ENUM_UNKNOWN_JDBC_TYPE) {
+				if ( !isCharacterType(code) && !isEnumType(code) ) {
 					throwError(type, javaType, functionName, count);
 				}
 				break;
@@ -216,7 +239,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 				}
 				break;
 			case INTEGER:
-				if ( !isIntegral(code) && code != ENUM_UNKNOWN_JDBC_TYPE ) {
+				if ( !isIntegral(code) ) {
 					throwError(type, javaType, functionName, count);
 				}
 				break;

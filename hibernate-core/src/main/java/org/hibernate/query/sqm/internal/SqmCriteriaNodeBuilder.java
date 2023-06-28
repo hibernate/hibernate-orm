@@ -264,7 +264,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			JdbcType lhsJdbcType = ((JdbcMapping) lhsDomainType).getJdbcType();
 			JdbcType rhsJdbcType = ((JdbcMapping) rhsDomainType).getJdbcType();
 			if ( lhsJdbcType.getJdbcTypeCode() == rhsJdbcType.getJdbcTypeCode()
-					|| lhsJdbcType.isString() && rhsJdbcType.isString()
+					|| lhsJdbcType.isStringLike() && rhsJdbcType.isStringLike()
 					|| lhsJdbcType.isTemporal() && rhsJdbcType.isTemporal()
 					|| lhsJdbcType.isNumber() && rhsJdbcType.isNumber() ) {
 				return true;

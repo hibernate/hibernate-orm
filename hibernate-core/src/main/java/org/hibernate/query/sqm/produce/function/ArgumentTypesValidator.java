@@ -213,7 +213,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	private void checkArgumentType(int count, String functionName, FunctionParameterType type, int code, Type javaType) {
 		switch (type) {
 			case COMPARABLE:
-				if ( !isCharacterType(code) && !isTemporalType(code) && !isNumericType(code)
+				if ( !isCharacterType(code) && !isTemporalType(code) && !isNumericType(code) && !isEnumType( code )
 						// both Java and the database consider UUIDs
 						// comparable, so go ahead and accept them
 						&& code != UUID

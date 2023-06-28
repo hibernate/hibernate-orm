@@ -382,7 +382,7 @@ public class QuerySqmImpl<R>
 			JdbcType lhsJdbcType = ((JdbcMapping) lhsDomainType).getJdbcType();
 			JdbcType rhsJdbcType = ((JdbcMapping) rhsDomainType).getJdbcType();
 			if ( lhsJdbcType.getJdbcTypeCode() == rhsJdbcType.getJdbcTypeCode()
-					|| lhsJdbcType.isString() && rhsJdbcType.isString()
+					|| lhsJdbcType.isStringLike() && rhsJdbcType.isStringLike()
 					|| lhsJdbcType.isInteger() && rhsJdbcType.isInteger() ) {
 				return true;
 			}

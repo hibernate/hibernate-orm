@@ -316,15 +316,36 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * The first row position to return from the query results. Applied
-	 * to the SQL query
+	 * to the SQL query.
 	 */
 	int getFirstResult();
 
 	/**
 	 * Set the first row position to return from the query results. Applied
-	 * to the SQL query
+	 * to the SQL query.
 	 */
 	SelectionQuery<R> setFirstResult(int startPosition);
+
+	/**
+	 * Set the page of results to return.
+	 *
+	 * @param pageNumber the page to return, where pages are numbered from zero
+	 * @param pageSize the number of results per page
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> paginate(int pageSize, int pageNumber);
+
+	/**
+	 * Set the {@linkplain Page page} of results to return.
+	 *
+	 * @see Page
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> paginate(Page page);
 
 	/**
 	 * Obtain the {@link CacheMode} in effect for this query. By default,
@@ -509,6 +530,8 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * {@linkplain Sort rules} for ordering the query results.
 	 *
 	 * @param sorts one or more instances of {@link Sort}
+	 *
+	 * @see Sort
 	 *
 	 * @since 6.3
 	 */

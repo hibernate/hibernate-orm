@@ -118,7 +118,6 @@ public abstract class AbstractQuery<R>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// QueryOptions handling
 
-
 	@Override
 	public QueryImplementor<R> setHint(String hintName, Object value) {
 		super.setHint( hintName, value );

@@ -900,7 +900,7 @@ Unfortunately, there's no way to do this using JPA's `TypedQuery` interface.
 | `setFirstResult()` | Set an offset on the results returned by a query | &#10004;
 | `ascending()` | Add a field to use to order the results | &#10006;
 | `descending()` | Add a field to use to order the results | &#10006;
-| `unordered()` | Clear any current ordering | &#10006;
+| `clearOrder()` | Clear any current ordering | &#10006;
 |===
 
 [[projection-lists]]

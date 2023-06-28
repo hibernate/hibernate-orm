@@ -618,13 +618,10 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public SelectionQuery<R> setFirstResult(int startPosition) {
 		getSession().checkOpen();
-
 		if ( startPosition < 0 ) {
 			throw new IllegalArgumentException( "first-result value cannot be negative : " + startPosition );
 		}
-
 		getQueryOptions().getLimit().setFirstRow( startPosition );
-
 		return this;
 	}
 

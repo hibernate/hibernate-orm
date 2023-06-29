@@ -43,9 +43,7 @@ import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -81,7 +79,6 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SortOrder;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -116,8 +113,6 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
@@ -135,7 +130,7 @@ import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInter
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.generateNonSelectKey;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
 import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsNonSelectStatement;
-import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
+import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 
 /**
  * {@link Query} implementation based on an SQM
@@ -357,48 +352,10 @@ public class QuerySqmImpl<R>
 			final SqmAssignment<?> assignment = assignments.get( i );
 			final SqmPath<?> targetPath = assignment.getTargetPath();
 			final SqmExpression<?> expression = assignment.getValue();
-			if ( !isAssignable( targetPath, expression ) ) {
-				throw new SemanticException(
-						String.format(
-								"Cannot assign expression of type '%s' to target path '%s' of type '%s'",
-								expression.getNodeJavaType().getJavaType().getTypeName(),
-								targetPath.toHqlString(),
-								targetPath.getNodeJavaType().getJavaType().getTypeName()
-						),
-						hqlString,
-						null
-				);
-			}
+			assertAssignable( hqlString, targetPath, expression, getSessionFactory() );
 		}
 	}
 
-	/**
-	 * @see SqmCriteriaNodeBuilder#areTypesComparable(SqmExpressible, SqmExpressible)
-	 */
-	public static boolean isAssignable(SqmPath<?> targetPath, SqmExpression<?> expression) {
-		DomainType<?> lhsDomainType = targetPath.getExpressible().getSqmType();
-		DomainType<?> rhsDomainType = expression.getExpressible().getSqmType();
-		if ( lhsDomainType instanceof JdbcMapping && rhsDomainType instanceof JdbcMapping ) {
-			JdbcType lhsJdbcType = ((JdbcMapping) lhsDomainType).getJdbcType();
-			JdbcType rhsJdbcType = ((JdbcMapping) rhsDomainType).getJdbcType();
-			if ( lhsJdbcType.getJdbcTypeCode() == rhsJdbcType.getJdbcTypeCode()
-					|| lhsJdbcType.isStringLike() && rhsJdbcType.isStringLike()
-					|| lhsJdbcType.isInteger() && rhsJdbcType.isInteger() ) {
-				return true;
-			}
-		}
-
-		JavaType<?> targetType = targetPath.getNodeJavaType();
-		JavaType<?> assignedType = expression.getNodeJavaType();
-		return targetType == assignedType
-			// If we don't know the java types, let's just be lenient
-			|| isUnknown( targetType)
-			|| isUnknown( assignedType )
-			// Assume we can coerce one to another
-			|| targetType.isWider( assignedType )
-			// Enum assignment, other strange user type mappings
-			|| targetType.getJavaTypeClass().isAssignableFrom( assignedType.getJavaTypeClass() );
-	}
 
 	private void verifyInsertTypesMatch(String hqlString, SqmInsertStatement<R> sqmStatement) {
 		final List<SqmPath<?>> insertionTargetPaths = sqmStatement.getInsertionTargetPaths();
@@ -439,21 +396,23 @@ public class QuerySqmImpl<R>
 		}
 		for ( int i = 0; i < expressionsSize; i++ ) {
 			final SqmTypedNode<?> expression = expressions.get( i );
-			if ( expression.getNodeJavaType() == null ) {
-				continue;
-			}
-			if ( insertionTargetPaths.get( i ).getJavaTypeDescriptor() != expression.getNodeJavaType() ) {
-				throw new SemanticException(
-						String.format(
-								"Expected insert attribute type [%s] did not match Query selection type [%s] at selection index [%d]",
-								insertionTargetPaths.get( i ).getJavaTypeDescriptor().getJavaType().getTypeName(),
-								expression.getNodeJavaType().getJavaType().getTypeName(),
-								i
-						),
-						hqlString,
-						null
-				);
-			}
+			final SqmPath<?> targetPath = insertionTargetPaths.get(i);
+			assertAssignable( hqlString, targetPath, expression, getSessionFactory() );
+//			if ( expression.getNodeJavaType() == null ) {
+//				continue;
+//			}
+//			if ( insertionTargetPaths.get( i ).getJavaTypeDescriptor() != expression.getNodeJavaType() ) {
+//				throw new SemanticException(
+//						String.format(
+//								"Expected insert attribute type [%s] did not match Query selection type [%s] at selection index [%d]",
+//								insertionTargetPaths.get( i ).getJavaTypeDescriptor().getJavaType().getTypeName(),
+//								expression.getNodeJavaType().getJavaType().getTypeName(),
+//								i
+//						),
+//						hqlString,
+//						null
+//				);
+//			}
 		}
 	}
 

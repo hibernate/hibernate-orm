@@ -108,6 +108,21 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
+	//Used by Hibernate Reactive to efficiently create new instances of this same class
+	protected UpdateCoordinatorStandard(
+			AbstractEntityPersister entityPersister,
+			SessionFactoryImplementor factory,
+			MutationOperationGroup staticUpdateGroup,
+			BatchKey batchKey,
+			MutationOperationGroup versionUpdateGroup,
+			BatchKey versionUpdateBatchkey) {
+		super( entityPersister, factory );
+		this.staticUpdateGroup = staticUpdateGroup;
+		this.batchKey = batchKey;
+		this.versionUpdateGroup = versionUpdateGroup;
+		this.versionUpdateBatchkey = versionUpdateBatchkey;
+	}
+
 	@Override
 	public MutationOperationGroup getStaticUpdateGroup() {
 		return staticUpdateGroup;
@@ -997,7 +1012,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		return NoBatchKeyAccess.INSTANCE;
 	}
 
-	private BatchKey getVersionUpdateBatchkey(){
+	//Used by Hibernate Reactive
+	protected BatchKey getVersionUpdateBatchkey(){
 		return versionUpdateBatchkey;
 	}
 

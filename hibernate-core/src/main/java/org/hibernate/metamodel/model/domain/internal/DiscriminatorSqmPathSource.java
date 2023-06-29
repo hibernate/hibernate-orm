@@ -34,6 +34,14 @@ public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 		this.entityMapping = entityMapping;
 	}
 
+	public EntityDomainType<?> getEntityDomainType() {
+		return entityDomainType;
+	}
+
+	public EntityMappingType getEntityMapping() {
+		return entityMapping;
+	}
+
 	@Override
 	public SqmPath<D> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
 		final NavigablePath navigablePath;

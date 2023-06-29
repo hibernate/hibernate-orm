@@ -693,7 +693,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 			return (BasicType<J>) existing;
 		}
 
-		final BasicType<J> registeredType = getBasicTypeRegistry().getRegisteredType( javaType );
+		final BasicType<J> registeredType = basicTypeRegistry.getRegisteredType( javaType );
 		if ( registeredType != null ) {
 			basicTypeByJavaType.put( javaType, registeredType );
 			return registeredType;

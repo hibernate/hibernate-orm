@@ -20,6 +20,7 @@ import jakarta.persistence.Table;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.query.Query;
+import org.hibernate.query.SemanticException;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -90,11 +91,7 @@ public class QueryLiteralTest {
 			fail( "Should throw Exception!" );
 		}
 		catch (Exception e) {
-			final Throwable rootCause = ExceptionHelper.getRootCause( e );
-			assertThat( rootCause, instanceOf( SqlTreeCreationException.class ) );
-			assertThat( rootCause.getMessage(), startsWith( "QueryLiteral type [" ) );
-			assertThat( rootCause.getMessage(), containsString( "] did not match domain Java-type [" ) );
-			assertThat( rootCause.getMessage(), containsString( "] nor JDBC Java-type [" ) );
+			assertThat( ExceptionHelper.getRootCause( e ), instanceOf( SemanticException.class ) );
 		}
 	}
 

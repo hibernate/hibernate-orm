@@ -15,11 +15,12 @@ import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import jakarta.persistence.criteria.Expression;
+
+import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
 /**
  * @author Steve Ebersole
@@ -135,7 +136,7 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	}
 
 	private void implyListElementType(SqmExpression<?> expression) {
-		nodeBuilder().assertComparable( getTestExpression(), expression );
+		assertComparable( getTestExpression(), expression, nodeBuilder().getSessionFactory() );
 		expression.applyInferableType(
 				QueryHelper.highestPrecedenceType2( getTestExpression().getExpressible(), expression.getExpressible() )
 		);

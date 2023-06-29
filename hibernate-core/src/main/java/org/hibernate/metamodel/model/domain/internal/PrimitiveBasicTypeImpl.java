@@ -7,18 +7,19 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 public class PrimitiveBasicTypeImpl<J> extends BasicTypeImpl<J> {
-	private final Class<J> javaTypeClass;
+	private final Class<J> primitiveClass;
 
-	public PrimitiveBasicTypeImpl(JavaType<J> javaType, Class<J> javaTypeClass) {
-		super( javaType );
-		assert javaTypeClass.isPrimitive();
-		this.javaTypeClass = javaTypeClass;
+	public PrimitiveBasicTypeImpl(JavaType<J> javaType, JdbcType jdbcType, Class<J> primitiveClass) {
+		super( javaType, jdbcType );
+		assert primitiveClass.isPrimitive();
+		this.primitiveClass = primitiveClass;
 	}
 
 	@Override
 	public Class<J> getJavaType() {
-		return javaTypeClass;
+		return primitiveClass;
 	}
 }

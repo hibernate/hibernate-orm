@@ -131,9 +131,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 	}
 
 	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup group) {
-		return session.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class )
+		return mutationExecutorService
 				.createExecutor( resolveBatchKeyAccess( false, session ), group, session );
 	}
 

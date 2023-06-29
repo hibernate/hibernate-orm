@@ -1221,6 +1221,22 @@ If the association is bidirectional, we annotate the unowned side `@OneToOne(map
 A unidirectional many-to-many association is represented as a collection-valued attribute.
 It always maps to a separate _association table_ in the database.
 
+[TIP]
+====
+It tends to happen that a many-to-many association eventually turns out to be an entity in disguise.
+Suppose we start with a nice clean many-to-many.
+Later on, it's quite likely that we'll discover some additional information which comes attached to the association, and so the association table needs some extra columns.
+
+For example, imagine that we needed to report the percentage contribution of each author to a book.
+That information naturally belongs to the association table.
+We can't easily store it as an attribute of of `Book`, nor as an attribute of `Author`.
+
+When this happens, we need to change our Java model, usually introducing a new entity class which maps the association table.
+In our example, it we might call this entity something like `BookAuthorship`, and it would have `@OneToMany` associations to both `Author` and `Book`.
+
+We can evade this disruption by simply avoiding the use of `@ManyToMany`, and representing every logical many-to-many association using an intermediate entity right from the start.
+====
+
 A many-to-many association must be annotated `@ManyToMany`:
 
 [source,java]
@@ -1314,6 +1330,7 @@ So we may expand our taxonomy with:
 
 There's actually two new kinds of mapping here: `@Array` mappings, and `@ElementCollection` mappings.
 
+[%unbreakable]
 [CAUTION]
 // .These sorts of mappings are overused
 ====
@@ -1338,6 +1355,7 @@ We might represent this in our `Event` entity as an attribute of type `DayOfWeek
 Since the number of elements of this array or list is upper bounded by 7, this is a reasonable case for the use of an `ARRAY`-typed column.
 It's hard to see much value in storing this collection in a separate table.
 
+[%unbreakable]
 .Learning to not hate SQL arrays
 ****
 For a long time, we thought arrays were a kind of weird and warty thing to add to the relational model, but recently we've come to realize that this view was overly closed-minded.
@@ -1410,6 +1428,7 @@ create table Event_daysOfWeek (
 
 Which is fine, but it's still a mapping we prefer to avoid.
 
+[%unbreakable]
 [WARNING]
 // .This is not what we would do
 ====

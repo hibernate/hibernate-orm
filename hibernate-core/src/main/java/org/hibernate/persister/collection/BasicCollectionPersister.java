@@ -178,7 +178,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			return new InsertRowsCoordinatorNoOp( this );
 		}
 
-		return new InsertRowsCoordinatorStandard( this, rowMutationOperations );
+		return new InsertRowsCoordinatorStandard( this, rowMutationOperations, getFactory().getServiceRegistry() );
 	}
 
 	private DeleteRowsCoordinator buildDeleteRowCoordinator() {
@@ -192,7 +192,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			return new DeleteRowsCoordinatorNoOp( this );
 		}
 
-		return new DeleteRowsCoordinatorStandard( this, rowMutationOperations, hasPhysicalIndexColumn() );
+		return new DeleteRowsCoordinatorStandard( this, rowMutationOperations, hasPhysicalIndexColumn(), getFactory().getServiceRegistry() );
 	}
 
 	private RemoveCoordinator buildDeleteAllCoordinator() {
@@ -206,7 +206,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 			return new RemoveCoordinatorNoOp( this );
 		}
 
-		return new RemoveCoordinatorStandard( this, this::buildDeleteAllOperation );
+		return new RemoveCoordinatorStandard( this, this::buildDeleteAllOperation, getFactory().getServiceRegistry() );
 	}
 
 

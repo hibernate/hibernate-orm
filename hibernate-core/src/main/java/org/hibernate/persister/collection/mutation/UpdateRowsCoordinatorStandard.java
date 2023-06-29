@@ -13,8 +13,6 @@ import java.util.List;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -32,8 +30,8 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
  * @author Steve Ebersole
  */
 public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator implements UpdateRowsCoordinator {
-	private final RowMutationOperations rowMutationOperations;
 
+	private final RowMutationOperations rowMutationOperations;
 	private AbstractMutationOperationGroup operationGroup;
 
 	public UpdateRowsCoordinatorStandard(
@@ -48,10 +46,6 @@ public class UpdateRowsCoordinatorStandard extends AbstractUpdateRowsCoordinator
 	protected int doUpdate(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
 		final AbstractMutationOperationGroup operationGroup = getOperationGroup();
 
-		final MutationExecutorService mutationExecutorService = session
-				.getFactory()
-				.getFastSessionServices()
-				.getMutationExecutorService();
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE" ),
 				operationGroup,

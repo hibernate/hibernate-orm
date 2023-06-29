@@ -15,6 +15,7 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.NoBatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
+import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.OnExecutionGenerator;
@@ -43,12 +44,16 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  */
 @Internal
 public abstract class AbstractMutationCoordinator {
-	private final AbstractEntityPersister entityPersister;
-	private final SessionFactoryImplementor factory;
+	protected final AbstractEntityPersister entityPersister;
+	protected final SessionFactoryImplementor factory;
+	protected final MutationExecutorService mutationExecutorService;
+	protected final Dialect dialect;
 
 	public AbstractMutationCoordinator(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
 		this.entityPersister = entityPersister;
 		this.factory = factory;
+		dialect = factory.getJdbcServices().getDialect();
+		this.mutationExecutorService = factory.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
 	protected AbstractEntityPersister entityPersister() {
@@ -60,7 +65,7 @@ public abstract class AbstractMutationCoordinator {
 	}
 
 	protected Dialect dialect() {
-		return factory().getJdbcServices().getDialect();
+		return dialect;
 	}
 
 	protected BatchKeyAccess resolveBatchKeyAccess(boolean dynamicUpdate, SharedSessionContractImplementor session) {

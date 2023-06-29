@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
@@ -34,13 +35,16 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 	private final RowMutationOperations rowMutationOperations;
 
 	private final SubclassEntry[] subclassEntries;
+	private final MutationExecutorService mutationExecutorService;
 
 	public InsertRowsCoordinatorTablePerSubclass(
 			OneToManyPersister mutationTarget,
-			RowMutationOperations rowMutationOperations) {
+			RowMutationOperations rowMutationOperations,
+			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
 		this.subclassEntries = new SubclassEntry[mutationTarget.getElementPersister().getRootEntityDescriptor().getSubclassEntityNames().size()];
+		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -69,11 +73,6 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 
 		final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
 		final CollectionPersister collectionDescriptor = pluralAttribute.getCollectionDescriptor();
-
-		final MutationExecutorService mutationExecutorService = session
-				.getFactory()
-				.getFastSessionServices()
-				.getMutationExecutorService();
 
 		final Iterator<?> entries = collection.entries( collectionDescriptor );
 		collection.preInsert( collectionDescriptor );

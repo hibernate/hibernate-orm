@@ -15,6 +15,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
@@ -29,6 +30,7 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 	private final OneToManyPersister mutationTarget;
 	private final OperationProducer operationProducer;
+	private final MutationExecutorService mutationExecutorService;
 
 	private MutationOperationGroupSingle[] operationGroups;
 
@@ -40,9 +42,11 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 	 */
 	public RemoveCoordinatorTablePerSubclass(
 			OneToManyPersister mutationTarget,
-			OperationProducer operationProducer) {
+			OperationProducer operationProducer,
+			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.operationProducer = operationProducer;
+		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -76,10 +80,6 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 			operationGroups = this.operationGroups = buildOperationGroups();
 		}
 
-		final MutationExecutorService mutationExecutorService = session
-				.getFactory()
-				.getFastSessionServices()
-				.getMutationExecutorService();
 		final ForeignKeyDescriptor fkDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
 
 		for ( MutationOperationGroupSingle operationGroup : operationGroups ) {

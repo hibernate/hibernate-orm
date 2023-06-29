@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
@@ -37,15 +38,18 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 	private final boolean deleteByIndex;
 
 	private final SubclassEntry[] subclassEntries;
+	private final MutationExecutorService mutationExecutorService;
 
 	public DeleteRowsCoordinatorTablePerSubclass(
 			OneToManyPersister mutationTarget,
 			RowMutationOperations rowMutationOperations,
-			boolean deleteByIndex) {
+			boolean deleteByIndex,
+			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
 		this.deleteByIndex = deleteByIndex;
 		this.subclassEntries = new SubclassEntry[mutationTarget.getElementPersister().getRootEntityDescriptor().getSubclassEntityNames().size()];
+		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -62,11 +66,6 @@ public class DeleteRowsCoordinatorTablePerSubclass implements DeleteRowsCoordina
 					key
 			);
 		}
-
-		final MutationExecutorService mutationExecutorService = session
-				.getFactory()
-				.getFastSessionServices()
-				.getMutationExecutorService();
 
 		final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
 		final CollectionPersister collectionDescriptor = pluralAttribute.getCollectionDescriptor();

@@ -12,11 +12,11 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
-import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
@@ -32,16 +32,19 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 	private final RowMutationOperations rowMutationOperations;
 
 	private final BasicBatchKey batchKey;
+	private final MutationExecutorService mutationExecutorService;
 
 	private MutationOperationGroupSingle operationGroup;
 
 	public InsertRowsCoordinatorStandard(
 			CollectionMutationTarget mutationTarget,
-			RowMutationOperations rowMutationOperations) {
+			RowMutationOperations rowMutationOperations,
+			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
 
 		this.batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#INSERT" );
+		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -75,10 +78,6 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 		final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
 		final CollectionPersister collectionDescriptor = pluralAttribute.getCollectionDescriptor();
 
-		final MutationExecutorService mutationExecutorService = session
-				.getFactory()
-				.getFastSessionServices()
-				.getMutationExecutorService();
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> batchKey,
 				operationGroup,

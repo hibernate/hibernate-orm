@@ -403,6 +403,7 @@ public final class FastSessionServices {
 		return xmlFormatMapper;
 	}
 
+	@Deprecated //This seems no longer used - cleanup?
 	public MutationExecutorService getMutationExecutorService() {
 		return mutationExecutorService;
 	}

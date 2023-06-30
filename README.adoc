@@ -177,7 +177,7 @@ The following table illustrates a list of commands for various databases that ca
 
 |Oracle XE
 |`./docker_db.sh oracle`
-|`./gradlew test -Pdb=oracle_ci`
+|`./gradlew test -Pdb=oracle_free_ci`
 
 |DB2
 |`./docker_db.sh db2`

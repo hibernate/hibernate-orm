@@ -7,11 +7,11 @@ import java.util.stream.Stream;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.CockroachDialect;
 
-import org.hibernate.testing.SkipForDialect;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -24,8 +24,8 @@ import jakarta.persistence.Version;
 		OptimisticAndPessimisticLockTest.EntityA.class
 })
 @SessionFactory
-@TestForIssue(jiraKey = "HHH-16461")
-@SkipForDialect(value = CockroachDialect.class, comment = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
+@JiraKey("HHH-16461")
+@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB uses SERIALIZABLE isolation, and does not support this")
 public class OptimisticAndPessimisticLockTest {
 
 	public Stream<LockMode> pessimisticLockModes() {

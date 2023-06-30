@@ -6,10 +6,13 @@
  */
 package org.hibernate.orm.test.query;
 
+import org.hibernate.dialect.OracleDialect;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -51,6 +54,7 @@ public class EntityValuedInSubqueryGroupAndOrderTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, reason = "Oracle 23c bug")
 	public void testInSubqueryGroupBy(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final EntityB result = session.createQuery(

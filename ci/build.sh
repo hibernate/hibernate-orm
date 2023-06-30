@@ -18,6 +18,9 @@ elif [ "$RDBMS" == "edb" ] || [ "$RDBMS" == "edb_11" ]; then
   goal="-Pdb=edb_ci -DdbHost=localhost:5444"
 elif [ "$RDBMS" == "oracle" ]; then
   goal="-Pdb=oracle_ci"
+elif [ "$RDBMS" == "oracle_xe" ]; then
+  # I have no idea why, but these tests don't seem to work on CI...
+  goal="-Pdb=oracle_xe_ci"
 elif [ "$RDBMS" == "oracle_atps" ]; then
   echo "Managing Oracle Autonomous Database..."
   export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=autonomous&hostname=`hostname`" -H 'accept: application/json')

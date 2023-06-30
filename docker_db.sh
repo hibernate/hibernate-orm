@@ -320,7 +320,7 @@ mssql_2022() {
 sybase() {
     $CONTAINER_CLI rm -f sybase || true
     # Yup, that sucks, but on ubuntu we need to use -T11889 as per: https://github.com/DataGrip/docker-env/issues/12
-    $CONTAINER_CLI run -d -p 5000:5000 -p 5001:5001 --name sybase --entrypoint /bin/bash docker.io/nguoianphu/docker-sybase -c "source /opt/sybase/SYBASE.sh
+    $CONTAINER_CLI run -d -p 9000:5000 -p 9001:5001 --name sybase --entrypoint /bin/bash docker.io/nguoianphu/docker-sybase -c "source /opt/sybase/SYBASE.sh
 /opt/sybase/ASE-16_0/bin/dataserver \
 -d/opt/sybase/data/master.dat \
 -e/opt/sybase/ASE-16_0/install/MYSYBASE.log \

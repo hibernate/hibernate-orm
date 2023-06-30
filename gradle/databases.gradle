@@ -79,7 +79,7 @@ ext {
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         // Disable prepared statement caching to avoid issues with changing schemas
-                        'jdbc.url'   : 'jdbc:jtds:sybase://' + dbHost + ':5000/hibernate_orm_test;maxStatements=0;cacheMetaData=false',
+                        'jdbc.url'   : 'jdbc:jtds:sybase://' + dbHost + ':9000/hibernate_orm_test;maxStatements=0;cacheMetaData=false',
                         'connection.init_sql' : 'set ansinull on'
                 ],
                 sybase_jconn_ci : [

@@ -50,6 +50,7 @@ tasks.test {
 			   'mysql_ci',
 			   'oracle',
 			   'oracle_ci',
+			   'oracle_free_ci',
 			   'mssql',
 			   'mssql_ci'
 	].contains( project.db )

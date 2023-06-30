@@ -21,6 +21,10 @@ elif [ "$RDBMS" == "edb" ] || [ "$RDBMS" == "edb_10" ]; then
 elif [ "$RDBMS" == "oracle" ]; then
   # I have no idea why, but these tests don't seem to work on CI...
   goal="-Pdb=oracle_ci -PexcludeTests=**.LockTest.testQueryTimeout*"
+elif [ "$RDBMS" == "oracle_free" ]; then
+  # Used starting from 23c because of the renaming of the default pluggable database
+  # I have no idea why, but these tests don't seem to work on CI...
+  goal="-Pdb=oracle_free_ci -PexcludeTests=**.LockTest.testQueryTimeout*"
 elif [ "$RDBMS" == "oracle_11_2" ]; then
   # I have no idea why, but these tests don't seem to work on CI...
   goal="-Pdb=oracle_legacy_ci -PexcludeTests=**.LockTest.testQueryTimeout*"

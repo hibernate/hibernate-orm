@@ -3,6 +3,42 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.6.Final (June 30, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32164
+
+** Bug
+    * [HHH-16868] - IN clause with more than 1000 expressions
+    * [HHH-16839] - Failing to update a one-to-one lazy association with `OptimisticLockType.DIRTY` and enabled bytecode enhancement
+    * [HHH-16832] - Bytecode enhancement leads to broken constructor for a generic embedded field in a MappedSuperclass
+    * [HHH-16831] - Revisit logging statement that use string concat for formatted logging
+    * [HHH-16821] - Fail to delete entity with a composite id using an @IdClass with one of its fields mapped from the id of a @ManyToOne association
+    * [HHH-16820] - When batching enabled the LockModeType is ignored
+    * [HHH-16799] - Using bytecode enhancement may result in incorrect AccessType being picked
+    * [HHH-16784] - @MappedSuperclass with parameterized interface types no longer works
+    * [HHH-16743] - StackOverflowError when loading a ManyToOne whith @Proxy(lazy=false)
+    * [HHH-16733] - Doing polymorphic queries with interfaces results in exception SqmRoot not yet resolved to TableGroup
+    * [HHH-16721] - HQL with subquery with entity path at least two levels deep produces wrong SQL
+    * [HHH-16713] - Unexpected warning: "HHH100001:  JDBC driver did not return the expected number of row counts"
+    * [HHH-16711] - Reading entities using @MappedSuperclass does not work with classes in foreign packages
+    * [HHH-16701] - "persister" is null during validation with lazy collections
+    * [HHH-16602] - NPE When initializing a lazy collection during flush
+    * [HHH-16589] - In-Clause Parameter Padding mistreats Dilect.getInExpressionCountLimit which can cause ORA-01795: maximum number of expressions in a list is 1000
+    * [HHH-16582] - Alias XXX used for multiple from-clause elements error when executing query with 2 level join
+    * [HHH-16537] - Wrong SQL generated when root join is not used in sub-query
+    * [HHH-16514] - Property sorting can lead to incorrect column mappings with derived embeddable keys
+    * [HHH-16275] - LockTest.testLock*FkTarget fail on Sybase with timeout getting lock
+    * [HHH-14703] - @ElementCollection + nested @Embeddable -> @Enumerated ignored
+    * [HHH-14078] - Hibernate returns duplicates into @OneToMany collection after merge
+
+** Improvement
+    * [HHH-16794] - With Bytecode enhancement a lazy ManyToOne association targeting an Entity annotated with @Proxy(lazy = false) is eagerly loaded 
+
+** Task
+    * [HHH-16873] - Expose fast-path cloning constructors for UpdateCoordinatorStandard
+
+
 Changes in 6.2.5.Final (June 15, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

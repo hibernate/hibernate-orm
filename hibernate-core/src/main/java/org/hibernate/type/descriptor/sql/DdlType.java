@@ -13,8 +13,10 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 /**
  * Descriptor for a DDL column type. An instance of this type abstracts over
@@ -37,31 +39,54 @@ public interface DdlType extends Serializable {
 	int getSqlTypeCode();
 
 	/**
-	 * Returns the default type name without precision/length and scale parameters.
+	 * Return a type with length, precision, and scale specified by the given
+	 * {@linkplain Size size object}. The given type may be used to
+	 * determine additional aspects of the returned SQL type.
+	 *
+	 * @since 6.3
 	 */
+	default String getTypeName(Size columnSize, Type type, DdlTypeRegistry ddlTypeRegistry) {
+		return getTypeName( columnSize );
+	}
+
+	/**
+	 * Returns the default type name without precision/length and scale parameters.
+	 *
+	 * @deprecated not appropriate for named enum or array types
+	 */
+	@Deprecated(since = "6.3")
 	String getRawTypeName();
 
 	/**
 	 * Returns all type names without precision/length and scale parameters.
+	 *
+	 * @deprecated not appropriate for named enum or array types
 	 */
 	@Incubating
+	@Deprecated(since = "6.3")
 	default String[] getRawTypeNames() {
 		return new String[] { getRawTypeName() };
 	}
 
-	String getTypeNamePattern();
-
 	/**
 	 * Return a type with length, precision, and scale specified by the given
 	 * {@linkplain Size size object}.
+	 *
+	 * @deprecated not appropriate for named enum or array types,
+	 *             use {@link #getTypeName(Size, Type, DdlTypeRegistry)} instead
 	 */
+	@Deprecated(since = "6.3")
 	default String getTypeName(Size size) {
 		return getTypeName( size.getLength(), size.getPrecision(), size.getScale() );
 	}
 
 	/**
 	 * Return a type with the given length, precision, and scale.
+	 *
+	 * @deprecated not appropriate for named enum or array types,
+	 *             use {@link #getTypeName(Size, Type, DdlTypeRegistry)} instead
 	 */
+	@Deprecated(since = "6.3")
 	String getTypeName(Long size, Integer precision, Integer scale);
 
 	/**

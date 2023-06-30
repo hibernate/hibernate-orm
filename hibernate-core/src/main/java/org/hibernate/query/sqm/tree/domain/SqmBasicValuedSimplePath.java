@@ -6,10 +6,11 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -49,18 +50,24 @@ public class SqmBasicValuedSimplePath<T>
 			return existing;
 		}
 
+		final SqmPath<?> lhsCopy = getLhs().copy( context );
 		final SqmBasicValuedSimplePath<T> path = context.registerCopy(
 				this,
 				new SqmBasicValuedSimplePath<>(
-						getNavigablePath(),
+						getNavigablePathCopy( lhsCopy ),
 						getReferencedPathSource(),
-						getLhs().copy( context ),
+						lhsCopy,
 						getExplicitAlias(),
 						nodeBuilder()
 				)
 		);
 		copyTo( path, context );
 		return path;
+	}
+
+	@Override
+	public SqmExpressible<T> getExpressible() {
+		return this;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -71,7 +78,7 @@ public class SqmBasicValuedSimplePath<T>
 			String name,
 			boolean isTerminal,
 			SqmCreationState creationState) {
-		throw new SemanticException(
+		throw new UnknownPathException(
 				String.format(
 						"Could not interpret attribute '%s' of basic-valued path '%s'",
 						name, getNavigablePath()
@@ -121,6 +128,11 @@ public class SqmBasicValuedSimplePath<T>
 	@Override
 	public Class<T> getBindableJavaType() {
 		return getJavaType();
+	}
+
+	@Override
+	public DomainType<T> getSqmType() {
+		return getNodeType().getSqmType();
 	}
 
 

@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -32,6 +31,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
+import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
@@ -45,10 +45,9 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
-import org.hibernate.type.Type;
 
+import static java.util.stream.Collectors.toList;
 import static org.hibernate.generator.EventType.INSERT;
-import static org.hibernate.id.IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
@@ -67,6 +66,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private PersistentClass owner;
 	private boolean dynamic;
 	private boolean isKey;
+	private Boolean isGeneric;
 	private String roleName;
 
 	private final ArrayList<Property> properties = new ArrayList<>();
@@ -123,7 +123,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.parentProperty = original.parentProperty;
 		this.owner = original.owner;
 		this.dynamic = original.dynamic;
-		this.metaAttributes = original.metaAttributes == null ? null : new HashMap<>(original.metaAttributes);
+		this.isGeneric = original.isGeneric;
+		this.metaAttributes = original.metaAttributes == null ? null : new HashMap<>( original.metaAttributes );
 		this.isKey = original.isKey;
 		this.roleName = original.roleName;
 		this.customInstantiator = original.customInstantiator;
@@ -183,8 +184,8 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	public List<Selectable> getSelectables() {
 		if ( cachedSelectables == null ) {
 			cachedSelectables = properties.stream()
-					.flatMap(p -> p.getSelectables().stream())
-					.collect(Collectors.toList());
+					.flatMap( p -> p.getSelectables().stream() )
+					.collect( toList() );
 		}
 		return cachedSelectables;
 	}
@@ -197,7 +198,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		else {
 			this.cachedColumns = properties.stream()
 					.flatMap( p -> p.getValue().getColumns().stream() )
-					.collect( Collectors.toList() );
+					.collect( toList() );
 			return cachedColumns;
 		}
 	}
@@ -430,14 +431,14 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public boolean isSame(Component other) {
 		return super.isSame( other )
-				&& Objects.equals( properties, other.properties )
-				&& Objects.equals( componentClassName, other.componentClassName )
-				&& embedded == other.embedded
-				&& Objects.equals( aggregateColumn, other.aggregateColumn )
-				&& Objects.equals( parentAggregateColumn, other.parentAggregateColumn )
-				&& Objects.equals( structName, other.structName )
-				&& Objects.equals( parentProperty, other.parentProperty )
-				&& Objects.equals( metaAttributes, other.metaAttributes );
+			&& Objects.equals( properties, other.properties )
+			&& Objects.equals( componentClassName, other.componentClassName )
+			&& embedded == other.embedded
+			&& Objects.equals( aggregateColumn, other.aggregateColumn )
+			&& Objects.equals( parentAggregateColumn, other.parentAggregateColumn )
+			&& Objects.equals( structName, other.structName )
+			&& Objects.equals( parentProperty, other.parentProperty )
+			&& Objects.equals( metaAttributes, other.metaAttributes );
 	}
 
 	@Override
@@ -657,11 +658,12 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		@Override
 		public void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext) {
 			if ( !subgenerator.generatedOnExecution() ) {
-				Object generatedId = ( (BeforeExecutionGenerator) subgenerator).generate( session, incomingObject, null, INSERT );
+				final Object generatedId = ( (BeforeExecutionGenerator) subgenerator)
+						.generate( session, incomingObject, null, INSERT );
 				injector.set( injectionContext, generatedId );
 			}
 			else {
-				injector.set( injectionContext, POST_INSERT_INDICATOR );
+				throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );
 			}
 		}
 
@@ -818,5 +820,16 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public void setStructColumnNames(String[] structColumnNames) {
 		this.structColumnNames = structColumnNames;
+	}
+
+	public boolean isGeneric() {
+		if ( isGeneric == null ) {
+			isGeneric = getComponentClassName() != null && getComponentClass().getTypeParameters().length != 0;
+		}
+		return isGeneric;
+	}
+
+	public void setGeneric(boolean generic) {
+		isGeneric = generic;
 	}
 }

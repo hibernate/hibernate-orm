@@ -670,7 +670,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		final StringBuilder buffer = new StringBuilder(
 				sql.length() + hints.length() + 12
 		);
-		final int pos = sql.indexOf( ";" );
+		final int pos = sql.indexOf( ';' );
 		if ( pos > -1 ) {
 			buffer.append( sql, 0, pos );
 		}

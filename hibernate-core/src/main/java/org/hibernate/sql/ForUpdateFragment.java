@@ -55,7 +55,7 @@ public class ForUpdateFragment {
 						addTableAlias( tableAlias );
 					}
 					if ( upgradeType != null && lockMode != upgradeType ) {
-						throw new QueryException( "mixed LockModes" );
+						throw new QueryException( "Mixed LockModes" );
 					}
 					upgradeType = lockMode;
 				}

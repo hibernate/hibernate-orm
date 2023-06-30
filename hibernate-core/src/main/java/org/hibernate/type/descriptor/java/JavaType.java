@@ -21,6 +21,7 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.compare.ComparableComparator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -332,4 +333,19 @@ public interface JavaType<T> extends Serializable {
 		return false;
 	}
 
+	/**
+	 * The check constraint that should be added to the column
+	 * definition in generated DDL.
+	 *
+	 * @param columnName the name of the column
+	 * @param jdbcType   the {@link JdbcType} of the mapped column
+	 * @param converter  the converter, if any, or null
+	 * @param dialect    the SQL {@link Dialect}
+	 * @return a check constraint condition or null
+	 * @since 6.2
+	 */
+	@Incubating
+	default String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
+		return null;
+	}
 }

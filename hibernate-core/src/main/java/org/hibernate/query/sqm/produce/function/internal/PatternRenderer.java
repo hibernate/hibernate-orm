@@ -235,7 +235,7 @@ public class PatternRenderer {
 			sqlAppender.appendSql( " within group (order by" );
 			translator.render( withinGroup.get( 0 ), argumentRenderingMode );
 			for ( int i = 1; i < withinGroup.size(); i++ ) {
-				sqlAppender.appendSql( SqlAppender.COMA_SEPARATOR_CHAR );
+				sqlAppender.appendSql( SqlAppender.COMMA_SEPARATOR_CHAR );
 				translator.render( withinGroup.get( 0 ), argumentRenderingMode );
 			}
 			sqlAppender.appendSql( ')' );

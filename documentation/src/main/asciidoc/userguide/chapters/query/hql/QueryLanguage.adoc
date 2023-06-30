@@ -512,7 +512,7 @@ HQL defines two ways to concatenate strings:
 * the SQL-style concatenation operator, `||`, and
 * the JPQL-standard `concat()` function.
 
-See <<hql-functions-string,below>> for details of the `concat()` function.
+See <<hql-string-functions, below>> for details of the `concat()` function.
 
 [[hql-concatenation-example]]
 //.Concatenation operation example
@@ -892,6 +892,7 @@ Naturally, there are a good number of functions for working with strings.
 | `left()` | The leftmost characters of a string | `left(string, length)` | &cross; / &cross;
 | `right()` | The rightmost characters of a string | `right(string, length)`  | &cross; / &cross;
 | `replace()` | Replace every occurrence of a pattern in a string | `replace(string, pattern, replacement)` | &cross; / &cross;
+| `repeat()` | Concatenate a string with itself multiple times | `replace(string, times)` | &cross; / &cross;
 | `collate()` | Select a collation | `collate(p.name as collation)` | &cross; / &cross;
 |===
 
@@ -1224,6 +1225,27 @@ The following operators make it easier to deal with null values.
 include::{example-dir-hql}/HQLTest.java[tags=hql-null-predicate-example]
 ----
 ====
+
+[[boolean-predicate]]
+==== Operators for dealing with boolean values
+
+These operators perform comparisons on values of type `boolean`.
+These predicates never evaluate to `null`.
+
+[NOTE]
+====
+The values `true` and `false` of the `boolean` basic type are different to the logical `true` or `false` produced by a predicate.
+====
+
+For _logical_ operations on <<conditional-expressions,predicates>>, see <<logical-operators>> below.
+
+[cols="20,20,15,~"]
+|===
+| Operator | Negation | Type | Semantics
+
+| `is true` | `is not true` | Unary postfix | `true` if the value to the left is `true`, or `false` otherwise
+| `is false` | `is not false` | Binary | `true` if the value to the left is `false`, or `false` otherwise
+|===
 
 [[hql-like-predicate]]
 ==== String pattern matching
@@ -1938,7 +1960,7 @@ There's no need to bother with trying to represent a "tuple of length 1".
 But if there are multiple expressions in the select list then:
 
 - by default, each query result is packaged as an array of type `Object[]`, or
-- if explicitly requested by passing the class `Tuple` to `createQuery()`, the query result is packaged as an instance of `javax.persistence.Tuple`.
+- if explicitly requested by passing the class `Tuple` to `createQuery()`, the query result is packaged as an instance of `jakarta.persistence.Tuple`.
 
 [[hql-select-clause-projection-example]]
 //.Query results as lists

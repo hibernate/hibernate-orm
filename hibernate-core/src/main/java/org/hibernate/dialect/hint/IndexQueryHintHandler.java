@@ -34,12 +34,11 @@ public class IndexQueryHintHandler implements QueryHintHandler {
 			String startToken = matcher.group( 1 );
 			String endToken = matcher.group( 2 );
 
-			return new StringBuilder( startToken )
-					.append( " use index (" )
-					.append( hints )
-					.append( ") " )
-					.append( endToken )
-					.toString();
+			return startToken +
+					" use index (" +
+					hints +
+					") " +
+					endToken;
 		}
 		else {
 			return query;

@@ -1,0 +1,1590 @@
+[[entities]]
+== Entities
+
+An _entity_ is a Java class which represents data in a relational database table.
+We say that the entity _maps_ or _maps to_ the table.
+Much less commonly, an entity might aggregate data from multiple tables, but we'll get to that <<entity-table-mappings,later>>.
+
+An entity has _attributes_—properties or fields—which map to columns of the table.
+In particular, every entity must have an _identifier_ or _id_, which maps to the primary key of the table.
+The id allows us to uniquely associate a row of the table with an instance of the Java class, at least within a given _persistence context_.
+
+We'll explore the idea of a persistence context <<persistence-contexts,later>>. For now, think of it as a one-to-one mapping between ids and entity instances.
+
+An instance of a Java class cannot outlive the virtual machine to which it belongs.
+But we may think of an entity instance having a lifecycle which transcends a particular instantiation in memory.
+By providing its id to Hibernate, we may re-materialize the instance in a new persistence context, as long as the associated row is present in the database.
+Therefore, the operations `persist()` and `remove()` may be thought of as demarcating the beginning and end of the lifecycle of an entity, at least with respect to persistence.
+
+Thus, an id represents the _persistent identity_ of an entity, an identity that outlives a particular instantiation in memory.
+And this is an important difference between entity class itself and the values of its attributes—the entity has a persistent identity, and a well-defined lifecycle with respect to persistence, whereas a `String` or `List` representing one of its attribute values doesn't.
+
+An entity usually has associations to other entities.
+Typically, an association between two entities maps to a foreign key in one of the database tables.
+A group of mutually associated entities is often called a _domain model_, though _data model_ is also a perfectly good term.
+
+[[entity-clases]]
+=== Entity classes
+
+An entity must:
+
+- be a non-`final` class,
+- with a non-`private` constructor with no parameters.
+
+On the other hand, the entity class may be either concrete or `abstract`, and it may have any number of additional constructors.
+
+[TIP]
+// .Inner entity classes
+====
+An entity class may be a `static` inner class.
+====
+
+Every entity class must be annotated `@Entity`.
+
+[source,java]
+----
+@Entity
+class Book {
+    Book() {}
+    ...
+}
+----
+
+Alternatively, the class may be identified as an entity type by providing an XML-based mapping for the class.
+
+.Mapping entities using XML
+****
+When XML-based mappings are used, the `<entity>` element is used to declare an entity class:
+
+[source,xml]
+----
+<entity-mappings>
+    <package>org.hibernate.example</package>
+
+    <entity class="Book">
+        <attributes> ... </attributes>
+    </entity>
+
+    ...
+</entity-mappings>
+----
+Since the `orm.xml` mapping file format defined by the JPA specification was modelled closely on the annotation-based mappings, it's usually easy to go back and forth between the two options.
+****
+
+We won't have much more to say about XML-based mappings in this Introduction, since it's not our preferred way to do things.
+
+."Dynamic" models
+****
+:maps: {userGuideBase}#dynamic-model
+:envers: https://hibernate.org/orm/envers/
+We love representing entities as classes because the classes give us a _type-safe_ model of our data.
+But Hibernate also has the ability to represent entities as detyped instances of `java.util.Map`.
+There's information in the {maps}[User Guide], if you're curious.
+
+This must sound like a weird feature for a project that places importance on type-safety.
+Actually, it's a useful capability for a very particular sort of generic code.
+For example, {envers}[Hibernate Envers] is a great auditing/versioning system for Hibernate entities.
+Envers makes use of maps to represent its _versioned model_ of the data.
+****
+
+[[access-type]]
+=== Access types
+
+Each entity class has a default _access type_, either:
+
+- direct _field access_, or
+- _property access_.
+
+Hibernate automatically determines the access type from the location of attribute-level annotations.
+Concretely:
+
+- if a field is annotated `@Id`, field access is used, or
+- if a getter method is annotated `@Id`, property access is used.
+
+Back when Hibernate was just a baby, property access was quite popular in the Hibernate community.
+Today, however, field access is _much_ more common.
+
+[NOTE]
+// .Explicit access type
+====
+The default access type may be specified explicitly using the `@Access` annotation, but we strongly discourage this, since it's ugly and never necessary.
+====
+
+[IMPORTANT]
+// .Mapping annotations should be placed consistently
+====
+Mapping annotations should be placed consistently:
+
+- if `@Id` annotates a field, the other mapping annotations should also be applied to fields, or,
+- if `@Id` annotates a getter, the other mapping annotations should be applied to getters.
+
+It is in principle possible to mix field and property access using explicit `@Access` annotations at the attribute level.
+We don't recommend doing this.
+====
+
+An entity class like `Book`, which does not extend any other entity class is called a _root entity_.
+Every root entity must declare an identifier attribute.
+
+[[entity-inheritance]]
+=== Entity class inheritance
+
+An entity class may `extend` another entity class.
+
+[source,java]
+----
+@Entity
+class AudioBook extends Book {
+    AudioBook() {}
+    ...
+}
+----
+
+A subclass entity inherits every persistent attribute of every entity it extends.
+
+A root entity may also extend another class and inherit mapped attributes from the other class.
+But in this case, the class which declares the mapped attributes must be annotated `@MappedSuperclass`.
+
+[source,java]
+----
+@MappedSuperclass
+class Versioned {
+    ...
+}
+
+@Entity
+class Book extends Versioned {
+    ...
+}
+----
+
+A root entity class must declare an attribute annotated `@Id`, or inherit one from a `@MappedSuperclass`.
+A subclass entity always inherits the identifier attribute of the root entity.
+It may not declare its own `@Id` attribute.
+
+[[identifier-attributes]]
+=== Identifier attributes
+
+An identifier attribute is usually a field:
+
+[source,java]
+----
+@Entity
+class Book {
+    Book() {}
+
+    @Id
+    Long id;
+    
+    ...
+}
+----
+
+But it may be a property:
+
+[source,java]
+----
+@Entity
+class Book {
+    Book() {}
+
+    private Long id;
+    
+    @Id
+    Long getId() { return id; }
+    void setId(Long id) { this.id = id; }
+
+    ...
+}
+----
+
+An identifier attribute must be annotated `@Id` or `@EmbeddedId`.
+
+Identifier values may be:
+
+- assigned by the application, that is, by your Java code, or
+- generated and assigned by Hibernate.
+
+We'll discuss the second option first.
+
+[[generated-identifiers]]
+=== Generated identifiers
+
+An identifier is often system-generated, in which case it should be annotated `@GeneratedValue`:
+
+[source,java]
+----
+@Id @GeneratedValue
+Long id;
+----
+
+[TIP]
+// .Using surrogate keys
+====
+System-generated identifiers, or _surrogate keys_ make it easier to evolve or refactor the relational data model.
+If you have the freedom to define the relational schema, we recommend the use of surrogate keys.
+On the other hand, if, as is more common, you're working with a pre-existing database schema, you might not have the option.
+====
+
+JPA defines the following strategies for generating ids, which are enumerated by `GenerationType`:
+
+.Standard id generation strategies
+[%breakable,cols="25,15,~"]
+|===
+| Strategy                  | Java type | Implementation
+
+| `GenerationType.UUID`     | `UUID` or `String`  | A Java `UUID`
+| `GenerationType.IDENTITY` | `Long` or `Integer` | An identity or autoincrement column
+| `GenerationType.SEQUENCE` | `Long` or `Integer` | A database sequence
+| `GenerationType.TABLE`    | `Long` or `Integer` | A database table
+| `GenerationType.AUTO`     | `Long` or `Integer` | Selects `SEQUENCE`, `TABLE`, or `UUID` based on the identifier type and capabilities of the database
+|===
+
+For example, this UUID is generated in Java code:
+
+[source,java]
+----
+@Id @GeneratedValue UUID id;  // AUTO strategy selects UUID based on the field type
+----
+
+This id maps to a SQL `identity`, `auto_increment`, or `bigserial` column:
+
+[source,java]
+----
+@Id @GeneratedValue(strategy=IDENTITY) Long id;
+----
+
+The `@SequenceGenerator` and `@TableGenerator` annotations allow further control over `SEQUENCE` and `TABLE` generation respectively.
+
+Consider this sequence generator:
+
+[source,java]
+----
+@SequenceGenerator(name="bookSeq", sequenceName="seq_book", initialValue = 5, allocationSize=10)
+----
+
+Values are generated using a database sequence defined as follows:
+
+[source,sql]
+----
+create sequence seq_book start with 5 increment by 10
+----
+
+Notice that Hibernate doesn't have to go to the database every time a new identifier is needed.
+Instead, a given process obtains a block of ids, of size `allocationSize`, and only needs to hit the database each time the block is exhausted.
+Of course, the downside is that generated identifiers are not contiguous.
+
+[CAUTION]
+// .Check the `initialValue` and `allocationSize`
+====
+If you let Hibernate export your database schema, the sequence definition will have the right `start with` and `increment` values.
+But if you're working with a database schema managed outside Hibernate, make sure the `initialValue` and `allocationSize` members of `@SequenceGenerator` match the `start with` and `increment` specified in the DDL.
+====
+
+Any identifier attribute may now make use of the generator named `bookSeq`:
+
+[source,java]
+----
+@Id
+@GeneratedValue(strategy=SEQUENCE, generator="bookSeq")  // reference to generator defined elsewhere
+Long id;
+----
+
+Actually, it's extremely common to place the `@SequenceGenerator` annotation on the `@Id` attribute that makes use of it:
+
+[source,java]
+----
+@Id
+@GeneratedValue(strategy=SEQUENCE, generator="bookSeq")  // reference to generator defined below
+@SequenceGenerator(name="bookSeq", sequenceName="seq_book", initialValue = 5, allocationSize=10)
+Long id;
+----
+
+[NOTE]
+// .JPA id generators may be shared between entities
+====
+JPA id generators may be shared between entities.
+A `@SequenceGenerator` or `@TableGenerator` must have a name, and may be shared between multiple id attributes.
+This fits somewhat uncomfortably with the common practice of annotating the `@Id` attribute which makes use of the generator!
+====
+
+As you can see, JPA provides quite adequate support for the most common strategies for system-generated ids.
+However, the annotations themselves are a bit more intrusive than they should be, and there's no well-defined way to extend this framework to support custom strategies for id generation.
+Nor may `@GeneratedValue` be used on a property not annotated `@Id`.
+Since custom id generation is a rather common requirement, Hibernate provides a very carefully-designed framework for user-defined ``Generator``s, which we'll discuss in <<user-defined-generators>>.
+
+[[natural-identifiers]]
+=== Natural keys as identifiers
+
+Not every identifier attribute maps to a (system-generated) surrogate key.
+Primary keys which are meaningful to the user of the system are called _natural keys_.
+
+When the primary key of a table is a natural key, we don't annotate the identifier attribute `@GeneratedValue`, and it's the responsibility of the application code to assign a value to the identifier attribute.
+
+[source,java]
+----
+@Entity
+class Book {
+    @Id
+    String isbn;
+
+    ...
+}
+----
+
+Of particular interest are natural keys which comprise more than one database column, and such natural keys are called _composite keys_.
+
+[[composite-identifiers]]
+=== Composite identifiers
+
+If your database uses composite keys, you'll need more than one identifier attribute.
+There are two ways to map composite keys in JPA:
+
+- using an `@IdClass`, or
+- using an `@EmbeddedId`.
+
+Perhaps the most immediately-natural way to represent this in an entity class is with multiple fields annotated `@Id`, for example:
+
+[source,java]
+----
+@Entity
+@IdClass(BookId.class)
+class Book {
+    Book() {}
+
+    @Id
+    String isbn;
+
+    @Id
+    int printing;
+
+    ...
+}
+----
+
+But this approach comes with a problem: what object can we use to identify a `Book` and pass to methods like `find()` which accept an identifier?
+
+The solution is to write a separate class with fields that match the identifier attributes of the entity.
+The `@IdClass` annotation of the `Book` entity identifies the id class to use for that entity:
+
+[source,java]
+----
+class BookId {
+    
+    String isbn;
+    int printing;
+
+    BookId() {}
+
+    BookId(String isbn, int printing) {
+        this.isbn = isbn;
+        this.printing = printing;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        if (other instanceof BookId) {
+            BookId bookId = (BookId) other;
+            return bookId.isbn.equals(isbn)
+                && bookId.printing == printing;
+        }
+        else {
+            return false;
+        }
+    }
+    
+    @Override
+    public int hashCode() {
+        return isbn.hashCode();
+    }
+}
+----
+
+Every id class should override `equals()` and `hashCode()`.
+
+This is not our preferred approach.
+Instead, we recommend that the `BookId` class be declared as an `@Embeddable` type:
+
+[source,java]
+----
+@Embeddable
+class BookId {
+    
+    String isbn;
+
+    int printing;
+
+    BookId() {}
+
+    BookId(String isbn, int printing) {
+        this.isbn = isbn;
+        this.printing = printing;
+    }
+
+    ...
+}
+----
+
+We'll learn more about <<embeddable-objects>> below.
+
+Now the entity class may reuse this definition using `@EmbeddedId`, and the `@IdClass` annotation is no longer required:
+
+[source,java]
+----
+@Entity
+class Book {
+    Book() {}
+
+    @EmbeddedId
+    BookId bookId;
+
+    ...
+}
+----
+
+This second approach eliminates some duplicated code.
+
+Either way, we may now use `BookId` to obtain instances of `Book`:
+
+[source,java]
+----
+Book book = session.find(Book.class, new BookId(isbn, printing));
+----
+
+[[version-attributes]]
+=== Version attributes
+
+An entity may have an attribute which is used by Hibernate for optimistic lock checking.
+A version attribute is usually of type `Integer`, `Short`, `Long`, `LocalDateTime`, `OffsetDateTime`, `ZonedDateTime`, or `Instant`.
+
+[source,java]
+----
+@Version
+LocalDateTime lastUpdated;
+----
+
+Version attributes are automatically assigned by Hibernate when an entity is made persistent, and automatically incremented or updated each time the entity is updated.
+
+[TIP]
+// .Optimistic locking in Hibernate
+====
+If an entity doesn't have a version number, which often happens when mapping legacy data, we can still do optimistic locking.
+The `@OptimisticLocking` annotation lets us specify that optimistic locks should be checked by validating the values of `ALL` fields, or only the `DIRTY` fields of the entity.
+And the `@OptimisticLock` annotation lets us selectively exclude certain fields from optimistic locking.
+====
+
+The `@Id` and `@Version` attributes we've already seen are just specialized examples of _basic attributes_.
+
+[[natural-id-attributes]]
+=== Natural id attributes
+
+Even when an entity has a surrogate key, it should always be possible to write down a combination of fields which uniquely identifies an instance of the entity, from the point of view of the user of the system.
+This combination of fields is its natural key.
+Above, we <<natural-identifiers,considered>> the case where the natural key coincides with the primary key.
+Here, the natural key is a second unique key of the entity, distinct from its surrogate primary key.
+
+[IMPORTANT]
+// .What if my entity has no natural key?
+====
+If you can't identify a natural key, it might be a sign that you need to think more carefully about some aspect of your data model.
+If an entity doesn't have a meaningful unique key, then it's impossible to say what event or object it represents in the "real world" outside your program.
+====
+
+Since it's _extremely_ common to retrieve an entity based on its natural key, Hibernate has a way to mark the attributes of the entity which make up its natural key.
+Each attribute must be annotated `@NaturalId`.
+
+[source,java]
+----
+@Entity
+class Book {
+    Book() {}
+
+    @Id @GeneratedValue
+    Long id; // the system-generated surrogate key
+
+    @NaturalId
+    String isbn; // belongs to the natural key
+
+    @NaturalId
+    int printing; // also belongs to the natural key
+
+    ...
+}
+----
+
+Hibernate automatically generates a `UNIQUE` constraint on the columns mapped by the annotated fields.
+
+[TIP]
+====
+Consider using the natural id attributes to implement <<equals-and-hash>>.
+====
+
+The payoff for doing this extra work, as we will see <<natural-id-cache,much later>>, is that we can take advantage of optimized natural id lookups that make use of the second-level cache.
+
+Note that even when you've identified a natural key, we still recommend the use of a generated surrogate key in foreign keys, since this makes your data model _much_ easier to change.
+
+[[basic-attributes]]
+=== Basic attributes
+
+A _basic_ attribute of an entity is a field or property which maps to a single column of the associated database table.
+The JPA specification defines a quite limited set of basic types:
+
+.JPA-standard basic attribute types
+[%breakable,cols="30,^14,~"]
+|====
+| Classification | Package | Types
+
+| Primitive types | | `boolean`, `int`, `double`, etc
+| Primitive wrappers | `java.lang` | `Boolean`, `Integer`, `Double`, etc
+| Strings | `java.lang` | `String`
+| Arbitrary-precision numeric types | `java.math` | `BigInteger`, `BigDecimal`
+| Date/time types | `java.time` | `LocalDate`, `LocalTime`, `LocalDateTime`, `OffsetDateTime`, `Instant`
+| Deprecated date/time types 💀 | `java.util` | `Date`, `Calendar`
+| Deprecated JDBC date/time types 💀 | `java.sql` | `Date`, `Time`, `Timestamp`
+| Binary and character arrays | | `byte[]`, `char[]`
+| UUIDs | `java.util` | `UUID`
+| Enumerated types | | Any `enum`
+| Serializable types | | Any type which implements `java.io.Serializable`
+|====
+
+[IMPORTANT]
+// .Please don't use `Date`!
+====
+We're begging you to use types from the `java.time` package instead of anything which inherits `java.util.Date`.
+====
+
+[CAUTION]
+// .Serialization is usually a bad idea
+====
+Serializing a Java object and storing its binary representation in the database is usually wrong.
+As we'll soon see in <<embeddable-objects>>, Hibernate has much better ways to handle complex Java objects.
+====
+
+Hibernate slightly extends this list with the following types:
+
+.Additional basic attribute types in Hibernate
+[%breakable,cols="30,^14,56"]
+|====
+| Classification | Package | Types
+
+| Additional date/time types | `java.time` | `Duration`, `ZoneId`, `ZoneOffset`, `Year`, and even `ZonedDateTime`
+| JDBC LOB types | `java.sql` | `Blob`, `Clob`, `NClob`
+| Java class object | `java.lang` | `Class`
+| Miscellaneous types | `java.util` | `Currency`, `URL`, `TimeZone`
+|====
+
+The `@Basic` annotation explicitly specifies that an attribute is basic, but it's often not needed, since attributes are assumed basic by default.
+On the other hand, if a non-primitively-typed attribute cannot be null, use of `@Basic(optional=false)` is highly recommended.
+
+[source,java]
+----
+@Basic(optional=false) String firstName;
+@Basic(optional=false) String lastName;
+String middleName; // may be null
+----
+
+Note that primitively-typed attributes are inferred `NOT NULL` by default.
+
+.How to make a column `not null` in JPA
+****
+There are two standard ways to add a `NOT NULL` constraint to a mapped column in JPA:
+
+- using `@Basic(optional=false)`, or
+- using `@Column(nullable=false)`.
+
+You might wonder what the difference is.
+
+Well, it's perhaps not obvious to a casual user of the JPA annotations, but they actually come in two "layers":
+
+- annotations like `@Entity`, `@Id`, and `@Basic` belong to the _logical_ layer, the subject of the current chapter—they specify the semantics of your Java domain model, whereas
+- annotations like `@Table` and `@Column` belong to the _mapping_ layer, the topic of the <<object-relational-mapping,next chapter>>—they specify how elements of the domain model map to objects in the relational database.
+
+Information may be inferred from the logical layer down to the mapping layer, but is never inferred in the opposite direction.
+
+Now, the `@Column` annotation, to whom we'll be properly <<regular-column-mappings,introduced>> a bit later, belongs to the _mapping_ layer, and so its `nullable` member only affects schema generation (resulting in a `not null` constraint in the generated DDL).
+On the other hand, the `@Basic` annotation belongs to the logical layer, and so an attribute marked `optional=false` is checked by Hibernate before it even writes an entity to the database.
+Note that:
+
+- `optional=false` implies `nullable=false`, but
+- `nullable=false` _does not_ imply `optional=false`.
+
+Therefore, we prefer `@Basic(optional=false)` to `@Column(nullable=false)`.
+
+[TIP]
+====
+But wait!
+An even better solution is to use the `@NotNull` annotation from Bean Validation.
+Just add Hibernate Validator to your project build, as described in <<optional-dependencies>>.
+====
+****
+
+[[enums]]
+=== Enumerated types
+
+We included Java ``enum``s on the list above.
+An enumerated type is considered a sort of basic type, but since most databases don't have a native `ENUM` type, JPA provides a special `@Enumerated` annotation to specify how the enumerated values should be represented in the database:
+
+- by default, an enum is stored as an integer, the value of its `ordinal()` member, but
+- if the attribute is annotated `@Enumerated(STRING)`, it will be stored as a string, the value of its `name()` member.
+
+[source,java]
+----
+//here, an ORDINAL encoding makes sense
+@Enumerated
+@Basic(optional=false)
+DayOfWeek dayOfWeek;
+
+//but usually, a STRING encoding is better
+@Enumerated(EnumType.STRING)
+@Basic(optional=false)
+Status status;
+
+----
+
+In Hibernate 6, an `enum` annotated `@Enumerated(STRING)` is mapped to:
+
+- a `VARCHAR` column type with a `CHECK` constraint on most databases, or
+- an `ENUM` column type on MySQL.
+
+Any other ``enum`` is mapped to a `TINYINT` column with a `CHECK` constraint.
+
+[TIP]
+// .It's usually better to persist `enum` values by their names
+====
+JPA picks the wrong default here.
+In most cases, storing an integer encoding of the `enum` value makes the relational data harder to interpret.
+
+Even considering `DayOfWeek`, the encoding to integers is ambiguous.
+If you check `java.time.DayOfWeek`, you'll notice that `SUNDAY` is encoded as `6`.
+But in the country I was born, `SUNDAY` is the _first_ day of the week!
+
+So we prefer `@Enumerated(STRING)` for most `enum` attributes.
+====
+
+An interesting special case is PostgreSQL.
+Postgres supports _named_ `ENUM` types, which must be declared using a DDL `CREATE TYPE` statement.
+Sadly, these `ENUM` types aren't well-integrated with the language nor well-supported by the Postgres JDBC driver, so Hibernate doesn't use them by default.
+But if you would like to use a named enumerated type on Postgres, just annotate your `enum` attribute like this:
+
+[source,java]
+----
+@JdbcTypeCode(SqlTypes.NAMED_ENUM)
+@Basic(optional=false)
+Status status;
+----
+
+The limited set of pre-defined basic attribute types can be stretched a bit further by supplying a _converter_.
+
+[[converters]]
+=== Converters
+
+A JPA `AttributeConverter` is responsible for:
+
+- converting a given Java type to one of the types listed above, and/or
+- perform any other sort of pre- and post-processing you might need to perform on a basic attribute value before writing and reading it to or from the database.
+
+Converters substantially widen the set of attribute types that can be handled by JPA.
+
+There are two ways to apply a converter:
+
+- the `@Convert` annotation applies an `AttributeConverter` to a particular entity attribute, or
+- the `@Converter` annotation (or, alternatively, the `@ConverterRegistration` annotation) registers an `AttributeConverter` for automatic application to all attributes of a given type.
+
+For example, the following converter will be automatically applied to any attribute of type `BitSet`, and takes care of persisting the `BitSet` to a column of type `varbinary`:
+
+[source,java]
+----
+@Converter(autoApply = true)
+public static class EnumSetConverter implements AttributeConverter<EnumSet<DayOfWeek>,Integer> {
+    @Override
+    public Integer convertToDatabaseColumn(EnumSet<DayOfWeek> enumSet) {
+        int encoded = 0;
+        var values = DayOfWeek.values();
+        for (int i = 0; i<values.length; i++) {
+            if (enumSet.contains(values[i])) {
+                encoded |= 1<<i;
+            }
+        }
+        return encoded;
+    }
+
+    @Override
+    public EnumSet<DayOfWeek> convertToEntityAttribute(Integer encoded) {
+        var set = EnumSet.noneOf(DayOfWeek.class);
+        var values = DayOfWeek.values();
+        for (int i = 0; i<values.length; i++) {
+            if (((1<<i) & encoded) != 0) {
+                set.add(values[i]);
+            }
+        }
+        return set;
+    }
+}
+----
+
+On the other hand, if we _don't_ set `autoapply=true`, then we must explicitly apply the converter using the `@Convert` annotation:
+
+[source,java]
+----
+@Convert(converter = BitSetConverter.class)
+@Basic(optional = false)
+BitSet bitset;
+----
+
+All this is nice, but it probably won't surprise you that Hibernate goes beyond what is required by JPA.
+
+[[compositional-basic-types]]
+=== Compositional basic types
+
+Hibernate considers a "basic type" to be formed by the marriage of two objects:
+
+- a `JavaType`, which models the semantics of a certain Java class, and
+- a `JdbcType`, representing a SQL type which is understood by JDBC.
+
+When mapping a basic attribute, we may explicitly specify a `JavaType`, a `JdbcType`, or both.
+
+[discrete]
+==== JavaType
+
+An instance of `org.hibernate.type.descriptor.java.JavaType` represents a particular Java class.
+It's able to:
+
+- compare instances of the class to determine if an attribute of that class type is dirty (modified),
+- produce a useful hash code for an instance of the class,
+- coerce values to other types, and, in particular,
+- convert an instance of the class to one of several other equivalent Java representations at the request of its partner `JdbcType`.
+
+For example, `IntegerJavaType` knows how to convert an `Integer` or `int` value to the types `Long`, `BigInteger`, and `String`, among others.
+
+We may explicitly specify a Java type using the `@JavaType` annotation, but for the built-in ``JavaType``s this is never necessary.
+
+[source,java]
+----
+@JavaType(LongJavaType.class)  // not needed, this is the default JavaType for long
+long currentTimeMillis;
+----
+
+For a user-written `JavaType`, the annotation is more useful:
+
+[source,java]
+----
+@JavaType(BitSetJavaType.class)
+BitSet bitSet;
+----
+
+Alternatively, the `@JavaTypeRegistration` annotation may be used to register `BitSetJavaType` as the default `JavaType` for `BitSet`.
+
+[discrete]
+==== JdbcType
+
+A `org.hibernate.type.descriptor.jdbc.JdbcType` is able to read and write a single Java type from and to JDBC.
+
+For example, `VarcharJdbcType` takes care of:
+
+- writing Java strings to JDBC ``PreparedStatement``s by calling `setString()`, and
+- reading Java strings from JDBC ``ResultSet``s using `getString()`.
+
+By pairing `LongJavaType` with `VarcharJdbcType` in holy matrimony, we produce a basic type which maps ``Long``s and primitive ``longs``s to the SQL type `VARCHAR`.
+
+We may explicitly specify a JDBC type using the `@JdbcType` annotation.
+
+[source,java]
+----
+@JdbcType(VarcharJdbcType.class)
+long currentTimeMillis;
+----
+
+Alternatively, we may specify a JDBC type code:
+
+[source,java]
+----
+@JdbcTypeCode(Types.VARCHAR)
+long currentTimeMillis;
+----
+
+The `@JdbcTypeRegistration` annotation may be used to register a user-written `JdbcType` as the default for a given SQL type code.
+
+.JDBC types and JDBC type codes
+****
+The types defined by the JDBC specification are enumerated by the integer type codes in the class `java.sql.Types`.
+Each JDBC type is an abstraction of a commonly-available type in SQL.
+For example, `Types.VARCHAR` represents the SQL type `VARCHAR` (or `VARCHAR2` on Oracle).
+
+Since Hibernate understand more SQL types than JDBC, there's an extended list of integer type codes in the class `org.hibernate.type.SqlTypes`.
+For example, `SqlTypes.GEOMETRY` represents the spatial data type `GEOMETRY`.
+****
+
+[discrete]
+==== AttributeConverter
+
+If a given `JavaType` doesn't know how to convert its instances to the type required by its partner `JdbcType`, we must help it out by providing a JPA `AttributeConverter` to perform the conversion.
+
+For example, to form a basic type using `LongJavaType` and `TimestampJdbcType`, we would provide an `AttributeConverter<Long,Timestamp>`.
+
+[source,java]
+----
+@JdbcType(TimestampJdbcType.class)
+@Convert(converter = LongToTimestampConverter.class)
+long currentTimeMillis;
+----
+
+Let's abandon our analogy right here, before we start calling this basic type a "throuple".
+
+[[embeddable-objects]]
+=== Embeddable objects
+
+An embeddable object is a Java class whose state maps to multiple columns of a table, but which doesn't have its own persistent identity.
+That is, it's a class with mapped attributes, but no `@Id` attribute.
+
+An embeddable object can only be made persistent by assigning it to the attribute of an entity.
+Since the embeddable object does not have its own persistent identity, its lifecycle with respect to persistence is completely determined by the lifecycle of the entity to which it belongs.
+
+An embeddable class must be annotated `@Embeddable` instead of `@Entity`.
+
+[source,java]
+----
+@Embeddable
+class Name {
+    
+    @Basic(optional=false)
+    String firstName;
+
+    @Basic(optional=false)
+    String lastName;
+    
+    String middleName;
+    
+    Name() {}
+
+    Name(String firstName, String middleName, String lastName) {
+        this.firstName = firstName;
+        this.middleName = middleName;
+        this.lastName = lastName;
+    }
+    
+    ...
+}
+----
+
+An embeddable class must satisfy the same requirements that entity classes satisfy, with the exception that an embeddable class has no `@Id` attribute.
+In particular, it must have a constructor with no parameters.
+
+Alternatively, an embeddable type may be defined as a Java record type:
+
+[source,java]
+----
+@Embeddable
+record Name(String firstName, String middleName, String lastName) {}
+----
+
+In this case, the requirement for a constructor with no parameters is relaxed.
+
+[NOTE]
+====
+Unfortunately, as of May 2023, Java `record` types still cannot be used as ``@EmbeddedId``s.
+====
+
+We may now use our `Name` class (or record) as the type of an entity attribute:
+
+[source,java]
+----
+@Entity
+class Author {
+    @Id @GeneratedValue
+    Long id;
+    
+    Name name;
+    
+    ...
+}
+----
+
+Embeddable types can be nested.
+That is, an `@Embeddable` class may have an attribute whose type is itself a different `@Embeddable` class.
+
+[TIP]
+// .The `@Embedded` annotation is not required
+====
+JPA provides an `@Embedded` annotation to identify an attribute of an entity that refers to an embeddable type.
+This annotation is completely optional, and so we don't usually use it.
+====
+
+On the other hand a reference to an embeddable type is _never_ polymorphic.
+One `@Embeddable` class `F` may inherit a second `@Embeddable` class `E`, but an attribute of type `E` will always refer to an instance of that concrete class `E`, never to an instance of `F`.
+
+Usually, embeddable types are stored in a "flattened" format.
+Their attributes map columns of the table of their parent entity.
+Later, in <<mapping-embeddables>>, we'll see a couple of different options.
+
+An attribute of embeddable type represents a relationship between a Java object with a persistent identity, and a Java object with no persistent identity.
+We can think of it as a whole/part relationship.
+The embeddable object belongs to the entity, and can't be shared with other entity instances.
+And it exits for only as long as its parent entity exists.
+
+Next we'll discuss a different kind of relationship: a relationship between Java objects that each have their persistent identity and persistence lifecycle.
+
+[[associations]]
+=== Associations
+
+An _association_ is a relationship between entities.
+We usually classify associations based on their _multiplicity_.
+If `E` and `F` are both entity classes, then:
+
+- a _one-to-one_ association relates at most one unique instance `E` with at most one unique instance of `F`,
+- a _many-to-one_ association relates zero or more instances of `E` with a unique instance of `F`, and
+- a _many-to-many_ association relates zero or more instances of `E` with zero or more instance of `F`.
+
+An association between entity classes may be either:
+
+- _unidirectional_, navigable from `E` to `F` but not from `F` to `E`, or
+- _bidirectional_, and navigable in either direction.
+
+In this example data model, we can see the sorts of associations which are possible:
+
+image::images/associations.png[Example data model,align="center",pdfwidth=90%]
+
+[%unbreakable]
+[TIP]
+// .One-to-one associations and subtyping
+====
+An astute observer of the diagram above might notice that the relationship we've presented as a unidirectional one-to-one association could reasonably be represented in Java using subtyping.
+This is quite normal.
+A one-to-one association is the usual way we implement subtyping in a fully-normalized relational model.
+It's related to the `JOINED` <<mapping-inheritance,inheritance mapping>> strategy.
+====
+
+There are three annotations for mapping associations: `@ManyToOne`, `@OneToMany`, and `@ManyToMany`.
+They share some common annotation members:
+
+.Association-defining annotation members
+[%breakable,cols="13,~,35"]
+|===
+| Member | Interpretation | Default value
+
+| `cascade` | Persistence operations which should <<cascade,cascade>> to the associated entity; a list of ``CascadeType``s | `{}`
+| `fetch` | Whether the association is <<entity-graph,eagerly>> <<association-fetching,fetched>> or may be <<proxies-and-lazy-fetching,proxied>>
+a|
+- `LAZY` for `@OneToMany` and `@ManyToMany`
+- `EAGER` for `@ManyToOne` 💀💀💀
+| `targetEntity` | The associated entity class | Determined from the attribute type declaration
+| `optional` | For a `@ManyToOne` or `@OneToOne` association, whether the association can be `null` | `true`
+| `mappedBy` | For a bidirectional association, an attribute of the associated entity which maps the association | By default, the association is assumed unidirectional
+|===
+
+We'll explain the effect of these members as we consider the various types of association mapping.
+
+Let's begin with the most common association multiplicity.
+
+[[many-to-one]]
+=== Many-to-one
+
+A many-to-one association is the most basic sort of association we can imagine.
+It maps completely naturally to a foreign key in the database.
+Almost all the associations in your domain model are going to be of this form.
+
+[TIP]
+// .One-to-many join table mappings
+====
+Later, we'll see how to map a many-to-one association to an <<join-table-mappings,association table>>.
+====
+
+The `@ManyToOne` annotation marks the "to one" side of the association, so a unidirectional many-to-one association looks like this:
+
+[source,java]
+----
+class Book {
+    @Id @GeneratedValue
+    Long id;
+
+    @ManyToOne(fetch=LAZY)
+    Publisher publisher;
+
+    ...
+}
+----
+
+Here, the `Book` table has a foreign key column holding the identifier of the associated `Publisher`.
+
+[[lazy-problem]]
+[TIP]
+// .Almost all associations should be lazy
+====
+A very unfortunate misfeature of JPA is that `@ManyToOne` associations are fetched eagerly by default.
+This is almost never what we want.
+Almost all associations should be lazy.
+The only scenario in which `fetch=EAGER` makes sense is if we think there's always a _very_ high probability that the <<caching-and-fetching,associated object will be found in the second-level cache>>.
+Whenever this isn't the case, remember to explicitly specify `fetch=LAZY`.
+====
+
+Most of the time, we would like to be able to easily navigate our associations in both directions.
+We do need a way to get the `Publisher` of a given `Book`, but we would also like to be able to obtain all the ``Book``s belonging to a given publisher.
+
+To make this association bidirectional, we need to add a collection-valued attribute to the `Publisher` class, and annotate it `@OneToMany`.
+
+[NOTE]
+====
+Hibernate needs to <<proxies-and-lazy-fetching,proxy>> unfetched associations at runtime.
+Therefore, the many-valued side must be declared using an interface type like `Set` or `List`, and never using a concrete type like `HashSet` or `ArrayList`.
+====
+
+To indicate clearly that this is a bidirectional association, and to reuse any mapping information already specified in the `Book` entity, we must use the `mappedBy` annotation member to refer back to `Book.publisher`.
+
+[source,java]
+----
+@Entity
+class Publisher {
+    @Id @GeneratedValue
+    Long id;
+
+    @OneToMany(mappedBy="publisher")
+    Set<Book> books;
+
+    ...
+}
+----
+
+The `Publisher.books` field is called the _unowned_ side of the association.
+
+Now, we passionately _hate_ the stringly-typed `mappedBy` reference to the owning side of the association.
+Thankfully, the <<metamodel-generator, Metamodel Generator>> gives us a way to make it a
+bit more typesafe:
+[source,java]
+----
+@OneToMany(mappedBy=Book_.PUBLISHER)  // get used to doing it this way!
+Set<Book> books;
+----
+We're going to use this approach for the rest of the Introduction.
+
+To modify a bidirectional association, we must change the _owning side_.
+
+[[bidirectional-problem]]
+[WARNING]
+// .To modify a bidirectional association, you must change the _owning side_!
+====
+Changes made to the unowned side of an association are never synchronized to the database.
+If we desire to change an association in the database, we must change it from the owning side.
+Here, we must set `Book.publisher`.
+
+In fact, it's often necessary to change _both sides_ of a bidirectional association.
+For example, if the collection `Publisher.books` was stored in the second-level cache, we must also modify the collection, to ensure that the second-level cache remains synchronized with the database.
+====
+
+That said, it's _not_ a hard requirement to update the unowned side, at least if you're sure you know what you're doing.
+
+[TIP]
+// .Unidirectional `@OneToMany`?
+====
+In principle Hibernate _does_ allow you to have a unidirectional one-to-many, that is, a `@OneToMany` with no matching `@ManyToOne` on the other side.
+In practice, this mapping is unnatural, and just doesn't work very well.
+Avoid it.
+====
+
+Here we've used `Set` as the type of the collection, but Hibernate also allows the use of `List` or `Collection` here, with almost no difference in semantics.
+In particular, the `List` may not contain duplicate elements, and its order will not be persistent.
+
+[source,java]
+----
+@OneToMany(mappedBy=Book_.PUBLISHER)
+Collection<Book> books;
+----
+
+We'll see how to map a collection with a persistent order <<ordered-sorted,much later>>.
+
+[[set-vs-list]]
+.`Set`, `List`, or `Collection`?
+****
+A one-to-many association mapped to a foreign key can never contain duplicate elements, so `Set` seems like the most semantically correct Java collection type to use here, and so that's the conventional practice in the Hibernate community.
+
+The catch associated with using a set is that we must carefully ensure that `Book` has a high-quality implementation of <<equals-and-hash>>.
+Now, that's not necessarily a bad thing, since a quality `equals()` is independently useful.
+
+But what if we used `Collection` or `List` instead?
+Then our code would be much less sensitive to how `equals()` and `hashCode()` were implemented.
+
+In the past, we were perhaps too dogmatic in recommending the use of `Set`.
+Now? I guess we're happy to let you guys decide.
+In hindsight, we could have done more to make clear that this was always a viable option.
+****
+
+[[one-to-one-fk]]
+=== One-to-one (first way)
+
+The simplest sort of one-to-one association is almost exactly like a `@ManyToOne` association, except that it maps to a foreign key column with a `UNIQUE` constraint.
+
+[TIP]
+// .One-to-many join table mappings
+====
+Later, we'll see how to map a one-to-one association to an <<join-table-mappings,association table>>.
+====
+
+A one-to-one association must be annotated `@OneToOne`:
+
+[source,java]
+----
+@Entity
+class Author {
+    @Id @GeneratedValue
+    Long id;
+
+    @OneToOne(optional=false, fetch=LAZY)
+    Person author;
+
+    ...
+}
+----
+
+Here, the `Author` table has a foreign key column holding the identifier of the associated `Publisher`.
+
+[TIP]
+// .One-to-one associations are a way to represent subtyping
+====
+A one-to-one association often models a "type of" relationship.
+In our example, an `Author` is a type of `Person`.
+An alternative—and often more natural—way to represent "type of" relationships in Java is via <<entity-inheritance,entity class inheritance>>.
+====
+
+We can make this association bidirectional by adding a reference back to the `Author` in the `Person` entity:
+
+[source,java]
+----
+@Entity
+class Person {
+    @Id @GeneratedValue
+    Long id;
+
+    @OneToOne(mappedBy = Author_.PERSON)
+    Author author;
+
+    ...
+}
+----
+
+`Person.author` is the unowned sure, because it's the side marked `mappedBy`.
+
+.Lazy fetching for one-to-one associations
+****
+Notice that we did not declare the unowned end of the association `fetch=LAZY`.
+That's because:
+
+1. not every `Person` has an associated `Author`, and
+2. the foreign key is held in the table mapped by `Author`, not in the table mapped by `Person`.
+
+Therefore, Hibernate can't tell if the reference from `Person` to `Author` is `null` without fetching the associated `Author`.
+
+On the other hand, if _every_ `Person` was an `Author`, that is, if the association were non-`optional`, we would not have to consider the possibility of `null` references, and we would map it like this:
+
+[source,java]
+----
+@OneToOne(optional=false, mappedBy = Author_.PERSON, fetch=LAZY)
+Author author;
+----
+****
+
+This is not the only sort of one-to-one association.
+
+[[one-to-one-pk]]
+=== One-to-one (second way)
+
+An arguably more elegant way to represent such a relationship is to share a primary key between the two tables.
+
+To use this approach, the `Author` class must be annotated like this:
+
+[source,java]
+----
+@Entity
+class Author {
+    @Id
+    Long id;
+
+    @OneToOne(optional=false, fetch=LAZY)
+    @MapsId
+    Person author;
+
+    ...
+}
+----
+
+Notice that, compared with the previous mapping:
+
+- the `@Id` attribute is no longer a `@GeneratedValue` and,
+- instead, the `author` association is annotated `@MapsId`.
+
+This lets Hibernate know that the association to `Person` is the source of primary key values for `Author`.
+
+Here, there's no extra foreign key column in the `Author` table, since the `id` column holds the identifier of `Person`.
+That is, the primary key of the `Author` table does double duty as the foreign key referring to the `Person` table.
+
+The `Person` class doesn't change.
+If the association is bidirectional, we annotate the unowned side `@OneToOne(mappedBy = Author_.PERSON)` just as before.
+
+[[many-to-many]]
+=== Many-to-many
+
+A unidirectional many-to-many association is represented as a collection-valued attribute.
+It always maps to a separate _association table_ in the database.
+
+It tends to happen that a many-to-many association eventually turns out to be an entity in disguise.
+
+[TIP]
+====
+Suppose we start with a nice clean many-to-many association between `Author` and `Book`.
+Later on, it's quite likely that we'll discover some additional information which comes attached to the association, so that the association table needs some extra columns.
+
+For example, imagine that we needed to report the percentage contribution of each author to a book.
+That information naturally belongs to the association table.
+We can't easily store it as an attribute of `Book`, nor as an attribute of `Author`.
+
+When this happens, we need to change our Java model, usually introducing a new entity class which maps the association table directly.
+In our example, we might call this entity something like `BookAuthorship`, and it would have `@OneToMany` associations to both `Author` and `Book`, along with the `contribution` attribute.
+
+We can evade the disruption occasioned by such "discoveries" by simply avoiding the use of `@ManyToMany` right from the start.
+There's little downside to representing every—or at least _almost_ every—logical many-to-many association using an intermediate entity.
+====
+
+A many-to-many association must be annotated `@ManyToMany`:
+
+[source,java]
+----
+@Entity
+class Book {
+    @Id @GeneratedValue
+    Long id;
+
+    @ManyToMany
+    Set<Author> authors;
+
+    ...
+}
+----
+
+If the association is bidirectional, we add a very similar-looking attribute to `Book`, but this time we must specify `mappedBy` to indicate that this is the unowned side of the association:
+
+[source,java]
+----
+@Entity
+class Book {
+    @Id @GeneratedValue
+    Long id;
+
+    @ManyToMany(mappedBy=Author_.BOOKS)
+    Set<Author> authors;
+    
+    ...
+}
+----
+
+Remember, if we wish to the modify the collection we must <<bidirectional-problem,change the owning side>>.
+
+We've again used ``Set``s to represent the association.
+As before, we have the option to use `Collection` or `List`.
+But in this case it _does_ make a difference to the semantics of the association.
+
+[NOTE]
+// .Sets and bags
+====
+A many-to-many association represented as a `Collection` or `List` may contain duplicate elements.
+However, as before, the order of the elements is not persistent.
+That is, the collection is a _bag_, not a set.
+====
+
+[[collections]]
+=== Collections of basic values and embeddable objects
+
+We've now seen the following kinds of entity attribute:
+
+[%breakable,cols="32,^15,^15,~"]
+|===
+| Kind of entity attribute | Kind of reference | Multiplicity | Examples
+
+| Single-valued attribute of basic type | Non-entity | At most one | `@Basic String name`
+| Single-valued attribute of embeddable type | Non-entity | At most one | `@Embedded Name name`
+| Single-valued association | Entity | At most one |
+`@ManyToOne Publisher publisher` +
+`@OneToOne Person person`
+| Many-valued association | Entity | Zero or more |
+`@OneToMany Set<Book> books` +
+`@ManyToMany Set<Author> authors`
+|===
+
+Scanning this taxonomy, you might ask: does Hibernate have multivalued attributes of basic or embeddable type?
+
+Well, actually, we've already seen that it does, at least in two special cases.
+So first, lets <<basic-attributes,recall>> that JPA treats `byte[]` and `char[]` arrays as basic types.
+Hibernate persists a `byte[]` or `char[]` array to a `VARBINARY` or `VARCHAR` column, respectively.
+
+But in this section we're really concerned with cases _other_ than these two special cases.
+So then, _apart from ``byte[]`` and ``char[]``_, does Hibernate have multivalued attributes of basic or embeddable type?
+
+And the answer again is that _it does_. Indeed, there are two different ways to handle such a collection, by mapping it:
+
+- to a column of SQL `ARRAY` type (assuming the database has an `ARRAY` type), or
+- to a separate table.
+
+So we may expand our taxonomy with:
+
+[%breakable,cols="32,^15,^15,~"]
+|===
+| Kind of entity attribute | Kind of reference | Multiplicity | Examples
+
+| `byte[]` and `char[]` arrays | Non-entity | Zero or more |
+`byte[] image` +
+`char[] text`
+| Collection of basic-typed elements | Non-entity | Zero or more |
+`@Array String[] names` +
+`@ElementCollection Set<String> names`
+| Collection of embeddable elements | Non-entity | Zero or more |  `@ElementCollection Set<Name> names`
+|===
+
+There's actually two new kinds of mapping here: `@Array` mappings, and `@ElementCollection` mappings.
+
+[%unbreakable]
+[CAUTION]
+// .These sorts of mappings are overused
+====
+These sorts of mappings are overused.
+
+There _are_ situations where we think it's appropriate to use a collection of basic-typed values in our entity class.
+But such situations are rare.
+Almost every many-valued relationship should map to a foreign key association between separate tables.
+And almost every table should be mapped by an entity class.
+
+The features we're about to meet in the next two subsections are used much more often by beginners than they're used by experts.
+So if you're a beginner, you'll save yourself same hassle by staying away from these features for now.
+====
+
+We'll talk about `@Array` mappings first.
+
+[[arrays]]
+=== Collections mapped to SQL arrays
+
+Let's consider a calendar event which repeats on certain days of the week.
+We might represent this in our `Event` entity as an attribute of type `DayOfWeek[]` or `List<DayOfWeek>`.
+Since the number of elements of this array or list is upper bounded by 7, this is a reasonable case for the use of an `ARRAY`-typed column.
+It's hard to see much value in storing this collection in a separate table.
+
+[%unbreakable]
+.Learning to not hate SQL arrays
+****
+For a long time, we thought arrays were a kind of weird and warty thing to add to the relational model, but recently we've come to realize that this view was overly closed-minded.
+Indeed, we might choose to view SQL `ARRAY` types as a generalization of `VARCHAR` and `VARBINARY` to generic "element" types.
+And from this point of view, SQL arrays look quite attractive, at least for certain problems.
+If we're comfortable mapping `byte[]` to `VARBINARY(255)`, why would we shy away from mapping `DayOfWeek[]` to `TINYINT ARRAY[7]`?
+****
+
+Unfortunately, JPA doesn't define a standard way to map SQL arrays, but here's how we can do it in Hibernate:
+
+[source, java]
+----
+@Entity
+class Event {
+    @Id @GeneratedValue
+    Long id;
+    ...
+    @Array(length=7)
+    DayOfWeek[] daysOfWeek;  // stored as a SQL ARRAY type
+    ...
+}
+----
+
+The `@Array` annotation is optional, but it's important to limit the amount of storage space the database allocates to the `ARRAY` column.
+
+[WARNING]
+// .Not every database has an `ARRAY` type
+====
+Now for the gotcha: not every database has a SQL `ARRAY` type, and some that _do_ have an `ARRAY` type don't allow it to be used as a column type.
+
+In particular, neither DB2 nor SQL Server have array-typed columns.
+On these databases, Hibernate falls back to something much worse: it uses Java serialization to encode the array to a binary representation, and stores the binary stream in a `VARBINARY` column.
+Quite clearly, this is terrible.
+You can ask Hibernate to do something _slightly_ less terrible by annotating the attribute `@JdbcTypeCode(SqlTypes.JSON)`, so that the array is serialized to JSON instead of binary format.
+But at this point it's better to just admit defeat and use an `@ElementCollection` instead.
+====
+
+Alternatively, we could store this array or list in a separate table.
+
+[[element-collections]]
+=== Collections mapped to a separate table
+
+JPA _does_ define a standard way to map a collection to an auxiliary table: the `@ElementCollection` annotation.
+
+[source, java]
+----
+@Entity
+class Event {
+    @Id @GeneratedValue
+    Long id;
+    ...
+    @ElementCollection
+    DayOfWeek[] daysOfWeek;  // stored in a dedicated table
+    ...
+}
+----
+
+Actually, we shouldn't use an array here, since array types can't be <<proxies-and-lazy-fetching,proxied>>, and so the JPA specification doesn't even say they're supported.
+Instead, we should use `Set`, `List`, or `Map`.
+
+[source, java]
+----
+@Entity
+class Event {
+    @Id @GeneratedValue
+    Long id;
+    ...
+    @ElementCollection
+    List<DayOfWeek> daysOfWeek;  // stored in a dedicated table
+    ...
+}
+----
+
+Here, each collection elements are stored as separate rows of the auxiliary table.
+By default, this table has the following definition:
+
+[source,sql]
+----
+create table Event_daysOfWeek (
+    Event_id bigint not null,
+    daysOfWeek tinyint check (daysOfWeek between 0 and 6),
+    daysOfWeek_ORDER integer not null,
+    primary key (Event1_id, daysOfWeek_ORDER)
+)
+----
+
+Which is fine, but it's still a mapping we prefer to avoid.
+
+[%unbreakable]
+[WARNING]
+// .This is not what we would do
+====
+`@ElementCollection` is one of our least-favorite features of JPA.
+Even the name of the annotation is bad.
+
+The code above results in a table with three columns:
+
+- a foreign key of the `Event` table,
+- a `TINYINT` encoding the `enum`, and
+- an `INTEGER` encoding the ordering of elements in the array.
+
+Instead of a surrogate primary key, it has a composite key comprising the foreign key of `Event` and the order column.
+
+When—inevitably—we find that we need to add a fourth column to that table, our Java code must change completely.
+Most likely, we'll realize that we need to add a separate entity after all.
+So this mapping isn't very robust in the face of minor changes to our data model.
+====
+
+There's much more we could say about "element collections", but we won't say it, because we don't want to hand you the gun you'll shoot your foot with.
+
+[[entities-summary]]
+=== Summary of annotations
+
+Let's pause to remember the annotations we've met so far.
+
+.Declaring entities and embeddable types
+[%breakable,cols="22,~,^13"]
+|===
+| Annotation | Purpose | JPA-standard
+
+| `@Entity` | Declare an entity class | &#10004;
+| `@MappedSuperclass` | Declare a non-entity class with mapped attributes inherited by an entity | &#10004;
+| `@Embeddable` | Declare an embeddable type | &#10004;
+| `@IdClass` | declare the identifier class for an entity with multiple `@Id` attributes | &#10004;
+|===
+
+.Declaring basic attributes
+[%breakable,cols="22,~,^10,^13"]
+|===
+| Annotation | Purpose | | JPA-standard
+
+| `@Id` | Declare a basic-typed identifier attribute | | &#10004;
+| `@Version` | Declare a version attribute | | &#10004;
+| `@Basic` | Declare a basic attribute | Default | &#10004;
+| `@EmbeddedId` | Declare an embeddable-typed identifier attribute | | &#10004;
+| `@Embedded` | Declare an embeddable-typed attribute | Inferred | &#10004;
+| `@Enumerated` | Declare an `enum`-typed attribute and specify how it is encoded | Inferred | &#10004;
+| `@Array` | Declare that an attribute maps to a SQL `ARRAY`, and specify the length | Inferred | &#10006;
+| `@ElementCollection` | Declare that a collection is mapped to a dedicated table | | &#10004;
+|===
+
+.Converters and compositional basic types
+[%breakable,cols="22,~,^13"]
+|===
+| Annotation | Purpose | JPA-standard
+
+| `@Converter` | Register an `AttributeConverter` | &#10004;
+| `@Convert` | Apply a converter to an attribute | &#10004;
+| `@JavaType` | Explicitly specify an implementation of `JavaType` for a basic attribute | &#10006;
+| `@JdbcType` | Explicitly specify an implementation of `JdbcType` for a basic attribute | &#10006;
+| `@JdbcTypeCode` | Explicitly specify a JDBC type code used to determine the `JdbcType` for a basic attribute | &#10006;
+| `@JavaTypeRegistration` | Register a `JavaType` for a given Java type | &#10006;
+| `@JdbcTypeRegistration` | Register a `JdbcType` for a given JDBC type code | &#10006;
+|===
+
+.System-generated identifiers
+[%breakable,cols="22,~,^13"]
+|===
+| Annotation | Purpose | JPA-standard
+
+| `@GeneratedValue` | Specify that an identifier is system-generated | &#10004;
+| `@SequenceGenerator` | Define an id generated backed by on a database sequence | &#10004;
+| `@TableGenerator` | Define an id generated backed by a database table | &#10004;
+| `@IdGeneratorType`  | Declare an annotation that associates a custom `Generator` with each `@Id` attribute it annotates | &#10006;
+| `@ValueGenerationType` | Declare an annotation that associates a custom `Generator` with each `@Basic` attribute it annotates | &#10006;
+|===
+
+.Declaring entity associations
+[%breakable,cols="22,~,^13"]
+|===
+| Annotation | Purpose | JPA-standard
+
+| `@ManyToOne` | Declare the single-valued side of a many-to-one association (the owning side) | &#10004;
+| `@OneToMany` | Declare the many-valued side of a many-to-one association (the unowned side) | &#10004;
+| `@ManyToMany` | Declare either side of a one-to-one association | &#10004;
+| `@OneToOne` | Declare either side of a one-to-one association | &#10004;
+| `@MapsId` | Declare that the owning side of a `@OneToOne` association maps the primary key column | &#10004;
+|===
+
+Phew!
+That's already a lot of annotations, and we have not even started with the annotations for O/R mapping!
+
+[[equals-and-hash]]
+=== `equals()` and `hashCode()`
+
+Entity classes should override `equals()` and `hashCode()`, especially when associations are <<set-vs-list,represented as sets>>.
+
+People new to Hibernate or JPA are often confused by exactly which fields should be included in the `hashCode()`.
+Even people with plenty of experience often argue quite religiously that one or another approach is the only right way.
+The truth is, there's no unique right way to do it, but there are some constraints.
+So please keep the following principles in mind:
+
+- You should not include a mutable field in the hashcode, since that would require rehashing every collection containing the entity whenever the field is mutated.
+- It's not completely wrong to include a generated identifier (surrogate key) in the hashcode, but since the identifier is not generated until the entity instance is made persistent, you must take great care to not add it to any hashed collection before the identifier is generated. We therefore advise against including any database-generated field in the hashcode.
+
+It's OK to include any immutable, non-generated field in the hashcode.
+
+TIP: We therefore recommend identifying a <<natural-id-attributes,natural key>> for each entity, that is, a combination of fields that uniquely identifies an instance of the entity, from the perspective of the data model of the program. The natural key should correspond to a unique constraint on the database, and to the fields which are included in `equals()` and `hashCode()`.
+
+[source,java]
+----
+@Entity
+class Book {
+
+    @Id @GeneratedValue
+    Long id;
+
+    @NaturalId
+    @Basic(optional=false)
+    String isbn;
+
+    ...
+
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof Book
+            && ((Book) other).isbn.equals(isbn);
+    }
+    @Override
+    public int hashCode() {
+        return isbn.hashCode();
+    }
+}
+----
+
+That said, an implementation of `equals()` and `hashCode()` based on the generated identifier of the entity can work _if you're careful_.

@@ -23,6 +23,7 @@ public class AggregateColumn extends Column {
 		setLength( column.getLength() );
 		setPrecision( column.getPrecision() );
 		setScale( column.getScale() );
+		setArrayLength( column.getArrayLength() );
 		setValue( column.getValue() );
 		setTypeIndex( column.getTypeIndex() );
 		setName( column.getQuotedName() );
@@ -35,6 +36,7 @@ public class AggregateColumn extends Column {
 			addCheckConstraint( constraint );
 		}
 		setComment( column.getComment() );
+		setCollation( column.getCollation() );
 		setDefaultValue( column.getDefaultValue() );
 		setGeneratedAs( column.getGeneratedAs() );
 		setAssignmentExpression( column.getAssignmentExpression() );

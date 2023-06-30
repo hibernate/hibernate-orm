@@ -152,6 +152,7 @@ import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNoOpImpl;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.tool.schema.internal.HibernateSchemaManagementTool;
 import org.hibernate.tool.schema.internal.StandardAuxiliaryDatabaseObjectExporter;
@@ -174,11 +175,12 @@ import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.LongNVarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NCharJdbcType;
 import org.hibernate.type.descriptor.jdbc.NClobJdbcType;
@@ -188,6 +190,7 @@ import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsJdbcTimestampJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsOffsetDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -199,10 +202,12 @@ import jakarta.persistence.TemporalType;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
+import static java.util.Arrays.sort;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
 import static org.hibernate.internal.util.StringHelper.parseCommaSeparatedString;
+import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
@@ -247,6 +252,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithNanos;
+import static org.hibernate.type.descriptor.converter.internal.EnumHelper.getEnumeratedValues;
 
 /**
  * Represents a dialect of SQL implemented by a particular RDBMS. Every
@@ -438,6 +444,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32VARCHAR ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32NVARCHAR ) );
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32VARBINARY ) );
+
+		if ( supportsStandardArrays() ) {
+			ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this ) );
+		}
 	}
 
 	private DdlTypeImpl simpleSqlType(int sqlTypeCode) {
@@ -685,25 +695,27 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			int precision,
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
-		final JdbcType jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
-		if ( jdbcTypeCode == Types.ARRAY && jdbcType instanceof ArrayJdbcType ) {
-			// Special handling for array types, because we need the proper element/component type
-			// To determine the element JdbcType, we pass the database reported type to #resolveSqlTypeCode
-			final int arraySuffixIndex = columnTypeName.toLowerCase( Locale.ROOT ).indexOf( " array" );
-			if ( arraySuffixIndex != -1 ) {
-				final String componentTypeName = columnTypeName.substring( 0, arraySuffixIndex );
-				final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
-				if ( sqlTypeCode != null ) {
-					return ( (ArrayJdbcType) jdbcType ).resolveType(
-							jdbcTypeRegistry.getTypeConfiguration(),
-							this,
-							jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-							null
-					);
+		if ( jdbcTypeCode == ARRAY ) {
+			final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
+			if ( jdbcTypeConstructor != null ) {
+				// Special handling for array types, because we need the proper element/component type
+				// To determine the element JdbcType, we pass the database reported type to #resolveSqlTypeCode
+				final int arraySuffixIndex = columnTypeName.toLowerCase( Locale.ROOT ).indexOf( " array" );
+				if ( arraySuffixIndex != -1 ) {
+					final String componentTypeName = columnTypeName.substring( 0, arraySuffixIndex );
+					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+					if ( sqlTypeCode != null ) {
+						return jdbcTypeConstructor.resolveType(
+								jdbcTypeRegistry.getTypeConfiguration(),
+								this,
+								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
+								ColumnTypeInformation.EMPTY
+						);
+					}
 				}
 			}
 		}
-		return jdbcType;
+		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
 
 	/**
@@ -745,8 +757,32 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param values the enumerated values of the type
 	 * @return the DDL column type declaration
 	 */
-	public String getEnumTypeDeclaration(String[] values) {
+	public String getEnumTypeDeclaration(String name, String[] values) {
 		return null;
+	}
+
+	public String getEnumTypeDeclaration(Class<? extends Enum<?>> enumType) {
+		String[] values = getEnumeratedValues( enumType );
+		sort( values ); //sort alphabetically, to guarantee alphabetical ordering in queries with 'order by'
+		return getEnumTypeDeclaration( enumType.getSimpleName(), values );
+	}
+
+	public String[] getCreateEnumTypeCommand(String name, String[] values) {
+		return EMPTY_STRING_ARRAY;
+	}
+
+	public String[] getCreateEnumTypeCommand(Class<? extends Enum<?>> enumType) {
+		String[] values = getEnumeratedValues( enumType );
+		sort( values ); //sort alphabetically, to guarantee alphabetical ordering in queries with 'order by'
+		return getCreateEnumTypeCommand( enumType.getSimpleName(), values );
+	}
+
+	public String[] getDropEnumTypeCommand(String name) {
+		return EMPTY_STRING_ARRAY;
+	}
+
+	public String[] getDropEnumTypeCommand(Class<? extends Enum<?>> enumType) {
+		return getDropEnumTypeCommand( enumType.getSimpleName() );
 	}
 
 	/**
@@ -766,6 +802,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return check.append( ')' ).toString();
 	}
 
+	public String getCheckCondition(String columnName, Class<? extends Enum<?>> enumType) {
+		return getCheckCondition( columnName, getEnumeratedValues( enumType ) );
+	}
+
 	/**
 	 * Render a SQL check condition for a column that represents an enumerated value.
 	 * by its {@linkplain jakarta.persistence.EnumType#ORDINAL ordinal representation}.
@@ -774,6 +814,23 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getCheckCondition(String columnName, long min, long max) {
 		return columnName + " between " + min + " and " + max;
+	}
+
+	/**
+	 * Render a SQL check condition for a column that represents an enumerated value
+	 * by its {@linkplain jakarta.persistence.EnumType#ORDINAL ordinal representation}.
+	 *
+	 * @return a SQL expression that will occur in a {@code check} constraint
+	 */
+	public String getCheckCondition(String columnName, long[] values) {
+		StringBuilder check = new StringBuilder();
+		check.append( columnName ).append( " in (" );
+		String separator = "";
+		for ( long value : values ) {
+			check.append( separator ).append( value );
+			separator = ",";
+		}
+		return check.append( ')' ).toString();
 	}
 
 	@Override
@@ -882,6 +939,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * <li> <code>right(string, length)</code>
 	 * <li> <code>replace(string, pattern, replacement)</code>
 	 * <li> <code>pad(string with length spec[ character])</code>
+	 * <li> <code>repeat(string, times)</code>
 	 * </ul>
 	 *
 	 * <ul>
@@ -1572,7 +1630,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		}
 
 		if ( supportsStandardArrays() ) {
-			jdbcTypeRegistry.addDescriptor( ArrayJdbcType.INSTANCE );
+			jdbcTypeRegistry.addTypeConstructor( ArrayJdbcTypeConstructor.INSTANCE );
 		}
 		if ( supportsMaterializedLobAccess() ) {
 			jdbcTypeRegistry.addDescriptor( SqlTypes.MATERIALIZED_BLOB, BlobJdbcType.MATERIALIZED );
@@ -2867,6 +2925,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect support the {@code is true} and {@code is false}
+	 * operators?
+	 *
+	 * @return {@code true} if the database supports {@code is true} and
+	 *         {@code is false}, or {@code false} if it does not. The
+	 *         default is {@code is false}.
+	 */
+	public boolean supportsIsTrue() {
+		return false;
+	}
+
+	/**
 	 * Meant as a means for end users to affect the select strings being sent
 	 * to the database and perhaps manipulate them in some fashion.
 	 *
@@ -3353,6 +3423,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getNullColumnString(String columnType) {
 		return getNullColumnString();
+	}
+
+	/**
+	 * Quote the given collation name if necessary.
+	 */
+	public String quoteCollation(String collation) {
+		return collation;
 	}
 
 	/**
@@ -4135,8 +4212,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @since 6.1
 	 */
-	public String getArrayTypeName(String elementTypeName) {
-		return supportsStandardArrays() ? elementTypeName + " array" : null;
+	public String getArrayTypeName(String javaElementTypeName, String elementTypeName, Integer maxLength) {
+		if ( supportsStandardArrays() ) {
+			return maxLength == null
+					? elementTypeName + " array"
+					: elementTypeName + " array[" + maxLength + "]";
+		}
+		else {
+			return null;
+		}
 	}
 
 	/**
@@ -4869,6 +4953,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			}
 
 			switch ( ddlTypeCode ) {
+				case SqlTypes.ARRAY:
+					break;
 				case SqlTypes.BIT:
 				case SqlTypes.CHAR:
 				case SqlTypes.NCHAR:
@@ -4917,10 +5003,9 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 				case SqlTypes.DECIMAL:
 				case SqlTypes.INTERVAL_SECOND:
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
+					size.setScale( javaType.getDefaultSqlScale( Dialect.this, jdbcType ) );
 					break;
 			}
-
-			size.setScale( javaType.getDefaultSqlScale( Dialect.this, jdbcType ) );
 
 			if ( precision != null ) {
 				size.setPrecision( precision );
@@ -5223,5 +5308,22 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getRowIdColumnString(String rowId) {
 		return null;
+	}
+
+	/**
+	 * Get the minimum {@link DmlTargetColumnQualifierSupport} required by this dialect.
+	 *
+	 * @return the column qualifier support required by this dialect
+	 */
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.NONE;
+	}
+
+	/**
+	 * Get this dialect's level of support for primary key functional dependency analysis
+	 * within {@code GROUP BY} and {@code ORDER BY} clauses.
+	 */
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.NONE;
 	}
 }

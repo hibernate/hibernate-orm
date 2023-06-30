@@ -61,13 +61,14 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 		if ( existing != null ) {
 			return existing;
 		}
+		final SqmRoot<?> rootCopy = getRoot().copy( context );
 		final SqmCrossJoin<T> path = context.registerCopy(
 				this,
 				new SqmCrossJoin<>(
-						getNavigablePath(),
+						getNavigablePathCopy( rootCopy ),
 						getReferencedPathSource(),
 						getExplicitAlias(),
-						sqmRoot.copy( context )
+						rootCopy
 				)
 		);
 		copyTo( path, context );

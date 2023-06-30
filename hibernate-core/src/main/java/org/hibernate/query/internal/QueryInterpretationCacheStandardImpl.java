@@ -9,7 +9,6 @@ package org.hibernate.query.internal;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import jakarta.persistence.Tuple;
 
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.query.QueryLogging;
@@ -23,6 +22,7 @@ import org.hibernate.query.spi.SimpleHqlInterpretationImpl;
 import org.hibernate.query.sql.spi.ParameterInterpretation;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
@@ -45,7 +45,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	private final Supplier<StatisticsImplementor> statisticsSupplier;
 
 	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount, Supplier<StatisticsImplementor> statisticsSupplier) {
-		log.debugf( "Starting QueryPlanCache(%s)", maxQueryPlanCount );
+		log.debugf( "Starting QueryInterpretationCache(%s)", maxQueryPlanCount );
 
 		this.queryPlanCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
 		this.hqlInterpretationCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
@@ -99,6 +99,45 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		log.tracef( "QueryPlan#cacheNonSelectQueryPlan(%s)", key );
 	}
 
+	private static String typedKey(String queryString, Class<?> expectedResultType) {
+		return expectedResultType.getName() + ":" + queryString;
+	}
+
+	private void putInCache(String queryString, Class<?> expectedResultType, HqlInterpretation hqlInterpretation) {
+		final SqmStatement<?> statement = hqlInterpretation.getSqmStatement();
+		if ( statement instanceof SqmSelectStatement && expectedResultType != null ) {
+			hqlInterpretationCache.put( typedKey( queryString, expectedResultType ), hqlInterpretation);
+		}
+		else {
+			hqlInterpretationCache.put( queryString, hqlInterpretation );
+		}
+	}
+
+	private HqlInterpretation getFromCache(String queryString, Class<?> expectedResultType) {
+		if ( expectedResultType != null ) {
+			final HqlInterpretation typedHqlInterpretation =
+					hqlInterpretationCache.get( typedKey( queryString, expectedResultType ) );
+			if ( typedHqlInterpretation != null ) {
+				return typedHqlInterpretation;
+			}
+		}
+
+		final HqlInterpretation hqlInterpretation = hqlInterpretationCache.get( queryString );
+		if ( hqlInterpretation != null ) {
+			final SqmStatement<?> statement = hqlInterpretation.getSqmStatement();
+			if ( statement instanceof SqmSelectStatement && expectedResultType != null ) {
+				final Class<?> resultType = ((SqmSelectStatement<?>) statement).getSelection().getJavaType();
+				return expectedResultType.equals( resultType ) ? hqlInterpretation : null;
+			}
+			else {
+				return hqlInterpretation;
+			}
+		}
+		else {
+			return null;
+		}
+	}
+
 	@Override
 	public HqlInterpretation resolveHqlInterpretation(
 			String queryString,
@@ -106,17 +145,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			Function<String, SqmStatement<?>> creator) {
 		log.tracef( "QueryPlan#resolveHqlInterpretation( `%s` )", queryString );
 
-		final String cacheKey;
-		if ( expectedResultType != null
-				&& ( expectedResultType.isArray() || Tuple.class.isAssignableFrom( expectedResultType ) ) ) {
-			cacheKey = "multi_" + queryString;
-		}
-		else {
-			cacheKey = queryString;
-		}
-
-
-		final HqlInterpretation existing = hqlInterpretationCache.get( cacheKey );
+		final HqlInterpretation existing = getFromCache( queryString, expectedResultType );
 		if ( existing != null ) {
 			final StatisticsImplementor statistics = statisticsSupplier.get();
 			if ( statistics.isStatisticsEnabled() ) {
@@ -124,10 +153,12 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			}
 			return existing;
 		}
-
-		final HqlInterpretation hqlInterpretation = createHqlInterpretation( queryString, creator, statisticsSupplier );
-		hqlInterpretationCache.put( cacheKey, hqlInterpretation );
-		return hqlInterpretation;
+		else {
+			final HqlInterpretation hqlInterpretation =
+					createHqlInterpretation( queryString, creator, statisticsSupplier );
+			putInCache( queryString, expectedResultType, hqlInterpretation );
+			return hqlInterpretation;
+		}
 	}
 
 	protected static HqlInterpretation createHqlInterpretation(
@@ -136,7 +167,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			Supplier<StatisticsImplementor> statisticsSupplier) {
 		final StatisticsImplementor statistics = statisticsSupplier.get();
 		final boolean stats = statistics.isStatisticsEnabled();
-		final long startTime = ( stats ) ? System.nanoTime() : 0L;
+		final long startTime = stats ? System.nanoTime() : 0L;
 
 		final SqmStatement<?> sqmStatement = creator.apply( queryString );
 		final ParameterMetadataImplementor parameterMetadata;

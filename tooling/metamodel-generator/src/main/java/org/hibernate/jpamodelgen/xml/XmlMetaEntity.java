@@ -24,7 +24,7 @@ import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.MetaModelGenerationException;
 import org.hibernate.jpamodelgen.model.ImportContext;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
-import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.NullnessUtil;
 import org.hibernate.jpamodelgen.util.StringUtil;
@@ -52,7 +52,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Hardy Ferentschik
  */
-public class XmlMetaEntity implements MetaEntity {
+public class XmlMetaEntity implements Metamodel {
 
 	static final Map<String, String> COLLECTIONS = new HashMap<String, String>();
 
@@ -184,7 +184,7 @@ public class XmlMetaEntity implements MetaEntity {
 		return importContext.staticImport( fqcn, member );
 	}
 
-	public TypeElement getTypeElement() {
+	public TypeElement getElement() {
 		return element;
 	}
 
@@ -626,5 +626,10 @@ public class XmlMetaEntity implements MetaEntity {
 		else {
 			return ElementKind.METHOD;
 		}
+	}
+
+	@Override
+	public Context getContext() {
+		return context;
 	}
 }

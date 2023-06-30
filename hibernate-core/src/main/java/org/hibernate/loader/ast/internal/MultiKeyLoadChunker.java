@@ -16,6 +16,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -53,7 +54,7 @@ public class MultiKeyLoadChunker<K> {
 	private final int keyColumnCount;
 	private final Bindable bindable;
 
-	private final List<JdbcParameter> jdbcParameters;
+	private final JdbcParametersList jdbcParameters;
 	private final SelectStatement sqlAst;
 	private final JdbcOperationQuerySelect jdbcSelect;
 
@@ -61,7 +62,7 @@ public class MultiKeyLoadChunker<K> {
 			int chunkSize,
 			int keyColumnCount,
 			Bindable bindable,
-			List<JdbcParameter> jdbcParameters,
+			JdbcParametersList jdbcParameters,
 			SelectStatement sqlAst,
 			JdbcOperationQuerySelect jdbcSelect) {
 		this.chunkSize = chunkSize;

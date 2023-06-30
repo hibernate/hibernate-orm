@@ -8,6 +8,7 @@ package org.hibernate.sql.results.internal;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryOptions;
@@ -115,7 +116,7 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 
 	@Override
 	public Object getJdbcValue(int position) {
-		return jdbcValues.getCurrentRowValuesArray()[ position ];
+		return jdbcValues.getCurrentRowValue( position );
 	}
 
 	@Override
@@ -129,6 +130,7 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 
 	@Override
 	public void finishRowProcessing() {
+		jdbcValues.finishRowProcessing( this );
 	}
 
 	@Override
@@ -167,6 +169,11 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 	}
 
 	@Override
+	public EntityMappingType getRootEntityDescriptor() {
+		return executionContext.getRootEntityDescriptor();
+	}
+
+	@Override
 	public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
 		executionContext.registerLoadingEntityEntry( entityKey, entry );
 	}
@@ -188,5 +195,10 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 
 	public boolean hasCollectionInitializers() {
 		return this.initializers.hasCollectionInitializers();
+	}
+
+	@Override
+	public boolean upgradeLocks() {
+		return executionContext.upgradeLocks();
 	}
 }

@@ -21,6 +21,8 @@ ext {
 dependencies {
     implementation jakartaLibs.jaxbApi
     implementation jakartaLibs.jaxb
+    implementation libs.antlrRuntime
+    implementation project( ':hibernate-core' )
 
     xjc jakartaLibs.xjc
     xjc jakartaLibs.jaxb
@@ -29,6 +31,7 @@ dependencies {
     testImplementation project( ':hibernate-core' )
 
     testImplementation jakartaLibs.validation
+    testImplementation jakartaLibs.annotation
 }
 
 sourceSets.main {

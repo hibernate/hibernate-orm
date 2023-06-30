@@ -8,10 +8,10 @@ package org.hibernate.persister.entity;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
@@ -23,6 +23,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.DynamicFilterAliasGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.mapping.Column;
@@ -34,13 +35,13 @@ import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.sql.InFragment;
+import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
@@ -660,12 +661,36 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public void pruneForSubclasses(TableGroup tableGroup, Set<String> treatedEntityNames) {
-		if ( !needsDiscriminator() && treatedEntityNames.isEmpty() ) {
+	public void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
+		if ( !needsDiscriminator() && entityNameUses.isEmpty() ) {
 			return;
 		}
-		// The optimization is to simply add the discriminator filter fragment for all treated entity names
-		final NamedTableReference tableReference = (NamedTableReference) tableGroup.getPrimaryTableReference();
+		// The following optimization is to add the discriminator filter fragment for all treated entity names
+		final MappingMetamodelImplementor mappingMetamodel = getFactory()
+				.getRuntimeMetamodels()
+				.getMappingMetamodel();
+
+		boolean containsTreatUse = false;
+		for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {
+			final EntityNameUse.UseKind useKind = entry.getValue().getKind();
+			if ( useKind == EntityNameUse.UseKind.PROJECTION || useKind == EntityNameUse.UseKind.EXPRESSION ) {
+				// We only care about treat and filter uses which allow to reduce the amount of rows to select
+				continue;
+			}
+			final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entry.getKey() );
+			// Filtering for abstract entities makes no sense, so ignore that
+			// Also, it makes no sense to filter for any of the super types,
+			// as the query will contain a filter for that already anyway
+			if ( !persister.isAbstract() && !isTypeOrSuperType( persister ) && useKind == EntityNameUse.UseKind.TREAT ) {
+				containsTreatUse = true;
+				break;
+			}
+		}
+		if ( !containsTreatUse ) {
+			// If we only have FILTER uses, we don't have to do anything here,
+			// because the BaseSqmToSqlAstConverter will already apply the type filter in the WHERE clause
+			return;
+		}
 
 		final InFragment frag = new InFragment();
 		if ( isDiscriminatorFormula() ) {
@@ -674,34 +699,55 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 		else {
 			frag.setColumn( "t", getDiscriminatorColumnName() );
 		}
-
-		final MappingMetamodelImplementor mappingMetamodel = getFactory()
-				.getRuntimeMetamodels()
-				.getMappingMetamodel();
-		for ( String subclass : treatedEntityNames ) {
-			final EntityMappingType treatTargetType = mappingMetamodel.getEntityDescriptor( subclass );
-			if ( !treatTargetType.isAbstract() ) {
-				frag.addValue( treatTargetType.getDiscriminatorSQLValue() );
+		boolean containsNotNull = false;
+		for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {
+			final EntityNameUse.UseKind useKind = entry.getValue().getKind();
+			if ( useKind == EntityNameUse.UseKind.PROJECTION || useKind == EntityNameUse.UseKind.EXPRESSION ) {
+				// We only care about treat and filter uses which allow to reduce the amount of rows to select
+				continue;
 			}
-			if ( treatTargetType.hasSubclasses() ) {
-				// if the treat is an abstract class, add the concrete implementations to values if any
-				final Set<String> actualSubClasses = treatTargetType.getSubclassEntityNames();
-				for ( String actualSubClass : actualSubClasses ) {
-					if ( actualSubClass.equals( subclass ) ) {
-						continue;
-					}
-
-					final EntityMappingType actualEntityDescriptor = mappingMetamodel.getEntityDescriptor( actualSubClass );
-					if ( !actualEntityDescriptor.hasSubclasses() ) {
-						frag.addValue( actualEntityDescriptor.getDiscriminatorSQLValue() );
-					}
-				}
+			final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entry.getKey() );
+			// Filtering for abstract entities makes no sense, so ignore that
+			// Also, it makes no sense to filter for any of the super types,
+			// as the query will contain a filter for that already anyway
+			if ( !persister.isAbstract() && ( this == persister || !isTypeOrSuperType( persister ) ) ) {
+				containsNotNull = containsNotNull || InFragment.NOT_NULL.equals( persister.getDiscriminatorSQLValue() );
+				frag.addValue( persister.getDiscriminatorSQLValue() );
 			}
 		}
+		final List<String> discriminatorSQLValues = Arrays.asList( ( (SingleTableEntityPersister) getRootEntityDescriptor() ).fullDiscriminatorSQLValues );
+		if ( frag.getValues().size() == discriminatorSQLValues.size() ) {
+			// Nothing to prune if we filter for all subtypes
+			return;
+		}
 
-		tableReference.setPrunedTableExpression(
-				"(select * from " + getTableName() + " t where " + frag.toFragmentString() + ")"
-		);
+		final NamedTableReference tableReference = (NamedTableReference) tableGroup.getPrimaryTableReference();
+		if ( containsNotNull ) {
+			StringBuilder sb = new StringBuilder();
+			String lhs;
+			if ( isDiscriminatorFormula() ) {
+				lhs = StringHelper.replace( getDiscriminatorFormulaTemplate(), Template.TEMPLATE, "t" );
+			}
+			else {
+				lhs = "t." + getDiscriminatorColumnName();
+			}
+			sb.append( " or " ).append( lhs ).append( " is not in (" );
+			for ( Object discriminatorSQLValue : discriminatorSQLValues ) {
+				if ( !frag.getValues().contains( discriminatorSQLValue ) ) {
+					sb.append( lhs ).append( discriminatorSQLValue );
+				}
+			}
+			sb.append( ") and " ).append( lhs ).append( " is not null" );
+			frag.getValues().remove( InFragment.NOT_NULL );
+			tableReference.setPrunedTableExpression(
+					"(select * from " + getTableName() + " t where " + frag.toFragmentString() + sb + ")"
+			);
+		}
+		else {
+			tableReference.setPrunedTableExpression(
+					"(select * from " + getTableName() + " t where " + frag.toFragmentString() + ")"
+			);
+		}
 	}
 
 	@Override
@@ -713,7 +759,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 					tableName,
 					() -> columnConsumer -> columnConsumer.accept(
 							tableName,
-							constraintOrderedKeyColumnNames[tablePosition]
+							constraintOrderedKeyColumnNames[tablePosition],
+							getIdentifierMapping()::getJdbcMapping
 					)
 			);
 		}

@@ -19,26 +19,23 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.spi.NonSelectQueryPlan;
-import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.SqmTranslation;
-import org.hibernate.query.sqm.sql.SqmTranslator;
-import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.MutatingTableReferenceGroupWrapper;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
 /**
@@ -51,7 +48,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 
 	private JdbcOperationQueryDelete jdbcDelete;
 	private SqmTranslation<DeleteStatement> sqmInterpretation;
-	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<List<JdbcParameter>>>> jdbcParamsXref;
+	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
 
 	public SimpleDeleteQueryPlan(
 			EntityMappingType entityDescriptor,
@@ -66,19 +63,18 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 
 	protected SqlAstTranslator<JdbcOperationQueryDelete> createDeleteTranslator(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
-		final QueryEngine queryEngine = factory.getQueryEngine();
 
-		final SqmTranslatorFactory translatorFactory = queryEngine.getSqmTranslatorFactory();
-		final SqmTranslator<DeleteStatement> translator = translatorFactory.createSimpleDeleteTranslator(
-				sqmDelete,
-				executionContext.getQueryOptions(),
-				domainParameterXref,
-				executionContext.getQueryParameterBindings(),
-				executionContext.getSession().getLoadQueryInfluencers(),
-				factory
-		);
-
-		sqmInterpretation = translator.translate();
+		sqmInterpretation =
+				factory.getQueryEngine().getSqmTranslatorFactory().
+						createSimpleDeleteTranslator(
+								sqmDelete,
+								executionContext.getQueryOptions(),
+								domainParameterXref,
+								executionContext.getQueryParameterBindings(),
+								executionContext.getSession().getLoadQueryInfluencers(),
+								factory
+						)
+						.translate();
 
 		this.jdbcParamsXref = SqmUtil.generateJdbcParamsXref(
 				domainParameterXref,
@@ -124,8 +120,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 			jdbcDelete = deleteTranslator.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 		}
 
-		final boolean missingRestriction = sqmDelete.getWhereClause() == null
-				|| sqmDelete.getWhereClause().getPredicate() == null;
+		final boolean missingRestriction = sqmInterpretation.getSqlAst().getRestriction() == null;
 		if ( missingRestriction ) {
 			assert domainParameterXref.getSqmParameterCount() == 0;
 			assert jdbcParamsXref.isEmpty();
@@ -165,13 +160,18 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 							sqmInterpretation.getSqlExpressionResolver(),
 							factory
 					);
-					matchingIdSubQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( 1, 0, fkTargetColumnExpression ) );
+					matchingIdSubQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( 0, fkTargetColumnExpression ) );
 
 					matchingIdSubQuery.getFromClause().addRoot(
 							tableGroup
 					);
 
-					matchingIdSubQuery.applyPredicate( sqmInterpretation.getSqlAst().getRestriction() );
+					matchingIdSubQuery.applyPredicate( SqmMutationStrategyHelper.getIdSubqueryPredicate(
+							sqmInterpretation.getSqlAst().getRestriction(),
+							entityDescriptor,
+							tableGroup,
+							session
+					) );
 
 					return new InSubQueryPredicate( fkColumnExpression, matchingIdSubQuery, false );
 				},

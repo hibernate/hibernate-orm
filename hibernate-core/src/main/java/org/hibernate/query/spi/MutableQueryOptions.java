@@ -60,6 +60,11 @@ public interface MutableQueryOptions extends QueryOptions {
 	void setResultCacheRegionName(String cacheRegion);
 
 	/**
+	 * Corollary to {@link #getQueryPlanCachingEnabled()}
+	 */
+	void setQueryPlanCachingEnabled(Boolean queryPlanCachingEnabled);
+
+	/**
 	 * Corollary to {@link #getTimeout()}
 	 */
 	void setTimeout(int timeout);

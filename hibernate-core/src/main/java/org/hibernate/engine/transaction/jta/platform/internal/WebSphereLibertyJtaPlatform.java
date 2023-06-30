@@ -16,6 +16,7 @@ import jakarta.transaction.UserTransaction;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
+import org.hibernate.internal.util.NullnessUtil;
 
 /**
  * JTA platform implementation intended for use with WebSphere Liberty and OpenLiberty
@@ -48,6 +49,7 @@ public class WebSphereLibertyJtaPlatform extends AbstractJtaPlatform {
 		return (UserTransaction) jndiService().locate( UT_NAME );
 	}
 
+	@Override
 	public boolean canRegisterSynchronization() {
 		try {
 			return getCurrentStatus() == Status.STATUS_ACTIVE;
@@ -57,17 +59,20 @@ public class WebSphereLibertyJtaPlatform extends AbstractJtaPlatform {
 		}
 	}
 
+	@Override
 	public int getCurrentStatus() throws SystemException {
-		return retrieveTransactionManager().getStatus();
+		return NullnessUtil.castNonNull( retrieveTransactionManager() ).getStatus();
 	}
 
+	@Override
 	public Object getTransactionIdentifier(Transaction transaction) {
 		return transaction;
 	}
 
+	@Override
 	public void registerSynchronization(Synchronization synchronization) {
 		try {
-			retrieveTransactionManager().getTransaction().registerSynchronization(synchronization);
+			NullnessUtil.castNonNull( retrieveTransactionManager() ).getTransaction().registerSynchronization(synchronization);
 		} 
 		catch ( RollbackException | SystemException x ) {
 			throw new RuntimeException(x);

@@ -6,14 +6,8 @@
  */
 package org.hibernate.orm.test.sql.ast;
 
-import java.sql.Types;
-
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.type.descriptor.converter.internal.OrdinalEnumValueConverter;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.converter.spi.EnumValueConverter;
 import org.hibernate.orm.test.mapping.SmokeTests.Gender;
 import org.hibernate.orm.test.mapping.SmokeTests.SimpleEntity;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
@@ -51,7 +45,6 @@ import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.isOneOf;
 
 /**
  * @author Steve Ebersole
@@ -88,9 +81,9 @@ public class SmokeTests {
 			assertThat( rootTableGroup.getTableGroupJoins().isEmpty(), is( true ) );
 
 
-			// `s` is the "alias stem" for `SimpleEntity` and as it is the first entity with that stem in
-			// the query the base becomes `s1`.  The primary table reference is always suffixed as `_0`
-			assertThat( rootTableGroup.getPrimaryTableReference().getIdentificationVariable(), is( "s1_0" ) );
+			// `se` is the "alias stem" for `SimpleEntity` and as it is the first entity with that stem in
+			// the query the base becomes `se1`.  The primary table reference is always suffixed as `_0`
+			assertThat( rootTableGroup.getPrimaryTableReference().getIdentificationVariable(), is( "se1_0" ) );
 
 			final SelectClause selectClause = sqlAst.getQuerySpec().getSelectClause();
 			assertThat( selectClause.getSqlSelections().size(), is( 1 ) ) ;
@@ -106,7 +99,7 @@ public class SmokeTests {
 
 			assertThat(
 					jdbcSelectOperation.getSqlString(),
-					is( "select s1_0.name from mapping_simple_entity s1_0" )
+					is( "select se1_0.name from mapping_simple_entity se1_0" )
 			);
 		} );
 	}
@@ -144,9 +137,9 @@ public class SmokeTests {
 					assertThat( rootTableGroup.getTableGroupJoins().isEmpty(), is( true ) );
 
 
-					// `s` is the "alias stem" for `SimpleEntity` and as it is the first entity with that stem in
-					// the query the base becomes `s1`.  The primary table reference is always suffixed as `_0`
-					assertThat( rootTableGroup.getPrimaryTableReference().getIdentificationVariable(), is( "s1_0" ) );
+					// `se` is the "alias stem" for `SimpleEntity` and as it is the first entity with that stem in
+					// the query the base becomes `se1`.  The primary table reference is always suffixed as `_0`
+					assertThat( rootTableGroup.getPrimaryTableReference().getIdentificationVariable(), is( "se1_0" ) );
 
 					final SelectClause selectClause = sqlAst.getQuerySpec().getSelectClause();
 					assertThat( selectClause.getSqlSelections().size(), is( 1 ) );
@@ -160,25 +153,16 @@ public class SmokeTests {
 					final Expression selectedExpression = sqlSelection.getExpression();
 					assertThat( selectedExpression, instanceOf( ColumnReference.class ) );
 					final ColumnReference columnReference = (ColumnReference) selectedExpression;
-					assertThat( columnReference.getExpressionText(), is( "s1_0.gender" ) );
+					assertThat( columnReference.getExpressionText(), is( "se1_0.gender" ) );
 
 					final JdbcMapping selectedExpressible = selectedExpression.getExpressionType().getSingleJdbcMapping();
 					assertThat( selectedExpressible.getJdbcType().isInteger(), is( true ) );
-
-					final EnumValueConverter<?, ?> enumConverter = (EnumValueConverter<?, ?>) selectedExpressible.getValueConverter();
-					assertThat(
-							enumConverter.getRelationalJavaType().getJavaTypeClass(),
-							isOneOf( Byte.class, Short.class, Integer.class )
-					);
 
 					assertThat( sqlAst.getDomainResultDescriptors().size(), is( 1 ) );
 					final DomainResult<?> domainResult = sqlAst.getDomainResultDescriptors().get( 0 );
 					assertThat( domainResult, instanceOf( BasicResult.class ) );
 					final BasicResult<?> scalarDomainResult = (BasicResult<?>) domainResult;
 					assertThat( scalarDomainResult.getAssembler(), instanceOf( BasicResultAssembler.class ) );
-					final BasicResultAssembler<?> assembler = (BasicResultAssembler<?>) scalarDomainResult.getAssembler();
-					assertThat( assembler.getValueConverter(), notNullValue() );
-					assertThat( assembler.getValueConverter(), instanceOf( OrdinalEnumValueConverter.class ) );
 
 					final NavigablePath expectedSelectedPath = new NavigablePath(
 							SimpleEntity.class.getName(),
@@ -192,9 +176,6 @@ public class SmokeTests {
 					final DomainResultAssembler<?> resultAssembler = domainResult.createResultAssembler( null, null );
 
 					assertThat( resultAssembler, instanceOf( BasicResultAssembler.class ) );
-					final BasicValueConverter<?,?> valueConverter = ( (BasicResultAssembler<?>) resultAssembler ).getValueConverter();
-					assertThat( valueConverter, notNullValue() );
-					assertThat( valueConverter, instanceOf( OrdinalEnumValueConverter.class ) );
 
 					final JdbcOperationQuerySelect jdbcSelectOperation = new StandardSqlAstTranslator<JdbcOperationQuerySelect>(
 							session.getSessionFactory(),
@@ -203,7 +184,7 @@ public class SmokeTests {
 
 					assertThat(
 							jdbcSelectOperation.getSqlString(),
-							is( "select s1_0.gender from mapping_simple_entity s1_0" )
+							is( "select se1_0.gender from mapping_simple_entity se1_0" )
 					);
 				}
 		);

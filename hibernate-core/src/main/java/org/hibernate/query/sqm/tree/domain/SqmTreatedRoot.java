@@ -11,8 +11,8 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -37,6 +37,21 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 		this.treatTarget = treatTarget;
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	private SqmTreatedRoot(
+			NavigablePath navigablePath,
+			SqmRoot<T> wrappedPath,
+			EntityDomainType<S> treatTarget) {
+		super(
+				navigablePath,
+				(EntityDomainType) wrappedPath.getReferencedPathSource(),
+				null,
+				wrappedPath.nodeBuilder()
+		);
+		this.wrappedPath = wrappedPath;
+		this.treatTarget = treatTarget;
+	}
+
 	@Override
 	public SqmRoot<S> copy(SqmCopyContext context) {
 		final SqmTreatedRoot<T, S> existing = context.getCopy( this );
@@ -46,6 +61,7 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 		final SqmTreatedRoot<T, S> path = context.registerCopy(
 				this,
 				new SqmTreatedRoot<>(
+						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget
 				)

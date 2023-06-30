@@ -19,26 +19,13 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import jakarta.persistence.TemporalType;
-
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.PessimisticLockException;
 import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.PgJdbcHelper;
-import org.hibernate.dialect.PostgreSQLCastingInetJdbcType;
-import org.hibernate.dialect.PostgreSQLCastingIntervalSecondJdbcType;
-import org.hibernate.dialect.PostgreSQLCastingJsonJdbcType;
-import org.hibernate.dialect.PostgreSQLDriverKind;
-import org.hibernate.dialect.RowLockStrategy;
-import org.hibernate.dialect.SimpleDatabaseVersion;
-import org.hibernate.dialect.SpannerDialect;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.*;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.FormatFunction;
 import org.hibernate.dialect.function.PostgreSQLTruncFunction;
@@ -60,6 +47,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -70,9 +58,10 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
@@ -85,10 +74,38 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.TemporalType;
+
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
+import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.ARRAY;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.GEOGRAPHY;
+import static org.hibernate.type.SqlTypes.GEOMETRY;
+import static org.hibernate.type.SqlTypes.INET;
+import static org.hibernate.type.SqlTypes.INTEGER;
+import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_UTC;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.UUID;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
@@ -284,21 +301,21 @@ public class CockroachLegacyDialect extends Dialect {
 				}
 				break;
 			case ARRAY:
-				final JdbcType jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+				final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
 				// PostgreSQL names array types by prepending an underscore to the base name
-				if ( jdbcType instanceof ArrayJdbcType && columnTypeName.charAt( 0 ) == '_' ) {
+				if ( jdbcTypeConstructor != null && columnTypeName.charAt( 0 ) == '_' ) {
 					final String componentTypeName = columnTypeName.substring( 1 );
 					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
 					if ( sqlTypeCode != null ) {
-						return ( (ArrayJdbcType) jdbcType ).resolveType(
+						return jdbcTypeConstructor.resolveType(
 								jdbcTypeRegistry.getTypeConfiguration(),
 								this,
 								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-								null
+								ColumnTypeInformation.EMPTY
 						);
 					}
 				}
-				return jdbcType;
+				break;
 		}
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
@@ -787,23 +804,53 @@ public class CockroachLegacyDialect extends Dialect {
 			}
 		}
 		else {
-			switch (unit) {
-				case YEAR:
-					return "extract(year from ?3-?2)";
-				case QUARTER:
-					return "(extract(year from ?3-?2)*4+extract(month from ?3-?2)//3)";
-				case MONTH:
-					return "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
-				// Prior to v20, Cockroach didn't support extracting from an interval/duration,
-				// so we use the extract_duration function
-				case WEEK:
-					return "extract_duration(hour from ?3-?2)/168";
-				case DAY:
-					return "extract_duration(hour from ?3-?2)/24";
-				case NANOSECOND:
-					return "extract_duration(microsecond from ?3-?2)*1e3";
-				default:
-					return "extract_duration(?1 from ?3-?2)";
+			if (getVersion().isSameOrAfter( 20, 1 )) {
+				switch (unit) {
+					case YEAR:
+						return "extract(year from ?3-?2)";
+					case QUARTER:
+						return "(extract(year from ?3-?2)*4+extract(month from ?3-?2)//3)";
+					case MONTH:
+						return "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
+					case WEEK: //week is not supported by extract() when the argument is a duration
+						return "(extract(day from ?3-?2)/7)";
+					case DAY:
+						return "extract(day from ?3-?2)";
+					//in order to avoid multiple calls to extract(),
+					//we use extract(epoch from x - y) * factor for
+					//all the following units:
+
+					// Note that CockroachDB also has an extract_duration function which returns an int,
+					// but we don't use that here because it is deprecated since v20
+					case HOUR:
+					case MINUTE:
+					case SECOND:
+					case NANOSECOND:
+					case NATIVE:
+						return "cast(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + " as int)";
+					default:
+						throw new SemanticException( "unrecognized field: " + unit );
+				}
+			}
+			else {
+				switch (unit) {
+					case YEAR:
+						return "extract(year from ?3-?2)";
+					case QUARTER:
+						return "(extract(year from ?3-?2)*4+extract(month from ?3-?2)//3)";
+					case MONTH:
+						return "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
+					// Prior to v20, Cockroach didn't support extracting from an interval/duration,
+					// so we use the extract_duration function
+					case WEEK:
+						return "extract_duration(hour from ?3-?2)/168";
+					case DAY:
+						return "extract_duration(hour from ?3-?2)/24";
+					case NANOSECOND:
+						return "extract_duration(microsecond from ?3-?2)*1e3";
+					default:
+						return "extract_duration(?1 from ?3-?2)";
+				}
 			}
 		}
 	}
@@ -987,6 +1034,11 @@ public class CockroachLegacyDialect extends Dialect {
 	public boolean supportsSkipLocked() {
 		// See https://www.cockroachlabs.com/docs/stable/select-for-update.html#wait-policies
 		return false;
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
 	}
 
 	@Override

@@ -63,7 +63,7 @@ import org.hibernate.metamodel.spi.ValueAccess;
  *         final BigDecimal value = valueAccess.getValue(0, BigDecimal.class);
  *         final Currency currency = valueAccess.getValue(1, Currency.class);
  *
- *         if ( value == null && currency == null ) {
+ *         if ( value == null &amp;&amp; currency == null ) {
  *             return null;
  *         }
  *         return new MonetaryAmount( value, currency );

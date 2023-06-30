@@ -9,7 +9,6 @@ package org.hibernate.procedure.internal;
 import java.util.List;
 
 import org.hibernate.QueryException;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.procedure.spi.FunctionReturnImplementor;
 import org.hibernate.procedure.spi.ProcedureCallImplementor;
 import org.hibernate.procedure.spi.ProcedureParameterImplementor;
@@ -26,6 +25,7 @@ import jakarta.persistence.ParameterMode;
  * and instead requires that we render this as `@param=?`.
  */
 public class JTDSCallableStatementSupport extends AbstractStandardCallableStatementSupport {
+
 	public static final JTDSCallableStatementSupport INSTANCE = new JTDSCallableStatementSupport();
 
 	@Override
@@ -33,7 +33,6 @@ public class JTDSCallableStatementSupport extends AbstractStandardCallableStatem
 		final String procedureName = procedureCall.getProcedureName();
 		final FunctionReturnImplementor<?> functionReturn = procedureCall.getFunctionReturn();
 		final ProcedureParameterMetadataImplementor parameterMetadata = procedureCall.getParameterMetadata();
-		final SharedSessionContractImplementor session = procedureCall.getSession();
 		final List<? extends ProcedureParameterImplementor<?>> registrations = parameterMetadata.getRegistrationsAsList();
 		final int paramStringSizeEstimate;
 		if ( functionReturn == null && parameterMetadata.hasNamedParameters() ) {
@@ -48,14 +47,10 @@ public class JTDSCallableStatementSupport extends AbstractStandardCallableStatem
 		final StringBuilder buffer;
 		final int offset;
 		if ( functionReturn != null ) {
-			offset = 2;
-			buffer = new StringBuilder( 11 + procedureName.length() + paramStringSizeEstimate ).append( "{?=call " );
-			builder.setFunctionReturn( functionReturn.toJdbcFunctionReturn( session ) );
+			throw new QueryException( "The jTDS driver does not support calling functions through the JDBC CallableStatement API" );
 		}
-		else {
-			offset = 1;
-			buffer = new StringBuilder( 9 + procedureName.length() + paramStringSizeEstimate ).append( "{call " );
-		}
+		offset = 1;
+		buffer = new StringBuilder( 9 + procedureName.length() + paramStringSizeEstimate ).append( "{call " );
 
 		buffer.append( procedureName );
 
@@ -67,7 +62,7 @@ public class JTDSCallableStatementSupport extends AbstractStandardCallableStatem
 			for ( int i = 0; i < registrations.size(); i++ ) {
 				final ProcedureParameterImplementor<?> parameter = registrations.get( i );
 				if ( parameter.getMode() == ParameterMode.REF_CURSOR ) {
-					throw new QueryException( "Dialect [" + session.getJdbcServices().getJdbcEnvironment().getDialect().getClass().getName() + "] not known to support REF_CURSOR parameters" );
+					throw new QueryException( "Dialect [" + procedureCall.getSession().getJdbcServices().getJdbcEnvironment().getDialect().getClass().getName() + "] not known to support REF_CURSOR parameters" );
 				}
 				buffer.append( sep );
 				final JdbcCallParameterRegistration registration = parameter.toJdbcParameterRegistration(

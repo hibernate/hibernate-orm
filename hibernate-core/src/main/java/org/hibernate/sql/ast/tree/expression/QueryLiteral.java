@@ -11,9 +11,10 @@ import java.sql.SQLException;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -30,12 +31,12 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
  */
 public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	private final T value;
-	private final BasicValuedMapping type;
+	private final SqlExpressible expressible;
 
-	public QueryLiteral(T value, BasicValuedMapping type) {
-		assert value == null || type.getJdbcMapping().getJdbcJavaType().isInstance( value );
+	public QueryLiteral(T value, SqlExpressible expressible) {
+		assert value == null || expressible.getJdbcMapping().getJdbcJavaType().isInstance( value );
 		this.value = value;
-		this.type = type;
+		this.expressible = expressible;
 	}
 
 	@Override
@@ -45,7 +46,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
-		return type.getJdbcMapping();
+		return expressible.getJdbcMapping();
 	}
 
 	@Override
@@ -54,30 +55,29 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	}
 
 	@Override
-	public BasicValuedMapping getExpressionType() {
-		return type;
+	public JdbcMappingContainer getExpressionType() {
+		return expressible;
 	}
 
 	@Override
 	public DomainResult<T> createDomainResult(
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		final SqlExpressionResolver sqlExpressionResolver = creationState.getSqlAstCreationState()
-				.getSqlExpressionResolver();
-		final SqlSelection sqlSelection = sqlExpressionResolver.resolveSqlSelection(
-				this,
-				type.getJdbcMapping().getJdbcJavaType(),
-				null,
-				creationState.getSqlAstCreationState()
-						.getCreationContext()
-						.getSessionFactory()
-						.getTypeConfiguration()
-		);
+		final SqlSelection sqlSelection = creationState.getSqlAstCreationState().getSqlExpressionResolver()
+				.resolveSqlSelection(
+						this,
+						expressible.getJdbcMapping().getJdbcJavaType(),
+						null,
+						creationState.getSqlAstCreationState()
+								.getCreationContext()
+								.getSessionFactory()
+								.getTypeConfiguration()
+				);
 
 		return new BasicResult<>(
 				sqlSelection.getValuesArrayPosition(),
 				resultVariable,
-				type.getJdbcMapping()
+				expressible.getJdbcMapping()
 		);
 	}
 
@@ -88,7 +88,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 			JdbcParameterBindings jdbcParameterBindings,
 			ExecutionContext executionContext) throws SQLException {
 		//noinspection unchecked
-		type.getJdbcMapping().getJdbcValueBinder().bind(
+		expressible.getJdbcMapping().getJdbcValueBinder().bind(
 				statement,
 				getLiteralValue(),
 				startPosition,
@@ -100,7 +100,7 @@ public class QueryLiteral<T> implements Literal, DomainResultProducer<T> {
 	public void applySqlSelections(DomainResultCreationState creationState) {
 		creationState.getSqlAstCreationState().getSqlExpressionResolver().resolveSqlSelection(
 				this,
-				type.getJdbcMapping().getJdbcJavaType(),
+				expressible.getJdbcMapping().getJdbcJavaType(),
 				null,
 				creationState.getSqlAstCreationState().getCreationContext().getMappingMetamodel().getTypeConfiguration()
 		);

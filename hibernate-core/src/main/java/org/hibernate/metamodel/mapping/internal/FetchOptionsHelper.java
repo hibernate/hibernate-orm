@@ -61,9 +61,9 @@ public final class FetchOptionsHelper {
 			}
 		}
 		else {
-			CollectionPersister persister = (CollectionPersister) type.getAssociatedJoinable( sessionFactory );
+			final CollectionPersister persister = (CollectionPersister) type.getAssociatedJoinable( sessionFactory );
 			if ( persister instanceof AbstractCollectionPersister
-					&& ( (AbstractCollectionPersister) persister ).isSubselectLoadable() ) {
+					&& persister.isSubselectLoadable() ) {
 				return FetchStyle.SUBSELECT;
 			}
 			else if ( persister.getBatchSize() > 0 ) {

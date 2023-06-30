@@ -2,15 +2,19 @@ package org.hibernate.orm.test.deleteunloaded;
 
 import org.hibernate.Transaction;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.Hibernate.isInitialized;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-@DomainModel( annotatedClasses = { Parent.class, Child.class } )
+@DomainModel( annotatedClasses = { Parent.class, Child.class, ParentSub.class } )
 @SessionFactory
 //@ServiceRegistry(
 //        settings = {
@@ -18,6 +22,15 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 //        }
 //)
 public class DeleteUnloadedProxyTest {
+
+    @AfterEach
+    public void cleanup(SessionFactoryScope scope) {
+        scope.inTransaction( session -> {
+            session.createMutationQuery( "delete from ParentSub" ).executeUpdate();
+            session.createMutationQuery( "delete from Child" ).executeUpdate();
+            session.createMutationQuery( "delete from Parent" ).executeUpdate();
+        } );
+    }
     @Test
     public void testAttached(SessionFactoryScope scope) {
         Parent p = new Parent();
@@ -84,6 +97,50 @@ public class DeleteUnloadedProxyTest {
         scope.inSession( em -> {
             assertNull( em.find( Parent.class, p.getId() ) );
             assertNull( em.find( Child.class, c.getId() ) );
+        } );
+    }
+
+    @Test
+    @JiraKey( "HHH-16690" )
+    public void testRePersist(SessionFactoryScope scope) {
+        Parent p = new Parent();
+        ParentSub ps = new ParentSub( 1L, "abc", p );
+        scope.inTransaction( em -> {
+            em.persist( p );
+            em.persist( ps );
+        } );
+        scope.inTransaction( em -> {
+            ParentSub sub = em.getReference( ParentSub.class, 1L );
+            assertFalse( isInitialized( sub ) );
+            em.remove( sub );
+            em.persist( new ParentSub( 1L, "def", p ) );
+        } );
+        scope.inSession( em -> {
+            ParentSub sub = em.find( ParentSub.class, 1L );
+            assertNotNull( sub );
+            assertEquals( "def", sub.getData() );
+        } );
+    }
+
+    @Test
+    @JiraKey( "HHH-16690" )
+    public void testReMerge(SessionFactoryScope scope) {
+        Parent p = new Parent();
+        ParentSub ps = new ParentSub( 1L, "abc", p );
+        scope.inTransaction( em -> {
+            em.persist( p );
+            em.persist( ps );
+        } );
+        scope.inTransaction( em -> {
+            ParentSub sub = em.getReference( ParentSub.class, 1L );
+            assertFalse( isInitialized( sub ) );
+            em.remove( sub );
+            em.merge( new ParentSub( 1L, "def", p ) );
+        } );
+        scope.inSession( em -> {
+            ParentSub sub = em.find( ParentSub.class, 1L );
+            assertNotNull( sub );
+            assertEquals( "def", sub.getData() );
         } );
     }
 }

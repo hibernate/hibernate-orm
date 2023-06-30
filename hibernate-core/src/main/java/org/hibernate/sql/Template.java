@@ -130,12 +130,10 @@ public final class Template {
 		// 		which the tokens occur.  Depending on the state of those flags we decide whether we need to qualify
 		//		identifier references.
 
-		String symbols = new StringBuilder()
-				.append( PUNCTUATION )
-				.append( WHITESPACE )
-				.append( dialect.openQuote() )
-				.append( dialect.closeQuote() )
-				.toString();
+		String symbols = PUNCTUATION +
+				WHITESPACE +
+				dialect.openQuote() +
+				dialect.closeQuote();
 		StringTokenizer tokens = new StringTokenizer( sqlWhereString, symbols, true );
 		StringBuilder result = new StringBuilder();
 

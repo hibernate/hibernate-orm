@@ -8,6 +8,7 @@ package org.hibernate.orm.test.tenantid;
 
 import org.hibernate.HibernateError;
 import org.hibernate.PropertyValueException;
+import org.hibernate.Session;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -20,13 +21,19 @@ import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.binder.internal.TenantIdBinder;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.type.descriptor.DateTimeUtils;
 
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION;
+import static org.hibernate.internal.util.collections.CollectionHelper.toMap;
+import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -159,6 +166,58 @@ public class TenantIdTest implements SessionFactoryProducer {
             assertNotEquals( record.state.updated, r.state.updated );
             assertEquals( true, r.state.deleted );
         } );
+    }
+
+    @Test
+    public void testEntityManagerHint(SessionFactoryScope scope) {
+        currentTenant = "mine";
+        Record record = new Record();
+        scope.inTransaction( s -> s.persist( record ) );
+        assertEquals( "mine", record.state.tenantId );
+        assertNotNull( record.state.updated );
+
+        currentTenant = "yours";
+        Record record2 = new Record();
+        scope.inTransaction( s -> s.persist( record2 ) );
+        assertEquals( "yours", record2.state.tenantId );
+        assertNotNull( record2.state.updated );
+
+        currentTenant = null;
+        final EntityManagerFactory emf = scope.getSessionFactory();
+        try (EntityManager em = emf.createEntityManager( toMap( HINT_TENANT_ID, "mine" ) ) ) {
+            Record r = em.find( Record.class, record.id );
+            assertEquals( "mine", r.state.tenantId );
+
+            // Session seems to not apply tenant-id on #find
+            Record yours = em.find( Record.class, record2.id );
+            assertEquals( "yours", yours.state.tenantId );
+
+
+            em.createQuery( "from Record where id = :id", Record.class )
+                    .setParameter( "id", record.id )
+                    .getSingleResult();
+            assertEquals( "mine", r.state.tenantId );
+
+            // However, Session does seem to apply tenant-id on queries
+            try {
+                em.createQuery( "from Record where id = :id", Record.class )
+                        .setParameter( "id", record2.id )
+                        .getSingleResult();
+                fail( "Expecting an exception" );
+            }
+            catch (Exception expected) {
+            }
+        }
+        catch (RuntimeException e) {
+            currentTenant = "yours";
+            scope.inTransaction( (s) -> s.createMutationQuery( "delete Record" ) );
+
+            throw e;
+        }
+        finally {
+            // for cleanup
+            currentTenant = "mine";
+        }
     }
 
     private static void waitALittle() {

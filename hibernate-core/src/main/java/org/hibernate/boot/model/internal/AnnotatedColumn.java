@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.annotations.Array;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.ColumnDefault;
@@ -75,6 +76,7 @@ public class AnnotatedColumn {
 	private Long length;
 	private Integer precision;
 	private Integer scale;
+	private Integer arrayLength;
 	private String logicalColumnName;
 	private boolean unique;
 	private boolean nullable = true;
@@ -118,6 +120,14 @@ public class AnnotatedColumn {
 
 	public Integer getScale() {
 		return scale;
+	}
+
+	public Integer getArrayLength() {
+		return arrayLength;
+	}
+
+	public void setArrayLength(Integer arrayLength) {
+		this.arrayLength = arrayLength;
 	}
 
 	public boolean isUnique() {
@@ -228,6 +238,7 @@ public class AnnotatedColumn {
 					length,
 					precision,
 					scale,
+					arrayLength,
 					nullable,
 					sqlType,
 					unique,
@@ -257,6 +268,7 @@ public class AnnotatedColumn {
 			Long length,
 			Integer precision,
 			Integer scale,
+			Integer arrayLength,
 			boolean nullable,
 			String sqlType,
 			boolean unique,
@@ -273,6 +285,7 @@ public class AnnotatedColumn {
 				mappingColumn.setPrecision( precision );
 				mappingColumn.setScale( scale );
 			}
+			mappingColumn.setArrayLength( arrayLength );
 			mappingColumn.setNullable( nullable );
 			mappingColumn.setSqlType( sqlType );
 			mappingColumn.setUnique( unique );
@@ -576,7 +589,7 @@ public class AnnotatedColumn {
 			Map<String, Join> secondaryTables,
 			MetadataBuildingContext context) {
 		return buildColumnsOrFormulaFromAnnotation(
-				new jakarta.persistence.Column[] { column },
+				column==null ? null : new jakarta.persistence.Column[] { column },
 				formulaAnn,
 //				commentAnn,
 				nullability,
@@ -732,6 +745,7 @@ public class AnnotatedColumn {
 		annotatedColumn.setLength( (long) column.length() );
 		annotatedColumn.setPrecision( column.precision() );
 		annotatedColumn.setScale( column.scale() );
+		annotatedColumn.handleArrayLength( inferredData );
 //		annotatedColumn.setPropertyHolder( propertyHolder );
 //		annotatedColumn.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
 		annotatedColumn.setNullable( column.nullable() ); //TODO force to not null if available? This is a (bad) user choice.
@@ -751,6 +765,12 @@ public class AnnotatedColumn {
 		annotatedColumn.extractDataFromPropertyData( propertyHolder, inferredData );
 		annotatedColumn.bind();
 		return annotatedColumn;
+	}
+
+	private void handleArrayLength(PropertyData inferredData) {
+		if ( inferredData.getProperty().isAnnotationPresent(Array.class) ) {
+			setArrayLength( inferredData.getProperty().getAnnotation(Array.class).length() );
+		}
 	}
 
 	private static String logicalColumnName(
@@ -901,6 +921,7 @@ public class AnnotatedColumn {
 		column.applyGeneratedAs( inferredData, 1 );
 		column.applyCheckConstraint( inferredData, 1 );
 		column.extractDataFromPropertyData( propertyHolder, inferredData );
+		column.handleArrayLength( inferredData );
 		column.bind();
 		return columns;
 	}

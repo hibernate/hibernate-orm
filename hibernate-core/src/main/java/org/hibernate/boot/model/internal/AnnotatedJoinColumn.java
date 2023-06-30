@@ -311,9 +311,11 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		final Column mappingColumn = getMappingColumn();
 		initMappingColumn(
 				columnName,
-				null, referencedColumn.getLength(),
+				null,
+				referencedColumn.getLength(),
 				referencedColumn.getPrecision(),
 				referencedColumn.getScale(),
+				referencedColumn.getArrayLength(),
 				mappingColumn != null && mappingColumn.isNullable(),
 				referencedColumn.getSqlType(),
 				mappingColumn != null && mappingColumn.isUnique(),
@@ -339,6 +341,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				column.getLength(),
 				column.getPrecision(),
 				column.getScale(),
+				column.getArrayLength(),
 				getMappingColumn().isNullable(),
 				column.getSqlType(),
 				getMappingColumn().isUnique(),
@@ -390,6 +393,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			mappingColumn.setLength( column.getLength() );
 			mappingColumn.setPrecision( column.getPrecision() );
 			mappingColumn.setScale( column.getScale() );
+			mappingColumn.setArrayLength( column.getArrayLength() );
 		}
 	}
 

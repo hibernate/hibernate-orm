@@ -62,6 +62,7 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.predicate.ThruthnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -71,6 +72,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableDeleteCustomSql;
 import org.hibernate.sql.model.internal.TableDeleteStandard;
 import org.hibernate.sql.model.internal.TableInsertCustomSql;
@@ -201,6 +203,8 @@ public interface SqlAstWalker {
 
 	void visitNullnessPredicate(NullnessPredicate nullnessPredicate);
 
+	void visitThruthnessPredicate(ThruthnessPredicate predicate);
+
 	void visitRelationalPredicate(ComparisonPredicate comparisonPredicate);
 
 	void visitSelfRenderingPredicate(SelfRenderingPredicate selfRenderingPredicate);
@@ -224,6 +228,8 @@ public interface SqlAstWalker {
 	void visitCustomTableDelete(TableDeleteCustomSql tableDelete);
 
 	void visitStandardTableUpdate(TableUpdateStandard tableUpdate);
+
+	void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate);
 
 	void visitCustomTableUpdate(TableUpdateCustomSql tableUpdate);
 

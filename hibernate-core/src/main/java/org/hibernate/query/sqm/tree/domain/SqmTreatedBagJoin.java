@@ -12,7 +12,7 @@ import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -42,6 +42,28 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 		this.wrappedPath = wrappedPath;
 	}
 
+	private SqmTreatedBagJoin(
+			NavigablePath navigablePath,
+			SqmBagJoin<O, T> wrappedPath,
+			EntityDomainType<S> treatTarget,
+			String alias) {
+		//noinspection unchecked
+		super(
+				wrappedPath.getLhs(),
+				wrappedPath.getNavigablePath().treatAs(
+						treatTarget.getHibernateEntityName(),
+						alias
+				),
+				(BagPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				alias,
+				wrappedPath.getSqmJoinType(),
+				wrappedPath.isFetched(),
+				wrappedPath.nodeBuilder()
+		);
+		this.treatTarget = treatTarget;
+		this.wrappedPath = wrappedPath;
+	}
+
 	@Override
 	public SqmTreatedBagJoin<O, T, S> copy(SqmCopyContext context) {
 		final SqmTreatedBagJoin<O, T, S> existing = context.getCopy( this );
@@ -51,6 +73,7 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 		final SqmTreatedBagJoin<O, T, S> path = context.registerCopy(
 				this,
 				new SqmTreatedBagJoin<>(
+						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
 						getExplicitAlias()
@@ -72,6 +95,11 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 
 	@Override
 	public SqmPathSource<S> getNodeType() {
+		return treatTarget;
+	}
+
+	@Override
+	public EntityDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 

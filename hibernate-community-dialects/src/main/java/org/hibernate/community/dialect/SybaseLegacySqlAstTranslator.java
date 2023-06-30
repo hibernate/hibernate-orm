@@ -12,6 +12,7 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -25,6 +26,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.JdbcOperation;
@@ -35,6 +37,8 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
  * @author Christian Beikov
  */
 public class SybaseLegacySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAstTranslator<T> {
+
+	private static final String UNION_ALL = " union all ";
 
 	public SybaseLegacySqlAstTranslator(SessionFactoryImplementor sessionFactory, Statement statement) {
 		super( sessionFactory, statement );
@@ -99,11 +103,43 @@ public class SybaseLegacySqlAstTranslator<T extends JdbcOperation> extends Abstr
 
 	@Override
 	protected boolean renderNamedTableReference(NamedTableReference tableReference, LockMode lockMode) {
-		super.renderNamedTableReference( tableReference, lockMode );
+		final String tableExpression = tableReference.getTableExpression();
+		if ( tableReference instanceof UnionTableReference && lockMode != LockMode.NONE && tableExpression.charAt( 0 ) == '(' ) {
+			// SQL Server requires to push down the lock hint to the actual table names
+			int searchIndex = 0;
+			int unionIndex;
+			while ( ( unionIndex = tableExpression.indexOf( UNION_ALL, searchIndex ) ) != -1 ) {
+				append( tableExpression, searchIndex, unionIndex );
+				renderLockHint( lockMode );
+				appendSql( UNION_ALL );
+				searchIndex = unionIndex + UNION_ALL.length();
+			}
+			append( tableExpression, searchIndex, tableExpression.length() - 1 );
+			renderLockHint( lockMode );
+			appendSql( " )" );
+
+			registerAffectedTable( tableReference );
+			final Clause currentClause = getClauseStack().getCurrent();
+			if ( rendersTableReferenceAlias( currentClause ) ) {
+				final String identificationVariable = tableReference.getIdentificationVariable();
+				if ( identificationVariable != null ) {
+					appendSql( ' ' );
+					appendSql( identificationVariable );
+				}
+			}
+		}
+		else {
+			super.renderNamedTableReference( tableReference, lockMode );
+			renderLockHint( lockMode );
+		}
+		// Just always return true because SQL Server doesn't support the FOR UPDATE clause
+		return true;
+	}
+
+	private void renderLockHint(LockMode lockMode) {
 		if ( LockMode.READ.lessThan( lockMode ) ) {
 			appendSql( " holdlock" );
 		}
-		return true;
 	}
 
 	@Override

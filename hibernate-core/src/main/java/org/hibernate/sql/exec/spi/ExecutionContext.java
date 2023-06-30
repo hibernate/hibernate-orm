@@ -10,6 +10,7 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -55,8 +56,24 @@ public interface ExecutionContext {
 		return null;
 	}
 
+	default EntityMappingType getRootEntityDescriptor() {
+		return null;
+	}
+
+	/**
+	 *
+	 * @param entityKey
+	 * @param entry
+	 *
+	 * @deprecated use {@link #registerSubselect(EntityKey, LoadingEntityEntry)} instead.
+	 */
+	@Deprecated
 	default void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
 		// by default do nothing
+	}
+
+	default void registerSubselect(EntityKey entityKey, LoadingEntityEntry entry) {
+		registerLoadingEntityEntry( entityKey, entry );
 	}
 
 	/**
@@ -77,6 +94,14 @@ public interface ExecutionContext {
 	 * @return true if the query execution has to be added to the {@link org.hibernate.stat.Statistics}, false otherwise.
 	 */
 	default boolean hasQueryExecutionToBeAddedToStatistics() {
+		return false;
+	}
+
+	/**
+	 * Does this query return objects that might be already cached
+	 * by the session, whose lock mode may need upgrading
+	 */
+	default boolean upgradeLocks(){
 		return false;
 	}
 

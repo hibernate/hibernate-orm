@@ -131,6 +131,11 @@ public class DerbyDialect extends Dialect {
 	}
 
 	@Override
+	protected DatabaseVersion getMinimumSupportedVersion() {
+		return MINIMUM_VERSION;
+	}
+
+	@Override
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			case TINYINT:

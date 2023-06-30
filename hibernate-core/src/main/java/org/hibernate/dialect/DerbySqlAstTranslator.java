@@ -208,7 +208,7 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 			if ( inListPredicate.isNegated() ) {
 				appendSql( " not" );
 			}
-			appendSql( " in(" );
+			appendSql( " in (" );
 			renderCommaSeparated( listExpressions );
 			appendSql( CLOSE_PARENTHESIS );
 		}
@@ -280,5 +280,4 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
-
 }

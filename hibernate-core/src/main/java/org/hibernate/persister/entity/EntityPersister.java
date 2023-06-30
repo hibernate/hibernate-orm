@@ -638,6 +638,22 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 			SharedSessionContractImplementor session);
 
 	/**
+	 * Merge a persistent instance
+	 */
+	default void merge(
+			Object id,
+			Object[] fields,
+			int[] dirtyFields,
+			boolean hasDirtyCollection,
+			Object[] oldFields,
+			Object oldVersion,
+			Object object,
+			Object rowId,
+			SharedSessionContractImplementor session) {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
 	 * Get the Hibernate types of the class properties
 	 */
 	Type[] getPropertyTypes();
@@ -749,9 +765,22 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	ClassMetadata getClassMetadata();
 
 	/**
-	 * Is batch loading enabled?
+	 * The batch size for batch loading.
+	 * 
+	 * @see org.hibernate.engine.spi.LoadQueryInfluencers#effectiveBatchSize(EntityPersister)
 	 */
-	boolean isBatchLoadable();
+	default int getBatchSize() {
+		return -1;
+	}
+
+	/**
+	 * Is batch loading enabled?
+	 *
+	 * @see org.hibernate.engine.spi.LoadQueryInfluencers#effectivelyBatchLoadable(EntityPersister)
+	 */
+	default boolean isBatchLoadable() {
+		return getBatchSize() > 1;
+	}
 
 	/**
 	 * Is select snapshot before update enabled?

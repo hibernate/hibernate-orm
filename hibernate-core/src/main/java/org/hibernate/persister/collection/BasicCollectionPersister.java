@@ -411,7 +411,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	// Update handling
 
 	private JdbcMutationOperation generateUpdateRowOperation(MutatingTableReference tableReference) {
-		if ( getIdentifierTableMapping().getInsertDetails().getCustomSql() != null ) {
+		if ( getIdentifierTableMapping().getUpdateDetails().getCustomSql() != null ) {
 			return buildCustomSqlUpdateRowOperation( tableReference );
 		}
 
@@ -437,9 +437,9 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		return new JdbcUpdateMutation(
 				getCollectionTableMapping(),
 				this,
-				getCollectionTableMapping().getDeleteDetails().getCustomSql(),
-				getCollectionTableMapping().getDeleteDetails().isCallable(),
-				getCollectionTableMapping().getDeleteDetails().getExpectation(),
+				getCollectionTableMapping().getUpdateDetails().getCustomSql(),
+				getCollectionTableMapping().getUpdateDetails().isCallable(),
+				getCollectionTableMapping().getUpdateDetails().getExpectation(),
 				parameterBinders
 		);
 	}
@@ -464,8 +464,32 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SET
 
-		attribute.getElementDescriptor().forEachUpdatable( updateBuilder );
+		if ( hasIndex() ) {
+			/*
+				Given :
 
+				class MyEntity {
+					@ElementCollection(fetch = FetchType.LAZY)
+					@OrderColumn
+					private List<MyEmbeddable> myEmbeddables;
+				}
+
+				@Embeddable
+				public static class MyEmbeddable {
+					@Column(updatable = false)
+					private String embeddedProperty;
+				}
+
+			 	we cannot understand if the update is due to a change in the value embeddedProperty or because a
+			 	new element has been added to the list in an existing position (update) shifting the old value (insert).
+
+			 	For this reason we cannot take into consideration the `@Column(updatable = false)`
+			 */
+			attribute.getElementDescriptor().forEachNonFormula( updateBuilder );
+		}
+		else {
+			attribute.getElementDescriptor().forEachUpdatable( updateBuilder );
+		}
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// WHERE
 
@@ -501,16 +525,28 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				0,
 				jdbcValueBindings,
 				null,
-				(valueIndex, bindings, y, jdbcValue, jdbcValueMapping) -> {
-					if ( !jdbcValueMapping.isUpdateable() || jdbcValueMapping.isFormula() ) {
-						return;
-					}
-					bindings.bindValue(
-							jdbcValue,
-							jdbcValueMapping,
-							ParameterUsage.SET
-					);
-				},
+				hasIndex() ?
+						(valueIndex, bindings, y, jdbcValue, jdbcValueMapping) -> {
+							if ( jdbcValueMapping.isFormula() ) {
+								return;
+							}
+							bindings.bindValue(
+									jdbcValue,
+									jdbcValueMapping,
+									ParameterUsage.SET
+							);
+						}
+						:
+						(valueIndex, bindings, y, jdbcValue, jdbcValueMapping) -> {
+							if ( !jdbcValueMapping.isUpdateable() || jdbcValueMapping.isFormula() ) {
+								return;
+							}
+							bindings.bindValue(
+									jdbcValue,
+									jdbcValueMapping,
+									ParameterUsage.SET
+							);
+						},
 				session
 		);
 	}

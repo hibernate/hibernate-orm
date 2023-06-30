@@ -1,0 +1,836 @@
+[[object-relational-mapping]]
+== Object/relational mapping
+
+Given a domain model—that is, a collection of entity classes decorated with all the fancy annotations we <<entities-summary,just met>> in the previous chapter—Hibernate will happily go away and infer a complete relational schema, and even <<automatic-schema-export,export it to your database>> if you ask politely.
+
+The resulting schema will be entirely sane and reasonable, though if you look closely, you'll find some flaws.
+For example, every `VARCHAR` column will have the same length, `VARCHAR(255)`.
+
+But the process I just described—which we call _top down_ mapping—simply doesn't fit the most common scenario for the use of O/R mapping.
+It's only rarely that the Java classes precede the relational schema.
+Usually, _we already have a relational schema_, and we're constructing our domain model around the schema.
+This is called _bottom up_ mapping.
+
+[TIP]
+// ."Legacy" data
+====
+Developers often refer to a pre-existing relational database as "legacy" data.
+This tends to conjure images of bad old "legacy apps" written in COBOL or something.
+But legacy data is valuable, and learning to work with it is important.
+====
+
+Especially when mapping bottom up, we often need to customize the inferred object/relational mappings.
+This is a somewhat tedious topic, and so we don't want to spend too many words on it.
+Instead, we'll quickly skim the most important mapping annotations.
+
+[[case-convention]]
+.Hibernate SQL case convention
+****
+Computers have had lowercase letters for rather a long time now.
+Most developers learned long ago that text written in MixedCase, camelCase, or even snake_case is easier to read than text written in SHOUTYCASE.
+This is just as true of SQL as it is of any other language.
+
+Therefore, for over twenty years, the convention on the Hibernate project has been that:
+
+- query language identifiers are written in `lowercase`,
+- table names are written in `MixedCase`, and
+- column names are written in `camelCase`.
+
+That is to say, we simply adopted Java's excellent conventions and applied them to SQL.
+
+Now, there's no way we can force you to follow this convention, even if we wished to.
+Hell, you can easily write a `PhysicalNamingStrategy` which makes table and column names ALL UGLY AND SHOUTY LIKE THIS IF YOU PREFER.
+But, _by default_, it's the convention Hibernate follows, and it's frankly a pretty reasonable one.
+****
+
+[[mapping-inheritance]]
+=== Mapping entity inheritance hierarchies
+
+In <<entity-inheritance>> we saw that entity classes may exist within an inheritance hierarchy.
+There's three basic strategies for mapping an entity hierarchy to relational tables.
+Let's put them in a table, so we can more easily compare the points of difference between them.
+
+.Entity inheritance mapping strategies
+|===
+| Strategy | Mapping | Polymorphic queries | Constraints | Normalization | When to use it
+
+| `SINGLE_TABLE`
+| Map every class in the hierarchy to the same table, and uses the value of a _discriminator column_ to determine which concrete class each row represents.
+| To retrieve instances of a given class, we only need to query the one table.
+| Attributes declared by subclasses map to columns without `NOT NULL` constraints. 💀
+
+  Any association may have a `FOREIGN KEY` constraint. 🤓
+| Subclass data is denormalized. 🧐
+| Works well when subclasses declare few or no additional attributes.
+| `JOINED`
+| Map every class in the hierarchy to a separate table, but each table only maps the attributes declared by the class itself.
+
+  Optionally, a discriminator column may be used.
+a| To retrieve instances of a given class, we must `JOIN` the table mapped by the class with:
+
+  - all tables mapped by its superclasses and
+  - all tables mapped by its subclasses.
+| Any attribute may map to a column with a `NOT NULL` constraint. 🤓
+
+  Any association may have a `FOREIGN KEY` constraint. 🤓
+| The tables are normalized. 🤓
+| The best option when we care a lot about constraints and normalization.
+| `TABLE_PER_CLASS`
+| Map every concrete class in the hierarchy to a separate table, but denormalize all inherited attributes into the table.
+| To retrieve instances of a given class, we must take a `UNION` over the table mapped by the class and the tables mapped by its subclasses.
+| Associations targeting a superclass cannot have a corresponding `FOREIGN KEY` constraint in the database. 💀💀
+
+  Any attribute may map to a column with a `NOT NULL` constraint. 🤓
+| Superclass data is denormalized. 🧐
+| Not very popular.
+
+  From a certain point of view, competes with `@MappedSuperclass`.
+|===
+
+The three mapping strategies are enumerated by `InheritanceType`.
+We specify an inheritance mapping strategy using the `@Inheritance` annotation.
+
+For mappings with a _discriminator column_, we should:
+
+- specify the discriminator column name and type by annotating the root entity `@DiscriminatorColumn`, and
+- specify the values of this discriminator by annotating each entity in the hierarchy `@DiscriminatorValue`.
+
+// [[single-table-inheritance]]
+// === Single table inheritance
+
+For single table inheritance we always need a discriminator:
+
+[source,java]
+----
+@Entity
+@DiscriminatorColumn(discriminatorType=CHAR, name="kind")
+@DiscriminatorValue('P')
+class Person { ... }
+
+@Entity
+@DiscriminatorValue('A')
+class Author { ... }
+----
+
+We don't need to explicitly specify `@Inheritance(strategy=SINGLE_TABLE)`, since that's the default.
+
+// [[multiple-table-inheritance]]
+// === Multiple table inheritance
+
+For `JOINED` inheritance we don't need a discriminator:
+
+[source,java]
+----
+@Entity
+@Inheritance(strategy=JOINED)
+class Person { ... }
+
+@Entity
+class Author { ... }
+----
+
+[TIP]
+// .Discriminator columns for `JOINED` inheritance
+====
+However, we can add a discriminator column if we like, and in that case the generated SQL for polymorphic queries will be slightly simpler.
+====
+
+Similarly, for `TABLE_PER_CLASS` inheritance we have:
+
+[source,java]
+----
+@Entity
+@Inheritance(strategy=TABLE_PER_CLASS)
+class Person { ... }
+
+@Entity
+class Author { ... }
+----
+
+[NOTE]
+// .Discriminator columns for `TABLE_PER_CLASS` inheritance
+====
+Hibernate doesn't allow discriminator columns for `TABLE_PER_CLASS` inheritance mappings, since they would make no sense, and offer no advantage.
+====
+
+Notice that in this last case, a polymorphic association like:
+
+[source,java]
+----
+@ManyToOne Person person;
+----
+
+is a bad idea, since it's impossible to create a foreign key constraint that targets both mapped tables.
+
+// [[mixing-inheritance]]
+// === Mixed inheritance
+//
+// Hibernate doesn't support mixing ``InheritanceType``s within a single entity hierarchy.
+// However, it's possible to emulate a mix of `SINGLE_TABLE` and `JOINED` inheritance using the `@SecondaryTable` annotation.
+
+[[table-mappings]]
+=== Mapping to tables
+
+The following annotations specify exactly how elements of the domain model map to tables of the relational model:
+
+.Annotations for mapping tables
+[%autowidth.stretch]
+|===
+| Annotation | Purpose
+
+| `@Table` | Map an entity class to its primary table
+| `@SecondaryTable` | Define a secondary table for an entity class
+| `@JoinTable` | Map a many-to-many or many-to-one association to its association table
+| `@CollectionTable` | Map an `@ElementCollection` to its table
+|===
+
+The first two annotations are used to map an entity to its _primary table_ and, optionally, one or more _secondary tables_.
+
+[[entity-table-mappings]]
+=== Mapping entities to tables
+
+By default, an entity maps to a single table, which may be specified using `@Table`:
+
+[source,java]
+----
+@Entity
+@Table(name="People")
+class Person { ... }
+----
+
+However, the `@SecondaryTable` annotation allows us to spread its attributes across multiple _secondary tables_.
+
+[source,java]
+----
+@Entity
+@Table(name="Books")
+@SecondaryTable(name="Editions")
+class Book { ... }
+----
+
+The `@Table` annotation can do more than just specify a name:
+
+.`@Table` annotation members
+[%breakable,cols="20,~"]
+|===
+| Annotation member | Purpose
+
+| `name` | The name of the mapped table
+| `schema` 💀 | The schema to which the table belongs
+| `catalog` 💀 | The catalog to which the table belongs
+| `uniqueConstraints` | One or more `@UniqueConstraint` annotations declaring multi-column unique constraints
+| `indexes` | One or more `@Index` annotations each declaring an index
+|===
+
+[%unbreakable]
+[TIP]
+// .If you don't need to, don't hardcode the schema and catalog
+====
+It only makes sense to explicitly specify the `schema` in annotations if the domain model is spread across multiple schemas.
+
+Otherwise, it's a bad idea to hardcode the schema (or catalog) in a `@Table` annotation.
+Instead:
+
+- set the configuration property `hibernate.default_schema` (or `hibernate.default_catalog`), or
+- simply specify the schema in the JDBC connection URL.
+====
+
+The `@SecondaryTable` annotation is even more interesting:
+
+.`@SecondaryTable` annotation members
+[%breakable,cols="20,~"]
+|===
+| Annotation member | Purpose
+
+| `name` | The name of the mapped table
+| `schema` 💀 | The schema to which the table belongs
+| `catalog` 💀 | The catalog to which the table belongs
+| `uniqueConstraints` | One or more `@UniqueConstraint` annotations declaring multi-column unique constraints
+| `indexes` | One or more `@Index` annotations each declaring an index
+| `pkJoinColumns` | One or more `@PrimaryKeyJoinColumn` annotations, specifying <<primary-key-column-mappings,primary key column mappings>>
+| `foreignKey` | An `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``@PrimaryKeyJoinColumn``s
+|===
+
+[TIP]
+====
+Using `@SecondaryTable` on a subclass in a `SINGLE_TABLE` entity inheritance hierarchy gives us a sort of mix of `SINGLE_TABLE` with `JOINED` inheritance.
+====
+
+[[join-table-mappings]]
+=== Mapping associations to tables
+
+The `@JoinTable` annotation specifies an _association table_, that is, a table holding foreign keys of both associated entities.
+This annotation is usually used with `@ManyToMany` associations:
+
+[source,java]
+----
+@Entity
+class Book {
+    ...
+
+    @ManyToMany
+    @JoinTable(name="BooksAuthors")
+    Set<Author> authors;
+
+    ...
+}
+----
+
+But it's even possible to use it to map a `@ManyToOne` or `@OneToOne` association to an association table.
+
+[source,java]
+----
+@Entity
+class Book {
+    ...
+
+    @ManyToOne(fetch=LAZY)
+    @JoinTable(name="BookPublisher")
+    Publisher publisher;
+
+    ...
+}
+----
+
+Here, there should be a `UNIQUE` constraint on one of the columns of the association table.
+
+[source,java]
+----
+@Entity
+class Author {
+    ...
+
+    @OneToOne(optional=false, fetch=LAZY)
+    @JoinTable(name="AuthorPerson")
+    Person author;
+
+    ...
+}
+----
+
+Here, there should be a `UNIQUE` constraint on _both_ columns of the association table.
+
+.`@JoinTable` annotation members
+[%breakable,cols="20,~"]
+|===
+| Annotation member | Purpose
+
+| `name` | The name of the mapped association table
+| `schema` 💀 | The schema to which the table belongs
+| `catalog` 💀 | The catalog to which the table belongs
+| `uniqueConstraints` | One or more `@UniqueConstraint` annotations declaring multi-column unique constraints
+| `indexes` | One or more `@Index` annotations each declaring an index
+| `joinColumns` | One or more `@JoinColumn` annotations, specifying <<join-column-mappings,foreign key column mappings>> to the table of the owning side
+| `inverseJoinColumns` | One or more `@JoinColumn` annotations, specifying <<join-column-mappings,foreign key column mappings>> to the table of the unowned side
+| `foreignKey` | An `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``joinColumns``s
+| `inverseForeignKey` | An `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint on the ``inverseJoinColumns``s
+|===
+
+To better understand these annotations, we must first discuss column mappings in general.
+
+[[column-mappings]]
+=== Mapping to columns
+
+These annotations specify how elements of the domain model map to columns of tables in the relational model:
+
+.Annotations for mapping columns
+[%autowidth.stretch]
+|===
+| Annotation | Purpose
+
+| `@Column` | Map an attribute to a column
+| `@JoinColumn` | Map an association to a foreign key column
+| `@PrimaryKeyJoinColumn` | Map the primary key used to join a secondary table with its primary, or a subclass table in `JOINED` inheritance with its root class table
+| `@OrderColumn` | Specifies a column that should be used to maintain the order of a `List`.
+| `@MapKeyColumn` | Specified a column that should be used to persist the keys of a `Map`.
+|===
+
+We use the `@Column` annotation to map basic attributes.
+
+[[regular-column-mappings]]
+=== Mapping basic attributes to columns
+
+The `@Column` annotation is not only useful for specifying the column name.
+
+.`@Column` annotation members
+[%breakable,cols="20,~"]
+|===
+| Annotation member | Purpose
+
+| `name` | The name of the mapped column
+| `table` | The name of the table to which this column belongs
+| `length` | The length of a `VARCHAR`, `CHAR`, or `VARBINARY` column type
+| `precision` | The decimal digits of precision of a `FLOAT`, `DECIMAL`, `NUMERIC`, or `TIME`, or `TIMESTAMP` column type
+| `scale` | The scale of a `DECIMAL` or `NUMERIC` column type, the digits of precision that occur to the right of the decimal point
+| `unique` | Whether the column has a `UNIQUE` constraint
+| `nullable` | Whether the column has a `NOT NULL` constraint
+| `insertable` | Whether the column should appear in generated SQL `INSERT` statements
+| `updatable` | Whether the column should appear in generated SQL `UPDATE` statements
+| `columnDefinition` 💀| A DDL fragment that should be used to declare the column
+|===
+
+[TIP]
+// .Use of `columnDefinition` results in unportable DDL
+====
+We no longer recommend the use of `columnDefinition` since it results in unportable DDL.
+Hibernate has much better ways to customize the generated DDL using techniques that result in portable behavior across different databases.
+====
+
+Here we see four different ways to use the `@Column` annotation:
+
+[source,java]
+----
+@Entity
+@Table(name="Books")
+@SecondaryTable(name="Editions")
+class Book {
+    @Id @GeneratedValue
+    @Column(name="bookId") // customize column name
+    Long id;
+
+    @Column(length=100, nullable=false) // declare column as VARCHAR(100) NOT NULL
+    String title;
+    
+    @Column(length=17, unique=true, nullable=false) // declare column as VARCHAR(17) NOT NULL UNIQUE
+    String isbn;
+    
+    @Column(table="Editions", updatable=false) // column belongs to the secondary table, and is never updated
+    int edition;
+}
+----
+
+We don't use `@Column` to map associations.
+
+[[join-column-mappings]]
+=== Mapping associations to foreign key columns
+
+The `@JoinColumn` annotation is used to customize a foreign key column.
+
+.`@JoinColumn` annotation members
+[%breakable,cols="20,~"]
+|===
+| Annotation member | Purpose
+
+| `name` | The name of the mapped foreign key column
+| `table` | The name of the table to which this column belongs
+| `referencedColumnName` | The name of the column to which the mapped foreign key column refers
+| `unique` | Whether the column has a `UNIQUE` constraint
+| `nullable` | Whether the column has a `NOT NULL` constraint
+| `insertable` | Whether the column should appear in generated SQL `INSERT` statements
+| `updatable` | Whether the column should appear in generated SQL `UPDATE` statements
+| `columnDefinition` 💀| A DDL fragment that should be used to declare the column
+| `foreignKey` | A `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint
+|===
+
+A foreign key column doesn't necessarily have to refer to the primary key of the referenced table.
+It's quite acceptable for the foreign key to refer to any other unique key of the referenced entity, even to a unique key of a secondary table.
+
+Here we see how to use `@JoinColumn` to define a `@ManyToOne` association mapping a foreign key column which refers to the `@NaturalId` of `Book`:
+
+[source,java]
+----
+@Entity
+@Table(name="Items")
+class Item {
+    ...
+
+    @ManyToOne(optional=false)  // implies nullable=false
+    @JoinColumn(name = "bookIsbn", referencedColumnName = "isbn",  // a reference to a non-PK column
+                foreignKey = @ForeignKey(name="ItemsToBooksBySsn")) // supply a name for the FK constraint
+    Book book;
+
+    ...
+}
+----
+
+In case this is confusing:
+
+- `bookIsbn` is the name of the foreign key column in the `Items` table,
+- it refers to a unique key `isbn` in the `Books` table, and
+- it has a foreign key constraint named `ItemsToBooksBySsn`.
+
+Note that the `foreignKey` member is completely optional and only affects DDL generation.
+
+[TIP]
+// .Foreign key constraint names
+====
+If you don't supply an explicit name using `@ForeignKey`, Hibernate will generate a quite ugly name.
+The reason for this is that the maximum length of foreign key names on some databases is extremely constrained, and we need to avoid collisions.
+To be fair, this is perfectly fine if you're only using the generated DDL for testing.
+====
+
+For composite foreign keys we might have multiple `@JoinColumn` annotations:
+
+[source,java]
+----
+@Entity
+@Table(name="Items")
+class Item {
+    ...
+
+    @ManyToOne(optional=false)
+    @JoinColumn(name = "bookIsbn", referencedColumnName = "isbn")
+    @JoinColumn(name = "bookPrinting", referencedColumnName = "printing")
+    Book book;
+
+    ...
+}
+----
+
+If we need to specify the `@ForeignKey`, this starts to get a bit messy:
+
+[source,java]
+----
+@Entity
+@Table(name="Items")
+class Item {
+    ...
+
+    @ManyToOne(optional=false)
+    @JoinColumns(value = {@JoinColumn(name = "bookIsbn", referencedColumnName = "isbn"),
+                          @JoinColumn(name = "bookPrinting", referencedColumnName = "printing")},
+                 foreignKey = @ForeignKey(name="ItemsToBooksBySsn"))
+    Book book;
+
+    ...
+}
+----
+
+For associations mapped to a `@JoinTable`, fetching the association requires two joins, and so we must declare the ``@JoinColumn``s inside the `@JoinTable` annotation:
+
+[source,java]
+----
+@Entity
+class Book {
+    @Id @GeneratedValue
+    Long id;
+
+    @ManyToMany
+    @JoinTable(joinColumns=@JoinColumn(name="bookId"),
+               inverseJoinColumns=@joinColumn(name="authorId"),
+               foreignKey=@ForeignKey(name="BooksToAuthors"))
+    Set<Author> authors;
+
+    ...
+}
+----
+
+Again, the `foreignKey` member is optional.
+
+[[primary-key-column-mappings]]
+=== Mapping primary key joins between tables
+
+The `@PrimaryKeyJoinColumn` is a special-purpose annotation for mapping:
+
+- the primary key column of a `@SecondaryTable`—which is also a foreign key referencing the primary table, or
+- the primary key column of the primary table mapped by a subclass in a `JOINED` inheritance hierarchy—which is also a foreign key referencing the primary table mapped by the root entity.
+
+.`@PrimaryKeyJoinColumn` annotation members
+[%breakable,cols="20,~"]
+|===
+| Annotation member | Purpose
+
+| `name` | The name of the mapped foreign key column
+| `referencedColumnName` | The name of the column to which the mapped foreign key column refers
+| `columnDefinition` 💀| A DDL fragment that should be used to declare the column
+| `foreignKey` | A `@ForeignKey` annotation specifying the name of the `FOREIGN KEY` constraint
+|===
+
+When mapping a subclass table primary key, we place the `@PrimaryKeyJoinColumn` annotation on the entity class:
+
+[source,java]
+----
+@Entity
+@Table(name="People")
+@Inheritance(strategy=JOINED)
+class Person { ... }
+
+@Entity
+@Table(name="Authors")
+@PrimaryKeyJoinColumn(name="personId") // the primary key of the Authors table
+class Author { ... }
+----
+
+But to map a secondary table primary key, the `@PrimaryKeyJoinColumn` annotation must occur inside the `@SecondaryTable` annotation:
+
+[source,java]
+----
+@Entity
+@Table(name="Books")
+@SecondaryTable(name="Editions",
+                pkJoinColumns = @PrimaryKeyJoinColumn(name="bookId")) // the primary key of the Editions table
+class Book {
+    @Id @GeneratedValue
+    @Column(name="bookId") // the name of the primary key of the Books table
+    Long id;
+
+    ...
+}
+----
+
+[[column-lengths]]
+=== Column lengths and adaptive column types
+
+Hibernate automatically adjusts the column type used in generated DDL based on the column length specified by the `@Column` annotation.
+So we don't usually need to explicitly specify that a column should be of type `TEXT` or `CLOB`—or worry about the parade of `TINYTEXT`, `MEDIUMTEXT`, `TEXT`, `LONGTEXT` types on MySQL—because Hibernate will automatically select one of those types if required to accommodate a string of the `length` we specify.
+
+The constant values defined in the class `org.hibernate.Length` are very helpful here:
+
+.Predefined column lengths
+[%breakable,cols="10,12,~"]
+|===
+| Constant | Value | Description
+
+| `DEFAULT` | 255 | The default length of a `VARCHAR` or `VARBINARY` column when none is explicitly specified
+| `LONG` | 32600 | The largest column length for a `VARCHAR` or `VARBINARY` that is allowed on every database Hibernate supports
+| `LONG16` | 32767 | The maximum length that can be represented using 16 bits (but this length is too large for a `VARCHAR` or `VARBINARY` column on for some database)
+| `LONG32` | 2147483647 | The maximum length for a Java string
+|===
+
+We can use these constants in the `@Column` annotation:
+
+[source,java]
+----
+@Column(length=LONG)
+String text;
+
+@Column(length=LONG32)
+byte[] binaryData;
+----
+
+This is usually all you need to do to make use of large object types in Hibernate.
+
+[[lobs]]
+=== LOBs
+
+JPA provides a `@Lob` annotation which specifies that a field should be persisted as a `BLOB` or `CLOB`.
+
+.Semantics of the `@Lob` annotation
+****
+What the spec actually says is that the field should be persisted
+
+> as a large object to a database-supported large object type.
+
+It's quite unclear what this means, and the spec goes on to say that
+
+> the treatment of the `Lob` annotation is provider-dependent
+
+which doesn't help much.
+****
+
+Hibernate interprets this annotation in what we think is the most reasonable way.
+In Hibernate, an attribute annotated `@Lob` will be written to JDBC using the `setClob()` or `setBlob()` method of `PreparedStatement`, and will be read from JDBC using the `getClob()` or `getBlob()` method of `ResultSet`.
+
+Now, the use of these JDBC methods is usually unnecessary!
+JDBC drivers are perfectly capable of converting between `String` and `CLOB` or between `byte[]` and `BLOB`.
+So unless you specifically need to use these JDBC LOB APIs, you _don't_ need the `@Lob` annotation.
+
+Instead, as we just saw in <<column-lengths>>, all you need is to specify a large enough column `length` to accommodate the data you plan to write to that column.
+
+[WARNING]
+// .PostgreSQL `BYTEA` and `TEXT`
+====
+Unfortunately, the driver for PostgreSQL doesn't allow `BYTEA` or `TEXT` columns to be read via the JDBC LOB APIs.
+
+This limitation of the Postgres driver has resulted in a whole cottage industry of bloggers and stackoverflow question-answerers recommending convoluted ways to hack the Hibernate `Dialect` for Postgres to allow an attribute annotated `@Lob` to be written using `setString()` and read using `getString()`.
+
+But simply removing the `@Lob` annotation has exactly the same effect.
+
+Conclusion:
+
+- on PostgreSQL, `@Lob` always means the `OID` type,
+- `@Lob` should never be used to map columns of type `BYTEA` or `TEXT`, and
+- please don't believe everything you read on stackoverflow.
+====
+
+Finally, as an alternative, Hibernate lets you declare an attribute of type `java.sql.Blob` or `java.sql.Clob`.
+
+[source,java]
+----
+@Entity
+class Book {
+    ...
+    Clob text;
+    Blob coverArt;
+    ....
+}
+----
+
+The advantage is that a `java.sql.Clob` or `java.sql.Blob` can in principle index up to 2^63^ characters or bytes, much more data than you can fit in a Java `String` or `byte[]` array (or in your computer).
+
+To assign a value to these fields, we'll need to use a `LobHelper`.
+We can get one from the `Session`:
+
+[source,java]
+----
+LobHelper helper = session.getLobHelper();
+book.text = helper.createClob(text);
+book.coverArt = helper.createBlob(image);
+----
+
+In principle, the `Blob` and `Clob` objects provide efficient ways to read or stream LOB data from the server.
+
+[source,java]
+----
+Book book = session.find(Book.class, bookId);
+String text = book.text.getSubString(1, textLength);
+InputStream bytes = book.images.getBinaryStream();
+----
+
+Of course, the behavior here depends very much on the JDBC driver, and so we really can't promise that this is a sensible thing to do on your database.
+
+[[mapping-embeddables]]
+=== Mapping embeddable types to UDTs or to JSON
+
+There's a couple of alternative ways to represent an embeddable type on the database side.
+
+[discrete]
+==== Embeddables as UDTs
+
+First, a really nice option, at least in the case of Java record types, and for databases which support _user-defined types_ (UDTs), is to define a UDT which represents the record type.
+Hibernate 6 makes this really easy.
+Just annotate the record type, or the attribute which holds a reference to it, with the new `@Struct` annotation:
+
+[source,java]
+----
+@Embeddable
+@Struct(name="PersonName")
+record Name(String firstName, String middleName, String lastName) {}
+----
+[source,java]
+----
+@Entity
+class Person {
+    ...
+    Name name;
+    ...
+}
+----
+
+This results in the following UDT:
+
+[source,sql]
+----
+create type PersonName as (firstName varchar(255), middleName varchar(255), lastName varchar(255))
+----
+
+And the `name` column of the `Author` table will have the type `PersonName`.
+
+[discrete]
+==== Embeddables to JSON
+
+A second option that's available is to map the embeddable type to a `JSON` (or `JSONB`) column.
+Now, this isn't something we would exactly _recommend_ if you're defining a data model from scratch, but it's at least useful for mapping pre-existing tables with JSON-typed columns.
+Since embeddable types are nestable, we can map some JSON formats this way, and even query JSON properties using HQL.
+
+[NOTE]
+====
+At this time, JSON arrays are not supported!
+====
+
+To map an attribute of embeddable type to JSON, we must annotate the attribute `@JdbcTypeCode(SqlTypes.JSON)`, instead of annotating the embeddable type.
+But the embeddable type `Name` should still be annotated `@Embeddable` if we want to query its attributes using HQL.
+
+[source,java]
+----
+@Embeddable
+record Name(String firstName, String middleName, String lastName) {}
+----
+[source,java]
+----
+@Entity
+class Person {
+    ...
+    @JdbcTypeCode(SqlTypes.JSON)
+    Name name;
+    ...
+}
+----
+
+We also need to add Jackson or an implementation of JSONB—for example, Yasson—to our runtime classpath.
+To use Jackson we could add this line to our Gradle build:
+
+[source,groovy]
+----
+runtimeOnly 'com.fasterxml.jackson.core:jackson-databind:{jacksonVersion}'
+----
+
+Now the `name` column of the `Author` table will have the type `jsonb`, and Hibernate will automatically use Jackson to serialize a `Name` to and from JSON format.
+
+[[miscellaneous-mappings]]
+=== Summary of SQL column type mappings
+
+So, as we've seen, there are quite a few annotations that affect the mapping of Java types to SQL column types in DDL.
+Here we summarize the ones we've just seen in the second half of this chapter, along with some we already mentioned in earlier chapters.
+
+.Annotations for mapping SQL column types
+[%autowidth.stretch]
+|===
+| Annotation | Interpretation
+
+| `@Enumerated` | Specify how an `enum` type should be persisted
+| `@Nationalized` | Use a nationalized character type: `NCHAR`, `NVARCHAR`, or `NCLOB`
+| `@Lob` 💀 | Use JDBC LOB APIs to read and write the annotated attribute
+| `@Array` | Map a collection to a SQL `ARRAY` type of the specified length
+| `@Struct` | Map an embeddable to a SQL UDT with the given name
+| `@TimeZoneStorage` | Specify how the time zone information should be persisted
+| `@JdbcType` or `@JdbcTypeCode` | Use an implementation of `JdbcType` to map an arbitrary SQL type
+|===
+
+In addition, there are some configuration properties which have a _global_ affect on how basic types map to SQL column types:
+
+.Type mapping settings
+[%autowidth.stretch]
+|===
+| Configuration property name | Purpose
+
+| `hibernate.use_nationalized_character_data` | Enable use of nationalized character types by default
+| `hibernate.type.preferred_boolean_jdbc_type` | Specify the default SQL column type for mapping `boolean`
+| `hibernate.type.preferred_uuid_jdbc_type` | Specify the default SQL column type for mapping `UUID`
+| `hibernate.type.preferred_duration_jdbc_type` | Specify the default SQL column type for mapping `Duration`
+| `hibernate.type.preferred_instant_jdbc_type` | Specify the default SQL column type for mapping `Instant`
+| `hibernate.timezone.default_storage` | Specify the default strategy for storing time zone information
+|===
+
+[TIP]
+====
+These are _global_ settings and thus quite clumsy.
+We recommend against messing with any of these settings unless you have a really good reason for it.
+====
+
+There's one more topic we would like to cover in this chapter.
+
+[[mapping-formulas]]
+=== Mapping to formulas
+
+Hibernate lets us map an attribute of an entity to a SQL formula involving columns of the mapped table.
+Thus, the attribute is a sort of "derived" value.
+
+.Annotations for mapping formulas
+[%autowidth.stretch]
+|===
+| Annotation | Purpose
+
+| `@Formula` | Map an attribute to a SQL formula
+| `@JoinFormula` | Map an association to a SQL formula
+| `@DiscriminatorFormula` | Use a SQL formula as the discriminator in <<mapping-inheritance,single table inheritance>>.
+|===
+
+For example:
+
+[source,java]
+----
+@Entity
+class Order {
+    ...
+    @Column(name = "sub_total", scale=2, precision=8)
+    BigDecimal subTotal;
+
+    @Column(name = "tax", scale=4, precision=4)
+    BigDecimal taxRate;
+
+    @Formula("sub_total * (1.0 + tax)")
+    BigDecimal totalWithTax;
+    ...
+}
+----

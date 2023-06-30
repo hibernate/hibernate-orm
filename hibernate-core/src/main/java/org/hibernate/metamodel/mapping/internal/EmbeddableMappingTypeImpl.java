@@ -166,8 +166,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 		this.createEmptyCompositesEnabled = ConfigurationHelper.getBoolean(
 				Environment.CREATE_EMPTY_COMPOSITES_ENABLED,
-				creationContext.getServiceRegistry().getService( ConfigurationService.class ).getSettings(),
-				false
+				creationContext.getServiceRegistry().getService( ConfigurationService.class ).getSettings()
 		);
 		final AggregateColumn aggregateColumn = bootDescriptor.getAggregateColumn();
 		if ( aggregateColumn != null ) {
@@ -183,7 +182,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				updatable = componentProperty.isUpdateable();
 			}
 			this.aggregateMapping = SelectableMappingImpl.from(
-					bootDescriptor.getOwner().getTable().getName(),
+					bootDescriptor.getOwner().getTable().getQualifiedName( creationContext.getSqlStringGenerationContext() ),
 					aggregateColumn,
 					bootDescriptor.getParentAggregateColumn() != null
 							? bootDescriptor.getParentAggregateColumn().getSelectablePath()
@@ -635,31 +634,35 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 
 			for ( int i = 0; i < size; i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				final Object attributeValue = values[ i ];
-				span += attributeMapping.breakDownJdbcValues(
-						attributeValue,
-						offset + span,
-						x,
-						y,
-						valueConsumer,
-						session
-				);
+				if ( !attributeMapping.isPluralAttributeMapping() ) {
+					final Object attributeValue = values[i];
+					span += attributeMapping.breakDownJdbcValues(
+							attributeValue,
+							offset + span,
+							x,
+							y,
+							valueConsumer,
+							session
+					);
+				}
 			}
 		}
 		else {
 			for ( int i = 0; i < size; i++ ) {
 				final AttributeMapping attributeMapping = attributeMappings.get( i );
-				final Object attributeValue = domainValue == null
-						? null
-						: attributeMapping.getPropertyAccess().getGetter().get( domainValue );
-				span += attributeMapping.breakDownJdbcValues(
-						attributeValue,
-						offset + span,
-						x,
-						y,
-						valueConsumer,
-						session
-				);
+				if ( !attributeMapping.isPluralAttributeMapping() ) {
+					final Object attributeValue = domainValue == null
+							? null
+							: attributeMapping.getPropertyAccess().getGetter().get( domainValue );
+					span += attributeMapping.breakDownJdbcValues(
+							attributeValue,
+							offset + span,
+							x,
+							y,
+							valueConsumer,
+							session
+					);
+				}
 			}
 		}
 		return span;

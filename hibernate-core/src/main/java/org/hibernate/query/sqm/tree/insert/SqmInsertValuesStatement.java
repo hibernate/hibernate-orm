@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.query.criteria.JpaCriteriaInsertValues;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -25,11 +26,25 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 /**
  * @author Gavin King
  */
-public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> {
+public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> implements JpaCriteriaInsertValues<T> {
 	private final List<SqmValues> valuesList;
 
 	public SqmInsertValuesStatement(SqmRoot<T> targetRoot, NodeBuilder nodeBuilder) {
 		super( targetRoot, SqmQuerySource.HQL, nodeBuilder );
+		this.valuesList = new ArrayList<>();
+	}
+
+	public SqmInsertValuesStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {
+		super(
+				new SqmRoot<>(
+						nodeBuilder.getDomainModel().entity( targetEntity ),
+						null,
+						false,
+						nodeBuilder
+				),
+				SqmQuerySource.CRITERIA,
+				nodeBuilder
+		);
 		this.valuesList = new ArrayList<>();
 	}
 
@@ -65,6 +80,21 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> {
 						getTarget().copy( context ),
 						copyInsertionTargetPaths( context ),
 						valuesList
+				)
+		);
+	}
+
+	public SqmInsertValuesStatement<T> copyWithoutValues(SqmCopyContext context) {
+		return context.registerCopy(
+				this,
+				new SqmInsertValuesStatement<>(
+						nodeBuilder(),
+						getQuerySource(),
+						copyParameters( context ),
+						copyCteStatements( context ),
+						getTarget().copy( context ),
+						copyInsertionTargetPaths( context ),
+						new ArrayList<>()
 				)
 		);
 	}

@@ -73,11 +73,8 @@ public class CharacterArrayMappingTests {
 			}
 			else {
 				assertThat(
-						jdbcMapping.getJdbcType(),
-						isOneOf(
-								jdbcRegistry.getDescriptor( SqlTypes.ARRAY ),
-								jdbcRegistry.getDescriptor( SqlTypes.SQLXML )
-						)
+						jdbcMapping.getJdbcType().getJdbcTypeCode(),
+						isOneOf( SqlTypes.ARRAY, SqlTypes.SQLXML, SqlTypes.VARBINARY )
 				);
 			}
 		}

@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
+import org.hibernate.QueryException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.query.NamedHqlQueryDefinition;
 import org.hibernate.boot.query.NamedNativeQueryDefinition;
@@ -18,12 +19,18 @@ import org.hibernate.boot.query.NamedProcedureCallDefinition;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
+import org.hibernate.query.sqm.EntityTypeException;
+import org.hibernate.query.NamedQueryValidationException;
+import org.hibernate.query.sqm.PathElementException;
+import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.named.NamedObjectRepository;
 import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.sql.spi.NamedNativeQueryMemento;
+import org.hibernate.query.sqm.UnknownEntityException;
+import org.hibernate.query.sqm.UnknownPathException;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 
 import org.jboss.logging.Logger;
@@ -211,14 +218,16 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 	public void validateNamedQueries(QueryEngine queryEngine) {
 		final Map<String, HibernateException> errors = checkNamedQueries( queryEngine );
 		if ( !errors.isEmpty() ) {
+			int i = 0;
 			final StringBuilder failingQueries = new StringBuilder( "Errors in named queries: " );
-			String sep = "";
 			for ( Map.Entry<String, HibernateException> entry : errors.entrySet() ) {
 				QUERY_MESSAGE_LOGGER.namedQueryError( entry.getKey(), entry.getValue() );
-				failingQueries.append( sep ).append( entry.getKey() );
-				sep = ", ";
+				failingQueries.append( "\n" )
+						.append("  [").append(++i).append("] Error in query named '").append( entry.getKey() ).append("'")
+						.append(": ").append( entry.getValue().getMessage() );
 			}
-			final HibernateException exception = new HibernateException( failingQueries.toString() );
+			final NamedQueryValidationException exception =
+					new NamedQueryValidationException( failingQueries.toString(), errors );
 			errors.values().forEach( exception::addSuppressed );
 			throw exception;
 		}
@@ -233,17 +242,24 @@ public class NamedObjectRepositoryImpl implements NamedObjectRepository {
 		// Check named HQL queries
 		log.debugf( "Checking %s named HQL queries", sqmMementoMap.size() );
 		for ( NamedSqmQueryMemento hqlMemento : sqmMementoMap.values() ) {
+			final String queryString = hqlMemento.getHqlString();
+			final String registrationName = hqlMemento.getRegistrationName();
 			try {
-				log.debugf( "Checking named HQL query: %s", hqlMemento.getRegistrationName() );
-				String queryString = hqlMemento.getHqlString();
+				log.debugf( "Checking named HQL query: %s", registrationName );
 				interpretationCache.resolveHqlInterpretation(
 						queryString,
 						null,
 						s -> queryEngine.getHqlTranslator().translate( queryString, null )
 				);
 			}
-			catch ( HibernateException e ) {
-				errors.put( hqlMemento.getRegistrationName(), e );
+			catch ( QueryException e ) {
+				errors.put( registrationName, e );
+			}
+			catch ( PathElementException | TerminalPathException e ) {
+				errors.put( registrationName, new UnknownPathException( e.getMessage(), queryString, e ) );
+			}
+			catch ( EntityTypeException e ) {
+				errors.put( registrationName, new UnknownEntityException( e.getMessage(), e.getReference(), e ) );
 			}
 		}
 

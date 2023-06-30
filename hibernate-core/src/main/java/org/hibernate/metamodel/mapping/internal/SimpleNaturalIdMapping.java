@@ -18,10 +18,17 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.loader.ast.internal.*;
+import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderArrayParam;
+import org.hibernate.loader.ast.internal.MultiNaturalIdLoaderInPredicate;
+import org.hibernate.loader.ast.internal.SimpleNaturalIdLoader;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
 import org.hibernate.loader.ast.spi.NaturalIdLoader;
-import org.hibernate.metamodel.mapping.*;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.MappingType;
+import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -222,11 +229,6 @@ public class SimpleNaturalIdMapping extends AbstractNaturalIdMapping implements 
 	@Override
 	public int getJdbcTypeCount() {
 		return attribute.getJdbcTypeCount();
-	}
-
-	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return attribute.getJdbcMappings();
 	}
 
 	@Override

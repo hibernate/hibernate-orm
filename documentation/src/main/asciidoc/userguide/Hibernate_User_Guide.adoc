@@ -1,5 +1,4 @@
 = Hibernate ORM {fullVersion} User Guide
-Vlad Mihalcea, Steve Ebersole, Andrea Boriero, Gunnar Morling, Gail Badner, Chris Cranford, Emmanuel Bernard, Sanne Grinovero, Brett Meyer, Hardy Ferentschik, Gavin King, Christian Bauer, Max Rydahl Andersen, Karel Maesen, Radim Vansa, Louis Jacomet
 :toc2:
 :toclevels: 3
 :sectanchors:
@@ -43,6 +42,8 @@ include::appendices/Legacy_Bootstrap.adoc[]
 include::appendices/Legacy_DomainModel.adoc[]
 include::appendices/LegacyBasicTypeResolution.adoc[]
 include::appendices/Legacy_Native_Queries.adoc[]
+
+include::Credits.adoc[]
 
 include::ConfigPropertyList.adoc[]
 include::Bibliography.adoc[]

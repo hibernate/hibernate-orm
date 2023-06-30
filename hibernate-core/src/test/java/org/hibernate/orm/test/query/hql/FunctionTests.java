@@ -54,6 +54,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isOneOf;
 
+import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.FEMALE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -294,6 +295,43 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testAggregateIndexElementWithPath(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select max(index(eol.listOfNumbers)) from EntityOfLists eol", Integer.class)
+							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select max(element(eol.listOfNumbers)) from EntityOfLists eol", Double.class)
+							.getSingleResult(), is(2.0) );
+
+					assertThat( session.createQuery("select sum(index(eol.listOfNumbers)) from EntityOfLists eol", Long.class)
+							.getSingleResult(), is(1L) );
+					assertThat( session.createQuery("select sum(element(eol.listOfNumbers)) from EntityOfLists eol", Double.class)
+							.getSingleResult(), is(3.0) );
+
+					assertThat( session.createQuery("select avg(index(eol.listOfNumbers)) from EntityOfLists eol", Double.class)
+							.getSingleResult(), is(0.5) );
+					assertThat( session.createQuery("select avg(element(eol.listOfNumbers)) from EntityOfLists eol", Double.class)
+							.getSingleResult(), is(1.5) );
+
+					assertThat( session.createQuery("select max(key(eom.numberByNumber)) from EntityOfMaps eom", Integer.class)
+							.getSingleResult(), is(1) );
+					assertThat( session.createQuery("select max(element(eom.numberByNumber)) from EntityOfMaps eom", Double.class)
+							.getSingleResult(), is(1.0) );
+
+					assertThat( session.createQuery("select sum(key(eom.numberByNumber)) from EntityOfMaps eom", Long.class)
+							.getSingleResult(), is(1L) );
+					assertThat( session.createQuery("select sum(element(eom.numberByNumber)) from EntityOfMaps eom", Double.class)
+							.getSingleResult(), is(1.0) );
+
+					assertThat( session.createQuery("select avg(key(eom.numberByNumber)) from EntityOfMaps eom", Double.class)
+							.getSingleResult(), is(1.0) );
+					assertThat( session.createQuery("select avg(element(eom.numberByNumber)) from EntityOfMaps eom", Double.class)
+							.getSingleResult(), is(1.0) );
+				}
+		);
+	}
+
+	@Test
 	public void testAggregateIndexElementKeyValueWithAlias(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -409,9 +447,15 @@ public class FunctionTests {
 	public void testCoalesceFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select coalesce(nullif('',''), e.gender, e.convertedGender) from EntityOfBasics e", EntityOfBasics.Gender.class)
+					//Derby does not like literal nulls :-/
+//					session.createQuery("select coalesce(null, e.gender, org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.MALE) from EntityOfBasics e", EntityOfBasics.Gender.class)
+//							.list();
+					session.createQuery("select coalesce(nullif(e.gender,org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.FEMALE), e.gender) from EntityOfBasics e", EntityOfBasics.Gender.class)
 							.list();
-					session.createQuery("select ifnull(e.gender, e.convertedGender) from EntityOfBasics e", EntityOfBasics.Gender.class)
+					session.createQuery("select coalesce(nullif(e.gender,?1), e.gender) from EntityOfBasics e", EntityOfBasics.Gender.class)
+							.setParameter(1, FEMALE)
+							.list();
+					session.createQuery("select ifnull(e.gender, org.hibernate.testing.orm.domain.gambit.EntityOfBasics$Gender.FEMALE) from EntityOfBasics e", EntityOfBasics.Gender.class)
 							.list();
 					assertThat( session.createQuery("select coalesce(nullif('',''), nullif('bye','bye'), 'hello', 'oops')", String.class).getSingleResult(), is("hello") );
 					assertThat( session.createQuery("select ifnull(nullif('bye','bye'), 'hello')", String.class).getSingleResult(), is("hello") );
@@ -703,14 +747,37 @@ public class FunctionTests {
 	}
 
 	@Test
+	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsRepeat.class)
+	public void testRepeatFunction(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select repeat('hello', 3)", String.class).getSingleResult(),
+							is("hellohellohello") );
+					assertThat( session.createQuery("select repeat(?1, 3)", String.class)
+									.setParameter(1, "hello")
+									.getSingleResult(),
+							is("hellohellohello") );
+					//HSQLDB doesn't like the second parameter
+//					assertThat( session.createQuery("select repeat(?1, ?2)", String.class)
+//									.setParameter(1, "hello")
+//									.setParameter(2, 3)
+//									.getSingleResult(),
+//							is("hellohellohello") );
+				}
+		);
+	}
+
+	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsReplace.class)
 	public void testReplaceFunction(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					session.createQuery("select replace(e.theString, 'hello', 'goodbye') from EntityOfBasics e", String.class)
 							.list();
-					assertThat( session.createQuery("select replace('hello world', 'hello', 'goodbye')", String.class).getSingleResult(), is("goodbye world") );
-					assertThat( session.createQuery("select replace('hello world', 'o', 'ooo')", String.class).getSingleResult(), is("hellooo wooorld") );
+					assertThat( session.createQuery("select replace('hello world', 'hello', 'goodbye')", String.class).getSingleResult(),
+							is("goodbye world") );
+					assertThat( session.createQuery("select replace('hello world', 'o', 'ooo')", String.class).getSingleResult(),
+							is("hellooo wooorld") );
 				}
 		);
 
@@ -1874,4 +1941,62 @@ public class FunctionTests {
 		);
 	}
 
+	@Test
+	public void testMaxGreatest(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(10L, session.createQuery("select greatest((select max(someLong) from SimpleEntity), (select max(someInteger) from SimpleEntity))", Long.class)
+							.getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	public void testMaxOverUnion(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(10L, session.createQuery("select max(val) from (select someLong as val from SimpleEntity union select someInteger as val from SimpleEntity)", Long.class)
+							.getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class)
+	public void testBetweenDates(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createSelectionQuery("select theDate from EntityOfBasics where theDate between local date and local date + 7 day").getResultList();
+				}
+		);
+	}
+
+	@Test
+	public void testMemberOf(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createSelectionQuery("from EntityOfLists where org.hibernate.testing.orm.domain.gambit.EnumValue.THREE member of listOfEnums").getResultList();
+				}
+		);
+	}
+
+	static class Pair {
+		int integer; double floating;
+		Pair(int integer, double floating) {
+			this.integer = integer;
+			this.floating = floating;
+		}
+	}
+	static class Triple {
+		int integer; double floating; String string;
+	}
+	@Test
+	public void testInstantiateLocalClass(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createSelectionQuery("select new Pair(theInt, theDouble) from EntityOfBasics", Pair.class).getResultList();
+					session.createSelectionQuery("select new Triple(theInt as integer, theDouble as floating, 'hello' as string) from EntityOfBasics", Triple.class).getResultList();
+				}
+		);
+	}
 }

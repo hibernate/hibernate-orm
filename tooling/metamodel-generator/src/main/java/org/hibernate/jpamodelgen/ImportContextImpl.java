@@ -84,12 +84,7 @@ public class ImportContextImpl implements ImportContext {
 		String simpleName = unqualify( fqcn );
 		if ( simpleNames.containsKey( simpleName ) ) {
 			String existingFqcn = simpleNames.get( simpleName );
-			if ( existingFqcn.equals( pureFqcn ) ) {
-				canBeSimple = true;
-			}
-			else {
-				canBeSimple = false;
-			}
+			canBeSimple = existingFqcn.equals( pureFqcn );
 		}
 		else {
 			canBeSimple = true;
@@ -127,7 +122,7 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	private boolean inDefaultPackage(String className) {
-		return className.indexOf( "." ) < 0;
+		return className.indexOf( '.' ) < 0;
 	}
 
 	private boolean isPrimitive(String className) {
@@ -175,7 +170,7 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	public static String qualifier(String qualifiedName) {
-		int loc = qualifiedName.lastIndexOf( "." );
+		int loc = qualifiedName.lastIndexOf( '.' );
 		return ( loc < 0 ) ? "" : qualifiedName.substring( 0, loc );
 	}
 }

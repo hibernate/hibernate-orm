@@ -169,7 +169,6 @@ public class MatchingIdSelectionHelper {
 					idSelectionQuery.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
 									position,
-									position + 1,
 									expression
 							)
 					);
@@ -306,7 +305,7 @@ public class MatchingIdSelectionHelper {
 		if ( !jdbcEnvironment.getDialect().supportsOuterJoinForUpdate() ) {
 			matchingIdSelection.getQuerySpec().getFromClause().visitTableJoins(
 					tableJoin -> {
-						if ( tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
+						if ( tableJoin.isInitialized() && tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
 							lockOptions.setLockMode( lockMode );
 						}
 					}

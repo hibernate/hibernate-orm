@@ -17,16 +17,10 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2DurationIntervalSecondJdbcType;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.SelectItemReferenceStrategy;
-import org.hibernate.dialect.SimpleDatabaseVersion;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.*;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2FinalTableIdentityColumnSupport;
@@ -735,7 +729,7 @@ public class H2LegacyDialect extends Dialect {
 					if ( idx > 0 ) {
 						String constraintName = message.substring( idx + "violation: ".length() );
 						if ( sqle.getSQLState().equals( "23506" ) ) {
-							constraintName = constraintName.substring( 1, constraintName.indexOf( ":" ) );
+							constraintName = constraintName.substring( 1, constraintName.indexOf( ':' ) );
 						}
 						return constraintName;
 					}
@@ -759,6 +753,8 @@ public class H2LegacyDialect extends Dialect {
 					// NULL not allowed for column [90006-145]
 					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
 					return new ConstraintViolationException(message, sqlException, sql, constraintName);
+				case 57014:
+					return new QueryTimeoutException( message, sqlException, sql );
 			}
 
 			return null;
@@ -827,6 +823,11 @@ public class H2LegacyDialect extends Dialect {
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		return getVersion().isSameOrAfter( 1, 4, 198 );
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_GROUP_AND_CONSTANTS;
 	}
 
 	@Override

@@ -74,19 +74,21 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NamedNativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -271,6 +273,8 @@ public class PostgreSQLDialect extends Dialect {
 
 		// Prefer jsonb if possible
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "jsonb", this ) );
+
+		ddlTypeRegistry.addDescriptor( new NamedNativeEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -339,21 +343,21 @@ public class PostgreSQLDialect extends Dialect {
 				}
 				break;
 			case ARRAY:
-				final JdbcType jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+				final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
 				// PostgreSQL names array types by prepending an underscore to the base name
-				if ( jdbcType instanceof ArrayJdbcType && columnTypeName.charAt( 0 ) == '_' ) {
+				if ( jdbcTypeConstructor != null && columnTypeName.charAt( 0 ) == '_' ) {
 					final String componentTypeName = columnTypeName.substring( 1 );
 					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
 					if ( sqlTypeCode != null ) {
-						return ( (ArrayJdbcType) jdbcType ).resolveType(
+						return jdbcTypeConstructor.resolveType(
 								jdbcTypeRegistry.getTypeConfiguration(),
 								this,
 								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-								null
+								ColumnTypeInformation.EMPTY
 						);
 					}
 				}
-				return jdbcType;
+				break;
 			case STRUCT:
 				final AggregateJdbcType aggregateDescriptor = jdbcTypeRegistry.findAggregateDescriptor( columnTypeName );
 				if ( aggregateDescriptor != null ) {
@@ -382,6 +386,37 @@ public class PostgreSQLDialect extends Dialect {
 				return Types.BIGINT;
 		}
 		return super.resolveSqlTypeCode( columnTypeName, typeConfiguration );
+	}
+
+	@Override
+	public String getEnumTypeDeclaration(String name, String[] values) {
+		return name;
+	}
+
+	@Override
+	public String[] getCreateEnumTypeCommand(String name, String[] values) {
+		StringBuilder type = new StringBuilder();
+		type.append( "create type " )
+				.append( name )
+				.append( " as enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			type.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
+		}
+		type.append( ')' );
+		String cast1 = "create cast (varchar as " +
+				name +
+				") with inout as implicit";
+		String cast2 = "create cast (" +
+				name +
+				" as varchar) with inout as implicit";
+		return new String[] { type.toString(), cast1, cast2 };
+	}
+
+	@Override
+	public String[] getDropEnumTypeCommand(String name) {
+		return new String[] { "drop type if exists " + name + " cascade" };
 	}
 
 	@Override
@@ -487,7 +522,7 @@ public class PostgreSQLDialect extends Dialect {
 				case NATIVE:
 					return "extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this );
 				default:
-					throw new SemanticException( "unrecognized field: " + unit );
+					throw new SemanticException( "Unrecognized field: " + unit );
 			}
 		}
 	}
@@ -819,8 +854,14 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
+		// TODO: adapt this to handle named enum types!
 		// Workaround for postgres bug #1453
 		return "null::" + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName();
+	}
+
+	@Override
+	public String quoteCollation(String collation) {
+		return '\"' + collation + '\"';
 	}
 
 	@Override
@@ -845,6 +886,11 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsTupleCounts() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsIsTrue() {
 		return true;
 	}
 
@@ -1297,6 +1343,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
+	}
+
+	@Override
 	public RowLockStrategy getWriteRowLockStrategy() {
 		return RowLockStrategy.TABLE;
 	}
@@ -1371,6 +1422,8 @@ public class PostgreSQLDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+
+		jdbcTypeRegistry.addDescriptor( new PostgreSQLEnumJdbcType() );
 	}
 
 	@Override

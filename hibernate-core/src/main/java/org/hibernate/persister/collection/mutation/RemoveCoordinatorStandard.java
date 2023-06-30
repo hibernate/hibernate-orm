@@ -86,8 +86,8 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 
 		final MutationExecutorService mutationExecutorService = session
 				.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class );
+				.getFastSessionServices()
+				.getMutationExecutorService();
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> batchKey,
 				operationGroup,

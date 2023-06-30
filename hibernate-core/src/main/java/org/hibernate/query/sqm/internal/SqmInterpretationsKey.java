@@ -6,23 +6,33 @@
  */
 package org.hibernate.query.sqm.internal;
 
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
+import jakarta.persistence.criteria.Order;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.spi.QueryInterpretationCache;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.query.sqm.tree.SqmStatement;
 
 import static java.lang.Boolean.TRUE;
+import static org.hibernate.query.spi.AbstractSelectionQuery.CRITERIA_HQL_STRING;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
+public final class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	public interface CacheabilityInfluencers {
+		boolean isQueryPlanCacheable();
 		String getQueryString();
+		SqmStatement<?> getSqmStatement();
 		QueryOptions getQueryOptions();
 		LoadQueryInfluencers getLoadQueryInfluencers();
 		Supplier<Boolean> hasMultiValuedParameterBindingsChecker();
@@ -30,52 +40,67 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 
 	public interface InterpretationsKeySource extends CacheabilityInfluencers {
 		Class<?> getResultType();
+		List<Order> getOrder();
 	}
 
 	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource) {
-		if ( ! isCacheable( keySource ) ) {
+		if ( isCacheable ( keySource ) ) {
+			final Object query = CRITERIA_HQL_STRING.equals( keySource.getQueryString() )
+					? keySource.getSqmStatement()
+					: keySource.getQueryString();
+			return new SqmInterpretationsKey(
+					query,
+					query.hashCode(),
+					keySource.getResultType(),
+					keySource.getOrder(),
+					keySource.getQueryOptions().getLockOptions(),
+					keySource.getQueryOptions().getTupleTransformer(),
+					keySource.getQueryOptions().getResultListTransformer(),
+					memoryEfficientDefensiveSetCopy( keySource.getLoadQueryInfluencers().getEnabledFetchProfileNames() )
+			);
+		}
+		else {
 			return null;
 		}
-
-		return new SqmInterpretationsKey(
-				keySource.getQueryString(),
-				keySource.getResultType(),
-				keySource.getQueryOptions().getLockOptions(),
-				keySource.getQueryOptions().getTupleTransformer(),
-				keySource.getQueryOptions().getResultListTransformer()
-		);
 	}
-	@SuppressWarnings("RedundantIfStatement")
+
+	private static Collection<String> memoryEfficientDefensiveSetCopy(final Set<String> set) {
+		if ( set == null ) {
+			return null;
+		}
+		else {
+			switch ( set.size() ) {
+				case 0:
+					return null;
+				case 1:
+					return Set.of( set.iterator().next() );
+				case 2:
+					final Iterator<String> iterator = set.iterator();
+					return Set.of( iterator.next(), iterator.next() );
+				default:
+					return Set.copyOf( set );
+			}
+		}
+	}
+
 	private static boolean isCacheable(InterpretationsKeySource keySource) {
 		assert keySource.getQueryOptions().getAppliedGraph() != null;
 
-		if ( QuerySqmImpl.CRITERIA_HQL_STRING.equals( keySource.getQueryString() ) ) {
-			// for now at least, skip caching Criteria-based plans
-			//		- especially wrt parameters atm; this works with HQL because the parameters
-			//			are part of the query string; with Criteria, they are not.
-			return false;
-		}
-
-		if ( keySource.getLoadQueryInfluencers().hasEnabledFilters() ) {
-			// At the moment we cannot cache query plan if there is filter enabled.
-			return false;
-		}
-
-		if ( keySource.getQueryOptions().getAppliedGraph().getSemantic() != null ) {
-			// At the moment we cannot cache query plan if there is an
-			// EntityGraph enabled.
-			return false;
-		}
-
-		if ( keySource.hasMultiValuedParameterBindingsChecker().get() == TRUE ) {
-			// todo (6.0) : this one may be ok because of how I implemented multi-valued param handling
-			//		- the expansion is done per-execution based on the "static" SQM
-			//  - Note from Christian: The call to domainParameterXref.clearExpansions() in ConcreteSqmSelectQueryPlan is a concurrency issue when cached
-			//  - This could be solved by using a method-local clone of domainParameterXref when multi-valued params exist
-			return false;
-		}
-
-		return true;
+		// for now at least, skip caching Criteria-based plans
+		// - especially wrt parameters atm; this works with HQL because the
+		// parameters are part of the query string; with Criteria, they're not.
+		return keySource.isQueryPlanCacheable()
+				// At the moment we cannot cache query plan if there is filter enabled.
+			&& ! keySource.getLoadQueryInfluencers().hasEnabledFilters()
+				// At the moment we cannot cache query plan if it has an entity graph
+			&& keySource.getQueryOptions().getAppliedGraph().getSemantic() == null
+				// todo (6.0) : this one may be ok because of how I implemented multi-valued param handling
+				// - the expansion is done per-execution based on the "static" SQM
+				// - Note from Christian: The call to domainParameterXref.clearExpansions()
+				//   in ConcreteSqmSelectQueryPlan is a concurrency issue when cached
+				// - This could be solved by using a method-local clone of domainParameterXref
+				//   when multi-valued params exist
+			&& ! keySource.hasMultiValuedParameterBindingsChecker().get() == TRUE;
 	}
 
 	public static QueryInterpretationCache.Key generateNonSelectKey(InterpretationsKeySource keyDetails) {
@@ -86,41 +111,52 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 		return null;
 	}
 
-
-	private final String query;
+	private final Object query;
 	private final Class<?> resultType;
+	private final List<Order> order;
 	private final LockOptions lockOptions;
 	private final TupleTransformer<?> tupleTransformer;
-	private final ResultListTransformer resultListTransformer;
+	private final ResultListTransformer<?> resultListTransformer;
+	private final Collection<String> enabledFetchProfiles;
+	private final int hashcode;
 
 	private SqmInterpretationsKey(
-			String query,
+			Object query,
+			int hash,
 			Class<?> resultType,
+			List<Order> order,
 			LockOptions lockOptions,
 			TupleTransformer<?> tupleTransformer,
-			ResultListTransformer resultListTransformer) {
+			ResultListTransformer<?> resultListTransformer,
+			Collection<String> enabledFetchProfiles) {
 		this.query = query;
+		this.hashcode = hash;
 		this.resultType = resultType;
+		this.order = order;
 		this.lockOptions = lockOptions;
 		this.tupleTransformer = tupleTransformer;
 		this.resultListTransformer = resultListTransformer;
+		this.enabledFetchProfiles = enabledFetchProfiles;
 	}
 
 	@Override
 	public QueryInterpretationCache.Key prepareForStore() {
 		return new SqmInterpretationsKey(
 				query,
+				hashcode,
 				resultType,
-				// Since lock options are mutable, we need a copy for the cache key
-				lockOptions.makeCopy(),
+				order,
+				// Since lock options might be mutable, we need a copy for the cache key
+				lockOptions.makeDefensiveCopy(),
 				tupleTransformer,
-				resultListTransformer
+				resultListTransformer,
+				enabledFetchProfiles
 		);
 	}
 
 	@Override
 	public String getQueryString() {
-		return query;
+		return query instanceof String ? (String) query : null;
 	}
 
 	@Override
@@ -128,29 +164,23 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( o == null || SqmInterpretationsKey.class != o.getClass() ) {
 			return false;
 		}
 
 		final SqmInterpretationsKey that = (SqmInterpretationsKey) o;
-		return query.equals( that.query )
-				&& areEqual( resultType, that.resultType )
-				&& areEqual( lockOptions, that.lockOptions )
-				&& areEqual( tupleTransformer, that.tupleTransformer )
-				&& areEqual( resultListTransformer, that.resultListTransformer );
-	}
-
-	private <T> boolean areEqual(T o1, T o2) {
-		if ( o1 == null ) {
-			return o2 == null;
-		}
-		else {
-			return o1.equals( o2 );
-		}
+		return this.hashcode == o.hashCode() //check this first as some other checks are expensive
+			&& query.equals( that.query )
+			&& Objects.equals( resultType, that.resultType )
+			&& Objects.equals( order, that.order )
+			&& Objects.equals( lockOptions, that.lockOptions )
+			&& Objects.equals( tupleTransformer, that.tupleTransformer )
+			&& Objects.equals( resultListTransformer, that.resultListTransformer )
+			&& Objects.equals( enabledFetchProfiles, that.enabledFetchProfiles );
 	}
 
 	@Override
 	public int hashCode() {
-		return query.hashCode();
+		return hashcode;
 	}
 }

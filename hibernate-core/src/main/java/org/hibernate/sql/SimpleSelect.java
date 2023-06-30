@@ -17,8 +17,8 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.internal.FastSessionServices;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
@@ -42,21 +42,10 @@ public class SimpleSelect implements RestrictionRenderingContext {
 	private final ParameterMarkerStrategy parameterMarkerStrategy;
 	private int parameterCount;
 
-	public SimpleSelect(SessionFactoryImplementor factory) {
-		this.dialect = lookupDialect( factory );
-		this.parameterMarkerStrategy = lookupParameterMarkerStrategy( factory );
-	}
-
-	//A SimpleSelect constructor might be invoked before the FastSessionServices are defined
-	private static Dialect lookupDialect(final SessionFactoryImplementor factory) {
-		final FastSessionServices fastSessionServices = factory.getFastSessionServices();
-		return fastSessionServices != null ? fastSessionServices.dialect : factory.getJdbcServices().getDialect();
-	}
-
-	//A SimpleSelect constructor might be invoked before the FastSessionServices are defined
-	private static ParameterMarkerStrategy lookupParameterMarkerStrategy(final SessionFactoryImplementor factory) {
-		final FastSessionServices fastSessionServices = factory.getFastSessionServices();
-		return fastSessionServices != null ? fastSessionServices.parameterMarkerStrategy : factory.getServiceRegistry().getService( ParameterMarkerStrategy.class );
+	public SimpleSelect(final SessionFactoryImplementor factory) {
+		final JdbcServices jdbcServices = factory.getJdbcServices();
+		this.dialect = jdbcServices.getDialect();
+		this.parameterMarkerStrategy = jdbcServices.getParameterMarkerStrategy();
 	}
 
 	@Override

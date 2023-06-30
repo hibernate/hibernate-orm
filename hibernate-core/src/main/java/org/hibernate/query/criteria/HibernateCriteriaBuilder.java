@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -40,11 +41,52 @@ import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
- * Hibernate extensions to the JPA {@link CriteriaBuilder}.
+ * A JPA {@link CriteriaBuilder} is a source of objects which may be composed
+ * to express a criteria query. The JPA-standard API defines all the operations
+ * needed express any query written in standard JPQL. This interface extends
+ * {@code CriteriaBuilder}, adding operations needed to express features of
+ * HQL which are not available in standard JPQL. For example:
+ * <ul>
+ * <li>JPQL does not have a {@code format()} function, so
+ *     {@link #format(Expression, String)} is declared here, and
+ * <li>since JPQL does not have {@code insert} statements, this interface
+ *     defines the operations {@link #createCriteriaInsertSelect(Class)} and
+ *     {@link #createCriteriaInsertValues(Class)}.
+ * </ul>
+ * <p>
+ * Furthermore, the operations of this interface return types defined in the
+ * package {@link org.hibernate.query.criteria}, which extend the equivalent
+ * types in {@link jakarta.persistence.criteria} with additional operations.
+ * For example {@link JpaCriteriaQuery} adds the methods:
+ * <ul>
+ * <li>{@link JpaCriteriaQuery#from(Subquery)}, which allows the use of a
+ *     subquery in the {@code from} clause of the query, and
+ * <li>{@link JpaCriteriaQuery#with(AbstractQuery)}, which allows the creation
+ *     of {@link JpaCteCriteria common table expressions}.
+ * </ul>
+ * <p>
+ * Finally, the method {@link #createQuery(String, Class)} allows a query
+ * written in HQL to be translated to a tree of criteria objects for further
+ * manipulation and execution.
+ * <p>
+ * An instance of this interface may be obtained by calling
+ * {@link org.hibernate.SessionFactory#getCriteriaBuilder()}.
+ *
+ * @see org.hibernate.SessionFactory#getCriteriaBuilder()
+ * @see JpaCriteriaQuery
+ * @see JpaCriteriaUpdate
+ * @see JpaCriteriaDelete
+ * @see JpaCriteriaInsertValues
+ * @see JpaCriteriaInsertSelect
+ * @see JpaCteCriteria
+ * @see JpaSubQuery
+ * @see JpaExpression
+ *
+ * @since 6.0
  *
  * @author Steve Ebersole
  */
-
+@Incubating
 public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<X, T> JpaExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType);
@@ -75,7 +117,21 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	<T> JpaCriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity);
 
+	<T> JpaCriteriaInsertValues<T> createCriteriaInsertValues(Class<T> targetEntity);
+
 	<T> JpaCriteriaInsertSelect<T> createCriteriaInsertSelect(Class<T> targetEntity);
+
+	/**
+	 * Transform the given HQL {@code select} query to an equivalent criteria query.
+	 *
+	 * @param hql The HQL {@code select} query
+	 * @param resultClass The result type of the query
+	 *
+	 * @return The equivalent criteria query
+	 *
+	 * @since 6.3
+	 */
+	<T> JpaCriteriaQuery<T> createQuery(String hql, Class<T> resultClass);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Set operation
@@ -277,18 +333,18 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// Selections
 
 	@Override
-	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>[] selections);
+	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>... selections);
 	<Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends JpaSelection<?>> arguments);
 
 	@Override
-	JpaCompoundSelection<Tuple> tuple(Selection<?>[] selections);
+	JpaCompoundSelection<Tuple> tuple(Selection<?>... selections);
 	JpaCompoundSelection<Tuple> tuple(List<? extends JpaSelection<?>> selections);
 
 	@Override
-	JpaCompoundSelection<Object[]> array(Selection<?>[] selections);
+	JpaCompoundSelection<Object[]> array(Selection<?>... selections);
 	JpaCompoundSelection<Object[]> array(List<? extends JpaSelection<?>> selections);
 
-	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>[] selections);
+	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>... selections);
 	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends JpaSelection<?>> selections);
 
 
@@ -405,7 +461,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<T> JpaExpression<T> literal(T value);
 	<T> SqmExpression<T> literal(T value, SqmExpression<? extends T> typeInferenceSource);
 
-	<T> List<? extends JpaExpression<T>> literals(T[] values);
+	<T> List<? extends JpaExpression<T>> literals(T... values);
 
 	<T> List<? extends JpaExpression<T>> literals(List<T> values);
 
@@ -498,7 +554,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	JpaFunction<Instant> currentInstant();
 
 	@Override
-	<T> JpaFunction<T> function(String name, Class<T> type, Expression<?>[] args);
+	<T> JpaFunction<T> function(String name, Class<T> type, Expression<?>... args);
 
 	@Override
 	<Y> JpaExpression<Y> all(Subquery<Y> subquery);
@@ -1195,6 +1251,36 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			Expression<String> x,
 			Expression<Integer> length,
 			Expression<Character> padChar);
+
+	/**
+	 * Concatenate the given string expression with itself the given number of times.
+	 *
+	 * @param x the string expression to concatenate
+	 * @param times the number of times it should be repeated
+	 *
+	 * @return repeat expression
+	 */
+	JpaFunction<String> repeat(Expression<String> x, Expression<Integer> times);
+
+	/**
+	 * Concatenate the given string expression with itself the given number of times.
+	 *
+	 * @param x the string expression to concatenate
+	 * @param times the number of times it should be repeated
+	 *
+	 * @return repeat expression
+	 */
+	JpaFunction<String> repeat(Expression<String> x, int times);
+
+	/**
+	 * Concatenate the given string expression with itself the given number of times.
+	 *
+	 * @param x the string expression to concatenate
+	 * @param times the number of times it should be repeated
+	 *
+	 * @return repeat expression
+	 */
+	JpaFunction<String> repeat(String x, Expression<Integer> times);
 
 	/**
 	 * @see #left(Expression, Expression)

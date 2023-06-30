@@ -8,12 +8,12 @@ package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
 
+import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.query.SemanticException;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
@@ -69,7 +69,8 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 			RowProcessingState rowProcessingState) {
 		final Integer indexValue = listIndexAssembler.assemble( rowProcessingState );
 		if ( indexValue == null ) {
-			throw new SemanticException( "Illegal null index value encountered while reading: " + getCollectionAttributeMapping().getNavigableRole() );
+			throw new HibernateException( "Illegal null value for array index encountered while reading: "
+					+ getCollectionAttributeMapping().getNavigableRole() );
 		}
 		int index = indexValue;
 

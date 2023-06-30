@@ -209,16 +209,28 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 			TableGroupProducer declaringTableGroupProducer,
 			IntFunction<SelectableMapping> selectableMappingAccess,
 			MappingModelCreationProcess creationProcess) {
+		final SelectableMapping selectableMapping = selectableMappingAccess.apply( 0 );
 		return new SimpleForeignKeyDescriptor(
 				declaringType,
 				keySide.getModelPart(),
 				( (PropertyBasedMapping) keySide.getModelPart() ).getPropertyAccess(),
-				selectableMappingAccess.apply( 0 ),
+				selectableMapping,
 				targetSide.getModelPart(),
-				keySide.getModelPart().isInsertable(),
-				keySide.getModelPart().isUpdateable(),
+				selectableMapping.isInsertable(),
+				selectableMapping.isUpdateable(),
 				refersToPrimaryKey,
 				hasConstraint
+		);
+	}
+
+	@Override
+	public ForeignKeyDescriptor withTargetPart(ValuedModelPart targetPart) {
+		return new SimpleForeignKeyDescriptor(
+				keySide.getModelPart(),
+				(BasicValuedModelPart) targetPart,
+				refersToPrimaryKey,
+				hasConstraint,
+				false
 		);
 	}
 
@@ -551,12 +563,6 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( targetSide.getModelPart().getJdbcMapping() );
-	}
-
-
-	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		if ( index != 0 ) {
 			throw new IndexOutOfBoundsException( index );
@@ -712,5 +718,10 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 				targetSide.getModelPart().getContainingTableExpression(),
 				targetSide.getModelPart().getSelectionExpression()
 		);
+	}
+
+	@Override
+	public boolean isEmbedded() {
+		return false;
 	}
 }

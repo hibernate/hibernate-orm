@@ -91,15 +91,14 @@ public final class ExecuteWithTemporaryTableHelper {
 		matchingIdSelection.getFromClause().addRoot( mutatingTableGroup );
 
 		mutatingEntityDescriptor.getIdentifierMapping().forEachSelectable(
-				(jdbcPosition, selection) -> {
+				(selectionIndex, selection) -> {
 					final TableReference tableReference = mutatingTableGroup.resolveTableReference(
 							mutatingTableGroup.getNavigablePath(),
 							selection.getContainingTableExpression()
 					);
 					matchingIdSelection.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									jdbcPosition,
-									jdbcPosition + 1,
+									selectionIndex,
 									sqmConverter.getSqlExpressionResolver().resolveSqlExpression(
 											tableReference,
 											selection
@@ -114,7 +113,6 @@ public final class ExecuteWithTemporaryTableHelper {
 			matchingIdSelection.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
 							jdbcPosition,
-							jdbcPosition + 1,
 							new QueryLiteral<>(
 									UUID.fromString( sessionUidAccess.apply( executionContext.getSession() ) ),
 									(BasicValuedMapping) idTable.getSessionUidColumn().getJdbcMapping()
@@ -146,7 +144,7 @@ public final class ExecuteWithTemporaryTableHelper {
 					querySpec -> {
 						querySpec.getFromClause().visitTableJoins(
 								tableJoin -> {
-									if ( tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
+									if ( tableJoin.isInitialized() && tableJoin.getJoinType() != SqlAstJoinType.INNER ) {
 										lockOptions.setLockMode( lockMode );
 									}
 								}
@@ -222,7 +220,6 @@ public final class ExecuteWithTemporaryTableHelper {
 				if ( temporaryTableColumn != idTable.getSessionUidColumn() ) {
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									i + 1,
 									i,
 									new ColumnReference(
 											tableReference,
@@ -241,7 +238,6 @@ public final class ExecuteWithTemporaryTableHelper {
 					(i, selectableMapping) -> {
 						querySpec.getSelectClause().addSqlSelection(
 								new SqlSelectionImpl(
-										i + 1,
 										i,
 										new ColumnReference(
 												tableReference,

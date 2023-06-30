@@ -23,7 +23,7 @@ import javax.tools.Diagnostic;
 import javax.tools.FileObject;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
-import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.TypeUtils;
 
@@ -49,7 +49,7 @@ public final class ClassWriter {
 	private ClassWriter() {
 	}
 
-	public static void writeFile(MetaEntity entity, Context context) {
+	public static void writeFile(Metamodel entity, Context context) {
 		try {
 			String metaModelPackage = entity.getPackageName();
 			// need to generate the body first, since this will also update the required imports which need to
@@ -58,7 +58,7 @@ public final class ClassWriter {
 
 			FileObject fo = context.getProcessingEnvironment().getFiler().createSourceFile(
 					getFullyQualifiedClassName( entity, metaModelPackage ),
-					entity.getTypeElement()
+					entity.getElement()
 			);
 			OutputStream os = fo.openOutputStream();
 			PrintWriter pw = new PrintWriter( os );
@@ -94,46 +94,44 @@ public final class ClassWriter {
 	 *
 	 * @return body content
 	 */
-	private static StringBuffer generateBody(MetaEntity entity, Context context) {
+	private static StringBuffer generateBody(Metamodel entity, Context context) {
 		StringWriter sw = new StringWriter();
-		PrintWriter pw = null;
-		try {
-			pw = new PrintWriter( sw );
+		try ( PrintWriter pw = new PrintWriter(sw) ) {
 
-			if ( context.addGeneratedAnnotation() ) {
-				pw.println( writeGeneratedAnnotation( entity, context ) );
-			}
-			if ( context.isAddSuppressWarningsAnnotation() ) {
-				pw.println( writeSuppressWarnings() );
+			if ( entity.getElement() instanceof TypeElement ) {
+				pw.println(writeStaticMetaModelAnnotation(entity));
 			}
 
-			pw.println( writeStaticMetaModelAnnotation( entity ) );
+			if (context.addGeneratedAnnotation()) {
+				pw.println(writeGeneratedAnnotation(entity, context));
+			}
+			if (context.isAddSuppressWarningsAnnotation()) {
+				pw.println(writeSuppressWarnings());
+			}
 
-			printClassDeclaration( entity, pw, context );
+			printClassDeclaration(entity, pw, context);
 
 			pw.println();
 
 			List<MetaAttribute> members = entity.getMembers();
-			for ( MetaAttribute metaMember : members ) {
-				pw.println( "	" + metaMember.getAttributeDeclarationString() );
+			for (MetaAttribute metaMember : members) {
+				if (metaMember.hasTypedAttribute()) {
+					metaMember.getAttributeDeclarationString().lines()
+							.forEach(line -> pw.println("	" + line));
+				}
 			}
 			pw.println();
-			for ( MetaAttribute metaMember : members ) {
-				pw.println( "	" + metaMember.getAttributeNameDeclarationString() );
+			for (MetaAttribute metaMember : members) {
+				pw.println("	" + metaMember.getAttributeNameDeclarationString());
 			}
 
 			pw.println();
-			pw.println( "}" );
+			pw.println("}");
 			return sw.getBuffer();
-		}
-		finally {
-			if ( pw != null ) {
-				pw.close();
-			}
 		}
 	}
 
-	private static void printClassDeclaration(MetaEntity entity, PrintWriter pw, Context context) {
+	private static void printClassDeclaration(Metamodel entity, PrintWriter pw, Context context) {
 		pw.print( "public abstract class " + entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX );
 
 		String superClassName = findMappedSuperClass( entity, context );
@@ -144,17 +142,20 @@ public final class ClassWriter {
 		pw.println( " {" );
 	}
 
-	private static @Nullable String findMappedSuperClass(MetaEntity entity, Context context) {
-		TypeMirror superClass = entity.getTypeElement().getSuperclass();
-		//superclass of Object is of NoType which returns some other kind
-		while ( superClass.getKind() == TypeKind.DECLARED ) {
-			//F..king Ch...t Have those people used their horrible APIs even once?
-			final Element superClassElement = ( (DeclaredType) superClass ).asElement();
-			String superClassName = ( (TypeElement) superClassElement ).getQualifiedName().toString();
-			if ( extendsSuperMetaModel( superClassElement, entity.isMetaComplete(), context ) ) {
-				return superClassName;
+	private static @Nullable String findMappedSuperClass(Metamodel entity, Context context) {
+		Element element = entity.getElement();
+		if ( element instanceof TypeElement ) {
+			TypeMirror superClass = ((TypeElement) element).getSuperclass();
+			//superclass of Object is of NoType which returns some other kind
+			while ( superClass.getKind() == TypeKind.DECLARED ) {
+				//F..king Ch...t Have those people used their horrible APIs even once?
+				final Element superClassElement = ( (DeclaredType) superClass ).asElement();
+				String superClassName = ( (TypeElement) superClassElement ).getQualifiedName().toString();
+				if ( extendsSuperMetaModel( superClassElement, entity.isMetaComplete(), context ) ) {
+					return superClassName;
+				}
+				superClass = ( (TypeElement) superClassElement ).getSuperclass();
 			}
-			superClass = ( (TypeElement) superClassElement ).getSuperclass();
 		}
 		return null;
 	}
@@ -191,7 +192,7 @@ public final class ClassWriter {
 		return false;
 	}
 
-	private static String getFullyQualifiedClassName(MetaEntity entity, String metaModelPackage) {
+	private static String getFullyQualifiedClassName(Metamodel entity, String metaModelPackage) {
 		String fullyQualifiedClassName = "";
 		if ( !metaModelPackage.isEmpty() ) {
 			fullyQualifiedClassName = fullyQualifiedClassName + metaModelPackage + ".";
@@ -200,20 +201,28 @@ public final class ClassWriter {
 		return fullyQualifiedClassName;
 	}
 
-	private static String writeGeneratedAnnotation(MetaEntity entity, Context context) {
+	private static String writeGeneratedAnnotation(Metamodel entity, Context context) {
 		StringBuilder generatedAnnotation = new StringBuilder();
-		generatedAnnotation.append( "@" )
-				.append( entity.importType( context.getGeneratedAnnotationFqcn() ) )
-				.append( "(value = \"" )
-				.append( JPAMetaModelEntityProcessor.class.getName() );
+		generatedAnnotation
+				.append( "@" )
+				.append( entity.importType( "jakarta.annotation.Generated" ) )
+				.append( "(" );
 		if ( context.addGeneratedDate() ) {
-			generatedAnnotation.append( "\", date = \"" )
+			generatedAnnotation
+					.append( "value = " );
+		}
+		generatedAnnotation
+				.append( "\"" )
+				.append( JPAMetaModelEntityProcessor.class.getName() )
+				.append( "\"" );
+		if ( context.addGeneratedDate() ) {
+			generatedAnnotation
+					.append( ", date = " )
+					.append( "\"" )
 					.append( SIMPLE_DATE_FORMAT.get().format( new Date() ) )
-					.append( "\")" );
+					.append( "\"" );
 		}
-		else {
-			generatedAnnotation.append( "\")" );
-		}
+		generatedAnnotation.append( ")" );
 		return generatedAnnotation.toString();
 	}
 
@@ -221,7 +230,7 @@ public final class ClassWriter {
 		return "@SuppressWarnings({ \"deprecation\", \"rawtypes\" })";
 	}
 
-	private static String writeStaticMetaModelAnnotation(MetaEntity entity) {
+	private static String writeStaticMetaModelAnnotation(Metamodel entity) {
 		return "@" + entity.importType( "jakarta.persistence.metamodel.StaticMetamodel" ) + "(" + entity.getSimpleName() + ".class)";
 	}
 }

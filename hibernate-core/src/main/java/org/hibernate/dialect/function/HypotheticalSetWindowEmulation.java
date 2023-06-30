@@ -14,7 +14,6 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingOrderedSetAggregateFunctionSqlAstExpression;
-import org.hibernate.query.sqm.function.SelfRenderingSqmAggregateFunction;
 import org.hibernate.query.sqm.function.SelfRenderingSqmOrderedSetAggregateFunction;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
@@ -50,8 +49,7 @@ public class HypotheticalSetWindowEmulation extends HypotheticalSetFunction {
 			SqmPredicate filter,
 			SqmOrderByClause withinGroupClause,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		return new SelfRenderingSqmOrderedSetAggregateFunction<>(
 				this,
 				this,
@@ -110,7 +108,7 @@ public class HypotheticalSetWindowEmulation extends HypotheticalSetFunction {
 						getFilter() == null ? null : (Predicate) getFilter().accept( walker ),
 						Collections.emptyList(),
 						resultType,
-						getMappingModelExpressible( walker, resultType )
+						getMappingModelExpressible( walker, resultType, arguments )
 				);
 				final Over<Object> windowFunction = new Over<>( function, new ArrayList<>(), withinGroup );
 				walker.registerQueryTransformer(

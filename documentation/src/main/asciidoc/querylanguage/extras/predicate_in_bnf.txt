@@ -1,0 +1,7 @@
+expression "NOT"? "IN" inList
+
+inList
+	: collectionQuantifier "(" simplePath ")"
+	| "(" (expression ("," expression)*)? ")"
+	| "(" subquery ")"
+	| parameter

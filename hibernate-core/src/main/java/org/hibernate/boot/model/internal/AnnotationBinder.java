@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import jakarta.persistence.FetchType;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionTypeRegistration;
@@ -22,7 +23,9 @@ import org.hibernate.annotations.ConverterRegistration;
 import org.hibernate.annotations.ConverterRegistrations;
 import org.hibernate.annotations.EmbeddableInstantiatorRegistration;
 import org.hibernate.annotations.EmbeddableInstantiatorRegistrations;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.FetchProfile;
+import org.hibernate.annotations.FetchProfile.FetchOverride;
 import org.hibernate.annotations.FetchProfiles;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -93,6 +96,7 @@ import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.InheritanceState.getInheritanceStateOfSuperEntity;
 import static org.hibernate.boot.model.internal.InheritanceState.getSuperclassInheritanceState;
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.mapping.MetadataSource.ANNOTATIONS;
 
 /**
  * Reads annotations from Java classes and produces the Hibernate configuration-time metamodel,
@@ -834,27 +838,47 @@ public final class AnnotationBinder {
 	}
 
 	private static void bindFetchProfiles(XAnnotatedElement annotatedElement, MetadataBuildingContext context) {
-		final FetchProfile fetchProfileAnnotation = annotatedElement.getAnnotation( FetchProfile.class );
-		final FetchProfiles fetchProfileAnnotations = annotatedElement.getAnnotation( FetchProfiles.class );
-		if ( fetchProfileAnnotation != null ) {
-			bindFetchProfile( fetchProfileAnnotation, context );
+		final FetchProfile fetchProfile = annotatedElement.getAnnotation( FetchProfile.class );
+		final FetchProfiles fetchProfiles = annotatedElement.getAnnotation( FetchProfiles.class );
+		if ( fetchProfile != null ) {
+			bindFetchProfile( fetchProfile, context );
 		}
-		if ( fetchProfileAnnotations != null ) {
-			for ( FetchProfile profile : fetchProfileAnnotations.value() ) {
+		if ( fetchProfiles != null ) {
+			for ( FetchProfile profile : fetchProfiles.value() ) {
 				bindFetchProfile( profile, context );
 			}
 		}
 	}
 
-	private static void bindFetchProfile(FetchProfile fetchProfileAnnotation, MetadataBuildingContext context) {
-		for ( FetchProfile.FetchOverride fetch : fetchProfileAnnotation.fetchOverrides() ) {
-			org.hibernate.annotations.FetchMode mode = fetch.mode();
-			if ( !mode.equals( org.hibernate.annotations.FetchMode.JOIN ) ) {
-				throw new MappingException( "Only FetchMode.JOIN is currently supported" );
+	private static void bindFetchProfile(FetchProfile fetchProfile, MetadataBuildingContext context) {
+		final String name = fetchProfile.name();
+		if ( reuseOrCreateFetchProfile( context, name ) ) {
+			for ( FetchOverride fetch : fetchProfile.fetchOverrides() ) {
+				if ( fetch.fetch() == FetchType.LAZY && fetch.mode() == FetchMode.JOIN ) {
+					throw new AnnotationException( "Fetch profile '" + name
+							+ "' has a '@FetchOverride' with 'fetch=LAZY' and 'mode=JOIN'"
+							+ " (join fetching is eager by nature)");
+				}
+				context.getMetadataCollector()
+						.addSecondPass( new FetchOverrideSecondPass( name, fetch, context ) );
 			}
-			context.getMetadataCollector().addSecondPass(
-					new VerifyFetchProfileReferenceSecondPass( fetchProfileAnnotation.name(), fetch, context )
-			);
+		}
+		// otherwise, it's a fetch profile defined in XML, and it overrides
+		// the annotations, so we simply ignore this annotation completely
+	}
+
+	private static boolean reuseOrCreateFetchProfile(MetadataBuildingContext context, String name) {
+		// We tolerate multiple @FetchProfile annotations for same named profile
+		org.hibernate.mapping.FetchProfile existing = context.getMetadataCollector().getFetchProfile( name );
+		if ( existing == null ) {
+			// no existing profile, so create a new one
+			org.hibernate.mapping.FetchProfile profile =
+					new org.hibernate.mapping.FetchProfile( name, ANNOTATIONS );
+			context.getMetadataCollector().addFetchProfile( profile );
+			return true;
+		}
+		else {
+			return existing.getSource() == ANNOTATIONS;
 		}
 	}
 

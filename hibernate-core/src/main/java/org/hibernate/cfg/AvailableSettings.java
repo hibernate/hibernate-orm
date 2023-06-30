@@ -1025,12 +1025,33 @@ public interface AvailableSettings {
 	String MAX_FETCH_DEPTH = "hibernate.max_fetch_depth";
 
 	/**
-	 * Specifies the default batch size for batch fetching.
+	 * Specifies the default batch size for batch fetching. When set to
+	 * a value greater than one, Hibernate will use batch fetching, when
+	 * possible, to fetch any association.
+	 * <p>
+	 * By default, Hibernate only uses batch fetching for entities and
+	 * collections explicitly annotated {@code @BatchSize}.
 	 *
 	 * @see org.hibernate.annotations.BatchSize
+	 * @see org.hibernate.Session#setFetchBatchSize(int)
 	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultBatchFetchSize(int)
 	 */
 	String DEFAULT_BATCH_FETCH_SIZE = "hibernate.default_batch_fetch_size";
+
+	/**
+	 * When enabled, Hibernate will use subselect fetching, when possible, to
+	 * fetch any collection.
+	 * <p>
+	 * By default, Hibernate only uses subselect fetching for collections
+	 * explicitly annotated {@code @Fetch(SUBSELECT)}.
+	 *
+	 * @since 6.3
+	 *
+	 * @see org.hibernate.annotations.FetchMode#SUBSELECT
+	 * @see org.hibernate.Session#setSubselectFetchingEnabled(boolean)
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applySubselectFetchEnabled(boolean)
+	 */
+	String USE_SUBSELECT_FETCH = "hibernate.use_subselect_fetch";
 
 	/**
 	 * When enabled, specifies that JDBC scrollable {@code ResultSet}s may be used.
@@ -1323,7 +1344,7 @@ public interface AvailableSettings {
 	 * Controls whether Hibernate can try to create beans other than converters
 	 * and listeners using CDI.  Only meaningful when a CDI {@link #BEAN_CONTAINER container}
 	 * is used.
-	 *
+	 * <p>
 	 * By default, Hibernate will only attempt to create converter and listener beans using CDI.
 	 *
 	 * @since 6.2
@@ -1572,7 +1593,7 @@ public interface AvailableSettings {
 
 	/**
 	 * When enabled, specifies that {@linkplain QueryPlan query plans} should be
-	 * {@linkplain org.hibernate.query.spi.QueryPlanCache cached}.
+	 * {@linkplain org.hibernate.query.spi.QueryInterpretationCache cached}.
 	 * <p>
 	 * By default, the query plan cache is disabled, unless one of the configuration
 	 * properties {@value #QUERY_PLAN_CACHE_MAX_SIZE} or
@@ -1582,14 +1603,13 @@ public interface AvailableSettings {
 
 	/**
 	 * The maximum number of entries in the
-	 * {@linkplain org.hibernate.query.spi.QueryPlanCache query plan cache} or
 	 * {@linkplain org.hibernate.query.spi.QueryInterpretationCache
 	 * query interpretation cache}.
 	 * <p>
 	 * The default maximum is
 	 * {@value org.hibernate.query.spi.QueryEngine#DEFAULT_QUERY_PLAN_MAX_COUNT}.
 	 *
-	 * @see org.hibernate.query.spi.QueryPlanCache
+	 * @see org.hibernate.query.spi.QueryInterpretationCache
 	 */
 	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
 
@@ -1633,12 +1653,14 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DATABASE_ACTION} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_DATABASE_ACTION = "javax.persistence.schema-generation.database.action";
 
 	/**
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_SCRIPTS_ACTION} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_SCRIPTS_ACTION = "javax.persistence.schema-generation.scripts.action";
 
 	/**
@@ -1653,6 +1675,7 @@ public interface AvailableSettings {
 	 * @see org.hibernate.tool.schema.SourceType
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_CREATE_SOURCE = "javax.persistence.schema-generation.create-source";
 
 	/**
@@ -1660,24 +1683,28 @@ public interface AvailableSettings {
 	 * @see org.hibernate.tool.schema.SourceType
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_DROP_SOURCE = "javax.persistence.schema-generation.drop-source";
 
 	/**
 	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_CREATE_SCRIPT_SOURCE = "javax.persistence.schema-generation.create-script-source";
 
 	/**
 	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_DROP_SCRIPT_SOURCE = "javax.persistence.schema-generation.drop-script-source";
 
 	/**
 	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_SCRIPTS_CREATE_TARGET = "javax.persistence.schema-generation.scripts.create-target";
 
 	/**
@@ -1696,6 +1723,7 @@ public interface AvailableSettings {
 	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_SCRIPTS_DROP_TARGET = "javax.persistence.schema-generation.scripts.drop-target";
 
 	/**
@@ -1876,7 +1904,7 @@ public interface AvailableSettings {
 	 * <p>
 	 * If no value is specified, a default is inferred as follows:
 	 * <ul>
-	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_CREATE_SOURCE},
+	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE},
 	 *     then {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
 	 *     <li>otherwise, {@link org.hibernate.tool.schema.SourceType#SCRIPT "metadata"} is
 	 *     assumed.
@@ -1893,8 +1921,8 @@ public interface AvailableSettings {
 	 * <p>
 	 * If no value is specified, a default is inferred as follows:
 	 * <ul>
-	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE}, then
-	 *     {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
+	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE},
+	 *     then {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
 	 *     <li>otherwise, {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "metadata"}
 	 *     is assumed.
 	 * </ul>
@@ -2697,6 +2725,7 @@ public interface AvailableSettings {
 
 	/**
 	 * The preferred JDBC type to use for storing {@link java.util.UUID} values.
+	 * Defaults to {@link org.hibernate.type.SqlTypes#UUID}.
 	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
 	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
@@ -2710,14 +2739,14 @@ public interface AvailableSettings {
 	String PREFERRED_UUID_JDBC_TYPE = "hibernate.type.preferred_uuid_jdbc_type";
 
 	/**
-	 * The preferred JDBC type to use for storing duration values. Falls back to
-	 * {@link org.hibernate.type.SqlTypes#INTERVAL_SECOND}.
+	 * The preferred JDBC type to use for storing {@link java.time.Duration} values.
+	 * Defaults to {@link org.hibernate.type.SqlTypes#NUMERIC}.
 	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
 	 * {@link org.hibernate.annotations.JdbcTypeCode}, and friends.
 	 * <p>
 	 * Can also specify the name of the {@link org.hibernate.type.SqlTypes} constant
-	 * field, for example, {@code hibernate.type.preferred_duration_jdbc_type=NUMERIC}.
+	 * field, for example, {@code hibernate.type.preferred_duration_jdbc_type=INTERVAL_SECOND}.
 	 *
 	 * @since 6.0
 	 */
@@ -2725,8 +2754,8 @@ public interface AvailableSettings {
 	String PREFERRED_DURATION_JDBC_TYPE = "hibernate.type.preferred_duration_jdbc_type";
 
 	/**
-	 * Specifies the preferred JDBC type for storing instant values. When no
-	 * type is explicitly specified, {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC}
+	 * Specifies the preferred JDBC type for storing {@link java.time.Instant} values.
+	 * Defaults to {@link org.hibernate.type.SqlTypes#TIMESTAMP_UTC}.
 	 * is used.
 	 * <p>
 	 * Can be overridden locally using {@link org.hibernate.annotations.JdbcType},
@@ -3098,6 +3127,7 @@ public interface AvailableSettings {
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
 	 */
 	@Deprecated(since = "6.2", forRemoval = true)
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String FLUSH_MODE = "org.hibernate.flushMode";
 
 	String CFG_XML_FILE = "hibernate.cfg_xml_file";

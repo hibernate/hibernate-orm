@@ -18,6 +18,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
@@ -31,6 +32,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,13 +42,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Steve Ebersole
  */
-@RequiresDialectFeatureGroup(
-		value = {
-				@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class),
-				@RequiresDialectFeature(feature = BasicOperationsTest.OracleDialectChecker.class)
-		},
-		jiraKey = "HHH-6834"
-)
+@SkipForDialect(dialectClass = OracleDialect.class, reason = "HHH-6834")
+@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "HHH-6834")
+@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "jConnect reports the type code 11 for bigdatetime columns, which is an unknown type code..")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class, jiraKey = "HHH-6834")
 @DomainModel(
 		annotatedClasses = { SomeEntity.class, SomeOtherEntity.class }
 )
@@ -59,13 +58,6 @@ public class BasicOperationsTest {
 	private static final String SOME_ENTITY_TABLE_NAME = "SOMEENTITY";
 	private static final String SOME_OTHER_ENTITY_TABLE_NAME = "SOMEOTHERENTITY";
 
-
-	public static class OracleDialectChecker implements DialectFeatureCheck {
-		@Override
-		public boolean apply(Dialect dialect) {
-			return !( dialect instanceof OracleDialect ) && !( dialect instanceof PostgresPlusDialect );
-		}
-	}
 
 	@Test
 	public void testCreateAndDelete(SessionFactoryScope scope) {

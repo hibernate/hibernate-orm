@@ -76,6 +76,7 @@ import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
@@ -132,13 +133,25 @@ public class MySQLDialect extends Dialect {
 				Integer scale,
 				Long length) {
 			switch ( jdbcType.getDdlTypeCode() ) {
-				case Types.BIT:
+				case BIT:
 					// MySQL allows BIT with a length up to 64 (less the default length 255)
 					if ( length != null ) {
 						return Size.length( Math.min( Math.max( length, 1 ), 64 ) );
 					}
+				case FLOAT:
+				case DOUBLE:
+				case REAL:
+					//MySQL doesn't let you cast to DOUBLE/FLOAT
+					//but don't just return 'decimal' because
+					//the default scale is 0 (no decimal places)
+					Size size = super.resolveSize( jdbcType, javaType, precision, scale, length );
+					//cast() on MySQL does not behave sensibly if
+					//we set scale > 20
+					size.setScale( Math.min( size.getPrecision(), 20 ) );
+					return size;
+				default:
+					return super.resolveSize( jdbcType, javaType, precision, scale, length );
 			}
-			return super.resolveSize( jdbcType, javaType, precision, scale, length );
 		}
 	};
 
@@ -238,10 +251,18 @@ public class MySQLDialect extends Dialect {
 			case NUMERIC:
 				// it's just a synonym
 				return columnType( DECIMAL );
+
+			// on MySQL 8, the nchar/nvarchar types use a deprecated character set
+			case NCHAR:
+				return "char($l) character set utf8";
+			case NVARCHAR:
+				return "varchar($l) character set utf8";
+
 			// the maximum long LOB length is 4_294_967_295, bigger than any Java string
 			case BLOB:
 				return "longblob";
 			case NCLOB:
+				return "longtext character set utf8";
 			case CLOB:
 				return "longtext";
 
@@ -325,16 +346,18 @@ public class MySQLDialect extends Dialect {
 		}
 		ddlTypeRegistry.addDescriptor( varcharBuilder.build() );
 
+		// do not use nchar/nvarchar/ntext because these
+		// types use a deprecated character set on MySQL 8
 		final CapacityDependentDdlType.Builder nvarcharBuilder = CapacityDependentDdlType.builder(
 						NVARCHAR,
 						columnType( NCLOB ),
-						"char",
+						"char character set utf8",
 						this
 				)
-				.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
-				.withTypeCapacity( maxMediumLobLen, "mediumtext" );
+				.withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8" )
+				.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" );
 		if ( getMaxVarcharLength() < maxLobLen ) {
-			nvarcharBuilder.withTypeCapacity( maxLobLen, "text" );
+			nvarcharBuilder.withTypeCapacity( maxLobLen, "text character set utf8" );
 		}
 		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
 
@@ -372,12 +395,14 @@ public class MySQLDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NCLOB, columnType( NCLOB ), "char", this )
-						.withTypeCapacity( maxTinyLobLen, "tinytext" )
-						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
-						.withTypeCapacity( maxLobLen, "text" )
+				CapacityDependentDdlType.builder( NCLOB, columnType( NCLOB ), "char character set utf8", this )
+						.withTypeCapacity( maxTinyLobLen, "tinytext character set utf8" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" )
+						.withTypeCapacity( maxLobLen, "text character set utf8" )
 						.build()
 		);
+
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl(this) );
 	}
 
 	@Deprecated
@@ -641,6 +666,8 @@ public class MySQLDialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+
+		jdbcTypeRegistry.addDescriptor( new MySQLEnumJdbcType() );
 	}
 
 	@Override
@@ -870,7 +897,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
-	public String getEnumTypeDeclaration(String[] values) {
+	public String getEnumTypeDeclaration(String name, String[] values) {
 		StringBuilder type = new StringBuilder();
 		type.append( "enum (" );
 		String separator = "";
@@ -879,12 +906,6 @@ public class MySQLDialect extends Dialect {
 			separator = ",";
 		}
 		return type.append( ')' ).toString();
-	}
-
-	@Override
-	public String getCheckCondition(String columnName, String[] values) {
-		//not needed, because we use an 'enum' type
-		return null;
 	}
 
 	@Override
@@ -952,7 +973,7 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getAlterColumnTypeString(String columnName, String columnType, String columnDefinition) {
 		// no way to change just the column type, leaving other attributes intact
-		return "modify column " + columnName + " " + columnDefinition;
+		return "modify column " + columnName + " " + columnDefinition.trim();
 	}
 
 	@Override
@@ -1097,6 +1118,11 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public int getMaxIdentifierLength() {
 		return 64;
+	}
+
+	@Override
+	public boolean supportsIsTrue() {
+		return true;
 	}
 
 	@Override
@@ -1457,6 +1483,11 @@ public class MySQLDialect extends Dialect {
 
 	boolean supportsAliasLocks() {
 		return getMySQLVersion().isSameOrAfter( 8 );
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_GROUP;
 	}
 
 	@Override

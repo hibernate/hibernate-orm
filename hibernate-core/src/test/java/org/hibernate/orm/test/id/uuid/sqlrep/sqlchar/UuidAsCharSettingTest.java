@@ -7,12 +7,7 @@
 package org.hibernate.orm.test.id.uuid.sqlrep.sqlchar;
 
 import java.sql.Types;
-import java.util.List;
 import java.util.UUID;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.Property;
@@ -30,10 +25,14 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
+
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.hasSize;
 
 /**
  * @author Steve Ebersole
@@ -69,9 +68,7 @@ public class UuidAsCharSettingTest {
 	public void testUsage(SessionFactoryScope scope) {
 		final MappingMetamodel domainModel = scope.getSessionFactory().getRuntimeMetamodels().getMappingMetamodel();
 		final EntityPersister entityDescriptor = domainModel.findEntityDescriptor( Node.class );
-		final List<JdbcMapping> identifierJdbcMappings = entityDescriptor.getIdentifierMapping().getJdbcMappings();
-		assertThat( identifierJdbcMappings, hasSize( 1 ) );
-		final JdbcMapping jdbcMapping = identifierJdbcMappings.get( 0 );
+		final JdbcMapping jdbcMapping = entityDescriptor.getIdentifierMapping().getSingleJdbcMapping();
 		assertThat( jdbcMapping.getJdbcType().isString(), is( true ) );
 
 		final UUIDPair uuidPair = scope.fromTransaction( session -> {

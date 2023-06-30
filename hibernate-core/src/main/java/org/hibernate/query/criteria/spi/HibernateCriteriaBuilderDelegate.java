@@ -28,6 +28,7 @@ import org.hibernate.query.criteria.JpaCollectionJoin;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaCriteriaDelete;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
+import org.hibernate.query.criteria.JpaCriteriaInsertValues;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaCriteriaUpdate;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
@@ -111,6 +112,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <T> JpaCriteriaQuery<T> createQuery(String hql, Class<T> resultClass) {
+		return criteriaBuilder.createQuery( hql, resultClass );
+	}
+
+	@Override
 	public JpaCriteriaQuery<Tuple> createTupleQuery() {
 		return criteriaBuilder.createTupleQuery();
 	}
@@ -123,6 +129,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public <T> JpaCriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity) {
 		return criteriaBuilder.createCriteriaDelete( targetEntity );
+	}
+
+	@Override
+	public <T> JpaCriteriaInsertValues<T> createCriteriaInsertValues(Class<T> targetEntity) {
+		return criteriaBuilder.createCriteriaInsertValues( targetEntity );
 	}
 
 	@Override
@@ -1462,6 +1473,21 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			Expression<Integer> length,
 			Expression<Character> padChar) {
 		return criteriaBuilder.pad( ts, x, length, padChar );
+	}
+
+	@Override
+	public JpaFunction<String> repeat(Expression<String> x, Expression<Integer> times) {
+		return criteriaBuilder.repeat( x, times );
+	}
+
+	@Override
+	public JpaFunction<String> repeat(Expression<String> x, int times) {
+		return criteriaBuilder.repeat( x, times );
+	}
+
+	@Override
+	public JpaFunction<String> repeat(String x, Expression<Integer> times) {
+		return criteriaBuilder.repeat( x, times );
 	}
 
 	@Override

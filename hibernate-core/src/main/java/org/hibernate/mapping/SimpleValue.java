@@ -45,7 +45,6 @@ import org.hibernate.id.factory.spi.CustomIdGeneratorCreationContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
@@ -63,7 +62,10 @@ import org.hibernate.usertype.DynamicParameterizedType;
 
 import jakarta.persistence.AttributeConverter;
 
+import static java.lang.Boolean.parseBoolean;
+import static org.hibernate.boot.model.convert.spi.ConverterDescriptor.TYPE_NAME_PREFIX;
 import static org.hibernate.id.factory.internal.IdentifierGeneratorUtil.createLegacyIdentifierGenerator;
+import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
 
 /**
  * A mapping model object that represents any value that maps to columns.
@@ -207,7 +209,7 @@ public abstract class SimpleValue implements KeyValue {
 	protected void justAddColumn(Column column, boolean insertable, boolean updatable) {
 		int index = columns.indexOf( column );
 		if ( index == -1 ) {
-			columns.add(column);
+			columns.add( column );
 			insertability.add( insertable );
 			updatability.add( updatable );
 		}
@@ -230,8 +232,8 @@ public abstract class SimpleValue implements KeyValue {
 	public void sortColumns(int[] originalOrder) {
 		if ( columns.size() > 1 ) {
 			final Selectable[] originalColumns = columns.toArray( new Selectable[0] );
-			final boolean[] originalInsertability = ArrayHelper.toBooleanArray( insertability );
-			final boolean[] originalUpdatability = ArrayHelper.toBooleanArray( updatability );
+			final boolean[] originalInsertability = toBooleanArray( insertability );
+			final boolean[] originalUpdatability = toBooleanArray( updatability );
 			for ( int i = 0; i < originalOrder.length; i++ ) {
 				final int originalIndex = originalOrder[i];
 				final Selectable selectable = originalColumns[i];
@@ -294,8 +296,8 @@ public abstract class SimpleValue implements KeyValue {
 	}
 
 	public void setTypeName(String typeName) {
-		if ( typeName != null && typeName.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX ) ) {
-			final String converterClassName = typeName.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
+		if ( typeName != null && typeName.startsWith( TYPE_NAME_PREFIX ) ) {
+			final String converterClassName = typeName.substring( TYPE_NAME_PREFIX.length() );
 			final ClassLoaderService cls = getMetadata()
 					.getMetadataBuildingOptions()
 					.getServiceRegistry()
@@ -770,7 +772,7 @@ public abstract class SimpleValue implements KeyValue {
 
 		// todo : cache the AttributeConverterTypeAdapter in case that AttributeConverter is applied multiple times.
 		return new ConvertedBasicTypeImpl<>(
-				ConverterDescriptor.TYPE_NAME_PREFIX
+				TYPE_NAME_PREFIX
 						+ jpaAttributeConverter.getConverterJavaType().getJavaType().getTypeName(),
 				String.format(
 						"BasicType adapter for AttributeConverter<%s,%s>",
@@ -821,11 +823,11 @@ public abstract class SimpleValue implements KeyValue {
 
 	public boolean isSame(SimpleValue other) {
 		return Objects.equals( columns, other.columns )
-				&& Objects.equals( typeName, other.typeName )
-				&& Objects.equals( typeParameters, other.typeParameters )
-				&& Objects.equals( table, other.table )
-				&& Objects.equals( foreignKeyName, other.foreignKeyName )
-				&& Objects.equals( foreignKeyDefinition, other.foreignKeyDefinition );
+			&& Objects.equals( typeName, other.typeName )
+			&& Objects.equals( typeParameters, other.typeParameters )
+			&& Objects.equals( table, other.table )
+			&& Objects.equals( foreignKeyName, other.foreignKeyName )
+			&& Objects.equals( foreignKeyDefinition, other.foreignKeyDefinition );
 	}
 
 	@Override
@@ -928,7 +930,7 @@ public abstract class SimpleValue implements KeyValue {
 			final XProperty xProperty = (XProperty) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 			// todo : not sure this works for handling @MapKeyEnumerated
 			final Annotation[] annotations = xProperty == null
-					? null
+					? new Annotation[0]
 					: xProperty.getAnnotations();
 
 			final ClassLoaderService classLoaderService = getMetadata()
@@ -939,13 +941,13 @@ public abstract class SimpleValue implements KeyValue {
 					DynamicParameterizedType.PARAMETER_TYPE,
 					new ParameterTypeImpl(
 							classLoaderService.classForTypeName(
-									typeParameters.getProperty( DynamicParameterizedType.RETURNED_CLASS )
+									typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS)
 							),
 							annotations,
 							table.getCatalog(),
 							table.getSchema(),
 							table.getName(),
-							Boolean.parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ),
+							parseBoolean(typeParameters.getProperty(DynamicParameterizedType.IS_PRIMARY_KEY)),
 							columnNames,
 							columnLengths
 					)
@@ -972,7 +974,7 @@ public abstract class SimpleValue implements KeyValue {
 			final XProperty xProperty = (XProperty) typeParameters.get( DynamicParameterizedType.XPROPERTY );
 			// todo : not sure this works for handling @MapKeyEnumerated
 			final Annotation[] annotations = xProperty == null
-					? null
+					? new Annotation[0]
 					: xProperty.getAnnotations();
 
 			final ClassLoaderService classLoaderService = getMetadata()
@@ -981,12 +983,12 @@ public abstract class SimpleValue implements KeyValue {
 					.getService( ClassLoaderService.class );
 
 			return new ParameterTypeImpl(
-					classLoaderService.classForTypeName( typeParameters.getProperty( DynamicParameterizedType.RETURNED_CLASS ) ),
+					classLoaderService.classForTypeName(typeParameters.getProperty(DynamicParameterizedType.RETURNED_CLASS)),
 					annotations,
 					table.getCatalog(),
 					table.getSchema(),
 					table.getName(),
-					Boolean.parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_PRIMARY_KEY ) ),
+					parseBoolean(typeParameters.getProperty(DynamicParameterizedType.IS_PRIMARY_KEY)),
 					columnNames,
 					columnLengths
 			);

@@ -136,7 +136,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 	protected void addColumns(TableInformation tableInformation) {
 		final ExtractionContext extractionContext = getExtractionContext();
 		// We use this dummy query to retrieve the table information through the ResultSetMetaData
-		// This is significantly better than to use the DatabaseMetaData especially on Oracle with synonyms enable
+		// This is significantly better than to use the DatabaseMetaData especially on Oracle with synonyms enabled
 		final String tableName = extractionContext.getSqlStringGenerationContext().format(
 				// The name comes from the database, so the case is correct
 				// But we quote here to avoid issues with reserved words
@@ -157,7 +157,7 @@ public class InformationExtractorJdbcDatabaseMetaDataImpl extends AbstractInform
 									tableInformation,
 									DatabaseIdentifier.toIdentifier( columnName ),
 									metaData.getColumnType( i ),
-									new StringTokenizer( metaData.getColumnTypeName( i ), "() " ).nextToken(),
+									new StringTokenizer( metaData.getColumnTypeName( i ), "()" ).nextToken(),
 									metaData.getPrecision( i ),
 									metaData.getScale( i ),
 									interpretNullable( metaData.isNullable( i ) )

@@ -26,7 +26,7 @@ public interface JdbcBindingLogging {
 		assert TRACE_ENABLED;
 
 		LOGGER.tracef(
-				"binding parameter [%s] as [%s] - [%s]",
+				"binding parameter (%s:%s) <- [%s]",
 				jdbcPosition,
 				JdbcTypeNameMapper.getTypeName( typeCode ),
 				value
@@ -37,7 +37,7 @@ public interface JdbcBindingLogging {
 		assert TRACE_ENABLED;
 
 		LOGGER.tracef(
-				"binding parameter [%s] as [%s] - [null]",
+				"binding parameter (%s:%s) <- [null]",
 				jdbcPosition,
 				JdbcTypeNameMapper.getTypeName( typeCode )
 		);
@@ -47,7 +47,7 @@ public interface JdbcBindingLogging {
 		assert TRACE_ENABLED;
 
 		LOGGER.tracef(
-				"binding parameter [%s] as [%s] - [%s]",
+				"binding parameter (%s:%s) <- [%s]",
 				callableParameterName,
 				JdbcTypeNameMapper.getTypeName( typeCode ),
 				value
@@ -58,7 +58,7 @@ public interface JdbcBindingLogging {
 		assert TRACE_ENABLED;
 
 		LOGGER.tracef(
-				"binding parameter [%s] as [%s] - [null]",
+				"binding parameter (%s:%s) <- [null]",
 				callableParameterName,
 				JdbcTypeNameMapper.getTypeName( typeCode )
 		);

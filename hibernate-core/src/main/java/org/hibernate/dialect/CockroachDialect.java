@@ -57,9 +57,10 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StandardSqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
@@ -124,7 +125,7 @@ public class CockroachDialect extends Dialect {
 	// Pre-compile and reuse pattern
 	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
 
-	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 21, 1 );
+	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 22, 1 );
 
 	protected final PostgreSQLDriverKind driverKind;
 
@@ -163,7 +164,7 @@ public class CockroachDialect extends Dialect {
 		return parseVersion( versionString );
 	}
 
-	protected static DatabaseVersion parseVersion(String versionString ) {
+	public static DatabaseVersion parseVersion( String versionString ) {
 		DatabaseVersion databaseVersion = null;
 		// What the DB select returns is similar to "CockroachDB CCL v21.2.10 (x86_64-unknown-linux-gnu, built 2022/05/02 17:38:58, go1.16.6)"
 		Matcher m = CRDB_VERSION_PATTERN.matcher( versionString == null ? "" : versionString );
@@ -303,21 +304,21 @@ public class CockroachDialect extends Dialect {
 				}
 				break;
 			case ARRAY:
-				final JdbcType jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+				final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
 				// PostgreSQL names array types by prepending an underscore to the base name
-				if ( jdbcType instanceof ArrayJdbcType && columnTypeName.charAt( 0 ) == '_' ) {
+				if ( jdbcTypeConstructor != null && columnTypeName.charAt( 0 ) == '_' ) {
 					final String componentTypeName = columnTypeName.substring( 1 );
 					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
 					if ( sqlTypeCode != null ) {
-						return ( (ArrayJdbcType) jdbcType ).resolveType(
+						return jdbcTypeConstructor.resolveType(
 								jdbcTypeRegistry.getTypeConfiguration(),
 								this,
 								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-								null
+								ColumnTypeInformation.EMPTY
 						);
 					}
 				}
-				return jdbcType;
+				break;
 		}
 		return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
 	}
@@ -814,7 +815,7 @@ public class CockroachDialect extends Dialect {
 				case NATIVE:
 					return "cast(extract(epoch from ?3-?2)" + EPOCH.conversionFactor( unit, this ) + " as int)";
 				default:
-					throw new SemanticException( "unrecognized field: " + unit );
+					throw new SemanticException( "Unrecognized field: " + unit );
 			}
 		}
 	}
@@ -985,6 +986,11 @@ public class CockroachDialect extends Dialect {
 	public boolean supportsSkipLocked() {
 		// See https://www.cockroachlabs.com/docs/stable/select-for-update.html#wait-policies
 		return false;
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
 	}
 
 	@Override

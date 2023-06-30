@@ -1158,7 +1158,7 @@ public class BulkManipulationTest extends BaseCoreFunctionalTestCase {
 		int count = s.createQuery( "update Mammal set bodyWeight = null" ).executeUpdate();
 		assertEquals( "Incorrect deletion count on joined subclass", 2, count );
 
-		count = s.createQuery( "delete Animal where bodyWeight = null" ).executeUpdate();
+		count = s.createQuery( "delete Animal where bodyWeight is null" ).executeUpdate();
 		assertEquals( "Incorrect deletion count on joined subclass", 2, count );
 
 		t.commit();

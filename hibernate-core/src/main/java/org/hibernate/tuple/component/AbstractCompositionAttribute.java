@@ -20,8 +20,6 @@ import org.hibernate.type.CompositeType;
 public abstract class AbstractCompositionAttribute
 		extends AbstractNonIdentifierAttribute {
 
-	private final int columnStartPosition;
-
 	protected AbstractCompositionAttribute(
 			AttributeSource source,
 			SessionFactoryImplementor sessionFactory,
@@ -31,7 +29,6 @@ public abstract class AbstractCompositionAttribute
 			int columnStartPosition,
 			BaselineAttributeInformation baselineInfo) {
 		super( source, sessionFactory, entityBasedAttributeNumber, attributeName, attributeType, baselineInfo );
-		this.columnStartPosition = columnStartPosition;
 	}
 
 	@Override

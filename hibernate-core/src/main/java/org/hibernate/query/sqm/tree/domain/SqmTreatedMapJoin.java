@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -40,6 +40,25 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 		this.wrappedPath = wrappedPath;
 	}
 
+	private SqmTreatedMapJoin(
+			NavigablePath navigablePath,
+			SqmMapJoin<O, K, V> wrappedPath,
+			EntityDomainType<S> treatTarget,
+			String alias) {
+		//noinspection unchecked
+		super(
+				wrappedPath.getLhs(),
+				navigablePath,
+				( (SqmMapJoin<O, K, S>) wrappedPath ).getModel(),
+				alias,
+				wrappedPath.getSqmJoinType(),
+				wrappedPath.isFetched(),
+				wrappedPath.nodeBuilder()
+		);
+		this.treatTarget = treatTarget;
+		this.wrappedPath = wrappedPath;
+	}
+
 	@Override
 	public SqmTreatedMapJoin<O, K, V, S> copy(SqmCopyContext context) {
 		final SqmTreatedMapJoin<O, K, V, S> existing = context.getCopy( this );
@@ -49,6 +68,7 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 		final SqmTreatedMapJoin<O, K, V, S> path = context.registerCopy(
 				this,
 				new SqmTreatedMapJoin<>(
+						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
 						getExplicitAlias()
@@ -70,6 +90,11 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 
 	@Override
 	public SqmPathSource<S> getNodeType() {
+		return treatTarget;
+	}
+
+	@Override
+	public EntityDomainType<S> getReferencedPathSource() {
 		return treatTarget;
 	}
 

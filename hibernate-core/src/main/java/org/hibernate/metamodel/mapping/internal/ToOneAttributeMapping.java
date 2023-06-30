@@ -2058,9 +2058,9 @@ public class ToOneAttributeMapping
 		}
 
 		final TableGroupProducer tableGroupProducer;
-		if ( realParentTableGroup instanceof CorrelatedTableGroup ) {
-			// If the parent is a correlated table group, we can't refer to columns of the table in the outer query,
-			// because the context in which a column is used could be an aggregate function.
+		if ( requestedJoinType != null && realParentTableGroup instanceof CorrelatedTableGroup ) {
+			// If the parent is a correlated table group, and we're explicitly joining, we can't refer to columns of the
+			// table in the outer query, because the context in which a column is used could be an aggregate function.
 			// Using a parent column in such a case would lead to an error if the parent query lacks a proper group by
 			tableGroupProducer = entityMappingType;
 		}
@@ -2105,7 +2105,7 @@ public class ToOneAttributeMapping
 			);
 		}
 
-		if ( realParentTableGroup instanceof CorrelatedTableGroup ) {
+		if ( requestedJoinType != null && realParentTableGroup instanceof CorrelatedTableGroup ) {
 			// Force initialization of the underlying table group join to retain cardinality
 			lazyTableGroup.getPrimaryTableReference();
 		}
@@ -2330,6 +2330,11 @@ public class ToOneAttributeMapping
 	@Override
 	public int getJdbcTypeCount() {
 		return foreignKeyDescriptor.getJdbcTypeCount();
+	}
+
+	@Override
+	public JdbcMapping getJdbcMapping(final int index) {
+		return foreignKeyDescriptor.getJdbcMapping( index );
 	}
 
 	@Override

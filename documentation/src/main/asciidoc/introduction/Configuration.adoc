@@ -1,0 +1,471 @@
+[[configuration]]
+== Configuration and bootstrap
+
+We would love to make this section short.
+Unfortunately, there's several distinct ways to configure and bootstrap Hibernate, and we're going to have to describe at least two of them in detail.
+
+The four basic ways to obtain an instance of Hibernate are shown in the following table:
+
+[%breakable,cols="50,50"]
+|===
+
+| Using the standard JPA-defined XML, and the operation `Persistence.createEntityManagerFactory()`
+| Usually chosen when portability between JPA implementations is important.
+
+| Using the `Configuration` class to construct a `SessionFactory`
+| When portability between JPA implementations is not important, this option is quicker, adds some flexibility and saves a typecast.
+
+| Using the more complex APIs defined in `org.hibernate.boot`
+| Used primarily by framework integrators, this option is outside the scope of this document.
+
+| By letting the container take care of the bootstrap process and of injecting the `SessionFactory` or `EntityManagerFactory`
+| Used in a container environment like WildFly or Quarkus.
+|===
+
+Here we'll focus on the first two options.
+
+:hibernate-quarkus: https://quarkus.io/guides/hibernate-orm
+
+.Hibernate in containers
+****
+Actually, the last option is extremely popular, since every major Java application server and microservice framework comes with built-in support for Hibernate.
+Such container environments typically also feature facilities to automatically manage the lifecycle of an `EntityManager` or `Session` and its association with container-managed transactions.
+
+To learn how to configure Hibernate in such a container environment, you'll need to refer to the documentation of your chosen container.
+For Quarkus, here's the {hibernate-quarkus}[relevant documentation].
+****
+
+If you're using Hibernate outside of a container environment,
+you'll need to:
+
+- include Hibernate ORM itself, along with the appropriate JDBC driver, as dependencies of your project, and
+- configure Hibernate with information about your database,
+by specifying configuration properties.
+
+[[required-dependencies]]
+=== Including Hibernate in your project build
+
+First, add the following dependency to your project:
+
+----
+org.hibernate.orm:hibernate-core:{version}
+----
+
+Where `{version}` is the version of Hibernate you're using.
+
+You'll also need to add a dependency for the JDBC
+driver for your database.
+
+.JDBC driver dependencies
+[%breakable,cols="50,~"]
+|===
+| Database                  | Driver dependency
+
+| PostgreSQL or CockroachDB | `org.postgresql:postgresql:{version}`
+| MySQL or TiDB             | `com.mysql:mysql-connector-j:{version}`
+| MariaDB                   | `org.mariadb.jdbc:mariadb-java-client:{version}`
+| DB2                       | `com.ibm.db2:jcc:{version}`
+| SQL Server                | `com.microsoft.sqlserver:mssql-jdbc:${version}`
+| Oracle                    | `com.oracle.database.jdbc:ojdbc11:${version}`
+| H2                        | `com.h2database:h2:{version}`
+| HSQLDB                    | `org.hsqldb:hsqldb:{version}`
+|===
+
+Where `{version}` is the latest version of the JDBC driver for your databse.
+
+[[optional-dependencies]]
+=== Optional dependencies
+
+:slf4j: http://www.slf4j.org/
+:enhancer: {userGuideBase}#tooling-gradle
+:agroal: https://agroal.github.io
+:jackson: https://github.com/FasterXML/jackson
+:yasson: https://projects.eclipse.org/projects/ee4j.yasson
+:validator: https://hibernate.org/validator
+:ehcache: https://www.ehcache.org
+:infinispan: https://infinispan.org
+:generator: https://hibernate.org/orm/tooling/
+:caffeine: https://github.com/ben-manes/caffeine/
+:bean-validation: https://beanvalidation.org
+:query-validator: https://github.com/hibernate/query-validator/
+
+Optionally, you might also add any of the following additional features:
+
+.Optional dependencies
+[%breakable,cols="50,~"]
+|===
+| Optional feature | Dependencies
+
+| An {slf4j}[SLF4J] logging implementation |
+`org.apache.logging.log4j:log4j-core` +
+or `org.slf4j:slf4j-jdk14`
+| A JDBC connection pool, for example, {agroal}[Agroal] |
+`org.hibernate.orm:hibernate-agroal` +
+and `io.agroal:agroal-pool`
+| The {generator}[Hibernate Metamodel Generator], especially if you're using the JPA criteria query API | `org.hibernate.orm:hibernate-jpamodelgen`
+| The {query-validator}[Query Validator], for compile-time checking of HQL | `org.hibernate:query-validator`
+| {validator}[Hibernate Validator], an implementation of {bean-validation}[Bean Validation] |
+`org.hibernate.validator:hibernate-validator` +
+and `org.glassfish:jakarta.el`
+| Local second-level cache support via JCache and {ehcache}[EHCache] | `org.hibernate.orm:hibernate-jcache` +
+and `org.ehcache:ehcache`
+| Local second-level cache support via JCache and {caffeine}[Caffeine]| `org.hibernate.orm:hibernate-jcache` +
+and `com.github.ben-manes.caffeine:jcache`
+| Distributed second-level cache support via {infinispan}[Infinispan] | `org.infinispan:infinispan-hibernate-cache-v60`
+// | SCRAM authentication support for PostgreSQL | `com.ongres.scram:client:2.1`
+| A JSON serialization library for working with JSON datatypes, for example, {jackson}[Jackson] or {yasson}[Yasson] |
+`com.fasterxml.jackson.core:jackson-databind` +
+or `org.eclipse:yasson`
+| <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
+| <<envers,Envers>>, for auditing historical data | `org.hibernate.orm:hibernate-envers`
+|===
+
+You might also add the Hibernate {enhancer}[bytecode enhancer] to your
+Gradle build if you want to use <<bytecode-enhancer,field-level lazy fetching>>.
+
+[[configuration-jpa]]
+=== Configuration using JPA XML
+
+Sticking to the JPA-standard approach, we would provide a file named `persistence.xml`, which we usually place in the `META-INF` directory of a _persistence archive_, that is, of the `.jar` file or directory which contains our entity classes.
+
+[source,xml]
+----
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
+             version="2.0">
+
+    <persistence-unit name="org.hibernate.example">
+
+        <class>org.hibernate.example.Book</class>
+        <class>org.hibernate.example.Author</class>
+
+        <properties>
+            <!-- PostgreSQL -->
+            <property name="jakarta.persistence.jdbc.url"
+                      value="jdbc:postgresql://localhost/example"/>
+
+            <!-- Credentials -->
+            <property name="jakarta.persistence.jdbc.user"
+                      value="gavin"/>
+            <property name="jakarta.persistence.jdbc.password"
+                      value="hibernate"/>
+
+            <!-- Automatic schema export -->
+            <property name="jakarta.persistence.schema-generation.database.action"
+                      value="drop-and-create"/>
+
+            <!-- SQL statement logging -->
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.highlight_sql" value="true"/>
+
+        </properties>
+
+    </persistence-unit>
+
+</persistence>
+----
+The `<persistence-unit>` element defines a named _persistence unit_, that is:
+
+- a collection of associated entity types, along with
+- a set of default configuration settings, which may be augmented or overridden at runtime.
+
+Each `<class>` element specifies the fully-qualified name of an entity class.
+
+.Scanning for entity classes
+****
+In some container environments, for example, in any EE container, the `<class>` elements are unnecessary, since the container will scan the archive for annotated classes, and automatically recognize any class annotated `@Entity`.
+****
+
+Each `<property>` element specifies a _configuration property_ and its value.
+Note that:
+
+- the configuration properties in the `jakarta.persistence` namespace are standard properties defined by the JPA spec, and
+- properties in the `hibernate` namespace are specific to Hibernate.
+
+We may obtain an `EntityManagerFactory` by calling `Persistence.createEntityManagerFactory()`:
+
+[source,java]
+----
+EntityManagerFactory entityManagerFactory =
+    Persistence.createEntityManagerFactory("org.hibernate.example");
+----
+
+If necessary, we may override configuration properties specified in `persistence.xml`:
+
+[source,java]
+----
+EntityManagerFactory entityManagerFactory =
+    Persistence.createEntityManagerFactory("org.hibernate.example",
+            Map.of(AvailableSettings.JAKARTA_JDBC_PASSWORD, password));
+----
+
+[[configuration-api]]
+=== Configuration using Hibernate API
+
+Alternatively, the venerable class `org.hibernate.cfg.Configuration` allows an instance of Hibernate to be configured in Java code:
+
+[source,java]
+----
+SessionFactory sessionFactory =
+        new Configuration()
+            .addAnnotatedClass(Book.class)
+            .addAnnotatedClass(Author.class)
+            // PostgreSQL
+            .setProperty(AvailableSettings.JAKARTA_JDBC_URL, "jdbc:postgresql://localhost/example")
+            // Credentials
+            .setProperty(AvailableSettings.JAKARTA_JDBC_USER, user)
+            .setProperty(AvailableSettings.JAKARTA_JDBC_PASSWORD, password)
+            // Automatic schema export
+            .setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
+                         Action.CREATE.getExternalJpaName())
+            // SQL statement logging
+            .setProperty(AvailableSettings.SHOW_SQL, TRUE.toString())
+            .setProperty(AvailableSettings.FORMAT_SQL, TRUE.toString())
+            .setProperty(AvailableSettings.HIGHLIGHT_SQL, TRUE.toString())
+            // Create a new SessionFactory
+            .buildSessionFactory();
+----
+
+The `Configuration` class has survived almost unchanged since the very earliest (pre-1.0) versions of Hibernate, and so it doesn't look particularly modern.
+On the other hand, it's very easy to use, and exposes some options that `persistence.xml` doesn't support.
+
+:native-bootstrap: {userGuideBase}#bootstrap-native
+:boot: {versionDocBase}/javadocs/org/hibernate/boot/package-summary.html
+
+.Advanced configuration options
+****
+Actually, the `Configuration` class is just a very simple facade for the more modern, much more powerful—but more complex—API defined in the package `org.hibernate.boot`.
+This API is useful if you have very advanced requirements, for example, if you're writing a framework or implementing a container.
+You'll find more information in the {native-bootstrap}[User Guide], and in the {boot}[package-level documentation] of `org.hibernate.boot`.
+****
+
+[[configuration-properties]]
+=== Configuration using Hibernate properties file
+
+If we're using the Hibernate `Configuration` API, but we don't want to put certain configuration properties directly in the Java code, we can specify them in a file named `hibernate.properties`, and place the file in the root classpath.
+
+[source,properties]
+----
+# PostgreSQL
+jakarta.persistence.jdbc.url=jdbc:postgresql://localhost/example
+# Credentials
+jakarta.persistence.jdbc.user=hibernate
+jakarta.persistence.jdbc.password=zAh7mY$2MNshzAQ5
+
+# SQL statement logging
+hibernate.show_sql=true
+hibernate.format_sql=true
+hibernate.highlight_sql=true
+----
+
+[[basic-configuration-settings]]
+=== Basic configuration settings
+
+The class `org.hibernate.cfg.AvailableSettings` enumerates all the configuration properties understood by Hibernate.
+
+Of course, we're not going to cover every useful configuration setting in this chapter.
+Instead, we'll mention the ones you need to get started, and come back to some other important settings later, especially when we talk about performance tuning.
+
+[TIP]
+====
+Hibernate has many—too many—switches and toggles.
+Please don't go crazy messing about with these settings; most of them are rarely needed, and many only exist to provide backward compatibility with older versions of Hibernate.
+With rare exception, the default behavior of every one of these settings was carefully chosen to be _the behavior we recommend_.
+====
+
+The properties you really do need to get started are these three:
+
+.JDBC connection settings
+[%breakable,cols="35,~"]
+|===
+| Configuration property name | Purpose
+
+| `jakarta.persistence.jdbc.url` | JDBC URL of your database
+| `jakarta.persistence.jdbc.user` and `jakarta.persistence.jdbc.password` | Your database credentials
+|===
+
+[IMPORTANT]
+// .You don't need `hibernate.dialect` anymore!
+====
+In Hibernate 6, you don't need to specify `hibernate.dialect`.
+The correct Hibernate SQL `Dialect` will be determined for you automatically.
+The only reason to specify this property is if you're using a custom user-written `Dialect` class.
+
+Similarly, neither `hibernate.connection.driver_class` nor `jakarta.persistence.jdbc.driver` is needed when working with one of the supported databases.
+====
+
+Pooling JDBC connections is an extremely important performance optimization.
+You can set the size of Hibernate's built-in connection pool using this property:
+
+.Built-in connection pool size
+[%breakable,cols="35,~"]
+|===
+| Configuration property name | Purpose
+
+| `hibernate.connection.pool_size` | The size of the built-in connection pool
+|===
+
+[CAUTION]
+// .The default connection pool is not meant for production use
+====
+By default, Hibernate uses a simplistic built-in connection pool.
+This pool is not meant for use in production, and later, when we discuss performance, we'll see how to <<connection-pool,select a more robust implementation>>.
+====
+
+Alternatively, in a container environment, you'll need at least one of these properties:
+
+.Transaction management settings
+[%breakable,cols="35,~"]
+|===
+| Configuration property name            | Purpose
+
+| `jakarta.persistence.transactionType`  | (Optional, defaults to `JTA`)
+                                           Determines if transaction management is via JTA or resource-local transactions.
+                                           Specify `RESOURCE_LOCAL` if JTA should not be used.
+| `jakarta.persistence.jtaDataSource`    | JNDI name of a JTA datasource
+| `jakarta.persistence.nonJtaDataSource` | JNDI name of a non-JTA datasource
+|===
+
+In this case, Hibernate obtains pooled JDBC database connections from a container-managed `DataSource`.
+
+[[automatic-schema-export]]
+=== Automatic schema export
+
+You can have Hibernate infer your database schema from the mapping
+annotations you've specified in your Java code, and export the schema at
+initialization time by specifying one or more of the following configuration
+properties:
+
+.Schema management settings
+[%breakable,cols="52,~"]
+|===
+| Configuration property name                                | Purpose
+
+| `jakarta.persistence.schema-generation.database.action`
+a| * If `drop-and-create`, first drop the schema and then export tables, sequences, and constraints
+* If `create`, export tables, sequences, and constraints, without attempting to drop them first
+* If `create-drop`, drop the schema and recreate it on `SessionFactory` startup
+Additionally, drop the schema on `SessionFactory` shutdown
+* If `drop`, drop the schema on `SessionFactory` shutdown
+* If `validate`, validate the database schema without changing it
+* If `update`, only export what's missing in the schema
+
+| `jakarta.persistence.create-database-schemas`
+| (Optional) If `true`, automatically create schemas and catalogs
+
+| `jakarta.persistence.schema-generation.create-source`
+| (Optional) If `metadata-then-script` or `script-then-metadata`, execute an additional SQL script when exported tables and sequences
+
+| `jakarta.persistence.schema-generation.create-script-source`
+| (Optional) The name of the SQL script to be executed
+|===
+
+This feature is extremely useful for testing.
+
+[TIP]
+// .Importing test or reference data
+====
+The easiest way to pre-initialize a database with test or "reference" data is to place a list of SQL `insert` statements in a file named, for example, `import.sql`, and specify the path to this file using the property `jakarta.persistence.schema-generation.create-script-source`.
+
+This approach is cleaner than writing Java code to instantiate entity instances and calling `persist()` on each of them.
+====
+
+[TIP]
+// .Programmatic schema export
+====
+Alternatively, the `SchemaManager` API allow you to control schema export programmatically.
+
+[source,java]
+sessionFactory.getSchemaManager().exportMappedObjects(true);
+====
+
+[[logging-generated-sql]]
+=== Logging the generated SQL
+
+:log4j: https://github.com/hibernate/hibernate-reactive/blob/main/examples/session-example/src/main/resources/log4j2.properties
+
+To see the generated SQL as it's sent to the database, you have two options.
+
+One way is to set the property `hibernate.show_sql` to `true`, and Hibernate will log SQL direct to the console.
+You can make the output much more readable by enabling formatting or highlighting.
+These settings really help when troubleshooting the generated SQL statements.
+
+.Settings for SQL logging to the console
+[%breakable,cols="35,~"]
+|===
+| Configuration property name | Purpose
+
+| `hibernate.show_sql`        | If `true`, log SQL directly to the console
+| `hibernate.format_sql`      | If `true`, log SQL in a multiline, indented format
+| `hibernate.highlight_sql`   | If `true`, log SQL with syntax highlighting via ANSI escape codes
+|===
+
+Alternatively, you can enable debug-level logging for the category `org.hibernate.SQL` using your preferred SLF4J logging implementation.
+
+For example, if you're using Log4J 2 (as above in <<optional-dependencies>>), add these lines to your `log4j2.properties` file:
+
+[source,properties]
+----
+# SQL execution
+logger.hibernate.name = org.hibernate.SQL
+logger.hibernate.level = debug
+
+# JDBC parameter binding
+logger.jdbc-bind.name=org.hibernate.orm.jdbc.bind
+logger.jdbc-bind.level=trace
+# JDBC result set extraction
+logger.jdbc-extract.name=org.hibernate.orm.jdbc.extract
+logger.jdbc-extract.level=trace
+
+----
+
+But with this approach we miss out on the pretty highlighting.
+
+[[minimizing]]
+=== Minimizing repetitive mapping information
+
+The following properties are very useful for minimizing the amount of information you'll need to explicitly specify in `@Table` and `@Column` annotations, which we'll discuss below in <<object-relational-mapping>>:
+
+.Settings for minimizing explicit mapping information
+[%breakable,cols="35,~"]
+|===
+| Configuration property name           | Purpose
+
+| `hibernate.default_schema`            | A default schema name for entities which do not explicitly declare one
+| `hibernate.default_catalog`           | A default catalog name for entities which do not explicitly declare one
+| `hibernate.physical_naming_strategy`  | A `PhysicalNamingStrategy` implementing your database naming standards
+| `hibernate.implicit_naming_strategy`  | An `ImplicitNamingStrategy` which specifies how "logical" names of relational objects should be inferred when no name is specified in annotations
+|===
+
+[TIP]
+// .Implement your naming standards as a `PhysicalNamingStrategy`
+====
+Writing your own `PhysicalNamingStrategy` and/or `ImplicitNamingStrategy` is an especially good way to reduce the clutter of annotations on your entity classes, and to implement your database naming conventions, and so we think you should do it for any nontrivial data model.
+We'll have more to say about them in <<naming-strategies>>.
+====
+
+[[nationalized-chars]]
+=== Nationalized character data in SQL Server
+
+_By default,_ SQL Server's `char` and `varchar` types don't accommodate Unicode data.
+But a Java string may contain any Unicode character.
+So, if you're working with SQL Server, you might need to force Hibernate to use the `nchar` and `nvarchar` column types.
+
+.Setting the use of nationalized character data
+[%breakable,cols="40,~"]
+|===
+| Configuration property name                 | Purpose
+
+| `hibernate.use_nationalized_character_data` | Use `nchar` and `nvarchar` instead of `char` and `varchar`
+|===
+
+On the other hand, if only _some_ columns store nationalized data, use the `@Nationalized` annotation to indicate fields of your entities which map these columns.
+
+[TIP]
+// .Configuring SQL Server to use UTF-8 by default
+====
+Alternatively, you can configure SQL Server to use the UTF-8 enabled collation `_UTF8`.
+====
+

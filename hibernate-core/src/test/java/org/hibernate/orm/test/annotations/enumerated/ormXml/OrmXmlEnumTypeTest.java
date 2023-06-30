@@ -6,12 +6,9 @@
  */
 package org.hibernate.orm.test.annotations.enumerated.ormXml;
 
-import java.sql.Types;
-
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.type.ConvertedBasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
@@ -19,8 +16,11 @@ import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.junit4.ExtraAssertions;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.junit.Test;
 
+import static java.sql.Types.VARCHAR;
+import static org.hibernate.type.SqlTypes.ENUM;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -45,9 +45,9 @@ public class OrmXmlEnumTypeTest extends BaseUnitTestCase {
 			final JdbcTypeRegistry jdbcTypeRegistry = metadata.getDatabase()
 					.getTypeConfiguration()
 					.getJdbcTypeRegistry();
-			ConvertedBasicType<?> enumMapping = ExtraAssertions.assertTyping( ConvertedBasicType.class, bindingPropertyType );
+			BasicTypeImpl<?> enumMapping = ExtraAssertions.assertTyping( BasicTypeImpl.class, bindingPropertyType );
 			assertEquals(
-					jdbcTypeRegistry.getDescriptor( Types.VARCHAR ),
+					jdbcTypeRegistry.getDescriptor( jdbcTypeRegistry.hasRegisteredDescriptor( ENUM ) ? ENUM : VARCHAR ),
 					jdbcTypeRegistry.getDescriptor( enumMapping.getJdbcType().getJdbcTypeCode() )
 			);
 		}

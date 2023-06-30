@@ -11,6 +11,7 @@ import jakarta.transaction.SystemException;
 import jakarta.transaction.Transaction;
 import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.service.Service;
 
@@ -37,7 +38,7 @@ public interface JtaPlatform extends Service {
 	 *
 	 * @return The {@link TransactionManager}
 	 */
-	TransactionManager retrieveTransactionManager();
+	@Nullable TransactionManager retrieveTransactionManager();
 
 	/**
 	 * Locate the {@link UserTransaction}.
@@ -48,7 +49,7 @@ public interface JtaPlatform extends Service {
 	 *
 	 * @return The {@link UserTransaction}
 	 */
-	UserTransaction retrieveUserTransaction();
+	@Nullable UserTransaction retrieveUserTransaction();
 
 	/**
 	 * Determine an identifier for the given transaction appropriate for use in caching/lookup usages.
@@ -59,7 +60,7 @@ public interface JtaPlatform extends Service {
 	 * @param transaction The transaction to be identified.
 	 * @return An appropriate identifier
 	 */
-	Object getTransactionIdentifier(Transaction transaction);
+	@Nullable Object getTransactionIdentifier(Transaction transaction);
 
 	/**
 	 * Can we currently register a {@link Synchronization}?

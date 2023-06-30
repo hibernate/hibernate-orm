@@ -7,9 +7,9 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
-import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -39,27 +39,18 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 			return existing;
 		}
 
+		final SqmPath<?> lhsCopy = getLhs().copy( context );
 		final NonAggregatedCompositeSimplePath<T> path = context.registerCopy(
 				this,
 				new NonAggregatedCompositeSimplePath<>(
-						getNavigablePath(),
+						getNavigablePathCopy( lhsCopy ),
 						getReferencedPathSource(),
-						getLhs().copy( context ),
+						lhsCopy,
 						nodeBuilder()
 				)
 		);
 		copyTo( path, context );
 		return path;
-	}
-
-	@Override
-	public SqmPath<?> resolvePathPart(
-			String name,
-			boolean isTerminal,
-			SqmCreationState creationState) {
-		final SqmPath<?> sqmPath = get( name );
-		creationState.getProcessingStateStack().getCurrent().getPathRegistry().register( sqmPath );
-		return sqmPath;
 	}
 
 	@Override
@@ -70,7 +61,7 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 
 	@Override
 	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		throw new PathException( "Non Aggregate composite paths cannot be TREAT-ed" );
+		throw new FunctionArgumentException( "Non-aggregate composite paths cannot be TREAT-ed" );
 	}
 	
 }

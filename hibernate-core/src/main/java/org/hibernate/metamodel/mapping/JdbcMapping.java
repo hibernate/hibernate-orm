@@ -6,15 +6,12 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.Incubating;
 import org.hibernate.internal.util.IndexedConsumer;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -129,11 +126,6 @@ public interface JdbcMapping extends MappingType, JdbcMappingContainer {
 	@Override
 	default int getJdbcTypeCount() {
 		return 1;
-	}
-
-	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( this );
 	}
 
 	@Override

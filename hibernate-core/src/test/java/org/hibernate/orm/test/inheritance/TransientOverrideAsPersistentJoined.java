@@ -8,6 +8,10 @@ package org.hibernate.orm.test.inheritance;
 
 import java.util.Comparator;
 import java.util.List;
+
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.internal.util.ExceptionHelper;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.DiscriminatorColumn;
@@ -27,23 +31,26 @@ import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.FailureExpected;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.fail;
 
 
-@TestForIssue(jiraKey = "HHH-14103")
+@JiraKey("HHH-14103")
 @DomainModel(
 		annotatedClasses = {
 				TransientOverrideAsPersistentJoined.Employee.class,
@@ -54,6 +61,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 		}
 )
 @SessionFactory
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.CRITERIA_COPY_TREE, value = "true"))
 public class TransientOverrideAsPersistentJoined {
 
 	@Test
@@ -114,25 +122,24 @@ public class TransientOverrideAsPersistentJoined {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-12981")
+	@JiraKey("HHH-12981")
 	public void testQueryByRootClassAndOverridenProperty(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final Employee editor = session.createQuery( "from Employee where title=:title", Employee.class )
-					.setParameter( "title", "Senior Editor" )
-					.getSingleResult();
-			assertThat( editor, instanceOf( Editor.class ) );
-
-			final Employee writer = session.createQuery( "from Employee where title=:title", Employee.class )
-					.setParameter( "title", "Writing" )
-					.getSingleResult();
-			assertThat( writer, instanceOf( Writer.class ) );
-			assertNotNull( ( (Writer) writer ).getGroup() );
-			assertEquals( writer.getTitle(), ( (Writer) writer ).getGroup().getName() );
+			try {
+				session.createQuery( "from Employee where title=:title", Employee.class );
+				fail( "Expected exception!" );
+			}
+			catch (IllegalArgumentException e) {
+				assertThat(
+						ExceptionHelper.getRootCause( e ).getMessage(),
+						containsString( "due to the attribute being declared in multiple subtypes" )
+				);
+			}
 		} );
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-12981")
+	@JiraKey("HHH-12981")
 	public void testQueryByRootClassAndOverridenPropertyTreat(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final Employee editor = session.createQuery(
@@ -172,7 +179,7 @@ public class TransientOverrideAsPersistentJoined {
 	}
 
 	@Test
-	@FailureExpected(jiraKey = "HHH-12981")
+	@JiraKey("HHH-12981")
 	public void testCriteriaQueryByRootClassAndOverridenProperty(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 

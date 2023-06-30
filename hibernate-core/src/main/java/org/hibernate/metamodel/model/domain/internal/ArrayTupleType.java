@@ -111,6 +111,11 @@ public class ArrayTupleType implements TupleType<Object[]>,
 	}
 
 	@Override
+	public JdbcMapping getJdbcMapping(int index) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public int forEachJdbcType(int offset, IndexedConsumer<JdbcMapping> action) {
 		throw new UnsupportedOperationException();
 	}

@@ -13,6 +13,7 @@ import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
@@ -66,7 +67,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
 		this.rowState = new Object[ size ];
 
-		this.isPartOfKey = isPartOfKey( navigablePath );
+		this.isPartOfKey = isPartOfKey( embedded, navigablePath );
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
 		this.createEmptyCompositesEnabled = !isPartOfKey && embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
 
@@ -74,11 +75,23 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		this.assemblers = createAssemblers( resultDescriptor, creationState, embeddableTypeDescriptor );
 	}
 
+	private static boolean isPartOfKey(EmbeddableValuedModelPart modelPart, NavigablePath navigablePath) {
+		return modelPart.isEntityIdentifierMapping()
+				|| isPartOfKey( navigablePath )
+				|| modelPart.getNavigableRole() != null && isPartOfKey( modelPart.getNavigableRole() );
+	}
+
 	private static boolean isPartOfKey(NavigablePath navigablePath) {
 		return ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
 				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() )
 				|| navigablePath instanceof EntityIdentifierNavigablePath
 				|| navigablePath.getParent().getParent() != null && isPartOfKey( navigablePath.getParent() );
+	}
+
+	private static boolean isPartOfKey(NavigableRole navigableRole) {
+		final NavigableRole parent = navigableRole.getParent();
+		return parent != null
+				&& ( parent.getLocalName().equals( EntityIdentifierMapping.ROLE_LOCAL_NAME ) || isPartOfKey( parent ) );
 	}
 
 	protected DomainResultAssembler<?>[] createAssemblers(
@@ -273,10 +286,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		}
 
 		final EntityInitializer entityInitializer = parentAccess.asEntityInitializer();
-		if ( entityInitializer != null && entityInitializer.getParentKey() == null ) {
-			return true;
-		}
-		return false;
+		return entityInitializer != null && entityInitializer.getParentKey() == null;
 	}
 
 	private void extractRowState(RowProcessingState processingState) {

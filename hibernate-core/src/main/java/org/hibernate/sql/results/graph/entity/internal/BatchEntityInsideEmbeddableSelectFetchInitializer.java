@@ -63,6 +63,7 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
+		resolveKey( rowProcessingState, referencedModelPart, parentAccess );
 		if ( entityKey == null ) {
 			return;
 		}
@@ -133,7 +134,6 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 			);
 			toBatchLoad.clear();
 		}
-		parentAccess = null;
 	}
 
 	protected static void setInstance(

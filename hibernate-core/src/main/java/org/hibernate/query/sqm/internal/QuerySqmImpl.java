@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -25,6 +27,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.query.spi.EntityGraphQueryHint;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -40,7 +43,9 @@ import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -74,6 +79,9 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -83,6 +91,7 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
+import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -94,6 +103,7 @@ import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
+import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
@@ -106,6 +116,8 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
@@ -119,7 +131,11 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptionsWithUniqueSemanticFilter;
+import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
+import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.generateNonSelectKey;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
+import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsNonSelectStatement;
+import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
 
 /**
  * {@link Query} implementation based on an SQM
@@ -132,7 +148,7 @@ public class QuerySqmImpl<R>
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( QuerySqmImpl.class );
 
 	private final String hql;
-	private final SqmStatement<R> sqm;
+	private SqmStatement<R> sqm;
 
 	private final ParameterMetadataImplementor parameterMetadata;
 	private final DomainParameterXref domainParameterXref;
@@ -154,8 +170,7 @@ public class QuerySqmImpl<R>
 		this.hql = memento.getHqlString();
 		this.resultType = expectedResultType;
 
-		final SessionFactoryImplementor factory = session.getFactory();
-		final QueryEngine queryEngine = factory.getQueryEngine();
+		final QueryEngine queryEngine = session.getFactory().getQueryEngine();
 		final QueryInterpretationCache interpretationCache = queryEngine.getInterpretationCache();
 		final HqlInterpretation hqlInterpretation = interpretationCache.resolveHqlInterpretation(
 				hql,
@@ -218,40 +233,35 @@ public class QuerySqmImpl<R>
 	 */
 	public QuerySqmImpl(
 			SqmStatement<R> criteria,
-			Class<R> resultType,
+			Class<R> expectedResultType,
 			SharedSessionContractImplementor producer) {
 		super( producer );
-		this.hql = CRITERIA_HQL_STRING;
+		hql = CRITERIA_HQL_STRING;
 		if ( producer.isCriteriaCopyTreeEnabled() ) {
-			this.sqm = criteria.copy( SqmCopyContext.simpleContext() );
+			sqm = criteria.copy( SqmCopyContext.simpleContext() );
 		}
 		else {
-			this.sqm = criteria;
+			sqm = criteria;
+			// Cache immutable query plans by default
+			setQueryPlanCacheable( true );
 		}
 
 		setComment( hql );
 
-		this.domainParameterXref = DomainParameterXref.from( this.sqm );
+		domainParameterXref = DomainParameterXref.from( sqm );
 		if ( ! domainParameterXref.hasParameters() ) {
-			this.parameterMetadata = ParameterMetadataImpl.EMPTY;
+			parameterMetadata = ParameterMetadataImpl.EMPTY;
 		}
 		else {
-			this.parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
+			parameterMetadata = new ParameterMetadataImpl( domainParameterXref.getQueryParameters() );
 		}
 
-		this.parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
+		parameterBindings = QueryParameterBindingsImpl.from( parameterMetadata, producer.getFactory() );
 
 		// Parameters might be created through HibernateCriteriaBuilder.value which we need to bind here
-		for ( SqmParameter<?> sqmParameter : this.domainParameterXref.getParameterResolutions().getSqmParameters() ) {
+		for ( SqmParameter<?> sqmParameter : domainParameterXref.getParameterResolutions().getSqmParameters() ) {
 			if ( sqmParameter instanceof SqmJpaCriteriaParameterWrapper<?> ) {
-				final JpaCriteriaParameter<Object> jpaCriteriaParameter = ( (SqmJpaCriteriaParameterWrapper<Object>) sqmParameter ).getJpaCriteriaParameter();
-				final Object value = jpaCriteriaParameter.getValue();
-				// We don't set a null value, unless the type is also null which is the case when using HibernateCriteriaBuilder.value
-				if ( value != null || jpaCriteriaParameter.getNodeType() == null ) {
-					// Use the anticipated type for binding the value if possible
-					getQueryParameterBindings().getBinding( jpaCriteriaParameter )
-							.setBindValue( value, jpaCriteriaParameter.getAnticipatedType() );
-				}
+				bindCriteriaParameter((SqmJpaCriteriaParameterWrapper<?>) sqmParameter);
 			}
 		}
 
@@ -262,24 +272,19 @@ public class QuerySqmImpl<R>
 			queryPart.validateQueryStructureAndFetchOwners();
 			visitQueryReturnType(
 					queryPart,
-					resultType,
+					expectedResultType,
 					producer.getFactory()
 			);
 		}
 		else {
-			if ( resultType != null ) {
-				throw new IllegalQueryOperationException(
-						"Result type given for a non-SELECT Query",
-						hql,
-						null
-				);
+			if ( expectedResultType != null ) {
+				throw new IllegalQueryOperationException( "Result type given for a non-SELECT Query", hql, null );
 			}
 			if ( sqm instanceof SqmUpdateStatement<?> ) {
 				final SqmUpdateStatement<R> updateStatement = (SqmUpdateStatement<R>) sqm;
 				verifyImmutableEntityUpdate( CRITERIA_HQL_STRING, updateStatement, producer.getFactory() );
-				if ( updateStatement.getSetClause() == null || updateStatement.getSetClause()
-						.getAssignments()
-						.isEmpty() ) {
+				if ( updateStatement.getSetClause() == null
+						|| updateStatement.getSetClause().getAssignments().isEmpty() ) {
 					throw new IllegalArgumentException( "No assignments specified as part of UPDATE criteria" );
 				}
 			}
@@ -288,8 +293,20 @@ public class QuerySqmImpl<R>
 			}
 		}
 
-		this.resultType = resultType;
-		this.tupleMetadata = buildTupleMetadata( criteria, resultType );
+		resultType = expectedResultType;
+		tupleMetadata = buildTupleMetadata( criteria, expectedResultType );
+	}
+
+	private <T> void bindCriteriaParameter(SqmJpaCriteriaParameterWrapper<T> sqmParameter) {
+		final JpaCriteriaParameter<T> jpaCriteriaParameter = sqmParameter.getJpaCriteriaParameter();
+		final T value = jpaCriteriaParameter.getValue();
+		// We don't set a null value, unless the type is also null which
+		// is the case when using HibernateCriteriaBuilder.value
+		if ( value != null || jpaCriteriaParameter.getNodeType() == null ) {
+			// Use the anticipated type for binding the value if possible
+			getQueryParameterBindings().getBinding( jpaCriteriaParameter )
+					.setBindValue( value, jpaCriteriaParameter.getAnticipatedType() );
+		}
 	}
 
 	private void validateStatement(SqmStatement<R> sqmStatement, Class<R> resultType) {
@@ -298,11 +315,7 @@ public class QuerySqmImpl<R>
 		}
 		else {
 			if ( resultType != null ) {
-				throw new IllegalQueryOperationException(
-						"Result type given for a non-SELECT Query",
-						hql,
-						null
-				);
+				throw new IllegalQueryOperationException( "Result type given for a non-SELECT Query", hql, null );
 			}
 			if ( sqmStatement instanceof SqmUpdateStatement<?> ) {
 				final SqmUpdateStatement<R> updateStatement = (SqmUpdateStatement<R>) sqmStatement;
@@ -319,30 +332,22 @@ public class QuerySqmImpl<R>
 			String hqlString,
 			SqmUpdateStatement<R> sqmStatement,
 			SessionFactoryImplementor factory) {
-		final EntityPersister entityDescriptor = factory.getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( sqmStatement.getTarget().getEntityName() );
-		if ( entityDescriptor.isMutable() ) {
-			return;
-		}
-		final ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode = factory
-				.getSessionFactoryOptions()
-				.getImmutableEntityUpdateQueryHandlingMode();
-
-		final String querySpaces = Arrays.toString( entityDescriptor.getQuerySpaces() );
-
-		switch ( immutableEntityUpdateQueryHandlingMode ) {
-			case WARNING:
-				LOG.immutableEntityUpdateQuery( hqlString, querySpaces );
-				break;
-			case EXCEPTION:
-				throw new HibernateException(
-						"The query: [" + hqlString + "] attempts to update an immutable entity: " + querySpaces
-				);
-			default:
-				throw new UnsupportedOperationException(
-						"The " + immutableEntityUpdateQueryHandlingMode + " is not supported"
-				);
+		final EntityPersister persister =
+				factory.getMappingMetamodel().getEntityDescriptor( sqmStatement.getTarget().getEntityName() );
+		if ( !persister.isMutable() ) {
+			final ImmutableEntityUpdateQueryHandlingMode mode =
+					factory.getSessionFactoryOptions().getImmutableEntityUpdateQueryHandlingMode();
+			final String querySpaces = Arrays.toString( persister.getQuerySpaces() );
+			switch ( mode ) {
+				case WARNING:
+					LOG.immutableEntityUpdateQuery( hqlString, querySpaces );
+					break;
+				case EXCEPTION:
+					throw new HibernateException( "The query [" + hqlString + "] attempts to update an immutable entity: "
+							+ querySpaces );
+				default:
+					throw new UnsupportedOperationException( "The " + mode + " is not supported" );
+			}
 		}
 	}
 
@@ -352,23 +357,47 @@ public class QuerySqmImpl<R>
 			final SqmAssignment<?> assignment = assignments.get( i );
 			final SqmPath<?> targetPath = assignment.getTargetPath();
 			final SqmExpression<?> expression = assignment.getValue();
-			if ( targetPath.getNodeJavaType() == null || expression.getNodeJavaType() == null ) {
-				continue;
-			}
-			if ( targetPath.getNodeJavaType() != expression.getNodeJavaType()
-					&& !targetPath.getNodeJavaType().isWider( expression.getNodeJavaType() ) ) {
+			if ( !isAssignable( targetPath, expression ) ) {
 				throw new SemanticException(
 						String.format(
-								"The assignment expression type [%s] did not match the assignment path type [%s] for the path [%s]",
+								"Cannot assign expression of type '%s' to target path '%s' of type '%s'",
 								expression.getNodeJavaType().getJavaType().getTypeName(),
-								targetPath.getNodeJavaType().getJavaType().getTypeName(),
-								targetPath.toHqlString()
+								targetPath.toHqlString(),
+								targetPath.getNodeJavaType().getJavaType().getTypeName()
 						),
 						hqlString,
 						null
 				);
 			}
 		}
+	}
+
+	/**
+	 * @see SqmCriteriaNodeBuilder#areTypesComparable(SqmExpressible, SqmExpressible)
+	 */
+	public static boolean isAssignable(SqmPath<?> targetPath, SqmExpression<?> expression) {
+		DomainType<?> lhsDomainType = targetPath.getExpressible().getSqmType();
+		DomainType<?> rhsDomainType = expression.getExpressible().getSqmType();
+		if ( lhsDomainType instanceof JdbcMapping && rhsDomainType instanceof JdbcMapping ) {
+			JdbcType lhsJdbcType = ((JdbcMapping) lhsDomainType).getJdbcType();
+			JdbcType rhsJdbcType = ((JdbcMapping) rhsDomainType).getJdbcType();
+			if ( lhsJdbcType.getJdbcTypeCode() == rhsJdbcType.getJdbcTypeCode()
+					|| lhsJdbcType.isStringLike() && rhsJdbcType.isStringLike()
+					|| lhsJdbcType.isInteger() && rhsJdbcType.isInteger() ) {
+				return true;
+			}
+		}
+
+		JavaType<?> targetType = targetPath.getNodeJavaType();
+		JavaType<?> assignedType = expression.getNodeJavaType();
+		return targetType == assignedType
+			// If we don't know the java types, let's just be lenient
+			|| isUnknown( targetType)
+			|| isUnknown( assignedType )
+			// Assume we can coerce one to another
+			|| targetType.isWider( assignedType )
+			// Enum assignment, other strange user type mappings
+			|| targetType.getJavaTypeClass().isAssignableFrom( assignedType.getJavaTypeClass() );
 	}
 
 	private void verifyInsertTypesMatch(String hqlString, SqmInsertStatement<R> sqmStatement) {
@@ -381,10 +410,11 @@ public class QuerySqmImpl<R>
 		}
 		else {
 			final SqmInsertSelectStatement<R> statement = (SqmInsertSelectStatement<R>) sqmStatement;
-			final List<SqmSelectableNode<?>> selections = statement.getSelectQueryPart()
-					.getFirstQuerySpec()
-					.getSelectClause()
-					.getSelectionItems();
+			final List<SqmSelectableNode<?>> selections =
+					statement.getSelectQueryPart()
+							.getFirstQuerySpec()
+							.getSelectClause()
+							.getSelectionItems();
 			verifyInsertTypesMatch( hqlString, insertionTargetPaths, selections );
 			statement.getSelectQueryPart().validateQueryStructureAndFetchOwners();
 		}
@@ -436,7 +466,8 @@ public class QuerySqmImpl<R>
 		return hql;
 	}
 
-	public SqmStatement getSqmStatement() {
+	@Override
+	public SqmStatement<R> getSqmStatement() {
 		return sqm;
 	}
 
@@ -481,7 +512,7 @@ public class QuerySqmImpl<R>
 
 	protected boolean hasMultiValuedParameterBindings() {
 		return getQueryParameterBindings().hasAnyMultiValuedBindings()
-				|| getParameterMetadata().hasAnyMatching( QueryParameter::allowsMultiValuedBinding );
+			|| getParameterMetadata().hasAnyMatching( QueryParameter::allowsMultiValuedBinding );
 	}
 
 
@@ -508,14 +539,15 @@ public class QuerySqmImpl<R>
 		verifySelect();
 
 		final SqmSelectStatement<?> sqmStatement = (SqmSelectStatement<?>) getSqmStatement();
-		final boolean containsCollectionFetches = sqmStatement.containsCollectionFetches() || AppliedGraphs.containsCollectionFetches(
-				getQueryOptions() );
+		final boolean containsCollectionFetches =
+				sqmStatement.containsCollectionFetches()
+						|| AppliedGraphs.containsCollectionFetches( getQueryOptions() );
 		final boolean hasLimit = hasLimit( sqmStatement, getQueryOptions() );
 		final boolean needsDistinct = containsCollectionFetches
-				&& ( sqmStatement.usesDistinct() || hasAppliedGraph( getQueryOptions() ) || hasLimit );
+				&& ( hasLimit || sqmStatement.usesDistinct() || hasAppliedGraph( getQueryOptions() ) );
 
 		final List<R> list = resolveSelectQueryPlan()
-				.performList( executionContextFordoList( containsCollectionFetches, hasLimit, needsDistinct ) );
+				.performList( executionContextForDoList( containsCollectionFetches, hasLimit, needsDistinct ) );
 
 		if ( needsDistinct ) {
 			final int first = !hasLimit || getQueryOptions().getLimit().getFirstRow() == null
@@ -525,99 +557,72 @@ public class QuerySqmImpl<R>
 					? getMaxRows( sqmStatement, list.size() )
 					: getQueryOptions().getLimit().getMaxRows();
 			if ( first > 0 || max != -1 ) {
-				final int toIndex;
 				final int resultSize = list.size();
-				if ( max != -1 ) {
-					toIndex = first + max;
-				}
-				else {
-					toIndex = resultSize;
-				}
+				final int toIndex = max != -1 ? first + max : resultSize;
 				if ( first > resultSize ) {
 					return new ArrayList<>(0);
 				}
-				return list.subList( first, toIndex > resultSize ? resultSize : toIndex );
+				return list.subList( first, Math.min( toIndex, resultSize ) );
 			}
 		}
 		return list;
 
 	}
 
-	protected DomainQueryExecutionContext executionContextFordoList(boolean containsCollectionFetches, boolean hasLimit, boolean needsDistinct) {
-		final DomainQueryExecutionContext executionContextToUse;
+	protected DomainQueryExecutionContext executionContextForDoList(boolean containsCollectionFetches, boolean hasLimit, boolean needsDistinct) {
+		final MutableQueryOptions originalQueryOptions;
+		final QueryOptions normalizedQueryOptions;
 		if ( hasLimit && containsCollectionFetches ) {
-			boolean fail = getSessionFactory().getSessionFactoryOptions().isFailOnPaginationOverCollectionFetchEnabled();
-			if (fail) {
+			if ( getSessionFactory().getSessionFactoryOptions().isFailOnPaginationOverCollectionFetchEnabled() ) {
 				throw new HibernateException(
-						"firstResult/maxResults specified with collection fetch. " +
-								"In memory pagination was about to be applied. " +
-								"Failing because 'Fail on pagination over collection fetch' is enabled."
+						"setFirstResult() or setMaxResults() specified with collection fetch join "
+								+ "(in-memory pagination was about to be applied, but '"
+								+ AvailableSettings.FAIL_ON_PAGINATION_OVER_COLLECTION_FETCH
+								+ "' is enabled)"
 				);
 			}
 			else {
 				QueryLogging.QUERY_MESSAGE_LOGGER.firstOrMaxResultsSpecifiedWithCollectionFetch();
 			}
 
-			final MutableQueryOptions originalQueryOptions = getQueryOptions();
-			final QueryOptions normalizedQueryOptions;
-			if ( needsDistinct ) {
-				normalizedQueryOptions = omitSqlQueryOptionsWithUniqueSemanticFilter( originalQueryOptions, true, false );
-			}
-			else {
-				normalizedQueryOptions = omitSqlQueryOptions( originalQueryOptions, true, false );
-			}
-			if ( originalQueryOptions == normalizedQueryOptions ) {
-				executionContextToUse = this;
-			}
-			else {
-				executionContextToUse = new DelegatingDomainQueryExecutionContext( this ) {
-					@Override
-					public QueryOptions getQueryOptions() {
-						return normalizedQueryOptions;
-					}
-				};
-			}
+			originalQueryOptions = getQueryOptions();
+			normalizedQueryOptions = needsDistinct
+					? omitSqlQueryOptionsWithUniqueSemanticFilter( originalQueryOptions, true, false )
+					: omitSqlQueryOptions( originalQueryOptions, true, false );
 		}
 		else {
 			if ( needsDistinct ) {
-				final MutableQueryOptions originalQueryOptions = getQueryOptions();
-				final QueryOptions normalizedQueryOptions = uniqueSemanticQueryOptions( originalQueryOptions );
-				if ( originalQueryOptions == normalizedQueryOptions ) {
-					executionContextToUse = this;
-				}
-				else {
-					executionContextToUse = new DelegatingDomainQueryExecutionContext( this ) {
-						@Override
-						public QueryOptions getQueryOptions() {
-							return normalizedQueryOptions;
-						}
-					};
-				}
+				originalQueryOptions = getQueryOptions();
+				normalizedQueryOptions = uniqueSemanticQueryOptions( originalQueryOptions );
 			}
 			else {
-				executionContextToUse = this;
+				return this;
 			}
 		}
-		return executionContextToUse;
+
+		if ( originalQueryOptions == normalizedQueryOptions ) {
+			return this;
+		}
+		else {
+			return new DelegatingDomainQueryExecutionContext( this ) {
+				@Override
+				public QueryOptions getQueryOptions() {
+					return normalizedQueryOptions;
+				}
+			};
+		}
 	}
 
 	public static QueryOptions uniqueSemanticQueryOptions(QueryOptions originalOptions) {
-		final ListResultsConsumer.UniqueSemantic semantic = originalOptions.getUniqueSemantic();
-
-
-		if ( semantic == ListResultsConsumer.UniqueSemantic.FILTER ) {
-			return originalOptions;
-		}
-
-		return new UniqueSemanticFilterQueryOption( originalOptions );
+		return originalOptions.getUniqueSemantic() == ListResultsConsumer.UniqueSemantic.FILTER
+				? originalOptions
+				: new UniqueSemanticFilterQueryOption( originalOptions );
 	}
 
-	public static class UniqueSemanticFilterQueryOption extends DelegatingQueryOptions{
-
-		public UniqueSemanticFilterQueryOption(QueryOptions queryOptions) {
+	private static class UniqueSemanticFilterQueryOption extends DelegatingQueryOptions{
+		private UniqueSemanticFilterQueryOption(QueryOptions queryOptions) {
 			super( queryOptions );
 		}
-
 		@Override
 		public ListResultsConsumer.UniqueSemantic getUniqueSemantic() {
 			return ListResultsConsumer.UniqueSemantic.FILTER;
@@ -625,7 +630,7 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	protected ScrollableResultsImplementor doScroll(ScrollMode scrollMode) {
+	protected ScrollableResultsImplementor<R> doScroll(ScrollMode scrollMode) {
 		return resolveSelectQueryPlan().performScroll( scrollMode, this );
 	}
 
@@ -633,13 +638,19 @@ public class QuerySqmImpl<R>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Select query plan
 
+	@Override
+	public boolean isQueryPlanCacheable() {
+		return CRITERIA_HQL_STRING.equals( hql )
+				// For criteria queries, query plan caching requires an explicit opt-in
+				? getQueryOptions().getQueryPlanCachingEnabled() == Boolean.TRUE
+				: super.isQueryPlanCacheable();
+	}
+
 	private SelectQueryPlan<R> resolveSelectQueryPlan() {
-		final QueryInterpretationCache.Key cacheKey = SqmInterpretationsKey.createInterpretationsKey( this );
+		final QueryInterpretationCache.Key cacheKey = createInterpretationsKey( this );
 		if ( cacheKey != null ) {
-			return getSession().getFactory().getQueryEngine().getInterpretationCache().resolveSelectQueryPlan(
-					cacheKey,
-					this::buildSelectQueryPlan
-			);
+			return getSession().getFactory().getQueryEngine().getInterpretationCache()
+					.resolveSelectQueryPlan( cacheKey, this::buildSelectQueryPlan );
 		}
 		else {
 			return buildSelectQueryPlan();
@@ -722,7 +733,7 @@ public class QuerySqmImpl<R>
 
 	protected void verifyUpdate() {
 		try {
-			SqmUtil.verifyIsNonSelectStatement( getSqmStatement(), hql );
+			verifyIsNonSelectStatement( getSqmStatement(), hql );
 		}
 		catch (IllegalQueryOperationException e) {
 			// per JPA
@@ -740,15 +751,17 @@ public class QuerySqmImpl<R>
 
 		NonSelectQueryPlan queryPlan = null;
 
-		final QueryInterpretationCache.Key cacheKey = SqmInterpretationsKey.generateNonSelectKey( this );
+		final QueryInterpretationCache.Key cacheKey = generateNonSelectKey( this );
+		final QueryInterpretationCache interpretationCache =
+				getSession().getFactory().getQueryEngine().getInterpretationCache();
 		if ( cacheKey != null ) {
-			queryPlan = getSession().getFactory().getQueryEngine().getInterpretationCache().getNonSelectQueryPlan( cacheKey );
+			queryPlan = interpretationCache.getNonSelectQueryPlan( cacheKey );
 		}
 
 		if ( queryPlan == null ) {
 			queryPlan = buildNonSelectQueryPlan();
 			if ( cacheKey != null ) {
-				getSession().getFactory().getQueryEngine().getInterpretationCache().cacheNonSelectQueryPlan( cacheKey, queryPlan );
+				interpretationCache.cacheNonSelectQueryPlan( cacheKey, queryPlan );
 			}
 		}
 
@@ -773,34 +786,26 @@ public class QuerySqmImpl<R>
 		throw new UnsupportedOperationException( "Query#executeUpdate for Statements of type [" + getSqmStatement() + "] not supported" );
 	}
 
-	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private NonSelectQueryPlan buildDeleteQueryPlan() {
-		final SqmDeleteStatement[] concreteSqmStatements = QuerySplitter.split(
-				(SqmDeleteStatement) getSqmStatement(),
+		final SqmDeleteStatement<R>[] concreteSqmStatements = QuerySplitter.split(
+				(SqmDeleteStatement<R>) getSqmStatement(),
 				getSessionFactory()
 		);
 
-		if ( concreteSqmStatements.length > 1 ) {
-			return buildAggregatedDeleteQueryPlan( concreteSqmStatements );
-		}
-		else {
-			return buildConcreteDeleteQueryPlan( concreteSqmStatements[0] );
-		}
+		return concreteSqmStatements.length > 1
+				? buildAggregatedDeleteQueryPlan( concreteSqmStatements )
+				: buildConcreteDeleteQueryPlan( concreteSqmStatements[0] );
 	}
 
 	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(@SuppressWarnings("rawtypes") SqmDeleteStatement sqmDelete) {
 		final EntityDomainType<?> entityDomainType = sqmDelete.getTarget().getModel();
 		final String entityNameToDelete = entityDomainType.getHibernateEntityName();
-		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityNameToDelete );
-		final SqmMultiTableMutationStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableMutationStrategy();
-		if ( multiTableStrategy == null ) {
-			return new SimpleDeleteQueryPlan( entityDescriptor, sqmDelete, domainParameterXref );
-		}
-		else {
-			return new MultiTableDeleteQueryPlan( sqmDelete, domainParameterXref, multiTableStrategy );
-		}
+		final EntityPersister persister =
+				getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityNameToDelete );
+		final SqmMultiTableMutationStrategy multiTableStrategy = persister.getSqmMultiTableMutationStrategy();
+		return multiTableStrategy == null
+				? new SimpleDeleteQueryPlan( persister, sqmDelete, domainParameterXref )
+				: new MultiTableDeleteQueryPlan( sqmDelete, domainParameterXref, multiTableStrategy );
 	}
 
 	private NonSelectQueryPlan buildAggregatedDeleteQueryPlan(@SuppressWarnings("rawtypes") SqmDeleteStatement[] concreteSqmStatements) {
@@ -814,64 +819,67 @@ public class QuerySqmImpl<R>
 	}
 
 	private NonSelectQueryPlan buildUpdateQueryPlan() {
-		//noinspection rawtypes
-		final SqmUpdateStatement sqmUpdate = (SqmUpdateStatement) getSqmStatement();
+		final SqmUpdateStatement<R> sqmUpdate = (SqmUpdateStatement<R>) getSqmStatement();
 
 		final String entityNameToUpdate = sqmUpdate.getTarget().getModel().getHibernateEntityName();
-		final EntityPersister entityDescriptor = getSessionFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityNameToUpdate );
+		final EntityPersister persister =
+				getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityNameToUpdate );
 
-		final SqmMultiTableMutationStrategy multiTableStrategy = entityDescriptor.getSqmMultiTableMutationStrategy();
-		if ( multiTableStrategy == null ) {
-			return new SimpleUpdateQueryPlan( sqmUpdate, domainParameterXref );
-		}
-		else {
-			return new MultiTableUpdateQueryPlan( sqmUpdate, domainParameterXref, multiTableStrategy );
-		}
+		final SqmMultiTableMutationStrategy multiTableStrategy = persister.getSqmMultiTableMutationStrategy();
+		return multiTableStrategy == null
+				? new SimpleUpdateQueryPlan( sqmUpdate, domainParameterXref )
+				: new MultiTableUpdateQueryPlan( sqmUpdate, domainParameterXref, multiTableStrategy );
 	}
 
 	private NonSelectQueryPlan buildInsertQueryPlan() {
-		//noinspection rawtypes
-		final SqmInsertStatement sqmInsert = (SqmInsertStatement) getSqmStatement();
+		final SqmInsertStatement<R> sqmInsert = (SqmInsertStatement<R>) getSqmStatement();
 
 		final String entityNameToInsert = sqmInsert.getTarget().getModel().getHibernateEntityName();
-		final AbstractEntityPersister entityDescriptor = (AbstractEntityPersister) getSessionFactory().getRuntimeMetamodels()
-				.getMappingMetamodel()
-				.getEntityDescriptor( entityNameToInsert );
+		final AbstractEntityPersister persister = (AbstractEntityPersister)
+				getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityNameToInsert );
 
-		boolean useMultiTableInsert = entityDescriptor.isMultiTable();
-		if ( !useMultiTableInsert && !isSimpleValuesInsert( sqmInsert, entityDescriptor ) ) {
-			final Generator identifierGenerator = entityDescriptor.getGenerator();
+		boolean useMultiTableInsert = persister.isMultiTable();
+		if ( !useMultiTableInsert && !isSimpleValuesInsert( sqmInsert, persister ) ) {
+			final Generator identifierGenerator = persister.getGenerator();
 			if ( identifierGenerator instanceof BulkInsertionCapableIdentifierGenerator
 					&& identifierGenerator instanceof OptimizableGenerator ) {
 				final Optimizer optimizer = ( (OptimizableGenerator) identifierGenerator ).getOptimizer();
 				if ( optimizer != null && optimizer.getIncrementSize() > 1 ) {
-					useMultiTableInsert = !hasIdentifierAssigned( sqmInsert, entityDescriptor );
+					useMultiTableInsert = !hasIdentifierAssigned( sqmInsert, persister );
 				}
 			}
 		}
-		if ( !useMultiTableInsert ) {
-			return new SimpleInsertQueryPlan( sqmInsert, domainParameterXref );
-		}
-		else {
+		if ( useMultiTableInsert ) {
 			return new MultiTableInsertQueryPlan(
 					sqmInsert,
 					domainParameterXref,
-					entityDescriptor.getSqmMultiTableInsertStrategy()
+					persister.getSqmMultiTableInsertStrategy()
 			);
 		}
+		else if ( sqmInsert instanceof SqmInsertValuesStatement<?>
+				&& ( (SqmInsertValuesStatement<R>) sqmInsert ).getValuesList().size() != 1
+				&& !getSessionFactory().getJdbcServices().getDialect().supportsValuesListForInsert() ) {
+			// Split insert-values queries if the dialect doesn't support values lists
+			final SqmInsertValuesStatement<R> insertValues = (SqmInsertValuesStatement<R>) sqmInsert;
+			final List<SqmValues> valuesList = insertValues.getValuesList();
+			final NonSelectQueryPlan[] planParts = new NonSelectQueryPlan[valuesList.size()];
+			for ( int i = 0; i < valuesList.size(); i++ ) {
+				final SqmInsertValuesStatement<?> subInsert = insertValues.copyWithoutValues( SqmCopyContext.simpleContext() );
+				subInsert.getValuesList().add( valuesList.get( i ) );
+				planParts[i] = new SimpleInsertQueryPlan( subInsert, domainParameterXref );
+			}
+
+			return new AggregatedNonSelectQueryPlanImpl( planParts );
+		}
+
+		return new SimpleInsertQueryPlan( sqmInsert, domainParameterXref );
 	}
 
 	protected boolean hasIdentifierAssigned(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
-		final String partName;
-		if ( identifierMapping instanceof SingleAttributeIdentifierMapping ) {
-			partName = ( (SingleAttributeIdentifierMapping) identifierMapping ).getAttributeName();
-		}
-		else {
-			partName = EntityIdentifierMapping.ROLE_LOCAL_NAME;
-		}
+		final String partName = identifierMapping instanceof SingleAttributeIdentifierMapping
+				? identifierMapping.getAttributeName()
+				: EntityIdentifierMapping.ROLE_LOCAL_NAME;
 		for ( SqmPath<?> insertionTargetPath : sqmInsert.getInsertionTargetPaths() ) {
 			final SqmPath<?> lhs = insertionTargetPath.getLhs();
 			if ( !( lhs instanceof SqmRoot<?> ) ) {
@@ -889,10 +897,10 @@ public class QuerySqmImpl<R>
 	protected boolean isSimpleValuesInsert(SqmInsertStatement<?> sqmInsert, EntityPersister entityDescriptor) {
 		// Simple means that we can translate the statement to a single plain insert
 		return sqmInsert instanceof SqmInsertValuesStatement
-				// An insert is only simple if no SqmMultiTableMutation strategy is available,
-				// as the presence of it means the entity has multiple tables involved,
-				// in which case we currently need to use the MultiTableInsertQueryPlan
-				&& entityDescriptor.getSqmMultiTableMutationStrategy() == null;
+			// An insert is only simple if no SqmMultiTableMutation strategy is available,
+			// as the presence of it means the entity has multiple tables involved,
+			// in which case we currently need to use the MultiTableInsertQueryPlan
+			&& entityDescriptor.getSqmMultiTableMutationStrategy() == null;
 	}
 
 
@@ -984,6 +992,75 @@ public class QuerySqmImpl<R>
 		return getJpaFlushMode();
 	}
 
+	@Override
+	public SqmQueryImplementor<R> addOrdering(SingularAttribute<? super R, ?> attribute, SortOrder order) {
+		if ( sqm instanceof SqmSelectStatement ) {
+			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
+			NodeBuilder nodeBuilder = sqm.nodeBuilder();
+			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
+			List<Order> orders = new ArrayList<>( select.getOrderList() );
+			select.getQuerySpec().getRoots().forEach( root -> {
+				@SuppressWarnings("unchecked")
+				SqmRoot<R> singleRoot = (SqmRoot<R>) root;
+				SqmPath<?> ref = singleRoot.get( attribute );
+				orders.add( nodeBuilder.sort( ref, order) );
+
+			} );
+			select.orderBy( orders );
+			return this;
+		}
+		else {
+			throw new IllegalStateException( "Not a select query" );
+		}
+	}
+
+	@Override
+	public SqmQueryImplementor<R> addOrdering(int element, SortOrder order) {
+		if ( sqm instanceof SqmSelectStatement ) {
+			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
+			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
+			int size = select.getSelection().getSelectionItems().size();
+			if ( element < 1) {
+				throw new IllegalArgumentException("Cannot order by element " + element + " (the first select item is element 1)");
+			}
+			if ( element > size) {
+				throw new IllegalArgumentException("Cannot order by element " + element + " (there are " + size + " select items)");
+			}
+			NodeBuilder nodeBuilder = sqm.nodeBuilder();
+			List<Order> orders = new ArrayList<>( select.getOrderList() );
+			orders.add( new SqmSortSpecification(
+					new SqmAliasedNodeRef(
+						element,
+						nodeBuilder.getTypeConfiguration().standardBasicTypeForJavaType( Integer.class ),
+						nodeBuilder
+					),
+					order
+			) );
+			select.orderBy( orders );
+			return this;
+		}
+		else {
+			throw new IllegalStateException( "Not a select query" );
+		}
+	}
+
+	@Override
+	public SqmQueryImplementor<R> unordered() {
+		if ( sqm instanceof SqmSelectStatement ) {
+			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
+			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
+			select.getQueryPart().setOrderByClause( null );
+
+		}
+		return this;
+	}
+
+	@Override
+	public List<Order> getOrder() {
+		return sqm instanceof SqmSelectStatement
+				? ((SqmSelectStatement<R>) sqm).getOrderList()
+				: null;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// hints
@@ -1078,7 +1155,7 @@ public class QuerySqmImpl<R>
 	@Override
 	public NamedQueryMemento toMemento(String name) {
 		if ( CRITERIA_HQL_STRING.equals( getQueryString() ) ) {
-			final SqmStatement sqmStatement ;
+			final SqmStatement<R> sqmStatement;
 			if ( !getSession().isCriteriaCopyTreeEnabled() ) {
 				sqmStatement = getSqmStatement().copy( SqmCopyContext.simpleContext() );
 			}
@@ -1199,6 +1276,12 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> setCacheRegion(String cacheRegion) {
 		super.setCacheRegion( cacheRegion );
+		return this;
+	}
+
+	@Override
+	public SqmQueryImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
+		super.setQueryPlanCacheable( queryPlanCacheable );
 		return this;
 	}
 

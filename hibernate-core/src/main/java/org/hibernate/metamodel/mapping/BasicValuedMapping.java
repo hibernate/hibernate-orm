@@ -6,14 +6,10 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.io.Serializable;
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
-import org.hibernate.type.descriptor.java.JavaType;
+
+import static org.hibernate.engine.internal.CacheHelper.addBasicValueToCacheKey;
 
 /**
  * Any basic-typed ValueMapping.  Generally this would be one of<ul>
@@ -25,14 +21,10 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
+
 	@Override
 	default int getJdbcTypeCount() {
 		return 1;
-	}
-
-	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		return Collections.singletonList( getJdbcMapping() );
 	}
 
 	@Override
@@ -60,24 +52,6 @@ public interface BasicValuedMapping extends ValueMapping, SqlExpressible {
 			MutableCacheKeyBuilder cacheKey,
 			Object value,
 			SharedSessionContractImplementor session) {
-		if ( value == null ) {
-			return;
-		}
-		final JdbcMapping jdbcMapping = getJdbcMapping();
-		final BasicValueConverter converter = jdbcMapping.getValueConverter();
-		final Serializable disassemble;
-		final int hashCode;
-		if ( converter == null ) {
-			disassemble = jdbcMapping.getJavaTypeDescriptor().getMutabilityPlan().disassemble( value, session );
-			hashCode = ( (JavaType) jdbcMapping.getMappedJavaType() ).extractHashCode( value );
-		}
-		else {
-			final Object relationalValue = converter.toRelationalValue( value );
-			final JavaType relationalJavaType = converter.getRelationalJavaType();
-			disassemble = relationalJavaType.getMutabilityPlan().disassemble( relationalValue, session );
-			hashCode = relationalJavaType.extractHashCode( relationalValue );
-		}
-		cacheKey.addValue( disassemble );
-		cacheKey.addHashCode( hashCode );
+		addBasicValueToCacheKey( cacheKey, value, getJdbcMapping(), session );
 	}
 }

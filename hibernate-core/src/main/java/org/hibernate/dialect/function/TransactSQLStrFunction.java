@@ -44,14 +44,12 @@ public class TransactSQLStrFunction extends CastStrEmulation implements Function
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		if ( arguments.size() == 1 ) {
 			return super.generateSqmFunctionExpression(
 					arguments,
 					impliedResultType,
-					queryEngine,
-					typeConfiguration
+					queryEngine
 			);
 		}
 

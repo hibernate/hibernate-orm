@@ -28,14 +28,14 @@ public class ProviderUtilTest extends BaseEntityManagerFunctionalTestCase {
 	public void testIsLoadedOnUnknownClass() {
 		final Object entity = new Object();
 		assertTrue( Persistence.getPersistenceUtil().isLoaded( entity ) );
-		assertEquals( LoadState.UNKNOWN, PersistenceUtilHelper.isLoaded( entity ) );
+		assertEquals( LoadState.UNKNOWN, PersistenceUtilHelper.getLoadState( entity ) );
 	}
 
 	@Test
 	public void testIsLoadedOnKnownClass() {
 		final Author entity = new Author();
 		assertTrue( Persistence.getPersistenceUtil().isLoaded( entity ) );
-		assertEquals( LoadState.UNKNOWN, PersistenceUtilHelper.isLoaded( entity ) );
+		assertEquals( LoadState.UNKNOWN, PersistenceUtilHelper.getLoadState( entity ) );
 	}
 
 	@Test

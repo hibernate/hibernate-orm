@@ -235,24 +235,19 @@ public class AttributeFactory {
 	public static <Y> DomainType<Y> determineSimpleType(ValueContext typeContext, MetadataContext context) {
 		switch ( typeContext.getValueClassification() ) {
 			case BASIC: {
-				Class returnedClass = typeContext.getJpaBindableType();
-				if ( returnedClass.isAssignableFrom( Object.class ) ) {
-					final SimpleValue simpleValue = (SimpleValue) typeContext.getHibernateValue();
-					if ( simpleValue.getTypeParameters() != null && typeContext.getAttributeMetadata()
-							.getOwnerType() instanceof EntityDomainType ) {
-						// Due to how generics work with Java, the type of generic fields will always
-						// be reported as Object. We need to resolve type based on the actual property
-						// value for basic attributes in entities which specify concrete type parameters.
-						returnedClass = simpleValue.getType().getReturnedClass();
-					}
+				final Class<?> jpaBindableType = typeContext.getJpaBindableType();
+				if ( jpaBindableType.isPrimitive() ) {
+					// Special BasicDomainType necessary for primitive types in the JPA metamodel
+					return (DomainType<Y>) context.resolveBasicType( jpaBindableType );
 				}
-				return context.resolveBasicType( returnedClass );
+				return (DomainType<Y>) typeContext.getHibernateValue().getType();
 			}
 			case ENTITY: {
 				final org.hibernate.type.Type type = typeContext.getHibernateValue().getType();
 				if ( type instanceof EntityType ) {
 					final EntityType entityType = (EntityType) type;
-					final IdentifiableDomainType<Y> domainType = context.locateIdentifiableType( entityType.getAssociatedEntityName() );
+					final IdentifiableDomainType<Y> domainType =
+							context.locateIdentifiableType( entityType.getAssociatedEntityName() );
 					if ( domainType == null ) {
 						// Due to the use of generics, it can happen that a mapped super class uses a type
 						// for an attribute that is not a managed type. Since this case is not specifically mentioned
@@ -274,9 +269,7 @@ public class AttributeFactory {
 						(Any) typeContext.getHibernateValue(),
 						anyType,
 						(JavaType<Class>) baseJtd,
-						context.getTypeConfiguration(),
-						context.getMetamodel(),
-						context.getRuntimeModelCreationContext().getSessionFactory()
+						context.getRuntimeModelCreationContext().getSessionFactory().getMappingMetamodel()
 				);
 			}
 			case EMBEDDABLE: {
@@ -300,9 +293,11 @@ public class AttributeFactory {
 					@SuppressWarnings("unchecked")
 					final Class<Y> embeddableClass = (Class<Y>) component.getComponentClass();
 
-					final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass, component );
-					if ( cached != null ) {
-						return cached;
+					if ( !component.isGeneric() ) {
+						final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass, component );
+						if ( cached != null ) {
+							return cached;
+						}
 					}
 
 					final JavaTypeRegistry registry = context.getTypeConfiguration()
@@ -342,7 +337,8 @@ public class AttributeFactory {
 			DomainType<?> metaModelType,
 			MetadataContext context) {
 		if ( typeContext.getValueClassification() == ValueClassification.BASIC ) {
-			final ConverterDescriptor descriptor = ( (SimpleValue) typeContext.getHibernateValue() ).getJpaAttributeConverterDescriptor();
+			final ConverterDescriptor descriptor =
+					( (SimpleValue) typeContext.getHibernateValue() ).getJpaAttributeConverterDescriptor();
 			if ( descriptor != null ) {
 				return context.getJavaTypeRegistry().resolveDescriptor(
 						descriptor.getRelationalValueResolvedType().getErasedType()
@@ -553,45 +549,6 @@ public class AttributeFactory {
 		}
 	}
 
-	protected <Y> Class<Y> accountForPrimitiveTypes(Class<Y> declaredType) {
-		return accountForPrimitiveTypes( declaredType, context );
-	}
-
-	public static <Y> Class<Y> accountForPrimitiveTypes(Class<Y> declaredType, MetadataContext metadataContext) {
-//		if ( !declaredType.isPrimitive() ) {
-//			return declaredType;
-//		}
-//
-//		if ( Boolean.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Boolean.class;
-//		}
-//		if ( Character.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Character.class;
-//		}
-//		if( Byte.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Byte.class;
-//		}
-//		if ( Short.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Short.class;
-//		}
-//		if ( Integer.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Integer.class;
-//		}
-//		if ( Long.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Long.class;
-//		}
-//		if ( Float.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Float.class;
-//		}
-//		if ( Double.TYPE.equals( declaredType ) ) {
-//			return (Class<Y>) Double.class;
-//		}
-//
-//		throw new IllegalArgumentException( "Unexpected type [" + declaredType + "]" );
-		// if the field is defined as int, return int not Integer...
-		return declaredType;
-	}
-
 	public static ParameterizedType getSignatureType(Member member) {
 		final java.lang.reflect.Type type;
 		if ( member instanceof Field ) {
@@ -675,7 +632,8 @@ public class AttributeFactory {
 		final AttributeMapping attributeMapping = embeddable.findAttributeMapping( attributeName );
 		if ( attributeMapping == null ) {
 			throw new PropertyNotFoundException(
-					"Unable to locate property named " + attributeName + " on " + embeddable.getJavaType().getJavaTypeClass().getName()
+					"Could not resolve attribute '" + attributeName
+							+ "' of '" + embeddable.getJavaType().getJavaTypeClass().getName() + "'"
 			);
 		}
 

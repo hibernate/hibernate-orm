@@ -20,7 +20,6 @@ import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.SourceSet;
 
 import org.hibernate.orm.tooling.gradle.enhance.EnhancementSpec;
-import org.hibernate.orm.tooling.gradle.metamodel.JpaMetamodelGenerationSpec;
 
 /**
  * Main DSL extension for Hibernate ORM.  Available as `project.hibernate`
@@ -33,14 +32,12 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 	private final Project project;
 
 	private EnhancementSpec enhancementDsl;
-	private JpaMetamodelGenerationSpec jpaMetamodelDsl;
 
 	private final Property<Boolean> useSameVersion;
 	private final Property<SourceSet> sourceSet;
 	private final SetProperty<String> languages;
 
 	private final Provider<EnhancementSpec> enhancementDslAccess;
-	private final Provider<JpaMetamodelGenerationSpec> jpaMetamodelDslAccess;
 
 
 	@Inject
@@ -57,7 +54,6 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 		languages.convention( Arrays.asList( "java", "kotlin" ) );
 
 		enhancementDslAccess = project.provider( () -> enhancementDsl );
-		jpaMetamodelDslAccess = project.provider( () -> jpaMetamodelDsl );
 	}
 
 	private static SourceSet mainSourceSet(Project project) {
@@ -121,31 +117,9 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 		action.execute( getEnhancement() );
 	}
 
-	/**
-	 * DSL extension for configuring JPA static metamodel generation.  Also acts as the trigger for
-	 * opting into the generation
-	 */
-	public JpaMetamodelGenerationSpec getJpaMetamodel() {
-		if ( jpaMetamodelDsl == null ) {
-			jpaMetamodelDsl = getExtensions().create( JpaMetamodelGenerationSpec.DSL_NAME, JpaMetamodelGenerationSpec.class, this, project );
-		}
-		return jpaMetamodelDsl;
-	}
-
-	/**
-	 * @see #getJpaMetamodel()
-	 */
-	public void jpaMetamodel(Action<JpaMetamodelGenerationSpec>action) {
-		action.execute( getJpaMetamodel() );
-	}
-
 
 	public boolean isEnhancementEnabled() {
 		return enhancementDsl != null;
-	}
-
-	public boolean isMetamodelGenerationEnabled() {
-		return jpaMetamodelDsl != null;
 	}
 
 
@@ -237,16 +211,5 @@ public abstract class HibernateOrmSpec implements ExtensionAware {
 	@Deprecated
 	public Provider<EnhancementSpec> getEnhancementDslAccess() {
 		return enhancementDslAccess;
-	}
-
-
-	/**
-	 * Provider access to {@link #getJpaMetamodel()}
-	 *
-	 * @deprecated See the Gradle property naming <a href="https://docs.gradle.org/current/userguide/lazy_configuration.html#lazy_configuration_faqs">guidelines</a>
-	 */
-	@Deprecated
-	public Provider<JpaMetamodelGenerationSpec> getJpaMetamodelDslAccess() {
-		return jpaMetamodelDslAccess;
 	}
 }

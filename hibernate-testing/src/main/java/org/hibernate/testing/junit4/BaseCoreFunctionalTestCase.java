@@ -36,7 +36,6 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.build.AllowSysOut;
-import org.hibernate.internal.util.PropertiesHelper;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -109,7 +108,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	// before/after test class ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@BeforeClassOnce
-	@SuppressWarnings( {"UnusedDeclaration"})
 	protected void buildSessionFactory() {
 		buildSessionFactory( null );
 	}
@@ -384,7 +382,8 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	public final void afterTest() throws Exception {
 		// see https://github.com/hibernate/hibernate-orm/pull/3412#issuecomment-678338398
 		if ( getDialect() instanceof H2Dialect ) {
-			ReflectHelper.getMethod( Class.forName( "org.h2.util.DateTimeUtils" ), "resetCalendar" ).invoke( null );
+			ReflectHelper.getMethod( Class.forName( "org.h2.util.DateTimeUtils" ), "resetCalendar" )
+					.invoke( null );
 		}
 
 		completeStrayTransaction();
@@ -449,7 +448,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 			// Because of https://hibernate.atlassian.net/browse/HHH-5529,
 			// we can't rely on a Bulk Delete query which will not clear the link tables in @ElementCollection or unidirectional collections
 			doInHibernate( this::sessionFactory, s -> {
-				s.createQuery( "from java.lang.Object" ).list().forEach( s::remove );
+				s.createQuery( "from java.lang.Object", Object.class ).list().forEach( s::remove );
 			} );
 		}
 	}
@@ -472,7 +471,6 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 	protected void cleanupTest() throws Exception {
 	}
 
-	@SuppressWarnings( {"UnnecessaryBoxing", "UnnecessaryUnboxing"})
 	@AllowSysOut
 	protected void assertAllDataRemoved() {
 		if ( !createSchema() ) {
@@ -486,9 +484,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 		Transaction transaction = tmpSession.beginTransaction();
 		try {
 
-			List list = tmpSession.createQuery( "select o from java.lang.Object o" ).list();
+			List<?> list = tmpSession.createQuery( "select o from java.lang.Object o" ).list();
 
-			Map<String,Integer> items = new HashMap<String,Integer>();
+			Map<String,Integer> items = new HashMap<>();
 			if ( !list.isEmpty() ) {
 				for ( Object element : list ) {
 					Integer l = items.get( tmpSession.getEntityName( element ) );
@@ -500,7 +498,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 					System.out.println( "Data left: " + element );
 				}
 				transaction.rollback();
-				fail( "Data is left in the database: " + items.toString() );
+				fail( "Data is left in the database: " + items );
 			}
 			transaction.rollback();
 		}
@@ -519,11 +517,9 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 
 	protected boolean readCommittedIsolationMaintained(String scenario) {
 		int isolation = Connection.TRANSACTION_READ_UNCOMMITTED;
-		Session testSession = null;
-		try {
-			testSession = openSession();
+		try ( Session testSession = openSession() ) {
 			isolation = testSession.doReturningWork(
-					new AbstractReturningWork<Integer>() {
+					new AbstractReturningWork<>() {
 						@Override
 						public Integer execute(Connection connection) throws SQLException {
 							return connection.getTransactionIsolation();
@@ -531,16 +527,7 @@ public abstract class BaseCoreFunctionalTestCase extends BaseUnitTestCase {
 					}
 			);
 		}
-		catch( Throwable ignore ) {
-		}
-		finally {
-			if ( testSession != null ) {
-				try {
-					testSession.close();
-				}
-				catch( Throwable ignore ) {
-				}
-			}
+		catch (Throwable ignore) {
 		}
 		if ( isolation < Connection.TRANSACTION_READ_COMMITTED ) {
 			SkipLog.reportSkip( "environment does not support at least read committed isolation", scenario );

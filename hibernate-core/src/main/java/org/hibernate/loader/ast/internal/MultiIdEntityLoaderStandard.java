@@ -16,7 +16,6 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -28,7 +27,6 @@ import org.hibernate.event.spi.LoadEvent;
 import org.hibernate.event.spi.LoadEventListener;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
@@ -37,6 +35,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -54,10 +53,10 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 
 	public MultiIdEntityLoaderStandard(
 			EntityPersister entityDescriptor,
-			PersistentClass bootDescriptor,
+			int idColumnSpan,
 			SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
-		this.idJdbcTypeCount = bootDescriptor.getIdentifier().getColumnSpan();
+		this.idJdbcTypeCount = idColumnSpan;
 
 		assert idJdbcTypeCount > 0;
 	}
@@ -212,7 +211,7 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 			log.tracef( "#loadEntitiesById(`%s`, `%s`, ..)", getLoadable().getEntityName(), numberOfIdsInBatch );
 		}
 
-		final List<JdbcParameter> jdbcParameters = new ArrayList<>( numberOfIdsInBatch * idJdbcTypeCount);
+		JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder( numberOfIdsInBatch * idJdbcTypeCount );
 
 		final SelectStatement sqlAst = LoaderSelectBuilder.createSelect(
 				getLoadable(),
@@ -223,13 +222,13 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 				numberOfIdsInBatch,
 				session.getLoadQueryInfluencers(),
 				lockOptions,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				getSessionFactory()
 		);
+		JdbcParametersList jdbcParameters = jdbcParametersBuilder.build();
 
-		final JdbcServices jdbcServices = getSessionFactory().getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+		final SqlAstTranslatorFactory sqlAstTranslatorFactory =
+				getSessionFactory().getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory();
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( jdbcParameters.size() );
 		int offset = 0;
@@ -252,7 +251,7 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 				.translate( jdbcParameterBindings, QueryOptions.NONE );
 
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler;
-		if ( getLoadable().getEntityPersister().hasSubselectLoadableCollections() ) {
+		if ( session.getLoadQueryInfluencers().hasSubselectLoadableCollections( getLoadable().getEntityPersister() ) ) {
 			subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 					session.getPersistenceContext().getBatchFetchQueue(),
 					sqlAst,

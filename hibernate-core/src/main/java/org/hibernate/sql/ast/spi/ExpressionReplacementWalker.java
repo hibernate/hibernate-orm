@@ -68,6 +68,7 @@ import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.predicate.ThruthnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -77,6 +78,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.model.ast.ColumnWriteFragment;
+import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.internal.TableDeleteCustomSql;
 import org.hibernate.sql.model.internal.TableDeleteStandard;
 import org.hibernate.sql.model.internal.TableInsertCustomSql;
@@ -441,6 +443,22 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	}
 
 	@Override
+	public void visitThruthnessPredicate(ThruthnessPredicate thruthnessPredicate) {
+		final Expression expression = replaceExpression( thruthnessPredicate.getExpression() );
+		if ( expression != thruthnessPredicate.getExpression() ) {
+			returnedNode = new ThruthnessPredicate(
+					expression,
+					thruthnessPredicate.getBooleanValue(),
+					thruthnessPredicate.isNegated(),
+					thruthnessPredicate.getExpressionType()
+			);
+		}
+		else {
+			returnedNode = thruthnessPredicate;
+		}
+	}
+
+	@Override
 	public void visitRelationalPredicate(ComparisonPredicate comparisonPredicate) {
 		final Expression lhs = replaceExpression( comparisonPredicate.getLeftHandExpression() );
 		final Expression rhs = replaceExpression( comparisonPredicate.getRightHandExpression() );
@@ -590,6 +608,11 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 
 	@Override
 	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void visitOptionalTableUpdate(OptionalTableUpdate tableUpdate) {
 		throw new UnsupportedOperationException();
 	}
 

@@ -10,7 +10,6 @@ import java.util.function.IntFunction;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
-import org.hibernate.metamodel.mapping.internal.VirtualIdEmbeddable;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -176,6 +175,11 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 			IntFunction<SelectableMapping> selectableMappingAccess,
 			MappingModelCreationProcess creationProcess);
 
+	/**
+	 * Return a copy of this foreign key descriptor with the target part as given by the argument.
+	 */
+	ForeignKeyDescriptor withTargetPart(ValuedModelPart targetPart);
+
 	AssociationKey getAssociationKey();
 
 	boolean hasConstraint();
@@ -194,4 +198,7 @@ public interface ForeignKeyDescriptor extends VirtualModelPart, ValuedModelPart 
 		ValuedModelPart getModelPart();
 
 	}
+
+	boolean isEmbedded();
+
 }

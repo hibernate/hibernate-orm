@@ -211,6 +211,10 @@ public abstract class AbstractSqmSelectQuery<T>
 		return (Set) getQuerySpec().getRoots();
 	}
 
+	public List<Root<?>> getRootList() {
+		return (List) getQuerySpec().getRootList();
+	}
+
 	@Override
 	public <X> SqmRoot<X> from(Class<X> entityClass) {
 		return addRoot(
@@ -249,7 +253,7 @@ public abstract class AbstractSqmSelectQuery<T>
 	}
 
 	private void validateComplianceFromSubQuery() {
-		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
 					"The JPA specification does not support subqueries in the from clause. " +
 							"Please disable the JPA query compliance if you want to use this feature." );

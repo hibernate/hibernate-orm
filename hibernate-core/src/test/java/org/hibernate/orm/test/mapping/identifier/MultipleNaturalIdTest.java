@@ -7,9 +7,8 @@
 package org.hibernate.orm.test.mapping.identifier;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Objects;
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -66,6 +65,16 @@ public class MultipleNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 				.using("publisher", publisher)
 				.load();
 			//end::naturalid-load-access-example[]
+
+			assertEquals("High-Performance Java Persistence", book.getTitle());
+		});
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Publisher publisher = entityManager.getReference(Publisher.class, 1L);
+			Book book = entityManager
+					.unwrap(Session.class)
+					.byNaturalId(Book.class)
+					.using(Map.of("productNumber", "973022823X", "publisher", publisher))
+					.load();
 
 			assertEquals("High-Performance Java Persistence", book.getTitle());
 		});

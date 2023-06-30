@@ -6,6 +6,13 @@
  */
 package org.hibernate.service;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.ANNOTATION_TYPE;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
+
 /**
  * Marker annotation identifying integration points which Hibernate supports loading as a
  * {@linkplain java.util.ServiceLoader Java service}.
@@ -14,5 +21,7 @@ package org.hibernate.service;
  *
  * @author Steve Ebersole
  */
+@Target({TYPE,ANNOTATION_TYPE})
+@Retention(RUNTIME)
 public @interface JavaServiceLoadable {
 }

@@ -77,7 +77,7 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 					throw new SemanticException(
 							String.format(
 									Locale.ROOT,
-									"SqmQualifiedJoin predicate referred to SqmRoot [`%s`] other than the join's root [`%s`]",
+									"SqmQualifiedJoin predicate referred to SqmRoot [%s] other than the join's root [%s]",
 									pathRoot.getNavigablePath(),
 									sqmJoin.getNavigablePath()
 							)
@@ -109,7 +109,7 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 				throw new SemanticException(
 						String.format(
 								Locale.ROOT,
-								"SqmQualifiedJoin predicate referred to SqmRoot [`%s`] other than the join's root [`%s`]",
+								"SqmQualifiedJoin predicate referred to SqmRoot [%s] other than the join's root [%s]",
 								pathRoot.getNavigablePath(),
 								sqmJoin.getNavigablePath()
 						)

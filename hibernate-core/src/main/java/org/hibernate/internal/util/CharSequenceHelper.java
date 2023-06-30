@@ -44,9 +44,6 @@ public final class CharSequenceHelper {
 		}
 		else if ( charSequence instanceof SubSequence ) {
 			int idx = ( (SubSequence) charSequence ).lastIndexOf( c, fromIndex, endIndex );
-			if ( idx == -1 ) {
-				return -1;
-			}
 			return idx;
 		}
 		else {
@@ -72,9 +69,6 @@ public final class CharSequenceHelper {
 		}
 		else if ( charSequence instanceof SubSequence ) {
 			int idx = ( (SubSequence) charSequence ).indexOf( c, fromIndex, endIndex );
-			if ( idx == -1 ) {
-				return -1;
-			}
 			return idx;
 		}
 		else {
@@ -96,9 +90,6 @@ public final class CharSequenceHelper {
 		}
 		else if ( charSequence instanceof SubSequence ) {
 			int idx = ( (SubSequence) charSequence ).indexOf( target, fromIndex, endIndex );
-			if ( idx == -1 ) {
-				return -1;
-			}
 			return idx;
 		}
 		else {

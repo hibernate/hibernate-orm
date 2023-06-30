@@ -11,6 +11,8 @@ import java.util.concurrent.Callable;
 
 import org.hibernate.service.Service;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Service which acts as a registry for named strategy implementations.
  * <p>
@@ -79,7 +81,7 @@ public interface StrategySelector extends Service {
 	 *
 	 * @return The strategy instance
 	 */
-	<T> T resolveStrategy(Class<T> strategy, Object strategyReference);
+	<T> T resolveStrategy(Class<T> strategy, @Nullable Object strategyReference);
 
 	/**
 	 * Resolve strategy instances. The incoming reference might be:<ul>

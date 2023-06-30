@@ -77,8 +77,7 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 				);
 			}
 
-			if ( enhancementContext.isCompositeClass( persistentField.getType().asErasure() )
-					&& persistentField.hasAnnotation( Embedded.class )
+			if ( enhancementContext.isCompositeField( persistentField )
 					// Don't do composite owner tracking for records
 					&& !persistentField.getType().isRecord() ) {
 
@@ -88,7 +87,7 @@ final class InlineDirtyCheckingHandler implements Implementation, ByteCodeAppend
 				Advice.WithCustomMapping advice = Advice.withCustomMapping();
 				advice = persistentField.isVisibleTo( managedCtClass )
 						? advice.bind( CodeTemplates.FieldValue.class, persistentField.getFieldDescription() )
-						: advice.bind( CodeTemplates.FieldValue.class, new CodeTemplates.GetterMapping( persistentField.getFieldDescription() ) );
+						: advice.bind( CodeTemplates.FieldValue.class, new CodeTemplates.GetterMapping( persistentField.getFieldDescription(), persistentField.getGetter().get().getReturnType() ) );
 
 				implementation = advice
 						.bind( CodeTemplates.FieldName.class, persistentField.getName() )

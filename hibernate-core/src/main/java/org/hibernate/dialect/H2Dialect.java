@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.hibernate.PessimisticLockException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -69,12 +70,11 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.descriptor.jdbc.H2FormatJsonJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeAsTimestampWithTimeZoneJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeUtcAsJdbcTimeJdbcType;
-import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
-import org.hibernate.type.descriptor.jdbc.TimestampWithTimeZoneJdbcType;
+import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -175,6 +175,11 @@ public class H2Dialect extends Dialect {
 
 		final String[] bits = databaseVersion.split("[. ]");
 		return bits.length > 2 ? Integer.parseInt( bits[2] ) : 0;
+	}
+
+	@Override
+	protected DatabaseVersion getMinimumSupportedVersion() {
+		return MINIMUM_VERSION;
 	}
 
 	@Override
@@ -344,10 +349,10 @@ public class H2Dialect extends Dialect {
 		functionFactory.rownum();
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
 			functionFactory.windowFunctions();
+			functionFactory.inverseDistributionOrderedSetAggregates();
+			functionFactory.hypotheticalOrderedSetAggregates();
 			if ( getVersion().isSameOrAfter( 2 ) ) {
 				functionFactory.listagg( null );
-				functionFactory.inverseDistributionOrderedSetAggregates();
-				functionFactory.hypotheticalOrderedSetAggregates();
 			}
 			else {
 				// Use group_concat until 2.x as listagg was buggy
@@ -588,6 +593,11 @@ public class H2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIsTrue() {
+		return true;
+	}
+
+	@Override
 	public void appendBooleanValueString(SqlAppender appender, boolean bool) {
 		appender.appendSql( bool );
 	}
@@ -725,7 +735,7 @@ public class H2Dialect extends Dialect {
 					if ( idx > 0 ) {
 						String constraintName = message.substring( idx + "violation: ".length() );
 						if ( sqle.getSQLState().equals( "23506" ) ) {
-							constraintName = constraintName.substring( 1, constraintName.indexOf( ":" ) );
+							constraintName = constraintName.substring( 1, constraintName.indexOf( ':' ) );
 						}
 						return constraintName;
 					}
@@ -749,6 +759,8 @@ public class H2Dialect extends Dialect {
 					// NULL not allowed for column [90006-145]
 					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
 					return new ConstraintViolationException(message, sqlException, sql, constraintName);
+				case 57014:
+					return new QueryTimeoutException( message, sqlException, sql );
 			}
 
 			return null;
@@ -817,6 +829,11 @@ public class H2Dialect extends Dialect {
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
 		return getVersion().isSameOrAfter( 1, 4, 198 );
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_GROUP_AND_CONSTANTS;
 	}
 
 	@Override

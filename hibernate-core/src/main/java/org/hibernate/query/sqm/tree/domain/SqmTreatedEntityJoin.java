@@ -10,7 +10,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -37,6 +37,22 @@ public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> imple
 		this.treatTarget = treatTarget;
 	}
 
+	private SqmTreatedEntityJoin(
+			NavigablePath navigablePath,
+			SqmEntityJoin<T> wrappedPath,
+			EntityDomainType<S> treatTarget,
+			String alias) {
+		super(
+				navigablePath,
+				treatTarget,
+				alias,
+				wrappedPath.getSqmJoinType(),
+				wrappedPath.getRoot()
+		);
+		this.wrappedPath = wrappedPath;
+		this.treatTarget = treatTarget;
+	}
+
 	@Override
 	public SqmTreatedEntityJoin<T, S> copy(SqmCopyContext context) {
 		final SqmTreatedEntityJoin<T, S> existing = context.getCopy( this );
@@ -46,6 +62,7 @@ public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> imple
 		final SqmTreatedEntityJoin<T, S> path = context.registerCopy(
 				this,
 				new SqmTreatedEntityJoin<>(
+						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
 						getExplicitAlias()
@@ -72,8 +89,7 @@ public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> imple
 
 	@Override
 	public EntityDomainType<S> getReferencedPathSource() {
-		//noinspection unchecked
-		return (EntityDomainType<S>) wrappedPath.getReferencedPathSource();
+		return treatTarget;
 	}
 
 	@Override

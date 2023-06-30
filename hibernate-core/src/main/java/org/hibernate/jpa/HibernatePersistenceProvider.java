@@ -189,8 +189,8 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			return PersistenceUtilHelper.isLoadedWithReference( proxy, property, cache );
 		}
 		@Override
-		public LoadState isLoaded(Object o) {
-			return PersistenceUtilHelper.isLoaded(o);
+		public LoadState isLoaded(Object object) {
+			return PersistenceUtilHelper.getLoadState( object );
 		}
 	};
 

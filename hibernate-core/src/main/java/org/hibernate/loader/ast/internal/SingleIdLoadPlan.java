@@ -28,6 +28,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
@@ -46,13 +47,13 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 	private final ModelPart restrictivePart;
 	private final LockOptions lockOptions;
 	private final JdbcOperationQuerySelect jdbcSelect;
-	private final List<JdbcParameter> jdbcParameters;
+	private final JdbcParametersList jdbcParameters;
 
 	public SingleIdLoadPlan(
 			EntityMappingType entityMappingType,
 			ModelPart restrictivePart,
 			SelectStatement sqlAst,
-			List<JdbcParameter> jdbcParameters,
+			JdbcParametersList jdbcParameters,
 			LockOptions lockOptions,
 			SessionFactoryImplementor sessionFactory) {
 		this.entityMappingType = entityMappingType;
@@ -78,7 +79,7 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		return lockOptions;
 	}
 
-	protected List<JdbcParameter> getJdbcParameters() {
+	protected JdbcParametersList getJdbcParameters() {
 		return jdbcParameters;
 	}
 
@@ -145,7 +146,14 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		final List<T> list = session.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
-				new SingleIdExecutionContext( session, entityInstance, restrictedValue, queryOptions, callback ),
+				new SingleIdExecutionContext(
+						session,
+						entityInstance,
+						restrictedValue,
+						entityMappingType.getRootEntityDescriptor(),
+						queryOptions,
+						callback
+				),
 				getRowTransformer(),
 				singleResultExpected ? ListResultsConsumer.UniqueSemantic.ASSERT : ListResultsConsumer.UniqueSemantic.FILTER
 		);
@@ -155,15 +163,14 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		}
 
 		final T entity = list.get( 0 );
-		if ( entityMappingType != null ) {
-			callback.invokeAfterLoadActions( entity, entityMappingType, session );
-		}
+		callback.invokeAfterLoadActions( entity, entityMappingType, session );
 		return entity;
 	}
 
 	private static class SingleIdExecutionContext extends BaseExecutionContext {
 		private final Object entityInstance;
 		private final Object restrictedValue;
+		private final EntityMappingType rootEntityDescriptor;
 		private final QueryOptions queryOptions;
 		private final Callback callback;
 
@@ -171,11 +178,12 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 				SharedSessionContractImplementor session,
 				Object entityInstance,
 				Object restrictedValue,
-				QueryOptions queryOptions,
+				EntityMappingType rootEntityDescriptor, QueryOptions queryOptions,
 				Callback callback) {
 			super( session );
 			this.entityInstance = entityInstance;
 			this.restrictedValue = restrictedValue;
+			this.rootEntityDescriptor = rootEntityDescriptor;
 			this.queryOptions = queryOptions;
 			this.callback = callback;
 		}
@@ -188,6 +196,11 @@ public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 		@Override
 		public Object getEntityId() {
 			return restrictedValue;
+		}
+
+		@Override
+		public EntityMappingType getRootEntityDescriptor() {
+			return rootEntityDescriptor;
 		}
 
 		@Override

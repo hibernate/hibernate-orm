@@ -83,6 +83,17 @@ public class EmbeddedAnyTest {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-16732")
+	public void testEmbeddedIdHql(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final List<Foo> foos = session.createQuery( "from Foo f where id(f.fooEmbedded.bar) = 1", Foo.class )
+							.list();
+				}
+		);
+	}
+
+	@Test
 	@TestForIssue( jiraKey = "HHH-15323")
 	public void testEmbeddedTypeHql(SessionFactoryScope scope) {
 		scope.inTransaction(

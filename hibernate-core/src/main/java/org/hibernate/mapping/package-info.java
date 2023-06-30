@@ -46,7 +46,7 @@
  *     and friends, to build up the internal data structures used by these
  *     objects at runtime. Once the persisters are fully-constructed,
  *     the mapping model objects are no longer useful.
- * <li>The mapping model objects are also passed to the the schema
+ * <li>The mapping model objects are also passed to the schema
  *     export tooling which uses them directly to produce DDL.
  * </ol>
  *

@@ -6,6 +6,8 @@
  */
 package org.hibernate.metamodel.model.domain;
 
+import java.util.Collection;
+
 import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.query.sqm.SqmPathSource;
@@ -17,4 +19,12 @@ import org.hibernate.query.sqm.SqmPathSource;
  */
 public interface EntityDomainType<J> extends IdentifiableDomainType<J>, EntityType<J>, SqmPathSource<J> {
 	String getHibernateEntityName();
+
+	@Override
+	Collection<? extends EntityDomainType<? extends J>> getSubTypes();
+
+	@Override
+	default DomainType<J> getSqmType() {
+		return this;
+	}
 }

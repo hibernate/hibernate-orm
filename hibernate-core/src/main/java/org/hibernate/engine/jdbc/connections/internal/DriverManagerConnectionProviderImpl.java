@@ -84,11 +84,7 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	private PooledConnections buildPool(Map<String,Object> configurationValues, ServiceRegistryImplementor serviceRegistry) {
-		final boolean autoCommit = ConfigurationHelper.getBoolean(
-				AvailableSettings.AUTOCOMMIT,
-				configurationValues,
-				false
-		);
+		final boolean autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues );
 		final int minSize = ConfigurationHelper.getInt( MIN_SIZE, configurationValues, 1 );
 		final int maxSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 );
 		final int initialSize = ConfigurationHelper.getInt( INITIAL_SIZE, configurationValues, minSize );
@@ -170,7 +166,7 @@ public class DriverManagerConnectionProviderImpl
 			CONNECTIONS_MESSAGE_LOGGER.connectionProperties( ConfigurationHelper.maskOut( connectionProps, "password" ) );
 		}
 
-		final boolean autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues, false );
+		final boolean autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues );
 		CONNECTIONS_MESSAGE_LOGGER.autoCommitMode( autoCommit );
 
 		final Integer isolation = ConnectionProviderInitiator.extractIsolation( configurationValues );

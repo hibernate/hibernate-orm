@@ -22,19 +22,19 @@ import org.hibernate.MappingException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
-import org.hibernate.engine.internal.ForeignKeys;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.engine.internal.ForeignKeys.getEntityIdentifierIfNotUnsaved;
+import static org.hibernate.internal.util.collections.ArrayHelper.join;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -79,7 +79,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 	@Override
 	public int[] getSqlTypeCodes(Mapping mapping) throws MappingException {
-		return ArrayHelper.join( discriminatorType.getSqlTypeCodes( mapping ), identifierType.getSqlTypeCodes( mapping ) );
+		return join( discriminatorType.getSqlTypeCodes( mapping ), identifierType.getSqlTypeCodes( mapping ) );
 	}
 
 	@Override
@@ -246,7 +246,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 		else {
 			entityName = session.bestGuessEntityName( value );
-			id = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, value, session );
+			id = getEntityIdentifierIfNotUnsaved( entityName, value, session );
 		}
 
 		// discriminatorType is assumed to be single-column type
@@ -295,7 +295,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		else {
 			return new ObjectTypeCacheEntry(
 					session.bestGuessEntityName( value ),
-					ForeignKeys.getEntityIdentifierIfNotUnsaved(
+					getEntityIdentifierIfNotUnsaved(
 							session.bestGuessEntityName( value ),
 							value,
 							session
@@ -317,7 +317,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 		else {
 			final String entityName = session.bestGuessEntityName( original );
-			final Object id = ForeignKeys.getEntityIdentifierIfNotUnsaved( entityName, original, session );
+			final Object id = getEntityIdentifierIfNotUnsaved( entityName, original, session );
 			return session.internalLoad( entityName, id, eager, false );
 		}
 	}
@@ -345,7 +345,8 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 			return 1;
 		}
 
-		throw new PropertyNotFoundException( "Unable to locate property named " + name + " on AnyType" );
+		throw new PropertyNotFoundException( "Could not resolve attribute '" + name
+				+ "' of any mapping (must be one of 'class', 'id')" );
 	}
 
 	@Override
@@ -365,7 +366,7 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 
 	private Object getIdentifier(Object value, SharedSessionContractImplementor session) throws HibernateException {
 		try {
-			return ForeignKeys.getEntityIdentifierIfNotUnsaved(
+			return getEntityIdentifierIfNotUnsaved(
 					session.bestGuessEntityName( value ),
 					value,
 					session
@@ -469,9 +470,10 @@ public class AnyType extends AbstractType implements CompositeType, AssociationT
 		}
 
 		public boolean equals(Object object) {
-			if (object instanceof ObjectTypeCacheEntry) {
-				ObjectTypeCacheEntry objectTypeCacheEntry = (ObjectTypeCacheEntry)object;
-				return Objects.equals( objectTypeCacheEntry.entityName, entityName ) && Objects.equals( objectTypeCacheEntry.id, id );
+			if ( object instanceof ObjectTypeCacheEntry ) {
+				final ObjectTypeCacheEntry objectTypeCacheEntry = (ObjectTypeCacheEntry) object;
+				return Objects.equals( objectTypeCacheEntry.entityName, entityName )
+					&& Objects.equals( objectTypeCacheEntry.id, id );
 			}
 			return false;
 		}

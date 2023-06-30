@@ -6,8 +6,6 @@
  */
 package org.hibernate.engine.profile.internal;
 
-import org.hibernate.engine.profile.Fetch;
-
 /**
  * Commonality between entities and collections as something that can be affected by fetch profiles.
  *
@@ -17,5 +15,5 @@ public interface FetchProfileAffectee {
 	/**
 	 * Register the profile name with the entity/collection
 	 */
-	void registerAffectingFetchProfile(String fetchProfileName, Fetch.Style fetchStyle);
+	void registerAffectingFetchProfile(String fetchProfileName);
 }

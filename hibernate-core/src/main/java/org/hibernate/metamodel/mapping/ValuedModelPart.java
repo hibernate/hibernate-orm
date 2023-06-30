@@ -6,8 +6,6 @@
  */
 package org.hibernate.metamodel.mapping;
 
-import java.util.List;
-
 /**
  * Describes a ModelPart that is also a ValueMapping (and therefore also a SelectableMappings).
  * <p/>
@@ -25,16 +23,6 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 	@Override
 	default int getJdbcTypeCount() {
 		return ModelPart.super.getJdbcTypeCount();
-	}
-
-	@Override
-	default List<JdbcMapping> getJdbcMappings() {
-		return ModelPart.super.getJdbcMappings();
-	}
-
-	@Override
-	default JdbcMapping getJdbcMapping(int index) {
-		return ModelPart.super.getJdbcMapping( index );
 	}
 
 	@Override
@@ -64,6 +52,18 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 		);
 	}
 
+	default void forEachNonFormula(SelectableConsumer consumer) {
+		ModelPart.super.forEachSelectable(
+				(selectionIndex, selectableMapping) -> {
+					if ( selectableMapping.isFormula() ) {
+						return;
+					}
+
+					consumer.accept( selectionIndex, selectableMapping );
+				}
+		);
+	}
+
 	default void forEachUpdatable(SelectableConsumer consumer) {
 		ModelPart.super.forEachSelectable(
 				(selectionIndex, selectableMapping) -> {
@@ -75,4 +75,5 @@ public interface ValuedModelPart extends ModelPart, ValueMapping, SelectableMapp
 				}
 		);
 	}
+
 }

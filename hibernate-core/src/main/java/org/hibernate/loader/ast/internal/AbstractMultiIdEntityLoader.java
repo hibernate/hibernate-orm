@@ -16,23 +16,18 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import java.util.List;
 
 /**
- * Base support for MultiIdEntityLoader implementations
+ * Base support for {@link MultiIdEntityLoader} implementations.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoader<T>, Preparable {
+public abstract class AbstractMultiIdEntityLoader<T> implements MultiIdEntityLoader<T> {
 	private final EntityMappingType entityDescriptor;
 	private final SessionFactoryImplementor sessionFactory;
-
-	private EntityIdentifierMapping identifierMapping;
+	private final EntityIdentifierMapping identifierMapping;
 
 	public AbstractMultiIdEntityLoader(EntityMappingType entityDescriptor, SessionFactoryImplementor sessionFactory) {
 		this.entityDescriptor = entityDescriptor;
 		this.sessionFactory = sessionFactory;
-	}
-
-	@Override
-	public void prepare() {
 		identifierMapping = getLoadable().getIdentifierMapping();
 	}
 

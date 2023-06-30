@@ -450,14 +450,14 @@ treatedNavigablePath
  * A 'value()' function that "breaks" a path expression
  */
 collectionValueNavigablePath
-	: (VALUE|ELEMENT) LEFT_PAREN path RIGHT_PAREN pathContinuation?
+	: elementValueQuantifier LEFT_PAREN path RIGHT_PAREN pathContinuation?
 	;
 
 /**
  * A 'key()' or 'index()' function that "breaks" a path expression
  */
 mapKeyNavigablePath
-	: (KEY|INDEX) LEFT_PAREN path RIGHT_PAREN pathContinuation?
+	: indexKeyQuantifier LEFT_PAREN path RIGHT_PAREN pathContinuation?
 	;
 
 
@@ -622,13 +622,16 @@ predicate
 	: LEFT_PAREN predicate RIGHT_PAREN											# GroupedPredicate
 	| expression IS NOT? NULL													# IsNullPredicate
 	| expression IS NOT? EMPTY													# IsEmptyPredicate
+	| expression IS NOT? TRUE													# IsTruePredicate
+	| expression IS NOT? FALSE													# IsFalsePredicate
+	| expression IS NOT? DISTINCT FROM expression								# IsDistinctFromPredicate
+	| expression NOT? MEMBER OF? path											# MemberOfPredicate
 	| expression NOT? IN inList													# InPredicate
 	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
 	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate
 	| expression comparisonOperator expression									# ComparisonPredicate
-	| EXISTS (ELEMENTS|INDICES) LEFT_PAREN simplePath RIGHT_PAREN				# ExistsCollectionPartPredicate
+	| EXISTS collectionQuantifier LEFT_PAREN simplePath RIGHT_PAREN				# ExistsCollectionPartPredicate
 	| EXISTS expression															# ExistsPredicate
-	| expression NOT? MEMBER OF? path											# MemberOfPredicate
 	| NOT predicate																# NegatedPredicate
 	| predicate AND predicate													# AndPredicate
 	| predicate OR predicate													# OrPredicate
@@ -645,8 +648,6 @@ comparisonOperator
 	| GREATER_EQUAL
 	| LESS
 	| LESS_EQUAL
-	| IS DISTINCT FROM
-	| IS NOT DISTINCT FROM
 	;
 
 /**
@@ -655,7 +656,7 @@ comparisonOperator
  * A list of values, a parameter (for a parameterized list of values), a subquery, or an 'elements()' or 'indices()' function
  */
 inList
-	: (ELEMENTS|INDICES) LEFT_PAREN simplePath RIGHT_PAREN							# PersistentCollectionReferenceInList
+	: collectionQuantifier LEFT_PAREN simplePath RIGHT_PAREN						# PersistentCollectionReferenceInList
 	| LEFT_PAREN (expressionOrPredicate (COMMA expressionOrPredicate)*)? RIGHT_PAREN# ExplicitTupleInList
 	| LEFT_PAREN subquery RIGHT_PAREN												# SubqueryInList
 	| parameter 																	# ParamInList
@@ -713,6 +714,31 @@ primaryExpression
 expressionOrPredicate
 	: expression
 	| predicate
+	;
+
+collectionQuantifier
+	: elementsValuesQuantifier
+	| indicesKeysQuantifier
+	;
+
+elementValueQuantifier
+	: ELEMENT
+	| VALUE
+	;
+
+indexKeyQuantifier
+	: INDEX
+	| KEY
+	;
+
+elementsValuesQuantifier
+	: ELEMENTS
+	| VALUES
+	;
+
+indicesKeysQuantifier
+	: INDICES
+	| KEYS
 	;
 
 /**
@@ -1024,8 +1050,7 @@ function
 	: standardFunction
 	| aggregateFunction
 	| collectionSizeFunction
-	| indexAggregateFunction
-	| elementAggregateFunction
+	| collectionAggregateFunction
 	| collectionFunctionMisuse
 	| jpaNonstandardFunction
 	| genericFunction
@@ -1051,7 +1076,8 @@ jpaNonstandardFunctionName
  * The function name, followed by a parenthesized list of comma-separated expressions
  */
 genericFunction
-	: genericFunctionName LEFT_PAREN (genericFunctionArguments | ASTERISK)? RIGHT_PAREN nthSideClause? nullsClause? withinGroupClause? filterClause? overClause?
+	: genericFunctionName LEFT_PAREN (genericFunctionArguments | ASTERISK)? RIGHT_PAREN
+	  nthSideClause? nullsClause? withinGroupClause? filterClause? overClause?
 	;
 
 /**
@@ -1078,27 +1104,14 @@ collectionSizeFunction
 	;
 
 /**
- * The special aggregate collection functions defined by HQL
+ * Special rule for 'max(elements())`, 'avg(keys())', 'sum(indices())`, etc., as defined by HQL
+ * Also the deprecated 'maxindex()', 'maxelement()', 'minindex()', 'minelement()' functions from old HQL
  */
-indexAggregateFunction
-	: MAXINDEX LEFT_PAREN path RIGHT_PAREN
-	| MININDEX LEFT_PAREN path RIGHT_PAREN
-	| MAX LEFT_PAREN INDICES LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
-	| MIN LEFT_PAREN INDICES LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
-	| SUM LEFT_PAREN INDICES LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
-	| AVG LEFT_PAREN INDICES LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
-	;
-
-/**
- * The special aggregate collection functions defined by HQL
- */
-elementAggregateFunction
-	: MAXELEMENT LEFT_PAREN path RIGHT_PAREN
-	| MINELEMENT LEFT_PAREN path RIGHT_PAREN
-	| MAX LEFT_PAREN ELEMENTS LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
-	| MIN LEFT_PAREN ELEMENTS LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
-	| SUM LEFT_PAREN ELEMENTS LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
-	| AVG LEFT_PAREN ELEMENTS LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN
+collectionAggregateFunction
+	: (MAX|MIN|SUM|AVG) LEFT_PAREN elementsValuesQuantifier LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN	# ElementAggregateFunction
+	| (MAX|MIN|SUM|AVG) LEFT_PAREN indicesKeysQuantifier LEFT_PAREN path RIGHT_PAREN RIGHT_PAREN	# IndexAggregateFunction
+	| (MAXELEMENT|MINELEMENT) LEFT_PAREN path RIGHT_PAREN											# ElementAggregateFunction
+	| (MAXINDEX|MININDEX) LEFT_PAREN path RIGHT_PAREN												# IndexAggregateFunction
 	;
 
 /**
@@ -1108,8 +1121,8 @@ elementAggregateFunction
  *  and so we have tests that insist they're interchangeable. Ugh.)
  */
 collectionFunctionMisuse
-	: ELEMENTS LEFT_PAREN path RIGHT_PAREN
-	| INDICES LEFT_PAREN path RIGHT_PAREN
+	: elementsValuesQuantifier LEFT_PAREN path RIGHT_PAREN
+	| indicesKeysQuantifier LEFT_PAREN path RIGHT_PAREN
 	;
 
 /**
@@ -1127,32 +1140,43 @@ aggregateFunction
  * The functions 'every()' and 'all()' are synonyms
  */
 everyFunction
-	: (EVERY|ALL) LEFT_PAREN predicate RIGHT_PAREN filterClause? overClause?
-	| (EVERY|ALL) LEFT_PAREN subquery RIGHT_PAREN
-	| (EVERY|ALL) (ELEMENTS|INDICES) LEFT_PAREN simplePath RIGHT_PAREN
+	: everyAllQuantifier LEFT_PAREN predicate RIGHT_PAREN filterClause? overClause?
+	| everyAllQuantifier LEFT_PAREN subquery RIGHT_PAREN
+	| everyAllQuantifier collectionQuantifier LEFT_PAREN simplePath RIGHT_PAREN
 	;
 
 /**
  * The functions 'any()' and 'some()' are synonyms
  */
 anyFunction
-	: (ANY|SOME) LEFT_PAREN predicate RIGHT_PAREN filterClause? overClause?
-	| (ANY|SOME) LEFT_PAREN subquery RIGHT_PAREN
-	| (ANY|SOME) (ELEMENTS|INDICES) LEFT_PAREN simplePath RIGHT_PAREN
+	: anySomeQuantifier LEFT_PAREN predicate RIGHT_PAREN filterClause? overClause?
+	| anySomeQuantifier LEFT_PAREN subquery RIGHT_PAREN
+	| anySomeQuantifier collectionQuantifier LEFT_PAREN simplePath RIGHT_PAREN
 	;
+
+everyAllQuantifier
+    : EVERY
+    | ALL
+    ;
+
+anySomeQuantifier
+    : ANY
+    | SOME
+    ;
 
 /**
  * The 'listagg()' ordered set-aggregate function
  */
 listaggFunction
-	: LISTAGG LEFT_PAREN DISTINCT? expressionOrPredicate COMMA expressionOrPredicate onOverflowClause? RIGHT_PAREN withinGroupClause? filterClause? overClause?
+	: LISTAGG LEFT_PAREN DISTINCT? expressionOrPredicate COMMA expressionOrPredicate onOverflowClause? RIGHT_PAREN
+	  withinGroupClause? filterClause? overClause?
 	;
 
 /**
  * A 'on overflow' clause: what to do when the text data type used for 'listagg' overflows
  */
 onOverflowClause
-	: ON OVERFLOW (ERROR | (TRUNCATE expression? (WITH|WITHOUT) COUNT))
+	: ON OVERFLOW (ERROR | TRUNCATE expression? (WITH|WITHOUT) COUNT)
 	;
 
 /**
@@ -1211,9 +1235,9 @@ frameClause
  * The start of the window content
  */
 frameStart
-	: UNBOUNDED PRECEDING
+	: CURRENT ROW
+	| UNBOUNDED PRECEDING
 	| expression PRECEDING
-	| CURRENT ROW
 	| expression FOLLOWING
 	;
 
@@ -1221,10 +1245,10 @@ frameStart
  * The end of the window content
  */
 frameEnd
-	: expression PRECEDING
-	| CURRENT ROW
-	| expression FOLLOWING
+	: CURRENT ROW
 	| UNBOUNDED FOLLOWING
+	| expression PRECEDING
+	| expression FOLLOWING
 	;
 
 /**
@@ -1621,6 +1645,7 @@ rollup
 	| IS
 	| JOIN
 	| KEY
+	| KEYS
 	| LAST
 	| LATERAL
 	| LEADING

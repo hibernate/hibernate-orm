@@ -81,7 +81,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "On release of batch it still contained JDBC statements", id = 10)
 	void batchContainedStatementsOnRelease();
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Bytecode provider: %s", id = 21)
 	void bytecodeProvider(String provider);
 
@@ -91,12 +91,20 @@ public interface CoreMessageLogger extends BasicLogger {
 	void c3p0ProviderClassNotFound(String c3p0ProviderClassName);
 
 	@LogMessage(level = WARN)
-	@Message(value = "I/O reported cached file could not be found : %s : %s", id = 23)
+	@Message(value = "I/O reported cached file could not be found: [%s]: %s", id = 23)
 	void cachedFileNotFound(String path, FileNotFoundException error);
 
 	@LogMessage(level = INFO)
 	@Message(value = "Cache provider: %s", id = 24)
 	void cacheProvider(String name);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Second-level cache region factory [%s]", id = 25)
+	void regionFactory(String name);
+
+	@LogMessage(level = INFO)
+	@Message(value = "Second-level cache disabled", id = 26)
+	void noRegionFactory();
 
 	@LogMessage(level = WARN)
 	@Message(value = "Calling joinTransaction() on a non JTA EntityManager", id = 27)
@@ -187,7 +195,7 @@ public interface CoreMessageLogger extends BasicLogger {
 //	void deprecatedForceDescriminatorAnnotation();
 
 	@LogMessage(level = WARN)
-	@Message(value = "DEPRECATED : use [%s] instead with custom [%s] implementation", id = 65)
+	@Message(value = "DEPRECATED: use [%s] instead with custom [%s] implementation", id = 65)
 	void deprecatedUuidGenerator(String name, String name2);
 
 	@LogMessage(level = INFO)
@@ -264,7 +272,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void exceptionInBeforeTransactionCompletionInterceptor(@Cause Throwable e);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Sub-resolver threw unexpected exception, continuing to next : %s", id = 89)
+	@Message(value = "Sub-resolver threw unexpected exception, continuing to next: %s", id = 89)
 	void exceptionInSubResolver(String message);
 
 	@LogMessage(level = ERROR)
@@ -334,7 +342,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "GUID identifier generated: %s", id = 113)
 	void guidGenerated(String result);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Handling transient entity in delete processing", id = 114)
 	void handlingTransientEntity();
 
@@ -469,7 +477,7 @@ public interface CoreMessageLogger extends BasicLogger {
 			String sfJNDIName,
 			@Cause ClassCastException e);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Lazy property fetching available for: %s", id = 157)
 	void lazyPropertyFetchingAvailable(String name);
 
@@ -563,7 +571,7 @@ public interface CoreMessageLogger extends BasicLogger {
 //	void parameterPositionOccurredAsBothJpaAndHibernatePositionalParameter(Integer position);
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Error parsing XML (%s) : %s", id = 196)
+	@Message(value = "Error parsing XML: (%s) %s", id = 196)
 	void parsingXmlError(
 			int lineNumber,
 			String message);
@@ -576,7 +584,7 @@ public interface CoreMessageLogger extends BasicLogger {
 			String message);
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Warning parsing XML (%s) : %s", id = 198)
+	@Message(value = "Warning parsing XML: (%s) %s", id = 198)
 	void parsingXmlWarning(
 			int lineNumber,
 			String message);
@@ -615,11 +623,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	void propertiesLoaded(Properties maskOut);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "hibernate.properties not found", id = 206)
+	@Message(value = "'hibernate.properties' not found", id = 206)
 	void propertiesNotFound();
 
 	@LogMessage(level = WARN)
-	@Message(value = "Property %s not found in class but described in <mapping-file/> (possible typo error)", id = 207)
+	@Message(value = "Property '%s' not found in class but described in <mapping-file/> (possible typo error)", id = 207)
 	void propertyNotFound(String property);
 
 //	@LogMessage(level = WARN)
@@ -793,7 +801,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void stoppingService();
 
 	@LogMessage(level = INFO)
-	@Message(value = "sub-resolver threw unexpected exception, continuing to next : %s", id = 257)
+	@Message(value = "sub-resolver threw unexpected exception, continuing to next: %s", id = 257)
 	void subResolverException(String message);
 
 	@LogMessage(level = INFO)
@@ -805,7 +813,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void synchronizationAlreadyRegistered(Synchronization synchronization);
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Exception calling user Synchronization [%s] : %s", id = 260)
+	@Message(value = "Exception calling user Synchronization [%s]: %s", id = 260)
 	void synchronizationFailed(
 			Synchronization synchronization,
 			Throwable t);
@@ -839,7 +847,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void typeDefinedNoRegistrationKeys(Object type);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Type registration key [%s] overrode previous key : %s", id = 270)
+	@Message(value = "Type registration key [%s] overrode previous key: %s", id = 270)
 	void typeRegistrationKeyOverridesPrevious(
 			String key,
 			Type old);
@@ -855,7 +863,7 @@ public interface CoreMessageLogger extends BasicLogger {
 			@Cause NamingException e);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Error accessing type info result set : %s", id = 273)
+	@Message(value = "Error accessing type info result set: %s", id = 273)
 	void unableToAccessTypeInfoResultSet(String string);
 
 	@LogMessage(level = WARN)
@@ -966,7 +974,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToCompleteSchemaValidation(@Cause SQLException e);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to configure SQLExceptionConverter : %s", id = 301)
+	@Message(value = "Unable to configure SQLExceptionConverter: %s", id = 301)
 	void unableToConfigureSqlExceptionConverter(HibernateException e);
 
 	@LogMessage(level = ERROR)
@@ -976,7 +984,7 @@ public interface CoreMessageLogger extends BasicLogger {
 			@Cause Throwable e);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to construct instance of specified SQLExceptionConverter : %s", id = 303)
+	@Message(value = "Unable to construct instance of specified SQLExceptionConverter: %s", id = 303)
 	void unableToConstructSqlExceptionConverter(Throwable t);
 
 	@LogMessage(level = WARN)
@@ -994,7 +1002,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToCreateSchema(@Cause Exception e);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Could not deserialize cache file: %s : %s", id = 307)
+	@Message(value = "Could not deserialize cache file [%s]: %s", id = 307)
 	void unableToDeserializeCache(
 			String path,
 			SerializationException error);
@@ -1034,7 +1042,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToExecuteBatch(Exception e, String sql );
 
 	@LogMessage(level = WARN)
-	@Message(value = "Error executing resolver [%s] : %s", id = 316)
+	@Message(value = "Error executing resolver [%s]: %s", id = 316)
 	void unableToExecuteResolver(
 			DialectResolver abstractDialectResolver,
 			String message);
@@ -1062,7 +1070,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToInstantiateOptimizer(String type);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to instantiate UUID generation strategy class : %s", id = 325)
+	@Message(value = "Unable to instantiate UUID generation strategy class: %s", id = 325)
 	void unableToInstantiateUuidGenerationStrategy(Exception ignore);
 
 	@LogMessage(level = WARN)
@@ -1074,7 +1082,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToLoadCommand(@Cause HibernateException e);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to load/access derby driver class sysinfo to check versions : %s", id = 328)
+	@Message(value = "Unable to load/access derby driver class sysinfo to check versions: %s", id = 328)
 	void unableToLoadDerbyDriver(String message);
 
 	@LogMessage(level = ERROR)
@@ -1095,11 +1103,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToLocateMBeanServer();
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to locate requested UUID generation strategy class : %s", id = 334)
+	@Message(value = "Unable to locate requested UUID generation strategy class: %s", id = 334)
 	void unableToLocateUuidGenerationStrategy(String strategyClassName);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to log SQLWarnings : %s", id = 335)
+	@Message(value = "Unable to log SQLWarnings: %s", id = 335)
 	void unableToLogSqlWarnings(SQLException sqle);
 
 	@LogMessage(level = WARN)
@@ -1166,7 +1174,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToReleaseBatchStatement();
 
 	@LogMessage(level = ERROR)
-	@Message(value = "Could not release a cache lock : %s", id = 353)
+	@Message(value = "Could not release a cache lock: %s", id = 353)
 	void unableToReleaseCacheLock(CacheException ce);
 
 	@LogMessage(level = INFO)
@@ -1174,7 +1182,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToReleaseContext(String message);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to release created MBeanServer : %s", id = 355)
+	@Message(value = "Unable to release created MBeanServer: %s", id = 355)
 	void unableToReleaseCreatedMBeanServer(String string);
 
 	@LogMessage(level = INFO)
@@ -1204,7 +1212,7 @@ public interface CoreMessageLogger extends BasicLogger {
 			String message);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to retrieve type info result set : %s", id = 362)
+	@Message(value = "Unable to retrieve type info result set: %s", id = 362)
 	void unableToRetrieveTypeInfoResultSet(String string);
 
 	@LogMessage(level = INFO)
@@ -1212,7 +1220,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToRollbackConnection(Exception ignore);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Unable to rollback isolated transaction on error [%s] : [%s]", id = 364)
+	@Message(value = "Unable to rollback isolated transaction on error [%s]: [%s]", id = 364)
 	void unableToRollbackIsolatedTransaction(
 			Exception e,
 			Exception ignore);
@@ -1273,7 +1281,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToWrapResultSet(@Cause SQLException e);
 
 	@LogMessage(level = WARN)
-	@Message(value = "I/O reported error writing cached file : %s: %s", id = 378)
+	@Message(value = "I/O reported error writing cached file: %s: %s", id = 378)
 	void unableToWriteCachedFile(
 			String path,
 			String message);
@@ -1362,7 +1370,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	/**
 	 * @deprecated Use {@link org.hibernate.dialect.DialectLogging#usingDialect} instead
 	 */
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Using dialect: %s", id = 400)
 	@Deprecated
 	void usingDialect(Dialect dialect);
@@ -1395,7 +1403,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void version(String versionString);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Warnings creating temp table : %s", id = 413)
+	@Message(value = "Warnings creating temp table: %s", id = 413)
 	void warningsCreatingTempTable(SQLWarning warning);
 
 	@LogMessage(level = INFO)
@@ -1462,7 +1470,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	 * @see LobCreationLogging#contextualNClobCreationFailed
 	 */
 	@LogMessage(level = DEBUG)
-	@Message(value = "Disabling contextual LOB creation as createClob() method threw error : %s", id = 424)
+	@Message(value = "Disabling contextual LOB creation as createClob() method threw error: %s", id = 424)
 	@Deprecated
 	void disablingContextualLOBCreationSinceCreateClobFailed(Throwable t);
 
@@ -1489,7 +1497,7 @@ public interface CoreMessageLogger extends BasicLogger {
 			String jtaPlatform);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Setting entity-identifier value binding where one already existed : %s.", id = 429)
+	@Message(value = "Setting entity-identifier value binding where one already existed: %s.", id = 429)
 	void entityIdentifierValueBindingExists(String name);
 
 	@LogMessage(level = WARN)
@@ -1585,7 +1593,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void explicitSkipLockedLockCombo();
 
 	@LogMessage(level = INFO)
-	@Message(value = "'jakarta.persistence.validation.mode' named multiple values : %s", id = 448)
+	@Message(value = "'jakarta.persistence.validation.mode' named multiple values: %s", id = 448)
 	void multipleValidationModes(String modes);
 
 	@LogMessage(level = WARN)
@@ -1616,7 +1624,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToLoadScannedClassOrResource(@Cause Exception e);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Exception while discovering OSGi service implementations : %s", id = 453)
+	@Message(value = "Exception while discovering OSGi service implementations: %s", id = 453)
 	void unableToDiscoverOsgiService(String service, @Cause Exception e);
 
 	@LogMessage(level = WARN)
@@ -1640,7 +1648,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void creatingPooledLoOptimizer(int incrementSize, String name);
 
 	@LogMessage(level = WARN)
-	@Message(value = "Unable to interpret type [%s] as an AttributeConverter due to an exception : %s", id = 468)
+	@Message(value = "Unable to interpret type [%s] as an AttributeConverter due to an exception: %s", id = 468)
 	void logBadHbmAttributeConverterType(String type, String exceptionMessage);
 
 	@Message(value = "The ClassLoaderService can not be reused. This instance was stopped already.", id = 469)
@@ -1664,7 +1672,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	void cachedFileObsolete(File cachedFile);
 
 	@Message(
-			value = "Ambiguous persistent property methods detected on %s; mark one as @Transient : [%s] and [%s]",
+			value = "Ambiguous persistent property methods detected on %s; mark one as @Transient: [%s] and [%s]",
 			id = 474
 	)
 	String ambiguousPropertyMethods(String entityName, String oneMethodSig, String secondMethodSig);
@@ -1673,11 +1681,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Cannot locate column information using identifier [%s]; ignoring index [%s]", id = 475 )
 	void logCannotLocateIndexColumnInformation(String columnIdentifierText, String indexIdentifierText);
 
-	@LogMessage(level = INFO)
-	@Message(value = "Executing script '%s'", id = 476)
+	@LogMessage(level = DEBUG)
+	@Message(value = "Executing script [%s]", id = 476)
 	void executingScript(String scriptName);
 
-	@LogMessage(level = INFO)
+	@LogMessage(level = DEBUG)
 	@Message(value = "Starting delayed evictData of schema as part of SessionFactory shut-down'", id = 477)
 	void startingDelayedSchemaDrop();
 
@@ -1749,7 +1757,11 @@ public interface CoreMessageLogger extends BasicLogger {
 	String bytecodeEnhancementFailedUnableToGetPrivateLookupFor(String className);
 
 	@LogMessage(level = INFO)
-	@Message(value = "Using JtaPlatform implementation: [%s]", id = 490)
+	@Message(value = "No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)", id = 489)
+	void noJtaPlatform();
+
+	@LogMessage(level = INFO)
+	@Message(value = "Using JTA platform [%s]", id = 490)
 	void usingJtaPlatform(String jtaPlatformClassName);
 
 	@LogMessage(level = WARN)
@@ -1839,9 +1851,9 @@ public interface CoreMessageLogger extends BasicLogger {
 	void unableToDetermineCockroachDatabaseVersion(String minimumVersion);
 
 	@LogMessage(level = DEBUG)
-	@Message(value = "Unable to create the ReflectionOptimizer for [%s]",
+	@Message(value = "Unable to create the ReflectionOptimizer for [%s]: %s",
 			id = 513)
-	void unableToGenerateReflectionOptimizer(String className, @Cause Throwable cause);
+	void unableToGenerateReflectionOptimizer(String className, String cause);
 
 	@LogMessage(level = WARN)
 	@Message(value = "PostgreSQL JDBC driver classes are inaccessible and thus, certain DDL types like JSONB, JSON, GEOMETRY can not be used.",

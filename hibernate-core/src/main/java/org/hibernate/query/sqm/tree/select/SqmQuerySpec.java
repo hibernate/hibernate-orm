@@ -28,6 +28,8 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
@@ -41,6 +43,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClauseContainer;
+import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
@@ -316,6 +319,12 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
+	public List<SqmRoot<?>> getRootList() {
+		assert getFromClause() != null;
+		return getFromClause().getRoots();
+	}
+
+	@Override
 	public SqmQuerySpec<T> addRoot(JpaRoot<?> root) {
 		if ( getFromClause() == null ) {
 			setFromClause( new SqmFromClause() );
@@ -554,7 +563,7 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	private void assertFetchOwner(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> owner, SqmJoin<?, ?> sqmJoin) {
 		if ( !selectedFromSet.contains( owner ) ) {
 			throw new SemanticException(
-					"query specified join fetching, but the owner " +
+					"Query specified join fetching, but the owner " +
 							"of the fetched association was not present in the select list " +
 							"[" + sqmJoin.asLoggableText() + "]"
 			);
@@ -588,12 +597,14 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 						sb.append( root.getCorrelationParent().resolveAlias() );
 						sb.append( ' ' ).append( root.resolveAlias() );
 						appendJoins( root, sb );
+						appendTreatJoins( root, sb );
 					}
 				}
 				else {
 					sb.append( root.getEntityName() );
 					sb.append( ' ' ).append( root.resolveAlias() );
 					appendJoins( root, sb );
+					appendTreatJoins( root, sb );
 				}
 				separator = ", ";
 			}
@@ -639,8 +650,16 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			}
 			if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
 				final SqmAttributeJoin<?, ?> attributeJoin = (SqmAttributeJoin<?, ?>) sqmJoin;
-				sb.append( sqmFrom.resolveAlias() ).append( '.' );
-				sb.append( ( attributeJoin ).getAttribute().getName() );
+				if ( sqmFrom instanceof SqmTreatedPath<?, ?> ) {
+					final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmFrom;
+					sb.append( "treat(" );
+					sb.append( treatedPath.getWrappedPath().resolveAlias() );
+					sb.append( " as " ).append( treatedPath.getTreatTarget().getName() ).append( ')' );
+				}
+				else {
+					sb.append( sqmFrom.resolveAlias() );
+				}
+				sb.append( '.' ).append( ( attributeJoin ).getAttribute().getName() );
 				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
 				if ( attributeJoin.getJoinPredicate() != null ) {
 					sb.append( " on " );
@@ -680,5 +699,20 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 			appendJoins( sqmJoin, sb );
 			separator = ", ";
 		}
+	}
+
+	private void appendTreatJoins(SqmFrom<?, ?> sqmFrom, StringBuilder sb) {
+		for ( SqmFrom<?, ?> sqmTreat : sqmFrom.getSqmTreats() ) {
+			appendJoins( sqmTreat, sb );
+		}
+	}
+
+	public boolean groupByClauseContains(NavigablePath path) {
+		for ( SqmExpression<?> expression : groupByClauseExpressions ) {
+			if ( expression instanceof SqmPath && ( (SqmPath<?>) expression ).getNavigablePath() == path ) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

@@ -17,6 +17,8 @@ import java.util.stream.Stream;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -34,6 +36,8 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
+import org.hibernate.engine.profile.DefaultFetchProfile;
+import org.hibernate.graph.GraphSemantic;
 
 /**
  * Within the context of an active {@linkplain org.hibernate.Session session},
@@ -65,6 +69,21 @@ import jakarta.persistence.TemporalType;
  *     {@link #setParameter(int, Object)} allow arguments to be bound to named
  *     and ordinal parameters defined by the query.
  * </ul>
+ * <p>
+ * A query may have explicit <em>fetch joins</em>, specified using the syntax
+ * {@code join fetch} in HQL, or via {@link jakarta.persistence.criteria.From#fetch}
+ * in the criteria API. Additional fetch joins may be added by:
+ * <ul>
+ * <li>setting an {@link EntityGraph} by calling
+ *     {@link #setEntityGraph(EntityGraph, GraphSemantic)}, or
+ * <li>enabling a fetch profile, using {@link Session#enableFetchProfile(String)}.
+ * </ul>
+ * <p>
+ * The special built-in fetch profile named
+ * {@value DefaultFetchProfile#HIBERNATE_DEFAULT_PROFILE} adds
+ * a fetch join for every {@link jakarta.persistence.FetchType#EAGER eager}
+ * {@code @ManyToOne} or {@code @OneToOne} association belonging to an entity
+ * returned by the query.
  *
  * @author Steve Ebersole
  */
@@ -186,6 +205,16 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	SelectionQuery<R> setHint(String hintName, Object value);
 
+	/**
+	 * Apply an {@link EntityGraph} to the query.
+	 * <p>
+	 * This is an alternative way to specify the associations which
+	 * should be fetched as part of the initial query.
+	 *
+	 * @since 6.3
+	 */
+	SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
+
 	@Override
 	SelectionQuery<R> setFlushMode(FlushModeType flushMode);
 
@@ -194,6 +223,9 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	@Override
 	SelectionQuery<R> setTimeout(int timeout);
+
+	@Override
+	SelectionQuery<R> setComment(String comment);
 
 	/**
 	 * Obtain the JDBC fetch size hint in effect for this query. This value is eventually passed along to the JDBC
@@ -373,6 +405,18 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setCacheable(boolean cacheable);
 
 	/**
+	 * Should the query plan of the query be stored in the query plan cache?
+	 */
+	boolean isQueryPlanCacheable();
+
+	/**
+	 * Enable/disable query plan caching for this query.
+	 *
+	 * @see #isQueryPlanCacheable
+	 */
+	SelectionQuery<R> setQueryPlanCacheable(boolean queryPlanCacheable);
+
+	/**
 	 * Obtain the name of the second level query cache region in which query
 	 * results will be stored (if they are cached, see the discussion on
 	 * {@link #isCacheable()} for more information). {@code null} indicates
@@ -426,6 +470,61 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * Specify a {@link LockMode} to apply to a specific alias defined in the query
 	 */
 	SelectionQuery<R> setLockMode(String alias, LockMode lockMode);
+
+	/**
+	 * If the result type of this query is an entity class, add an attribute
+	 * of the entity to be used to order the query results in ascending order.
+	 *
+	 * @param attribute an attribute of the entity class returned by this query
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> ascending(SingularAttribute<? super R, ?> attribute);
+
+	/**
+	 * If the result type of this query is an entity class, add an attribute
+	 * of the entity to be used to order the query results in descending order.
+	 *
+	 * @param attribute an attribute of the entity class returned by this query
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> descending(SingularAttribute<? super R, ?> attribute);
+
+	/**
+	 * Add an element of the select list to be used to order the query results
+	 * in ascending order.
+	 *
+	 * @param element an integer identifying an element of the select list
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> ascending(int element);
+
+	/**
+	 * Add an element of the select list to be used to order the query results
+	 * in descending order.
+	 *
+	 * @param element an integer identifying an element of the select list
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> descending(int element);
+
+	/**
+	 * Clear the ordering conditions for this query.
+	 *
+	 * @see #ascending(SingularAttribute)
+	 * @see #descending(SingularAttribute)
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> unordered();
 
 	/**
 	 * Specify a {@link LockMode} to apply to a specific alias defined in the query

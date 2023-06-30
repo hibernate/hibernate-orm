@@ -25,7 +25,7 @@ public class DdlTypeImpl implements DdlType {
 	private final String typeNamePattern;
 	private final String castTypeNamePattern;
 	private final boolean castTypeNameIsStatic;
-	private final Dialect dialect;
+	final Dialect dialect;
 
 	public DdlTypeImpl(int sqlTypeCode, String typeNamePattern, Dialect dialect) {
 		this( sqlTypeCode, typeNamePattern, typeNamePattern, dialect );
@@ -60,11 +60,6 @@ public class DdlTypeImpl implements DdlType {
 					? typeNamePattern.substring( 0, paren )
 					: ( typeNamePattern.substring( 0, paren ) + typeNamePattern.substring( parenEnd + 1 ) );
 		}
-		return typeNamePattern;
-	}
-
-	@Override
-	public String getTypeNamePattern() {
 		return typeNamePattern;
 	}
 

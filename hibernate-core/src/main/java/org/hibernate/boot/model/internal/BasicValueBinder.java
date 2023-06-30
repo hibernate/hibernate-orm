@@ -74,6 +74,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
@@ -152,6 +153,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private TemporalType temporalPrecision;
 	private TimeZoneStorageType timeZoneStorageType;
 	private boolean partitionKey;
+	private Integer jdbcTypeCode;
 
 	private Table table;
 	private AnnotatedColumns columns;
@@ -895,7 +897,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 						.getDescriptor( javaClassAnn.value() );
 			}
 
-			return null;
+			throw new MappingException("Could not determine key type for '@Any' mapping (specify '@AnyKeyJavaType' or '@AnyKeyJavaClass')");
 		};
 
 		explicitJdbcTypeAccess = (typeConfiguration) -> {
@@ -940,7 +942,13 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			if ( jdbcTypeCodeAnn != null ) {
 				final int jdbcTypeCode = jdbcTypeCodeAnn.value();
 				if ( jdbcTypeCode != Integer.MIN_VALUE ) {
-					return typeConfiguration.getJdbcTypeRegistry().getDescriptor( jdbcTypeCode );
+					final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
+					if ( jdbcTypeRegistry.getConstructor( jdbcTypeCode ) != null ) {
+						return null;
+					}
+					else {
+						return jdbcTypeRegistry.getDescriptor( jdbcTypeCode );
+					}
 				}
 			}
 
@@ -1052,15 +1060,15 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private void normalSupplementalDetails(XProperty attributeXProperty) {
 
 		explicitJavaTypeAccess = typeConfiguration -> {
-			final org.hibernate.annotations.JavaType javaTypeAnn = findAnnotation( attributeXProperty, org.hibernate.annotations.JavaType.class );
-			if ( javaTypeAnn != null ) {
-				final Class<? extends BasicJavaType<?>> javaTypeClass = normalizeJavaType( javaTypeAnn.value() );
+			final org.hibernate.annotations.JavaType javaType =
+					findAnnotation( attributeXProperty, org.hibernate.annotations.JavaType.class );
+			if ( javaType != null ) {
+				final Class<? extends BasicJavaType<?>> javaTypeClass = normalizeJavaType( javaType.value() );
 				if ( javaTypeClass != null ) {
 					if ( buildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
 						return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
 					}
-					final ManagedBean<? extends BasicJavaType<?>> jtdBean = getManagedBeanRegistry().getBean( javaTypeClass );
-					return jtdBean.getBeanInstance();
+					return getManagedBeanRegistry().getBean( javaTypeClass ).getBeanInstance();
 				}
 			}
 
@@ -1072,22 +1080,28 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			return null;
 		};
 
+		final org.hibernate.annotations.JdbcTypeCode jdbcType =
+				findAnnotation( attributeXProperty, org.hibernate.annotations.JdbcTypeCode.class );
+		if ( jdbcType != null ) {
+			jdbcTypeCode = jdbcType.value();
+		}
+
 		normalJdbcTypeDetails( attributeXProperty);
 		normalMutabilityDetails( attributeXProperty );
 
-		final Enumerated enumeratedAnn = attributeXProperty.getAnnotation( Enumerated.class );
-		if ( enumeratedAnn != null ) {
-			enumType = enumeratedAnn.value();
+		final Enumerated enumerated = attributeXProperty.getAnnotation( Enumerated.class );
+		if ( enumerated != null ) {
+			enumType = enumerated.value();
 		}
 
-		final Temporal temporalAnn = attributeXProperty.getAnnotation( Temporal.class );
-		if ( temporalAnn != null ) {
-			temporalPrecision = temporalAnn.value();
+		final Temporal temporal = attributeXProperty.getAnnotation( Temporal.class );
+		if ( temporal != null ) {
+			temporalPrecision = temporal.value();
 		}
 
-		final TimeZoneStorage timeZoneStorageAnn = attributeXProperty.getAnnotation( TimeZoneStorage.class );
-		if ( timeZoneStorageAnn != null ) {
-			timeZoneStorageType = timeZoneStorageAnn.value();
+		final TimeZoneStorage timeZoneStorage = attributeXProperty.getAnnotation( TimeZoneStorage.class );
+		if ( timeZoneStorage != null ) {
+			timeZoneStorageType = timeZoneStorage.value();
 			final TimeZoneColumn timeZoneColumnAnn = attributeXProperty.getAnnotation( TimeZoneColumn.class );
 			if ( timeZoneColumnAnn != null ) {
 				if ( timeZoneStorageType != TimeZoneStorageType.AUTO && timeZoneStorageType != TimeZoneStorageType.COLUMN ) {
@@ -1221,6 +1235,10 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 		if ( temporalPrecision != null ) {
 			basicValue.setTemporalPrecision( temporalPrecision );
+		}
+
+		if ( jdbcTypeCode != null ) {
+			basicValue.setExplicitJdbcTypeCode( jdbcTypeCode );
 		}
 
 		linkWithValue();

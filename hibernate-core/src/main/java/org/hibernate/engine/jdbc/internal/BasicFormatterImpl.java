@@ -22,7 +22,7 @@ import org.hibernate.internal.util.StringHelper;
 public class BasicFormatterImpl implements Formatter {
 
 	private static final Set<String> NON_FUNCTION_NAMES = Set.of(
-			"select", "from", "on", "set", "and", "or", "where", "having", "by"
+			"select", "from", "on", "set", "and", "or", "where", "having", "by", "using"
 	);
 
 	private static final String INDENT_STRING = "    ";
@@ -37,12 +37,13 @@ public class BasicFormatterImpl implements Formatter {
 		boolean beginLine = true;
 		boolean afterBeginBeforeEnd;
 		boolean afterByOrSetOrFromOrSelect;
-		boolean afterOn;
+		int afterOn;
 		boolean afterBetween;
 		boolean afterExtract;
 		boolean afterInsert;
 		int inFunction;
 		int parensSinceSelect;
+		int valuesParenCount;
 		private final LinkedList<Integer> parenCounts = new LinkedList<>();
 		private final LinkedList<Boolean> afterByOrFromOrSelects = new LinkedList<>();
 
@@ -75,6 +76,7 @@ public class BasicFormatterImpl implements Formatter {
 				switch (lcToken) {
 
 					case "'":
+					case "`":
 					case "\"":
 						String t;
 						do {
@@ -99,15 +101,7 @@ public class BasicFormatterImpl implements Formatter {
 						break;
 
 					case ",":
-						if ( afterByOrSetOrFromOrSelect && inFunction==0 ) {
-							commaAfterByOrFromOrSelect();
-						}
-						else if ( afterOn && inFunction==0 ) {
-							commaAfterOn();
-						}
-						else {
-							misc();
-						}
+						comma();
 						break;
 
 					case "(":
@@ -120,6 +114,7 @@ public class BasicFormatterImpl implements Formatter {
 					case "select":
 						select();
 						break;
+					case "merge":
 					case "insert":
 					case "update":
 					case "delete":
@@ -154,16 +149,13 @@ public class BasicFormatterImpl implements Formatter {
 					case "group":
 					case "order":
 					case "returning":
+					case "using":
 						beginNewClause();
 						break;
 
 					case "from":
-						if ( afterExtract ) {
-							misc();
-							afterExtract = false;
-							break;
-						}
-						//else fall through:
+						from();
+						break;
 					case "where":
 					case "set":
 					case "having":
@@ -172,6 +164,9 @@ public class BasicFormatterImpl implements Formatter {
 					case "into":
 					case "union":
 					case "intersect":
+					case "offset":
+					case "limit":
+					case "fetch":
 						endNewClause();
 						break;
 
@@ -182,23 +177,23 @@ public class BasicFormatterImpl implements Formatter {
 						endCase();
 						break;
 
-					case "and":
-						if ( afterBetween ) {
-							misc();
-							afterBetween = false;
-							break;
-						}
-						//else fall through:
-					case "or":
 					case "when":
 					case "else":
-						logical();
+						when();
+						break;
+					case "then":
+						then();
+						break;
+					case "and":
+						and();
+						break;
+					case "or":
+						or();
 						break;
 					default:
 						if ( isWhitespace( token ) ) {
 							white();
 						}
-
 						else {
 							misc();
 						}
@@ -212,13 +207,63 @@ public class BasicFormatterImpl implements Formatter {
 			return result.toString();
 		}
 
-		private void commaAfterOn() {
-			out();
-			indent--;
-			newline();
-			afterOn = false;
-			afterByOrSetOrFromOrSelect = true;
+		private void or() {
+			logical();
 		}
+
+		private void and() {
+			if ( afterBetween ) {
+				misc();
+				afterBetween = false;
+			}
+			else {
+				logical();
+			}
+		}
+
+		private void from() {
+			if ( afterExtract ) {
+				misc();
+				afterExtract = false;
+			}
+			else {
+				endNewClause();
+			}
+		}
+
+		private void comma() {
+			if ( afterByOrSetOrFromOrSelect && inFunction==0 ) {
+				commaAfterByOrFromOrSelect();
+			}
+//			else if ( afterOn && inFunction==0 ) {
+//				commaAfterOn();
+//			}
+			else {
+				misc();
+			}
+		}
+
+		private void then() {
+			incrementIndent();
+			newline();
+			misc();
+		}
+
+		private void when() {
+			decrementIndent();
+			newline();
+			out();
+			beginLine = false;
+			afterBeginBeforeEnd = true;
+		}
+
+//		private void commaAfterOn() {
+//			out();
+//			decrementIndent();
+//			newline();
+//			afterOn = false;
+//			afterByOrSetOrFromOrSelect = true;
+//		}
 
 		private void commaAfterByOrFromOrSelect() {
 			out();
@@ -232,13 +277,20 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void endCase() {
-			indent--;
+			afterBeginBeforeEnd = false;
+			decrementIndent();
 			logical();
 		}
 
 		private void on() {
-			indent++;
-			afterOn = true;
+			if ( afterOn == 0 ) {
+				incrementIndent();
+			}
+			else if ( afterOn == 1 ) {
+				// ad hoc, but gives a nice result
+				decrementIndent();
+			}
+			afterOn++;
 			newline();
 			out();
 			beginLine = false;
@@ -247,7 +299,9 @@ public class BasicFormatterImpl implements Formatter {
 		private void beginCase() {
 			out();
 			beginLine = false;
-			indent++;
+			incrementIndent();
+			incrementIndent();
+			afterBeginBeforeEnd = true;
 		}
 
 		private void misc() {
@@ -274,7 +328,7 @@ public class BasicFormatterImpl implements Formatter {
 			}
 			else {
 				out();
-				indent++;
+				incrementIndent();
 				beginLine = false;
 				if ( "update".equals( lcToken ) ) {
 					newline();
@@ -286,8 +340,17 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void select() {
+//			if ( parensSinceSelect > 0 ) {
+//				newline();
+//				incrementIndent();
+//				out();
+//			}
+//			else {
+//				out();
+//				incrementIndent();
+//			}
 			out();
-			indent++;
+			incrementIndent();
 			newline();
 			parenCounts.addLast( parensSinceSelect );
 			afterByOrFromOrSelects.addLast( afterByOrSetOrFromOrSelect );
@@ -296,21 +359,26 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void out() {
+			if ( result.charAt( result.length() - 1 ) == ',' ) {
+				result.append(" ");
+			}
 			result.append( token );
 		}
 
 		private void endNewClause() {
 			if ( !afterBeginBeforeEnd ) {
-				indent--;
-				if ( afterOn ) {
-					indent--;
-					afterOn = false;
+				decrementIndent();
+				if ( afterOn == 1 ) {
+					decrementIndent();
+				}
+				if ( afterOn > 0 ) {
+					afterOn = 0;
 				}
 				newline();
 			}
 			out();
 			if ( !"union".equals( lcToken ) && !"intersect".equals( lcToken ) ) {
-				indent++;
+				incrementIndent();
 			}
 			newline();
 			afterBeginBeforeEnd = false;
@@ -321,11 +389,13 @@ public class BasicFormatterImpl implements Formatter {
 
 		private void beginNewClause() {
 			if ( !afterBeginBeforeEnd ) {
-				if ( afterOn ) {
-					indent--;
-					afterOn = false;
+				if ( afterOn == 1 ) {
+					decrementIndent();
 				}
-				indent--;
+				if ( afterOn > 0 ) {
+					afterOn = 0;
+				}
+				decrementIndent();
 				newline();
 			}
 			out();
@@ -335,11 +405,14 @@ public class BasicFormatterImpl implements Formatter {
 
 		private void values() {
 			if ( parensSinceSelect == 0 ) {
-				indent--;
+				if ( !afterBeginBeforeEnd ) {
+					decrementIndent();
+				}
 				newline();
 				out();
-				indent++;
+				incrementIndent();
 				newline();
+				valuesParenCount = parensSinceSelect + 1;
 			}
 			else {
 				out();
@@ -347,19 +420,34 @@ public class BasicFormatterImpl implements Formatter {
 		}
 
 		private void closeParen() {
-			parensSinceSelect--;
-			if ( parensSinceSelect < 0 ) {
-				indent--;
+			if ( parensSinceSelect == 0 ) {
+				decrementIndent();
 				parensSinceSelect = parenCounts.removeLast();
 				afterByOrSetOrFromOrSelect = afterByOrFromOrSelects.removeLast();
 			}
+			else if ( valuesParenCount == parensSinceSelect ) {
+				valuesParenCount = 0;
+				if ( afterBeginBeforeEnd ) {
+					decrementIndent();
+				}
+			}
+			parensSinceSelect--;
 			if ( inFunction > 0 ) {
+				// this should come first,
+				// because we increment
+				// inFunction for every
+				// opening paren from the
+				// first one after the
+				// function name
 				inFunction--;
+				out();
+			}
+			else if ( afterOn > 0 ) {
 				out();
 			}
 			else {
 				if ( !afterByOrSetOrFromOrSelect ) {
-					indent--;
+					decrementIndent();
 					newline();
 				}
 				out();
@@ -372,18 +460,28 @@ public class BasicFormatterImpl implements Formatter {
 				inFunction++;
 			}
 			beginLine = false;
-			if ( inFunction > 0 ) {
+			if ( afterOn > 0 || inFunction > 0 ) {
 				out();
 			}
 			else {
 				out();
 				if ( !afterByOrSetOrFromOrSelect ) {
-					indent++;
+					incrementIndent();
 					newline();
 					beginLine = true;
 				}
 			}
 			parensSinceSelect++;
+		}
+
+		private void incrementIndent() {
+			indent++;
+		}
+
+		private void decrementIndent() {
+			if ( indent > 0 ) {
+				indent--;
+			}
 		}
 
 		private static boolean isFunctionName(String tok) {

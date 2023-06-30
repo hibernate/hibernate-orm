@@ -19,6 +19,10 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 
+import static org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder.BatchMode.BATCH_INITIALIZE;
+import static org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder.BatchMode.BATCH_LOAD;
+import static org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder.BatchMode.NONE;
+
 public class EntitySelectFetchInitializerBuilder {
 
 	public static AbstractFetchParentAccess createInitializer(
@@ -31,6 +35,16 @@ public class EntitySelectFetchInitializerBuilder {
 			AssemblerCreationState creationState) {
 		if ( selectByUniqueKey ) {
 			return new EntitySelectFetchByUniqueKeyInitializer(
+					parentAccess,
+					fetchedAttribute,
+					navigablePath,
+					entityPersister,
+					keyResult.createResultAssembler( parentAccess, creationState )
+			);
+		}
+		if ( parentAccess.findFirstEntityInitializer() == null ) {
+			// Batch initializers require parentAccess.findFirstEntityInitializer() != null
+			return new EntitySelectFetchInitializer(
 					parentAccess,
 					fetchedAttribute,
 					navigablePath,
@@ -83,8 +97,18 @@ public class EntitySelectFetchInitializerBuilder {
 			EntityPersister entityPersister,
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		if ( !entityPersister.isBatchLoadable() || creationState.isScrollResult() ) {
-			return BatchMode.NONE;
+		if ( creationState.isScrollResult()
+				|| !creationState.getExecutionContext()
+						.getSession()
+						.getLoadQueryInfluencers()
+						.effectivelyBatchLoadable( entityPersister ) ) {
+			return NONE;
+		}
+		else if ( creationState.isDynamicInstantiation() ) {
+			if ( canBatchInitializeBeUsed( entityPersister ) ) {
+				return BatchMode.BATCH_INITIALIZE;
+			}
+			return NONE;
 		}
 		while ( parentAccess.isEmbeddableInitializer() ) {
 			final EmbeddableInitializer embeddableInitializer = parentAccess.asEmbeddableInitializer();
@@ -95,9 +119,11 @@ public class EntitySelectFetchInitializerBuilder {
 			if ( initializedPart.isEntityIdentifierMapping()
 					// todo: check if the virtual check is necessary
 					|| initializedPart.isVirtual()
-					// If the parent embeddable has a custom instantiator, we can't inject entities later through setValues()
-					|| !( initializedPart.getMappedType().getRepresentationStrategy().getInstantiator() instanceof StandardEmbeddableInstantiator ) ) {
-				return entityPersister.hasSubclasses() ? BatchMode.NONE : BatchMode.BATCH_INITIALIZE;
+					// If the parent embeddable has a custom instantiator,
+					// we can't inject entities later through setValues()
+					|| !( initializedPart.getMappedType().getRepresentationStrategy().getInstantiator()
+								instanceof StandardEmbeddableInstantiator ) ) {
+				return entityPersister.hasSubclasses() ? NONE : BATCH_INITIALIZE;
 			}
 			parentAccess = parentAccess.getFetchParentAccess();
 			if ( parentAccess == null ) {
@@ -111,10 +137,22 @@ public class EntitySelectFetchInitializerBuilder {
 			if ( cacheAccess != null ) {
 				// Do batch initialization instead of batch loading if the parent entity is cacheable
 				// to avoid putting entity state into the cache at a point when the association is not yet set
-				return BatchMode.BATCH_INITIALIZE;
+				if ( canBatchInitializeBeUsed( entityPersister ) ) {
+					return BATCH_INITIALIZE;
+				}
+				return NONE;
 			}
 		}
-		return BatchMode.BATCH_LOAD;
+		return BATCH_LOAD;
+	}
+
+	private static boolean canBatchInitializeBeUsed(EntityPersister entityPersister) {
+		if ( entityPersister.getRepresentationStrategy().getProxyFactory() == null
+				&& entityPersister.hasSubclasses() ) {
+			// We cannot neither create a proxy nor instantiate the entity because we don't know the concrete type
+			return false;
+		}
+		return true;
 	}
 
 	enum BatchMode {

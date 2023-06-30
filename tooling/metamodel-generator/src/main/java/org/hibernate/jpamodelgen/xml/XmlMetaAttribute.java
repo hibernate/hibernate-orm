@@ -7,11 +7,8 @@
 package org.hibernate.jpamodelgen.xml;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
-import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.StringUtil;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Hardy Ferentschik
@@ -26,6 +23,11 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
 		this.hostingEntity = parent;
 		this.propertyName = propertyName;
 		this.type = type;
+	}
+
+	@Override
+	public boolean hasTypedAttribute() {
+		return true;
 	}
 
 	@Override
@@ -50,15 +52,18 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
 				.toString();
 	}
 
+	@Override
 	public String getPropertyName() {
 		return propertyName;
 	}
 
+	@Override
 	public String getTypeDeclaration() {
 		return type;
 	}
 
-	public MetaEntity getHostingEntity() {
+	@Override
+	public Metamodel getHostingEntity() {
 		return hostingEntity;
 	}
 

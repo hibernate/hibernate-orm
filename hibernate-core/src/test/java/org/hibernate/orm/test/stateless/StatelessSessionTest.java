@@ -199,7 +199,7 @@ public class StatelessSessionTest {
 
 		scope.inStatelessTransaction(
 				statelessSession -> {
-					Paper p2 = (Paper) statelessSession.get( Paper.class, paper.getId() );
+					Paper p2 = statelessSession.get( Paper.class, paper.getId() );
 					p2.setColor( "White" );
 					statelessSession.update( p2 );
 				}

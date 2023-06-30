@@ -29,9 +29,4 @@ public class RowTransformerTupleTransformerAdapter<T> implements RowTransformer<
 		assert aliases == null || row.length == aliases.length;
 		return tupleTransformer.transformTuple( row, aliases );
 	}
-
-	@Override
-	public int determineNumberOfResultElements(int rawElementCount) {
-		return rawElementCount;
-	}
 }

@@ -6,6 +6,8 @@
  */
 package org.hibernate.dialect;
 
+import java.util.List;
+
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -20,6 +22,7 @@ import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
+import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -156,5 +159,10 @@ public class HANASqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 						getDialect()
 				)
 		);
+	}
+
+	@Override
+	protected void visitValuesList(List<Values> valuesList) {
+		visitValuesListEmulateSelectUnion( valuesList );
 	}
 }

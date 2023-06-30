@@ -29,10 +29,10 @@ import static java.util.Collections.unmodifiableSet;
  * {@link Session#refresh(Object, LockOptions)}, the relevant options
  * are:
  * <ul>
- * <li>the {@link #getLockMode() lock mode},
- * <li>the {@link #getTimeOut() pessimistic lock timeout}, and
- * <li>the {@link #getLockScope() lock scope}, that is, whether the
- *     lock extends to rows of owned collections.
+ * <li>the {@linkplain #getLockMode() lock mode},
+ * <li>the {@linkplain #getTimeOut() pessimistic lock timeout}, and
+ * <li>the {@linkplain #getLockScope() lock scope}, that is, whether
+ *     the lock extends to rows of owned collections.
  * </ul>
  * <p>
  * Timeout and lock scope are ignored if the specified {@code LockMode}
@@ -512,7 +512,7 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * Make a copy.
+	 * Make a copy. The new copy will be mutable even if the original wasn't.
 	 *
 	 * @return The copy
 	 */
@@ -520,6 +520,22 @@ public class LockOptions implements Serializable {
 		final LockOptions copy = new LockOptions();
 		copy( this, copy );
 		return copy;
+	}
+
+	/**
+	 * Make a copy, unless this is an immutable instance.
+	 *
+	 * @return The copy, or this if it was immutable.
+	 */
+	public LockOptions makeDefensiveCopy() {
+		if ( immutable ) {
+			return this;
+		}
+		else {
+			final LockOptions copy = new LockOptions();
+			copy( this, copy );
+			return copy;
+		}
 	}
 
 	/**

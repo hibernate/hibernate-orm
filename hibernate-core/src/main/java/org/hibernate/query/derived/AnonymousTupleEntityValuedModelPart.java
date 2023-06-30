@@ -16,6 +16,7 @@ import java.util.function.Consumer;
 import org.hibernate.Incubating;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.OptimisticLockStyle;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.loader.ast.spi.MultiNaturalIdLoader;
@@ -214,13 +215,6 @@ public class AnonymousTupleEntityValuedModelPart
 	}
 
 	@Override
-	public List<JdbcMapping> getJdbcMappings() {
-		final List<JdbcMapping> results = new ArrayList<>();
-		forEachSelectable( (index, selection) -> results.add( selection.getJdbcMapping() ) );
-		return results;
-	}
-
-	@Override
 	public JdbcMapping getJdbcMapping(int index) {
 		return identifierMapping.getJdbcMapping( index );
 	}
@@ -357,7 +351,8 @@ public class AnonymousTupleEntityValuedModelPart
 							(ColumnReference) sqlExpressionResolver.resolveSqlExpression(
 									SqlExpressionResolver.createColumnReferenceKey(
 											tableReference,
-											keyMappings.get( i ).getSelectionExpression()
+											keyMappings.get( i ).getSelectionExpression(),
+											keyMappings.get( i ).getJdbcMapping()
 									),
 									state -> new ColumnReference(
 											tableReference,
@@ -377,7 +372,8 @@ public class AnonymousTupleEntityValuedModelPart
 						sqlExpressionResolver.resolveSqlExpression(
 								SqlExpressionResolver.createColumnReferenceKey(
 										tableReference,
-										targetMappings.get( i ).getSelectionExpression()
+										targetMappings.get( i ).getSelectionExpression(),
+										targetMappings.get( i ).getJdbcMapping()
 								),
 								state -> new ColumnReference(
 										tableReference,
@@ -727,5 +723,20 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public boolean containsTableReference(String tableExpression) {
 		return ( (TableGroupProducer) delegate ).containsTableReference( tableExpression );
+	}
+
+	@Override
+	public int getBatchSize() {
+		return -1;
+	}
+
+	@Override
+	public boolean isAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return false;
+	}
+
+	@Override
+	public boolean isNotAffectedByInfluencers(LoadQueryInfluencers influencers) {
+		return true;
 	}
 }

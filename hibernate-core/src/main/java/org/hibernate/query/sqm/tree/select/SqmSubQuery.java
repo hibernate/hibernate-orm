@@ -52,7 +52,6 @@ import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.Tuple;
@@ -148,6 +147,12 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 		);
 		statement.setQueryPart( getQueryPart().copy( context ) );
 		return statement;
+	}
+
+	@Override
+	public Integer getTupleLength() {
+		final SqmSelectClause selectClause = getQuerySpec().getSelectClause();
+		return selectClause == null ? null : selectClause.getSelectionItems().size();
 	}
 
 	@Override
@@ -414,7 +419,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	private void validateComplianceMultiselect() {
-		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
 					"The JPA specification does not support subqueries having multiple select items. " +
 							"Please disable the JPA query compliance if you want to use this feature." );
@@ -422,7 +427,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	private void validateComplianceOrderBy() {
-		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
 					"The JPA specification does not support subqueries having an order by clause. " +
 							"Please disable the JPA query compliance if you want to use this feature." );
@@ -430,7 +435,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	private void validateComplianceFetchOffset() {
-		if ( nodeBuilder().getDomainModel().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
+		if ( nodeBuilder().isJpaQueryComplianceEnabled() ) {
 			throw new IllegalStateException(
 					"The JPA specification does not support subqueries having a fetch or offset clause. " +
 							"Please disable the JPA query compliance if you want to use this feature." );
@@ -579,8 +584,10 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	@Override
 	public void applyInferableType(SqmExpressible<?> type) {
 		//noinspection unchecked
-		this.expressibleType = (SqmExpressible<T>) type;
-		setResultType( type == null ? null : expressibleType.getExpressibleJavaType().getJavaTypeClass() );
+		expressibleType = (SqmExpressible<T>) type;
+		if ( expressibleType != null && expressibleType.getExpressibleJavaType() != null ) {
+			setResultType( expressibleType.getExpressibleJavaType().getJavaTypeClass() );
+		}
 	}
 
 	private void applyInferableType(Class<T> type) {

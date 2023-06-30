@@ -22,9 +22,9 @@ import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaParameterExpression;
-import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSimpleCase;
@@ -42,13 +42,13 @@ import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
+import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -78,8 +78,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	boolean isJpaQueryComplianceEnabled();
 
-	ServiceRegistry getServiceRegistry();
-
 	QueryEngine getQueryEngine();
 
 	<R> SqmTuple<R> tuple(
@@ -103,6 +101,9 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	@Override
 	<T> SqmSelectStatement<T> createQuery(Class<T> resultClass);
+
+	@Override
+	<T> SqmSelectStatement<T> createQuery(String hql, Class<T> resultClass);
 
 	@Override
 	SqmSelectStatement<Tuple> createTupleQuery();
@@ -132,10 +133,13 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<T> SqmDeleteStatement<T> createCriteriaDelete(Class<T> targetEntity);
 
 	@Override
+	<T> SqmInsertValuesStatement<T> createCriteriaInsertValues(Class<T> targetEntity);
+
+	@Override
 	<T> SqmInsertSelectStatement<T> createCriteriaInsertSelect(Class<T> targetEntity);
 
 	@Override
-	<N extends Number> SqmExpression abs(Expression<N> x);
+	<N extends Number> SqmExpression<N> abs(Expression<N> x);
 
 	@Override
 	<X, T> SqmExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType);

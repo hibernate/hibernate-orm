@@ -67,6 +67,9 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  * }
  * </pre>
  * <p>
+ * Unlike the {@linkplain jakarta.persistence.Id primary identifier}
+ * of an entity, a natural id may be {@linkplain #mutable}.
+ * <p>
  * The {@link org.hibernate.Session} interface offers several methods
  * that allow an entity instance to be retrieved by its
  * {@linkplain org.hibernate.Session#bySimpleNaturalId(Class) simple}

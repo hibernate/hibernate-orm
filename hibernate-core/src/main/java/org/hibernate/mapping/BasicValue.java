@@ -12,6 +12,7 @@ import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.TimeZoneStorageStrategy;
@@ -20,7 +21,6 @@ import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
-import org.hibernate.boot.model.process.internal.EnumeratedValueResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolution;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.boot.model.process.internal.NamedBasicTypeResolution;
@@ -32,6 +32,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
@@ -65,6 +66,7 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
+import static java.lang.Boolean.parseBoolean;
 import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /**
@@ -97,6 +99,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Resolved state - available after `#resolve`
 	private Resolution<?> resolution;
+	private Integer jdbcTypeCode;
 
 
 	public BasicValue(MetadataBuildingContext buildingContext) {
@@ -314,11 +317,36 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 
 		final Selectable selectable = getColumn();
+		final Size size;
 		if ( selectable instanceof Column ) {
-			resolveColumn( (Column) selectable, getDialect() );
+			Column column = (Column) selectable;
+			resolveColumn( column, getDialect() );
+			size = column.calculateColumnSize( getDialect(), getBuildingContext().getMetadataCollector() );
+		}
+		else {
+			size = Size.nil();
 		}
 
+		resolution.getJdbcType()
+				.addAuxiliaryDatabaseObjects(
+						resolution.getRelationalJavaType(),
+						size,
+						getBuildingContext().getMetadataCollector().getDatabase(),
+						getTypeConfiguration()
+				);
+
 		return resolution;
+	}
+
+	@Override
+	public String getExtraCreateTableInfo() {
+		return resolution.getJdbcType()
+				.getExtraCreateTableInfo(
+						resolution.getRelationalJavaType(),
+						getColumn().getText(),
+						getTable().getName(),
+						getBuildingContext().getMetadataCollector().getDatabase()
+				);
 	}
 
 	@Override
@@ -332,12 +360,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			column.setSqlTypeCode( resolution.getJdbcType().getDdlTypeCode() );
 		}
 
-		if ( resolution.getValueConverter() != null ) {
-			final String declaration = resolution.getLegacyResolvedBasicType().getSpecializedTypeDeclaration(dialect);
-			if ( declaration != null ) {
-				column.setSpecializedTypeDeclaration( declaration );
-			}
-		}
+//		final String declaration = resolution.getLegacyResolvedBasicType().getSpecializedTypeDeclaration( dialect );
+//		if ( declaration != null ) {
+//			column.setSpecializedTypeDeclaration( declaration );
+//		}
 
 		if ( dialect.supportsColumnCheck() ) {
 			final String checkCondition = resolution.getLegacyResolvedBasicType()
@@ -366,8 +392,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	protected Resolution<?> buildResolution() {
 		Properties typeParameters = getTypeParameters();
 		if ( typeParameters != null
-				&& Boolean.parseBoolean( typeParameters.getProperty( DynamicParameterizedType.IS_DYNAMIC ) )
-				&& typeParameters.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+				&& parseBoolean( typeParameters.getProperty(DynamicParameterizedType.IS_DYNAMIC) )
+				&& typeParameters.get(DynamicParameterizedType.PARAMETER_TYPE) == null ) {
 			createParameterImpl();
 		}
 		if ( explicitTypeName != null ) {
@@ -386,13 +412,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 
 		if ( isVersion() ) {
-			return VersionResolution.from(
-					implicitJavaTypeAccess,
-					timeZoneStorageType,
-					getBuildingContext()
-			);
+			return VersionResolution.from( implicitJavaTypeAccess, timeZoneStorageType, getBuildingContext() );
 		}
-
 
 		// determine JavaType if we can
 
@@ -427,8 +448,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 			if ( javaType instanceof BasicPluralJavaType<?>
 					&& !attributeConverterDescriptor.getDomainValueResolvedType()
-					.getErasedType()
-					.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
+							.getErasedType()
+							.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
 				// In this case, the converter applies to the element of a BasicPluralJavaType
 				final BasicPluralJavaType<?> containerJtd = (BasicPluralJavaType<?>) javaType;
 				final BasicType registeredElementType = converterResolution.getLegacyResolvedBasicType();
@@ -590,13 +611,12 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			);
 		}
 
-		if ( name.startsWith( EnumeratedValueResolution.PREFIX ) ) {
-			return EnumeratedValueResolution.fromName( name, stdIndicators, context );
-		}
+//		if ( name.startsWith( EnumeratedValueResolution.PREFIX ) ) {
+//			return EnumeratedValueResolution.fromName( name, stdIndicators, context );
+//		}
 
 		if ( name.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX ) ) {
 			final BasicTypeImpl<Object> basicType = context.getBootstrapContext().resolveAdHocBasicType( name );
-
 			return new NamedBasicTypeResolution<>(
 					basicType.getJavaTypeDescriptor(),
 					basicType,
@@ -825,10 +845,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			}
 
 			if ( typeInstance instanceof DynamicParameterizedType ) {
-				if ( Boolean.parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
-					if ( properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+				if (parseBoolean(properties.getProperty(DynamicParameterizedType.IS_DYNAMIC))) {
+					if (properties.get(DynamicParameterizedType.PARAMETER_TYPE) == null) {
 						final DynamicParameterizedType.ParameterType parameterType = makeParameterImpl();
-						properties.put( DynamicParameterizedType.PARAMETER_TYPE, parameterType );
+						properties.put(DynamicParameterizedType.PARAMETER_TYPE, parameterType);
 					}
 				}
 			}
@@ -870,6 +890,16 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	private boolean isWrapperByteOrCharacterArray() {
 		final Class<?> javaTypeClass = getResolution().getDomainJavaType().getJavaTypeClass();
 		return javaTypeClass == Byte[].class || javaTypeClass == Character[].class;
+	}
+
+	@Incubating
+	public void setExplicitJdbcTypeCode(Integer jdbcTypeCode) {
+		this.jdbcTypeCode = jdbcTypeCode;
+	}
+
+	@Override
+	public Integer getExplicitJdbcTypeCode() {
+		return jdbcTypeCode == null ? getPreferredSqlTypeCodeForArray() : jdbcTypeCode;
 	}
 
 	/**

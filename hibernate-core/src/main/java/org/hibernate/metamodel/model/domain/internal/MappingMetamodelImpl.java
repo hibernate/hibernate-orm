@@ -115,7 +115,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// RuntimeModel
 
-	private final Map<String, EntityPersister> entityPersisterMap = new ConcurrentHashMap<>();
+	private final EntityPersisterConcurrentMap entityPersisterMap = new EntityPersisterConcurrentMap();
 	private final Map<String, CollectionPersister> collectionPersisterMap = new ConcurrentHashMap<>();
 	private final Map<String, Set<String>> collectionRolesByEntityParticipant = new ConcurrentHashMap<>();
 
@@ -158,16 +158,11 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 //	private final Map<Class<?>, EmbeddableDomainType<?>> jpaEmbeddableTypeMap = new ConcurrentHashMap<>();
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private final ServiceRegistry serviceRegistry;
-	private final TypeConfiguration typeConfiguration;
-
 	private final Map<String, String[]> implementorsCache = new ConcurrentHashMap<>();
 	private final Map<TupleType<?>, MappingModelExpressible<?>> tupleTypeCache = new ConcurrentHashMap<>();
 
 	public MappingMetamodelImpl(TypeConfiguration typeConfiguration, ServiceRegistry serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
-		this.typeConfiguration = typeConfiguration;
-		this.jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, this, serviceRegistry );
+		jpaMetamodel = new JpaMetamodelImpl( typeConfiguration, this, serviceRegistry );
 	}
 
 	public JpaMetamodelImplementor getJpaMetamodel() {
@@ -180,7 +175,8 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		bootModel.getMappedSuperclassMappingsCopy().forEach( MappedSuperclass::prepareForMappingModel );
 		bootModel.getEntityBindings().forEach( persistentClass -> persistentClass.prepareForMappingModel( context ) );
 
-		final PersisterFactory persisterFactory = serviceRegistry.getService( PersisterFactory.class );
+		final PersisterFactory persisterFactory =
+				jpaMetamodel.getServiceRegistry().getService( PersisterFactory.class );
 		final CacheImplementor cache = context.getCache();
 		processBootEntities(
 				bootModel.getEntityBindings(),
@@ -360,7 +356,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
-		return typeConfiguration;
+		return jpaMetamodel.getTypeConfiguration();
 	}
 
 	@Override
@@ -370,17 +366,19 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 	@Override
 	public ServiceRegistry getServiceRegistry() {
-		return serviceRegistry;
+		return jpaMetamodel.getServiceRegistry();
 	}
 
 	@Override
 	public void forEachEntityDescriptor(Consumer<EntityPersister> action) {
-		entityPersisterMap.values().forEach( action );
+		for ( EntityPersister value : entityPersisterMap.values() ) {
+			action.accept( value );
+		}
 	}
 
 	@Override
 	public Stream<EntityPersister> streamEntityDescriptors() {
-		return entityPersisterMap.values().stream();
+		return Arrays.stream( entityPersisterMap.values() );
 	}
 
 	@Override
@@ -530,7 +528,9 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		}
 
 		try {
-			final Class<?> clazz = serviceRegistry.getService( ClassLoaderService.class ).classForName( className );
+			final Class<?> clazz =
+					jpaMetamodel.getServiceRegistry().getService( ClassLoaderService.class )
+							.classForName( className );
 			implementors = doGetImplementors( clazz );
 			if ( implementors.length > 0 ) {
 				implementorsCache.putIfAbsent( className, implementors );
@@ -547,7 +547,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 	@Override @SuppressWarnings("deprecation")
 	public Map<String, EntityPersister> entityPersisters() {
-		return entityPersisterMap;
+		return entityPersisterMap.convertToMap();
 	}
 
 	@Override @SuppressWarnings("deprecation")
@@ -634,7 +634,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 	@Override
 	public String[] getAllEntityNames() {
-		return ArrayHelper.toStringArray( entityPersisterMap.keySet() );
+		return entityPersisterMap.keys();
 	}
 
 	@Override
@@ -754,8 +754,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	@Override
 	public MappingModelExpressible<?> resolveMappingExpressible(
 			SqmExpressible<?> sqmExpressible,
-			Function<NavigablePath,
-					TableGroup> tableGroupLocator) {
+			Function<NavigablePath, TableGroup> tableGroupLocator) {
 		if ( sqmExpressible instanceof SqmPath ) {
 			final SqmPath<?> sqmPath = (SqmPath<?>) sqmExpressible;
 			final NavigablePath navigablePath = sqmPath.getNavigablePath();

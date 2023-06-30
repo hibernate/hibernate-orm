@@ -58,12 +58,13 @@ public class SqmMapJoin<O, K, V>
 		if ( existing != null ) {
 			return existing;
 		}
+		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
 		final SqmMapJoin<O, K, V> path = context.registerCopy(
 				this,
 				new SqmMapJoin<>(
-						getLhs().copy( context ),
-						getNavigablePath(),
-						getReferencedPathSource(),
+						lhsCopy,
+						getNavigablePathCopy( lhsCopy ),
+						getAttribute(),
 						getExplicitAlias(),
 						getSqmJoinType(),
 						isFetched(),
@@ -72,11 +73,6 @@ public class SqmMapJoin<O, K, V>
 		);
 		copyTo( path, context );
 		return path;
-	}
-
-	@Override
-	public MapPersistentAttribute<O, K, V> getReferencedPathSource() {
-		return(MapPersistentAttribute<O, K, V>) super.getReferencedPathSource();
 	}
 
 	@Override
@@ -91,23 +87,21 @@ public class SqmMapJoin<O, K, V>
 
 	@Override
 	public MapPersistentAttribute<O, K, V> getAttribute() {
-		//noinspection unchecked
-		return (MapPersistentAttribute<O, K, V>) super.getAttribute();
+		return getModel();
 	}
-
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
 	@Override
 	public SqmPath<K> key() {
-		final SqmPathSource<K> keyPathSource = getReferencedPathSource().getKeyPathSource();
+		final SqmPathSource<K> keyPathSource = getAttribute().getKeyPathSource();
 		return resolvePath( keyPathSource.getPathName(), keyPathSource );
 	}
 
 	@Override
-	public Path<V> value() {
-		final SqmPathSource<V> elementPathSource = getReferencedPathSource().getElementPathSource();
+	public SqmPath<V> value() {
+		final SqmPathSource<V> elementPathSource = getAttribute().getElementPathSource();
 		return resolvePath( elementPathSource.getPathName(), elementPathSource );
 	}
 
@@ -169,7 +163,7 @@ public class SqmMapJoin<O, K, V>
 	public SqmMapJoin<O, K, V> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmMapJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
-				getReferencedPathSource(),
+				getAttribute(),
 				getExplicitAlias(),
 				getSqmJoinType(),
 				isFetched(),

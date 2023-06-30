@@ -423,6 +423,7 @@ public abstract class AbstractHANADialect extends Dialect {
 		functionFactory.everyAny_minMaxCase();
 		functionFactory.octetLength_pattern( "length(to_binary(?1))" );
 		functionFactory.bitLength_pattern( "length(to_binary(?1))*8" );
+		functionFactory.repeat_rpad();
 
 		functionFactory.median();
 		functionFactory.windowFunctions();
@@ -1132,11 +1133,6 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public boolean supportsNoColumnsInsert() {
-		return false;
-	}
-
-	@Override
-	public boolean supportsValuesListForInsert() {
 		return false;
 	}
 

@@ -30,11 +30,7 @@ public class MutableJpaComplianceImpl implements MutableJpaCompliance {
 	public MutableJpaComplianceImpl(Map<?,?> configurationSettings) {
 		this(
 				configurationSettings,
-				ConfigurationHelper.getBoolean(
-						AvailableSettings.JPA_COMPLIANCE,
-						configurationSettings,
-						false
-				)
+				ConfigurationHelper.getBoolean( AvailableSettings.JPA_COMPLIANCE, configurationSettings )
 		);
 	}
 

@@ -6,8 +6,10 @@
  */
 package org.hibernate.loader.ast.internal;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
@@ -21,6 +23,7 @@ import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.query.spi.Limit;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.ResultListTransformer;
 import org.hibernate.query.TupleTransformer;
@@ -37,7 +40,6 @@ import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 
@@ -101,6 +103,21 @@ public class LoaderSqlAstCreationState
 	@Override
 	public QueryPart getInflightQueryPart() {
 		return processingState.getInflightQueryPart();
+	}
+
+	@Override
+	public void registerTreatedFrom(SqmFrom<?, ?> sqmFrom) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public void registerFromUsage(SqmFrom<?, ?> sqmFrom, boolean downgradeTreatUses) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Map<SqmFrom<?, ?>, Boolean> getFromRegistrations() {
+		return Collections.emptyMap();
 	}
 
 	@Override
@@ -238,6 +255,11 @@ public class LoaderSqlAstCreationState
 	@Override
 	public Boolean isResultCachingEnabled() {
 		return false;
+	}
+
+	@Override
+	public Boolean getQueryPlanCachingEnabled() {
+		return null;
 	}
 
 	@Override

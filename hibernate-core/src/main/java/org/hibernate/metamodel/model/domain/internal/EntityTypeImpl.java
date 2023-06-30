@@ -8,6 +8,8 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.ObjectStreamException;
 import java.io.Serializable;
+import java.util.Collection;
+
 import jakarta.persistence.metamodel.EntityType;
 
 import org.hibernate.graph.internal.SubGraphImpl;
@@ -44,22 +46,25 @@ public class EntityTypeImpl<J>
 	private final SqmPathSource<?> discriminatorPathSource;
 
 	public EntityTypeImpl(
+			String entityName,
+			String jpaEntityName,
+			boolean hasIdClass,
+			boolean hasIdProperty,
+			boolean hasVersion,
 			JavaType<J> javaType,
 			IdentifiableDomainType<? super J> superType,
-			PersistentClass persistentClass,
 			JpaMetamodelImplementor jpaMetamodel) {
 		super(
-				persistentClass.getEntityName(),
+				entityName,
 				javaType,
 				superType,
-				persistentClass.getDeclaredIdentifierMapper() != null
-						|| superType != null && superType.hasIdClass(),
-				persistentClass.hasIdentifierProperty(),
-				persistentClass.isVersioned(),
+				hasIdClass,
+				hasIdProperty,
+				hasVersion,
 				jpaMetamodel
 		);
 
-		this.jpaEntityName = persistentClass.getJpaEntityName();
+		this.jpaEntityName = jpaEntityName;
 
 		final Queryable entityDescriptor = (Queryable)
 				jpaMetamodel.getMappingMetamodel()
@@ -81,6 +86,25 @@ public class EntityTypeImpl<J>
 				entityDescriptor
 		);
 	}
+
+	public EntityTypeImpl(
+			JavaType<J> javaType,
+			IdentifiableDomainType<? super J> superType,
+			PersistentClass persistentClass,
+			JpaMetamodelImplementor jpaMetamodel) {
+		this(
+				persistentClass.getEntityName(),
+				persistentClass.getJpaEntityName(),
+				persistentClass.getDeclaredIdentifierMapper() != null
+						|| superType != null && superType.hasIdClass(),
+				persistentClass.hasIdentifierProperty(),
+				persistentClass.isVersioned(),
+				javaType,
+				superType,
+				jpaMetamodel
+		);
+	}
+
 	public EntityTypeImpl(JavaType<J> javaTypeDescriptor, JpaMetamodelImplementor jpaMetamodel) {
 		super(
 				javaTypeDescriptor.getJavaTypeClass().getName(),
@@ -167,6 +191,12 @@ public class EntityTypeImpl<J>
 	@Override
 	public IdentifiableDomainType<? super J> getSuperType() {
 		return super.getSuperType();
+	}
+
+	@Override
+	public Collection<? extends EntityDomainType<? extends J>> getSubTypes() {
+		//noinspection unchecked
+		return (Collection<? extends EntityDomainType<? extends J>>) super.getSubTypes();
 	}
 
 	@Override

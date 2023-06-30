@@ -29,8 +29,6 @@ import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.java.JdbcDateJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimeJavaType;
 import org.hibernate.type.descriptor.java.JdbcTimestampJavaType;
-import org.hibernate.type.descriptor.java.TemporalJavaType;
-import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
 import org.hibernate.usertype.internal.OffsetTimeCompositeUserType;
 
@@ -68,8 +66,8 @@ public class SqmExpressionHelper {
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Timestamp.class ),
-				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+				creationState.getCreationContext().getTypeConfiguration().standardBasicTypeForJavaType( Timestamp.class ),
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 
@@ -95,8 +93,8 @@ public class SqmExpressionHelper {
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Date.class ),
-				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+				creationState.getCreationContext().getTypeConfiguration().standardBasicTypeForJavaType( Date.class ),
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 
@@ -106,8 +104,8 @@ public class SqmExpressionHelper {
 
 		return new SqmLiteral<>(
 				literal,
-				creationState.getCreationContext().getJpaMetamodel().getTypeConfiguration().standardBasicTypeForJavaType( Time.class ),
-				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+				creationState.getCreationContext().getTypeConfiguration().standardBasicTypeForJavaType( Time.class ),
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 
@@ -174,9 +172,7 @@ public class SqmExpressionHelper {
 				return lhs;
 			}
 			final SqmPath<?> rhs = findPath( binaryArithmetic.getRightHandOperand(), nodeType );
-			if ( rhs != null ) {
-				return rhs;
-			}
+			return rhs;
 		}
 		return null;
 	}

@@ -861,6 +861,11 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIsTrue() {
+		return true;
+	}
+
+	@Override
 	public boolean supportsCurrentTimestampSelection() {
 		return true;
 	}

@@ -238,6 +238,23 @@ task stageTopicalGuide(type: Copy) {
     into "${buildDir}/documentation/topical"
 }
 
+task stageIntroduction(type: Copy) {
+    group 'Release'
+
+    dependsOn ':documentation:renderIntroduction', ':documentation:renderIntroductionPdf'
+
+    from "${project( ':documentation' ).buildDir}/asciidoc/introduction"
+    into "${buildDir}/documentation/introduction"
+}
+
+task stageQL(type: Copy) {
+    group 'Release'
+
+    dependsOn ':documentation:renderQL', ':documentation:renderQLPdf'
+
+    from "${project( ':documentation' ).buildDir}/asciidoc/querylanguage"
+    into "${buildDir}/documentation/querylanguage"
+}
 
 task stageUserGuide(type: Copy) {
     group 'Release'
@@ -310,6 +327,17 @@ task stageOrmLoggingReport(type: Copy) { task ->
 }
 
 
+task stageOrmDialectReport(type: Copy) { task ->
+    group 'Release'
+
+    dependsOn ':documentation:renderDialectReport'
+    tasks.stageOrmReports.dependsOn task
+
+    from project( ":documentation" ).tasks.renderDialectReport.outputDir
+    into "${buildDir}/documentation/dialect"
+}
+
+
 /**
  * Assembles all documentation into the {buildDir}/documentation directory.
  *
@@ -324,6 +352,7 @@ task assembleDocumentation {
     dependsOn tasks.stageIntegrationGuide
     dependsOn tasks.stageTopicalGuide
     dependsOn tasks.stageQuickstart
+    dependsOn tasks.stageIntroduction
     dependsOn tasks.stageUserGuide
     dependsOn tasks.stageMigrationGuide
     dependsOn tasks.stageOrmReports

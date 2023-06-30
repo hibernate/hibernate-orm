@@ -27,7 +27,7 @@ public enum Action {
 	 * <p>
 	 * Valid in JPA; compatible with Hibernate's HBM2DDL action of the same name.
 	 */
-	NONE( "none" ),
+	NONE,
 	/**
 	 * Create the schema.
 	 * <p>
@@ -36,7 +36,7 @@ public enum Action {
 	 *
 	 * @see org.hibernate.tool.schema.spi.SchemaCreator
 	 */
-	CREATE_ONLY( "create", "create-only" ),
+	CREATE_ONLY,
 	/**
 	 * Drop the schema.
 	 * <p>
@@ -44,14 +44,14 @@ public enum Action {
 	 *
 	 * @see org.hibernate.tool.schema.spi.SchemaDropper
 	 */
-	DROP( "drop" ),
+	DROP,
 	/**
 	 * Drop and then recreate the schema.
 	 *
 	 * @see org.hibernate.tool.schema.spi.SchemaDropper
 	 * @see org.hibernate.tool.schema.spi.SchemaCreator
 	 */
-	CREATE( "drop-and-create", "create" ),
+	CREATE,
 	/**
 	 * Drop the schema and then recreate it on {@code SessionFactory} startup.
 	 * Additionally, drop the schema on {@code SessionFactory} shutdown.
@@ -70,7 +70,7 @@ public enum Action {
 	 * @see org.hibernate.tool.schema.spi.SchemaDropper
 	 * @see org.hibernate.tool.schema.spi.SchemaCreator
 	 */
-	CREATE_DROP( null, "create-drop" ),
+	CREATE_DROP,
 	/**
 	 * Validate the database schema.
 	 * <p>
@@ -78,7 +78,7 @@ public enum Action {
 	 *
 	 * @see org.hibernate.tool.schema.spi.SchemaValidator
 	 */
-	VALIDATE( null, "validate" ),
+	VALIDATE,
 	/**
 	 * Update (alter) the database schema.
 	 * <p>
@@ -86,7 +86,7 @@ public enum Action {
 	 *
 	 * @see org.hibernate.tool.schema.spi.SchemaMigrator
 	 */
-	UPDATE( null, "update" ),
+	UPDATE,
 	/**
 	 * Truncate the tables in the schema.
 	 * <p>
@@ -96,31 +96,47 @@ public enum Action {
 	 *
 	 * @since 6.2
 	 */
-	TRUNCATE( null, null);
-
-	private final String externalJpaName;
-	private final String externalHbm2ddlName;
-
-	Action(String externalJpaName) {
-		this( externalJpaName, externalJpaName );
-	}
-
-	Action(String externalJpaName, String externalHbm2ddlName) {
-		this.externalJpaName = externalJpaName;
-		this.externalHbm2ddlName = externalHbm2ddlName;
-	}
+	TRUNCATE;
 
 	public String getExternalJpaName() {
-		return externalJpaName;
+		switch (this) {
+			case NONE:
+				return "none";
+			case CREATE_ONLY:
+				return "create";
+			case DROP:
+				return "drop";
+			case CREATE:
+				return "drop-and-create";
+			default:
+				return null;
+		}
 	}
 
 	public String getExternalHbm2ddlName() {
-		return externalHbm2ddlName;
+		switch (this) {
+			case NONE:
+				return "none";
+			case CREATE_ONLY:
+				return "create-only";
+			case DROP:
+				return "drop";
+			case CREATE:
+				return "create";
+			case CREATE_DROP:
+				return "create-drop";
+			case VALIDATE:
+				return "validate";
+			case UPDATE:
+				return "update";
+			default:
+				return null;
+		}
 	}
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "(externalJpaName=" + externalJpaName + ", externalHbm2ddlName=" + externalHbm2ddlName + ")";
+		return getClass().getSimpleName() + "(externalJpaName=" + getExternalJpaName() + ", externalHbm2ddlName=" + getExternalHbm2ddlName() + ")";
 	}
 
 	/**
@@ -144,29 +160,29 @@ public enum Action {
 		}
 
 		final String name = value.toString().trim();
-		if ( name.isEmpty() || NONE.externalJpaName.equals( name ) ) {
+		if ( name.isEmpty() || NONE.getExternalJpaName().equals( name ) ) {
 			// default is NONE
 			return NONE;
 		}
 
 		// prefer JPA external names
 		for ( Action action : values() ) {
-			if ( action.externalJpaName == null ) {
+			if ( action.getExternalJpaName() == null ) {
 				continue;
 			}
 
-			if ( action.externalJpaName.equals( name ) ) {
+			if ( action.getExternalJpaName().equals( name ) ) {
 				return action;
 			}
 		}
 
 		// then check hbm2ddl names
 		for ( Action action : values() ) {
-			if ( action.externalHbm2ddlName == null ) {
+			if ( action.getExternalHbm2ddlName() == null ) {
 				continue;
 			}
 
-			if ( action.externalHbm2ddlName.equals( name ) ) {
+			if ( action.getExternalHbm2ddlName().equals( name ) ) {
 				return action;
 			}
 		}
@@ -200,29 +216,29 @@ public enum Action {
 		}
 
 		final String name = value.toString().trim();
-		if ( name.isEmpty() || NONE.externalJpaName.equals( name ) ) {
+		if ( name.isEmpty() || NONE.getExternalJpaName().equals( name ) ) {
 			// default is NONE
 			return NONE;
 		}
 
 		// prefer hbm2ddl names
 		for ( Action action : values() ) {
-			if ( action.externalHbm2ddlName == null ) {
+			if ( action.getExternalHbm2ddlName() == null ) {
 				continue;
 			}
 
-			if ( action.externalHbm2ddlName.equals( name ) ) {
+			if ( action.getExternalHbm2ddlName().equals( name ) ) {
 				return hbm2ddlSetting( action );
 			}
 		}
 
 		// then check JPA external names
 		for ( Action action : values() ) {
-			if ( action.externalJpaName == null ) {
+			if ( action.getExternalJpaName() == null ) {
 				continue;
 			}
 
-			if ( action.externalJpaName.equals( name ) ) {
+			if ( action.getExternalJpaName().equals( name ) ) {
 				return hbm2ddlSetting( action );
 			}
 		}

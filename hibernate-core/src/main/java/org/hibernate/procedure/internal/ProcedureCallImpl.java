@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
@@ -1061,6 +1062,31 @@ public class ProcedureCallImpl<R>
 		}
 
 		throw new PersistenceException( "Unrecognized unwrap type : " + cls.getName() );
+	}
+
+	@Override
+	public Query<R> ascending(SingularAttribute<? super R, ?> attribute) {
+		throw new UnsupportedOperationException( "Not supported for procedure calls" );
+	}
+
+	@Override
+	public Query<R> descending(SingularAttribute<? super R, ?> attribute) {
+		throw new UnsupportedOperationException( "Not supported for procedure calls" );
+	}
+
+	@Override
+	public Query<R> ascending(int element) {
+		throw new UnsupportedOperationException( "Not supported for procedure calls" );
+	}
+
+	@Override
+	public Query<R> descending(int element) {
+		throw new UnsupportedOperationException( "Not supported for procedure calls" );
+	}
+
+	@Override
+	public Query<R> unordered() {
+		return this;
 	}
 
 	@Override

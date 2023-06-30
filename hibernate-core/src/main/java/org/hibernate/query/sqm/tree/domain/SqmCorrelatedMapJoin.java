@@ -47,7 +47,7 @@ public class SqmCorrelatedMapJoin<O, K, V> extends SqmMapJoin<O, K, V> implement
 			NodeBuilder nodeBuilder,
 			SqmCorrelatedRootJoin<O> correlatedRootJoin,
 			SqmMapJoin<O, K, V> correlationParent) {
-		super( lhs, attribute, alias, sqmJoinType, fetched, nodeBuilder );
+		super( lhs, correlationParent.getNavigablePath(), attribute, alias, sqmJoinType, fetched, nodeBuilder );
 		this.correlatedRootJoin = correlatedRootJoin;
 		this.correlationParent = correlationParent;
 	}
@@ -62,7 +62,7 @@ public class SqmCorrelatedMapJoin<O, K, V> extends SqmMapJoin<O, K, V> implement
 				this,
 				new SqmCorrelatedMapJoin<>(
 						getLhs().copy( context ),
-						getReferencedPathSource(),
+						getAttribute(),
 						getExplicitAlias(),
 						getSqmJoinType(),
 						isFetched(),
@@ -100,7 +100,7 @@ public class SqmCorrelatedMapJoin<O, K, V> extends SqmMapJoin<O, K, V> implement
 		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
 		return new SqmCorrelatedMapJoin<>(
 				pathRegistry.findFromByPath( getLhs().getNavigablePath() ),
-				getReferencedPathSource(),
+				getAttribute(),
 				getExplicitAlias(),
 				getSqmJoinType(),
 				isFetched(),

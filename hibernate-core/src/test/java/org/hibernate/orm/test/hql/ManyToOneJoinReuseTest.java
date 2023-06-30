@@ -56,7 +56,7 @@ public class ManyToOneJoinReuseTest {
 					session.createQuery( query ).getResultList();
 					assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
 					assertEquals(
-							"select b1_0.id,b2_0.isbn,b2_0.title from BookList b1_0 join book b2_0 on b2_0.isbn=b1_0.book_isbn where b2_0.isbn is not null",
+							"select bl1_0.id,b1_0.isbn,b1_0.title from BookList bl1_0 join book b1_0 on b1_0.isbn=bl1_0.book_isbn where b1_0.isbn is not null",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
 				}
@@ -85,7 +85,7 @@ public class ManyToOneJoinReuseTest {
 					session.createQuery( query ).getResultList();
 					assertEquals( 1, sqlStatementInterceptor.getSqlQueries().size() );
 					assertEquals(
-							"select b1_0.id,b1_0.book_isbn from BookList b1_0 join book b2_0 on b2_0.isbn=b1_0.book_isbn where b2_0.isbn is not null and b1_0.book_isbn is not null",
+							"select bl1_0.id,bl1_0.book_isbn from BookList bl1_0 join book b1_0 on b1_0.isbn=bl1_0.book_isbn where b1_0.isbn is not null and bl1_0.book_isbn is not null",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
 				}

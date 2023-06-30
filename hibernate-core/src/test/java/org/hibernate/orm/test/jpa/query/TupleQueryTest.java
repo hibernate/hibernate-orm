@@ -16,15 +16,21 @@ import jakarta.persistence.TypedQuery;
 import java.util.List;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.nullValue;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.core.Is.is;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 /**
  * @author Andrea Boriero
@@ -81,6 +87,23 @@ public class TupleQueryTest {
 					assertThat( elements.size(), is( 1 ) );
 					final String alias = elements.get( 0 ).getAlias();
 					assertThat( alias, is( "fn" ) );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( "HHH-16742" )
+	public void testTwoDifferentAliasesToSameColumn(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					TypedQuery<Tuple> query = entityManager.createQuery( "SELECT u.firstName as fn, u.firstName as fn_2 from User u", Tuple.class );
+
+					Tuple result = query.getResultList().get(0);
+					assertNotNull( result );
+					assertEquals( 2, result.getElements().size() );
+					// Should not throw IllegalArgumentException
+					result.get("fn", String.class);
+					result.get("fn_2", String.class);
 				}
 		);
 	}

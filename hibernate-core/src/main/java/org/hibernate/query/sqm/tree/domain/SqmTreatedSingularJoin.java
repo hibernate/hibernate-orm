@@ -12,7 +12,7 @@ import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -42,6 +42,25 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 		this.wrappedPath = wrappedPath;
 	}
 
+	private SqmTreatedSingularJoin(
+			NavigablePath navigablePath,
+			SqmSingularJoin<O,T> wrappedPath,
+			EntityDomainType<S> treatTarget,
+			String alias) {
+		//noinspection unchecked
+		super(
+				wrappedPath.getLhs(),
+				navigablePath,
+				(SingularPersistentAttribute<O, S>) wrappedPath.getAttribute(),
+				alias,
+				wrappedPath.getSqmJoinType(),
+				wrappedPath.isFetched(),
+				wrappedPath.nodeBuilder()
+		);
+		this.treatTarget = treatTarget;
+		this.wrappedPath = wrappedPath;
+	}
+
 	@Override
 	public SqmTreatedSingularJoin<O, T, S> copy(SqmCopyContext context) {
 		final SqmTreatedSingularJoin<O, T, S> existing = context.getCopy( this );
@@ -51,6 +70,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 		final SqmTreatedSingularJoin<O, T, S> path = context.registerCopy(
 				this,
 				new SqmTreatedSingularJoin<>(
+						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
 						getExplicitAlias()
@@ -73,6 +93,11 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 	@Override
 	public SqmPathSource<S> getNodeType() {
 		return treatTarget;
+	}
+
+	@Override
+	public EntityDomainType<S> getReferencedPathSource() {
+		return getTreatTarget();
 	}
 
 	@Override

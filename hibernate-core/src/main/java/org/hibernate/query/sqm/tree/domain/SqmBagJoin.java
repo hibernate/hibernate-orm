@@ -56,12 +56,13 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 		if ( existing != null ) {
 			return existing;
 		}
+		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
 		final SqmBagJoin<O, E> path = context.registerCopy(
 				this,
 				new SqmBagJoin<>(
-						getLhs().copy( context ),
-						getNavigablePath(),
-						getReferencedPathSource(),
+						lhsCopy,
+						getNavigablePathCopy( lhsCopy ),
+						getAttribute(),
 						getExplicitAlias(),
 						getSqmJoinType(),
 						isFetched(),
@@ -73,13 +74,8 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	}
 
 	@Override
-	public BagPersistentAttribute<O,E> getReferencedPathSource() {
-		return (BagPersistentAttribute<O,E>) super.getReferencedPathSource();
-	}
-
-	@Override
 	public BagPersistentAttribute<O,E> getModel() {
-		return getReferencedPathSource();
+		return (BagPersistentAttribute<O, E>) super.getModel();
 	}
 
 	@Override
@@ -89,8 +85,7 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 
 	@Override
 	public BagPersistentAttribute<O,E> getAttribute() {
-		//noinspection unchecked
-		return (BagPersistentAttribute<O, E>) super.getAttribute();
+		return getModel();
 	}
 
 	@Override
@@ -148,12 +143,11 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 	public SqmAttributeJoin<O, E> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmBagJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
-				getReferencedPathSource(),
+				getAttribute(),
 				getExplicitAlias(),
 				getSqmJoinType(),
 				isFetched(),
 				nodeBuilder()
 		);
 	}
-
 }

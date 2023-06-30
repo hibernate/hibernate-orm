@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.from;
 
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 
 /**
@@ -18,4 +19,15 @@ public interface PluralTableGroup extends TableGroup {
 	TableGroup getElementTableGroup();
 
 	TableGroup getIndexTableGroup();
+
+	default TableGroup getTableGroup(CollectionPart.Nature nature) {
+		switch ( nature ) {
+			case ELEMENT:
+				return getElementTableGroup();
+			case INDEX:
+				return getIndexTableGroup();
+		}
+
+		throw new IllegalStateException( "Could not find table group for: " + nature );
+	}
 }

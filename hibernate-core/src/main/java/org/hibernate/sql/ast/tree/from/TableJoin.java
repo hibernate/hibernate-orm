@@ -19,4 +19,5 @@ public interface TableJoin extends SqlAstNode {
 	SqlAstJoinType getJoinType();
 	Predicate getPredicate();
 	SqlAstNode getJoinedNode();
+	boolean isInitialized();
 }

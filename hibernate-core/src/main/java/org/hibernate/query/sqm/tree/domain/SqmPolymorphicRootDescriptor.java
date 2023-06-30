@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -90,8 +91,8 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 
 	private static boolean isACommonAttribute(List<EntityDomainType<?>> subList, PersistentAttribute<?, ?> attribute) {
 		// for each of its attributes, check whether the other implementors also expose it
-		for ( EntityDomainType navigable : subList ) {
-			if ( navigable.findAttribute( attribute.getName() ) != null ) {
+		for ( EntityDomainType<?> navigable : subList ) {
+			if ( navigable.findAttribute( attribute.getName() ) == null ) {
 				// we found an implementor that does not expose that attribute,
 				// so break-out to the next attribute
 				return false;
@@ -499,6 +500,11 @@ public class SqmPolymorphicRootDescriptor<T> implements EntityDomainType<T> {
 
 	@Override
 	public ManagedDomainType<? super T> getSuperType() {
+		throw new UnsupportedOperationException(  );
+	}
+
+	@Override
+	public Collection<? extends EntityDomainType<? extends T>> getSubTypes() {
 		throw new UnsupportedOperationException(  );
 	}
 

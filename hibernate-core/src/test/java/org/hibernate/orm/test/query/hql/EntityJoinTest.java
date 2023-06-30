@@ -20,14 +20,12 @@ import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.query.hql.HqlTranslator;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.SqmTranslation;
-import org.hibernate.query.sqm.sql.SqmTranslator;
-import org.hibernate.query.sqm.sql.SqmTranslatorFactory;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.sql.ast.tree.from.LazyTableGroup;
@@ -37,6 +35,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
@@ -48,6 +47,7 @@ import static org.hamcrest.core.Is.is;
 import static org.hamcrest.core.IsInstanceOf.instanceOf;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole, Jan Martiska
@@ -184,21 +184,22 @@ public class EntityJoinTest {
                             .findEntityDescriptor( Customer.class );
 
                     final QueryEngine queryEngine = factory.getQueryEngine();
-                    final HqlTranslator hqlTranslator = queryEngine.getHqlTranslator();
-                    final SqmTranslatorFactory sqmTranslatorFactory = queryEngine.getSqmTranslatorFactory();
 
-                    final SqmStatement<Object> sqm = hqlTranslator.translate( qry, null );
+                    final SqmStatement<Object> sqm =
+                            queryEngine.getHqlTranslator().translate( qry, null );
 
-                    final SqmTranslator<SelectStatement> selectTranslator = sqmTranslatorFactory.createSelectTranslator(
-                            (SqmSelectStatement<?>) sqm,
-                            QueryOptions.NONE,
-                            DomainParameterXref.empty(),
-                            QueryParameterBindings.NO_PARAM_BINDINGS,
-                            LoadQueryInfluencers.NONE,
-                            factory,
-							true
-					);
-                    final SqmTranslation<SelectStatement> sqmTranslation = selectTranslator.translate();
+                    final SqmTranslation<SelectStatement> sqmTranslation =
+                            queryEngine.getSqmTranslatorFactory()
+                                    .createSelectTranslator(
+                                            (SqmSelectStatement<?>) sqm,
+                                            QueryOptions.NONE,
+                                            DomainParameterXref.empty(),
+                                            QueryParameterBindings.NO_PARAM_BINDINGS,
+                                            LoadQueryInfluencers.NONE,
+                                            factory,
+                                            true
+                                    )
+                                    .translate();
 
                     final SelectStatement sqlAst = sqmTranslation.getSqlAst();
                     final List<TableGroup> roots = sqlAst.getQuerySpec().getFromClause().getRoots();
@@ -244,6 +245,40 @@ public class EntityJoinTest {
         );
     }
 
+    @Test
+    @Jira( "https://hibernate.atlassian.net/browse/HHH-16495" )
+    public void testEntityJoinWithoutPredicate(SessionFactoryScope scope) {
+        scope.inTransaction( (session) -> {
+            try {
+                // this should throw an exception since it's not a cross join
+                final List<Object[]> result = session.createQuery(
+                        "select r.id, u.id, u.username " +
+                        "from FinancialRecord r join User u",
+                        Object[].class
+                ).getResultList();
+                fail( "Should've thrown SemanticException" );
+            }
+            catch (Exception expected) {
+                assertThat( expected.getCause(), instanceOf( SemanticException.class ) );
+                assertThat( expected.getMessage(), CoreMatchers.containsString( "Entity join did not specify a join condition" ) );
+            }
+        } );
+    }
+
+    @Test
+    @Jira( "https://hibernate.atlassian.net/browse/HHH-16495" )
+    public void testEntityCrossJoinWithoutPredicate(SessionFactoryScope scope) {
+        scope.inTransaction(
+                (session) -> {
+                    final List<Object[]> result = session.createQuery(
+                            "select r.id, u.id, u.username " +
+                            "from FinancialRecord r cross join User u",
+                            Object[].class
+                    ).getResultList();
+                    assertThat( result.size(), is( 4 ) );
+                }
+        );
+    }
 
     @BeforeEach
     public void createTestData(SessionFactoryScope scope) {

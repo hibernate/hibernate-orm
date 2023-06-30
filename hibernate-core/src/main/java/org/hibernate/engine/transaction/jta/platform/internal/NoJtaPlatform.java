@@ -13,6 +13,8 @@ import jakarta.transaction.Transaction;
 import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 
 /**
@@ -24,17 +26,17 @@ public class NoJtaPlatform implements JtaPlatform {
 	public static final NoJtaPlatform INSTANCE = new NoJtaPlatform();
 
 	@Override
-	public TransactionManager retrieveTransactionManager() {
+	public @Nullable TransactionManager retrieveTransactionManager() {
 		return null;
 	}
 
 	@Override
-	public UserTransaction retrieveUserTransaction() {
+	public @Nullable UserTransaction retrieveUserTransaction() {
 		return null;
 	}
 
 	@Override
-	public Object getTransactionIdentifier(Transaction transaction) {
+	public @Nullable Object getTransactionIdentifier(Transaction transaction) {
 		return null;
 	}
 

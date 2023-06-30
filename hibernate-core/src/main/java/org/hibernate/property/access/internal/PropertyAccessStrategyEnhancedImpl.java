@@ -9,6 +9,8 @@ package org.hibernate.property.access.internal;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
+import jakarta.persistence.AccessType;
+
 /**
  * Defines a strategy for accessing property values via a get/set pair, which may be nonpublic.  This
  * is the default (and recommended) strategy.
@@ -17,13 +19,24 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
  * @author Gavin King
  */
 public class PropertyAccessStrategyEnhancedImpl implements PropertyAccessStrategy {
-	/**
-	 * Singleton access
-	 */
-	public static final PropertyAccessStrategyEnhancedImpl INSTANCE = new PropertyAccessStrategyEnhancedImpl();
+	public static PropertyAccessStrategyEnhancedImpl with(AccessType getterAccessType) {
+		if ( getterAccessType == AccessType.FIELD ) {
+			return FIELD;
+		}
+		return STANDARD;
+	}
+
+	private final AccessType getterAccessType;
+
+	public static PropertyAccessStrategyEnhancedImpl STANDARD = new PropertyAccessStrategyEnhancedImpl( null );
+	public static PropertyAccessStrategyEnhancedImpl FIELD = new PropertyAccessStrategyEnhancedImpl( AccessType.FIELD );
+
+	public PropertyAccessStrategyEnhancedImpl(AccessType getterAccessType) {
+		this.getterAccessType = getterAccessType;
+	}
 
 	@Override
 	public PropertyAccess buildPropertyAccess(Class<?> containerJavaType, final String propertyName, boolean setterRequired) {
-		return new PropertyAccessEnhancedImpl( this, containerJavaType, propertyName );
+		return new PropertyAccessEnhancedImpl( this, containerJavaType, propertyName, getterAccessType );
 	}
 }

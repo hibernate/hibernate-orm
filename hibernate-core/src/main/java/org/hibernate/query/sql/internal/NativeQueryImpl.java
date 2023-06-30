@@ -26,7 +26,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
-import org.hibernate.QueryException;
 import org.hibernate.ScrollMode;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.query.spi.NativeQueryInterpreter;
@@ -45,6 +44,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.ParameterMetadata;
+import org.hibernate.query.PathException;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
@@ -432,10 +432,6 @@ public class NativeQueryImpl<R>
 		return callback;
 	}
 
-	public SessionFactoryImplementor getSessionFactory() {
-		return getSession().getFactory();
-	}
-
 	@Override
 	public QueryParameterBindings getQueryParameterBindings() {
 		return parameterBindings;
@@ -661,8 +657,7 @@ public class NativeQueryImpl<R>
 			}
 		};
 
-		return getSessionFactory().getQueryEngine()
-				.getNativeQueryInterpreter()
+		return getSessionFactory().getQueryEngine().getNativeQueryInterpreter()
 				.createQueryPlan( queryDefinition, getSessionFactory() );
 	}
 
@@ -1015,6 +1010,11 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	public NativeQueryImplementor<R> addEntity(Class<R> entityType, LockMode lockMode) {
+		return addEntity( StringHelper.unqualify( entityType.getName() ), entityType.getName(), lockMode);
+	}
+
+	@Override
 	public NativeQueryImplementor<R> addEntity(String tableAlias, @SuppressWarnings("rawtypes") Class entityClass) {
 		return addEntity( tableAlias, entityClass.getName() );
 	}
@@ -1040,7 +1040,7 @@ public class NativeQueryImpl<R>
 	private FetchReturn createFetchJoin(String tableAlias, String path) {
 		int loc = path.indexOf( '.' );
 		if ( loc < 0 ) {
-			throw new QueryException( "not a property path: " + path );
+			throw new PathException( "Not a property path '" + path + "'" );
 		}
 		final String ownerTableAlias = path.substring( 0, loc );
 		final String joinedPropertyName = path.substring( loc + 1 );
@@ -1146,6 +1146,12 @@ public class NativeQueryImpl<R>
 	@Override
 	public NativeQueryImplementor<R> setCacheRegion(String cacheRegion) {
 		super.setCacheRegion( cacheRegion );
+		return this;
+	}
+
+	@Override
+	public NativeQueryImplementor<R> setQueryPlanCacheable(boolean queryPlanCacheable) {
+		super.setQueryPlanCacheable( queryPlanCacheable );
 		return this;
 	}
 
@@ -1494,7 +1500,30 @@ public class NativeQueryImpl<R>
 		return this;
 	}
 
+	@Override
+	public Query<R> ascending(SingularAttribute<? super R, ?> attribute) {
+		throw new UnsupportedOperationException("Not yet supported for native queries");
+	}
 
+	@Override
+	public Query<R> descending(SingularAttribute<? super R, ?> attribute) {
+		throw new UnsupportedOperationException("Not yet supported for native queries");
+	}
+
+	@Override
+	public Query<R> ascending(int element) {
+		throw new UnsupportedOperationException("Not yet supported for native queries");
+	}
+
+	@Override
+	public Query<R> descending(int element) {
+		throw new UnsupportedOperationException("Not yet supported for native queries");
+	}
+
+	@Override
+	public Query<R> unordered() {
+		return this;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Hints

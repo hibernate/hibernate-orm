@@ -6,38 +6,40 @@
  */
 package org.hibernate.query.sqm;
 
+import java.util.Locale;
+
 /**
  * @author Steve Ebersole
  */
 public enum SortOrder {
-	ASCENDING {
-		@Override
-		public SortOrder reverse() {
-			return DESCENDING;
-		}
-	},
-	DESCENDING {
-		@Override
-		public SortOrder reverse() {
-			return ASCENDING;
-		}
-	};
+	ASCENDING,
+	DESCENDING;
 
-	public abstract SortOrder reverse();
+	public SortOrder reverse() {
+		switch (this) {
+			case ASCENDING:
+				return DESCENDING;
+			case DESCENDING:
+				return ASCENDING;
+			default:
+				return this;
+		}
+	}
 
 	public static SortOrder interpret(String value) {
 		if ( value == null ) {
 			return null;
 		}
 
-		if ( value.equalsIgnoreCase( "ascending" ) || value.equalsIgnoreCase( "asc" ) ) {
-			return ASCENDING;
+		switch ( value.toLowerCase(Locale.ROOT) ) {
+			case "asc":
+			case "ascending":
+				return ASCENDING;
+			case "desc":
+			case "descending":
+				return DESCENDING;
+			default:
+				throw new IllegalArgumentException( "Unknown sort order: " + value );
 		}
-
-		if ( value.equalsIgnoreCase( "descending" ) || value.equalsIgnoreCase( "desc" ) ) {
-			return DESCENDING;
-		}
-
-		throw new IllegalArgumentException( "Unknown sort order : " + value );
 	}
 }

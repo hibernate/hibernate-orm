@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
@@ -21,6 +22,16 @@ public class SqmEvery<T> extends AbstractSqmExpression<T> {
 	public SqmEvery(SqmSubQuery<T> subquery, NodeBuilder criteriaBuilder) {
 		super( subquery.getNodeType(), criteriaBuilder );
 		this.subquery = subquery;
+	}
+
+	@Override
+	public SqmExpressible<T> getNodeType() {
+		return subquery.getNodeType();
+	}
+
+	@Override
+	public Integer getTupleLength() {
+		return subquery.getTupleLength();
 	}
 
 	@Override

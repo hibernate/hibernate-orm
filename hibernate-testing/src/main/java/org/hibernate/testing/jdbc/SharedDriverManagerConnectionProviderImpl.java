@@ -88,7 +88,7 @@ public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConn
 		private final Integer isolation;
 
 		public Config(Map<String,Object> configurationValues) {
-			this.autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues, false );
+			this.autoCommit = ConfigurationHelper.getBoolean( AvailableSettings.AUTOCOMMIT, configurationValues );
 			this.minSize = ConfigurationHelper.getInt( MIN_SIZE, configurationValues, 0 );
 			this.maxSize = ConfigurationHelper.getInt( AvailableSettings.POOL_SIZE, configurationValues, 20 );
 			this.initialSize = ConfigurationHelper.getInt( INITIAL_SIZE, configurationValues, minSize );

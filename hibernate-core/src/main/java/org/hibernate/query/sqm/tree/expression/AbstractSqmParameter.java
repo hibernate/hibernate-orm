@@ -36,12 +36,7 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 		else if ( type instanceof PluralPersistentAttribute<?, ?, ?> ) {
 			type = ( (PluralPersistentAttribute<?, ?, ?>) type ).getElementType();
 		}
-		final SqmExpressible<T> oldType = getNodeType();
-
-		final SqmExpressible<?> newType = QueryHelper.highestPrecedenceType( oldType, type );
-		if ( newType != null && newType != oldType ) {
-			internalApplyInferableType( newType );
-		}
+		internalApplyInferableType( type );
 	}
 
 	@Override

@@ -27,7 +27,7 @@ public final class HighlightingFormatter implements Formatter {
 	private static final Set<String> KEYWORDS_LOWERCASED = new HashSet<>( new AnsiSqlKeywords().sql2003() );
 	static {
 		// additional keywords not reserved by ANSI SQL 2003
-		KEYWORDS_LOWERCASED.addAll( Arrays.asList( "key", "sequence", "cascade", "increment", "boolean" ) );
+		KEYWORDS_LOWERCASED.addAll( Arrays.asList( "key", "sequence", "cascade", "increment", "boolean", "offset", "next" ) );
 	}
 
 	public static final Formatter INSTANCE =

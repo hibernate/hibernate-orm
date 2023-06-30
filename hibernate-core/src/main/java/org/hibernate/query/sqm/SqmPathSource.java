@@ -11,7 +11,6 @@ import java.util.Locale;
 import jakarta.persistence.metamodel.Bindable;
 
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.SemanticException;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.SqmExpressibleAccessor;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -41,7 +40,7 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 	/**
 	 * Find a SqmPathSource by name relative to this source.
 	 *
-	 * returns null if the subPathSource is not found
+	 * @return null if the subPathSource is not found
 	 *
 	 * @throws IllegalStateException to indicate that this source cannot be de-referenced
 	 */
@@ -56,14 +55,12 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 	default SqmPathSource<?> getSubPathSource(String name) {
 		final SqmPathSource<?> subPathSource = findSubPathSource( name );
 		if ( subPathSource == null ) {
-			throw new IllegalArgumentException(
-					new SemanticException(
-							String.format(
-									Locale.ROOT,
-									"Could not resolve attribute '%s' of '%s'",
-									name,
-									getExpressible().getExpressibleJavaType().getJavaType().getTypeName()
-							)
+			throw new PathElementException(
+					String.format(
+							Locale.ROOT,
+							"Could not resolve attribute '%s' of '%s'",
+							name,
+							getExpressible().getTypeName()
 					)
 			);
 		}
@@ -85,6 +82,11 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 	@Override
 	default SqmExpressible<J> getExpressible() {
 		return (SqmExpressible<J>) getSqmPathType();
+	}
+
+	@Override
+	default DomainType<J> getSqmType() {
+		return (DomainType<J>) getSqmPathType();
 	}
 
 	/**

@@ -17,16 +17,7 @@ import org.hibernate.PessimisticLockException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.InnoDBStorageEngine;
-import org.hibernate.dialect.MyISAMStorageEngine;
-import org.hibernate.dialect.MySQLCastingJsonJdbcType;
-import org.hibernate.dialect.MySQLServerConfiguration;
-import org.hibernate.dialect.MySQLStorageEngine;
-import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.RowLockStrategy;
-import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.dialect.*;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
@@ -77,7 +68,6 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
@@ -796,7 +786,7 @@ public class MySQLLegacyDialect extends Dialect {
 	}
 
 	@Override
-	public String getEnumTypeDeclaration(String[] values) {
+	public String getEnumTypeDeclaration(String name, String[] values) {
 		StringBuilder type = new StringBuilder();
 		type.append( "enum (" );
 		String separator = "";
@@ -805,12 +795,6 @@ public class MySQLLegacyDialect extends Dialect {
 			separator = ",";
 		}
 		return type.append( ')' ).toString();
-	}
-
-	@Override
-	public String getCheckCondition(String columnName, String[] values) {
-		//not needed, because we use an 'enum' type
-		return null;
 	}
 
 	@Override
@@ -1372,6 +1356,11 @@ public class MySQLLegacyDialect extends Dialect {
 
 	boolean supportsAliasLocks() {
 		return getMySQLVersion().isSameOrAfter( 8 );
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_GROUP;
 	}
 
 	@Override

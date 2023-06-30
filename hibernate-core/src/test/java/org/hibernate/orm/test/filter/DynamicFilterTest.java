@@ -528,7 +528,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					log.info( "query against Department with a subquery on Salesperson in the APAC reqion..." );
 
 					List departments = session.createQuery(
-							"select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?1)"
+							"select d from Department as d where d in (select s.department from Salesperson s where s.name = ?1)"
 					).setParameter( 1, "steve" ).list();
 
 					assertEquals( "Incorrect department count", 1, departments.size() );
@@ -537,7 +537,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 
 					session.enableFilter( "region" ).setParameter( "region", "Foobar" );
 					departments = session.createQuery(
-							"select d from Department as d where d.id in (select s.department from Salesperson s where s.name = ?1)" )
+							"select d from Department as d where d in (select s.department from Salesperson s where s.name = ?1)" )
 							.setParameter( 1, "steve" )
 							.list();
 
@@ -560,7 +560,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					session.enableFilter( "effectiveDate" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
 
 					orders = session.createQuery(
-							"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3" )
+							"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product.id in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3" )
 							.setParameter( 1, 1L ).setParameter( 2, "Acme Hair Gel" ).setParameter( 3, "gavin" ).list();
 
 					assertEquals( "Incorrect orders count", 1, orders.size() );
@@ -577,7 +577,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					);
 
 					orders = session.createQuery(
-							"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3" )
+							"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p from Product p where p.name = ?2)) and o.buyer = ?3" )
 							.setParameter( 1, 1L ).setParameter( 2, "Acme Hair Gel" ).setParameter( 3, "gavin" ).list();
 
 					assertEquals( "Incorrect orders count", 0, orders.size() );
@@ -589,7 +589,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					session.enableFilter( "effectiveDate" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
 
 					orders = session.createQuery(
-							"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3" )
+							"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p from Product p where p.name = ?2)) and o.buyer = ?3" )
 							.setParameter( 1, 1L ).setParameter( 2, "Acme Hair Gel" ).setParameter( 3, "gavin" ).list();
 
 					assertEquals( "Incorrect orders count", 1, orders.size() );
@@ -601,7 +601,7 @@ public class DynamicFilterTest extends BaseNonConfigCoreFunctionalTestCase {
 					session.enableFilter( "effectiveDate" ).setParameter( "asOfDate", testData.lastMonth.getTime() );
 
 					orders = session.createQuery(
-							"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p.id from Product p where p.name = ?2)) and o.buyer = ?3" )
+							"select o from Order as o where exists (select li.id from LineItem li where li.quantity >= ?1 and li.product in (select p from Product p where p.name = ?2)) and o.buyer = ?3" )
 							.setParameter( 1, 1L ).setParameter( 2, "Acme Hair Gel" ).setParameter( 3, "gavin" ).list();
 
 					assertEquals( "Incorrect orders count", 1, orders.size() );

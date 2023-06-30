@@ -17,6 +17,10 @@ import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.sql.results.internal.ResultsHelper;
 
+import java.lang.reflect.Array;
+
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
@@ -31,6 +35,8 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 	private final int keyJdbcCount;
 
+	final CollectionLoaderSingleKey singleKeyLoader;
+
 	public AbstractCollectionBatchLoader(
 			int domainBatchSize,
 			LoadQueryInfluencers influencers,
@@ -42,6 +48,8 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 		this.keyJdbcCount = attributeMapping.getJdbcTypeCount();
 		this.sessionFactory = sessionFactory;
 		this.influencers = influencers;
+
+		singleKeyLoader = new CollectionLoaderSingleKey( getLoadable(), getInfluencers(), getSessionFactory() );
 	}
 
 	@Override
@@ -66,15 +74,39 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 		return keyJdbcCount;
 	}
 
-	protected void finishInitializingKey(
-			Object key,
-			SharedSessionContractImplementor session) {
+	abstract void initializeKeys(Object key, Object[] keysToInitialize, SharedSessionContractImplementor session);
+
+	@Override
+	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
+		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching collection: %s.%s",
+					getLoadable().getNavigableRole().getFullPath(), key );
+		}
+
+		final Object[] keys = resolveKeysToInitialize( key, session );
+
+		if ( hasSingleId( keys ) ) {
+			return singleKeyLoader.load( key, session );
+		}
+
+		initializeKeys( key, keys, session );
+
+		finishInitializingKeys( keys, session );
+
+		final CollectionKey collectionKey = new CollectionKey( getLoadable().getCollectionDescriptor(), key );
+		return session.getPersistenceContext().getCollection( collectionKey );
+	}
+
+	abstract void finishInitializingKeys(Object[] key, SharedSessionContractImplementor session);
+
+	protected void finishInitializingKey(Object key, SharedSessionContractImplementor session) {
 		if ( key == null ) {
 			return;
 		}
 
 		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Finishing initializing batch-fetched collection : %s.%s", attributeMapping.getNavigableRole().getFullPath(), key );
+			MULTI_KEY_LOAD_LOGGER.debugf( "Finishing initializing batch-fetched collection: %s.%s",
+					attributeMapping.getNavigableRole().getFullPath(), key );
 		}
 
 		final PersistenceContext persistenceContext = session.getPersistenceContext();
@@ -93,4 +125,20 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 		}
 
 	}
+
+	Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
+		final int length = getDomainBatchSize();
+		final Class<?> keyType = getLoadable().getKeyDescriptor().getJavaType().getJavaTypeClass();
+		final Object[] keysToInitialize = (Object[]) Array.newInstance( keyType, length );
+		session.getPersistenceContextInternal().getBatchFetchQueue()
+				.collectBatchLoadableCollectionKeys(
+						length,
+						(index, key) -> keysToInitialize[index] = key,
+						keyBeingLoaded,
+						getLoadable()
+				);
+		// now trim down the array to the number of keys we found
+		return trimIdBatch( length, keysToInitialize );
+	}
+
 }

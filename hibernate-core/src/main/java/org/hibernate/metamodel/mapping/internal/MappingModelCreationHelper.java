@@ -59,6 +59,7 @@ import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
@@ -856,7 +857,7 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( referencedPropertyName != null  ) {
-			if ( referencedPropertyName.indexOf( "." ) > 0 ) {
+			if ( referencedPropertyName.indexOf( '.' ) > 0 ) {
 				return interpretNestedToOneKeyDescriptor(
 						referencedEntityDescriptor,
 						referencedPropertyName,
@@ -1244,7 +1245,19 @@ public class MappingModelCreationHelper {
 					dialect,
 					creationProcess
 			);
-			attributeMapping.setForeignKeyDescriptor( referencedAttributeMapping.getForeignKeyDescriptor() );
+			foreignKeyDescriptor = referencedAttributeMapping.getForeignKeyDescriptor();
+		}
+
+		final EntityMappingType declaringEntityMapping = attributeMapping.findContainingEntityMapping();
+		if ( foreignKeyDescriptor.getTargetPart() instanceof EntityIdentifierMapping
+				&& foreignKeyDescriptor.getTargetPart() != declaringEntityMapping.getIdentifierMapping() ) {
+			// If the many-to-one refers to the super type, but the one-to-many is defined in a subtype,
+			// it would be wasteful to reuse the FK descriptor of the many-to-one,
+			// because that refers to the PK column in the root table.
+			// Joining such an association then requires that we join the root table
+			attributeMapping.setForeignKeyDescriptor(
+					foreignKeyDescriptor.withTargetPart( declaringEntityMapping.getIdentifierMapping() )
+			);
 		}
 		else {
 			attributeMapping.setForeignKeyDescriptor( foreignKeyDescriptor );

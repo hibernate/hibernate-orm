@@ -109,7 +109,7 @@ public class FromClauseTests extends BaseSqmUnitTest {
 		final SqmRoot<?> sqmRoot = fromClause.getRoots().get( 0 );
 		assertThat( sqmRoot, notNullValue() );
 		assertThat( sqmRoot.getExplicitAlias(), is( "p" )  );
-		assertThat( sqmRoot.getJoins(), hasSize( 1 ) );
+		assertThat( sqmRoot.getSqmJoins(), hasSize( 1 ) );
 		assertThat( sqmRoot.getSqmJoins().get( 0 ).getExplicitAlias(), is( "p2" )  );
 	}
 

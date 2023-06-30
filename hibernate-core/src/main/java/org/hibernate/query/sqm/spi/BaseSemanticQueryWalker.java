@@ -93,6 +93,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
@@ -110,7 +111,6 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
-import org.hibernate.service.ServiceRegistry;
 
 /**
  * Base support for an SQM walker
@@ -118,15 +118,6 @@ import org.hibernate.service.ServiceRegistry;
  * @author Steve Ebersole
  */
 public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Object> {
-	private final ServiceRegistry serviceRegistry;
-
-	public BaseSemanticQueryWalker(ServiceRegistry serviceRegistry) {
-		this.serviceRegistry = serviceRegistry;
-	}
-
-	public ServiceRegistry getServiceRegistry() {
-		return serviceRegistry;
-	}
 
 	@Override
 	public Object visitSelectStatement(SqmSelectStatement<?> statement) {
@@ -468,6 +459,12 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitIsNullPredicate(SqmNullnessPredicate predicate) {
+		predicate.getExpression().accept( this );
+		return predicate;
+	}
+
+	@Override
+	public Object visitIsTruePredicate(SqmTruthnessPredicate predicate) {
 		predicate.getExpression().accept( this );
 		return predicate;
 	}

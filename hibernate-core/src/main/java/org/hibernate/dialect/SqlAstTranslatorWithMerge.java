@@ -35,7 +35,7 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 
 	/**
 	 * Create the MutationOperation for performing a MERGE.
-	 *
+	 * <p>
 	 * The OptionalTableUpdate is {@linkplain #renderMergeStatement translated}
 	 * and wrapped as a MutationOperation
 	 */
@@ -86,13 +86,15 @@ public abstract class SqlAstTranslatorWithMerge<T extends JdbcOperation> extends
 		renderMergeInsert( optionalTableUpdate );
 		appendSql( " " );
 
-		// when matched
-		//      and s.col_1 is null
-		//	    and s.col_2 is null
-		//		and ...
-		//   then delete
-		renderMergeDelete( optionalTableUpdate );
-		appendSql( " " );
+		if ( optionalTableUpdate.getMutatingTable().isOptional() ) {
+			// when matched
+			//      and s.col_1 is null
+			//	    and s.col_2 is null
+			//		and ...
+			//   then delete
+			renderMergeDelete( optionalTableUpdate );
+			appendSql( " " );
+		}
 
 		// when matched
 		//   then update ...

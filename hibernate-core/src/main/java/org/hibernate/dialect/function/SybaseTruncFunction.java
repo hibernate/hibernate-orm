@@ -23,7 +23,6 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
 
 /**
  * Custom {@link TruncFunction} for Sybase which uses a dialect-specific emulation function for datetimes
@@ -48,16 +47,14 @@ public class SybaseTruncFunction extends TruncFunction {
 	protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 			List<? extends SqmTypedNode<?>> arguments,
 			ReturnableType<T> impliedResultType,
-			QueryEngine queryEngine,
-			TypeConfiguration typeConfiguration) {
+			QueryEngine queryEngine) {
 		final List<SqmTypedNode<?>> args = new ArrayList<>( arguments );
 		if ( arguments.size() == 2 && arguments.get( 1 ) instanceof SqmExtractUnit ) {
 			// datetime truncation
 			return dateTruncEmulation.generateSqmFunctionExpression(
 					arguments,
 					impliedResultType,
-					queryEngine,
-					typeConfiguration
+					queryEngine
 			);
 		}
 		// numeric truncation
@@ -95,7 +92,7 @@ public class SybaseTruncFunction extends TruncFunction {
 			sqlAppender.append( '(' );
 			sqlAppender.append( "datetime,substring(convert(varchar," );
 			sqlAstArguments.get( 0 ).accept( walker );
-			sqlAppender.append( ",21),1,17" );
+			sqlAppender.append( ",140),1,26" );
 			if ( sqlAstArguments.size() > 1 ) {
 				sqlAppender.append( "-len(" );
 				sqlAstArguments.get( 1 ).accept( walker );
@@ -105,54 +102,51 @@ public class SybaseTruncFunction extends TruncFunction {
 			else {
 				sqlAppender.append( ')' );
 			}
-			sqlAppender.append( ",21)" );
+			sqlAppender.append( ",140)" );
 		}
 
 		@Override
 		protected <T> SelfRenderingSqmFunction<T> generateSqmFunctionExpression(
 				List<? extends SqmTypedNode<?>> arguments,
 				ReturnableType<T> impliedResultType,
-				QueryEngine queryEngine,
-				TypeConfiguration typeConfiguration) {
-			final NodeBuilder nodeBuilder = queryEngine.getCriteriaBuilder();
+				QueryEngine queryEngine) {
 			final TemporalUnit temporalUnit = ( (SqmExtractUnit<?>) arguments.get( 1 ) ).getUnit();
 			final String literal;
 			switch ( temporalUnit ) {
 				case YEAR:
-					literal = "/01/01 00:00:00";
+					literal = "-01-01T00:00:00.000000";
 					break;
 				case MONTH:
-					literal = "/01 00:00:00";
+					literal = "-01T00:00:00.000000";
 					break;
 				case DAY:
-					literal = " 00:00:00";
+					literal = "T00:00:00.000000";
 					break;
 				case HOUR:
-					literal = ":00:00";
+					literal = ":00:00.000000";
 					break;
 				case MINUTE:
-					literal = ":00";
+					literal = ":00.000000";
 					break;
 				case SECOND:
-					literal = null;
+					literal = ".000000";
 					break;
 				default:
 					throw new UnsupportedOperationException( "Temporal unit not supported [" + temporalUnit + "]" );
 			}
 
+			final NodeBuilder nodeBuilder = queryEngine.getCriteriaBuilder();
 			return new SelfRenderingSqmFunction<>(
 					this,
 					this,
-					literal == null ?
-							singletonList( arguments.get( 0 ) ) :
-							asList(
-									arguments.get( 0 ),
-									new SqmLiteral<>(
-											literal,
-											typeConfiguration.getBasicTypeForJavaType( String.class ),
-											nodeBuilder
-									)
-							),
+					asList(
+							arguments.get( 0 ),
+							new SqmLiteral<>(
+									literal,
+									queryEngine.getTypeConfiguration().getBasicTypeForJavaType( String.class ),
+									nodeBuilder
+							)
+					),
 					impliedResultType,
 					null,
 					getReturnTypeResolver(),

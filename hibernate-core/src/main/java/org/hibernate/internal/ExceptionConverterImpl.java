@@ -13,7 +13,6 @@ import org.hibernate.HibernateException;
 import org.hibernate.JDBCException;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectNotFoundException;
-import org.hibernate.QueryException;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.TransientObjectException;
@@ -25,7 +24,9 @@ import org.hibernate.engine.spi.ExceptionConverter;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.loader.MultipleBagFetchException;
-import org.hibernate.query.sqm.ParsingException;
+import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.SemanticException;
+import org.hibernate.query.SyntaxException;
 
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
@@ -115,26 +116,28 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 			return converted;
 		}
 		else if ( exception instanceof ObjectNotFoundException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( exception.getMessage() );
+			final EntityNotFoundException converted = new EntityNotFoundException( exception.getMessage(), exception );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
 		else if ( exception instanceof org.hibernate.NonUniqueObjectException ) {
-			final EntityExistsException converted = new EntityExistsException( exception.getMessage() );
+			final EntityExistsException converted = new EntityExistsException( exception.getMessage(), exception );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
 		else if ( exception instanceof org.hibernate.NonUniqueResultException ) {
-			final NonUniqueResultException converted = new NonUniqueResultException( exception.getMessage() );
+			final NonUniqueResultException converted = new NonUniqueResultException( exception.getMessage(), exception );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
 		else if ( exception instanceof UnresolvableObjectException ) {
-			final EntityNotFoundException converted = new EntityNotFoundException( exception.getMessage() );
+			final EntityNotFoundException converted = new EntityNotFoundException( exception.getMessage(), exception );
 			rollbackIfNecessary( converted );
 			return converted;
 		}
-		else if ( exception instanceof QueryException || exception instanceof ParsingException) {
+		else if ( exception instanceof SyntaxException
+				|| exception instanceof SemanticException
+				|| exception instanceof IllegalQueryOperationException) {
 			return new IllegalArgumentException( exception );
 		}
 		else if ( exception instanceof MultipleBagFetchException ) {
@@ -189,44 +192,44 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 		return sharedSessionContract.getJdbcServices().getSqlExceptionHelper().convert( e, message );
 	}
 
-	protected PersistenceException wrapStaleStateException(StaleStateException e) {
-		if ( e instanceof StaleObjectStateException ) {
-			final StaleObjectStateException sose = (StaleObjectStateException) e;
+	protected PersistenceException wrapStaleStateException(StaleStateException exception) {
+		if ( exception instanceof StaleObjectStateException ) {
+			final StaleObjectStateException sose = (StaleObjectStateException) exception;
 			final Object identifier = sose.getIdentifier();
 			if ( identifier != null ) {
 				try {
 					final Object entity = sharedSessionContract.internalLoad( sose.getEntityName(), identifier, false, true);
 					if ( entity instanceof Serializable ) {
 						//avoid some user errors regarding boundary crossing
-						return new OptimisticLockException( e.getMessage(), e, entity );
+						return new OptimisticLockException( exception.getMessage(), exception, entity );
 					}
 					else {
-						return new OptimisticLockException( e.getMessage(), e );
+						return new OptimisticLockException( exception.getMessage(), exception );
 					}
 				}
 				catch (EntityNotFoundException enfe) {
-					return new OptimisticLockException( e.getMessage(), e );
+					return new OptimisticLockException( exception.getMessage(), exception );
 				}
 			}
 			else {
-				return new OptimisticLockException( e.getMessage(), e );
+				return new OptimisticLockException( exception.getMessage(), exception );
 			}
 		}
 		else {
-			return new OptimisticLockException( e.getMessage(), e );
+			return new OptimisticLockException( exception.getMessage(), exception );
 		}
 	}
 
-	protected PersistenceException wrapLockException(HibernateException e, LockOptions lockOptions) {
-		if ( e instanceof OptimisticEntityLockException ) {
-			final OptimisticEntityLockException lockException = (OptimisticEntityLockException) e;
+	protected PersistenceException wrapLockException(HibernateException exception, LockOptions lockOptions) {
+		if ( exception instanceof OptimisticEntityLockException ) {
+			final OptimisticEntityLockException lockException = (OptimisticEntityLockException) exception;
 			return new OptimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
 		}
-		else if ( e instanceof org.hibernate.exception.LockTimeoutException ) {
-			return new LockTimeoutException( e.getMessage(), e, null );
+		else if ( exception instanceof org.hibernate.exception.LockTimeoutException ) {
+			return new LockTimeoutException( exception.getMessage(), exception, null );
 		}
-		else if ( e instanceof PessimisticEntityLockException ) {
-			final PessimisticEntityLockException lockException = (PessimisticEntityLockException) e;
+		else if ( exception instanceof PessimisticEntityLockException ) {
+			final PessimisticEntityLockException lockException = (PessimisticEntityLockException) exception;
 			if ( lockOptions != null && lockOptions.getTimeOut() > -1 ) {
 				// assume lock timeout occurred if a timeout or NO WAIT was specified
 				return new LockTimeoutException( lockException.getMessage(), lockException, lockException.getEntity() );
@@ -235,18 +238,18 @@ public class ExceptionConverterImpl implements ExceptionConverter {
 				return new PessimisticLockException( lockException.getMessage(), lockException, lockException.getEntity() );
 			}
 		}
-		else if ( e instanceof org.hibernate.PessimisticLockException ) {
-			final org.hibernate.PessimisticLockException jdbcLockException = (org.hibernate.PessimisticLockException) e;
+		else if ( exception instanceof org.hibernate.PessimisticLockException ) {
+			final org.hibernate.PessimisticLockException lockException = (org.hibernate.PessimisticLockException) exception;
 			if ( lockOptions != null && lockOptions.getTimeOut() > -1 ) {
 				// assume lock timeout occurred if a timeout or NO WAIT was specified
-				return new LockTimeoutException( jdbcLockException.getMessage(), jdbcLockException, null );
+				return new LockTimeoutException( lockException.getMessage(), lockException, null );
 			}
 			else {
-				return new PessimisticLockException( jdbcLockException.getMessage(), jdbcLockException, null );
+				return new PessimisticLockException( lockException.getMessage(), lockException, null );
 			}
 		}
 		else {
-			return new OptimisticLockException( e );
+			return new OptimisticLockException( exception );
 		}
 	}
 

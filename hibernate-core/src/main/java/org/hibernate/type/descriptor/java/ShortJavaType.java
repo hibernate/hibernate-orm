@@ -177,7 +177,7 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 		throw new CoercionException(
 				String.format(
 						Locale.ROOT,
-						"Cannot coerce value `%s` [%s] as Short",
+						"Cannot coerce value '%s' [%s] to Short",
 						value,
 						value.getClass().getName()
 				)

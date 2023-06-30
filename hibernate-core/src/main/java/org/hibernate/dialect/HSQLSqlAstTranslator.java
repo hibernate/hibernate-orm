@@ -242,12 +242,11 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 				}
 				else {
 					// HSQL does not like parameters in the distinct from predicate
-					render( lhs, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
-					appendSql( operator.sqlText() );
-					render( rhs, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
+					renderComparisonEmulateIntersect( lhs, operator, rhs );
 				}
 				break;
 			default:
+				// HSQL has a broken 'is distinct from' operator
 				renderComparisonStandard( lhs, operator, rhs );
 				break;
 		}
@@ -317,4 +316,5 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			appendSql( CLOSE_PARENTHESIS );
 		}
 	}
+
 }

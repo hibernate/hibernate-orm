@@ -26,6 +26,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.dialect.SybaseDriverKind;
 import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -317,6 +318,14 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsRepeat implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
+			// Derby doesn't support the `REPLACE` function
+			return !( dialect instanceof DerbyDialect );
+		}
+	}
+
 	public static class SupportsTemporaryTable implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsTemporaryTables();
@@ -411,7 +420,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsInverseDistributionFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
-			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 )
+			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 1, 4, 200 )
 					|| dialect instanceof PostgreSQLDialect
 					|| dialect instanceof AbstractHANADialect
 					|| dialect instanceof CockroachDialect
@@ -425,7 +434,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsHypotheticalSetFunctions implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
-			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 2 )
+			return dialect instanceof H2Dialect && dialect.getVersion().isSameOrAfter( 1, 4, 200 )
 					|| dialect instanceof PostgreSQLDialect
 					|| dialect instanceof AbstractHANADialect
 					|| dialect instanceof CockroachDialect
@@ -649,6 +658,18 @@ abstract public class DialectFeatureChecks {
 			catch (Exception e) {
 				return false;
 			}
+		}
+	}
+
+	public static class IsJtds implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect instanceof SybaseDialect && ( (SybaseDialect) dialect ).getDriverKind() == SybaseDriverKind.JTDS;
+		}
+	}
+
+	public static class SupportsCommentOn implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsCommentOn();
 		}
 	}
 }

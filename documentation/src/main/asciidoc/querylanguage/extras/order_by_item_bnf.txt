@@ -1,0 +1,10 @@
+sortExpression sortDirection? nullsPrecedence?
+
+sortExpression
+    : identifier | INTEGER_LITERAL | expression
+
+sortDirection
+    : "ASC" | "DESC"
+
+nullsPrecedence
+    : "NULLS" ("FIRST" | "LAST")

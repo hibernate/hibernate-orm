@@ -1,0 +1,1 @@
+"CASE" ("WHEN" predicate "THEN" expression)+ ("ELSE" expression)? "END"

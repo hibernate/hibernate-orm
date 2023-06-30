@@ -6,46 +6,38 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.LockOptions;
-import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.BatchFetchQueue;
-import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
-import org.hibernate.internal.util.MutableInteger;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
+import org.hibernate.sql.exec.spi.JdbcParametersList;
 
+import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.countIds;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
- * CollectionLoader for batch fetching using a SQL IN predicate
+ * {@link CollectionBatchLoader} for batch fetching using a SQL {@code IN} predicate.
  *
  * @author Steve Ebersole
  */
 public class CollectionBatchLoaderInPredicate
 		extends AbstractCollectionBatchLoader
-		implements CollectionBatchLoader, SqlArrayMultiKeyLoader {
+		implements SqlArrayMultiKeyLoader {
 	private final int keyColumnCount;
 	private final int sqlBatchSize;
-	private final List<JdbcParameter> jdbcParameters;
+	private final JdbcParametersList jdbcParameters;
 	private final SelectStatement sqlAst;
 	private final JdbcOperationQuerySelect jdbcSelect;
-
-	private CollectionLoaderSingleKey singleKeyLoader;
 
 	public CollectionBatchLoaderInPredicate(
 			int domainBatchSize,
@@ -54,8 +46,8 @@ public class CollectionBatchLoaderInPredicate
 			SessionFactoryImplementor sessionFactory) {
 		super( domainBatchSize, influencers, attributeMapping, sessionFactory );
 
-		this.keyColumnCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount();
-		this.sqlBatchSize = sessionFactory.getJdbcServices()
+		keyColumnCount = attributeMapping.getKeyDescriptor().getJdbcTypeCount();
+		sqlBatchSize = sessionFactory.getJdbcServices()
 				.getDialect()
 				.getBatchLoadSizingStrategy()
 				.determineOptimalBatchLoadSize( keyColumnCount, domainBatchSize, false );
@@ -68,7 +60,7 @@ public class CollectionBatchLoaderInPredicate
 			);
 		}
 
-		this.jdbcParameters = new ArrayList<>();
+		final JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 		this.sqlAst = LoaderSelectBuilder.createSelect(
 				attributeMapping,
 				null,
@@ -77,12 +69,13 @@ public class CollectionBatchLoaderInPredicate
 				sqlBatchSize,
 				influencers,
 				LockOptions.NONE,
-				jdbcParameters::add,
+				jdbcParametersBuilder::add,
 				sessionFactory
 		);
+		this.jdbcParameters = jdbcParametersBuilder.build();
 		assert this.jdbcParameters.size() == this.sqlBatchSize * this.keyColumnCount;
 
-		this.jdbcSelect = sessionFactory.getJdbcServices()
+		jdbcSelect = sessionFactory.getJdbcServices()
 				.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
 				.buildSelectTranslator( sessionFactory, sqlAst )
@@ -90,53 +83,7 @@ public class CollectionBatchLoaderInPredicate
 	}
 
 	@Override
-	public PersistentCollection<?> load(
-			Object key,
-			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
-			MULTI_KEY_LOAD_LOGGER.debugf( "Loading collection `%s#%s` by batch-fetch", getLoadable().getNavigableRole().getFullPath(), key );
-		}
-
-		final MutableInteger nonNullCounter = new MutableInteger();
-		final ArrayList<Object> keysToInitialize = CollectionHelper.arrayList( getDomainBatchSize() );
-		session.getPersistenceContextInternal().getBatchFetchQueue().collectBatchLoadableCollectionKeys(
-				getDomainBatchSize(),
-				(index, batchableKey) -> {
-					keysToInitialize.add( batchableKey );
-					if ( batchableKey != null ) {
-						nonNullCounter.increment();
-					}
-				},
-				key,
-				getLoadable().asPluralAttributeMapping()
-		);
-
-		if ( nonNullCounter.get() <= 0 ) {
-			throw new IllegalStateException( "Number of non-null collection keys to batch fetch should never be 0" );
-		}
-
-		if ( nonNullCounter.get() == 1 ) {
-			prepareSingleKeyLoaderIfNeeded();
-			return singleKeyLoader.load( key, session );
-		}
-
-		initializeKeys( key, keysToInitialize.toArray( keysToInitialize.toArray( new Object[0] ) ), nonNullCounter.get(), session );
-
-		final CollectionKey collectionKey = new CollectionKey( getLoadable().getCollectionDescriptor(), key );
-		return session.getPersistenceContext().getCollection( collectionKey );
-	}
-
-	private void prepareSingleKeyLoaderIfNeeded() {
-		if ( singleKeyLoader == null ) {
-			singleKeyLoader = new CollectionLoaderSingleKey( getLoadable(), getInfluencers(), getSessionFactory() );
-		}
-	}
-
-	private <T> void initializeKeys(
-			T key,
-			T[] keysToInitialize,
-			int nonNullKeysToInitializeCount,
-			SharedSessionContractImplementor session) {
+	void initializeKeys(Object key, Object[] keysToInitialize, SharedSessionContractImplementor session) {
 		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
 			MULTI_KEY_LOAD_LOGGER.debugf(
 					"Collection keys to batch-fetch initialize (`%s#%s`) %s",
@@ -146,7 +93,7 @@ public class CollectionBatchLoaderInPredicate
 			);
 		}
 
-		final MultiKeyLoadChunker<T> chunker = new MultiKeyLoadChunker<>(
+		final MultiKeyLoadChunker<Object> chunker = new MultiKeyLoadChunker<>(
 				sqlBatchSize,
 				keyColumnCount,
 				getLoadable().getKeyDescriptor(),
@@ -159,7 +106,7 @@ public class CollectionBatchLoaderInPredicate
 
 		chunker.processChunks(
 				keysToInitialize,
-				nonNullKeysToInitializeCount,
+				countIds( keysToInitialize ),
 				(jdbcParameterBindings, session1) -> {
 					// Create a RegistrationHandler for handling any subselect fetches we encounter handling this chunk
 					final SubselectFetch.RegistrationHandler registrationHandler = SubselectFetch.createRegistrationHandler(
@@ -197,8 +144,7 @@ public class CollectionBatchLoaderInPredicate
 					for ( int i = 0; i < nonNullElementCount; i++ ) {
 						final int keyPosition = i + startIndex;
 						if ( keyPosition < keysToInitialize.length ) {
-							final T keyToInitialize = keysToInitialize[keyPosition];
-							finishInitializingKey( keyToInitialize, session );
+							finishInitializingKey( keysToInitialize[keyPosition], session );
 						}
 					}
 				},
@@ -206,4 +152,8 @@ public class CollectionBatchLoaderInPredicate
 		);
 	}
 
+	@Override
+	void finishInitializingKeys(Object[] key, SharedSessionContractImplementor session) {
+		// do nothing
+	}
 }

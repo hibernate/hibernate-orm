@@ -19,11 +19,11 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 /**
  * @author Steve Ebersole
  */
-class BagAttributeImpl<X, E>
+public class BagAttributeImpl<X, E>
 		extends AbstractPluralAttribute<X, Collection<E>, E>
 		implements BagPersistentAttribute<X, E> {
 
-	BagAttributeImpl(PluralAttributeBuilder<X, Collection<E>, E, ?> xceBuilder, MetadataContext metadataContext) {
+	public BagAttributeImpl(PluralAttributeBuilder<X, Collection<E>, E, ?> xceBuilder, MetadataContext metadataContext) {
 		super( xceBuilder, metadataContext );
 	}
 
@@ -46,7 +46,7 @@ class BagAttributeImpl<X, E>
 				alias,
 				joinType,
 				fetched,
-				creationState.getCreationContext().getQueryEngine().getCriteriaBuilder()
+				creationState.getCreationContext().getNodeBuilder()
 		);
 	}
 }

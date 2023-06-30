@@ -82,5 +82,10 @@ public enum FunctionParameterType {
 	/**
 	 * @see org.hibernate.type.SqlTypes#isCharacterOrClobType(int)
 	 */
-	STRING_OR_CLOB
+	STRING_OR_CLOB,
+	/**
+	 * Indicates that the argument should be a spatial type
+	 * @see org.hibernate.type.SqlTypes#isSpatialType(int) 
+	 */
+	SPATIAL
 }

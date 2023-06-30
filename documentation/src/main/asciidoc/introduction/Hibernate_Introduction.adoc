@@ -1,0 +1,51 @@
+:pdf-theme: ../pdf/theme.yml
+:source-highlighter: rouge
+:icons: font
+:doctype: book
+:pdf-fontsdir: ../pdf/fonts
+:docsBase: https://docs.jboss.org/hibernate/orm
+:versionDocBase: {docsBase}/6.3
+:userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
+
+= An introduction to Hibernate 6
+Gavin King and the Hibernate team
+:title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
+:toc:
+:toclevels: 3
+
+<<<
+
+include::Preface.adoc[]
+
+<<<
+
+:numbered:
+
+include::Introduction.adoc[]
+
+<<<
+
+include::Configuration.adoc[]
+
+<<<
+
+include::Entities.adoc[]
+
+<<<
+
+include::Mapping.adoc[]
+
+<<<
+
+include::Interacting.adoc[]
+
+// include::../userguide/chapters/query/hql/Hibernate_Query_Language.adoc[]
+
+<<<
+
+include::Tuning.adoc[]
+
+<<<
+
+include::Advanced.adoc[]
+

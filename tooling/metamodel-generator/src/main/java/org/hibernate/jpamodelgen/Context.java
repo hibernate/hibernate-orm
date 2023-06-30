@@ -19,7 +19,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
-import org.hibernate.jpamodelgen.model.MetaEntity;
+import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.AccessType;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
@@ -37,22 +37,23 @@ public final class Context {
 	/**
 	 * Used for keeping track of parsed entities and mapped super classes (xml + annotations).
 	 */
-	private final Map<String, MetaEntity> metaEntities = new HashMap<String, MetaEntity>();
+	private final Map<String, Metamodel> metaEntities = new HashMap<>();
 
 	/**
 	 * Used for keeping track of parsed embeddable entities. These entities have to be kept separate since
 	 * they are lazily initialized.
 	 */
-	private final Map<String, MetaEntity> metaEmbeddables = new HashMap<String, MetaEntity>();
+	private final Map<String, Metamodel> metaEmbeddables = new HashMap<>();
 
-	private final Map<String, AccessTypeInformation> accessTypeInformation = new HashMap<String, AccessTypeInformation>();
+	private final Map<String, Metamodel> metaAuxiliaries = new HashMap<>();
+
+	private final Map<String, AccessTypeInformation> accessTypeInformation = new HashMap<>();
 
 	private final ProcessingEnvironment pe;
 	private final boolean logDebug;
 	private final boolean lazyXmlParsing;
 	private final String persistenceXmlLocation;
 	private final List<String> ormXmlFiles;
-	private final String generatedAnnotation;
 
 	/**
 	 * Whether all mapping files are xml-mapping-metadata-complete. In this case no annotation processing will take
@@ -97,18 +98,6 @@ public final class Context {
 
 		lazyXmlParsing = Boolean.parseBoolean( pe.getOptions().get( JPAMetaModelEntityProcessor.LAZY_XML_PARSING ) );
 		logDebug = Boolean.parseBoolean( pe.getOptions().get( JPAMetaModelEntityProcessor.DEBUG_OPTION ) );
-
-		// Workaround that Eclipse transformer tries to replace this constant which we don't want
-		String j = "j";
-		TypeElement java8AndBelowGeneratedAnnotation =
-				pe.getElementUtils().getTypeElement( j + "avax.annotation.Generated" );
-		if ( java8AndBelowGeneratedAnnotation != null ) {
-			generatedAnnotation = java8AndBelowGeneratedAnnotation.getQualifiedName().toString();
-		}
-		else {
-			// Using the new name for this annotation in Java 9 and above
-			generatedAnnotation = "javax.annotation.processing.Generated";
-		}
 	}
 
 	public ProcessingEnvironment getProcessingEnvironment() {
@@ -117,10 +106,6 @@ public final class Context {
 
 	public boolean addGeneratedAnnotation() {
 		return addGeneratedAnnotation;
-	}
-
-	public String getGeneratedAnnotationFqcn() {
-		return generatedAnnotation;
 	}
 
 	public void setAddGeneratedAnnotation(boolean addGeneratedAnnotation) {
@@ -163,15 +148,15 @@ public final class Context {
 		return metaEntities.containsKey( fqcn );
 	}
 
-	public @Nullable MetaEntity getMetaEntity(String fqcn) {
+	public @Nullable Metamodel getMetaEntity(String fqcn) {
 		return metaEntities.get( fqcn );
 	}
 
-	public Collection<MetaEntity> getMetaEntities() {
+	public Collection<Metamodel> getMetaEntities() {
 		return metaEntities.values();
 	}
 
-	public void addMetaEntity(String fqcn, MetaEntity metaEntity) {
+	public void addMetaEntity(String fqcn, Metamodel metaEntity) {
 		metaEntities.put( fqcn, metaEntity );
 	}
 
@@ -179,16 +164,28 @@ public final class Context {
 		return metaEmbeddables.containsKey( fqcn );
 	}
 
-	public @Nullable MetaEntity getMetaEmbeddable(String fqcn) {
+	public @Nullable Metamodel getMetaEmbeddable(String fqcn) {
 		return metaEmbeddables.get( fqcn );
 	}
 
-	public void addMetaEmbeddable(String fqcn, MetaEntity metaEntity) {
+	public void addMetaEmbeddable(String fqcn, Metamodel metaEntity) {
 		metaEmbeddables.put( fqcn, metaEntity );
 	}
 
-	public Collection<MetaEntity> getMetaEmbeddables() {
+	public Collection<Metamodel> getMetaEmbeddables() {
 		return metaEmbeddables.values();
+	}
+
+	public @Nullable Metamodel getMetaAuxiliary(String fqcn) {
+		return metaAuxiliaries.get( fqcn );
+	}
+
+	public Collection<Metamodel> getMetaAuxiliaries() {
+		return metaAuxiliaries.values();
+	}
+
+	public void addMetaAuxiliary(String fqcn, Metamodel metamodel) {
+		metaAuxiliaries.put( fqcn, metamodel);
 	}
 
 	public void addAccessTypeInformation(String fqcn, AccessTypeInformation info) {

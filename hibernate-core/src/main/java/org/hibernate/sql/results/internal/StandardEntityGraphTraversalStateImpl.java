@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.sql.results.graph.EntityGraphTraversalState;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
@@ -29,13 +30,18 @@ import org.hibernate.sql.results.graph.Fetchable;
 public class StandardEntityGraphTraversalStateImpl implements EntityGraphTraversalState {
 
 	private final GraphSemantic graphSemantic;
+	private final JpaMetamodel metamodel;
 	private GraphImplementor<?> currentGraphContext;
 
-	public StandardEntityGraphTraversalStateImpl(GraphSemantic graphSemantic, RootGraphImplementor<?> rootGraphImplementor) {
+	public StandardEntityGraphTraversalStateImpl(
+			GraphSemantic graphSemantic,
+			RootGraphImplementor<?> rootGraphImplementor,
+			JpaMetamodel metamodel) {
 		Objects.requireNonNull( graphSemantic, "graphSemantic cannot be null" );
 		Objects.requireNonNull( rootGraphImplementor, "rootGraphImplementor cannot be null" );
 		this.graphSemantic = graphSemantic;
 		this.currentGraphContext = rootGraphImplementor;
+		this.metamodel = metamodel;
 	}
 
 	@Override
@@ -101,7 +107,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	}
 
 	private boolean appliesTo(FetchParent fetchParent) {
-		return currentGraphContext != null && fetchParent.appliesTo( currentGraphContext );
+		return currentGraphContext != null && fetchParent.appliesTo( currentGraphContext, metamodel );
 	}
 
 }

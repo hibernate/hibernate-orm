@@ -3617,7 +3617,7 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean isAffectedByEntityGraph(LoadQueryInfluencers loadQueryInfluencers) {
 		final RootGraphImplementor<?> graph = loadQueryInfluencers.getEffectiveEntityGraph().getGraph();
-		return graph != null && graph.appliesTo( getEntityName() );
+		return graph != null && graph.appliesTo( getEntityName(), getFactory().getJpaMetamodel() );
 	}
 
 	@Override

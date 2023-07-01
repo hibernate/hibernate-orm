@@ -684,7 +684,7 @@ public abstract class AbstractManagedType<J>
 
 	@Override
 	public SubGraphImplementor<J> makeSubGraph() {
-		return new SubGraphImpl<>( this, true, jpaMetamodel() );
+		return new SubGraphImpl<>( this, true);
 	}
 
 	@Override

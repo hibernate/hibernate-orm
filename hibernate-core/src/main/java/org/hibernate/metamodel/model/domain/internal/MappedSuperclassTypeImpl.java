@@ -130,7 +130,7 @@ public class MappedSuperclassTypeImpl<J> extends AbstractIdentifiableType<J> imp
 			);
 		}
 
-		return new SubGraphImpl( this, true, jpaMetamodel() );
+		return new SubGraphImpl( this, true );
 	}
 
 	@Override

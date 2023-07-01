@@ -1064,7 +1064,7 @@ public class SessionImpl
 		final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
 		final RootGraphImplementor<?> graph = effectiveEntityGraph.getGraph();
 		boolean clearedEffectiveGraph;
-		if ( semantic == null || graph.appliesTo( entityName ) ) {
+		if ( semantic == null || graph.appliesTo( entityName, getFactory().getJpaMetamodel() ) ) {
 			clearedEffectiveGraph = false;
 		}
 		else {
@@ -2862,11 +2862,7 @@ public class SessionImpl
 	@Override
 	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
 		checkOpen();
-		return new RootGraphImpl<>(
-				null,
-				getFactory().getJpaMetamodel().entity( rootType ),
-				getEntityManagerFactory().getJpaMetamodel()
-		);
+		return new RootGraphImpl<>( null, getFactory().getJpaMetamodel().entity( rootType ) );
 	}
 
 	@Override

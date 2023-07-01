@@ -198,6 +198,6 @@ public class EntityGraphsTest extends AbstractEntityGraphTest {
 	@TestForIssue( jiraKey = "HHH-14264" )
 	public void testRootGraphAppliesToChildEntityClass() {
 		RootGraphImplementor<GraphParsingTestEntity> rootGraphImplementor = parseGraph( GraphParsingTestEntity.class, "name, description" );
-		Assert.assertTrue( rootGraphImplementor.appliesTo( GraphParsingTestSubentity.class ) );
+		Assert.assertTrue( rootGraphImplementor.appliesTo( GraphParsingTestSubentity.class, entityManagerFactory().getJpaMetamodel() ) );
 	}
 }

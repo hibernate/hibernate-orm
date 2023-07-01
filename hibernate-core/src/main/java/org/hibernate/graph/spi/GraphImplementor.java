@@ -26,13 +26,11 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  */
 public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
-	boolean appliesTo(ManagedDomainType<?> managedType);
+	boolean appliesTo(ManagedDomainType<?> managedType, JpaMetamodel metamodel);
 
-	boolean appliesTo(Class<?> javaType);
+	boolean appliesTo(Class<?> javaType, JpaMetamodel metamodel);
 
 	void merge(GraphImplementor<? extends J> other);
-
-	JpaMetamodel jpaMetamodel();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

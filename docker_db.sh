@@ -518,7 +518,7 @@ oracle_free_setup() {
     HEALTHSTATUS=
     until [ "$HEALTHSTATUS" == "healthy" ];
     do
-        echo "Waiting for Oracle to start..."
+        echo "Waiting for Oracle Free to start..."
         sleep 5;
         # On WSL, health-checks intervals don't work for Podman, so run them manually
         if command -v podman > /dev/null; then

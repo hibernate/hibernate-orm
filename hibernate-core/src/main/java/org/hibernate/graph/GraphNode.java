@@ -7,9 +7,12 @@
 package org.hibernate.graph;
 
 /**
- * Commonality between {@link AttributeNode} and {@link Graph}.
+ * Common operations of {@link AttributeNode} and {@link Graph}.
  *
  * @author Steve Ebersole
+ *
+ * @see AttributeNode
+ * @see Graph
  */
 public interface GraphNode<J> {
 	boolean isMutable();

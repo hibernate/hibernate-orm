@@ -35,12 +35,7 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 	}
 
 	public RootGraphImpl(String name, EntityDomainType<J> entityType, JpaMetamodel jpaMetamodel) {
-		this(
-				name,
-				entityType,
-				true,
-				jpaMetamodel
-		);
+		this( name, entityType, true, jpaMetamodel );
 	}
 
 	public RootGraphImpl(String name, boolean mutable, GraphImplementor<J> original) {
@@ -65,11 +60,7 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 
 	@Override
 	public RootGraphImplementor<J> makeRootGraph(String name, boolean mutable) {
-		if ( ! mutable && ! isMutable() ) {
-			return this;
-		}
-
-		return super.makeRootGraph( name, mutable );
+		return !mutable && !isMutable() ? this : super.makeRootGraph( name, mutable );
 	}
 
 	@Override
@@ -78,13 +69,13 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 	}
 
 	@Override
-	public boolean appliesTo(EntityDomainType<? super J> entityType) {
+	public boolean appliesTo(EntityDomainType<?> entityType) {
 		final ManagedDomainType<J> managedTypeDescriptor = getGraphedType();
 		if ( managedTypeDescriptor.equals( entityType ) ) {
 			return true;
 		}
 
-		IdentifiableDomainType<? super J> superType = entityType.getSupertype();
+		IdentifiableDomainType<?> superType = entityType.getSupertype();
 		while ( superType != null ) {
 			if ( managedTypeDescriptor.equals( superType ) ) {
 				return true;
@@ -101,7 +92,7 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 	}
 
 	@Override
-	public boolean appliesTo(Class type) {
+	public boolean appliesTo(Class<?> type) {
 		return appliesTo( jpaMetamodel().entity( type ) );
 	}
 }

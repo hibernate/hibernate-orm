@@ -562,7 +562,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
 			if ( appliedGraph != null && appliedGraph.getSemantic() != null && appliedGraph.getGraph() != null ) {
 				this.entityGraphTraversalState = new StandardEntityGraphTraversalStateImpl(
-						appliedGraph.getSemantic(), appliedGraph.getGraph() );
+						appliedGraph.getSemantic(), appliedGraph.getGraph(),
+						creationContext.getSessionFactory().getJpaMetamodel()
+				);
 			}
 			else {
 				this.entityGraphTraversalState = null;

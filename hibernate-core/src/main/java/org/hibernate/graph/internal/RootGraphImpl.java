@@ -23,23 +23,20 @@ import jakarta.persistence.EntityGraph;
  * @author Steve Ebersole
  */
 public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>, RootGraphImplementor<J> {
+
 	private final String name;
 
-	public RootGraphImpl(
-			String name,
-			EntityDomainType<J> entityType,
-			boolean mutable,
-			JpaMetamodel jpaMetamodel) {
-		super( entityType, mutable, jpaMetamodel );
+	public RootGraphImpl(String name, EntityDomainType<J> entityType, boolean mutable) {
+		super( entityType, mutable );
 		this.name = name;
 	}
 
-	public RootGraphImpl(String name, EntityDomainType<J> entityType, JpaMetamodel jpaMetamodel) {
-		this( name, entityType, true, jpaMetamodel );
+	public RootGraphImpl(String name, EntityDomainType<J> entityType) {
+		this( name, entityType, true );
 	}
 
-	public RootGraphImpl(String name, boolean mutable, GraphImplementor<J> original) {
-		super( mutable, original );
+	public RootGraphImpl(String name, GraphImplementor<J> original, boolean mutable) {
+		super(original, mutable);
 		this.name = name;
 	}
 
@@ -50,12 +47,12 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 
 	@Override
 	public RootGraphImplementor<J> makeCopy(boolean mutable) {
-		return new RootGraphImpl<>( null, mutable, this );
+		return new RootGraphImpl<>( null, this, mutable);
 	}
 
 	@Override
 	public SubGraphImplementor<J> makeSubGraph(boolean mutable) {
-		return new SubGraphImpl<>( mutable, this );
+		return new SubGraphImpl<>(this, mutable);
 	}
 
 	@Override
@@ -69,7 +66,7 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 	}
 
 	@Override
-	public boolean appliesTo(EntityDomainType<?> entityType) {
+	public boolean appliesTo(EntityDomainType<?> entityType, JpaMetamodel metamodel) {
 		final ManagedDomainType<J> managedTypeDescriptor = getGraphedType();
 		if ( managedTypeDescriptor.equals( entityType ) ) {
 			return true;
@@ -87,12 +84,12 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 	}
 
 	@Override
-	public boolean appliesTo(String entityName) {
-		return appliesTo( jpaMetamodel().entity( entityName ) );
+	public boolean appliesTo(String entityName, JpaMetamodel metamodel) {
+		return appliesTo( metamodel.entity( entityName ), metamodel );
 	}
 
 	@Override
-	public boolean appliesTo(Class<?> type) {
-		return appliesTo( jpaMetamodel().entity( type ) );
+	public boolean appliesTo(Class<?> type, JpaMetamodel metamodel) {
+		return appliesTo( metamodel.entity( type ), metamodel );
 	}
 }

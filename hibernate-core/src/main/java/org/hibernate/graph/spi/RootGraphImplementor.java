@@ -8,6 +8,7 @@ package org.hibernate.graph.spi;
 
 import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 /**
@@ -17,14 +18,14 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
  */
 public interface RootGraphImplementor<J> extends RootGraph<J>, GraphImplementor<J> {
 
-	boolean appliesTo(String entityName);
+	boolean appliesTo(String entityName, JpaMetamodel metamodel);
 
-	boolean appliesTo(EntityDomainType<?> entityType);
+	boolean appliesTo(EntityDomainType<?> entityType, JpaMetamodel metamodel);
 
 	@Override
-	default boolean appliesTo(ManagedDomainType<?> managedType) {
+	default boolean appliesTo(ManagedDomainType<?> managedType, JpaMetamodel metamodel) {
 		assert managedType instanceof EntityDomainType;
-		return appliesTo( (EntityDomainType<?>) managedType );
+		return appliesTo( (EntityDomainType<?>) managedType, metamodel );
 	}
 
 	@Override

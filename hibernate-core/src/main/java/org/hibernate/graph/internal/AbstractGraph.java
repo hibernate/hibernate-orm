@@ -21,7 +21,6 @@ import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
@@ -36,17 +35,13 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	private final ManagedDomainType<J> managedType;
 	private Map<PersistentAttribute<?,?>, AttributeNodeImplementor<?>> attrNodeMap;
 
-	public AbstractGraph(
-			ManagedDomainType<J> managedType,
-			boolean mutable,
-			JpaMetamodel jpaMetamodel) {
-		super( mutable, jpaMetamodel );
+	public AbstractGraph(ManagedDomainType<J> managedType, boolean mutable) {
+		super( mutable );
 		this.managedType = managedType;
 	}
 
-	protected AbstractGraph(boolean mutable, GraphImplementor<J> original) {
-		this( original.getGraphedType(), mutable, original.jpaMetamodel() );
-
+	protected AbstractGraph(GraphImplementor<J> original, boolean mutable) {
+		this( original.getGraphedType(), mutable );
 		this.attrNodeMap = new ConcurrentHashMap<>( original.getAttributeNodeList().size() );
 		original.visitAttributeNodes(
 				node -> attrNodeMap.put(
@@ -57,11 +52,6 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public JpaMetamodel jpaMetamodel() {
-		return super.jpaMetamodel();
-	}
-
-	@Override
 	public ManagedDomainType<J> getGraphedType() {
 		return managedType;
 	}
@@ -69,7 +59,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	@Override
 	public RootGraphImplementor<J> makeRootGraph(String name, boolean mutable) {
 		if ( getGraphedType() instanceof EntityDomainType ) {
-			return new RootGraphImpl<>( name, mutable, this );
+			return new RootGraphImpl<>( name, this, mutable);
 		}
 
 		throw new CannotBecomeEntityGraphException(
@@ -180,7 +170,7 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 		}
 
 		if ( attrNode == null ) {
-			attrNode = new AttributeNodeImpl<>( isMutable(), attribute, jpaMetamodel() );
+			attrNode = new AttributeNodeImpl<>(attribute, isMutable());
 			attrNodeMap.put( attribute, attrNode );
 		}
 

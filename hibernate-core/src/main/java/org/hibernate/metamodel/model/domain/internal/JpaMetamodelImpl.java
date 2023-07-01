@@ -277,7 +277,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 
 			//noinspection unchecked
 			final RootGraphImplementor<T> egi = (RootGraphImplementor<T>) entityGraph;
-			if ( egi.appliesTo( entityType ) ) {
+			if ( egi.appliesTo( entityType, this ) ) {
 				results.add( egi );
 			}
 		}
@@ -351,11 +351,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				);
 			}
 
-			final RootGraphImpl<Object> entityGraph = new RootGraphImpl<>(
-					definition.getRegisteredName(),
-					entityType,
-					this
-			);
+			final RootGraphImpl<Object> entityGraph = new RootGraphImpl<>( definition.getRegisteredName(), entityType );
 
 			final NamedEntityGraph namedEntityGraph = definition.getAnnotation();
 

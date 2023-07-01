@@ -17,7 +17,6 @@ import org.hibernate.graph.spi.AttributeNodeImplementor;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
@@ -39,23 +38,19 @@ public class AttributeNodeImpl<J>
 	private Map<Class<? extends J>, SubGraphImplementor<? extends J>> subGraphMap;
 	private Map<Class<? extends J>, SubGraphImplementor<? extends J>> keySubGraphMap;
 
-	public <X> AttributeNodeImpl(
-			boolean mutable,
-			PersistentAttribute<X, J> attribute,
-			JpaMetamodel jpaMetamodel) {
-		this( mutable, attribute, null, null, jpaMetamodel );
+	public <X> AttributeNodeImpl(PersistentAttribute<X, J> attribute, boolean mutable) {
+		this(attribute, null, null, mutable);
 	}
 
 	/**
 	 * Intended only for use from making a copy
 	 */
 	private AttributeNodeImpl(
-			boolean mutable,
 			PersistentAttribute<?, J> attribute,
 			Map<Class<? extends J>, SubGraphImplementor<? extends J>> subGraphMap,
 			Map<Class<? extends J>, SubGraphImplementor<? extends J>> keySubGraphMap,
-			JpaMetamodel jpaMetamodel) {
-		super( mutable, jpaMetamodel );
+			boolean mutable) {
+		super( mutable );
 		this.attribute = attribute;
 		this.subGraphMap = subGraphMap;
 		this.keySubGraphMap = keySubGraphMap;
@@ -224,11 +219,7 @@ public class AttributeNodeImpl<J>
 	@Override
 	public AttributeNodeImplementor<J> makeCopy(boolean mutable) {
 		return new AttributeNodeImpl<>(
-				mutable,
-				this.attribute,
-				makeMapCopy( mutable, subGraphMap ),
-				makeMapCopy( mutable, keySubGraphMap ),
-				jpaMetamodel()
+				this.attribute, makeMapCopy( mutable, subGraphMap ), makeMapCopy( mutable, keySubGraphMap ), mutable
 		);
 	}
 

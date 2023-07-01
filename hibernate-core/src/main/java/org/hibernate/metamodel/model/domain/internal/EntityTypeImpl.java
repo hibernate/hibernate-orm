@@ -212,7 +212,7 @@ public class EntityTypeImpl<J>
 			);
 		}
 
-		return new SubGraphImpl( this, true, jpaMetamodel() );
+		return new SubGraphImpl( this, true );
 	}
 
 	@Override

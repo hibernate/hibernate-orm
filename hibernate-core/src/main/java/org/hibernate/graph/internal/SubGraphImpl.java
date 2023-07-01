@@ -14,29 +14,23 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
  * @author Steve Ebersole
  */
 public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImplementor<J> {
-	public SubGraphImpl(
-			ManagedDomainType<J> managedType,
-			boolean mutable,
-			JpaMetamodel jpaMetamodel) {
-		super( managedType, mutable, jpaMetamodel );
+
+	public SubGraphImpl(ManagedDomainType<J> managedType, boolean mutable) {
+		super( managedType, mutable );
 	}
 
-	public SubGraphImpl(boolean mutable, AbstractGraph<J> original) {
-		super( mutable, original );
+	public SubGraphImpl(AbstractGraph<J> original, boolean mutable) {
+		super(original, mutable);
 	}
 
 	@Override
 	public SubGraphImplementor<J> makeCopy(boolean mutable) {
-		return new SubGraphImpl<>( mutable, this );
+		return new SubGraphImpl<>(this, mutable);
 	}
 
 	@Override
 	public SubGraphImplementor<J> makeSubGraph(boolean mutable) {
-		if ( ! mutable && ! isMutable() ) {
-			return this;
-		}
-
-		return makeCopy( true );
+		return !mutable && !isMutable() ? this : makeCopy( true );
 	}
 
 	@Override
@@ -45,7 +39,7 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 	}
 
 	@Override
-	public boolean appliesTo(ManagedDomainType<?> managedType) {
+	public boolean appliesTo(ManagedDomainType<?> managedType, JpaMetamodel metamodel) {
 		if ( getGraphedType().equals( managedType ) ) {
 			return true;
 		}
@@ -62,7 +56,7 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 	}
 
 	@Override
-	public boolean appliesTo(Class<?> javaType) {
-		return appliesTo( jpaMetamodel().managedType( javaType ) );
+	public boolean appliesTo(Class<?> javaType, JpaMetamodel metamodel) {
+		return appliesTo( metamodel.managedType( javaType ), metamodel );
 	}
 }

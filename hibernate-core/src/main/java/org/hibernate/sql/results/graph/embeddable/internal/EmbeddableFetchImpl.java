@@ -10,6 +10,7 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -160,8 +161,8 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 	}
 
 	@Override
-	public boolean appliesTo(GraphImplementor graphImplementor) {
-		return getFetchParent().appliesTo( graphImplementor );
+	public boolean appliesTo(GraphImplementor<?> graphImplementor, JpaMetamodel metamodel) {
+		return getFetchParent().appliesTo( graphImplementor, metamodel );
 	}
 
 }

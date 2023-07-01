@@ -44,6 +44,6 @@ public class EmbeddableTypeImpl<J>
 	@Override
 	@SuppressWarnings("unchecked")
 	public <S extends J> SubGraphImplementor<S> makeSubGraph(Class<S> subType) {
-		return new SubGraphImpl( this, true, jpaMetamodel() );
+		return new SubGraphImpl( this, true );
 	}
 }

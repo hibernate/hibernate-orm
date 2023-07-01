@@ -9,7 +9,6 @@ package org.hibernate.sql.results.internal;
 import java.util.Map;
 import java.util.Objects;
 
-import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.AttributeNodeImplementor;
@@ -30,10 +29,10 @@ import org.hibernate.sql.results.graph.Fetchable;
 public class StandardEntityGraphTraversalStateImpl implements EntityGraphTraversalState {
 
 	private final GraphSemantic graphSemantic;
-	private GraphImplementor currentGraphContext;
+	private GraphImplementor<?> currentGraphContext;
 
-	public StandardEntityGraphTraversalStateImpl(GraphSemantic graphSemantic, RootGraphImplementor rootGraphImplementor) {
-		Objects.requireNonNull(graphSemantic, "graphSemantic cannot be null");
+	public StandardEntityGraphTraversalStateImpl(GraphSemantic graphSemantic, RootGraphImplementor<?> rootGraphImplementor) {
+		Objects.requireNonNull( graphSemantic, "graphSemantic cannot be null" );
 		Objects.requireNonNull( rootGraphImplementor, "rootGraphImplementor cannot be null" );
 		this.graphSemantic = graphSemantic;
 		this.currentGraphContext = rootGraphImplementor;
@@ -51,25 +50,19 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 			return new TraversalResult( currentGraphContext, new FetchStrategy( FetchTiming.IMMEDIATE, true ) );
 		}
 
-		final GraphImplementor previousContextRoot = currentGraphContext;
-		AttributeNodeImplementor attributeNode = null;
-		if ( appliesTo( fetchParent ) ) {
-			attributeNode = currentGraphContext.findAttributeNode( fetchable.getFetchableName() );
-		}
+		final GraphImplementor<?> previousContextRoot = currentGraphContext;
+		final AttributeNodeImplementor<?> attributeNode = appliesTo( fetchParent )
+				? currentGraphContext.findAttributeNode( fetchable.getFetchableName() )
+				: null;
 
 		currentGraphContext = null;
-		FetchStrategy fetchStrategy = null;
-
+		final FetchStrategy fetchStrategy;
 		if ( attributeNode != null ) {
-
 			fetchStrategy = new FetchStrategy( FetchTiming.IMMEDIATE, true );
-
-			final Map<Class<?>, SubGraphImplementor> subgraphMap;
+			final Map<? extends Class<?>, ? extends SubGraphImplementor<?>> subgraphMap;
 			final Class<?> subgraphMapKey;
-
 			if ( fetchable instanceof PluralAttributeMapping ) {
 				final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-
 				if ( exploreKeySubgraph ) {
 					subgraphMap = attributeNode.getKeySubGraphMap();
 					subgraphMapKey = getEntityCollectionPartJavaClass( pluralAttributeMapping.getIndexDescriptor() );
@@ -88,8 +81,11 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 				currentGraphContext = subgraphMap.get( subgraphMapKey );
 			}
 		}
-		if ( fetchStrategy == null && graphSemantic == GraphSemantic.FETCH ) {
+		else if ( graphSemantic == GraphSemantic.FETCH ) {
 			fetchStrategy = new FetchStrategy( FetchTiming.DELAYED, false );
+		}
+		else {
+			fetchStrategy = null;
 		}
 		return new TraversalResult( previousContextRoot, fetchStrategy );
 	}
@@ -105,10 +101,7 @@ public class StandardEntityGraphTraversalStateImpl implements EntityGraphTravers
 	}
 
 	private boolean appliesTo(FetchParent fetchParent) {
-		if ( currentGraphContext == null ) {
-			return false;
-		}
-		return fetchParent.appliesTo( currentGraphContext );
+		return currentGraphContext != null && fetchParent.appliesTo( currentGraphContext );
 	}
 
 }

@@ -7,7 +7,6 @@
 package org.hibernate.graph.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +24,8 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
+
+import static java.util.Collections.emptyList;
 
 /**
  *  Base class for {@link RootGraph} and {@link SubGraph} implementations.
@@ -66,10 +67,9 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public RootGraphImplementor<J> makeRootGraph(String name, boolean mutable) {
 		if ( getGraphedType() instanceof EntityDomainType ) {
-			return new RootGraphImpl( name, mutable, this );
+			return new RootGraphImpl<>( name, mutable, this );
 		}
 
 		throw new CannotBecomeEntityGraphException(
@@ -79,23 +79,21 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public void merge(GraphImplementor<J>... others) {
-		if ( others == null ) {
+	public void merge(GraphImplementor<? extends J> other) {
+		if ( other == null ) {
 			return;
 		}
 
-		for ( GraphImplementor<J> other : others ) {
-			for ( AttributeNodeImplementor<?> attributeNode : other.getAttributeNodeImplementors() ) {
-				final AttributeNodeImplementor localAttributeNode = findAttributeNode(
-						(PersistentAttribute) attributeNode.getAttributeDescriptor()
-				);
-				if ( localAttributeNode != null ) {
-					// keep the local one, but merge in the incoming one
-					localAttributeNode.merge( attributeNode );
-				}
-				else {
-					addAttributeNode( attributeNode.makeCopy( true ) );
-				}
+		for ( AttributeNodeImplementor<?> attributeNode : other.getAttributeNodeImplementors() ) {
+			final AttributeNodeImplementor<?> localAttributeNode = findAttributeNode(
+					(PersistentAttribute<? extends J,?>) attributeNode.getAttributeDescriptor()
+			);
+			if ( localAttributeNode != null ) {
+				// keep the local one, but merge in the incoming one
+				localAttributeNode.merge( attributeNode );
+			}
+			else {
+				addAttributeNode( attributeNode.makeCopy( true ) );
 			}
 		}
 
@@ -121,14 +119,11 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 			attrNodeMap.put( incomingAttributeNode.getAttributeDescriptor(), attributeNode );
 		}
 		else {
-			// because... Java
+			@SuppressWarnings("rawtypes")
 			final AttributeNodeImplementor attributeNodeFinal = attributeNode;
 			incomingAttributeNode.visitSubGraphs(
-					(subType, subGraph) -> attributeNodeFinal.addSubGraph(
-							subType,
-							// we assume the subGraph has been properly copied if needed
-							subGraph
-					)
+					// we assume the subGraph has been properly copied if needed
+					(subType, subGraph) -> attributeNodeFinal.addSubGraph( subGraph )
 			);
 		}
 
@@ -139,33 +134,24 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	@SuppressWarnings("unchecked")
 	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(String attributeName) {
 		final PersistentAttribute<? super J, ?> attribute = managedType.findAttributeInSuperTypes( attributeName );
-		if ( attribute == null ) {
-			return null;
-		}
-
-		return findAttributeNode( (PersistentAttribute) attribute );
+		return attribute == null ? null : findAttributeNode( (PersistentAttribute<? extends J, AJ>) attribute );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public <AJ> AttributeNodeImplementor<AJ> findAttributeNode(PersistentAttribute<? extends J, AJ> attribute) {
-		if ( attrNodeMap == null ) {
-			return null;
-		}
-		return (AttributeNodeImplementor) attrNodeMap.get( attribute );
+		return attrNodeMap == null ? null : (AttributeNodeImplementor<AJ>) attrNodeMap.get( attribute );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	public List<AttributeNode<?>> getGraphAttributeNodes() {
 		return (List) getAttributeNodeImplementors();
 	}
 
 	@Override
 	public List<AttributeNodeImplementor<?>> getAttributeNodeImplementors() {
-		return attrNodeMap == null
-				? Collections.emptyList()
-				: new ArrayList<>( attrNodeMap.values() );
+		return attrNodeMap == null ? emptyList() : new ArrayList<>( attrNodeMap.values() );
 	}
 
 	@Override
@@ -185,12 +171,12 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	public <AJ> AttributeNodeImplementor<AJ> findOrCreateAttributeNode(PersistentAttribute<? extends J, AJ> attribute) {
 		verifyMutability();
 
-		AttributeNodeImplementor attrNode = null;
+		AttributeNodeImplementor<AJ> attrNode = null;
 		if ( attrNodeMap == null ) {
 			attrNodeMap = new HashMap<>();
 		}
 		else {
-			attrNode = attrNodeMap.get( attribute );
+			attrNode = (AttributeNodeImplementor<AJ>) attrNodeMap.get( attribute );
 		}
 
 		if ( attrNode == null ) {

@@ -45,12 +45,12 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 	}
 
 	@Override
-	public boolean appliesTo(ManagedDomainType<? super J> managedType) {
-		if ( this.getGraphedType().equals( managedType ) ) {
+	public boolean appliesTo(ManagedDomainType<?> managedType) {
+		if ( getGraphedType().equals( managedType ) ) {
 			return true;
 		}
 
-		ManagedDomainType superType = managedType.getSuperType();
+		ManagedDomainType<?> superType = managedType.getSuperType();
 		while ( superType != null ) {
 			if ( superType.equals( managedType ) ) {
 				return true;
@@ -62,7 +62,7 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 	}
 
 	@Override
-	public boolean appliesTo(Class<? super J> javaType) {
+	public boolean appliesTo(Class<?> javaType) {
 		return appliesTo( jpaMetamodel().managedType( javaType ) );
 	}
 }

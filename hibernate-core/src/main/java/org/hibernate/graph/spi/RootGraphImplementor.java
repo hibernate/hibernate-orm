@@ -11,18 +11,20 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 /**
- * Integration version of the RootGraph contract
+ * Integration version of the {@link RootGraph} contract
  *
  * @author Steve Ebersole
  */
 public interface RootGraphImplementor<J> extends RootGraph<J>, GraphImplementor<J> {
-	boolean appliesTo(EntityDomainType<? super J> entityType);
+
+	boolean appliesTo(String entityName);
+
+	boolean appliesTo(EntityDomainType<?> entityType);
 
 	@Override
-	@SuppressWarnings("unchecked")
-	default boolean appliesTo(ManagedDomainType<? super J> managedType) {
+	default boolean appliesTo(ManagedDomainType<?> managedType) {
 		assert managedType instanceof EntityDomainType;
-		return appliesTo( (EntityDomainType) managedType );
+		return appliesTo( (EntityDomainType<?>) managedType );
 	}
 
 	@Override

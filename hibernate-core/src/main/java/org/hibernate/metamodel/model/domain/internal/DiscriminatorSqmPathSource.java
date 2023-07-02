@@ -29,7 +29,7 @@ public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 			DomainType<D> discriminatorValueType,
 			EntityDomainType<?> entityDomainType,
 			EntityMappingType entityMapping) {
-		super( EntityDiscriminatorMapping.ROLE_NAME, null, discriminatorValueType, BindableType.SINGULAR_ATTRIBUTE );
+		super( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME, null, discriminatorValueType, BindableType.SINGULAR_ATTRIBUTE );
 		this.entityDomainType = entityDomainType;
 		this.entityMapping = entityMapping;
 	}

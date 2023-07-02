@@ -2276,7 +2276,7 @@ public abstract class AbstractEntityPersister
 
 		//noinspection rawtypes
 		final DiscriminatorConverter converter = MappedDiscriminatorConverter.fromValueMappings(
-				getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME ),
+				getNavigableRole().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 				domainJavaType,
 				underlingJdbcMapping,
 				getSubclassByDiscriminatorValue(),
@@ -4900,7 +4900,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		identifierMapping = creationProcess.processSubPart(
-				EntityIdentifierMapping.ROLE_LOCAL_NAME,
+				EntityIdentifierMapping.ID_ROLE_NAME,
 				(role, process) -> generateIdentifierMapping( templateInstanceCreator, bootEntityDescriptor, process )
 		);
 
@@ -5811,7 +5811,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean isIdentifierReference(String name) {
-		return EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( name )
+		return EntityIdentifierMapping.ID_ROLE_NAME.equals( name )
 			|| hasIdentifierProperty() && getIdentifierPropertyName().equals( name )
 			|| !entityMetamodel.hasNonIdentifierPropertyNamedId() && "id".equals( name );
 	}

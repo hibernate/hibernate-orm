@@ -447,7 +447,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			}
 
 			// create a set of descriptors that should be used to build the polymorphic EntityDomainType
-			final Set<EntityDomainType<?>> matchingDescriptors = new HashSet<>();
+			final Set<EntityDomainType<? extends T>> matchingDescriptors = new HashSet<>();
 			for ( EntityDomainType<?> entityDomainType : jpaEntityTypeMap.values() ) {
 				// see if we should add `entityDomainType` as one of the matching-descriptors.
 				if ( javaType.isAssignableFrom( entityDomainType.getJavaType() ) ) {
@@ -477,7 +477,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 					}
 
 					// aside from these special cases, add it
-					matchingDescriptors.add( entityDomainType );
+					matchingDescriptors.add( (EntityDomainType<? extends T>) entityDomainType );
 				}
 			}
 

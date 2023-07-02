@@ -285,7 +285,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			}
 
 			return new FetchMementoBasicStandard(
-					entityPath.append( EntityDiscriminatorMapping.ROLE_NAME ),
+					entityPath.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 					discriminatorMapping,
 					discriminatorColumn
 			);

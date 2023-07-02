@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
@@ -58,6 +59,20 @@ public class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>,
 			}
 		}
 		return getElementPathSource().findSubPathSource( name );
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
+		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
+		if ( nature != null ) {
+			switch ( nature ) {
+				case INDEX:
+					return indexPathSource;
+				case ELEMENT:
+					return getElementPathSource();
+			}
+		}
+		return getElementPathSource().findSubPathSource( name, metamodel );
 	}
 
 	@Override

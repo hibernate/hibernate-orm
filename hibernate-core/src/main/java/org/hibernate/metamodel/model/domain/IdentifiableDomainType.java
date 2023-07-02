@@ -45,7 +45,7 @@ public interface IdentifiableDomainType<J> extends ManagedDomainType<J>, Identif
 
 	boolean hasIdClass();
 
-	SingularPersistentAttribute<J,?> findIdAttribute();
+	SingularPersistentAttribute<? super J,?> findIdAttribute();
 
 	void visitIdClassAttributes(Consumer<SingularPersistentAttribute<? super J,?>> action);
 

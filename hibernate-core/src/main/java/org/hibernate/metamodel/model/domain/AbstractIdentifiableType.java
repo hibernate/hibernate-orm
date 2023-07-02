@@ -30,13 +30,16 @@ import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.jboss.logging.Logger;
 
 /**
- * Defines commonality for the JPA {@link IdentifiableType} types.  JPA defines
- * identifiable types as entities or mapped-superclasses.  Basically things to which an
- * identifier can be attached.
+ * Functionality common to all implementations of {@link IdentifiableType}.
+ * <p>
+ * An identifiable type is one which may have an identifier attribute, that
+ * is, an {@linkplain jakarta.persistence.Entity entity type} or a
+ * {@linkplain jakarta.persistence.MappedSuperclass mapped superclass}.
  *
- * @apiNote Currently we only really have support for direct entities in the Hibernate metamodel
- * as the information for them is consumed into the closest actual entity subclass(es) in the
- * internal Hibernate mapping-metamodel.
+ * @apiNote Currently we only really have support for direct entities in the
+ *          Hibernate metamodel as the information for them is consumed into
+ *          the closest actual entity subclass(es) in the internal Hibernate
+ *          mapping metamodel.
  *
  * @author Steve Ebersole
  */
@@ -65,8 +68,8 @@ public abstract class AbstractIdentifiableType<J>
 			boolean hasIdClass,
 			boolean hasIdentifierProperty,
 			boolean versioned,
-			JpaMetamodelImplementor jpaMetamodel) {
-		super( typeName, javaType, superType, jpaMetamodel );
+			JpaMetamodelImplementor metamodel) {
+		super( typeName, javaType, superType, metamodel );
 		this.hasIdClass = hasIdClass;
 		this.hasIdentifierProperty = hasIdentifierProperty;
 		this.isVersioned = versioned;
@@ -97,7 +100,6 @@ public abstract class AbstractIdentifiableType<J>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
 	public IdentifiableDomainType<? super J> getSuperType() {
 		// overridden simply to perform the cast
 		return (IdentifiableDomainType<? super J>) super.getSuperType();
@@ -112,7 +114,7 @@ public abstract class AbstractIdentifiableType<J>
 	@SuppressWarnings("unchecked")
 	public <Y> SingularPersistentAttribute<? super J, Y> getId(Class<Y> javaType) {
 		ensureNoIdClass();
-		SingularPersistentAttribute<J, ?> id = findIdAttribute();
+		SingularPersistentAttribute<? super J, ?> id = findIdAttribute();
 		if ( id != null ) {
 			checkType( id, javaType );
 		}
@@ -129,28 +131,23 @@ public abstract class AbstractIdentifiableType<J>
 
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SingularPersistentAttribute<J, ?> findIdAttribute() {
+	public SingularPersistentAttribute<? super J, ?> findIdAttribute() {
 		if ( id != null ) {
 			return id;
 		}
-		else {
-			if ( getSuperType() != null ) {
-				SingularPersistentAttribute<? super J, ?> id = getSuperType().findIdAttribute();
-				if ( id != null ) {
-					return (SingularPersistentAttribute<J, ?>) id;
-				}
-			}
+		else if ( getSuperType() != null ) {
+			return getSuperType().findIdAttribute();
 		}
-
-		return null;
+		else {
+			return null;
+		}
 	}
 
 	private void checkType(SingularPersistentAttribute<?, ?> attribute, Class<?> javaType) {
 		if ( !javaType.isAssignableFrom( attribute.getType().getJavaType() ) ) {
 			final JavaType<?> attributeJavaType = attribute.getAttributeJavaType();
 			if ( !( attributeJavaType instanceof PrimitiveJavaType )
-					|| ( (PrimitiveJavaType) attributeJavaType ).getPrimitiveClass() != javaType ) {
+					|| ( (PrimitiveJavaType<?>) attributeJavaType ).getPrimitiveClass() != javaType ) {
 				throw new IllegalArgumentException(
 						String.format(
 								"Attribute [%s#%s : %s] not castable to requested type [%s]",
@@ -177,7 +174,7 @@ public abstract class AbstractIdentifiableType<J>
 
 	@Override
 	public SimpleDomainType<?> getIdType() {
-		final SingularPersistentAttribute<J, ?> id = findIdAttribute();
+		final SingularPersistentAttribute<? super J, ?> id = findIdAttribute();
 		if ( id != null ) {
 			return id.getType();
 		}
@@ -413,7 +410,7 @@ public abstract class AbstractIdentifiableType<J>
 			final SimpleDomainType<?> type = id.getType();
 			if ( type instanceof BasicDomainType ) {
 				return new BasicSqmPathSource<>(
-						EntityIdentifierMapping.ROLE_LOCAL_NAME,
+						EntityIdentifierMapping.ID_ROLE_NAME,
 						(SqmPathSource) id,
 						(BasicDomainType<?>) type,
 						type.getExpressibleJavaType(),
@@ -425,7 +422,7 @@ public abstract class AbstractIdentifiableType<J>
 				assert type instanceof EmbeddableDomainType;
 				final EmbeddableDomainType<?> compositeType = (EmbeddableDomainType<?>) type;
 				return new EmbeddedSqmPathSource<>(
-						EntityIdentifierMapping.ROLE_LOCAL_NAME,
+						EntityIdentifierMapping.ID_ROLE_NAME,
 						(SqmPathSource) id,
 						compositeType,
 						Bindable.BindableType.SINGULAR_ATTRIBUTE,
@@ -437,7 +434,7 @@ public abstract class AbstractIdentifiableType<J>
 			// non-aggregate composite id
 			if ( idClassType == null ) {
 				return new NonAggregatedCompositeSqmPathSource<>(
-						EntityIdentifierMapping.ROLE_LOCAL_NAME,
+						EntityIdentifierMapping.ID_ROLE_NAME,
 						null,
 						Bindable.BindableType.SINGULAR_ATTRIBUTE,
 						this
@@ -445,7 +442,7 @@ public abstract class AbstractIdentifiableType<J>
 			}
 			else {
 				return new EmbeddedSqmPathSource<>(
-						EntityIdentifierMapping.ROLE_LOCAL_NAME,
+						EntityIdentifierMapping.ID_ROLE_NAME,
 						null,
 						idClassType,
 						Bindable.BindableType.SINGULAR_ATTRIBUTE,

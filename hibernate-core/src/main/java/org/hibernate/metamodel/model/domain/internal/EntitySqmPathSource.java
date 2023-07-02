@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.SqmJoinable;
@@ -41,8 +42,12 @@ public class EntitySqmPathSource<J> extends AbstractSqmPathSource<J> implements 
 
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
-		final EntityDomainType<J> sqmPathType = getSqmPathType();
-		return sqmPathType.findSubPathSource( name );
+		return getSqmPathType().findSubPathSource( name );
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
+		return getSqmPathType().findSubPathSource( name, metamodel );
 	}
 
 	@Override

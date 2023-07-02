@@ -42,7 +42,6 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.ClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -52,7 +51,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  * @author Steve Ebersole
  */
 public class AnyDiscriminatorPart implements DiscriminatorMapping, FetchOptions {
-	public static final String ROLE_NAME = EntityDiscriminatorMapping.ROLE_NAME;
+	public static final String ROLE_NAME = EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 	private final NavigableRole navigableRole;
 	private final DiscriminatedAssociationModelPart declaringType;

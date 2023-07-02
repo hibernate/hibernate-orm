@@ -390,7 +390,7 @@ public class ToOneAttributeMapping
 
 		if ( referencedPropertyName == null ) {
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
-			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+			targetKeyPropertyNames.add( EntityIdentifierMapping.ID_ROLE_NAME );
 			final PersistentClass entityBinding = bootValue.getBuildingContext().getMetadataCollector()
 					.getEntityBinding( entityMappingType.getEntityName() );
 			final Type propertyType;
@@ -413,13 +413,13 @@ public class ToOneAttributeMapping
 					);
 					addPrefixedPropertyNames(
 							targetKeyPropertyNames,
-							EntityIdentifierMapping.ROLE_LOCAL_NAME,
+							EntityIdentifierMapping.ID_ROLE_NAME,
 							propertyType,
 							declaringEntityPersister.getFactory()
 					);
 				}
 				else {
-					this.targetKeyPropertyName = EntityIdentifierMapping.ROLE_LOCAL_NAME;
+					this.targetKeyPropertyName = EntityIdentifierMapping.ID_ROLE_NAME;
 					addPrefixedPropertyPaths(
 							targetKeyPropertyNames,
 							null,
@@ -467,7 +467,7 @@ public class ToOneAttributeMapping
 				);
 				addPrefixedPropertyNames(
 						targetKeyPropertyNames,
-						EntityIdentifierMapping.ROLE_LOCAL_NAME,
+						EntityIdentifierMapping.ID_ROLE_NAME,
 						propertyType,
 						declaringEntityPersister.getFactory()
 				);
@@ -685,7 +685,7 @@ public class ToOneAttributeMapping
 		);
 		addPrefixedPropertyNames(
 				targetKeyPropertyNames,
-				EntityIdentifierMapping.ROLE_LOCAL_NAME,
+				EntityIdentifierMapping.ID_ROLE_NAME,
 				type,
 				factory
 		);
@@ -732,17 +732,17 @@ public class ToOneAttributeMapping
 			final String newFkPrefix;
 			if ( prefix == null ) {
 				newPrefix = propertyName;
-				newPkPrefix = propertyName + "." + EntityIdentifierMapping.ROLE_LOCAL_NAME;
+				newPkPrefix = propertyName + "." + EntityIdentifierMapping.ID_ROLE_NAME;
 				newFkPrefix = ForeignKeyDescriptor.PART_NAME;
 			}
 			else if ( propertyName == null ) {
 				newPrefix = prefix;
-				newPkPrefix = prefix + "." + EntityIdentifierMapping.ROLE_LOCAL_NAME;
+				newPkPrefix = prefix + "." + EntityIdentifierMapping.ID_ROLE_NAME;
 				newFkPrefix = prefix + "." + ForeignKeyDescriptor.PART_NAME;
 			}
 			else {
 				newPrefix = prefix + "." + propertyName;
-				newPkPrefix = prefix + "." + EntityIdentifierMapping.ROLE_LOCAL_NAME;
+				newPkPrefix = prefix + "." + EntityIdentifierMapping.ID_ROLE_NAME;
 				newFkPrefix = prefix + "." + ForeignKeyDescriptor.PART_NAME;
 			}
 			addPrefixedPropertyNames( targetKeyPropertyNames, newPrefix, identifierOrUniqueKeyType, factory );
@@ -752,11 +752,11 @@ public class ToOneAttributeMapping
 				final String newEmbeddedPkPrefix;
 				final String newEmbeddedFkPrefix;
 				if ( prefix == null ) {
-					newEmbeddedPkPrefix = EntityIdentifierMapping.ROLE_LOCAL_NAME;
+					newEmbeddedPkPrefix = EntityIdentifierMapping.ID_ROLE_NAME;
 					newEmbeddedFkPrefix = ForeignKeyDescriptor.PART_NAME;
 				}
 				else {
-					newEmbeddedPkPrefix = prefix + "." + EntityIdentifierMapping.ROLE_LOCAL_NAME;
+					newEmbeddedPkPrefix = prefix + "." + EntityIdentifierMapping.ID_ROLE_NAME;
 					newEmbeddedFkPrefix = prefix + "." + ForeignKeyDescriptor.PART_NAME;
 				}
 				addPrefixedPropertyNames( targetKeyPropertyNames, newEmbeddedPkPrefix, identifierOrUniqueKeyType, factory );
@@ -876,7 +876,7 @@ public class ToOneAttributeMapping
 				fkPart = foreignKeyDescriptor.getTargetPart();
 			}
 			if ( fkPart instanceof EmbeddableValuedModelPart && fkPart instanceof VirtualModelPart
-					&& !EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( name )
+					&& !EntityIdentifierMapping.ID_ROLE_NAME.equals( name )
 					&& !ForeignKeyDescriptor.PART_NAME.equals( name )
 					&& !ForeignKeyDescriptor.TARGET_PART_NAME.equals( name )
 					&& !fkPart.getPartName().equals( name ) ) {
@@ -1138,7 +1138,7 @@ public class ToOneAttributeMapping
 		NavigablePath navigablePath = parentNavigablePath.trimSuffix( bidirectionalAttributePath );
 		if ( navigablePath != null ) {
 			final String localName = navigablePath.getLocalName();
-			if ( localName.equals( EntityIdentifierMapping.ROLE_LOCAL_NAME )
+			if ( localName.equals( EntityIdentifierMapping.ID_ROLE_NAME )
 					|| localName.equals( ForeignKeyDescriptor.PART_NAME )
 					|| localName.equals( ForeignKeyDescriptor.TARGET_PART_NAME ) ) {
 				navigablePath = navigablePath.getParent();
@@ -1759,7 +1759,7 @@ public class ToOneAttributeMapping
 		if ( referencedPropertyName == null ) {
 			//noinspection unchecked
 			return new EntityDelayedResultImpl(
-					navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+					navigablePath.append( EntityIdentifierMapping.ID_ROLE_NAME ),
 					this,
 					tableGroupToUse,
 					creationState

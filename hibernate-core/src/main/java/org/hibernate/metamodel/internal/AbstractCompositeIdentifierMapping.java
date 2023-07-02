@@ -47,7 +47,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableFetchImpl;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableResultImpl;
-import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Base implementation for composite identifier mappings
@@ -67,7 +66,7 @@ public abstract class AbstractCompositeIdentifierMapping
 			EntityMappingType entityMapping,
 			String tableExpression,
 			MappingModelCreationProcess creationProcess) {
-		this.navigableRole = entityMapping.getNavigableRole().appendContainer( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		this.navigableRole = entityMapping.getNavigableRole().appendContainer( EntityIdentifierMapping.ID_ROLE_NAME );
 		this.entityMapping = entityMapping;
 		this.tableExpression = tableExpression;
 		this.sessionFactory = creationProcess.getCreationContext().getSessionFactory();

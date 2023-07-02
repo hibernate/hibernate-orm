@@ -16,11 +16,10 @@ import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * Standard Hibernate implementation of JPA's {@link jakarta.persistence.metamodel.EmbeddableType}
- * contract
+ * Implementation of {@link jakarta.persistence.metamodel.EmbeddableType}.
  *
  * @author Emmanuel Bernard
- * @author Steve Ebersole`
+ * @author Steve Ebersole
  */
 public class EmbeddableTypeImpl<J>
 		extends AbstractManagedType<J>
@@ -39,11 +38,5 @@ public class EmbeddableTypeImpl<J>
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public <S extends J> SubGraphImplementor<S> makeSubGraph(Class<S> subType) {
-		return new SubGraphImpl( this, true );
 	}
 }

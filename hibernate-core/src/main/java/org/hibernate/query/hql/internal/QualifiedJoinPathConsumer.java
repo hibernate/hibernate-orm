@@ -113,38 +113,24 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 	private ConsumerDelegate resolveBase(String identifier, boolean isTerminal) {
 		final SqmCreationProcessingState processingState = creationState.getCurrentProcessingState();
 		final SqmPathRegistry pathRegistry = processingState.getPathRegistry();
-
 		final SqmFrom<?, Object> pathRootByAlias = pathRegistry.findFromByAlias( identifier, true );
 		if ( pathRootByAlias != null ) {
-			// identifier is an alias (identification variable)
-
-			if ( isTerminal ) {
-				throw new SemanticException( "Cannot join to root entity '" + identifier + "'" );
+			return resolveAlias( identifier, isTerminal, pathRootByAlias );
+		}
+		else {
+			final SqmFrom<?, ?> exposingPathRoot = pathRegistry.findFromExposing( identifier );
+			if ( exposingPathRoot != null ) {
+				return resolveExposed( identifier, isTerminal, exposingPathRoot );
 			}
-
-			return new AttributeJoinDelegate(
-					pathRootByAlias,
-					joinType,
-					fetch,
-					alias,
-					creationState
-			);
+			else {
+				// otherwise, assume we have a qualified entity name
+				// delay resolution until we process the final token
+				return resolveEntityName( identifier, isTerminal );
+			}
 		}
+	}
 
-		final SqmFrom<?, Object> pathRootByExposedNavigable = pathRegistry.findFromExposing( identifier );
-		if ( pathRootByExposedNavigable != null ) {
-			return new AttributeJoinDelegate(
-					createJoin( pathRootByExposedNavigable, identifier, isTerminal ),
-					joinType,
-					fetch,
-					alias,
-					creationState
-			);
-		}
-
-		// otherwise, assume we have a qualified entity name - delay resolution until we
-		// process the final token
-
+	private ExpectingEntityJoinDelegate resolveEntityName(String identifier, boolean isTerminal) {
 		return new ExpectingEntityJoinDelegate(
 				identifier,
 				isTerminal,
@@ -156,21 +142,43 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		);
 	}
 
-	private SqmFrom<?, ?> createJoin(SqmFrom<?, Object> lhs, String identifier, boolean isTerminal) {
-		return createJoin(
-				lhs,
-				identifier,
+	private AttributeJoinDelegate resolveExposed(String identifier, boolean isTerminal, SqmFrom<?, ?> pathRoot) {
+		return new AttributeJoinDelegate(
+				createJoin(
+						pathRoot,
+						identifier,
+						joinType,
+						alias,
+						fetch,
+						isTerminal,
+						true,
+						creationState
+				),
 				joinType,
-				alias,
 				fetch,
-				isTerminal,
-				true,
+				alias,
 				creationState
 		);
 	}
 
-	private static SqmFrom<?, Object> createJoin(
-			SqmFrom<?, Object> lhs,
+	private AttributeJoinDelegate resolveAlias(String identifier, boolean isTerminal, SqmFrom<?, Object> pathRootByAlias) {
+		// identifier is an alias (identification variable)
+		if (isTerminal) {
+			throw new SemanticException( "Cannot join to root entity '" + identifier + "'" );
+		}
+		else {
+			return new AttributeJoinDelegate(
+					pathRootByAlias,
+					joinType,
+					fetch,
+					alias,
+					creationState
+			);
+		}
+	}
+
+	private static <U> SqmFrom<?, ?> createJoin(
+			SqmFrom<?, U> lhs,
 			String name,
 			SqmJoinType joinType,
 			String alias,
@@ -178,25 +186,41 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			boolean isTerminal,
 			boolean allowReuse,
 			SqmCreationState creationState) {
-		final SqmPathSource<?> referencedPathSource = lhs.getReferencedPathSource();
-		// We need to use referencedPathSource when it is not generic since the getResolvedModel() method would
-		// return the association attribute as a path source and for treated paths that might correspond to a
-		// different entity type (usually the first in alphabetical order) and not the correct treat target
-		final SqmPathSource<?> pathSource = referencedPathSource.isGeneric() ?
-				lhs.getResolvedModel() :
-				referencedPathSource;
-		//noinspection unchecked
-		final SqmPathSource<Object> subPathSource = (SqmPathSource<Object>) pathSource.getSubPathSource( name );
+		final SqmPathSource<?> subPathSource = subPathSource( lhs, name, creationState );
 		if ( allowReuse && !isTerminal ) {
 			for ( SqmJoin<?, ?> sqmJoin : lhs.getSqmJoins() ) {
 				if ( sqmJoin.getAlias() == null && sqmJoin.getReferencedPathSource() == subPathSource ) {
-					//noinspection unchecked
-					return (SqmFrom<?, Object>) sqmJoin;
+					return sqmJoin;
 				}
 			}
 		}
 		@SuppressWarnings("unchecked")
-		final SqmJoin<Object, Object> join = ( (SqmJoinable<Object, Object>) subPathSource ).createSqmJoin(
+		SqmJoinable<U, ?> joinSource = (SqmJoinable<U, ?>) subPathSource;
+		return createJoin( lhs, joinType, alias, fetch, isTerminal, allowReuse, creationState, joinSource );
+	}
+
+	private static <U> SqmPathSource<?> subPathSource(SqmFrom<?, U> lhs, String name, SqmCreationState creationState) {
+		final SqmPathSource<U> referencedPathSource = lhs.getReferencedPathSource();
+		// We need to use referencedPathSource when it is not generic since the getResolvedModel() method would
+		// return the association attribute as a path source and for treated paths that might correspond to a
+		// different entity type (usually the first in alphabetical order) and not the correct treat target
+		final SqmPathSource<?> pathSource =
+				referencedPathSource.isGeneric()
+						? lhs.getResolvedModel()
+						: referencedPathSource;
+		return pathSource.getSubPathSource( name, creationState.getCreationContext().getJpaMetamodel() );
+	}
+
+	private static <U,V> SqmFrom<?, ?> createJoin(
+			SqmFrom<?,U> lhs,
+			SqmJoinType joinType,
+			String alias,
+			boolean fetch,
+			boolean isTerminal,
+			boolean allowReuse,
+			SqmCreationState creationState,
+			SqmJoinable<U,V> joinSource) {
+		final SqmJoin<U,V> join = joinSource.createSqmJoin(
 				lhs,
 				joinType,
 				isTerminal ? alias : allowReuse ? SqmCreationHelper.IMPLICIT_ALIAS : null,
@@ -221,9 +245,9 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		private final boolean fetch;
 		private final String alias;
 
-		private SqmFrom<?, Object> currentPath;
+		private SqmFrom<?, ?> currentPath;
 
-		public AttributeJoinDelegate(
+		private AttributeJoinDelegate(
 				SqmFrom<?, ?> base,
 				SqmJoinType joinType,
 				boolean fetch,
@@ -233,9 +257,7 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			this.fetch = fetch;
 			this.alias = alias;
 			this.creationState = creationState;
-
-			//noinspection unchecked
-			this.currentPath = (SqmFrom<?, Object>) base;
+			this.currentPath = base;
 		}
 
 		@Override
@@ -254,15 +276,14 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 
 		@Override
 		public void consumeTreat(String entityName, boolean isTerminal) {
-			final EntityDomainType<Object> entityDomainType = creationState.getCreationContext().getJpaMetamodel()
-					.entity( entityName );
-			if ( isTerminal ) {
-				currentPath = currentPath.treatAs( entityDomainType, alias );
-			}
-			else {
-				currentPath = currentPath.treatAs( entityDomainType );
-			}
+			currentPath = isTerminal
+					? currentPath.treatAs( treatTarget( entityName ), alias)
+					: currentPath.treatAs( treatTarget( entityName ) );
 			creationState.getCurrentProcessingState().getPathRegistry().register( currentPath );
+		}
+
+		private <T> EntityDomainType<T> treatTarget(String entityName) {
+			return creationState.getCreationContext().getJpaMetamodel().entity(entityName);
 		}
 
 		@Override
@@ -308,9 +329,9 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 			path.append( identifier );
 			if ( isTerminal ) {
 				final String fullPath = path.toString();
-				final EntityDomainType<?> joinedEntityType = creationState.getCreationContext()
-						.getJpaMetamodel()
-						.resolveHqlEntityReference( fullPath );
+				final EntityDomainType<?> joinedEntityType =
+						creationState.getCreationContext().getJpaMetamodel()
+								.resolveHqlEntityReference( fullPath );
 				if ( joinedEntityType == null ) {
 					final SqmCteStatement<?> cteStatement = creationState.findCteStatement( fullPath );
 					if ( cteStatement != null ) {

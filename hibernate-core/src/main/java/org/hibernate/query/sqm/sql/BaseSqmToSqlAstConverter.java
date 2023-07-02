@@ -5079,7 +5079,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 
 			final DiscriminatorPathInterpretation<?> typeExpression = new DiscriminatorPathInterpretation<>(
-					tableGroup.getNavigablePath().append( EntityDiscriminatorMapping.ROLE_NAME ),
+					tableGroup.getNavigablePath().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 					entityMapping,
 					tableGroup,
 					this

@@ -838,7 +838,7 @@ public class QuerySqmImpl<R>
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
 		final String partName = identifierMapping instanceof SingleAttributeIdentifierMapping
 				? identifierMapping.getAttributeName()
-				: EntityIdentifierMapping.ROLE_LOCAL_NAME;
+				: EntityIdentifierMapping.ID_ROLE_NAME;
 		for ( SqmPath<?> insertionTargetPath : sqmInsert.getInsertionTargetPaths() ) {
 			final SqmPath<?> lhs = insertionTargetPath.getLhs();
 			if ( !( lhs instanceof SqmRoot<?> ) ) {

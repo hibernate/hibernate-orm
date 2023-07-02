@@ -22,6 +22,7 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -128,6 +129,11 @@ public class SingularAttributeImpl<D,J>
 	@Override
 	public SqmPathSource<?> findSubPathSource(String name) {
 		return sqmPathSource.findSubPathSource( name );
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
+		return sqmPathSource.findSubPathSource( name, metamodel );
 	}
 
 	@Override

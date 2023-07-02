@@ -21,12 +21,14 @@ import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
 
+import org.hibernate.metamodel.model.domain.internal.DomainModelHelper;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
+import static org.hibernate.metamodel.model.domain.internal.DomainModelHelper.findSubType;
 
 /**
- * Hibernate implementation of the JPA AttributeNode contract
+ * Implementation of {@link jakarta.persistence.AttributeNode}.
  *
  * @author Steve Ebersole
  */
@@ -94,7 +96,7 @@ public class AttributeNodeImpl<J>
 	private <S extends J> SubGraphImplementor<S> internalMakeSubgraph(ManagedDomainType<S> type) {
 		assert type != null;
 		log.debugf( "Making sub-graph : ( (%s) %s )", type.getTypeName(), getAttributeName() );
-		final SubGraphImplementor<S> subGraph = type.makeSubGraph();
+		final SubGraphImplementor<S> subGraph = DomainModelHelper.makeSubGraph( type, type.getBindableJavaType() );
 		internalAddSubGraph( subGraph );
 		return subGraph;
 	}
@@ -122,7 +124,7 @@ public class AttributeNodeImpl<J>
 	private <S extends J> SubGraphImplementor<S> internalMakeSubgraph(Class<S> subType) {
 		verifyMutability();
 		final ManagedDomainType<S> managedType = valueGraphTypeAsManaged();
-		return internalMakeSubgraph( managedType.findSubType( subType == null ? managedType.getJavaType() : subType ) );
+		return internalMakeSubgraph( findSubType( managedType, subType == null ? managedType.getJavaType() : subType ) );
 	}
 
 	protected void internalAddSubGraph(SubGraphImplementor<? extends J> subGraph) {
@@ -164,8 +166,9 @@ public class AttributeNodeImpl<J>
 	}
 
 	private <S extends J> SubGraphImplementor<S> internalMakeKeySubgraph(ManagedDomainType<S> type) {
+		assert type != null;
 		log.debugf( "Making key sub-graph : ( (%s) %s )", type.getTypeName(), getAttributeName() );
-		final SubGraphImplementor<S> subGraph = type.makeSubGraph();
+		final SubGraphImplementor<S> subGraph = DomainModelHelper.makeSubGraph( type, type.getBindableJavaType() );
 		internalAddKeySubGraph( subGraph );
 		return subGraph;
 	}
@@ -173,9 +176,7 @@ public class AttributeNodeImpl<J>
 	private <S extends J> SubGraphImplementor<S> internalMakeKeySubgraph(Class<S> type) {
 		verifyMutability();
 		final ManagedDomainType<S> managedType = keyGraphTypeAsManaged();
-		final ManagedDomainType<S> subType = type == null ? managedType : managedType.findSubType( type );
-		subType.getJavaType();
-		return internalMakeKeySubgraph( subType );
+		return internalMakeKeySubgraph( type == null ? managedType : findSubType( managedType, type ) );
 	}
 
 	protected void internalAddKeySubGraph(SubGraph<? extends J> subGraph) {
@@ -231,7 +232,7 @@ public class AttributeNodeImpl<J>
 		}
 		else {
 			return nodeMap.entrySet().stream()
-					.map(entry -> Map.entry(entry.getKey(), entry.getValue().makeCopy( mutable )))
+					.map(entry -> Map.entry( entry.getKey(), entry.getValue().makeCopy( mutable ) ))
 					.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 		}
 	}
@@ -240,9 +241,10 @@ public class AttributeNodeImpl<J>
 	public void merge(AttributeNodeImplementor<?> attributeNode) {
 		attributeNode.visitSubGraphs(
 				(incomingSubType, incomingGraph) -> {
-					SubGraphImplementor<?> existing = null;
+					SubGraphImplementor<?> existing;
 					if ( subGraphMap == null ) {
 						subGraphMap = new HashMap<>();
+						existing = null;
 					}
 					else {
 						existing = subGraphMap.get( incomingSubType );
@@ -259,9 +261,10 @@ public class AttributeNodeImpl<J>
 
 		attributeNode.visitKeySubGraphs(
 				(incomingSubType, incomingGraph) -> {
-					SubGraphImplementor<?> existing = null;
+					SubGraphImplementor<?> existing;
 					if ( keySubGraphMap == null ) {
 						keySubGraphMap = new HashMap<>();
+						existing = null;
 					}
 					else {
 						existing = keySubGraphMap.get( incomingSubType );

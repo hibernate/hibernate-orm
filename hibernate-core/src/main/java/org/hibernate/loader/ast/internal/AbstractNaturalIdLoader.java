@@ -6,7 +6,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -267,7 +266,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				naturalIdMapping().normalizeInput( naturalIdValue ),
 				NaturalIdLoadOptions.NONE,
 				(tableGroup, creationState) -> entityDescriptor.getIdentifierMapping().createDomainResult(
-						tableGroup.getNavigablePath().append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+						tableGroup.getNavigablePath().append( EntityIdentifierMapping.ID_ROLE_NAME ),
 						tableGroup,
 						null,
 						creationState

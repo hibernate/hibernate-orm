@@ -103,12 +103,12 @@ public class NavigablePathTests {
 		final String aliasedRootStr = "org.hibernate.Root(r)";
 
 		final String pkStr = "pk";
-		final String pkFullPathStr = aliasedRootStr + "." + EntityIdentifierMapping.ROLE_LOCAL_NAME;
+		final String pkFullPathStr = aliasedRootStr + "." + EntityIdentifierMapping.ID_ROLE_NAME;
 
 		final NavigablePath root = new NavigablePath( rootStr, "r" );
 
 		final NavigablePath idPath = new EntityIdentifierNavigablePath( root, pkStr );
-		assertThat( idPath.getLocalName() ).isEqualTo( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		assertThat( idPath.getLocalName() ).isEqualTo( EntityIdentifierMapping.ID_ROLE_NAME );
 		assertThat( idPath.getFullPath() ).isEqualTo( pkFullPathStr );
 	}
 }

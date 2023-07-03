@@ -24,10 +24,6 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  */
 public interface RootGraph<J> extends Graph<J>, EntityGraph<J> {
 
-//	boolean appliesTo(String entityName);
-//
-//	boolean appliesTo(Class<?> entityType);
-
 	@Override
 	RootGraph<J> makeRootGraph(String name, boolean mutable);
 

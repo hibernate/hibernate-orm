@@ -8,25 +8,17 @@ package org.hibernate.graph.spi;
 
 import org.hibernate.graph.RootGraph;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 /**
- * Integration version of the {@link RootGraph} contract
+ * Integration version of the {@link RootGraph} contract.
  *
  * @author Steve Ebersole
+ *
+ * @see SubGraphImplementor
  */
 public interface RootGraphImplementor<J> extends RootGraph<J>, GraphImplementor<J> {
 
-	boolean appliesTo(String entityName, JpaMetamodel metamodel);
-
-	boolean appliesTo(EntityDomainType<?> entityType, JpaMetamodel metamodel);
-
-	@Override
-	default boolean appliesTo(ManagedDomainType<?> managedType, JpaMetamodel metamodel) {
-		assert managedType instanceof EntityDomainType;
-		return appliesTo( (EntityDomainType<?>) managedType, metamodel );
-	}
+	boolean appliesTo(EntityDomainType<?> entityType);
 
 	@Override
 	RootGraphImplementor<J> makeRootGraph(String name, boolean mutable);

@@ -13,7 +13,7 @@ import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.query.sqm.SqmPathSource;
 
 /**
- * Extension to the JPA {@link EntityType} contract
+ * Extension to the JPA {@link EntityType} contract.
  *
  * @author Steve Ebersole
  */

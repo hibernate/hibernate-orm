@@ -30,8 +30,8 @@ class PluralAttributeMetadataImpl<X, Y, E>
 	private final CollectionClassification collectionClassification;
 	private final AttributeClassification elementClassification;
 	private final AttributeClassification listIndexOrMapKeyClassification;
-	private final Class elementJavaType;
-	private final Class keyJavaType;
+	private final Class<?> elementJavaType;
+	private final Class<?> keyJavaType;
 	private final ValueContext elementValueContext;
 	private final ValueContext keyValueContext;
 
@@ -86,7 +86,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 				return ( (Collection) getPropertyMapping().getValue() ).getElement();
 			}
 
-			public Class getJpaBindableType() {
+			public Class<?> getJpaBindableType() {
 				return elementJavaType;
 			}
 
@@ -104,7 +104,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 				}
 			}
 
-			public AttributeMetadata getAttributeMetadata() {
+			public AttributeMetadata<X,Y> getAttributeMetadata() {
 				return PluralAttributeMetadataImpl.this;
 			}
 		};
@@ -116,7 +116,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 					return ( (Map) getPropertyMapping().getValue() ).getIndex();
 				}
 
-				public Class getJpaBindableType() {
+				public Class<?> getJpaBindableType() {
 					return keyJavaType;
 				}
 
@@ -134,7 +134,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 					}
 				}
 
-				public AttributeMetadata getAttributeMetadata() {
+				public AttributeMetadata<X,Y> getAttributeMetadata() {
 					return PluralAttributeMetadataImpl.this;
 				}
 			};
@@ -146,10 +146,10 @@ class PluralAttributeMetadataImpl<X, Y, E>
 
 	private Class<?> getClassFromGenericArgument(java.lang.reflect.Type type) {
 		if ( type instanceof Class ) {
-			return (Class) type;
+			return (Class<?>) type;
 		}
 		else if ( type instanceof TypeVariable ) {
-			final java.lang.reflect.Type upperBound = ( (TypeVariable) type ).getBounds()[0];
+			final java.lang.reflect.Type upperBound = ( (TypeVariable<?>) type ).getBounds()[0];
 			return getClassFromGenericArgument( upperBound );
 		}
 		else if ( type instanceof ParameterizedType ) {
@@ -168,7 +168,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 		}
 	}
 
-	public static CollectionClassification determineCollectionType(Class javaType, Property property) {
+	public static CollectionClassification determineCollectionType(Class<?> javaType, Property property) {
 		final Collection collection = (Collection) property.getValue();
 
 		if ( java.util.List.class.isAssignableFrom( javaType ) ) {

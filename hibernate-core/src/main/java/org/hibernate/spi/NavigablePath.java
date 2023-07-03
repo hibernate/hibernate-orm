@@ -160,7 +160,7 @@ public class NavigablePath implements DotIdentifierSequence, Serializable {
 
 	protected boolean localNamesMatch(EntityIdentifierNavigablePath other) {
 		return Objects.equals( getLocalName(), other.getLocalName() )
-				|| Objects.equals( getLocalName(), other.getIdentifierAttributeName() );
+			|| Objects.equals( getLocalName(), other.getIdentifierAttributeName() );
 	}
 
 	public NavigablePath append(String property) {

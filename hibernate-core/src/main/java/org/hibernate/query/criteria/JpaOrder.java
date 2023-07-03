@@ -29,7 +29,7 @@ public interface JpaOrder extends Order, JpaCriteriaNode {
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Co-variants
+	// Covariant returns
 
 	@Override
 	JpaOrder reverse();

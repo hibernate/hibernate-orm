@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
+import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
@@ -43,9 +44,7 @@ public interface EntityResultGraphNode extends DomainResultGraphNode, FetchParen
 
 	@Override
 	default boolean appliesTo(GraphImplementor<?> graphImplementor, JpaMetamodel metamodel) {
-		return graphImplementor.appliesTo(
-				getEntityValuedModelPart().getEntityMappingType().getJavaType().getJavaTypeClass(),
-				metamodel
-		);
+		final String entityName = getEntityValuedModelPart().getEntityMappingType().getEntityName();
+		return GraphHelper.appliesTo( graphImplementor, metamodel.entity( entityName ) );
 	}
 }

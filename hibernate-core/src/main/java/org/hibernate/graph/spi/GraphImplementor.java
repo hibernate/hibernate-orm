@@ -13,8 +13,6 @@ import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.CannotBecomeEntityGraphException;
 import org.hibernate.graph.CannotContainSubGraphException;
 import org.hibernate.graph.Graph;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
@@ -26,15 +24,11 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  */
 public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 
-	boolean appliesTo(ManagedDomainType<?> managedType, JpaMetamodel metamodel);
-
-	boolean appliesTo(Class<?> javaType, JpaMetamodel metamodel);
-
 	void merge(GraphImplementor<? extends J> other);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// Co-variant returns
+	// Covariant returns
 
 	@Override
 	RootGraphImplementor<J> makeRootGraph(String name, boolean mutable)

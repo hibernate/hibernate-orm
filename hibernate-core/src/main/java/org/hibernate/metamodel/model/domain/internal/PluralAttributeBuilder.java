@@ -32,7 +32,7 @@ import static org.hibernate.metamodel.internal.AttributeFactory.determineSimpleT
  */
 public class PluralAttributeBuilder<D, C, E, K> {
 	private final JavaType<C> collectionJtd;
-	private boolean isGeneric;
+	private final boolean isGeneric;
 
 	private final AttributeClassification attributeClassification;
 	private final CollectionClassification collectionClassification;

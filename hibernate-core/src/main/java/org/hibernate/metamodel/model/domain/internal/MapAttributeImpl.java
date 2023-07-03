@@ -103,9 +103,9 @@ public class MapAttributeImpl<X, K, V> extends AbstractPluralAttribute<X, Map<K,
 	}
 
 	@Override
-	public SqmAttributeJoin createSqmJoin(
-			SqmFrom lhs, SqmJoinType joinType, String alias, boolean fetched, SqmCreationState creationState) {
-		return new SqmMapJoin(
+	public SqmAttributeJoin<X,V> createSqmJoin(
+			SqmFrom<?,X> lhs, SqmJoinType joinType, String alias, boolean fetched, SqmCreationState creationState) {
+		return new SqmMapJoin<>(
 				lhs,
 				this,
 				alias,

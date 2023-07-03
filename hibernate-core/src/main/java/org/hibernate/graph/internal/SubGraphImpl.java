@@ -7,10 +7,11 @@
 package org.hibernate.graph.internal;
 
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 /**
+ * Implementation of the JPA-defined {@link jakarta.persistence.Subgraph} interface.
+ *
  * @author Steve Ebersole
  */
 public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImplementor<J> {
@@ -38,25 +39,4 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 		return super.addKeySubGraph( attributeName );
 	}
 
-	@Override
-	public boolean appliesTo(ManagedDomainType<?> managedType, JpaMetamodel metamodel) {
-		if ( getGraphedType().equals( managedType ) ) {
-			return true;
-		}
-
-		ManagedDomainType<?> superType = managedType.getSuperType();
-		while ( superType != null ) {
-			if ( superType.equals( managedType ) ) {
-				return true;
-			}
-			superType = superType.getSuperType();
-		}
-
-		return false;
-	}
-
-	@Override
-	public boolean appliesTo(Class<?> javaType, JpaMetamodel metamodel) {
-		return appliesTo( metamodel.managedType( javaType ), metamodel );
-	}
 }

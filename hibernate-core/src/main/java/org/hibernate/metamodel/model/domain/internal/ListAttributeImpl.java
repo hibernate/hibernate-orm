@@ -79,18 +79,17 @@ public class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>,
 	public SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
 		final String pathName = pathSource.getPathName();
 		return pathName.equals( getElementPathSource().getPathName() )
-				|| pathName.equals( indexPathSource.getPathName() ) ? null : getElementPathSource();
+			|| pathName.equals( indexPathSource.getPathName() ) ? null : getElementPathSource();
 	}
 
 	@Override
-	public SqmAttributeJoin createSqmJoin(
-			SqmFrom lhs,
+	public SqmAttributeJoin<X,E> createSqmJoin(
+			SqmFrom<?,X> lhs,
 			SqmJoinType joinType,
 			String alias,
 			boolean fetched,
 			SqmCreationState creationState) {
-		//noinspection unchecked
-		return new SqmListJoin(
+		return new SqmListJoin<>(
 				lhs,
 				this,
 				alias,

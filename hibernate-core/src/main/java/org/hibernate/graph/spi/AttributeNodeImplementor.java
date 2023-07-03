@@ -33,13 +33,13 @@ public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNode
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	default Map<Class<? extends J>, SubGraph<? extends J>> getSubGraphs() {
 		return (Map) getSubGraphMap();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	default Map<Class<? extends J>, SubGraph<? extends J>> getKeySubGraphs() {
 		return (Map) getKeySubGraphMap();
 	}
@@ -51,7 +51,7 @@ public interface AttributeNodeImplementor<J> extends AttributeNode<J>, GraphNode
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	default Map<Class, Subgraph> getKeySubgraphs() {
 		return (Map) getKeySubGraphMap();
 	}

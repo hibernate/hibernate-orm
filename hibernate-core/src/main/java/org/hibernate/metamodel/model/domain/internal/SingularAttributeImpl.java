@@ -8,9 +8,7 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
 import java.lang.reflect.Member;
-import java.util.function.Supplier;
 
-import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
@@ -37,6 +35,7 @@ import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildSubNavigablePath;
 
 /**
@@ -51,9 +50,6 @@ public class SingularAttributeImpl<D,J>
 	private final boolean isOptional;
 
 	private final SqmPathSource<J> sqmPathSource;
-
-	// NOTE : delay access for timing reasons
-	private final DelayedKeyTypeAccess graphKeyTypeAccess = new DelayedKeyTypeAccess();
 
 	public SingularAttributeImpl(
 			ManagedDomainType<D> declaringType,
@@ -86,7 +82,7 @@ public class SingularAttributeImpl<D,J>
 				this,
 				attributeType,
 				relationalJavaType,
-				BindableType.SINGULAR_ATTRIBUTE,
+				SINGULAR_ATTRIBUTE,
 				isGeneric
 		);
 	}
@@ -102,7 +98,6 @@ public class SingularAttributeImpl<D,J>
 
 	@Override
 	public SimpleDomainType<J> getSqmPathType() {
-		//noinspection unchecked
 		return (SimpleDomainType<J>) sqmPathSource.getSqmPathType();
 	}
 
@@ -112,8 +107,11 @@ public class SingularAttributeImpl<D,J>
 	}
 
 	@Override
-	public SimpleDomainType<J> getKeyGraphType() {
-		return graphKeyTypeAccess.get();
+	public SimpleDomainType<?> getKeyGraphType() {
+		final SimpleDomainType<?> attributeType = getType();
+		return attributeType instanceof IdentifiableDomainType
+				? ( (IdentifiableDomainType<?>) attributeType ).getIdType()
+				: null;
 	}
 
 	@Override
@@ -148,7 +146,7 @@ public class SingularAttributeImpl<D,J>
 
 	@Override
 	public SqmAttributeJoin<D,J> createSqmJoin(
-			SqmFrom lhs,
+			SqmFrom<?,D> lhs,
 			SqmJoinType joinType,
 			String alias,
 			boolean fetched,
@@ -156,20 +154,20 @@ public class SingularAttributeImpl<D,J>
 		if ( getType() instanceof AnyMappingDomainType ) {
 			throw new SemanticException( "An @Any attribute cannot be join fetched" );
 		}
-
-		//noinspection unchecked
-		return new SqmSingularJoin<D,J>(
-				lhs,
-				this,
-				alias,
-				joinType,
-				fetched,
-				creationState.getCreationContext().getNodeBuilder()
-		);
+		else {
+			return new SqmSingularJoin<>(
+					lhs,
+					this,
+					alias,
+					joinType,
+					fetched,
+					creationState.getCreationContext().getNodeBuilder()
+			);
+		}
 	}
 
 	@Override
-	public NavigablePath createNavigablePath(SqmPath parent, String alias) {
+	public NavigablePath createNavigablePath(SqmPath<?> parent, String alias) {
 		if ( parent == null ) {
 			throw new IllegalArgumentException(
 					"LHS cannot be null for a sub-navigable reference - " + getName()
@@ -219,7 +217,7 @@ public class SingularAttributeImpl<D,J>
 		}
 
 		@Override
-		public NavigablePath createNavigablePath(SqmPath parent, String alias) {
+		public NavigablePath createNavigablePath(SqmPath<?> parent, String alias) {
 			if ( parent == null ) {
 				throw new IllegalArgumentException(
 						"LHS cannot be null for a sub-navigable reference - " + getName()
@@ -296,25 +294,11 @@ public class SingularAttributeImpl<D,J>
 
 	@Override
 	public BindableType getBindableType() {
-		return BindableType.SINGULAR_ATTRIBUTE;
+		return SINGULAR_ATTRIBUTE;
 	}
 
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
 		return sqmPathSource.createSqmPath( lhs, intermediatePathSource );
-	}
-
-	private class DelayedKeyTypeAccess implements Supplier<SimpleDomainType<J>>, Serializable {
-		private boolean resolved;
-		private SimpleDomainType<J> type;
-
-		@Override
-		public SimpleDomainType<J> get() {
-			if ( ! resolved ) {
-				type = GraphHelper.resolveKeyTypeDescriptor( SingularAttributeImpl.this );
-				resolved = true;
-			}
-			return type;
-		}
 	}
 }

@@ -1268,7 +1268,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass, String name) {
-
 		final BasicType<T> basicType = getTypeConfiguration().getBasicTypeForJavaType( paramClass );
 		if ( basicType == null ) {
 			final BindableType<T> parameterType;
@@ -1279,12 +1278,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			else {
 				parameterType = null;
 			}
-			return new JpaCriteriaParameter<>(
-					name,
-					parameterType,
-					true,
-					this
-			);
+			return new JpaCriteriaParameter<>( name, parameterType, true, this );
 		}
 		else {
 			return new JpaCriteriaParameter<>( name, basicType, false, this );

@@ -29,14 +29,17 @@ public class SingularAttributeMetadataImpl<X, Y> extends BaseAttributeMetadata<X
 			MetadataContext metadataContext) {
 		super( propertyMapping, ownerType, member, attributeClassification, metadataContext );
 		valueContext = new ValueContext() {
+			@Override
 			public Value getHibernateValue() {
 				return getPropertyMapping().getValue();
 			}
 
+			@Override
 			public Class<Y> getJpaBindableType() {
 				return getAttributeMetadata().getJavaType();
 			}
 
+			@Override
 			public ValueClassification getValueClassification() {
 				switch ( attributeClassification ) {
 					case EMBEDDED: {
@@ -51,12 +54,14 @@ public class SingularAttributeMetadataImpl<X, Y> extends BaseAttributeMetadata<X
 				}
 			}
 
+			@Override
 			public AttributeMetadata<X,Y> getAttributeMetadata() {
 				return SingularAttributeMetadataImpl.this;
 			}
 		};
 	}
 
+	@Override
 	public ValueContext getValueContext() {
 		return valueContext;
 	}

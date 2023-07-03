@@ -1242,10 +1242,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		private final int[] dirtyAttributeIndexes;
 		private final InclusionChecker dirtinessChecker;
 
-		private final Set<EntityTableMapping> tablesNeedingUpdate = new HashSet<>();
-		private final Set<EntityTableMapping> tablesNeedingDynamicUpdate = new HashSet<>();
-		private final Set<EntityTableMapping> tablesWithNonNullValues = new HashSet<>();
-		private final Set<EntityTableMapping> tablesWithPreviousNonNullValues = new HashSet<>();
+		private final TableSet tablesNeedingUpdate = new TableSet();
+		private final TableSet tablesNeedingDynamicUpdate = new TableSet();
+		private final TableSet tablesWithNonNullValues = new TableSet();
+		private final TableSet tablesWithPreviousNonNullValues = new TableSet();
 
 		private final List<AttributeAnalysis> attributeAnalyses = new ArrayList<>();
 
@@ -1316,17 +1316,17 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 
 		@Override
-		public Set<EntityTableMapping> getTablesNeedingUpdate() {
+		public TableSet getTablesNeedingUpdate() {
 			return tablesNeedingUpdate;
 		}
 
 		@Override
-		public Set<EntityTableMapping> getTablesWithNonNullValues() {
+		public TableSet getTablesWithNonNullValues() {
 			return tablesWithNonNullValues;
 		}
 
 		@Override
-		public Set<EntityTableMapping> getTablesWithPreviousNonNullValues() {
+		public TableSet getTablesWithPreviousNonNullValues() {
 			return tablesWithPreviousNonNullValues;
 		}
 

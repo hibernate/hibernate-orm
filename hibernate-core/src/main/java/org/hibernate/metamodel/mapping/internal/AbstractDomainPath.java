@@ -64,7 +64,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 		if ( referenceModelPart instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart selection = (BasicValuedModelPart) referenceModelPart;
 			final TableReference tableReference = tableGroup.resolveTableReference(
-					getNavigablePath(),
+					null,
 					selection,
 					selection.getContainingTableExpression()
 			);
@@ -252,7 +252,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SortOrder sortOrder,
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
-		final TableReference tableReference = tableGroup.resolveTableReference( getNavigablePath(), selection.getContainingTableExpression() );
+		final TableReference tableReference = tableGroup.resolveTableReference( null, selection.getContainingTableExpression() );
 		final Expression expression = creationState.getSqlExpressionResolver().resolveSqlExpression(
 				createColumnReferenceKey(
 						tableReference,

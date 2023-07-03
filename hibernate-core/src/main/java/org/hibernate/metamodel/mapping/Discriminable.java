@@ -13,9 +13,9 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
- * Things that have a discriminator associated with it.
+ * Anything that has a discriminator associated with it.
  */
-public interface Discriminatable {
+public interface Discriminable {
 	DiscriminatorMapping getDiscriminatorMapping();
 
 	/**

@@ -13,7 +13,7 @@ https://hibernate.atlassian.net/projects/HHH/versions/32164
     * [HHH-16839] - Failing to update a one-to-one lazy association with `OptimisticLockType.DIRTY` and enabled bytecode enhancement
     * [HHH-16832] - Bytecode enhancement leads to broken constructor for a generic embedded field in a MappedSuperclass
     * [HHH-16831] - Revisit logging statement that use string concat for formatted logging
-    * [HHH-16821] - Fail to delete entity with a composite id using an @IdClass with one of its fields mapped from the id of a @ManyToOne association
+    * [HHH-16821] - Fail to delete entity that contains an embedded with a many to many association as field
     * [HHH-16820] - When batching enabled the LockModeType is ignored
     * [HHH-16799] - Using bytecode enhancement may result in incorrect AccessType being picked
     * [HHH-16784] - @MappedSuperclass with parameterized interface types no longer works

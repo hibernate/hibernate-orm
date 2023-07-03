@@ -16,6 +16,7 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
@@ -23,6 +24,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static jakarta.persistence.metamodel.Bindable.BindableType.PLURAL_ATTRIBUTE;
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildSubNavigablePath;
 
 /**
@@ -58,7 +60,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 		this.elementPathSource = SqmMappingModelHelper.resolveSqmPathSource(
 				CollectionPart.Nature.ELEMENT.getName(),
 				builder.getValueType(),
-				BindableType.PLURAL_ATTRIBUTE,
+				PLURAL_ATTRIBUTE,
 				builder.isGeneric()
 		);
 	}
@@ -84,6 +86,14 @@ public abstract class AbstractPluralAttribute<D, C, E>
 			return elementPathSource;
 		}
 		return elementPathSource.findSubPathSource( name );
+	}
+
+	@Override
+	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
+		if ( CollectionPart.Nature.ELEMENT.getName().equals( name ) ) {
+			return elementPathSource;
+		}
+		return elementPathSource.findSubPathSource( name, metamodel );
 	}
 
 	@Override
@@ -125,7 +135,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 	@Override
 	public boolean isAssociation() {
 		return getPersistentAttributeType() == PersistentAttributeType.ONE_TO_MANY
-				|| getPersistentAttributeType() == PersistentAttributeType.MANY_TO_MANY;
+			|| getPersistentAttributeType() == PersistentAttributeType.MANY_TO_MANY;
 	}
 
 	@Override
@@ -135,7 +145,7 @@ public abstract class AbstractPluralAttribute<D, C, E>
 
 	@Override
 	public BindableType getBindableType() {
-		return BindableType.PLURAL_ATTRIBUTE;
+		return PLURAL_ATTRIBUTE;
 	}
 
 	@Override
@@ -145,15 +155,8 @@ public abstract class AbstractPluralAttribute<D, C, E>
 
 	@Override
 	public SqmPath<E> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
-		final NavigablePath navigablePath;
-		if ( intermediatePathSource == null ) {
-			navigablePath = lhs.getNavigablePath().append( getPathName() );
-		}
-		else {
-			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
-		}
 		return new SqmPluralValuedSimplePath<>(
-				navigablePath,
+				PathHelper.append( lhs, this, intermediatePathSource ),
 				this,
 				lhs,
 				lhs.nodeBuilder()

@@ -156,7 +156,7 @@ public class CompleteResultBuilderEntityStandard implements CompleteResultBuilde
 
 						return discriminatorFetchBuilder.buildFetch(
 								entityResult,
-								navigablePath.append( EntityDiscriminatorMapping.ROLE_NAME ),
+								navigablePath.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 								jdbcResultsMetadata,
 								legacyFetchResolver,
 								domainResultCreationState

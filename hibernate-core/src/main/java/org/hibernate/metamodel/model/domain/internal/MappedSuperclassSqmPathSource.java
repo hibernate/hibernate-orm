@@ -8,7 +8,6 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import org.hibernate.metamodel.model.domain.MappedSuperclassDomainType;
 import org.hibernate.query.hql.spi.SqmCreationState;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmJoinType;
@@ -31,8 +30,7 @@ public class MappedSuperclassSqmPathSource<J> extends AbstractSqmPathSource<J> i
 
 	@Override
 	public MappedSuperclassDomainType<J> getSqmPathType() {
-		//noinspection unchecked
-		return ( MappedSuperclassDomainType<J> ) super.getSqmPathType();
+		return (MappedSuperclassDomainType<J>) super.getSqmPathType();
 	}
 
 	@Override
@@ -43,15 +41,8 @@ public class MappedSuperclassSqmPathSource<J> extends AbstractSqmPathSource<J> i
 
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
-		final NavigablePath navigablePath;
-		if ( intermediatePathSource == null ) {
-			navigablePath = lhs.getNavigablePath().append( getPathName() );
-		}
-		else {
-			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
-		}
 		return new SqmEntityValuedSimplePath<>(
-				navigablePath,
+				PathHelper.append( lhs, this, intermediatePathSource ),
 				pathModel,
 				lhs,
 				lhs.nodeBuilder()

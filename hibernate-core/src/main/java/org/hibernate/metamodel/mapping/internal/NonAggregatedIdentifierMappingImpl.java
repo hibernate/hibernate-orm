@@ -379,7 +379,7 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 
 	@Override
 	public String getFetchableName() {
-		return EntityIdentifierMapping.ROLE_LOCAL_NAME;
+		return EntityIdentifierMapping.ID_ROLE_NAME;
 	}
 
 	@Override

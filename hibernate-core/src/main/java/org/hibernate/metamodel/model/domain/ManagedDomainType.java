@@ -9,14 +9,13 @@ package org.hibernate.metamodel.model.domain;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.query.sqm.SqmExpressible;
 
 import jakarta.persistence.metamodel.ManagedType;
 
 /**
- * Hibernate extension to the JPA {@link ManagedType} contract
+ * Extensions to the JPA-defined {@link ManagedType} contract.
  *
  * @author Steve Ebersole
  */
@@ -24,9 +23,9 @@ public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, 
 	/**
 	 * Get the type name.
 	 *
-	 * Generally speaking, this returns the name of the Java class.  However, for
-	 * dynamic models ({@link RepresentationMode#MAP}), this returns the symbolic name
-	 * since the Java type is {@link java.util.Map}
+	 * @apiNote This usually returns the name of the Java class. However, for
+	 *          {@linkplain RepresentationMode#MAP dynamic models}, this returns
+	 *          the symbolic name since the Java type is {@link java.util.Map}.
 	 *
 	 * @return The type name.
 	 *
@@ -37,16 +36,18 @@ public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, 
 	RepresentationMode getRepresentationMode();
 
 	/**
-	 * This type's super type descriptor.  Note : we define this on the managed
-	 * type descriptor in anticipation of supporting embeddable inheritance
+	 * The descriptor of the supertype of this type.
+	 *
+	 * @apiNote we define this here in anticipation of eventually supporting
+	 *          embeddable inheritance
 	 */
 	ManagedDomainType<? super J> getSuperType();
 
 	Collection<? extends ManagedDomainType<? extends J>> getSubTypes();
 
-	void addSubType(ManagedDomainType subType);
+	void addSubType(ManagedDomainType<? extends J> subType);
 
-	void visitAttributes(Consumer<? super PersistentAttribute<J, ?>> action);
+	void visitAttributes(Consumer<? super PersistentAttribute<? super J, ?>> action);
 	void visitDeclaredAttributes(Consumer<? super PersistentAttribute<J, ?>> action);
 
 	@Override
@@ -57,7 +58,7 @@ public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, 
 
 	PersistentAttribute<? super J,?> findAttribute(String name);
 
-	PersistentAttribute<? super J, ?> findSubTypesAttribute(String name);
+	PersistentAttribute<?, ?> findSubTypesAttribute(String name);
 	PersistentAttribute<? super J, ?> findAttributeInSuperTypes(String name);
 
 	SingularPersistentAttribute<? super J,?> findSingularAttribute(String name);
@@ -65,13 +66,7 @@ public interface ManagedDomainType<J> extends SqmExpressible<J>, DomainType<J>, 
 	PersistentAttribute<? super J, ?> findConcreteGenericAttribute(String name);
 
 	PersistentAttribute<J,?> findDeclaredAttribute(String name);
-	SingularPersistentAttribute<? super J, ?> findDeclaredSingularAttribute(String name);
-	PluralPersistentAttribute<? super J, ?, ?> findDeclaredPluralAttribute(String name);
-	PersistentAttribute<? super J, ?> findDeclaredConcreteGenericAttribute(String name);
-
-	SubGraphImplementor<J> makeSubGraph();
-	<S extends J> SubGraphImplementor<S> makeSubGraph(Class<S> subClassType);
-
-	<S extends J> ManagedDomainType<S> findSubType(String subTypeName);
-	<S extends J> ManagedDomainType<S> findSubType(Class<S> subType);
+	SingularPersistentAttribute<J, ?> findDeclaredSingularAttribute(String name);
+	PluralPersistentAttribute<J, ?, ?> findDeclaredPluralAttribute(String name);
+	PersistentAttribute<J, ?> findDeclaredConcreteGenericAttribute(String name);
 }

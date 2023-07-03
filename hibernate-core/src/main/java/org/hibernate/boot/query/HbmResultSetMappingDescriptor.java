@@ -402,7 +402,7 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				}
 
 				discriminatorMemento = new FetchMementoBasicStandard(
-						entityPath.append( EntityDiscriminatorMapping.ROLE_NAME ),
+						entityPath.append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 						entityDescriptor.getDiscriminatorMapping(),
 						discriminatorColumnAlias
 				);

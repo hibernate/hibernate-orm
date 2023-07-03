@@ -130,7 +130,7 @@ public class LoaderSelectBuilder {
 				1,
 				loadQueryInfluencers,
 				lockOptions,
-				determineGraphTraversalState( loadQueryInfluencers ),
+				determineGraphTraversalState( loadQueryInfluencers, sessionFactory ),
 				true,
 				jdbcParameterConsumer
 		);
@@ -157,7 +157,7 @@ public class LoaderSelectBuilder {
 				-1,
 				influencers,
 				lockOptions,
-				determineGraphTraversalState( influencers ),
+				determineGraphTraversalState( influencers, sessionFactory ),
 				true,
 				null
 		);
@@ -385,7 +385,7 @@ public class LoaderSelectBuilder {
 				numberOfKeysToLoad,
 				loadQueryInfluencers,
 				lockOptions != null ? lockOptions : LockOptions.NONE,
-				determineGraphTraversalState( loadQueryInfluencers ),
+				determineGraphTraversalState( loadQueryInfluencers, creationContext.getSessionFactory() ),
 				determineWhetherToForceIdSelection( numberOfKeysToLoad, restrictedParts ),
 				jdbcParameterConsumer
 		);
@@ -435,14 +435,20 @@ public class LoaderSelectBuilder {
 		return false;
 	}
 
-	private static EntityGraphTraversalState determineGraphTraversalState(LoadQueryInfluencers loadQueryInfluencers) {
+	private static EntityGraphTraversalState determineGraphTraversalState(
+			LoadQueryInfluencers loadQueryInfluencers,
+			SessionFactoryImplementor sessionFactory) {
 		if ( loadQueryInfluencers != null ) {
 			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 			if ( effectiveEntityGraph != null ) {
 				final GraphSemantic graphSemantic = effectiveEntityGraph.getSemantic();
 				final RootGraphImplementor<?> rootGraphImplementor = effectiveEntityGraph.getGraph();
 				if ( graphSemantic != null && rootGraphImplementor != null ) {
-					return new StandardEntityGraphTraversalStateImpl( graphSemantic, rootGraphImplementor );
+					return new StandardEntityGraphTraversalStateImpl(
+							graphSemantic,
+							rootGraphImplementor,
+							sessionFactory.getJpaMetamodel()
+					);
 				}
 			}
 		}

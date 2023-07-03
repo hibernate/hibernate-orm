@@ -562,7 +562,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
 			if ( appliedGraph != null && appliedGraph.getSemantic() != null && appliedGraph.getGraph() != null ) {
 				this.entityGraphTraversalState = new StandardEntityGraphTraversalStateImpl(
-						appliedGraph.getSemantic(), appliedGraph.getGraph() );
+						appliedGraph.getSemantic(), appliedGraph.getGraph(),
+						creationContext.getSessionFactory().getJpaMetamodel()
+				);
 			}
 			else {
 				this.entityGraphTraversalState = null;
@@ -5077,7 +5079,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 
 			final DiscriminatorPathInterpretation<?> typeExpression = new DiscriminatorPathInterpretation<>(
-					tableGroup.getNavigablePath().append( EntityDiscriminatorMapping.ROLE_NAME ),
+					tableGroup.getNavigablePath().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 					entityMapping,
 					tableGroup,
 					this
@@ -8256,7 +8258,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					offset = countIndividualSelections( ( (SqmDynamicInstantiation<?>) selectableNode ).getArguments() ) - 1;
 				}
 				else if ( selectableNode instanceof SqmJpaCompoundSelection<?> ) {
-					offset += ( (SqmJpaCompoundSelection<?>) selectableNode ).getSelectionItems().size() - 1;
+					for ( SqmSelectableNode<?> node : ( (SqmJpaCompoundSelection<?>) selectableNode ).getSelectionItems() ) {
+						if ( node instanceof SqmDynamicInstantiation<?> ) {
+							offset += countIndividualSelections( ( (SqmDynamicInstantiation<?>) node ).getArguments() ) ;
+						}
+						else {
+							offset += 1;
+						}
+					}
+					offset -= 1;
 				}
 			}
 			return offset + selections.size();

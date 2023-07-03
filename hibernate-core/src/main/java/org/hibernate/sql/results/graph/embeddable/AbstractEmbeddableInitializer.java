@@ -91,7 +91,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 	private static boolean isPartOfKey(NavigableRole navigableRole) {
 		final NavigableRole parent = navigableRole.getParent();
 		return parent != null
-				&& ( parent.getLocalName().equals( EntityIdentifierMapping.ROLE_LOCAL_NAME ) || isPartOfKey( parent ) );
+				&& ( parent.getLocalName().equals( EntityIdentifierMapping.ID_ROLE_NAME ) || isPartOfKey( parent ) );
 	}
 
 	protected DomainResultAssembler<?>[] createAssemblers(

@@ -28,7 +28,6 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.model.domain.AbstractIdentifiableType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
@@ -51,6 +50,7 @@ import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.EntityJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.metamodel.Attribute;
@@ -806,12 +806,14 @@ public class MetadataContext {
 		return (BasicDomainType<J>) basicDomainTypeMap.computeIfAbsent(
 				javaType,
 				jt -> {
+					// we cannot use getTypeConfiguration().standardBasicTypeForJavaType(javaType)
+					// because that doesn't return the right thing for primitive types
 					final JavaTypeRegistry registry = getTypeConfiguration().getJavaTypeRegistry();
-
-					if ( javaType.isPrimitive() ) {
-						return new PrimitiveBasicTypeImpl<>( registry.resolveDescriptor( javaType ), javaType );
-					}
-					return new BasicTypeImpl<>( registry.resolveDescriptor( javaType ) );
+					JavaType<J> javaTypeDescriptor = registry.resolveDescriptor( javaType );
+					JdbcType jdbcType = javaTypeDescriptor.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+					return javaType.isPrimitive()
+							? new PrimitiveBasicTypeImpl<>( javaTypeDescriptor, jdbcType , javaType )
+							: new BasicTypeImpl<>( javaTypeDescriptor, jdbcType );
 				}
 		);
 	}

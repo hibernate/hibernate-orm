@@ -56,7 +56,7 @@ import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCH
  * @author Steve Ebersole
  */
 public interface EntityMappingType
-		extends ManagedMappingType, EntityValuedModelPart, Loadable, Restrictable, Discriminatable {
+		extends ManagedMappingType, EntityValuedModelPart, Loadable, Restrictable, Discriminable {
 
 	/**
 	 * The entity name.

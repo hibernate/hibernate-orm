@@ -188,7 +188,7 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 	public String getSelectionExpression() {
 		// this *should* only be used to create the sql-expression key, so just
 		// using the ROLE_NAME should be fine
-		return ROLE_NAME;
+		return DISCRIMINATOR_ROLE_NAME;
 	}
 
 

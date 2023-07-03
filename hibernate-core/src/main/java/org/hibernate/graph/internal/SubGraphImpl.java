@@ -7,36 +7,31 @@
 package org.hibernate.graph.internal;
 
 import org.hibernate.graph.spi.SubGraphImplementor;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
 /**
+ * Implementation of the JPA-defined {@link jakarta.persistence.Subgraph} interface.
+ *
  * @author Steve Ebersole
  */
 public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImplementor<J> {
-	public SubGraphImpl(
-			ManagedDomainType<J> managedType,
-			boolean mutable,
-			JpaMetamodel jpaMetamodel) {
-		super( managedType, mutable, jpaMetamodel );
+
+	public SubGraphImpl(ManagedDomainType<J> managedType, boolean mutable) {
+		super( managedType, mutable );
 	}
 
-	public SubGraphImpl(boolean mutable, AbstractGraph<J> original) {
-		super( mutable, original );
+	public SubGraphImpl(AbstractGraph<J> original, boolean mutable) {
+		super(original, mutable);
 	}
 
 	@Override
 	public SubGraphImplementor<J> makeCopy(boolean mutable) {
-		return new SubGraphImpl<>( mutable, this );
+		return new SubGraphImpl<>(this, mutable);
 	}
 
 	@Override
 	public SubGraphImplementor<J> makeSubGraph(boolean mutable) {
-		if ( ! mutable && ! isMutable() ) {
-			return this;
-		}
-
-		return makeCopy( true );
+		return !mutable && !isMutable() ? this : makeCopy( true );
 	}
 
 	@Override
@@ -44,25 +39,4 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 		return super.addKeySubGraph( attributeName );
 	}
 
-	@Override
-	public boolean appliesTo(ManagedDomainType<? super J> managedType) {
-		if ( this.getGraphedType().equals( managedType ) ) {
-			return true;
-		}
-
-		ManagedDomainType superType = managedType.getSuperType();
-		while ( superType != null ) {
-			if ( superType.equals( managedType ) ) {
-				return true;
-			}
-			superType = superType.getSuperType();
-		}
-
-		return false;
-	}
-
-	@Override
-	public boolean appliesTo(Class<? super J> javaType) {
-		return appliesTo( jpaMetamodel().managedType( javaType ) );
-	}
 }

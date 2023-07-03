@@ -7,7 +7,6 @@
 package org.hibernate.query.results;
 
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
@@ -74,11 +73,11 @@ public class ResultsHelper {
 	public static boolean isIdentifier(EntityIdentifierMapping identifierDescriptor, String... names) {
 		final String identifierAttributeName = identifierDescriptor instanceof SingleAttributeIdentifierMapping
 				? ( (SingleAttributeIdentifierMapping) identifierDescriptor ).getAttributeName()
-				: EntityIdentifierMapping.ROLE_LOCAL_NAME;
+				: EntityIdentifierMapping.ID_ROLE_NAME;
 
 		for ( int i = 0; i < names.length; i++ ) {
 			final String name = names[ i ];
-			if ( EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( name ) ) {
+			if ( EntityIdentifierMapping.ID_ROLE_NAME.equals( name ) ) {
 				return true;
 			}
 

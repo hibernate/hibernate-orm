@@ -42,7 +42,7 @@ public class SimpleHbmTests {
 		assertThat( identifierMapping, instanceOf( BasicEntityIdentifierMapping.class ) );
 		final BasicEntityIdentifierMapping bid = (BasicEntityIdentifierMapping) identifierMapping;
 		assertThat( bid.getFetchableName(), is( "id" ) );
-		assertThat( bid.getPartName(), is( EntityIdentifierMapping.ROLE_LOCAL_NAME ) );
+		assertThat( bid.getPartName(), is( EntityIdentifierMapping.ID_ROLE_NAME ) );
 
 		assertThat( entityDescriptor.getNumberOfAttributeMappings(), is( 1 ) );
 		assertThat( entityDescriptor.getNumberOfDeclaredAttributeMappings(), is( 1 ) );

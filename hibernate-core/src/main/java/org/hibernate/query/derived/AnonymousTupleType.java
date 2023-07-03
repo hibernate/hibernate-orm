@@ -236,7 +236,7 @@ public class AnonymousTupleType<T> implements TupleType<T>, DomainType<T>, Retur
 	}
 
 	@Override
-	public DomainType<?> getSqmPathType() {
+	public DomainType<T> getSqmPathType() {
 		return this;
 	}
 

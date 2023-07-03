@@ -12,11 +12,14 @@ import org.hibernate.graph.SubGraph;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
- * Integration version of the {@link SubGraph} contract
+ * Integration version of the {@link SubGraph} contract.
  *
  * @author Steve Ebersole
+ *
+ * @see RootGraphImplementor
  */
 public interface SubGraphImplementor<J> extends SubGraph<J>, GraphImplementor<J> {
+
 	@Override
 	SubGraphImplementor<J> makeCopy(boolean mutable);
 

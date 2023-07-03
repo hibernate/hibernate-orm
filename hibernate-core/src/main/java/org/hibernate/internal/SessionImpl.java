@@ -1064,7 +1064,8 @@ public class SessionImpl
 		final GraphSemantic semantic = effectiveEntityGraph.getSemantic();
 		final RootGraphImplementor<?> graph = effectiveEntityGraph.getGraph();
 		boolean clearedEffectiveGraph;
-		if ( semantic == null || graph.appliesTo( entityName, getFactory().getJpaMetamodel() ) ) {
+		if ( semantic == null
+				|| graph.appliesTo( getFactory().getJpaMetamodel().entity( entityName ) ) ) {
 			clearedEffectiveGraph = false;
 		}
 		else {

@@ -265,24 +265,19 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	public <T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
 		final EntityDomainType<T> entityType = entity( entityClass );
 		if ( entityType == null ) {
-			throw new IllegalArgumentException( "Given class is not an entity : " + entityClass.getName() );
+			throw new IllegalArgumentException( "Given class is not an entity: " + entityClass.getName() );
 		}
-
-		final List<RootGraphImplementor<? super T>> results = new ArrayList<>();
-
-		for ( EntityGraph<?> entityGraph : entityGraphMap.values() ) {
-			if ( !( entityGraph instanceof RootGraphImplementor ) ) {
-				continue;
+		else {
+			final List<RootGraphImplementor<? super T>> results = new ArrayList<>();
+			for ( RootGraphImplementor<?> entityGraph : entityGraphMap.values() ) {
+				if ( entityGraph.appliesTo( entityType ) ) {
+					@SuppressWarnings("unchecked")
+					final RootGraphImplementor<? super T> result = (RootGraphImplementor<? super T>) entityGraph;
+					results.add( result );
+				}
 			}
-
-			//noinspection unchecked
-			final RootGraphImplementor<T> egi = (RootGraphImplementor<T>) entityGraph;
-			if ( egi.appliesTo( entityType, this ) ) {
-				results.add( egi );
-			}
+			return results;
 		}
-
-		return results;
 	}
 
 	@Override

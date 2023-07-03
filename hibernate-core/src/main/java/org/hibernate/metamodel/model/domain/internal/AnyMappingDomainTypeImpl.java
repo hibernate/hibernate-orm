@@ -26,16 +26,16 @@ import java.util.List;
 /**
  * @author Steve Ebersole
  */
-public class AnyMappingDomainTypeImpl implements AnyMappingDomainType<Class> {
+public class AnyMappingDomainTypeImpl<T> implements AnyMappingDomainType<T> {
 	private final AnyType anyType;
-	private final JavaType<Class> baseJtd;
-	private final BasicType<Class> anyDiscriminatorType;
+	private final JavaType<T> baseJtd;
+	private final BasicType<Class<?>> anyDiscriminatorType;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public AnyMappingDomainTypeImpl(
 			Any bootAnyMapping,
 			AnyType anyType,
-			JavaType<Class> baseJtd,
+			JavaType<T> baseJtd,
 			MappingMetamodelImplementor mappingMetamodel) {
 		this.anyType = anyType;
 		this.baseJtd = baseJtd;
@@ -90,23 +90,22 @@ public class AnyMappingDomainTypeImpl implements AnyMappingDomainType<Class> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public Class<Class> getJavaType() {
-		return (Class<Class>) anyType.getReturnedClass();
+	public Class<T> getJavaType() {
+		return baseJtd.getJavaTypeClass();
 	}
 
 	@Override
-	public JavaType<Class> getExpressibleJavaType() {
+	public JavaType<T> getExpressibleJavaType() {
 		return baseJtd;
 	}
 
 	@Override
-	public BasicType<Class> getDiscriminatorType() {
+	public BasicType<Class<?>> getDiscriminatorType() {
 		return anyDiscriminatorType;
 	}
 
 	@Override
-	public SimpleDomainType getKeyType() {
+	public SimpleDomainType<?> getKeyType() {
 		return (BasicType<?>) anyType.getIdentifierType();
 	}
 

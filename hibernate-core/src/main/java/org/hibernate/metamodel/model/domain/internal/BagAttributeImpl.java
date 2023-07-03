@@ -33,14 +33,13 @@ public class BagAttributeImpl<X, E>
 	}
 
 	@Override
-	public SqmAttributeJoin createSqmJoin(
-			SqmFrom lhs,
+	public SqmAttributeJoin<X,E> createSqmJoin(
+			SqmFrom<?,X> lhs,
 			SqmJoinType joinType,
 			String alias,
 			boolean fetched,
 			SqmCreationState creationState) {
-		//noinspection unchecked
-		return new SqmBagJoin(
+		return new SqmBagJoin<>(
 				lhs,
 				this,
 				alias,

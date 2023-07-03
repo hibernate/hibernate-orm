@@ -17,7 +17,7 @@ public interface ValueContext {
 
 	Value getHibernateValue();
 
-	Class getJpaBindableType();
+	Class<?> getJpaBindableType();
 
-	AttributeMetadata getAttributeMetadata();
+	AttributeMetadata<?,?> getAttributeMetadata();
 }

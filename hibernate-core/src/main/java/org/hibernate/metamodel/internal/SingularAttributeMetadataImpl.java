@@ -33,7 +33,7 @@ public class SingularAttributeMetadataImpl<X, Y> extends BaseAttributeMetadata<X
 				return getPropertyMapping().getValue();
 			}
 
-			public Class getJpaBindableType() {
+			public Class<Y> getJpaBindableType() {
 				return getAttributeMetadata().getJavaType();
 			}
 
@@ -51,7 +51,7 @@ public class SingularAttributeMetadataImpl<X, Y> extends BaseAttributeMetadata<X
 				}
 			}
 
-			public AttributeMetadata getAttributeMetadata() {
+			public AttributeMetadata<X,Y> getAttributeMetadata() {
 				return SingularAttributeMetadataImpl.this;
 			}
 		};

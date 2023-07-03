@@ -58,7 +58,6 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.type.AnyType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
 import jakarta.persistence.ManyToMany;
@@ -99,7 +98,6 @@ public class AttributeFactory {
 		return buildAttribute( ownerType, property, context );
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <X, Y> PersistentAttribute<X, Y> buildAttribute(
 			ManagedDomainType<X> ownerType,
 			Property property,
@@ -118,9 +116,8 @@ public class AttributeFactory {
 		);
 
 		if ( attributeMetadata instanceof PluralAttributeMetadata ) {
-			//noinspection rawtypes
 			return PluralAttributeBuilder.build(
-					(PluralAttributeMetadata) attributeMetadata,
+					(PluralAttributeMetadata<X,Y,?>) attributeMetadata,
 					property.isGeneric(),
 					metadataContext
 			);
@@ -175,20 +172,14 @@ public class AttributeFactory {
 			Property property) {
 		LOG.tracef( "Building identifier attribute [%s.%s]", ownerType.getTypeName(), property.getName() );
 
-		// ownerType = Entity(Person)
-		// MetadataContext#containerRoleStack -> Person
-
-		// id-attribute = "id"
-
-		final SingularAttributeMetadata<X, Y> attributeMetadata = (SingularAttributeMetadata<X,Y>) determineAttributeMetadata(
-				wrap( ownerType, property ),
-				identifierMemberResolver
-		);
-
+		final AttributeMetadata<X, Y> attributeMetadata =
+				determineAttributeMetadata( wrap( ownerType, property ), identifierMemberResolver );
+		final SingularAttributeMetadata<X, Y> singularAttributeMetadata = (SingularAttributeMetadata<X, Y>) attributeMetadata;
+		final DomainType<Y> domainType = determineSimpleType( singularAttributeMetadata.getValueContext() );
 		return new SingularAttributeImpl.Identifier<>(
 				ownerType,
 				property.getName(),
-				(SimpleDomainType<Y>) determineSimpleType( attributeMetadata.getValueContext() ),
+				(SimpleDomainType<Y>) domainType,
 				attributeMetadata.getMember(),
 				attributeMetadata.getAttributeClassification(),
 				property.isGeneric(),
@@ -211,16 +202,15 @@ public class AttributeFactory {
 			Property property) {
 		LOG.tracef( "Building version attribute [%s.%s]", ownerType.getTypeName(), property.getName() );
 
-		final SingularAttributeMetadata<X, Y> attributeMetadata = (SingularAttributeMetadata<X, Y>) determineAttributeMetadata(
-				wrap( ownerType, property ),
-				versionMemberResolver
-		);
-
+		final AttributeMetadata<X, Y> attributeMetadata =
+				determineAttributeMetadata( wrap( ownerType, property ), versionMemberResolver );
+		final SingularAttributeMetadata<X, Y> singularAttributeMetadata = (SingularAttributeMetadata<X, Y>) attributeMetadata;
+		final DomainType<Y> domainType = determineSimpleType( singularAttributeMetadata.getValueContext() );
 		return new SingularAttributeImpl.Version<>(
 				ownerType,
 				property.getName(),
 				attributeMetadata.getAttributeClassification(),
-				(SimpleDomainType<Y>) determineSimpleType( attributeMetadata.getValueContext() ),
+				(SimpleDomainType<Y>) domainType,
 				attributeMetadata.getMember(),
 				context
 		);
@@ -230,104 +220,116 @@ public class AttributeFactory {
 		return determineSimpleType( typeContext, context );
 	}
 
-	@SuppressWarnings("unchecked")
 	public static <Y> DomainType<Y> determineSimpleType(ValueContext typeContext, MetadataContext context) {
 		switch ( typeContext.getValueClassification() ) {
-			case BASIC: {
-				final Class<?> jpaBindableType = typeContext.getJpaBindableType();
-				if ( jpaBindableType.isPrimitive() ) {
-					// Special BasicDomainType necessary for primitive types in the JPA metamodel
-					return (DomainType<Y>) context.resolveBasicType( jpaBindableType );
-				}
-				return (DomainType<Y>) typeContext.getHibernateValue().getType();
-			}
-			case ENTITY: {
-				final org.hibernate.type.Type type = typeContext.getHibernateValue().getType();
-				if ( type instanceof EntityType ) {
-					final EntityType entityType = (EntityType) type;
-					final IdentifiableDomainType<Y> domainType =
-							context.locateIdentifiableType( entityType.getAssociatedEntityName() );
-					if ( domainType == null ) {
-						// Due to the use of generics, it can happen that a mapped super class uses a type
-						// for an attribute that is not a managed type. Since this case is not specifically mentioned
-						// in the Jakarta Persistence spec, we handle this by returning a "dummy" entity type
-						final JavaType<Y> domainJavaType = context.getJavaTypeRegistry().resolveDescriptor(
-								typeContext.getJpaBindableType()
-						);
-						return new EntityTypeImpl<>( domainJavaType, context.getJpaMetamodel() );
-					}
-					return domainType;
-				}
-
-				assert type instanceof AnyType;
-				final AnyType anyType = (AnyType) type;
-				final JavaType<Y> baseJtd = context.getTypeConfiguration()
-						.getJavaTypeRegistry()
-						.resolveDescriptor( anyType.getReturnedClass() );
-				return (DomainType<Y>) new AnyMappingDomainTypeImpl(
-						(Any) typeContext.getHibernateValue(),
-						anyType,
-						(JavaType<Class>) baseJtd,
-						context.getRuntimeModelCreationContext().getSessionFactory().getMappingMetamodel()
-				);
-			}
-			case EMBEDDABLE: {
-				final Component component = (Component) typeContext.getHibernateValue();
-				final EmbeddableTypeImpl<Y> embeddableType;
-
-				if ( component.isDynamic() ) {
-					final JavaType<Y> javaType = context.getJavaTypeRegistry().getDescriptor( java.util.Map.class );
-
-					embeddableType = new EmbeddableTypeImpl<>(
-							javaType,
-							true,
-							context.getJpaMetamodel()
-					);
-
-					context.registerComponentByEmbeddable( embeddableType, component );
-				}
-				else {
-					// we should have a non-dynamic embeddable
-					assert component.getComponentClassName() != null;
-					@SuppressWarnings("unchecked")
-					final Class<Y> embeddableClass = (Class<Y>) component.getComponentClass();
-
-					if ( !component.isGeneric() ) {
-						final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass, component );
-						if ( cached != null ) {
-							return cached;
-						}
-					}
-
-					final JavaTypeRegistry registry = context.getTypeConfiguration()
-							.getJavaTypeRegistry();
-					final JavaType<Y> javaType = registry.resolveManagedTypeDescriptor( embeddableClass );
-
-					embeddableType = new EmbeddableTypeImpl<>(
-							javaType,
-							false,
-							context.getJpaMetamodel()
-					);
-
-					context.registerEmbeddableType( embeddableType, component );
-
-					return embeddableType;
-				}
-
-				final EmbeddableTypeImpl.InFlightAccess<Y> inFlightAccess = embeddableType.getInFlightAccess();
-				for ( Property property : component.getProperties() ) {
-					final PersistentAttribute<Y, Y> attribute = buildAttribute( embeddableType, property, context );
-					if ( attribute != null ) {
-						inFlightAccess.addAttribute( attribute );
-					}
-				}
-				inFlightAccess.finishUp();
-
-				return embeddableType;
-			}
-			default: {
+			case BASIC:
+				return basicDomainType( typeContext, context );
+			case ENTITY:
+				return entityDomainType( typeContext, context );
+			case EMBEDDABLE:
+				return embeddableDomainType( typeContext, context );
+			default:
 				throw new AssertionFailure( "Unknown type : " + typeContext.getValueClassification() );
+		}
+	}
+
+	private static <Y> EmbeddableDomainType<Y> embeddableDomainType(ValueContext typeContext, MetadataContext context) {
+		final Component component = (Component) typeContext.getHibernateValue();
+		if ( component.isDynamic() ) {
+			return dynamicEmbeddableType( context, component );
+		}
+		else {
+			// we should have a non-dynamic embeddable
+			return classEmbeddableType( context, component );
+		}
+	}
+
+	private static <Y> EmbeddableDomainType<Y> classEmbeddableType(MetadataContext context, Component component) {
+		assert component.getComponentClassName() != null;
+		@SuppressWarnings("unchecked")
+		final Class<Y> embeddableClass = (Class<Y>) component.getComponentClass();
+
+		if ( !component.isGeneric() ) {
+			final EmbeddableDomainType<Y> cached = context.locateEmbeddable( embeddableClass, component);
+			if ( cached != null ) {
+				return cached;
 			}
+		}
+
+		final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<>(
+				context.getJavaTypeRegistry().resolveManagedTypeDescriptor( embeddableClass ),
+				false,
+				context.getJpaMetamodel()
+		);
+
+		context.registerEmbeddableType( embeddableType, component);
+
+		return embeddableType;
+	}
+
+	private static <Y> EmbeddableTypeImpl<Y> dynamicEmbeddableType(MetadataContext context, Component component) {
+		final EmbeddableTypeImpl<Y> embeddableType = new EmbeddableTypeImpl<>(
+				context.getJavaTypeRegistry().getDescriptor( java.util.Map.class ),
+				true,
+				context.getJpaMetamodel()
+		);
+
+		context.registerComponentByEmbeddable( embeddableType, component);
+
+		final EmbeddableTypeImpl.InFlightAccess<Y> inFlightAccess = embeddableType.getInFlightAccess();
+		for ( Property property : component.getProperties() ) {
+			final PersistentAttribute<Y, Y> attribute = buildAttribute( embeddableType, property, context);
+			if ( attribute != null ) {
+				inFlightAccess.addAttribute( attribute );
+			}
+		}
+		inFlightAccess.finishUp();
+
+		return embeddableType;
+	}
+
+	private static <Y> DomainType<Y> entityDomainType(ValueContext typeContext, MetadataContext context) {
+		final org.hibernate.type.Type type = typeContext.getHibernateValue().getType();
+		if ( type instanceof EntityType ) {
+			final EntityType entityType = (EntityType) type;
+			final IdentifiableDomainType<Y> domainType =
+					context.locateIdentifiableType( entityType.getAssociatedEntityName() );
+			if ( domainType == null ) {
+				// Due to the use of generics, it can happen that a mapped super class uses a type
+				// for an attribute that is not a managed type. Since this case is not specifically mentioned
+				// in the Jakarta Persistence spec, we handle this by returning a "dummy" entity type
+				final JavaType<Y> domainJavaType = context.getJavaTypeRegistry().resolveDescriptor(
+						typeContext.getJpaBindableType()
+				);
+				return new EntityTypeImpl<>(domainJavaType, context.getJpaMetamodel());
+			}
+			return domainType;
+		}
+
+		assert type instanceof AnyType;
+		final AnyType anyType = (AnyType) type;
+		final JavaType<Y> baseJtd = context.getTypeConfiguration()
+				.getJavaTypeRegistry()
+				.resolveDescriptor( anyType.getReturnedClass() );
+		return new AnyMappingDomainTypeImpl<>(
+				(Any) typeContext.getHibernateValue(),
+				anyType,
+				baseJtd,
+				context.getRuntimeModelCreationContext().getSessionFactory().getMappingMetamodel()
+		);
+	}
+
+	private static <Y> DomainType<Y> basicDomainType(ValueContext typeContext, MetadataContext context) {
+		if ( typeContext.getJpaBindableType().isPrimitive() ) {
+			// Special BasicDomainType necessary for primitive types in the JPA metamodel
+			@SuppressWarnings("unchecked")
+			final Class<Y> type = (Class<Y>) typeContext.getJpaBindableType();
+			return context.resolveBasicType(type);
+		}
+		else {
+			@SuppressWarnings("unchecked")
+			DomainType<Y> type = (DomainType<Y>) typeContext.getHibernateValue().getType();
+			return type;
 		}
 	}
 

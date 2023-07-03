@@ -15,7 +15,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 
 /**
- * Extension to the JPA {@link IdentifiableType} contract
+ * Extension to the JPA {@link IdentifiableType} contract.
  *
  * @author Steve Ebersole
  */

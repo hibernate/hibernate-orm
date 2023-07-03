@@ -10,7 +10,6 @@ import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -32,7 +31,6 @@ public class EmbeddedSqmPathSource<J>
 
 	@Override
 	public EmbeddableDomainType<J> getSqmPathType() {
-		//noinspection unchecked
 		return (EmbeddableDomainType<J>) super.getSqmPathType();
 	}
 
@@ -48,15 +46,8 @@ public class EmbeddedSqmPathSource<J>
 
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
-		final NavigablePath navigablePath;
-		if ( intermediatePathSource == null ) {
-			navigablePath = lhs.getNavigablePath().append( getPathName() );
-		}
-		else {
-			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
-		}
 		return new SqmEmbeddedValuedSimplePath<>(
-				navigablePath,
+				PathHelper.append( lhs, this, intermediatePathSource ),
 				pathModel,
 				lhs,
 				lhs.nodeBuilder()

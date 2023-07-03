@@ -31,9 +31,9 @@ public class SetAttributeImpl<X, E> extends AbstractPluralAttribute<X, Set<E>, E
 	}
 
 	@Override
-	public SqmAttributeJoin createSqmJoin(
-			SqmFrom lhs, SqmJoinType joinType, String alias, boolean fetched, SqmCreationState creationState) {
-		return new SqmSetJoin(
+	public SqmAttributeJoin<X, E> createSqmJoin(
+			SqmFrom<?,X> lhs, SqmJoinType joinType, String alias, boolean fetched, SqmCreationState creationState) {
+		return new SqmSetJoin<>(
 				lhs,
 				this,
 				alias,

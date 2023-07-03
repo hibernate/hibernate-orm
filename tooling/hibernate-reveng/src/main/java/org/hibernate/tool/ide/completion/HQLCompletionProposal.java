@@ -189,5 +189,12 @@ public class HQLCompletionProposal {
 	}
 	
 
+	public int aliasRefKind() { return ALIAS_REF; }
+	public int entityNameKind() { return ENTITY_NAME; }
+	public int propertyKind() { return PROPERTY; }
+	public int keywordKind() { return KEYWORD; }
+	public int functionKind() { return FUNCTION; }
+	
+	
 	
 }

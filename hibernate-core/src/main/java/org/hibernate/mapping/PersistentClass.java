@@ -1003,12 +1003,14 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		for ( Selectable columnOrFormula : value.getSelectables() ) {
 			if ( !columnOrFormula.isFormula() ) {
 				Column col = (Column) columnOrFormula;
-				if ( !distinctColumns.add( col.getName() ) ) {
-					throw new MappingException(
-							"Column '" + col.getName()
-									+ "' is duplicated in mapping for entity '" + getEntityName()
-									+ "' (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
-					);
+				if (col.getValue().getColumnUpdateability()[0] || col.getValue().getColumnInsertability()[0]) {
+					if (!distinctColumns.add(col.getName())) {
+						throw new MappingException(
+								"Column '" + col.getName()
+										+ "' is duplicated in mapping for entity '" + getEntityName()
+										+ "' (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
+						);
+					}
 				}
 			}
 		}

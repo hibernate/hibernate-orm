@@ -260,6 +260,7 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -2908,25 +2909,41 @@ public abstract class AbstractEntityPersister
 				LOG.debugf( " Version select: %s", sqlVersionSelectString );
 			}
 
-			if ( insertCoordinator.getStaticInsertGroup() != null ) {
-				insertCoordinator.getStaticInsertGroup().forEachOperation( (tablePosition, mutation) -> {
-					if ( mutation instanceof JdbcOperation ) {
-						LOG.debugf( " Insert (%s): %s", tablePosition, ( (JdbcOperation) mutation ).getSqlString() );
+			{
+				final MutationOperationGroup staticInsertGroup = insertCoordinator.getStaticInsertGroup();
+				if ( staticInsertGroup != null ) {
+					for ( int i = 0; i < staticInsertGroup.getNumberOfOperations(); i++ ) {
+						final MutationOperation mutation = staticInsertGroup.getOperation( i );
+						if ( mutation instanceof JdbcOperation ) {
+							LOG.debugf( " Insert (%s): %s", i, ( (JdbcOperation) mutation ).getSqlString() );
+						}
 					}
-				} );
+				}
 			}
 
-			updateCoordinator.getStaticUpdateGroup().forEachOperation( (tablePosition, mutation) -> {
-				if ( mutation instanceof JdbcOperation ) {
-					LOG.debugf( " Update (%s): %s", tablePosition, ( (JdbcOperation) mutation ).getSqlString() );
+			{
+				final MutationOperationGroup staticUpdateGroup = updateCoordinator.getStaticUpdateGroup();
+				if ( staticUpdateGroup != null ) {
+					for ( int i = 0; i < staticUpdateGroup.getNumberOfOperations(); i++ ) {
+						final MutationOperation mutation = staticUpdateGroup.getOperation( i );
+						if ( mutation instanceof JdbcOperation ) {
+							LOG.debugf( " Update (%s): %s", i, ( (JdbcOperation) mutation ).getSqlString() );
+						}
+					}
 				}
-			} );
+			}
 
-			deleteCoordinator.getStaticDeleteGroup().forEachOperation( (tablePosition, mutation) -> {
-				if ( mutation instanceof JdbcOperation ) {
-					LOG.debugf( " Delete (%s): %s", tablePosition, ( (JdbcOperation) mutation ).getSqlString() );
+			{
+				final MutationOperationGroup staticDeleteGroup = deleteCoordinator.getStaticDeleteGroup();
+				if ( staticDeleteGroup != null ) {
+					for ( int i = 0; i < staticDeleteGroup.getNumberOfOperations(); i++ ) {
+						final MutationOperation mutation = staticDeleteGroup.getOperation( i );
+						if ( mutation instanceof JdbcOperation ) {
+							LOG.debugf( " Delete (%s): %s", i, ( (JdbcOperation) mutation ).getSqlString() );
+						}
+					}
 				}
-			} );
+			}
 		}
 	}
 
@@ -6052,12 +6069,14 @@ public abstract class AbstractEntityPersister
 	}
 
 	private String[] extractSqlStrings(MutationOperationGroup operationGroup) {
-		final String[] strings = new String[operationGroup.getNumberOfOperations()];
-		operationGroup.forEachOperation( (tableIndex, mutation) -> {
-			if ( mutation instanceof JdbcOperation ) {
-				strings[tableIndex] = ( (JdbcOperation) mutation ).getSqlString();
+		final int numberOfOperations = operationGroup.getNumberOfOperations();
+		final String[] strings = new String[numberOfOperations];
+		for ( int i = 0; i < numberOfOperations; i++ ) {
+			final MutationOperation operation = operationGroup.getOperation( i );
+			if ( operation instanceof JdbcOperation ) {
+				strings[i] = ( (JdbcOperation) operation ).getSqlString();
 			}
-		} );
+		}
 		return strings;
 	}
 

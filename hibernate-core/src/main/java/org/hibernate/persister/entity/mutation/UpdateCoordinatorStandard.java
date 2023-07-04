@@ -22,6 +22,7 @@ import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.internal.NoBatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
@@ -52,7 +53,6 @@ import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
@@ -1639,7 +1639,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					.buildModelMutationTranslator( updateBuilder.buildMutation(), factory() )
 					.translate( null, MutationQueryOptions.INSTANCE );
 
-			return new MutationOperationGroupSingle( MutationType.UPDATE, entityPersister(), jdbcMutation );
+			return MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, entityPersister(), jdbcMutation );
 		}
 	}
 

@@ -9,6 +9,7 @@ package org.hibernate.persister.collection.mutation;
 import java.util.Collection;
 
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -16,9 +17,9 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED;
@@ -32,7 +33,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 	private final OperationProducer operationProducer;
 	private final MutationExecutorService mutationExecutorService;
 
-	private MutationOperationGroupSingle[] operationGroups;
+	private MutationOperationGroup[] operationGroups;
 
 	/**
 	 * Creates the coordinator.
@@ -74,7 +75,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 			);
 		}
 
-		MutationOperationGroupSingle[] operationGroups = this.operationGroups;
+		MutationOperationGroup[] operationGroups = this.operationGroups;
 		if ( operationGroups == null ) {
 			// delayed creation of the operation-group
 			operationGroups = this.operationGroups = buildOperationGroups();
@@ -82,7 +83,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 
 		final ForeignKeyDescriptor fkDescriptor = mutationTarget.getTargetPart().getKeyDescriptor();
 
-		for ( MutationOperationGroupSingle operationGroup : operationGroups ) {
+		for ( MutationOperationGroup operationGroup : operationGroups ) {
 			final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 					() -> null,
 					operationGroup,
@@ -113,11 +114,11 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 		}
 	}
 
-	private MutationOperationGroupSingle[] buildOperationGroups() {
+	private MutationOperationGroup[] buildOperationGroups() {
 		final Collection<EntityMappingType> subMappingTypes = mutationTarget.getElementPersister()
 				.getRootEntityDescriptor()
 				.getSubMappingTypes();
-		final MutationOperationGroupSingle[] operationGroups = new MutationOperationGroupSingle[subMappingTypes.size()];
+		final MutationOperationGroup[] operationGroups = new MutationOperationGroup[subMappingTypes.size()];
 		int i = 0;
 		for ( EntityMappingType subMappingType : subMappingTypes ) {
 			operationGroups[i++] = buildOperationGroup( subMappingType.getEntityPersister() );
@@ -125,7 +126,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 		return operationGroups;
 	}
 
-	private MutationOperationGroupSingle buildOperationGroup(EntityPersister elementPersister) {
+	private MutationOperationGroup buildOperationGroup(EntityPersister elementPersister) {
 		assert mutationTarget.getTargetPart() != null;
 		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
@@ -148,7 +149,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 				)
 		);
 
-		return new MutationOperationGroupSingle(
+		return MutationOperationGroupFactory.singleOperation(
 				MutationType.DELETE,
 				mutationTarget,
 				operationProducer.createOperation( tableReference )

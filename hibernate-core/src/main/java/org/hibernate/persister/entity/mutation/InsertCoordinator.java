@@ -114,7 +114,8 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	}
 
 	protected void preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
-		final EntityMetamodel entityMetamodel = entityPersister().getEntityMetamodel();
+		final AbstractEntityPersister persister = entityPersister();
+		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 		if ( entityMetamodel.hasPreInsertGeneratedValues() ) {
 			final Generator[] generators = entityMetamodel.getGenerators();
 			for ( int i = 0; i < generators.length; i++ ) {
@@ -123,7 +124,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 						&& !generator.generatedOnExecution()
 						&& generator.generatesOnInsert() ) {
 					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], INSERT );
-					entityPersister().setPropertyValue( entity, i, values[i] );
+					persister.setPropertyValue( entity, i, values[i] );
 				}
 			}
 		}
@@ -214,12 +215,12 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			}
 		}
 
-		for ( int position = 0; position < mutationGroup.getNumberOfOperations(); position++ ) {
-			final MutationOperation jdbcOperation = mutationGroup.getOperation( position );
-			if ( id == null )  {
-				assert entityPersister().getIdentityInsertDelegate() != null;
-			}
-			else {
+		if ( id == null ) {
+			assert entityPersister().getIdentityInsertDelegate() != null;
+		}
+		else {
+			for ( int position = 0; position < mutationGroup.getNumberOfOperations(); position++ ) {
+				final MutationOperation jdbcOperation = mutationGroup.getOperation( position );
 				final EntityTableMapping tableDetails = (EntityTableMapping) jdbcOperation.getTableDetails();
 				breakDownJdbcValue( id, session, jdbcValueBindings, tableDetails );
 			}

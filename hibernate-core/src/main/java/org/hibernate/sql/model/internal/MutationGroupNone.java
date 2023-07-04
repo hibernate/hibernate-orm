@@ -9,6 +9,7 @@ package org.hibernate.sql.model.internal;
 import java.util.Locale;
 import java.util.function.BiConsumer;
 
+import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutationGroup;
@@ -55,7 +56,12 @@ public class MutationGroupNone implements MutationGroup {
 	}
 
 	@Override
-	public void forEachTableMutation(BiConsumer<Integer, TableMutation> action) {
+	public <O extends MutationOperation, M extends TableMutation<O>> void forEachTableMutation(BiConsumer<Integer, M> action) {
+	}
+
+	@Override
+	public TableMutation getTableMutation(int i) {
+		return null;
 	}
 
 	@Override

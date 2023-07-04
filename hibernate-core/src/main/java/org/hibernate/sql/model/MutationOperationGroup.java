@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.model;
 
+import org.hibernate.engine.jdbc.mutation.internal.EntityMutationOperationGroup;
+
 /**
  * Group of {@link MutationOperation} references for a specific
  * logical operation (target + type)
@@ -22,7 +24,7 @@ public interface MutationOperationGroup {
 	/**
 	 * The model-part being mutated
 	 */
-	MutationTarget<?> getMutationTarget();
+	MutationTarget getMutationTarget();
 
 	/**
 	 * Number of operations in this group
@@ -48,4 +50,12 @@ public interface MutationOperationGroup {
 	 */
 	MutationOperation getOperation(String tableName);
 
+	/**
+	 * Attempt to cast to the frequently uses subtype EntityMutationOperationGroup;
+	 * returns null if this is not possible.
+	 * @return
+	 */
+	default EntityMutationOperationGroup asEntityMutationOperationGroup() {
+		return null;
+	}
 }

@@ -20,6 +20,7 @@ import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -74,7 +75,6 @@ import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableUpdate;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
@@ -229,7 +229,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> new BasicBatchKey( getNavigableRole() + "#INDEX" ),
-				new MutationOperationGroupSingle( MutationType.UPDATE, this, updateRowOperation ),
+				MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, this, updateRowOperation ),
 				session
 		);
 

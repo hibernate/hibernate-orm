@@ -51,7 +51,19 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
  * @author Emmanuel Bernard
  */
 @SupportedAnnotationTypes({
-		"jakarta.persistence.Entity", "jakarta.persistence.MappedSuperclass", "jakarta.persistence.Embeddable"
+		Constants.ENTITY,
+		Constants.MAPPED_SUPERCLASS,
+		Constants.EMBEDDABLE,
+		Constants.HQL,
+		Constants.SQL,
+		Constants.NAMED_QUERY,
+		Constants.NAMED_NATIVE_QUERY,
+		Constants.NAMED_ENTITY_GRAPH,
+		Constants.SQL_RESULT_SET_MAPPING,
+		Constants.HIB_FETCH_PROFILE,
+		Constants.HIB_FILTER_DEF,
+		Constants.HIB_NAMED_QUERY,
+		Constants.HIB_NAMED_NATIVE_QUERY
 })
 @SupportedOptions({
 		JPAMetaModelEntityProcessor.DEBUG_OPTION,

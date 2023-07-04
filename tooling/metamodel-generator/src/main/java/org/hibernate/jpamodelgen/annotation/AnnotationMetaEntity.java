@@ -24,19 +24,12 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 
-import org.antlr.v4.runtime.ANTLRErrorListener;
-import org.antlr.v4.runtime.BailErrorStrategy;
-import org.antlr.v4.runtime.DefaultErrorStrategy;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.atn.ATNConfigSet;
-import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.dfa.DFA;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.grammars.hql.HqlLexer;
-import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.model.ImportContext;
@@ -47,8 +40,10 @@ import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.NullnessUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
-import org.hibernate.query.hql.internal.HqlParseTreeBuilder;
+import org.hibernate.jpamodelgen.validation.ProcessorSessionFactory;
+import org.hibernate.jpamodelgen.validation.Validation;
 
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 import static org.hibernate.jpamodelgen.util.TypeUtils.determineAnnotationSpecifiedAccessType;
@@ -397,7 +392,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 			checkParameters( method, paramNames, mirror, hql );
 			if ( !isNative ) {
-				checkHqlSyntax( method, mirror, hql );
+//				checkHqlSyntax( method, mirror, hql );
+				Validation.validate(
+						hql,
+						false,
+						emptySet(), emptySet(),
+						new ErrorHandler( method, mirror, hql ),
+						ProcessorSessionFactory.create( context.getProcessingEnvironment() )
+				);
 			}
 		}
 	}
@@ -412,60 +414,88 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private void checkHqlSyntax(ExecutableElement method, AnnotationMirror mirror, String queryString) {
-		ANTLRErrorListener errorListener = new ANTLRErrorListener() {
-			@Override
-			public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String message, RecognitionException e) {
-				displayError( method, mirror, "illegal HQL syntax - "
-						+ prettifyAntlrError( offendingSymbol, line, charPositionInLine, message, e, queryString, false ) );
-			}
+//	private void checkHqlSyntax(ExecutableElement method, AnnotationMirror mirror, String queryString) {
+//		final ANTLRErrorListener errorListener = new ErrorHandler( method, mirror, queryString );
+//		final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( queryString );
+//		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( queryString, hqlLexer );
+//		hqlLexer.addErrorListener( errorListener );
+//		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
+//		hqlParser.removeErrorListeners();
+//		hqlParser.addErrorListener( errorListener );
+//		hqlParser.setErrorHandler( new BailErrorStrategy() );
+//
+//		try {
+//			hqlParser.statement();
+//		}
+//		catch ( ParseCancellationException e) {
+//			// reset the input token stream and parser state
+//			hqlLexer.reset();
+//			hqlParser.reset();
+//
+//			// fall back to LL(k)-based parsing
+//			hqlParser.getInterpreter().setPredictionMode( PredictionMode.LL );
+//			hqlParser.setErrorHandler( new DefaultErrorStrategy() );
+//
+//			hqlParser.statement();
+//		}
+//	}
 
-			@Override
-			public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
-			}
-
-			@Override
-			public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {
-			}
-
-			@Override
-			public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
-			}
-		};
-
-		final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( queryString );
-		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( queryString, hqlLexer );
-		hqlLexer.addErrorListener( errorListener );
-		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
-		hqlParser.removeErrorListeners();
-		hqlParser.addErrorListener( errorListener );
-		hqlParser.setErrorHandler( new BailErrorStrategy() );
-
-		try {
-			hqlParser.statement();
-		}
-		catch ( ParseCancellationException e) {
-			// reset the input token stream and parser state
-			hqlLexer.reset();
-			hqlParser.reset();
-
-			// fall back to LL(k)-based parsing
-			hqlParser.getInterpreter().setPredictionMode( PredictionMode.LL );
-			hqlParser.setErrorHandler( new DefaultErrorStrategy() );
-
-			hqlParser.statement();
-		}
-	}
-
-	private void displayError(ExecutableElement method, String message) {
+	private void displayError(Element method, String message) {
 		context.getProcessingEnvironment().getMessager()
 				.printMessage( Diagnostic.Kind.ERROR, message, method );
 	}
-	private void displayError(ExecutableElement method, AnnotationMirror mirror, String message) {
+	private void displayError(Element method, AnnotationMirror mirror, String message) {
 		context.getProcessingEnvironment().getMessager()
 				.printMessage( Diagnostic.Kind.ERROR, message, method, mirror,
 						mirror.getElementValues().entrySet().stream()
 								.filter( entry -> entry.getKey().getSimpleName().toString().equals("value") )
 								.map(Map.Entry::getValue).findAny().orElseThrow() );
+	}
+
+	private class ErrorHandler implements Validation.Handler {
+		private final ExecutableElement method;
+		private final AnnotationMirror mirror;
+		private final String queryString;
+		private int errorcount;
+
+		public ErrorHandler(ExecutableElement method, AnnotationMirror mirror, String queryString) {
+			this.method = method;
+			this.mirror = mirror;
+			this.queryString = queryString;
+		}
+
+		@Override
+		public void error(int start, int end, String message) {
+			errorcount++;
+			displayError( method, mirror, message );
+		}
+
+		@Override
+		public void warn(int start, int end, String message) {
+		}
+
+		@Override
+		public int getErrorCount() {
+			return errorcount;
+		}
+
+		@Override
+		public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String message, RecognitionException e) {
+			errorcount++;
+			displayError( method, mirror, "illegal HQL syntax - "
+					+ prettifyAntlrError( offendingSymbol, line, charPositionInLine, message, e, queryString, false ) );
+		}
+
+		@Override
+		public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
+		}
+
+		@Override
+		public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {
+		}
+
+		@Override
+		public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
+		}
 	}
 }

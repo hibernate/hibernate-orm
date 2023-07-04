@@ -207,6 +207,7 @@ public class MappingModelCreationHelper {
 
 		final FetchTiming fetchTiming;
 		final FetchStyle fetchStyle;
+		final boolean partitioned;
 		if ( declaringType instanceof EmbeddableMappingType ) {
 			if ( bootProperty.isLazy() ) {
 				MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
@@ -217,10 +218,12 @@ public class MappingModelCreationHelper {
 			}
 			fetchTiming = FetchTiming.IMMEDIATE;
 			fetchStyle = FetchStyle.JOIN;
+			partitioned = value.isPartitionKey() && !( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping().isVirtual();
 		}
 		else {
 			fetchTiming = bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
 			fetchStyle = bootProperty.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN;
+			partitioned = value.isPartitionKey();
 		}
 
 		return new BasicAttributeMapping(
@@ -244,7 +247,7 @@ public class MappingModelCreationHelper {
 				nullable,
 				insertable,
 				updateable,
-				value.isPartitionKey(),
+				partitioned,
 				attrType,
 				declaringType,
 				propertyAccess

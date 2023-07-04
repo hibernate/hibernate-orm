@@ -39,6 +39,7 @@ import org.hibernate.LazyInitializationException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.StaleObjectStateException;
@@ -3926,20 +3927,29 @@ public abstract class AbstractEntityPersister
 			// let this take precedence if defined, since it works for
 			// assigned identifiers
 			final Object version = getVersion( entity );
-			final Boolean result = versionMapping.getUnsavedStrategy().isUnsaved( version );
-			if ( result != null ) {
-				if ( result && version == null && session.getPersistenceContext().hasLoadContext() ) {
-					// check if we're currently loading this entity instance, the version
-					// will be null but the entity cannot be considered transient
-					final EntityKey entityKey = new EntityKey( id, this );
-					final LoadingEntityEntry loadingEntityEntry = session.getPersistenceContext()
-							.getLoadContexts()
-							.findLoadingEntityEntry( entityKey );
-					if ( loadingEntityEntry != null && loadingEntityEntry.getEntityInstance() == entity ) {
-						return false;
+			final Boolean isUnsaved = versionMapping.getUnsavedStrategy().isUnsaved( version );
+			if ( isUnsaved != null ) {
+				if ( isUnsaved  ) {
+					if ( version == null && session.getPersistenceContext().hasLoadContext() ) {
+						// check if we're currently loading this entity instance, the version
+						// will be null but the entity cannot be considered transient
+						final LoadingEntityEntry loadingEntityEntry = session.getPersistenceContext()
+								.getLoadContexts()
+								.findLoadingEntityEntry( new EntityKey( id, this ) );
+						if ( loadingEntityEntry != null && loadingEntityEntry.getEntityInstance() == entity ) {
+							return false;
+						}
+					}
+					final Boolean unsaved = identifierMapping.getUnsavedStrategy().isUnsaved( id );
+					if ( unsaved != null && !unsaved ) {
+						throw new PropertyValueException(
+								"Detached entity with generated id '" + id + "' has an uninitialized version value '" + version + "'",
+								getEntityName(),
+								getVersionColumnName()
+						);
 					}
 				}
-				return result;
+				return isUnsaved;
 			}
 		}
 

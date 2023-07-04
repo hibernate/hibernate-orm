@@ -12,12 +12,13 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 /**
@@ -26,8 +27,8 @@ import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinator {
 	private final RowMutationOperations rowMutationOperations;
 
-	private MutationOperationGroupSingle deleteOperationGroup;
-	private MutationOperationGroupSingle insertOperationGroup;
+	private MutationOperationGroup deleteOperationGroup;
+	private MutationOperationGroup insertOperationGroup;
 
 	public UpdateRowsCoordinatorOneToMany(
 			CollectionMutationTarget mutationTarget,
@@ -58,7 +59,7 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 			return;
 		}
 
-		final MutationOperationGroupSingle operationGroup = resolveDeleteGroup();
+		final MutationOperationGroup operationGroup = resolveDeleteGroup();
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE-DELETE" ),
 				operationGroup,
@@ -96,12 +97,12 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 		}
 	}
 
-	private MutationOperationGroupSingle resolveDeleteGroup() {
+	private MutationOperationGroup resolveDeleteGroup() {
 		if ( deleteOperationGroup == null ) {
 			final JdbcMutationOperation operation = rowMutationOperations.getDeleteRowOperation();
 			assert operation != null;
 
-			deleteOperationGroup = new MutationOperationGroupSingle( MutationType.DELETE, getMutationTarget(), operation );
+			deleteOperationGroup = MutationOperationGroupFactory.singleOperation( MutationType.DELETE, getMutationTarget(), operation );
 		}
 
 		return deleteOperationGroup;
@@ -115,7 +116,7 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 			return -1;
 		}
 
-		final MutationOperationGroupSingle operationGroup = resolveInsertGroup();
+		final MutationOperationGroup operationGroup = resolveInsertGroup();
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> new BasicBatchKey( getMutationTarget().getRolePath() + "#UPDATE-INSERT" ),
 				operationGroup,
@@ -154,12 +155,12 @@ public class UpdateRowsCoordinatorOneToMany extends AbstractUpdateRowsCoordinato
 		}
 	}
 
-	private MutationOperationGroupSingle resolveInsertGroup() {
+	private MutationOperationGroup resolveInsertGroup() {
 		if ( insertOperationGroup == null ) {
 			final JdbcMutationOperation operation = rowMutationOperations.getInsertRowOperation();
 			assert operation != null;
 
-			insertOperationGroup = new MutationOperationGroupSingle( MutationType.INSERT, getMutationTarget(), operation );
+			insertOperationGroup = MutationOperationGroupFactory.singleOperation( MutationType.INSERT, getMutationTarget(), operation );
 		}
 
 		return insertOperationGroup;

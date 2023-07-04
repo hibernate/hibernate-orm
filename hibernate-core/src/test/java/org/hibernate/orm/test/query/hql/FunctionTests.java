@@ -1154,6 +1154,7 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(MySQLDialect.class)
 	public void testJpqlFunctionSyntax(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1162,9 +1163,9 @@ public class FunctionTests {
 					assertThat( session.createQuery("select 1 where function('lower','HIBERNATE') = 'hibernate'", Integer.class).getSingleResult(),
 							equalTo(1) );
 					assertThat( session.createQuery("select function('current_user')", String.class).getSingleResult().toLowerCase(),
-							isOneOf("hibernate_orm_test", "hibernateormtest", "sa") );
+							isOneOf("hibernate_orm_test", "hibernateormtest", "sa", "hibernateormtest@%", "hibernate_orm_test@%", "root@%") );
 					assertThat( session.createQuery("select lower(function('current_user'))", String.class).getSingleResult(),
-							isOneOf("hibernate_orm_test", "hibernateormtest", "sa") );
+							isOneOf("hibernate_orm_test", "hibernateormtest", "sa", "hibernateormtest@%", "hibernate_orm_test@%", "root@%") );
 					session.createQuery("select 1 where function('current_user') = 'hibernate_orm_test'", Integer.class).getSingleResultOrNull();
 				}
 		);

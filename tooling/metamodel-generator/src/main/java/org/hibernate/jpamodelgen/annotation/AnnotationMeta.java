@@ -10,9 +10,13 @@ import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.TypeUtils;
+import org.hibernate.jpamodelgen.validation.ProcessorSessionFactory;
+import org.hibernate.jpamodelgen.validation.Validation;
 
 import javax.lang.model.element.AnnotationMirror;
 import java.util.List;
+
+import static java.util.Collections.emptySet;
 
 public abstract class AnnotationMeta implements Metamodel {
 
@@ -34,6 +38,54 @@ public abstract class AnnotationMeta implements Metamodel {
 		addAuxiliaryMembersForRepeatableAnnotation( Constants.HIB_FETCH_PROFILES, "PROFILE_" );
 		addAuxiliaryMembersForAnnotation( Constants.HIB_FILTER_DEF, "FILTER_" );
 		addAuxiliaryMembersForRepeatableAnnotation( Constants.HIB_FILTER_DEFS, "FILTER_" );
+	}
+
+	void checkNamedQueries() {
+		if ( TypeUtils.containsAnnotation( getElement(), Constants.CHECK_HQL )
+			|| TypeUtils.containsAnnotation( getElement().getEnclosingElement(), Constants.CHECK_HQL ) ) {
+			checkNamedQueriesForAnnotation( Constants.NAMED_QUERY );
+			checkNamedQueriesForRepeatableAnnotation( Constants.NAMED_QUERIES );
+			checkNamedQueriesForAnnotation( Constants.HIB_NAMED_QUERY );
+			checkNamedQueriesForRepeatableAnnotation( Constants.HIB_NAMED_QUERIES );
+		}
+
+	}
+
+	private void checkNamedQueriesForAnnotation(String annotationName) {
+		AnnotationMirror mirror = TypeUtils.getAnnotationMirror(getElement(), annotationName);
+		if ( mirror != null ) {
+			checkNamedQueriesForMirror( mirror );
+		}
+	}
+
+	private void checkNamedQueriesForRepeatableAnnotation(String annotationName) {
+		AnnotationMirror mirror = TypeUtils.getAnnotationMirror(getElement(), annotationName);
+		if ( mirror != null ) {
+			mirror.getElementValues().forEach((key, value) -> {
+				if ( key.getSimpleName().contentEquals("value") ) {
+					List<? extends AnnotationMirror> values =
+							(List<? extends AnnotationMirror>) value.getValue();
+					for ( AnnotationMirror annotationMirror : values ) {
+						checkNamedQueriesForMirror( annotationMirror );
+					}
+				}
+			});
+		}
+	}
+
+	private void checkNamedQueriesForMirror(AnnotationMirror mirror) {
+		mirror.getElementValues().forEach((key, value) -> {
+			if ( key.getSimpleName().contentEquals("query") ) {
+				String hql = value.getValue().toString();
+				Validation.validate(
+						hql,
+						false,
+						emptySet(), emptySet(),
+						new ErrorHandler( getElement(), mirror, hql, getContext()),
+						ProcessorSessionFactory.create( getContext().getProcessingEnvironment() )
+				);
+			}
+		});
 	}
 
 	private void addAuxiliaryMembersForRepeatableAnnotation(String annotationName, String prefix) {

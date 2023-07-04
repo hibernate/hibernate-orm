@@ -52,6 +52,10 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <p>
  * The method parameters must match the parameters of the HQL query,
  * either by name or by position.
+ * <p>
+ * Queries specified using this annotation are always validated by
+ * the Metamodel Generator, and so it isn't necessary to specify the
+ * {@link CheckHQL} annotation.
  *
  * @author Gavin King
  * @since 6.3

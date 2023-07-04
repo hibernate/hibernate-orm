@@ -19,29 +19,32 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
 /**
  * Indicates that a package or top-level type contains HQL or JPQL
  * queries encoded as static strings that should be validated at
- * compile time by the Hibernate Query Validator. The Query Validator
- * must be enabled as an annotation processor in the project build.
- * Otherwise, this annotation has no effect.
+ * compile time by the Metamodel Generator or Query Validator.
+ * Errors in queries are reported by the Java compiler.
  * <p>
- * Within a scope annotated {@code @CheckHQL}, any static string
- * argument to any one the methods:
+ * The Metamodel Generator or Query Validator must be enabled as an
+ * annotation processor in the project build. Otherwise, if neither
+ * is enabled, this annotation has no effect.
+ * <p>
+ * If only the Metamodel Generator is enabled, only arguments to the
+ * following annotations are validated:
+ * <ul>
+ * <li>{@link jakarta.persistence.NamedQuery#query},
+ * <li>{@link org.hibernate.annotations.NamedQuery#query}.
+ * </ul>
+ * <p>
+ * Otherwise, if the Query validator is enabled, then, within the
+ * scope annotated {@code @CheckHQL}, any static string argument to
+ * any one of the following methods is interpreted as HQL/JPQL and
+ * validated:
  * <ul>
  * <li>{@link jakarta.persistence.EntityManager#createQuery(String,Class)},
  * <li>{@link jakarta.persistence.EntityManager#createQuery(String)},
  * <li>{@link org.hibernate.Session#createSelectionQuery(String,Class)}, or
  * <li>{@link org.hibernate.Session#createMutationQuery(String)}
  * </ul>
- * or to any one of the annotation members:
- * <ul>
- * <li>{@link jakarta.persistence.NamedQuery#query},
- * <li>{@link org.hibernate.annotations.NamedQuery#query}, or
- * <li>{@link HQL#value}
- * </ul>
  * <p>
- * is interpreted as HQL/JPQL and validated. Errors in the query are
- * reported by the Java compiler.
- * <p>
- * The entity classes referred to in the queries must be annotated
+ * The entity classes referred to by the queries must be annotated
  * with basic JPA metadata annotations like {@code @Entity},
  * {@code @ManyToOne}, {@code @Embeddable}, {@code @MappedSuperclass},
  * {@code @ElementCollection}, and {@code @Access}. Metadata specified
@@ -50,7 +53,6 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * Syntax errors, unknown entity names and unknown entity member names,
  * and typing errors all result in compile-time errors.
  *
- * @see HQL#value()
  * @see jakarta.persistence.NamedQuery#query()
  * @see jakarta.persistence.EntityManager#createQuery(String,Class)
  * @see org.hibernate.Session#createSelectionQuery(String,Class)

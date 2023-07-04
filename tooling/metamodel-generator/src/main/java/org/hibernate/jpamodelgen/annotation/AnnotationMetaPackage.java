@@ -118,6 +118,8 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 
 		addAuxiliaryMembers();
 
+		checkNamedQueries();
+
 		initialized = true;
 	}
 

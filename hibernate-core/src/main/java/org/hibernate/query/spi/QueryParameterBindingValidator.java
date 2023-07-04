@@ -12,6 +12,7 @@ import java.util.Date;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.QueryArgumentException;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -80,14 +81,16 @@ public class QueryParameterBindingValidator {
 					bind,
 					temporalPrecision
 			) ) {
-				throw new IllegalArgumentException(
+				throw new QueryArgumentException(
 						String.format(
 								"Argument [%s] of type [%s] did not match parameter type [%s (%s)]",
 								bind,
 								bind.getClass().getName(),
 								parameterJavaType.getName(),
 								extractName( temporalPrecision )
-						)
+						),
+						parameterJavaType,
+						bind
 				);
 			}
 		}
@@ -104,13 +107,16 @@ public class QueryParameterBindingValidator {
 		// validate the elements...
 		for ( Object element : value ) {
 			if ( !isValidBindValue( parameterType, element, temporalType ) ) {
-				throw new IllegalArgumentException(
+				throw new QueryArgumentException(
 						String.format(
 								"Parameter value element [%s] did not match expected type [%s (%s)]",
 								element,
 								parameterType.getName(),
 								extractName( temporalType )
 						)
+						,
+						parameterType,
+						element
 				);
 			}
 		}
@@ -193,12 +199,14 @@ public class QueryParameterBindingValidator {
 			Object value,
 			TemporalType temporalType) {
 		if ( !parameterType.isArray() ) {
-			throw new IllegalArgumentException(
+			throw new QueryArgumentException(
 					String.format(
 							"Encountered array-valued parameter binding, but was expecting [%s (%s)]",
 							parameterType.getName(),
 							extractName( temporalType )
-					)
+					),
+					parameterType,
+					value
 			);
 		}
 
@@ -206,13 +214,15 @@ public class QueryParameterBindingValidator {
 			// we have a primitive array.  we validate that the actual array has the component type (type of elements)
 			// we expect based on the component type of the parameter specification
 			if ( !parameterType.getComponentType().isAssignableFrom( value.getClass().getComponentType() ) ) {
-				throw new IllegalArgumentException(
+				throw new QueryArgumentException(
 						String.format(
 								"Primitive array-valued parameter bind value type [%s] did not match expected type [%s (%s)]",
 								value.getClass().getComponentType().getName(),
 								parameterType.getName(),
 								extractName( temporalType )
-						)
+						),
+						parameterType,
+						value
 				);
 			}
 		}
@@ -222,13 +232,15 @@ public class QueryParameterBindingValidator {
 			final Object[] array = (Object[]) value;
 			for ( Object element : array ) {
 				if ( !isValidBindValue( parameterType.getComponentType(), element, temporalType ) ) {
-					throw new IllegalArgumentException(
+					throw new QueryArgumentException(
 							String.format(
 									"Array-valued parameter value element [%s] did not match expected type [%s (%s)]",
 									element,
 									parameterType.getName(),
 									extractName( temporalType )
-							)
+							),
+							parameterType,
+							array
 					);
 				}
 			}

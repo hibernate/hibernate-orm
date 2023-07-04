@@ -1,9 +1,8 @@
 package org.hibernate.orm.test.jpa.criteria;
 
-import org.hibernate.query.SemanticException;
+import org.hibernate.query.QueryArgumentException;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,7 +38,7 @@ public class ObjectParameterTypeForEmbeddableTest {
 		);
 	}
 
-	@Test @FailureExpected(reason = "This query is in my opinion not well-typed, and should be rejected")
+	@Test
 	public void testSettingParameterOfTypeObject(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -77,8 +76,8 @@ public class ObjectParameterTypeForEmbeddableTest {
 
 	@Test
 	public void testSettingParameterOfTypeWrongType(EntityManagerFactoryScope scope) {
-		SemanticException thrown = assertThrows(
-				SemanticException.class, () ->
+		QueryArgumentException thrown = assertThrows(
+				QueryArgumentException.class, () ->
 						scope.inTransaction(
 								entityManager -> {
 									final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -94,7 +93,7 @@ public class ObjectParameterTypeForEmbeddableTest {
 						)
 		);
 
-		assertThat( thrown.getMessage() ).startsWith( "Cannot compare left expression" );
+		assertThat( thrown.getMessage() ).contains( "did not match parameter type" );
 	}
 
 	@Entity(name = "TestEntity")

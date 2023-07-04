@@ -14,8 +14,6 @@ import java.util.function.Supplier;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Mutability;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.resource.beans.spi.ManagedBean;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;

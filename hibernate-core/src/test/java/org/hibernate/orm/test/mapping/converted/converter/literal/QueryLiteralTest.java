@@ -21,7 +21,6 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.query.Query;
 import org.hibernate.query.SemanticException;
-import org.hibernate.sql.ast.SqlTreeCreationException;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -29,9 +28,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;

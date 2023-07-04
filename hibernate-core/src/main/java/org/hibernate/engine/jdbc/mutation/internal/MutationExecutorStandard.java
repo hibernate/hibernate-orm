@@ -165,6 +165,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 		}
 	}
 
+	//Used by Hibernate Reactive
 	protected PreparedStatementGroup getNonBatchedStatementGroup() {
 		return nonBatchedStatementGroup;
 	}

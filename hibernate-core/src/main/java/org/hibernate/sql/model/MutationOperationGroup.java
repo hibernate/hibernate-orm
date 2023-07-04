@@ -17,6 +17,7 @@ import java.util.function.BiFunction;
  * @author Steve Ebersole
  */
 public interface MutationOperationGroup {
+
 	/**
 	 * The type of mutation (at the model-level) represented by this group.
 	 */
@@ -37,22 +38,41 @@ public interface MutationOperationGroup {
 	 *
 	 * Throws an exception if there are more than one.
 	 */
-	<O extends MutationOperation> O getSingleOperation();
+	MutationOperation getSingleOperation();
 
-	<O extends MutationOperation> List<O> getOperations();
+	/**
+	 * Gets a specific MutationOperation from the group
+	 * @param idx the index, starting from zero.
+	 * @return
+	 */
+	MutationOperation getOperation(int idx);
 
 	/**
 	 * Get the operation for a specific table.
 	 */
-	<O extends MutationOperation> O getOperation(String tableName);
+	MutationOperation getOperation(String tableName);
+
+	/**
+	 * @deprecated Will be removed - use a combination of {@link #getNumberOfOperations()} and {@link #getOperation(int)}
+	 * to iterate the list of operations.
+	 */
+	@Deprecated(forRemoval = true)
+	List<MutationOperation> getOperations();
 
 	/**
 	 * Visit each operation
+	 * @deprecated Will be removed - use a combination of {@link #getNumberOfOperations()} and {@link #getOperation(int)}
+	 * to iterate the list of operations.
 	 */
-	<O extends MutationOperation> void forEachOperation(BiConsumer<Integer, O> action);
+	@Deprecated(forRemoval = true)
+	void forEachOperation(BiConsumer<Integer, MutationOperation> action);
 
 	/**
 	 * Test whether any operations match the condition
+	 * @deprecated Will be removed - use a combination of {@link #getNumberOfOperations()} and {@link #getOperation(int)}
+	 * to iterate the list of operations.
 	 */
-	<O extends MutationOperation> boolean hasMatching(BiFunction<Integer, O, Boolean> matcher);
+	@Deprecated(forRemoval = true)
+	boolean hasMatching(BiFunction<Integer, MutationOperation, Boolean> matcher);
+
 }

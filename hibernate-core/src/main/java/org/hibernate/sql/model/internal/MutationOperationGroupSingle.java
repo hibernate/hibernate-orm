@@ -15,6 +15,7 @@ import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutationGroup;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
@@ -22,14 +23,15 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
  * @author Steve Ebersole
  */
 public class MutationOperationGroupSingle extends AbstractMutationOperationGroup {
-	private final MutationOperation operation;
 
-	public MutationOperationGroupSingle(MutationType mutationType, MutationTarget<?> mutationTarget, MutationOperation operation) {
+	private final JdbcMutationOperation operation;
+
+	public MutationOperationGroupSingle(MutationType mutationType, MutationTarget<?> mutationTarget, JdbcMutationOperation operation) {
 		super( mutationType, mutationTarget );
 		this.operation = operation;
 	}
 
-	public MutationOperationGroupSingle(MutationGroup mutationGroup, MutationOperation operation) {
+	public MutationOperationGroupSingle(MutationGroup mutationGroup, JdbcMutationOperation operation) {
 		this( mutationGroup.getMutationType(), mutationGroup.getMutationTarget(), operation );
 	}
 
@@ -39,19 +41,23 @@ public class MutationOperationGroupSingle extends AbstractMutationOperationGroup
 	}
 
 	@Override
-	public <O extends MutationOperation> O getSingleOperation() {
-		//noinspection unchecked
-		return (O) operation;
+	public JdbcMutationOperation getSingleOperation() {
+		return operation;
 	}
 
 	@Override
-	public <O extends MutationOperation> List<O> getOperations() {
-		//noinspection unchecked
-		return Collections.singletonList( (O) operation );
+	public MutationOperation getOperation(int idx) {
+		if ( idx != 0 ) throw new IndexOutOfBoundsException( idx );
+		return operation;
 	}
 
 	@Override
-	public <O extends MutationOperation> O getOperation(String tableName) {
+	public List<MutationOperation> getOperations() {
+		return Collections.singletonList( operation );
+	}
+
+	@Override
+	public MutationOperation getOperation(String tableName) {
 		if ( !tableName.equals( operation.getTableDetails().getTableName() ) ) {
 			MODEL_MUTATION_LOGGER.debugf(
 					"Unexpected table name mismatch : `%s` - `%s`",
@@ -60,19 +66,17 @@ public class MutationOperationGroupSingle extends AbstractMutationOperationGroup
 			);
 		}
 
-		//noinspection unchecked
-		return (O) operation;
+		return operation;
 	}
 
 	@Override
-	public <O extends MutationOperation> void forEachOperation(BiConsumer<Integer, O> action) {
-		//noinspection unchecked
-		action.accept( 0, (O) operation );
+	public void forEachOperation(BiConsumer<Integer, MutationOperation> action) {
+		action.accept( 0, operation );
 	}
 
 	@Override
-	public <O extends MutationOperation> boolean hasMatching(BiFunction<Integer, O, Boolean> matcher) {
-		//noinspection unchecked
-		return matcher.apply( 0, (O) operation );
+	public boolean hasMatching(BiFunction<Integer, MutationOperation, Boolean> matcher) {
+		return matcher.apply( 0, operation );
 	}
+
 }

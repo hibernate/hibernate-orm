@@ -23,6 +23,7 @@ import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
@@ -99,12 +100,13 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 
 		final MutationExecutor mutationExecutor = executor( session, operationGroup );
 
-		operationGroup.forEachOperation( (position, mutation) -> {
+		for ( int i = 0; i < operationGroup.getNumberOfOperations(); i++ ) {
+			final MutationOperation mutation = operationGroup.getOperation( i );
 			if ( mutation != null ) {
 				final String tableName = mutation.getTableDetails().getTableName();
 				mutationExecutor.getPreparedStatementDetails( tableName );
 			}
-		} );
+		}
 
 		applyLocking( null, loadedState, mutationExecutor, session );
 
@@ -215,10 +217,12 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 			MutationExecutor mutationExecutor,
 			MutationOperationGroup operationGroup,
 			SharedSessionContractImplementor session) {
+
 		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 		final EntityRowIdMapping rowIdMapping = entityPersister().getRowIdMapping();
 
-		operationGroup.forEachOperation( (position, jdbcMutation) -> {
+		for ( int position = 0; position < operationGroup.getNumberOfOperations(); position++ ) {
+			final MutationOperation jdbcMutation = operationGroup.getOperation( position );
 			final EntityTableMapping tableDetails = (EntityTableMapping) jdbcMutation.getTableDetails();
 			breakDownIdJdbcValues( id, rowId, session, jdbcValueBindings, rowIdMapping, tableDetails );
 			final PreparedStatementDetails statementDetails = mutationExecutor.getPreparedStatementDetails( tableDetails.getTableName() );
@@ -227,7 +231,7 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 				//noinspection resource
 				statementDetails.resolveStatement();
 			}
-		} );
+		}
 	}
 
 	private static void breakDownIdJdbcValues(
@@ -281,11 +285,12 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 
 		final MutationExecutor mutationExecutor = executor( session, operationGroupToUse );
 
-		staticOperationGroup.forEachOperation( (position, mutation) -> {
+		for ( int position = 0; position < staticOperationGroup.getNumberOfOperations(); position++ ) {
+			final MutationOperation mutation = staticOperationGroup.getOperation( position );
 			if ( mutation != null ) {
 				mutationExecutor.getPreparedStatementDetails( mutation.getTableDetails().getTableName() );
 			}
-		} );
+		}
 
 		if ( applyVersion ) {
 			applyLocking( version, null, mutationExecutor, session );

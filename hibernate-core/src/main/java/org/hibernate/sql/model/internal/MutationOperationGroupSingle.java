@@ -6,11 +6,6 @@
  */
 package org.hibernate.sql.model.internal;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
@@ -26,7 +21,10 @@ public class MutationOperationGroupSingle extends AbstractMutationOperationGroup
 
 	private final JdbcMutationOperation operation;
 
-	public MutationOperationGroupSingle(MutationType mutationType, MutationTarget<?> mutationTarget, JdbcMutationOperation operation) {
+	public MutationOperationGroupSingle(
+			MutationType mutationType,
+			MutationTarget<?> mutationTarget,
+			JdbcMutationOperation operation) {
 		super( mutationType, mutationTarget );
 		this.operation = operation;
 	}
@@ -47,13 +45,10 @@ public class MutationOperationGroupSingle extends AbstractMutationOperationGroup
 
 	@Override
 	public MutationOperation getOperation(int idx) {
-		if ( idx != 0 ) throw new IndexOutOfBoundsException( idx );
+		if ( idx != 0 ) {
+			throw new IndexOutOfBoundsException( idx );
+		}
 		return operation;
-	}
-
-	@Override
-	public List<MutationOperation> getOperations() {
-		return Collections.singletonList( operation );
 	}
 
 	@Override
@@ -67,16 +62,6 @@ public class MutationOperationGroupSingle extends AbstractMutationOperationGroup
 		}
 
 		return operation;
-	}
-
-	@Override
-	public void forEachOperation(BiConsumer<Integer, MutationOperation> action) {
-		action.accept( 0, operation );
-	}
-
-	@Override
-	public boolean hasMatching(BiFunction<Integer, MutationOperation, Boolean> matcher) {
-		return matcher.apply( 0, operation );
 	}
 
 }

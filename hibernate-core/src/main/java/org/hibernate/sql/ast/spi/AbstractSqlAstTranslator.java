@@ -6815,6 +6815,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				else {
 					String separator = NO_SEPARATOR;
+					appendSql( OPEN_PARENTHESIS );
 					for ( Expression expression : listExpressions ) {
 						appendSql( separator );
 						emulateTupleComparison(
@@ -6825,6 +6826,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						);
 						separator = " or ";
 					}
+					appendSql( CLOSE_PARENTHESIS );
 				}
 				return;
 			}

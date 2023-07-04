@@ -8,7 +8,6 @@ package org.hibernate.sql.model.ast;
 
 import java.util.function.BiConsumer;
 
-import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 
@@ -25,9 +24,9 @@ public interface MutationGroup {
 
 	int getNumberOfTableMutations();
 
-	<O extends MutationOperation, M extends TableMutation<O>> M getSingleTableMutation();
+	TableMutation getSingleTableMutation();
 
-	<O extends MutationOperation, M extends TableMutation<O>> M getTableMutation(String tableName);
+	TableMutation getTableMutation(String tableName);
 
-	<O extends MutationOperation, M extends TableMutation<O>> void forEachTableMutation(BiConsumer<Integer, M> action);
+	void forEachTableMutation(BiConsumer<Integer, TableMutation> action);
 }

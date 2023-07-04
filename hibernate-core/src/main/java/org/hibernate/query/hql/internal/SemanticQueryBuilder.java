@@ -213,6 +213,9 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 
+import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
+import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
+import org.hibernate.type.internal.BasicTypeImpl;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.criteria.Predicate;
@@ -237,6 +240,7 @@ import static org.hibernate.grammars.hql.HqlParser.ListaggFunctionContext;
 import static org.hibernate.grammars.hql.HqlParser.OnOverflowClauseContext;
 import static org.hibernate.grammars.hql.HqlParser.PLUS;
 import static org.hibernate.grammars.hql.HqlParser.UNION;
+import static org.hibernate.internal.util.QuotingHelper.unquoteStringLiteral;
 import static org.hibernate.query.sqm.TemporalUnit.DATE;
 import static org.hibernate.query.sqm.TemporalUnit.DAY_OF_MONTH;
 import static org.hibernate.query.sqm.TemporalUnit.DAY_OF_WEEK;
@@ -2577,7 +2581,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else {
 			assert child instanceof TerminalNode;
 			final TerminalNode terminalNode = (TerminalNode) child;
-			final String escape = QuotingHelper.unquoteStringLiteral( terminalNode.getText() );
+			final String escape = unquoteStringLiteral( terminalNode.getText() );
 			if ( escape.length() != 1 ) {
 				throw new SemanticException(
 						"Escape character literals must have exactly a single character, but found: " + escape
@@ -3450,7 +3454,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final TerminalNode firstChild = (TerminalNode) ctx.getChild( 0 );
 		final String timezoneText;
 		if ( firstChild.getSymbol().getType() == HqlParser.STRING_LITERAL ) {
-			timezoneText = QuotingHelper.unquoteStringLiteral( ctx.getText() );
+			timezoneText = unquoteStringLiteral( ctx.getText() );
 		}
 		else {
 			timezoneText = ctx.getText();
@@ -3617,7 +3621,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private SqmLiteral<String> stringLiteral(String text) {
 		return new SqmLiteral<>(
-				QuotingHelper.unquoteStringLiteral( text ),
+				unquoteStringLiteral( text ),
 				resolveExpressibleTypeBasic( String.class ),
 				creationContext.getNodeBuilder()
 		);
@@ -3880,11 +3884,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmExpression<?> visitJpaNonstandardFunction(HqlParser.JpaNonstandardFunctionContext ctx) {
-		final String functionName = QuotingHelper.unquoteStringLiteral( ctx.getChild( 2 ).getText() ).toLowerCase();
+		final String functionName = unquoteStringLiteral( ctx.jpaNonstandardFunctionName().getText() ).toLowerCase();
 		final List<SqmTypedNode<?>> functionArguments;
 		if ( ctx.getChildCount() > 4 ) {
 			//noinspection unchecked
-			functionArguments = (List<SqmTypedNode<?>>) ctx.getChild( 4 ).accept( this );
+			functionArguments = (List<SqmTypedNode<?>>) ctx.genericFunctionArguments().accept( this );
 		}
 		else {
 			functionArguments = emptyList();
@@ -3897,7 +3901,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					true,
 					null,
 					StandardFunctionReturnTypeResolvers.invariant(
-							resolveExpressibleTypeBasic( Object.class )
+							new BasicTypeImpl<>(
+									new UnknownBasicJavaType<>( Object.class ),
+									ObjectJdbcType.INSTANCE
+							)
 					),
 					null
 			);
@@ -4396,7 +4403,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public Object visitFormat(HqlParser.FormatContext ctx) {
-		final String format = QuotingHelper.unquoteStringLiteral( ctx.getChild( 0 ).getText() );
+		final String format = unquoteStringLiteral( ctx.getChild( 0 ).getText() );
 		return new SqmFormat(
 				format,
 				resolveExpressibleTypeBasic( String.class ),
@@ -4898,7 +4905,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmLiteral<Character> visitTrimCharacter(HqlParser.TrimCharacterContext ctx) {
 		final String trimCharText = ctx != null
-				? QuotingHelper.unquoteStringLiteral( ctx.getText() )
+				? unquoteStringLiteral( ctx.getText() )
 				: " "; // JPA says space is the default
 
 		if ( trimCharText.length() != 1 ) {

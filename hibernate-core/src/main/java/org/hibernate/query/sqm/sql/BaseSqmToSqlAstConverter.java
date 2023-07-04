@@ -5349,10 +5349,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					);
 				}
 				else {
-					throw new SqlTreeCreationException(
+					throw new SemanticException(
 							String.format(
 									Locale.ROOT,
-									"QueryLiteral type [`%s`] did not match domain Java-type [`%s`] nor JDBC Java-type [`%s`]",
+									"Literal type '%s' did not match domain type '%s' nor converted type '%s'",
 									value.getClass(),
 									valueConverter.getDomainJavaType().getJavaTypeClass().getName(),
 									valueConverter.getRelationalJavaType().getJavaTypeClass().getName()

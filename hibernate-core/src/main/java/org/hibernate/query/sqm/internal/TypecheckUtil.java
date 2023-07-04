@@ -25,6 +25,8 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
+
 /**
  * Functions for typechecking comparison expressions and assignments in the SQM tree.
  * A comparison expression is any predicate like {@code x = y} or {@code x > y}. An
@@ -285,7 +287,8 @@ public class TypecheckUtil {
 	}
 
 	private static boolean isSameJavaType(SqmExpressible<?> leftType, SqmExpressible<?> rightType) {
-		return leftType.getRelationalJavaType() == rightType.getRelationalJavaType()
+		return isUnknown( leftType.getExpressibleJavaType() ) || isUnknown( rightType.getExpressibleJavaType() )
+			|| leftType.getRelationalJavaType() == rightType.getRelationalJavaType()
 			|| leftType.getExpressibleJavaType() == rightType.getExpressibleJavaType()
 			|| leftType.getBindableJavaType() == rightType.getBindableJavaType();
 	}

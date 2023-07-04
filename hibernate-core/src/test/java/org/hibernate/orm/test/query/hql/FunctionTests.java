@@ -10,6 +10,7 @@ import org.hibernate.QueryException;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
@@ -1147,6 +1148,24 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select offset datetime from EntityOfBasics", OffsetDateTime.class)
 							.list();
+				}
+		);
+	}
+
+	@Test
+	@RequiresDialect(H2Dialect.class)
+	public void testJpqlFunctionSyntax(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery("select function('lower','HIBERNATE')", String.class).getSingleResult(),
+							equalTo("hibernate") );
+					assertThat( session.createQuery("select 1 where function('lower','HIBERNATE') = 'hibernate'", Integer.class).getSingleResult(),
+							equalTo(1) );
+					assertThat( session.createQuery("select function('current_user')", String.class).getSingleResult().toLowerCase(),
+							isOneOf("hibernate_orm_test", "hibernateormtest", "sa") );
+					assertThat( session.createQuery("select lower(function('current_user'))", String.class).getSingleResult(),
+							isOneOf("hibernate_orm_test", "hibernateormtest", "sa") );
+					session.createQuery("select 1 where function('current_user') = 'hibernate_orm_test'", Integer.class).getSingleResultOrNull();
 				}
 		);
 	}

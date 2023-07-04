@@ -24,11 +24,7 @@ import javax.tools.Diagnostic;
 
 import org.jboss.logging.Logger;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 /**
  * @author Hardy Ferentschik
@@ -163,6 +159,14 @@ public class TestUtil {
 	 */
 	public static void assertMetamodelClassGeneratedFor(Class<?> clazz) {
 		assertNotNull( getMetamodelClassFor( clazz ) );
+	}
+
+	public static void assertNoMetamodelClassGeneratedFor(Class<?> clazz) {
+		try {
+			getMetamodelClassFor( clazz );
+			fail();
+		}
+		catch (AssertionError ae) {}
 	}
 
 	/**

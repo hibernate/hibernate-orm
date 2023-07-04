@@ -1,8 +1,7 @@
-package org.hibernate.jpamodelgen.test.querymethod;
+package org.hibernate.jpamodelgen.test.hqlvalidation;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.NamedEntityGraph;
 
 @Entity
 public class Book {

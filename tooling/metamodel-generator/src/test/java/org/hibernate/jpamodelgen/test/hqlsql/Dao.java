@@ -1,4 +1,4 @@
-package org.hibernate.jpamodelgen.test.querymethod;
+package org.hibernate.jpamodelgen.test.hqlsql;
 
 import jakarta.persistence.TypedQuery;
 import org.hibernate.annotations.processing.HQL;

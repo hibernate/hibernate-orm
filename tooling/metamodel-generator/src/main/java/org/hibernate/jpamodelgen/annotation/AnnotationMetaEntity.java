@@ -7,7 +7,6 @@
 package org.hibernate.jpamodelgen.annotation;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -24,11 +23,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 
-import org.antlr.v4.runtime.Parser;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
-import org.antlr.v4.runtime.atn.ATNConfigSet;
-import org.antlr.v4.runtime.dfa.DFA;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
@@ -49,7 +43,6 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 import static org.hibernate.jpamodelgen.util.TypeUtils.determineAnnotationSpecifiedAccessType;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValue;
-import static org.hibernate.query.hql.internal.StandardHqlTranslator.prettifyAntlrError;
 
 /**
  * Class used to collect meta information about an annotated type (entity, embeddable or mapped superclass).
@@ -231,6 +224,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 		addAuxiliaryMembers();
 
+		checkNamedQueries();
+
 		addQueryMethods( queryMethods );
 
 		initialized = true;
@@ -320,11 +315,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					addQueryMethod( method, methodName, returnTypeName, containerTypeName );
 				}
 				else {
-					displayError( method, "incorrect return type '" + containerTypeName + "'" );
+					context.message( method, "incorrect return type '" + containerTypeName + "'", Diagnostic.Kind.ERROR );
 				}
 			}
 			else {
-				displayError( method, "incorrect return type '" + declaredType + "'" );
+				context.message( method, "incorrect return type '" + declaredType + "'", Diagnostic.Kind.ERROR );
 			}
 		}
 	}
@@ -397,7 +392,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						hql,
 						false,
 						emptySet(), emptySet(),
-						new ErrorHandler( method, mirror, hql ),
+						new ErrorHandler( method, mirror, hql, context),
 						ProcessorSessionFactory.create( context.getProcessingEnvironment() )
 				);
 			}
@@ -408,8 +403,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		for (int i = 1; i <= paramNames.size(); i++) {
 			final String param = paramNames.get(i-1);
 			if ( !hql.contains(":" + param) && !hql.contains("?" + i) ) {
-				displayError( method, mirror, "missing query parameter for '" + param
-						+ "' (no parameter named :" + param + " or ?" + i + ")" );
+				context.message( method, mirror, "missing query parameter for '" + param
+						+ "' (no parameter named :" + param + " or ?" + i + ")", Diagnostic.Kind.ERROR );
 			}
 		}
 	}
@@ -440,62 +435,5 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 //		}
 //	}
 
-	private void displayError(Element method, String message) {
-		context.getProcessingEnvironment().getMessager()
-				.printMessage( Diagnostic.Kind.ERROR, message, method );
-	}
-	private void displayError(Element method, AnnotationMirror mirror, String message) {
-		context.getProcessingEnvironment().getMessager()
-				.printMessage( Diagnostic.Kind.ERROR, message, method, mirror,
-						mirror.getElementValues().entrySet().stream()
-								.filter( entry -> entry.getKey().getSimpleName().toString().equals("value") )
-								.map(Map.Entry::getValue).findAny().orElseThrow() );
-	}
 
-	private class ErrorHandler implements Validation.Handler {
-		private final ExecutableElement method;
-		private final AnnotationMirror mirror;
-		private final String queryString;
-		private int errorcount;
-
-		public ErrorHandler(ExecutableElement method, AnnotationMirror mirror, String queryString) {
-			this.method = method;
-			this.mirror = mirror;
-			this.queryString = queryString;
-		}
-
-		@Override
-		public void error(int start, int end, String message) {
-			errorcount++;
-			displayError( method, mirror, message );
-		}
-
-		@Override
-		public void warn(int start, int end, String message) {
-		}
-
-		@Override
-		public int getErrorCount() {
-			return errorcount;
-		}
-
-		@Override
-		public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String message, RecognitionException e) {
-			errorcount++;
-			displayError( method, mirror, "illegal HQL syntax - "
-					+ prettifyAntlrError( offendingSymbol, line, charPositionInLine, message, e, queryString, false ) );
-		}
-
-		@Override
-		public void reportAmbiguity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, boolean exact, BitSet ambigAlts, ATNConfigSet configs) {
-		}
-
-		@Override
-		public void reportAttemptingFullContext(Parser recognizer, DFA dfa, int startIndex, int stopIndex, BitSet conflictingAlts, ATNConfigSet configs) {
-		}
-
-		@Override
-		public void reportContextSensitivity(Parser recognizer, DFA dfa, int startIndex, int stopIndex, int prediction, ATNConfigSet configs) {
-		}
-	}
 }

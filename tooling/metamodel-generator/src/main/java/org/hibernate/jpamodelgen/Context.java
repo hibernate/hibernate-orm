@@ -14,6 +14,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -239,6 +241,19 @@ public final class Context {
 
 	public boolean doLazyXmlParsing() {
 		return lazyXmlParsing;
+	}
+
+	public void message(Element method, String message, Diagnostic.Kind severity) {
+		getProcessingEnvironment().getMessager()
+				.printMessage( severity, message, method );
+	}
+	public void message(Element method, AnnotationMirror mirror, String message, Diagnostic.Kind severity) {
+		getProcessingEnvironment().getMessager()
+				.printMessage( severity, message, method, mirror,
+						mirror.getElementValues().entrySet().stream()
+								.filter( entry -> entry.getKey().getSimpleName().contentEquals("query")
+										|| entry.getKey().getSimpleName().contentEquals("value") )
+								.map(Map.Entry::getValue).findAny().orElseThrow() );
 	}
 
 	@Override

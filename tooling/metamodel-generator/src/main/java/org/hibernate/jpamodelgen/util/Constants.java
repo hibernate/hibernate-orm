@@ -53,6 +53,8 @@ public final class Constants {
 	public static final String HQL = "org.hibernate.annotations.processing.HQL";
 	public static final String SQL = "org.hibernate.annotations.processing.SQL";
 
+	public static final String CHECK_HQL = "org.hibernate.annotations.processing.CheckHQL";
+
 	public static final Map<String, String> COLLECTIONS = allCollectionTypes();
 
 	private static Map<String, String> allCollectionTypes() {

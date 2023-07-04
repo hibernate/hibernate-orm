@@ -59,7 +59,7 @@ public class MutationExecutorPostInsertSingleTable implements MutationExecutor, 
 
 		assert mutationOperationGroup.getNumberOfOperations() == 1;
 
-		this.operation = mutationOperationGroup.getOperation( mutationTarget.getIdentifierTableName() );
+		this.operation = (PreparableMutationOperation) mutationOperationGroup.getOperation( mutationTarget.getIdentifierTableName() );
 		this.identityInsertStatementDetails = identityPreparation( operation, session );
 
 		this.valueBindings = new JdbcValueBindingsImpl(

@@ -775,7 +775,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 
 		// apply values
-		jdbcOperationGroup.forEachOperation( (position, operation) -> {
+		for ( int position = 0; position < jdbcOperationGroup.getNumberOfOperations(); position++ ) {
+			final MutationOperation operation = jdbcOperationGroup.getOperation( position );
 			final EntityTableMapping tableMapping = (EntityTableMapping) operation.getTableDetails();
 			if ( valuesAnalysis.tablesNeedingUpdate.contains( tableMapping ) ) {
 				final int[] attributeIndexes = tableMapping.getAttributeIndexes();
@@ -791,13 +792,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					);
 				}
 			}
-		} );
+		}
 
 		// apply keys
-		jdbcOperationGroup.forEachOperation( (position, operation) -> {
+		for ( int position = 0; position < jdbcOperationGroup.getNumberOfOperations(); position++ ) {
+			final MutationOperation operation = jdbcOperationGroup.getOperation( position );
 			final EntityTableMapping tableMapping = (EntityTableMapping) operation.getTableDetails();
 			breakDownKeyJdbcValues( id, rowId, session, jdbcValueBindings, tableMapping );
-		} );
+		}
 	}
 
 	private void decomposeAttributeForUpdate(

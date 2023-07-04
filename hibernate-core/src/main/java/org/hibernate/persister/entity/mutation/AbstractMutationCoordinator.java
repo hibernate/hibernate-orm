@@ -32,6 +32,7 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.internal.MutationOperationGroupNone;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.internal.MutationOperationGroupStandard;
+import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -90,7 +91,7 @@ public abstract class AbstractMutationCoordinator {
 						.createMutationOperation( valuesAnalysis, factory() );
 				return operation == null
 						? new MutationOperationGroupNone( mutationGroup )
-						: new MutationOperationGroupSingle( mutationGroup, operation );
+						: new MutationOperationGroupSingle( mutationGroup, (JdbcMutationOperation) operation );
 			}
 			default: {
 				final List<MutationOperation> operations = arrayList( numberOfTableMutations );

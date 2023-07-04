@@ -32,10 +32,9 @@ public class MutationOperationGroupStandard extends AbstractMutationOperationGro
 	}
 
 	@Override
-	public <O extends MutationOperation> O getSingleOperation() {
+	public MutationOperation getSingleOperation() {
 		if ( operations.size() == 1 ) {
-			//noinspection unchecked
-			return (O) operations.get( 0 );
+			return operations.get( 0 );
 		}
 		throw new IllegalStateException(
 				String.format(
@@ -47,38 +46,38 @@ public class MutationOperationGroupStandard extends AbstractMutationOperationGro
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public <O extends MutationOperation> List<O> getOperations() {
-		//noinspection rawtypes
-		return (List) operations;
+	public MutationOperation getOperation(int idx) {
+		return operations.get( idx );
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public <O extends MutationOperation> O getOperation(String tableName) {
+	public List<MutationOperation> getOperations() {
+		return operations;
+	}
+
+	@Override
+	public MutationOperation getOperation(String tableName) {
 		for ( int i = 0; i < operations.size(); i++ ) {
 			final MutationOperation operation = operations.get( i );
 			if ( operation.getTableDetails().getTableName().equals( tableName ) ) {
-				return (O) operation;
+				return operation;
 			}
 		}
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public <O extends MutationOperation> void forEachOperation(BiConsumer<Integer, O> action) {
+	public void forEachOperation(BiConsumer<Integer, MutationOperation> action) {
 		for ( int i = 0; i < operations.size(); i++ ) {
-			action.accept( i, (O) operations.get( i ) );
+			action.accept( i, operations.get( i ) );
 		}
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public <O extends MutationOperation> boolean hasMatching(BiFunction<Integer, O, Boolean> matcher) {
+	public boolean hasMatching(BiFunction<Integer, MutationOperation, Boolean> matcher) {
 		for ( int i = 0; i < operations.size(); i++ ) {
-			if ( matcher.apply( i, (O) operations.get( i ) ) ) {
+			if ( matcher.apply( i, operations.get( i ) ) ) {
 				return true;
 			}
 		}

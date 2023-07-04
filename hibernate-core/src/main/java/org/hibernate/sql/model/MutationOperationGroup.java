@@ -6,10 +6,6 @@
  */
 package org.hibernate.sql.model;
 
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-
 /**
  * Group of {@link MutationOperation} references for a specific
  * logical operation (target + type)
@@ -51,28 +47,5 @@ public interface MutationOperationGroup {
 	 * Get the operation for a specific table.
 	 */
 	MutationOperation getOperation(String tableName);
-
-	/**
-	 * @deprecated Will be removed - use a combination of {@link #getNumberOfOperations()} and {@link #getOperation(int)}
-	 * to iterate the list of operations.
-	 */
-	@Deprecated(forRemoval = true)
-	List<MutationOperation> getOperations();
-
-	/**
-	 * Visit each operation
-	 * @deprecated Will be removed - use a combination of {@link #getNumberOfOperations()} and {@link #getOperation(int)}
-	 * to iterate the list of operations.
-	 */
-	@Deprecated(forRemoval = true)
-	void forEachOperation(BiConsumer<Integer, MutationOperation> action);
-
-	/**
-	 * Test whether any operations match the condition
-	 * @deprecated Will be removed - use a combination of {@link #getNumberOfOperations()} and {@link #getOperation(int)}
-	 * to iterate the list of operations.
-	 */
-	@Deprecated(forRemoval = true)
-	boolean hasMatching(BiFunction<Integer, MutationOperation, Boolean> matcher);
 
 }

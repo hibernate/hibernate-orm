@@ -8,8 +8,6 @@ package org.hibernate.sql.model.internal;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
 
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
@@ -52,11 +50,6 @@ public class MutationOperationGroupStandard extends AbstractMutationOperationGro
 	}
 
 	@Override
-	public List<MutationOperation> getOperations() {
-		return operations;
-	}
-
-	@Override
 	public MutationOperation getOperation(String tableName) {
 		for ( int i = 0; i < operations.size(); i++ ) {
 			final MutationOperation operation = operations.get( i );
@@ -67,20 +60,4 @@ public class MutationOperationGroupStandard extends AbstractMutationOperationGro
 		return null;
 	}
 
-	@Override
-	public void forEachOperation(BiConsumer<Integer, MutationOperation> action) {
-		for ( int i = 0; i < operations.size(); i++ ) {
-			action.accept( i, operations.get( i ) );
-		}
-	}
-
-	@Override
-	public boolean hasMatching(BiFunction<Integer, MutationOperation, Boolean> matcher) {
-		for ( int i = 0; i < operations.size(); i++ ) {
-			if ( matcher.apply( i, operations.get( i ) ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
 }

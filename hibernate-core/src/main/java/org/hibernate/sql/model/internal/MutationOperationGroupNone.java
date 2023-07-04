@@ -35,26 +35,32 @@ public class MutationOperationGroupNone extends AbstractMutationOperationGroup {
 	}
 
 	@Override
-	public <O extends MutationOperation> O getSingleOperation() {
+	public MutationOperation getSingleOperation() {
 		return null;
 	}
 
 	@Override
-	public <O extends MutationOperation> List<O> getOperations() {
+	public MutationOperation getOperation(int idx) {
+		throw new IndexOutOfBoundsException( idx );
+	}
+
+	@Override
+	public List<MutationOperation> getOperations() {
 		return Collections.emptyList();
 	}
 
 	@Override
-	public <O extends MutationOperation> O getOperation(String tableName) {
+	public MutationOperation getOperation(String tableName) {
 		return null;
 	}
 
 	@Override
-	public <O extends MutationOperation> void forEachOperation(BiConsumer<Integer, O> action) {
+	public void forEachOperation(BiConsumer<Integer, MutationOperation> action) {
 	}
 
 	@Override
-	public <O extends MutationOperation> boolean hasMatching(BiFunction<Integer, O, Boolean> matcher) {
+	public boolean hasMatching(BiFunction<Integer, MutationOperation, Boolean> matcher) {
 		return false;
 	}
+
 }

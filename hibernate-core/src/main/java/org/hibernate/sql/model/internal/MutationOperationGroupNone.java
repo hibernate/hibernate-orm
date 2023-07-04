@@ -6,11 +6,6 @@
  */
 package org.hibernate.sql.model.internal;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.BiFunction;
-
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
@@ -45,22 +40,8 @@ public class MutationOperationGroupNone extends AbstractMutationOperationGroup {
 	}
 
 	@Override
-	public List<MutationOperation> getOperations() {
-		return Collections.emptyList();
-	}
-
-	@Override
 	public MutationOperation getOperation(String tableName) {
 		return null;
-	}
-
-	@Override
-	public void forEachOperation(BiConsumer<Integer, MutationOperation> action) {
-	}
-
-	@Override
-	public boolean hasMatching(BiFunction<Integer, MutationOperation, Boolean> matcher) {
-		return false;
 	}
 
 }

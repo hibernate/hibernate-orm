@@ -9,7 +9,6 @@ package org.hibernate.sql.model.internal;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutationGroup;
@@ -50,18 +49,17 @@ public class MutationGroupStandard implements MutationGroup {
 	}
 
 	@Override
-	public <O extends MutationOperation, M extends TableMutation<O>> M getSingleTableMutation() {
+	public TableMutation getSingleTableMutation() {
 		throw new IllegalStateException( "Group contains multiple table mutations : " + mutationTarget.getNavigableRole() );
 	}
 
 	@Override
-	public <O extends MutationOperation, M extends TableMutation<O>> M getTableMutation(String tableName) {
+	public TableMutation getTableMutation(String tableName) {
 		for ( int i = 0; i < tableMutationList.size(); i++ ) {
 			final TableMutation<?> tableMutation = tableMutationList.get( i );
 			if ( tableMutation != null ) {
 				if ( tableMutation.getMutatingTable().getTableName().equals( tableName ) ) {
-					//noinspection unchecked
-					return (M) tableMutation;
+					return tableMutation;
 				}
 			}
 		}
@@ -69,10 +67,10 @@ public class MutationGroupStandard implements MutationGroup {
 	}
 
 	@Override
-	public <O extends MutationOperation, M extends TableMutation<O>> void forEachTableMutation(BiConsumer<Integer, M> action) {
+	public void forEachTableMutation(BiConsumer<Integer, TableMutation> action) {
 		for ( int i = 0; i < tableMutationList.size(); i++ ) {
-			//noinspection unchecked
-			action.accept( i, (M)tableMutationList.get( i ) );
+			action.accept( i, tableMutationList.get( i ) );
 		}
 	}
+
 }

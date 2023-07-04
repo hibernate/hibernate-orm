@@ -8,21 +8,17 @@ package org.hibernate.sql.model.internal;
 
 import java.util.Locale;
 
+import org.hibernate.engine.jdbc.mutation.internal.EntityMutationOperationGroup;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.model.MutationOperation;
-import org.hibernate.sql.model.MutationOperationGroup;
-import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 
-/**
- * @author Steve Ebersole
- * @author Sanne Grinovero
- */
-final class MutationOperationGroupStandard implements MutationOperationGroup {
+public class EntityMutationOperationGroupStandard implements EntityMutationOperationGroup {
 
 	private static final MutationOperation[] EMPTY = new MutationOperation[0];
 
 	private final MutationType mutationType;
-	private final MutationTarget mutationTarget;
+	private final EntityMutationTarget mutationTarget;
 	private final MutationOperation[] operations;
 
 	/**
@@ -31,7 +27,7 @@ final class MutationOperationGroupStandard implements MutationOperationGroup {
 	 * @param mutationType
 	 * @param mutationTarget
 	 */
-	MutationOperationGroupStandard(MutationType mutationType, MutationTarget mutationTarget) {
+	EntityMutationOperationGroupStandard(MutationType mutationType, EntityMutationTarget mutationTarget) {
 		this( mutationType, mutationTarget, EMPTY );
 	}
 
@@ -42,7 +38,7 @@ final class MutationOperationGroupStandard implements MutationOperationGroup {
 	 * @param mutationTarget
 	 * @param operation
 	 */
-	MutationOperationGroupStandard(MutationType mutationType, MutationTarget mutationTarget, MutationOperation operation) {
+	EntityMutationOperationGroupStandard(MutationType mutationType, EntityMutationTarget mutationTarget, MutationOperation operation) {
 		this( mutationType, mutationTarget, new MutationOperation[]{ operation } );
 	}
 
@@ -53,7 +49,7 @@ final class MutationOperationGroupStandard implements MutationOperationGroup {
 	 * @param mutationTarget
 	 * @param operations
 	 */
-	MutationOperationGroupStandard(MutationType mutationType, MutationTarget mutationTarget, MutationOperation[] operations) {
+	EntityMutationOperationGroupStandard(MutationType mutationType, EntityMutationTarget mutationTarget, MutationOperation[] operations) {
 		this.mutationType = mutationType;
 		this.mutationTarget = mutationTarget;
 		this.operations = operations;
@@ -65,7 +61,7 @@ final class MutationOperationGroupStandard implements MutationOperationGroup {
 	}
 
 	@Override
-	public MutationTarget getMutationTarget() {
+	public EntityMutationTarget getMutationTarget() {
 		return mutationTarget;
 	}
 

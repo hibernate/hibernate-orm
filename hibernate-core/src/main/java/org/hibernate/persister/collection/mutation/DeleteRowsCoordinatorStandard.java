@@ -12,13 +12,14 @@ import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -34,7 +35,7 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 	private final BasicBatchKey batchKey;
 	private final MutationExecutorService mutationExecutorService;
 
-	private MutationOperationGroupSingle operationGroup;
+	private MutationOperationGroup operationGroup;
 
 	public DeleteRowsCoordinatorStandard(
 			CollectionMutationTarget mutationTarget,
@@ -113,11 +114,11 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 		}
 	}
 
-	private MutationOperationGroupSingle createOperationGroup() {
+	private MutationOperationGroup createOperationGroup() {
 		assert mutationTarget.getTargetPart() != null;
 		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
 		final JdbcMutationOperation operation = rowMutationOperations.getDeleteRowOperation();
-		return new MutationOperationGroupSingle( MutationType.DELETE, mutationTarget, operation );
+		return MutationOperationGroupFactory.singleOperation( MutationType.DELETE, mutationTarget, operation );
 	}
 }

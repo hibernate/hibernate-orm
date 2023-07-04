@@ -51,9 +51,9 @@ public class MutationExecutorPostInsertSingleTable implements MutationExecutor, 
 	private final JdbcValueBindingsImpl valueBindings;
 
 	public MutationExecutorPostInsertSingleTable(
-			MutationOperationGroup mutationOperationGroup,
+			EntityMutationOperationGroup mutationOperationGroup,
 			SharedSessionContractImplementor session) {
-		this.mutationTarget = (EntityMutationTarget) mutationOperationGroup.getMutationTarget();
+		this.mutationTarget = mutationOperationGroup.getMutationTarget();
 		this.session = session;
 
 		assert mutationOperationGroup.getNumberOfOperations() == 1;

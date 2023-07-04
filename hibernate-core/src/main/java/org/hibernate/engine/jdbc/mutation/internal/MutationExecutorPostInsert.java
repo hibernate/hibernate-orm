@@ -60,8 +60,8 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 
 	protected final JdbcValueBindingsImpl valueBindings;
 
-	public MutationExecutorPostInsert(MutationOperationGroup mutationOperationGroup, SharedSessionContractImplementor session) {
-		this.mutationTarget = (EntityMutationTarget) mutationOperationGroup.getMutationTarget();
+	public MutationExecutorPostInsert(EntityMutationOperationGroup mutationOperationGroup, SharedSessionContractImplementor session) {
+		this.mutationTarget = mutationOperationGroup.getMutationTarget();
 		this.valueBindings = new JdbcValueBindingsImpl(
 				MutationType.INSERT,
 				mutationTarget,

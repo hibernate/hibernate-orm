@@ -22,7 +22,6 @@ import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
-import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
@@ -438,11 +437,17 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 		if ( tableMutationBuilder != null && tableMutationBuilder.getOptimisticLockBindings() != null ) {
 			attribute.breakDownJdbcValues(
 					loadedValue,
-					tableMutationBuilder.getOptimisticLockBindings(),
+					(valueIndex, value, jdbcValueMapping) -> {
+						if ( value != null && !tableMutationBuilder.getKeyRestrictionBindings().contains( value ) ) {
+							tableMutationBuilder.getOptimisticLockBindings().consume( valueIndex, value, jdbcValueMapping );
+						}
+					}
+					,
 					session
 			);
 		}
 		// else there is no actual delete statement for that table,
 		// generally indicates we have an on-delete=cascade situation
 	}
+
 }

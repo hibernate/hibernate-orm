@@ -87,7 +87,7 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 					persistenceContext,
 					entry.getLoadedPersister(),
 					collection,
-					collectionKey,
+					key,
 					true
 			);
 		}

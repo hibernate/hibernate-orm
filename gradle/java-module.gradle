@@ -518,14 +518,33 @@ task nonFatalCheckstyle(type:Checkstyle) {
 	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle-non-fatal.xml' )
 }
 
+class CompilerStubsArgumentProvider implements CommandLineArgumentProvider {
+
+    @InputDirectory
+    @PathSensitive(PathSensitivity.NONE)
+    File stubsDir
+
+    @Override
+    Iterable<String> asArguments() {
+        { return ["-Astubs=${stubsDir}"]}
+    }
+}
+
+tasks.withType(JavaCompile).configureEach { task ->
+    // stubs argument needs to be passed as an absolute path, JavaCompile uses the Worker API which changes the current
+    // working directory and prevents from using a relative path to locate a project file.
+    // Using a CommandLineArgumentProvider allows build cache hits when the build cache is relocated.
+    task.options.compilerArgumentProviders.add(new CompilerStubsArgumentProvider(stubsDir: new File(project.rootDir, "checkerstubs")))
+}
+
 checkerFramework {
 	checkers = [
 			'org.checkerframework.checker.nullness.NullnessChecker'
 	]
 	extraJavacArgs = [
-	        '-AsuppressWarnings=initialization',
-			"-Astubs=${project.rootDir}/checkerstubs",
-			'-AonlyDefs=^org\\.hibernate\\.(jpamodelgen|spi|pretty|stat|engine\\.(profile|transaction)|(action|context|bytecode)\\.spi)\\.'
+            '-AsuppressWarnings=initialization',
+            // stubs is passed directly through options.compilerArgumentProviders
+            '-AonlyDefs=^org\\.hibernate\\.(jpamodelgen|spi|pretty|stat|engine\\.(profile|transaction)|(action|context|bytecode)\\.spi)\\.'
 	]
 }
 

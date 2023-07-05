@@ -72,7 +72,10 @@ public class LocalXmlResourceResolverTest {
 			"https://hibernate.org/dtd/hibernate-configuration,org/hibernate/hibernate-configuration-3.0.dtd",
 
 			"http://hibernate.sourceforge.net/hibernate-configuration,org/hibernate/hibernate-configuration-3.0.dtd",
-			"https://hibernate.sourceforge.net/hibernate-configuration,org/hibernate/hibernate-configuration-3.0.dtd"
+			"https://hibernate.sourceforge.net/hibernate-configuration,org/hibernate/hibernate-configuration-3.0.dtd",
+
+			"http://hibernate.org/dtd/hibernate-mapping-3.0.dtd,org/hibernate/hibernate-mapping-3.0.dtd",
+			"https://hibernate.org/dtd/hibernate-mapping-3.0.dtd,org/hibernate/hibernate-mapping-3.0.dtd"
 	})
 	void resolve_dtd_localResource(String id, String expectedLocalResource) throws XMLStreamException {
 		// publicId

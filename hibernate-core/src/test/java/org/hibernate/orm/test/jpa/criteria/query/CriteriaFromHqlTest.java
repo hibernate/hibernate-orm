@@ -18,8 +18,8 @@ public class CriteriaFromHqlTest {
 
     @Test void test(SessionFactoryScope scope) {
         scope.inTransaction( s -> {
-            s.persist( new CriteriaDefinitionTest.Message(1L, "hello") );
-            s.persist( new CriteriaDefinitionTest.Message(2L, "bye") );
+            s.persist( new Message(1L, "hello") );
+            s.persist( new Message(2L, "bye") );
         });
 
         scope.inSession( s -> {

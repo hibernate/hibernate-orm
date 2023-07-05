@@ -297,7 +297,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				sessionFactory.get().getQueryEngine().getHqlTranslator()
 						.translate( hql, resultClass );
 		if ( statement instanceof SqmSelectStatement ) {
-			return (SqmSelectStatement<T>) statement;
+			return new SqmSelectStatement<>((SqmSelectStatement<T>) statement);
 		}
 		else {
 			throw new IllegalArgumentException("Not a 'select' statement");

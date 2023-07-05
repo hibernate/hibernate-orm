@@ -28,9 +28,9 @@ import java.util.function.Function;
  * <p>
  * For example:
  * <pre>
- * sessionFactory.inTransaction(session -> {
+ * sessionFactory.inTransaction(session -&gt; {
  *     List&lt;Book&gt; books
- *             = new CriteriaDefinition&lt;&gt;(session, Book.class) {
+ *             = new CriteriaDefinition&lt;&gt;(sessionFactory, Book.class) {
  *                 public void define() {
  *                     var book = from(Book.class);
  *                     where(like(book.get(Book_.title), "%Hibernate%"));
@@ -38,8 +38,25 @@ import java.util.function.Function;
  *                     book.fetch(Book_.authors);
  *                 }
  *             }
- *             .createSelectionQuery()
+ *             .createSelectionQuery(session)
  *             .setMaxResults(10)
+ *             .getResultList();
+ * });
+ * </pre>
+ * <p>
+ * A {@code CriteriaDefinition} may even be used to modify a base HQL or criteria query:
+ * <pre>
+ * sessionFactory.inTransaction(session -&gt; {
+ *     List&lt;Book&gt; books
+ *             = new CriteriaDefinition&lt;&gt;(sessionFactory, Book.class,
+ *                     "from Book left join fetch authors where type = BOOK") {
+ *                 public void define() {
+ *                     var book = (JpaRoot&lt;Book&gt;) getSelection();
+ *                     where(getRestriction(), like(book.get(Book_.title), "%Hibernate%"));
+ *                     orderBy(desc(book.get(Book_.publicationDate)), asc(book.get(Book_.isbn)));
+ *                 }
+ *             }
+ *             .createSelectionQuery(session)
  *             .getResultList();
  * });
  * </pre>
@@ -60,12 +77,32 @@ public abstract class CriteriaDefinition<R>
 		define();
 	}
 
+	public CriteriaDefinition(SessionFactory factory, Class<R> resultType, String baseHql) {
+		super( factory.getCriteriaBuilder() );
+		query = createQuery( baseHql, resultType );
+		define();
+	}
+
+	public CriteriaDefinition(SessionFactory factory, CriteriaQuery<R> baseQuery) {
+		super( factory.getCriteriaBuilder() );
+		query = (JpaCriteriaQuery<R>) baseQuery;
+		define();
+	}
+
 	public CriteriaDefinition(Session session, Class<R> resultType) {
 		this( session.getSessionFactory(), resultType );
 	}
 
+	public CriteriaDefinition(Session session, Class<R> resultType, String baseHql) {
+		this( session.getSessionFactory(), resultType, baseHql );
+	}
+
+	public CriteriaDefinition(Session session, CriteriaQuery<R> baseQuery) {
+		this( session.getSessionFactory(), baseQuery );
+	}
+
 	public SelectionQuery<R> createSelectionQuery(Session session) {
-		return session.createSelectionQuery(query);
+		return session.createSelectionQuery( query );
 	}
 
 	public abstract void define();

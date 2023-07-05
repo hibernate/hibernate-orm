@@ -17,6 +17,8 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * {@link PropertyAccess} for handling non-aggregated composites.
  *
@@ -84,17 +86,17 @@ public class PropertyAccessEmbeddedImpl implements PropertyAccess {
 		}
 
 		@Override
-		public Member getMember() {
+		public @Nullable Member getMember() {
 			return null;
 		}
 
 		@Override
-		public String getMethodName() {
+		public @Nullable String getMethodName() {
 			return null;
 		}
 
 		@Override
-		public Method getMethod() {
+		public @Nullable Method getMethod() {
 			return null;
 		}
 	}
@@ -106,17 +108,17 @@ public class PropertyAccessEmbeddedImpl implements PropertyAccess {
 		public static final SetterImpl INSTANCE = new SetterImpl();
 
 		@Override
-		public void set(Object target, Object value) {
+		public void set(Object target, @Nullable Object value) {
 			// nothing to do
 		}
 
 		@Override
-		public String getMethodName() {
+		public @Nullable String getMethodName() {
 			return null;
 		}
 
 		@Override
-		public Method getMethod() {
+		public @Nullable Method getMethod() {
 			return null;
 		}
 	}

@@ -10,6 +10,8 @@ import java.io.Serializable;
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.PrimeAmongSecondarySupertypes;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Interface implemented directly by entity proxies, exposing
  * access to the associated {@link LazyInitializer}.
@@ -27,7 +29,7 @@ public interface HibernateProxy extends Serializable, PrimeAmongSecondarySuperty
 	 * @return the associated {@link LazyInitializer} if the given
 	 *         object is a proxy, or {@code null} otherwise.
 	 */
-	static LazyInitializer extractLazyInitializer(final Object object) {
+	static @Nullable LazyInitializer extractLazyInitializer(final @Nullable Object object) {
 		if ( object instanceof PrimeAmongSecondarySupertypes ) {
 			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) object;
 			final HibernateProxy hibernateProxy = t.asHibernateProxy();

@@ -14,6 +14,8 @@ import java.util.Map;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * The contract for getting the value of a persistent attribute from its container/owner.
  *
@@ -28,7 +30,7 @@ public interface Getter extends Serializable {
 	 *
 	 * @return The extracted value.
 	 */
-	Object get(Object owner);
+	@Nullable Object get(Object owner);
 
 	/**
 	 * Get the property value from the given owner instance.
@@ -39,7 +41,7 @@ public interface Getter extends Serializable {
 	 *
 	 * @return The extracted value.
 	 */
-	Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session);
+	@Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session);
 
 	/**
 	 * Retrieve the declared Java type class
@@ -63,7 +65,7 @@ public interface Getter extends Serializable {
 	 *
 	 * @return The mapped member, or {@code null}.
 	 */
-	Member getMember();
+	@Nullable Member getMember();
 
 	/**
 	 * Retrieve the getter-method name.
@@ -72,7 +74,7 @@ public interface Getter extends Serializable {
 	 *
 	 * @return The name of the getter method, or {@code null}.
 	 */
-	String getMethodName();
+	@Nullable String getMethodName();
 
 	/**
 	 * Retrieve the getter-method.
@@ -81,5 +83,5 @@ public interface Getter extends Serializable {
 	 *
 	 * @return The getter method, or {@code null}.
 	 */
-	Method getMethod();
+	@Nullable Method getMethod();
 }

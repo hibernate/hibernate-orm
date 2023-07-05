@@ -13,6 +13,8 @@ import org.hibernate.Internal;
 import org.hibernate.property.access.internal.AbstractSetterMethodSerialForm;
 import org.hibernate.property.access.internal.AccessStrategyHelper;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.property.access.internal.AccessStrategyHelper.determineEnhancementState;
 
 /**
@@ -35,7 +37,7 @@ public class EnhancedSetterMethodImpl extends SetterMethodImpl {
 	}
 
 	@Override
-	public void set(Object target, Object value) {
+	public void set(Object target, @Nullable Object value) {
 		super.set( target, value );
 
 		AccessStrategyHelper.handleEnhancedInjection( target, value, enhancementState, propertyName );

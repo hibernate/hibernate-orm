@@ -4,6 +4,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.criteria.CriteriaDefinition;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -41,18 +42,28 @@ public class CriteriaDefinitionTest {
             }
         };
 
+        var query3 = new CriteriaDefinition<>(sessionFactory, Message.class, "from Msg") {
+            public void define() {
+                var message = (JpaRoot<Message>) getSelection();
+                where(ilike(message.get("text"), "%e%"));
+                orderBy(asc(message.get("text")));
+            }
+        };
+
         scope.inSession(session -> {
             var idAndText = query1.createSelectionQuery(session).getSingleResult();
-
             assertNotNull(idAndText);
             assertEquals(1L,idAndText[0]);
             assertEquals("hello",idAndText[1]);
 
             var message = query2.createSelectionQuery(session).getSingleResult();
-
             assertNotNull(message);
             assertEquals(1L,message.id);
             assertEquals("hello",message.text);
+
+            var messages = query3.createSelectionQuery(session).getResultList();
+            assertEquals(2,messages.size());
+
         });
     }
 

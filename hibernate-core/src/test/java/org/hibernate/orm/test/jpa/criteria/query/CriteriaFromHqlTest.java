@@ -8,12 +8,20 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SessionFactory
 @DomainModel(annotatedClasses = CriteriaFromHqlTest.Message.class)
 public class CriteriaFromHqlTest {
+
     @Test void test(SessionFactoryScope scope) {
+        scope.inTransaction( s -> {
+            s.persist( new CriteriaDefinitionTest.Message(1L, "hello") );
+            s.persist( new CriteriaDefinitionTest.Message(2L, "bye") );
+        });
+
         scope.inSession( s -> {
             JpaCriteriaQuery<Object[]> query =
                     s.getFactory().getCriteriaBuilder()
@@ -21,11 +29,18 @@ public class CriteriaFromHqlTest {
             assertEquals(2, query.getSelection().getSelectionItems().size());
             assertEquals(1, query.getOrderList().size());
             assertEquals(1, query.getRoots().size());
-            s.createSelectionQuery(query).getResultList();
+            List<Object[]> list = s.createSelectionQuery(query).getResultList();
+            assertEquals(2, list.size());
         });
     }
+
     @Entity(name="Msg")
     static class Message {
+        public Message(Long id, String text) {
+            this.id = id;
+            this.text = text;
+        }
+        Message() {}
         @Id
         Long id;
         String text;

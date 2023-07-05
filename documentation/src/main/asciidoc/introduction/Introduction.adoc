@@ -137,6 +137,7 @@ Before we get deeper into the weeds, we'll quickly present a basic example progr
 
 We begin with a simple gradle build file:
 
+[[build-gradle]]
 [source,groovy]
 .`build.gradle`
 ----
@@ -166,7 +167,7 @@ dependencies {
     // logging via Log4j
     implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
 
-    // JPA metamodel generator (for criteria queries)
+    // JPA Metamodel Generator
     annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.2.2.Final'
 
     // Compile-time checking for HQL
@@ -481,9 +482,7 @@ public class BookResource {
 This is fine, and we won't complain if you prefer to leave the code exactly as it appears above.
 But there's one thing we could perhaps improve.
 We love super-short methods with single responsibilities, and there looks to be an opportunity to introduce one here.
-Let's hit the code with our favorite thing, the Extract Method refactoring.
-
-Out pops:
+Let's hit the code with our favorite thing, the Extract Method refactoring. We obtain:
 
 [source,java]
 ----
@@ -501,10 +500,13 @@ This is an example of a _query method_, a function which accepts arguments to th
 And that's all it does; it doesn't orchestrate additional program logic, and it doesn't perform transaction or session management.
 
 It's even better to specify the query string using the `@NamedQuery` annotation, so that Hibernate can validate the query it at startup time, that is, when the `SessionFactory` is created, instead of when the query is first executed.
+Indeed, since we included the <<metamodel-generator,Metamodel Generator>> in our <<build-gradle,Gradle build>>, the query can even be validated at _compile time_.
+
 We need a place to put the annotation, so lets move our query method to a new class:
 
 [source,java]
 ----
+@CheckHQL // validate named queries at compile time
 @NamedQuery(name="findBooksByTitle",
             query="from Book where title like :title order by title")
 class Queries {
@@ -547,7 +549,7 @@ You might be thinking that our query method looks a bit boilerplatey.
 That's true, perhaps, but we're much more concerned that it's not very typesafe.
 Indeed, for many years, the lack of compile-time checking for HQL queries and code which binds arguments to query parameters was our number one source of discomfort with Hibernate.
 
-Fortunately, there's now a solution to both problems: as an incubating feature of Hibernate 6.3, we now offer the possibility to have the <<metamodel-generator,Metamodel Generator>> fill in the implementation of such query methods for you.
+Fortunately, there's now a solution to both problems: as an incubating feature of Hibernate 6.3, we now offer the possibility to have the Metamodel Generator fill in the implementation of such query methods for you.
 
 [[generated-query-methods]]
 === Generated query methods
@@ -567,10 +569,9 @@ Hibernate's {generator}[Metamodel Generator] is an annotation processor that pro
 That is, it produces a typed model of the persistent classes in our program, giving us a type-safe way to refer to their attributes in Java code.
 In particular, it lets us specify <<entity-graph,entity graphs>> and <<criteria-queries,criteria queries>> in a completely type-safe way.
 
-We've already seen how to set up the annotation processor in the <<hello-hibernate,gradle build>> we saw earlier.
+Now, you don't have to use the Metamodel Generator with Hibernate—the APIs we just mentioned also accept plain strings—but we find that it works well with Gradle and integrates well with our IDE, and the advantage in typesafety is compelling.
 
-Now, you don't have to use the Metamodel Generator with Hibernate—the APIs we just mentioned also accept plain strings—but we find that it works well with gradle and integrates well with our IDE, and the advantage in typesafety is compelling.
-//
+We've already seen how to set up the annotation processor in the <<hello-hibernate,Gradle build>> we saw earlier.
 // You can find more information in the {generator-guide}[User Guide].
 ****
 
@@ -587,8 +588,24 @@ interface Queries {
 }
 ----
 
-The Metamodel Generator checks that the parameters of this method match the parameters of the HQL or SQL query, and that the query is syntactically legal, and generates a query method with a similar signature and return type in the corresponding static metamodel class `Queries_`.
-You can call the generated query method like this:
+The Metamodel Generator verifies that:
+
+- the parameters of this method match the parameters of the HQL or SQL query,
+- the query is syntactically legal and semantically well-typed, that is, that the entities, attributes, and functions referenced in the query actually exist and have compatible types.
+
+The `@CheckHQL` annotation which instructs Hibernate to validate named queries is not necessary for query methods.
+
+[TIP]
+====
+:query-validator: https://github.com/hibernate/query-validator/
+
+Don't like putting queries in annotations?
+No problem.
+If we set up the {query-validator}[Query Validator], we get validation of queries passed as strings directly to the Hibernate session.
+====
+
+A query method with a similar signature and return type is generated in the corresponding static metamodel class `Queries_`.
+We can call the generated query method like this:
 
 [source,java]
 ----
@@ -629,10 +646,6 @@ List<Book> books =
             .setFirstResult(page*RESULTS_PER_PAGE)    // start from the given page of results
             .getResultList();
 ----
-
-:query-validator: https://github.com/hibernate/query-validator/
-
-If we also set up the {query-validator}[Query Validator], our HQL query will even be completely _type-checked_ at compile time.
 
 Now that we have a rough picture of what our persistence logic might look like, it's natural to ask how we should test this code.
 
@@ -712,9 +725,11 @@ If you're only interested in facts, or if you prefer not to read things that mig
 Hibernate is an architecture-agnostic library, not a framework, and therefore integrates comfortably with a wide range of Java frameworks and containers.
 Consistent with our place within the ecosystem, we've historically avoided giving out much advice on architecture.
 This is a practice we're now perhaps inclined to regret, since the resulting vacuum has come to be filled with advice from people advocating architectures, design patterns, and extra frameworks which we suspect make Hibernate a bit less pleasant to use than it should be.
-In particular, frameworks which wrap JPA seem to add bloat while subtracting some of the fine-grained control over interaction with the database that Hibernate works hard to provide.
 
-The stodgy, dogmatic, _conventional_ wisdom, which we hesitate to challenge for simple fear of pricking ourselves on the erect hackles that inevitably accompany such dogma-questioning is:
+In particular, frameworks which wrap JPA seem to add bloat while subtracting some of the fine-grained control over data access that Hibernate works so hard to provide.
+These frameworks don't expose the full feature set of Hibernate, and so the program is forced to work with a less powerful abstraction.
+
+The stodgy, dogmatic, _conventional_ wisdom, which we hesitate to challenge for simple fear of pricking ourselves on the erect hackles that inevitably accompany such dogma-baiting is:
 
 > Code which interacts with the database belongs in a separate _persistence layer_.
 
@@ -759,13 +774,13 @@ If these repository frameworks offered anything actually _useful_—and not obvi
 Ultimately, we're not sure you need a separate persistence layer at all.
 At least _consider_ the possibility that it might be OK to call the `EntityManager` directly from your business logic.
 
+image::images/architecture.png[API overview,pdfwidth="100%",width=1100,align="center"]
+
 > Sssssssss. Heresy!
 
 OK, look, if it makes you feel better, one way to view `EntityManager` is to think of it as a single _generic_ "repository" that works for every entity in your system.
 From this point of view, JPA _is_ your persistence layer.
 And there's few good reasons to wrap this abstraction in a second abstraction that's _less_ generic.
-
-image::images/architecture.png[API overview,pdfwidth="100%",width=1100,align="center"]
 
 // We might even analogize `EntityManager` to `List`.
 // Then DAO-style repositories would be like having separate `StringList`, `IntList`, `PersonList`, and `BookList` classes.
@@ -782,7 +797,7 @@ Even where a distinct persistence layer _is_ appropriate, DAO-style repositories
 Indeed, repositories, by nature, exhibit very low _cohesion_.
 A layer of repository objects might make sense if you have multiple implementations of each repository, but in practice almost nobody ever does.
 That's because they're also extremely highly _coupled_ to their clients, with a very large API surface.
-A layer is only easily replaceable if it has a narrow API.
+And, on the contrary, a layer is only easily replaceable if it has a very _narrow_ API.
 
 [%unbreakable]
 [TIP]

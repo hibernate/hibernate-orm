@@ -39,6 +39,8 @@ import org.hibernate.jpamodelgen.validation.Validation;
 
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
+import static org.hibernate.jpamodelgen.annotation.QueryMethod.isOrderParam;
+import static org.hibernate.jpamodelgen.annotation.QueryMethod.isPageParam;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 import static org.hibernate.jpamodelgen.util.TypeUtils.determineAnnotationSpecifiedAccessType;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
@@ -385,7 +387,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					);
 			putMember( attribute.getPropertyName() + paramTypes, attribute );
 
-			checkParameters( method, paramNames, mirror, hql );
+			checkParameters( method, paramNames, paramTypes, mirror, hql );
 			if ( !isNative ) {
 //				checkHqlSyntax( method, mirror, hql );
 				Validation.validate(
@@ -399,10 +401,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private void checkParameters(ExecutableElement method, List<String> paramNames, AnnotationMirror mirror, String hql) {
+	private void checkParameters(ExecutableElement method, List<String> paramNames, List<String> paramTypes, AnnotationMirror mirror, String hql) {
 		for (int i = 1; i <= paramNames.size(); i++) {
 			final String param = paramNames.get(i-1);
-			if ( !hql.contains(":" + param) && !hql.contains("?" + i) ) {
+			final String ptype = paramTypes.get(i-1);
+			if ( !hql.contains(":" + param) && !hql.contains("?" + i)
+					&& !isPageParam(ptype) && !isOrderParam(ptype)) {
 				context.message( method, mirror, "missing query parameter for '" + param
 						+ "' (no parameter named :" + param + " or ?" + i + ")", Diagnostic.Kind.ERROR );
 			}

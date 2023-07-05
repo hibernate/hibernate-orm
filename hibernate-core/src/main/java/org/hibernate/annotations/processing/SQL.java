@@ -51,7 +51,13 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * </ul>
  * <p>
  * The method parameters must match the parameters of the SQL query,
- * either by name or by position.
+ * either by name or by position:
+ * <ul>
+ * <li>an ordinal query parameter of form {@code ?n} is matched to
+ *     the <em>n</em>th parameter of the method, and
+ * <li>a named query parameter of form {@code :name} is matched to
+ *     the method parameter {@code name}.
+ * </ul>
  *
  * @author Gavin King
  * @since 6.3

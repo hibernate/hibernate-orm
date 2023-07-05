@@ -1658,7 +1658,12 @@ public abstract class CollectionBinder {
 				inheritanceStatePerClass
 		) );
 		foreignJoinColumns.setJoins( joins );
-		collection.setCollectionTable( foreignJoinColumns.getTable() );
+		if ( foreignJoinColumns.hasMappedBy() ) {
+			collection.setCollectionTable( associatedClass.getRecursiveProperty( foreignJoinColumns.getMappedBy() ).getValue().getTable() );
+		}
+		else {
+			collection.setCollectionTable( foreignJoinColumns.getTable() );
+		}
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Mapping collection: %s -> %s", collection.getRole(), collection.getCollectionTable().getName() );
 		}

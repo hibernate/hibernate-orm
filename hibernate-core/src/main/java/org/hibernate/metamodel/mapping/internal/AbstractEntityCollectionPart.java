@@ -323,7 +323,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				creationState
 		);
 
-		return new StandardTableGroup(
+		final TableGroup tableGroup = new StandardTableGroup(
 				canUseInnerJoins,
 				navigablePath,
 				this,
@@ -341,6 +341,9 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				),
 				creationContext.getSessionFactory()
 		);
+		// Make sure the association key's table is resolved in the table group
+		tableGroup.getTableReference( null, resolveFetchAssociationKey().getTable(), true );
+		return tableGroup;
 	}
 
 

@@ -140,6 +140,12 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 			SqmCreationState creationState) {
 		throw new SemanticException( "Index operator applied to non-plural path '" + getNavigablePath() + "'" );
 	}
+
+	/**
+	 * Get this path's actual resolved model, i.e. the concrete type for generic attributes.
+	 */
+	SqmPathSource<?> getResolvedModel();
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 

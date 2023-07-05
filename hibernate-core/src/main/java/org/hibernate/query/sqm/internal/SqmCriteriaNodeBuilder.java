@@ -72,7 +72,6 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SetOperator;
-import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -462,7 +461,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return new SqmJunctionPredicate( Predicate.BooleanOperator.AND, predicates, this );
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public <T extends HibernateCriteriaBuilder> T unwrap(Class<T> clazz) {
 		return (T) extensions.get( clazz );
 	}
@@ -509,7 +508,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <X, K, T, V extends T> SqmMapJoin<X, K, V> treat(MapJoin<X, K, T> join, Class<V> type) {
-		return ( (SqmMapJoin<X, K, V>) join ).treatAs( type );
+		return ( (SqmMapJoin<X, K, T>) join ).treatAs( type );
 	}
 
 	@Override
@@ -1131,7 +1130,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return ( (SqmExpression<?>) character ).asString();
 	}
 
-	@Override
 	public <T> SqmLiteral<T> literal(T value, SqmExpression<? extends T> typeInferenceSource) {
 		if ( value == null ) {
 			return new SqmLiteralNull<>( this );
@@ -1663,7 +1661,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	/**
 	 * Creates an expression for the value with the given "type inference" information
 	 */
-	@Override
 	public <T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource) {
 		if ( value instanceof SqmExpression ) {
 			return (SqmExpression<T>) value;

@@ -8,9 +8,9 @@ package org.hibernate.orm.test.annotations.embeddables.generics;
 
 import java.io.Serializable;
 
-import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.sqm.SqmPathSource;
 
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -112,7 +112,7 @@ public class GenericEmbeddedIdentifierMappedSuperclassTest {
 			assertThat( modelPathSource.findSubPathSource( "serial" )
 								.getBindableJavaType() ).isEqualTo( Integer.class );
 			// assert that types of the concrete attributes inside the component's resolved model are reported correctly
-			final SqmPathSource<?> resolvedPathSource = ( (JpaPath<Object>) id ).getResolvedModel();
+			final SqmPathSource<?> resolvedPathSource = ( (SqmPath<Object>) id ).getResolvedModel();
 			assertThat( resolvedPathSource.findSubPathSource( "entity" )
 								.getBindableJavaType() ).isEqualTo( User.class );
 			assertThat( resolvedPathSource.findSubPathSource( "embedded" )
@@ -163,7 +163,7 @@ public class GenericEmbeddedIdentifierMappedSuperclassTest {
 			assertThat( modelPathSource.findSubPathSource( "serial" )
 								.getBindableJavaType() ).isEqualTo( Integer.class );
 			// assert that types of the concrete attributes inside the component's resolved model are reported correctly
-			final SqmPathSource<?> resolvedPathSource = ( (JpaPath<Object>) id ).getResolvedModel();
+			final SqmPathSource<?> resolvedPathSource = ( (SqmPath<Object>) id ).getResolvedModel();
 			assertThat( resolvedPathSource.findSubPathSource( "entity" )
 								.getBindableJavaType() ).isEqualTo( Group.class );
 			assertThat( resolvedPathSource.findSubPathSource( "embedded" )

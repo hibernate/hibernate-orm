@@ -13,17 +13,16 @@ import java.util.Set;
 import java.util.function.Function;
 
 import org.hibernate.query.criteria.JpaCteCriteria;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 
 import jakarta.persistence.criteria.AbstractQuery;
-import jakarta.persistence.criteria.CriteriaQuery;
 
 /**
  * @author Steve Ebersole
@@ -176,8 +175,8 @@ public abstract class AbstractSqmDmlStatement<E>
 	}
 
 	@Override
-	public void setTarget(SqmRoot<E> root) {
-		this.target = root;
+	public void setTarget(JpaRoot<E> root) {
+		this.target = (SqmRoot<E>) root;
 	}
 
 	@Override

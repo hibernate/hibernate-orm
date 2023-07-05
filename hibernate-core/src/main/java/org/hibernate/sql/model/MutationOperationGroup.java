@@ -6,6 +6,9 @@
  */
 package org.hibernate.sql.model;
 
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+
 import org.hibernate.engine.jdbc.mutation.internal.EntityMutationOperationGroup;
 
 /**
@@ -58,4 +61,28 @@ public interface MutationOperationGroup {
 	default EntityMutationOperationGroup asEntityMutationOperationGroup() {
 		return null;
 	}
+
+	/**
+	 * @deprecated Will be removed. Use the other methods to visit each operation.
+	 */
+	@Deprecated(forRemoval = true)
+	default <O extends MutationOperation> void forEachOperation(BiConsumer<Integer, O> action) {
+		for ( int i = 0; i < getNumberOfOperations(); i++ ) {
+			action.accept( i, (O) getOperation( i ) );
+		}
+	}
+
+	/**
+	 * @deprecated Will be removed. Use the other methods to visit each operation.
+	 */
+	@Deprecated(forRemoval = true)
+	default <O extends MutationOperation> boolean hasMatching(BiFunction<Integer, O, Boolean> matcher) {
+		for ( int i = 0; i < getNumberOfOperations(); i++ ) {
+			if ( matcher.apply( i, (O) getOperation( i ) ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 }

@@ -25,6 +25,9 @@
  *     which allows the creation of {@link org.hibernate.query.criteria.JpaCteCriteria
  *     common table expressions}.
  * </ul>
+ * <p>
+ * The class {@link org.hibernate.query.criteria.CriteriaDefinition} is a helpful
+ * utility that makes it easier to construct criteria queries.
  *
  * @see org.hibernate.query.criteria.HibernateCriteriaBuilder
  * @see org.hibernate.query.criteria.JpaCriteriaQuery

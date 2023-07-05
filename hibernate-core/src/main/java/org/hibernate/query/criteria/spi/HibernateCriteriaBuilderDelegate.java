@@ -90,8 +90,8 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.wrap( expression );
 	}
 
-	@Override
-	public JpaPredicate wrap(Expression<Boolean>... expressions) {
+	@Override @SafeVarargs
+	public final JpaPredicate wrap(Expression<Boolean>... expressions) {
 		return criteriaBuilder.wrap( expressions );
 	}
 
@@ -334,7 +334,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>[] selections) {
+	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>... selections) {
 		return criteriaBuilder.construct( resultClass, selections );
 	}
 
@@ -344,7 +344,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public JpaCompoundSelection<Tuple> tuple(Selection<?>[] selections) {
+	public JpaCompoundSelection<Tuple> tuple(Selection<?>... selections) {
 		return criteriaBuilder.tuple( selections );
 	}
 
@@ -354,7 +354,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public JpaCompoundSelection<Object[]> array(Selection<?>[] selections) {
+	public JpaCompoundSelection<Object[]> array(Selection<?>... selections) {
 		return criteriaBuilder.array( selections );
 	}
 
@@ -364,7 +364,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>[] selections) {
+	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>... selections) {
 		return criteriaBuilder.array( resultClass, selections );
 	}
 
@@ -553,8 +553,8 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.literal( value );
 	}
 
-	@Override
-	public <T> List<? extends JpaExpression<T>> literals(T[] values) {
+	@Override @SafeVarargs
+	public final <T> List<? extends JpaExpression<T>> literals(T... values) {
 		return criteriaBuilder.literals( values );
 	}
 
@@ -1144,13 +1144,13 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.in( expression );
 	}
 
-	@Override
-	public <T> JpaInPredicate<T> in(Expression<? extends T> expression, Expression<? extends T>... values) {
+	@Override @SafeVarargs
+	public final <T> JpaInPredicate<T> in(Expression<? extends T> expression, Expression<? extends T>... values) {
 		return criteriaBuilder.in( expression, values );
 	}
 
-	@Override
-	public <T> JpaInPredicate<T> in(Expression<? extends T> expression, T... values) {
+	@Override @SafeVarargs
+	public final <T> JpaInPredicate<T> in(Expression<? extends T> expression, T... values) {
 		return criteriaBuilder.in( expression, values );
 	}
 

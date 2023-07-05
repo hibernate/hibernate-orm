@@ -2,6 +2,6 @@ package org.hibernate.tool.api.version;
 
 public interface Version {
 	
-	final static String CURRENT_VERSION = "6.2.6.Final";
+	final static String CURRENT_VERSION = "6.2.7-SNAPSHOT";
 
 }

@@ -8,6 +8,8 @@ package org.hibernate;
 
 import java.util.Collection;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Steve Ebersole
  */
@@ -28,7 +30,7 @@ public class PropertySetterAccessException extends PropertyAccessException {
 			String propertyName,
 			Class<?> expectedType,
 			Object target,
-			Object value) {
+			@Nullable Object value) {
 		super(
 				cause,
 				String.format(

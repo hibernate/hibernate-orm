@@ -17,6 +17,8 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * {@link PropertyAccess} implementation that deals with an underlying {@code Map}
  * as the container, using {@link Map#get} and {@link Map#put}.
@@ -59,12 +61,12 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 
 		@Override
 		@SuppressWarnings("rawtypes")
-		public Object get(Object owner) {
+		public @Nullable Object get(Object owner) {
 			return ( (Map) owner ).get( propertyName );
 		}
 
 		@Override
-		public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+		public @Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 			return get( owner );
 		}
 
@@ -80,17 +82,17 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 		}
 
 		@Override
-		public Member getMember() {
+		public @Nullable Member getMember() {
 			return null;
 		}
 
 		@Override
-		public String getMethodName() {
+		public @Nullable String getMethodName() {
 			return null;
 		}
 
 		@Override
-		public Method getMethod() {
+		public @Nullable Method getMethod() {
 			return null;
 		}
 	}
@@ -104,17 +106,17 @@ public class PropertyAccessMapImpl implements PropertyAccess {
 
 		@Override
 		@SuppressWarnings("unchecked")
-		public void set(Object target, Object value) {
+		public void set(Object target, @Nullable Object value) {
 			( (Map) target ).put( propertyName, value );
 		}
 
 		@Override
-		public String getMethodName() {
+		public @Nullable String getMethodName() {
 			return null;
 		}
 
 		@Override
-		public Method getMethod() {
+		public @Nullable Method getMethod() {
 			return null;
 		}
 	}

@@ -21,6 +21,8 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
@@ -41,7 +43,7 @@ public class GetterMethodImpl implements Getter {
 	}
 
 	@Override
-	public Object get(Object owner) {
+	public @Nullable Object get(Object owner) {
 		try {
 			return getterMethod.invoke( owner, ArrayHelper.EMPTY_OBJECT_ARRAY );
 		}
@@ -83,7 +85,7 @@ public class GetterMethodImpl implements Getter {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+	public @Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 		return get( owner );
 	}
 

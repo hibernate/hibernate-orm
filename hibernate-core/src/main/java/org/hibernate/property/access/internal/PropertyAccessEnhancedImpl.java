@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import jakarta.persistence.AccessType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.util.ReflectHelper.findSetterMethod;
 import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
@@ -42,7 +43,7 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 			PropertyAccessStrategy strategy,
 			Class<?> containerJavaType,
 			String propertyName,
-			AccessType getterAccessType) {
+			@Nullable AccessType getterAccessType) {
 		this.strategy = strategy;
 
 		final AccessType propertyAccessType = resolveAccessType( getterAccessType, containerJavaType, propertyName );
@@ -80,7 +81,7 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 		}
 	}
 
-	private AccessType resolveAccessType(AccessType getterAccessType, Class<?> containerJavaType, String propertyName) {
+	private static AccessType resolveAccessType(@Nullable AccessType getterAccessType, Class<?> containerJavaType, String propertyName) {
 		if ( getterAccessType != null ) {
 			// this should indicate FIELD access
 			return getterAccessType;

@@ -17,6 +17,8 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Michael Bartmann
  * @author Gavin King
@@ -62,13 +64,13 @@ public class PropertyAccessStrategyNoopImpl implements PropertyAccessStrategy {
 		public static final GetterImpl INSTANCE = new GetterImpl();
 
 		@Override
-		public Object get(Object owner) {
+		public @Nullable Object get(Object owner) {
 			return null;
 		}
 
 		@Override
 		@SuppressWarnings("rawtypes")
-		public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+		public @Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 			return null;
 		}
 
@@ -83,17 +85,17 @@ public class PropertyAccessStrategyNoopImpl implements PropertyAccessStrategy {
 		}
 
 		@Override
-		public Member getMember() {
+		public @Nullable Member getMember() {
 			return null;
 		}
 
 		@Override
-		public String getMethodName() {
+		public @Nullable String getMethodName() {
 			return null;
 		}
 
 		@Override
-		public Method getMethod() {
+		public @Nullable Method getMethod() {
 			return null;
 		}
 	}
@@ -105,16 +107,16 @@ public class PropertyAccessStrategyNoopImpl implements PropertyAccessStrategy {
 		public static final SetterImpl INSTANCE = new SetterImpl();
 
 		@Override
-		public void set(Object target, Object value) {
+		public void set(Object target, @Nullable Object value) {
 		}
 
 		@Override
-		public String getMethodName() {
+		public @Nullable String getMethodName() {
 			return null;
 		}
 
 		@Override
-		public Method getMethod() {
+		public @Nullable Method getMethod() {
 			return null;
 		}
 	}

@@ -8,6 +8,8 @@ package org.hibernate.property.access.spi;
 
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationStrategy;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Defines how a given persistent attribute is accessed by exposing
  * a {@link Getter} and a {@link Setter} for the attribute.
@@ -39,5 +41,5 @@ public interface PropertyAccess {
 	 *
 	 * @return The property setter
 	 */
-	Setter getSetter();
+	@Nullable Setter getSetter();
 }

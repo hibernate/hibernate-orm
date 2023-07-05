@@ -203,14 +203,14 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 		public boolean matches(String publicId, String systemId) {
 			if ( publicId != null ) {
 				if ( publicId.startsWith( httpBase )
-						|| publicId.matches( httpsBase ) ) {
+						|| publicId.startsWith( httpsBase ) ) {
 					return true;
 				}
 			}
 
 			if ( systemId != null ) {
 				if ( systemId.startsWith( httpBase )
-						|| systemId.matches( httpsBase ) ) {
+						|| systemId.startsWith( httpsBase ) ) {
 					return true;
 				}
 			}

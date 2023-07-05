@@ -46,12 +46,28 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <li>an entity type,
  * <li>{@link java.util.List},
  * <li>{@link org.hibernate.query.Query},
+ * <li>{@link org.hibernate.query.SelectionQuery},
  * <li>{@link jakarta.persistence.Query}, or
  * <li>{@link jakarta.persistence.TypedQuery}.
  * </ul>
  * <p>
  * The method parameters must match the parameters of the HQL query,
- * either by name or by position.
+ * either by name or by position:
+ * <ul>
+ * <li>an ordinal query parameter of form {@code ?n} is matched to
+ *     the <em>n</em>th parameter of the method, and
+ * <li>a named query parameter of form {@code :name} is matched to
+ *     the method parameter {@code name}.
+ * </ul>
+ * <p>
+ * As an exception, the method may have:
+ * <ul>
+ * <li>a parameter with type {@code Page}, and/or
+ * <li>a parameter with type {@code Order<? super E>},
+ *     {@code List<Order<? super E>>}, or {@code Order<? super E>...}
+ *     (varargs) where {@code E} is the entity type returned by the
+ *     query.
+ * </ul>
  * <p>
  * Queries specified using this annotation are always validated by
  * the Metamodel Generator, and so it isn't necessary to specify the

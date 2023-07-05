@@ -17,6 +17,11 @@ import java.util.Objects;
  * This is a convenience class which allows query result ordering
  * rules to be passed around the system before being applied to
  * a {@link Query} by calling {@link SelectionQuery#setOrder}.
+ * <p>
+ * A parameter of a {@linkplain org.hibernate.annotations.processing.HQL
+ * HQL query method} may be declared with type {@code Order<? super E>},
+ * {@code List<Order<? super E>>}, or {@code Order<? super E>...} (varargs)
+ * where {@code E} is the entity type returned by the query.
  *
  * @param <X> The result type of the query to be sorted
  *

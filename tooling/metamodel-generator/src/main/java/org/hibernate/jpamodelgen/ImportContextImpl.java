@@ -76,6 +76,11 @@ public class ImportContextImpl implements ImportContext {
 			result = result.substring( 0, fqcn.indexOf( '[' ) );
 			fqcn = result;
 		}
+		else if ( fqcn.endsWith( "..." ) ) {
+			additionalTypePart = "...";
+			result = result.substring( 0, fqcn.indexOf( "..." ) );
+			fqcn = result;
+		}
 
 		String pureFqcn = fqcn.replace( '$', '.' );
 

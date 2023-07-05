@@ -10,6 +10,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
+import org.hibernate.query.Order;
+import org.hibernate.query.Page;
+import org.hibernate.query.SelectionQuery;
 
 import java.util.List;
 
@@ -58,6 +61,9 @@ public class QueryMethod implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
+		List<String> paramTypes = this.paramTypes.stream()
+				.map(ptype->isOrderParam(ptype) && ptype.endsWith("[]") ? ptype.replace("[]", "...") : ptype)
+				.collect(toList());
 		StringBuilder declaration = new StringBuilder();
 		declaration
 				.append("\n/**\n * @see ")
@@ -65,9 +71,14 @@ public class QueryMethod implements MetaAttribute {
 				.append("#")
 				.append(methodName)
 				.append("(")
-				.append(join(",", paramTypes.stream().map(annotationMetaEntity::importType).toArray()))
+				.append(join(",", paramTypes.stream().map(this::strip).map(annotationMetaEntity::importType).toArray()))
 				.append(")")
-				.append("\n **/\n")
+				.append("\n **/\n");
+		if ( paramTypes.stream().anyMatch(ptype -> ptype.endsWith("..."))) {
+			declaration
+					.append("@SafeVarargs\n");
+		}
+		declaration
 				.append("public static ");
 		StringBuilder type = new StringBuilder();
 		if (containerTypeName != null) {
@@ -88,11 +99,16 @@ public class QueryMethod implements MetaAttribute {
 				.append(" entityManager");
 
 		for (int i =0; i<paramNames.size(); i++) {
+			String ptype = paramTypes.get(i);
+			String param = paramNames.get(i);
+			String rptype = returnTypeName != null
+					? ptype.replace(returnTypeName, annotationMetaEntity.importType(returnTypeName))
+					: ptype;
 			declaration
 					.append(", ")
-					.append(annotationMetaEntity.importType(paramTypes.get(i)))
+					.append(annotationMetaEntity.importType(rptype))
 					.append(" ")
-					.append(paramNames.get(i));
+					.append(param);
 		}
 		declaration
 				.append(")")
@@ -104,7 +120,7 @@ public class QueryMethod implements MetaAttribute {
 		}
 		declaration
 				.append("entityManager.")
-				.append(isNative ? "createNativeQuery" :"createQuery")
+				.append(isNative ? "createNativeQuery" : "createQuery")
 				.append("(")
 				.append(getConstantName());
 		if (returnTypeName != null) {
@@ -114,8 +130,10 @@ public class QueryMethod implements MetaAttribute {
 					.append(".class");
 		}
 		declaration.append(")");
+		boolean unwrapped = false;
 		for (int i = 1; i <= paramNames.size(); i++) {
 			String param = paramNames.get(i-1);
+			String ptype = paramTypes.get(i-1);
 			if (queryString.contains(":" + param)) {
 				declaration
 						.append("\n			.setParameter(\"")
@@ -132,6 +150,32 @@ public class QueryMethod implements MetaAttribute {
 						.append(param)
 						.append(")");
 			}
+			else if (isPageParam(ptype)) {
+				unwrap( declaration, unwrapped );
+				unwrapped = true;
+				declaration
+						.append("\n			.setPage(")
+						.append(param)
+						.append(")");
+			}
+			else if (isOrderParam(ptype)) {
+				unwrap( declaration, unwrapped );
+				unwrapped = true;
+				if (ptype.endsWith("...")) {
+					declaration
+							.append("\n			.setOrder(")
+							.append(annotationMetaEntity.importType(List.class.getName()))
+							.append(".of(")
+							.append(param)
+							.append("))");
+				}
+				else {
+					declaration
+							.append("\n			.setOrder(")
+							.append(param)
+							.append(")");
+				}
+			}
 		}
 		if ( containerTypeName == null) {
 			declaration.append("\n			.getSingleResult()");
@@ -143,9 +187,34 @@ public class QueryMethod implements MetaAttribute {
 		return declaration.toString();
 	}
 
+	private String strip(String type) {
+		int index = type.indexOf("<");
+		String stripped = index > 0 ? type.substring(0, index) : type;
+		return type.endsWith("...") ? stripped + "..." : stripped;
+	}
+
+	static boolean isPageParam(String ptype) {
+		return Page.class.getName().equals(ptype);
+	}
+
+	static boolean isOrderParam(String ptype) {
+		return ptype.startsWith(Order.class.getName())
+			|| ptype.startsWith(List.class.getName() + "<" + Order.class.getName());
+	}
+
+	private void unwrap(StringBuilder declaration, boolean unwrapped) {
+		if ( !unwrapped ) {
+			declaration
+					.append("\n			.unwrap(")
+					.append(annotationMetaEntity.importType(SelectionQuery.class.getName()))
+					.append(".class)");
+		}
+	}
+
 	@Override
 	public String getAttributeNameDeclarationString() {
-		return new StringBuilder().append("public static final String ")
+		return new StringBuilder()
+				.append("public static final String ")
 				.append(getConstantName())
 				.append(" = \"")
 				.append(queryString)
@@ -160,7 +229,9 @@ public class QueryMethod implements MetaAttribute {
 		}
 		else {
 			return stem + "_" + StringHelper.join("_",
-					paramTypes.stream().map(StringHelper::unqualify).collect(toList()));
+					paramTypes.stream()
+							.filter(name -> !isPageParam(name) && !isOrderParam(name))
+							.map(StringHelper::unqualify).collect(toList()));
 		}
 	}
 

@@ -325,16 +325,16 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 */
 	SelectionQuery<R> setFirstResult(int startPosition);
 
-	/**
-	 * Set the page of results to return.
-	 *
-	 * @param pageNumber the page to return, where pages are numbered from zero
-	 * @param pageSize the number of results per page
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> paginate(int pageSize, int pageNumber);
+//	/**
+//	 * Set the page of results to return.
+//	 *
+//	 * @param pageNumber the page to return, where pages are numbered from zero
+//	 * @param pageSize the number of results per page
+//	 *
+//	 * @since 6.3
+//	 */
+//	@Incubating
+//	SelectionQuery<R> setPage(int pageSize, int pageNumber);
 
 	/**
 	 * Set the {@linkplain Page page} of results to return.
@@ -344,7 +344,7 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @since 6.3
 	 */
 	@Incubating
-	SelectionQuery<R> paginate(Page page);
+	SelectionQuery<R> setPage(Page page);
 
 	/**
 	 * Obtain the {@link CacheMode} in effect for this query. By default,

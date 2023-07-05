@@ -888,15 +888,15 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	@Override
 	Query<R> setFirstResult(int startPosition);
 
-	@Override @Incubating
-	default Query<R> paginate(int pageSize, int pageNumber) {
-		setFirstResult( pageNumber * pageSize );
-		setMaxResults( pageSize );
-		return this;
-	}
+//	@Override @Incubating
+//	default Query<R> setPage(int pageSize, int pageNumber) {
+//		setFirstResult( pageNumber * pageSize );
+//		setMaxResults( pageSize );
+//		return this;
+//	}
 
 	@Override @Incubating
-	default Query<R> paginate(Page page) {
+	default Query<R> setPage(Page page) {
 		setMaxResults( page.getMaxResults() );
 		setFirstResult( page.getFirstResult() );
 		return this;

@@ -14,9 +14,9 @@ import org.hibernate.Incubating;
  * <p>
  * This is a convenience class which allows a reference to a page of
  * results to be passed around the system before being applied to
- * a {@link Query} by calling {@link Query#paginate(Page)}.
+ * a {@link Query} by calling {@link Query#setPage(Page)}.
  *
- * @see Query#paginate(Page)
+ * @see Query#setPage(Page)
  *
  * @since 6.3
  *
@@ -43,13 +43,17 @@ public class Page {
 		return size*number;
 	}
 
-	public Page(int size, int number) {
+	private Page(int size, int number) {
 		this.size = size;
 		this.number = number;
 	}
 
+	public static Page page(int size, int number) {
+		return new Page( size, number );
+	}
+
 	public static Page first(int size) {
-		return new Page(0, size);
+		return new Page( size, 0 );
 	}
 
 	public Page next() {

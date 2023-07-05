@@ -276,15 +276,15 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// convenience methods
 
-	@Override
-	public SelectionQuery<R> paginate(int pageSize, int pageNumber) {
-		setFirstResult( pageNumber * pageSize );
-		setMaxResults( pageSize );
-		return this;
-	}
+//	@Override
+//	public SelectionQuery<R> setPage(int pageSize, int pageNumber) {
+//		setFirstResult( pageNumber * pageSize );
+//		setMaxResults( pageSize );
+//		return this;
+//	}
 
 	@Override
-	public SelectionQuery<R> paginate(Page page) {
+	public SelectionQuery<R> setPage(Page page) {
 		setMaxResults( page.getMaxResults() );
 		setFirstResult( page.getFirstResult() );
 		return this;

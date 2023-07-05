@@ -61,7 +61,7 @@ A persistence context—that is, a `Session` or `EntityManager`—absolutely pos
 If you accidentally leak a session across threads, you will suffer.
 ====
 
-.Container-managed peristence contexts
+.Container-managed persistence contexts
 ****
 In a container environment, the lifecycle of a persistence context scoped to the transaction will usually be managed for you.
 ****
@@ -279,7 +279,7 @@ But there's a way to set things up so that an operation will propagate to associ
 [[cascade]]
 === Cascading persistence operations
 
-It's quite often the case that the lifecycle of a _child_ entity is completely dependent on the lifeycle of some _parent_.
+It's quite often the case that the lifecycle of a _child_ entity is completely dependent on the lifecycle of some _parent_.
 This is especially common for many-to-one and one-to-one associations, though it's very rare for many-to-many associations.
 
 For example, it's quite common to make an `Order` and all its ``Item``s persistent in the same transaction, or to delete a `Project` and its ``Files``s at once.

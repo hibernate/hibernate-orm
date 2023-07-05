@@ -15,7 +15,11 @@ import org.hibernate.query.SortDirection;
  * @author Steve Ebersole
  */
 public interface JpaOrder extends Order, JpaCriteriaNode {
-	SortDirection getSortOrder();
+
+	/**
+	 * The direction, ascending or descending, in which to sort
+	 */
+	SortDirection getSortDirection();
 
 	/**
 	 * Set the precedence of nulls for this order element
@@ -31,9 +35,15 @@ public interface JpaOrder extends Order, JpaCriteriaNode {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant returns
 
+	/**
+	 * Reverse the sorting direction
+	 */
 	@Override
 	JpaOrder reverse();
 
+	/**
+	 * The expression to sort by
+	 */
 	@Override
 	JpaExpression<?> getExpression();
 }

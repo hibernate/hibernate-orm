@@ -38,7 +38,6 @@ import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
  * A JPA {@link CriteriaBuilder} is a source of objects which may be composed
@@ -459,7 +458,6 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	<T> JpaExpression<T> literal(T value);
-	<T> SqmExpression<T> literal(T value, SqmExpression<? extends T> typeInferenceSource);
 
 	<T> List<? extends JpaExpression<T>> literals(T... values);
 
@@ -570,9 +568,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<K, L extends List<?>> JpaExpression<Set<K>> indexes(L list);
 
-	<T> SqmExpression<T> value(T value);
-
-	<T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource);
+	<T> JpaExpression<T> value(T value);
 
 	<V, C extends Collection<V>> JpaExpression<Collection<V>> values(C collection);
 

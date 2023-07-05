@@ -7,7 +7,6 @@
 package org.hibernate.query.criteria;
 
 import java.util.List;
-import java.util.Set;
 
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.Expression;
@@ -22,9 +21,6 @@ import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 
 import org.hibernate.query.sqm.FetchClauseType;
-import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
-import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
-import org.hibernate.query.sqm.tree.from.SqmJoin;
 
 /**
  * @author Steve Ebersole
@@ -35,11 +31,9 @@ public interface JpaSubQuery<T> extends Subquery<T>, JpaSelectCriteria<T>, JpaEx
 
 	JpaSubQuery<T> multiselect(List<Selection<?>> selectionList);
 
-	<X> SqmCrossJoin<X> correlate(SqmCrossJoin<X> parentCrossJoin);
+	<X> JpaCrossJoin<X> correlate(JpaCrossJoin<X> parentCrossJoin);
 
-	<X> SqmEntityJoin<X> correlate(SqmEntityJoin<X> parentEntityJoin);
-
-	Set<SqmJoin<?, ?>> getCorrelatedSqmJoins();
+	<X> JpaEntityJoin<X> correlate(JpaEntityJoin<X> parentEntityJoin);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause

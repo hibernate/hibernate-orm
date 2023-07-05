@@ -54,7 +54,6 @@ import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CollectionJoin;
@@ -555,11 +554,6 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <T> SqmExpression<T> literal(T value, SqmExpression<? extends T> typeInferenceSource) {
-		return criteriaBuilder.literal( value, typeInferenceSource );
-	}
-
-	@Override
 	public <T> List<? extends JpaExpression<T>> literals(T[] values) {
 		return criteriaBuilder.literals( values );
 	}
@@ -740,13 +734,8 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <T> SqmExpression<T> value(T value) {
+	public <T> JpaExpression<T> value(T value) {
 		return criteriaBuilder.value( value );
-	}
-
-	@Override
-	public <T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource) {
-		return criteriaBuilder.value( value, typeInferenceSource );
 	}
 
 	@Override

@@ -15,8 +15,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteContainer;
 import org.hibernate.query.criteria.JpaCteCriteria;
+import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaSelection;
@@ -498,15 +500,17 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public <X> SqmCrossJoin<X> correlate(SqmCrossJoin<X> parentCrossJoin) {
-		final SqmCorrelatedCrossJoin<X> correlated = parentCrossJoin.createCorrelation();
+	public <X> SqmCrossJoin<X> correlate(JpaCrossJoin<X> parentCrossJoin) {
+		final SqmCorrelatedCrossJoin<X> correlated =
+				((SqmCrossJoin<X>) parentCrossJoin).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
-	public <X> SqmEntityJoin<X> correlate(SqmEntityJoin<X> parentEntityJoin) {
-		final SqmCorrelatedEntityJoin<X> correlated = parentEntityJoin.createCorrelation();
+	public <X> SqmEntityJoin<X> correlate(JpaEntityJoin<X> parentEntityJoin) {
+		final SqmCorrelatedEntityJoin<X> correlated =
+				((SqmEntityJoin<X>) parentEntityJoin).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
@@ -531,20 +535,20 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 		return correlatedJoins;
 	}
 
-	@Override
-	public Set<SqmJoin<?, ?>> getCorrelatedSqmJoins() {
-		final Set<SqmJoin<?, ?>> correlatedJoins = new HashSet<>();
-		for ( SqmRoot<?> root : getQuerySpec().getFromClause().getRoots() ) {
-			if ( root instanceof SqmCorrelation<?, ?> ) {
-				for ( SqmJoin<?, ?> sqmJoin : root.getSqmJoins() ) {
-					if ( sqmJoin instanceof SqmCorrelation<?, ?> ) {
-						correlatedJoins.add( sqmJoin );
-					}
-				}
-			}
-		}
-		return correlatedJoins;
-	}
+//	@Override
+//	public Set<SqmJoin<?, ?>> getCorrelatedSqmJoins() {
+//		final Set<SqmJoin<?, ?>> correlatedJoins = new HashSet<>();
+//		for ( SqmRoot<?> root : getQuerySpec().getFromClause().getRoots() ) {
+//			if ( root instanceof SqmCorrelation<?, ?> ) {
+//				for ( SqmJoin<?, ?> sqmJoin : root.getSqmJoins() ) {
+//					if ( sqmJoin instanceof SqmCorrelation<?, ?> ) {
+//						correlatedJoins.add( sqmJoin );
+//					}
+//				}
+//			}
+//		}
+//		return correlatedJoins;
+//	}
 
 	@Override
 	public SqmPredicate isNull() {

@@ -48,11 +48,12 @@ public class SqmSortSpecification implements JpaOrder {
 		return new SqmSortSpecification( sortExpression.copy( context ), sortOrder, nullPrecedence );
 	}
 
-	public SqmExpression getSortExpression() {
+	public SqmExpression<?> getSortExpression() {
 		return sortExpression;
 	}
 
-	public SortDirection getSortOrder() {
+	@Override
+	public SortDirection getSortDirection() {
 		return sortOrder;
 	}
 

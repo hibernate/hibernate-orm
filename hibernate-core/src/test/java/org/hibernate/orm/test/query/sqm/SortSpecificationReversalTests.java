@@ -33,12 +33,12 @@ public class SortSpecificationReversalTests {
 		SqmSortSpecification order = new SqmSortSpecification( sortExpression, ASCENDING, FIRST );
 
 		assertEquals( sortExpression, order.getSortExpression() );
-		assertEquals( ASCENDING, order.getSortOrder() );
+		assertEquals( ASCENDING, order.getSortDirection() );
 		assertEquals( FIRST, order.getNullPrecedence() );
 
 		JpaOrder reversed = order.reverse();
 
-		assertEquals( DESCENDING, reversed.getSortOrder() );
+		assertEquals( DESCENDING, reversed.getSortDirection() );
 		assertEquals( FIRST, reversed.getNullPrecedence() );
 
 		assertNotSame( "Order.reverse() should create new instance", order, reversed );

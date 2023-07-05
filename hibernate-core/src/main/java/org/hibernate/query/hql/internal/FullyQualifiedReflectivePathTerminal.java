@@ -208,6 +208,16 @@ public class FullyQualifiedReflectivePathTerminal
 	}
 
 	@Override
+	public SqmPredicate equalTo(Expression that) {
+		return null;
+	}
+
+	@Override
+	public SqmPredicate equalTo(Object that) {
+		return null;
+	}
+
+	@Override
 	public SqmPredicate in(Object... values) {
 		return null;
 	}

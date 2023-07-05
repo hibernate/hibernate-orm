@@ -561,6 +561,16 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
+	public SqmPredicate equalTo(Expression<T> that) {
+		return nodeBuilder().equal( this, that );
+	}
+
+	@Override
+	public SqmPredicate equalTo(T that) {
+		return nodeBuilder().equal( this, that );
+	}
+
+	@Override
 	public SqmInPredicate<?> in(Object... values) {
 		return nodeBuilder().in( this, values );
 	}

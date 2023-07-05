@@ -23,7 +23,6 @@ import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
 
-import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
 
 /**
@@ -113,6 +112,16 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	@Override
 	public SqmPredicate isNotNull() {
 		return nodeBuilder().isNotNull( this );
+	}
+
+	@Override
+	public SqmPredicate equalTo(Expression<T> that) {
+		return nodeBuilder().equal( this, that );
+	}
+
+	@Override
+	public SqmPredicate equalTo(T that) {
+		return nodeBuilder().equal( this, that );
 	}
 
 	@Override

@@ -95,34 +95,34 @@ public final class ClassWriter {
 	 * @return body content
 	 */
 	private static StringBuffer generateBody(Metamodel entity, Context context) {
-		StringWriter sw = new StringWriter();
+		final StringWriter sw = new StringWriter();
 		try ( PrintWriter pw = new PrintWriter(sw) ) {
 
 			if ( entity.getElement() instanceof TypeElement ) {
-				pw.println(writeStaticMetaModelAnnotation(entity));
+				pw.println( writeStaticMetaModelAnnotation(entity) );
 			}
 
-			if (context.addGeneratedAnnotation()) {
-				pw.println(writeGeneratedAnnotation(entity, context));
+			if ( context.addGeneratedAnnotation() ) {
+				pw.println( writeGeneratedAnnotation(entity, context) );
 			}
-			if (context.isAddSuppressWarningsAnnotation()) {
-				pw.println(writeSuppressWarnings());
+			if ( context.isAddSuppressWarningsAnnotation() ) {
+				pw.println( writeSuppressWarnings() );
 			}
 
-			printClassDeclaration(entity, pw, context);
+			printClassDeclaration( entity, pw, context );
 
 			pw.println();
 
-			List<MetaAttribute> members = entity.getMembers();
-			for (MetaAttribute metaMember : members) {
-				if (metaMember.hasTypedAttribute()) {
+			final List<MetaAttribute> members = entity.getMembers();
+			for ( MetaAttribute metaMember : members ) {
+				if ( metaMember.hasTypedAttribute() ) {
 					metaMember.getAttributeDeclarationString().lines()
 							.forEach(line -> pw.println("	" + line));
 				}
 			}
 			pw.println();
-			for (MetaAttribute metaMember : members) {
-				pw.println("	" + metaMember.getAttributeNameDeclarationString());
+			for ( MetaAttribute metaMember : members ) {
+				pw.println( "	" + metaMember.getAttributeNameDeclarationString() );
 			}
 
 			pw.println();

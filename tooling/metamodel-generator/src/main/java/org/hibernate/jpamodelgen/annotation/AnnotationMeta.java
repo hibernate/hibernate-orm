@@ -9,7 +9,6 @@ package org.hibernate.jpamodelgen.annotation;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
-import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.validation.ProcessorSessionFactory;
 import org.hibernate.jpamodelgen.validation.Validation;
 
@@ -17,6 +16,8 @@ import javax.lang.model.element.AnnotationMirror;
 import java.util.List;
 
 import static java.util.Collections.emptySet;
+import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
+import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
 
 public abstract class AnnotationMeta implements Metamodel {
 
@@ -41,47 +42,45 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	void checkNamedQueries() {
-		if ( TypeUtils.containsAnnotation( getElement(), Constants.CHECK_HQL )
-			|| TypeUtils.containsAnnotation( getElement().getEnclosingElement(), Constants.CHECK_HQL ) ) {
-			checkNamedQueriesForAnnotation( Constants.NAMED_QUERY );
-			checkNamedQueriesForRepeatableAnnotation( Constants.NAMED_QUERIES );
-			checkNamedQueriesForAnnotation( Constants.HIB_NAMED_QUERY );
-			checkNamedQueriesForRepeatableAnnotation( Constants.HIB_NAMED_QUERIES );
-		}
-
+		boolean checkHql = containsAnnotation( getElement(), Constants.CHECK_HQL )
+						|| containsAnnotation( getElement().getEnclosingElement(), Constants.CHECK_HQL );
+		checkNamedQueriesForAnnotation( Constants.NAMED_QUERY, checkHql );
+		checkNamedQueriesForRepeatableAnnotation( Constants.NAMED_QUERIES, checkHql );
+		checkNamedQueriesForAnnotation( Constants.HIB_NAMED_QUERY, checkHql );
+		checkNamedQueriesForRepeatableAnnotation( Constants.HIB_NAMED_QUERIES, checkHql );
 	}
 
-	private void checkNamedQueriesForAnnotation(String annotationName) {
-		AnnotationMirror mirror = TypeUtils.getAnnotationMirror(getElement(), annotationName);
+	private void checkNamedQueriesForAnnotation(String annotationName, boolean checkHql) {
+		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			checkNamedQueriesForMirror( mirror );
+			checkNamedQueriesForMirror( mirror, checkHql );
 		}
 	}
 
-	private void checkNamedQueriesForRepeatableAnnotation(String annotationName) {
-		AnnotationMirror mirror = TypeUtils.getAnnotationMirror(getElement(), annotationName);
+	private void checkNamedQueriesForRepeatableAnnotation(String annotationName, boolean checkHql) {
+		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
 			mirror.getElementValues().forEach((key, value) -> {
 				if ( key.getSimpleName().contentEquals("value") ) {
 					List<? extends AnnotationMirror> values =
 							(List<? extends AnnotationMirror>) value.getValue();
 					for ( AnnotationMirror annotationMirror : values ) {
-						checkNamedQueriesForMirror( annotationMirror );
+						checkNamedQueriesForMirror( annotationMirror, checkHql );
 					}
 				}
 			});
 		}
 	}
 
-	private void checkNamedQueriesForMirror(AnnotationMirror mirror) {
+	private void checkNamedQueriesForMirror(AnnotationMirror mirror, boolean checkHql) {
 		mirror.getElementValues().forEach((key, value) -> {
 			if ( key.getSimpleName().contentEquals("query") ) {
-				String hql = value.getValue().toString();
+				final String hql = value.getValue().toString();
 				Validation.validate(
 						hql,
-						false,
+						false, checkHql,
 						emptySet(), emptySet(),
-						new ErrorHandler( getElement(), mirror, hql, getContext()),
+						new ErrorHandler( getElement(), mirror, hql, getContext() ),
 						ProcessorSessionFactory.create( getContext().getProcessingEnvironment() )
 				);
 			}
@@ -89,7 +88,7 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	private void addAuxiliaryMembersForRepeatableAnnotation(String annotationName, String prefix) {
-		AnnotationMirror mirror = TypeUtils.getAnnotationMirror( getElement(), annotationName );
+		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
 			mirror.getElementValues().forEach((key, value) -> {
 				if ( key.getSimpleName().contentEquals("value") ) {
@@ -104,7 +103,7 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	private void addAuxiliaryMembersForAnnotation(String annotationName, String prefix) {
-		AnnotationMirror mirror = TypeUtils.getAnnotationMirror( getElement(), annotationName);
+		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
 			addAuxiliaryMembersForMirror( mirror, prefix );
 		}
@@ -113,8 +112,9 @@ public abstract class AnnotationMeta implements Metamodel {
 	private void addAuxiliaryMembersForMirror(AnnotationMirror mirror, String prefix) {
 		mirror.getElementValues().forEach((key, value) -> {
 			if ( key.getSimpleName().contentEquals("name") ) {
-				String name = value.getValue().toString();
-				putMember( prefix + name, new NameMetaAttribute( this, name, prefix ) );
+				final String name = value.getValue().toString();
+				putMember( prefix + name,
+						new NameMetaAttribute( this, name, prefix ) );
 			}
 		});
 	}

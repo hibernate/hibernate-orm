@@ -25,6 +25,7 @@ public final class Constants {
 	public static final String ONE_TO_MANY = "jakarta.persistence.OneToMany";
 	public static final String MANY_TO_ONE = "jakarta.persistence.ManyToOne";
 	public static final String MANY_TO_MANY = "jakarta.persistence.ManyToMany";
+	public static final String MANY_TO_ANY = "org.hibernate.annotations.ManyToAny";
 	public static final String MAP_KEY_CLASS = "jakarta.persistence.MapKeyClass";
 	public static final String ELEMENT_COLLECTION = "jakarta.persistence.ElementCollection";
 	public static final String ACCESS = "jakarta.persistence.Access";

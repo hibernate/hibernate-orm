@@ -350,14 +350,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			else {
 				// 2) build the EntityKey
 				entityKey = new EntityKey( id, concreteDescriptor );
-				// 3) schedule the EntityKey for batch loading, if possible
-				if ( concreteDescriptor.isBatchLoadable() ) {
-					final PersistenceContext persistenceContext =
-							rowProcessingState.getSession().getPersistenceContextInternal();
-					if ( !persistenceContext.containsEntity( entityKey ) ) {
-						persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
-					}
-				}
 			}
 		}
 	}

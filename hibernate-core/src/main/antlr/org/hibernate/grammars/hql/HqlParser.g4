@@ -575,15 +575,25 @@ limitClause
  * An 'offset' of the first query result to return
  */
 offsetClause
-	: OFFSET parameterOrIntegerLiteral (ROW | ROWS)?
+	: OFFSET parameterOrIntegerLiteral
+	  (ROW | ROWS)?   // no semantics
 	;
 
 /**
  * A much more complex syntax for limits
  */
 fetchClause
-	: FETCH (FIRST | NEXT) (parameterOrIntegerLiteral | parameterOrNumberLiteral PERCENT) (ROW | ROWS) (ONLY | WITH TIES)
+	: FETCH
+	  (FIRST | NEXT)  // no semantics
+      fetchCountOrPercent
+	  (ROW | ROWS)    // no semantics
+	  (ONLY | WITH TIES)
 	;
+
+fetchCountOrPercent
+    : parameterOrIntegerLiteral
+    | parameterOrNumberLiteral PERCENT
+    ;
 
 /**
  * An parameterizable integer literal

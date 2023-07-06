@@ -8,7 +8,11 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.Consumer;
 
+import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
+import org.hibernate.engine.spi.PersistentAttributeInterceptable;
+import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -19,7 +23,10 @@ import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+
+import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptableOrNull;
 
 public abstract class AbstractBatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
 		implements EntityInitializer {
@@ -32,7 +39,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	protected final ToOneAttributeMapping referencedModelPart;
 	protected final EntityInitializer firstEntityInitializer;
 
-	protected Object entityInstance;
+	protected Object initializedEntityInstance;
 	protected EntityKey entityKey;
 
 	protected State state = State.UNINITIALIZED;
@@ -90,18 +97,54 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 		}
 		else {
 			entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
-
 			state = State.KEY_RESOLVED;
-
-			rowProcessingState.getSession().getPersistenceContext()
-					.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
 			registerResolutionListener();
 		}
 	}
 
+	protected Object getExistingInitializedInstance(RowProcessingState rowProcessingState) {
+		assert entityKey != null;
+		final SharedSessionContractImplementor session = rowProcessingState.getSession();
+		final PersistenceContext persistenceContext = session.getPersistenceContext();
+		final Object instance = persistenceContext.getEntity( entityKey );
+		if ( instance == null ) {
+			final LoadingEntityEntry loadingEntityEntry = persistenceContext
+					.getLoadContexts().findLoadingEntityEntry( entityKey );
+			if ( loadingEntityEntry != null ) {
+				return loadingEntityEntry.getEntityInstance();
+			}
+		}
+		else if ( isInitialized( instance ) ) {
+			return instance;
+		}
+		return null;
+	}
+
+	private boolean isInitialized(Object entity) {
+		final PersistentAttributeInterceptable attributeInterceptable = asPersistentAttributeInterceptableOrNull(
+				entity );
+		if ( attributeInterceptable == null ) {
+			return true;
+		}
+		final PersistentAttributeInterceptor interceptor =
+				attributeInterceptable.$$_hibernate_getInterceptor();
+		if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
+			return ( (EnhancementAsProxyLazinessInterceptor) interceptor ).isInitialized();
+		}
+		else {
+			return true;
+		}
+	}
+
+	protected void registerToBatchFetchQueue(RowProcessingState rowProcessingState) {
+		assert entityKey != null;
+		rowProcessingState.getSession().getPersistenceContext()
+				.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
+	}
+
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
-		entityInstance = null;
+		initializedEntityInstance = null;
 		entityKey = null;
 		state = State.UNINITIALIZED;
 		clearResolutionListeners();
@@ -114,7 +157,7 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 
 	@Override
 	public Object getEntityInstance() {
-		return entityInstance;
+		return initializedEntityInstance;
 	}
 
 	@Override
@@ -129,8 +172,8 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 
 	@Override
 	public void registerResolutionListener(Consumer<Object> listener) {
-		if ( entityInstance != null ) {
-			listener.accept( entityInstance );
+		if ( initializedEntityInstance != null ) {
+			listener.accept( initializedEntityInstance );
 		}
 		else {
 			super.registerResolutionListener( listener );

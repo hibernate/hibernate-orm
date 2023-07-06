@@ -7,32 +7,39 @@
 package org.hibernate.orm.test.mapping;
 
 import org.hibernate.MappingException;
+import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataBuildingContext;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
-
 import org.hibernate.testing.boot.MetadataBuildingContextTestingImpl;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
+
 
 @BaseUnitTest
 public class PersistentClassTest {
 
 	private StandardServiceRegistry serviceRegistry;
 	private MetadataBuildingContext metadataBuildingContext;
+	private MetadataImplementor metadata;
 
 	@BeforeEach
 	public void prepare() {
 		serviceRegistry = new StandardServiceRegistryBuilder().build();
 		metadataBuildingContext = new MetadataBuildingContextTestingImpl( serviceRegistry );
+		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
+				.addAnnotatedClass(Participant.class)
+				.getMetadataBuilder().build();
 	}
 
 	@AfterEach
@@ -77,4 +84,10 @@ public class PersistentClassTest {
 		}
 	}
 
+	@Test
+	public void testCheckColumnDuplication() {
+		RootClass pc = (RootClass) metadata.getEntityBinding( Participant.class.getName() );
+
+		assertDoesNotThrow( () -> pc.validate( metadata ) );
+	}
 }

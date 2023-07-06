@@ -611,7 +611,41 @@ We can call the generated query method like this:
 ----
 List<Book> books =
         Queries_.findBooksByTitleWithPagination(entityManager, titlePattern,
-                                                RESULTS_PER_PAGE, page*RESULTS_PER_PAGE);
+                        RESULTS_PER_PAGE, page*RESULTS_PER_PAGE);
+----
+
+Optionally, a query method may have additional "magic" parameters which do not map to query parameters:
+
+[cols="19,~,32m"]
+|===
+| Parameter type | Purpose | Example argument
+
+| `Page` | Specifies a page of query results | Page.first(20)
+| `Order<? super E>` | Specifies an entity attribute to order by, if `E` is the entity type returned by the query | Order.asc(Book_.title)
+| `List<Order? super E>` +
+(or varargs) | Specifies entity attributes to order by, if `E` is the entity type returned by the query | List.of(Order.asc(Book_.title), Order.asc(Book_.isbn))
+| `Order<Object[]>` | Specifies a column to order by, if the query returns a projection list | Order.asc(1)
+| `List<Object[]>` +
+(or varargs) | Specifies columns to order by, if the query returns a projection list | List.of(Order.asc(1), Order.desc(2))
+|===
+
+Thus, if we redefine our query method as follows:
+
+[source,java]
+----
+interface Queries {
+    @HQL("from Book where title like :title order by title")
+    List<Book> findBooksByTitleWithPagination(String title, Page page, Order<? super Book>... order);
+}
+----
+
+Then we can call it like this:
+
+[source,java]
+----
+List<Book> books =
+        Queries_.findBooksByTitleWithPagination(entityManager, titlePattern,
+                        Page.page(RESULTS_PER_PAGE, page), Order.asc(Book_.isbn));
 ----
 
 A query method doesn't need to return `List`.
@@ -674,6 +708,13 @@ We do need to be careful here if our persistence code uses native SQL, or if it 
 Whether we're testing against your real database, or against an in-memory Java database, we'll need to export the schema at the beginning of a test suite.
 We _usually_ do this when we create the Hibernate `SessionFactory` or JPA `EntityManager`, and so traditionally we've used a <<automatic-schema-export,configuration property>> for this.
 The JPA-standard property is `jakarta.persistence.schema-generation.database.action`.
+For example, if we're using `Configuration` to configure Hibernate, we could write:
+
+[source,java]
+----
+configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
+                          Action.CREATE.getExternalJpaName());
+----
 
 Alternatively, in Hibernate 6, we may use the new `SchemaManager` API, just as we did <<main-hibernate,above>>.
 
@@ -708,8 +749,37 @@ insert into Books (isbn, title) values ('9781617290459', 'Java Persistence with 
 
 If we name this file `import.sql`, and place it in the root classpath, that's all we need to do.
 Otherwise, we need to specify the file in the <<automatic-schema-export,configuration property>> `jakarta.persistence.schema-generation.create-script-source`.
+If we're using `Configuration` to configure Hibernate, we could write:
 
-This SQL script will be executed every time `exportMappedObjects()` or `truncateMappedObjects()` is called.
+[source,java]
+----
+configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE,
+                          "/org/example/test-data.sql");
+----
+
+The SQL script will be executed every time `exportMappedObjects()` or `truncateMappedObjects()` is called.
+
+[TIP]
+====
+There's another sort of mess a test can leave behind: cached data in the <<second-level-cache,second-level cache>>.
+We recommend _disabling_ Hibernate's second-level cache for most sorts of testing.
+Alternatively, if the second-level cache is not disabled, then before each test we should call:
+[source,java]
+----
+sessionFactory.getCache().evictAllRegions();
+----
+====
+
+Now, suppose you've followed our advice, and written your entities and query methods to minimize dependencies on "infrastructure", that is, on libraries other than JPA and Hibernate, on frameworks,  on container-managed objects, and even on bits of your own system which are hard to instantiate from scratch.
+Then testing persistence logic is now straightforward!
+
+You'll need to:
+
+- bootstrap Hibernate and create a `SessionFactory` or `EntityManagerFactory` and the beginning of your test suite (we've already seen how to do that), and
+- create a new `Session` or `EntityManager` inside each `@Test` method, using `inTransaction()`, for example.
+
+Actually, some tests might require multiple sessions.
+But be careful not to leak a session between different tests.
 
 [[architecture]]
 === Architecture and the persistence layer

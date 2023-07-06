@@ -50,6 +50,12 @@ dependencies {
         runtime jakartaLibs.jaxbApi
         runtime jakartaLibs.inject
 
+        runtime jakartaLibs.cdi
+        runtime jakartaLibs.validation
+        runtime jakartaLibs.jacc
+        runtime jakartaLibs.annotation
+        runtime jakartaLibs.jsonbApi
+        // jakartaLibs.interceptors -- for tests only
 
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         // todo : imo these are questionable

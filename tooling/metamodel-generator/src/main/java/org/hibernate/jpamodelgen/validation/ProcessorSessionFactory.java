@@ -525,12 +525,11 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			return true;
 		}
 		else {
-			TypeMirror type = member.asType();
+			final TypeMirror type = member.asType();
 			if (type.getKind() == TypeKind.DECLARED) {
-				DeclaredType declaredType = (DeclaredType) type;
-				TypeElement typeElement = (TypeElement) declaredType.asElement();
-				//TODO: something better here!
-				return typeElement.getSuperclass().toString().startsWith("java.lang.Enum");
+				final DeclaredType declaredType = (DeclaredType) type;
+				final TypeElement typeElement = (TypeElement) declaredType.asElement();
+				return typeElement.getKind() == ElementKind.ENUM;
 			}
 			else {
 				return false;
@@ -547,7 +546,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			return true;
 		}
 		else {
-			TypeMirror type = member.asType();
+			final TypeMirror type = member.asType();
 			return type.getKind() == TypeKind.DECLARED
 				&& hasAnnotation(type, "Embeddable");
 		}

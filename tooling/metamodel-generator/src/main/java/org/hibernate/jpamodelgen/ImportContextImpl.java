@@ -8,6 +8,7 @@ package org.hibernate.jpamodelgen;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -21,13 +22,13 @@ import org.hibernate.jpamodelgen.model.ImportContext;
  */
 public class ImportContextImpl implements ImportContext {
 
-	private Set<String> imports = new TreeSet<String>();
-	private Set<String> staticImports = new TreeSet<String>();
-	private Map<String, String> simpleNames = new HashMap<String, String>();
+	private final Set<String> imports = new TreeSet<>();
+	private final Set<String> staticImports = new TreeSet<>();
+	private final Map<String, String> simpleNames = new HashMap<>();
 
 	private String basePackage = "";
 
-	private static final Map<String, String> PRIMITIVES = new HashMap<String, String>();
+	private static final Map<String, String> PRIMITIVES = new HashMap<>();
 
 	static {
 		PRIMITIVES.put( "char", "Character" );
@@ -56,61 +57,79 @@ public class ImportContextImpl implements ImportContext {
 	 * {@code java.util.Collection<org.marvel.Hulk>} imports {@code java.util.Collection} and returns {@code Collection}
 	 * {@code org.marvel.Hulk[]} imports {@code org.marvel.Hulk} and returns {@code Hulk}
 	 *
-	 * @param fqcn Fully qualified class name
+	 * @param typeExpression A type expression
 	 *
 	 * @return import string
 	 */
-	public String importType(String fqcn) {
-		String result = fqcn;
+	public String importType(String typeExpression) {
+		String result = typeExpression;
 
-		//if(fqcn==null) return "/** (null) **/"; 
-
-		String additionalTypePart = null;
-		if ( fqcn.indexOf( '<' ) >= 0 ) {
-			additionalTypePart = result.substring( fqcn.indexOf( '<' ) );
-			result = result.substring( 0, fqcn.indexOf( '<' ) );
-			fqcn = result;
-		}
-		else if ( fqcn.indexOf( '[' ) >= 0 ) {
-			additionalTypePart = result.substring( fqcn.indexOf( '[' ) );
-			result = result.substring( 0, fqcn.indexOf( '[' ) );
-			fqcn = result;
-		}
-		else if ( fqcn.endsWith( "..." ) ) {
-			additionalTypePart = "...";
-			result = result.substring( 0, fqcn.indexOf( "..." ) );
-			fqcn = result;
+		// strip off type annotations and '? super' or '? extends'
+		String preamble = "";
+		if ( result.startsWith("@") || result.startsWith("?") ) {
+			int index = result.lastIndexOf(' ');
+			if ( index > 0 ) {
+				preamble = result.substring( 0, index+1 );
+				result = result.substring( index+1 );
+			}
 		}
 
-		String pureFqcn = fqcn.replace( '$', '.' );
+		String appendices = "";
+		if ( result.indexOf( '<' ) >= 0 ) {
+			int startIndex = result.indexOf('<');
+			int endIndex = result.lastIndexOf('>');
+			appendices = '<' + importTypes( result.substring( startIndex + 1, endIndex ) ) + '>'
+					+ result.substring( endIndex + 1 );
+			result = result.substring( 0, startIndex );
+		}
+		else if ( result.indexOf( '[' ) >= 0 ) {
+			int index = result.indexOf('[');
+			appendices = result.substring( index );
+			result = result.substring( 0, index );
+		}
+		else if ( result.endsWith( "..." ) ) {
+			appendices = "...";
+			int index = result.indexOf("...");
+			result = result.substring( 0, index );
+		}
 
+		return ( preamble + unqualifyName( result ) + appendices )
+				.replace( '$', '.' );
+	}
+
+	private String unqualifyName(String qualifiedName) {
+		final String sourceQualifiedName = qualifiedName.replace( '$', '.' );
+		final String simpleName = unqualify( qualifiedName );
 		boolean canBeSimple;
-
-		String simpleName = unqualify( fqcn );
 		if ( simpleNames.containsKey( simpleName ) ) {
-			String existingFqcn = simpleNames.get( simpleName );
-			canBeSimple = existingFqcn.equals( pureFqcn );
+			String existing = simpleNames.get( simpleName );
+			canBeSimple = existing.equals( sourceQualifiedName );
 		}
 		else {
 			canBeSimple = true;
-			simpleNames.put( simpleName, pureFqcn );
-			imports.add( pureFqcn );
+			simpleNames.put( simpleName, sourceQualifiedName );
+			imports.add( sourceQualifiedName );
 		}
 
-
-		if ( inSamePackage( fqcn ) || ( imports.contains( pureFqcn ) && canBeSimple ) ) {
-			result = unqualify( result );
+		if ( inSamePackage( qualifiedName ) || inJavaLang( qualifiedName )
+				|| canBeSimple && imports.contains( sourceQualifiedName ) ) {
+			return unqualify( qualifiedName );
 		}
-		else if ( inJavaLang( fqcn ) ) {
-			result = result.substring( "java.lang.".length() );
+		else {
+			return qualifiedName;
 		}
+	}
 
-		if ( additionalTypePart != null ) {
-			result = result + additionalTypePart;
+	private String importTypes(String originalArgList) {
+		String[] args = originalArgList.split(",");
+		StringBuilder argList = new StringBuilder();
+		for ( String arg : args ) {
+			if ( argList.length() > 0 ) {
+				argList.append(',');
+			}
+			argList.append( importType( arg ) );
 		}
-
-		result = result.replace( '$', '.' );
-		return result;
+		return argList.toString();
 	}
 
 	public String staticImport(String fqcn, String member) {
@@ -135,9 +154,7 @@ public class ImportContextImpl implements ImportContext {
 	}
 
 	private boolean inSamePackage(String className) {
-		String other = qualifier( className );
-		return other == basePackage
-				|| ( other != null && other.equals( basePackage ) );
+		return Objects.equals( qualifier( className ), basePackage );
 	}
 
 	private boolean inJavaLang(String className) {

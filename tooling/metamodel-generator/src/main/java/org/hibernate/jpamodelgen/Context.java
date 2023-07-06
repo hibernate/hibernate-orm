@@ -212,23 +212,19 @@ public final class Context {
 	}
 
 	public void logMessage(Diagnostic.Kind type, String message) {
-		if ( !logDebug && type.equals( Diagnostic.Kind.OTHER ) ) {
-			return;
+		if ( logDebug || type != Diagnostic.Kind.OTHER ) {
+			pe.getMessager().printMessage( type, message );
 		}
-		pe.getMessager().printMessage( type, message );
 	}
 
 	public boolean isFullyXmlConfigured() {
-		return fullyXmlConfigured != null && fullyXmlConfigured.booleanValue();
+		return fullyXmlConfigured != null && fullyXmlConfigured;
 	}
 
 	public void mappingDocumentFullyXmlConfigured(boolean fullyXmlConfigured) {
-		if ( this.fullyXmlConfigured == null ) {
-			this.fullyXmlConfigured = fullyXmlConfigured;
-		}
-		else {
-			this.fullyXmlConfigured = this.fullyXmlConfigured && fullyXmlConfigured;
-		}
+		this.fullyXmlConfigured = this.fullyXmlConfigured == null
+				? fullyXmlConfigured
+				: this.fullyXmlConfigured && fullyXmlConfigured;
 	}
 
 	public AccessType getPersistenceUnitDefaultAccessType() {

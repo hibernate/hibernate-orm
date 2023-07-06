@@ -106,11 +106,12 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "AnnotationMetaPackage" );
-		sb.append( "{element=" ).append( element );
-		sb.append( '}' );
-		return sb.toString();
+		return new StringBuilder()
+				.append( "AnnotationMetaPackage" )
+				.append( "{element=" )
+				.append( element )
+				.append( '}' )
+				.toString();
 	}
 
 	protected final void init() {

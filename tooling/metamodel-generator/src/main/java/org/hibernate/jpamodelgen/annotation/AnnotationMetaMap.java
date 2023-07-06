@@ -25,10 +25,23 @@ public class AnnotationMetaMap extends AnnotationMetaCollection {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		return "public static volatile " + getHostingEntity().importType( getMetaType() )
-				+ "<" + getHostingEntity().importType( getHostingEntity().getQualifiedName() )
-				+ ", " + getHostingEntity().importType( keyType ) + ", "
-				+ getHostingEntity().importType( getTypeDeclaration() ) + "> "
-				+ getPropertyName() + ";";
+		return new StringBuilder()
+				.append("\n/**\n * @see ")
+				.append( parent.getQualifiedName() )
+				.append("#")
+				.append( element.getSimpleName() )
+				.append("\n **/\n")
+				.append("public static volatile ")
+				.append( parent.importType( getMetaType() ) )
+				.append("<")
+				.append( parent.importType( parent.getQualifiedName() ) )
+				.append(", ")
+				.append( parent.importType(keyType) )
+				.append(", ")
+				.append( parent.importType( getTypeDeclaration() ) )
+				.append("> ")
+				.append( getPropertyName() )
+				.append(";")
+				.toString();
 	}
 }

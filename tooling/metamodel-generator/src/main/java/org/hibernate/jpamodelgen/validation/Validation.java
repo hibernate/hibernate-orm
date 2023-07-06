@@ -14,6 +14,7 @@ import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.QueryException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.grammars.hql.HqlLexer;
 import org.hibernate.grammars.hql.HqlParser;
 import org.hibernate.query.hql.internal.HqlParseTreeBuilder;
@@ -46,72 +47,83 @@ public class Validation {
 	}
 
 	public static void validate(
-			String hql, boolean checkParams,
+			String hql,
+			boolean checkParams, boolean checkTyping,
 			Set<Integer> setParameterLabels,
 			Set<String> setParameterNames,
 			Handler handler,
-			MockSessionFactory factory) {
-		validate(hql, checkParams, setParameterLabels, setParameterNames, handler, factory, 0);
+			SessionFactoryImplementor factory) {
+		validate( hql, checkParams, checkTyping, setParameterLabels, setParameterNames, handler, factory, 0 );
 	}
 
 	public static void validate(
-			String hql, boolean checkParams,
+			String hql,
+			boolean checkParams, boolean checkTyping,
 			Set<Integer> setParameterLabels,
 			Set<String> setParameterNames,
 			Handler handler,
-			MockSessionFactory factory,
+			SessionFactoryImplementor factory,
 			int errorOffset) {
 //		handler = new Filter(handler, errorOffset);
 
 		try {
-
-			final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
-			final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
-			hqlLexer.addErrorListener( handler );
-			hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
-			hqlParser.removeErrorListeners();
-			hqlParser.addErrorListener( handler );
-			hqlParser.setErrorHandler( new BailErrorStrategy() );
-
-			HqlParser.StatementContext statementContext;
-			try {
-				statementContext = hqlParser.statement();
+			final HqlParser.StatementContext statementContext = parseAndCheckSyntax( hql, handler );
+			if ( checkTyping && handler.getErrorCount() == 0 ) {
+				checkTyping( hql, handler, factory, errorOffset, statementContext );
 			}
-			catch ( ParseCancellationException e) {
-				// reset the input token stream and parser state
-				hqlLexer.reset();
-				hqlParser.reset();
-
-				// fall back to LL(k)-based parsing
-				hqlParser.getInterpreter().setPredictionMode( PredictionMode.LL );
-				hqlParser.setErrorHandler( new DefaultErrorStrategy() );
-
-				statementContext = hqlParser.statement();
-
-			}
-			if (handler.getErrorCount() == 0) {
-				try {
-					new SemanticQueryBuilder<>(Object[].class, () -> false, factory)
-							.visitStatement( statementContext );
-				}
-				catch (JdbcTypeRecommendationException ignored) {
-					// just squash these for now
-				}
-				catch (QueryException | PathElementException | TerminalPathException | EntityTypeException
-						| PropertyNotFoundException se) { //TODO is this one really thrown by core? It should not be!
-					String message = se.getMessage();
-					if ( message != null ) {
-						handler.error(-errorOffset+1, -errorOffset + hql.length(), message);
-					}
-				}
-			}
-
-			if (checkParams) {
-				checkParameterBinding(hql, setParameterLabels, setParameterNames, handler, errorOffset);
+			if ( checkParams ) {
+				checkParameterBinding( hql, setParameterLabels, setParameterNames, handler, errorOffset );
 			}
 		}
 		catch (Exception e) {
 //			e.printStackTrace();
+		}
+	}
+
+	private static void checkTyping(
+			String hql,
+			Handler handler,
+			SessionFactoryImplementor factory,
+			int errorOffset,
+			HqlParser.StatementContext statementContext) {
+		try {
+			new SemanticQueryBuilder<>( Object[].class, () -> false, factory )
+					.visitStatement( statementContext );
+		}
+		catch ( JdbcTypeRecommendationException ignored ) {
+			// just squash these for now
+		}
+		catch ( QueryException | PathElementException | TerminalPathException | EntityTypeException
+				| PropertyNotFoundException se ) { //TODO is this one really thrown by core? It should not be!
+			String message = se.getMessage();
+			if ( message != null ) {
+				handler.error( -errorOffset +1, -errorOffset + hql.length(), message );
+			}
+		}
+	}
+
+	private static HqlParser.StatementContext parseAndCheckSyntax(String hql, Handler handler) {
+		final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( hql );
+		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( hql, hqlLexer );
+		hqlLexer.addErrorListener( handler );
+		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
+		hqlParser.removeErrorListeners();
+		hqlParser.addErrorListener( handler );
+		hqlParser.setErrorHandler( new BailErrorStrategy() );
+
+		try {
+			return hqlParser.statement();
+		}
+		catch ( ParseCancellationException e) {
+			// reset the input token stream and parser state
+			hqlLexer.reset();
+			hqlParser.reset();
+
+			// fall back to LL(k)-based parsing
+			hqlParser.getInterpreter().setPredictionMode( PredictionMode.LL );
+			hqlParser.setErrorHandler( new DefaultErrorStrategy() );
+
+			return hqlParser.statement();
 		}
 	}
 
@@ -143,10 +155,10 @@ public class Validation {
 						String text = next.getText();
 						switch (tokenType) {
 							case HqlLexer.COLON:
-								if (!text.isEmpty()
-										&& isJavaIdentifierStart(text.codePointAt(0))) {
+								if ( !text.isEmpty()
+										&& isJavaIdentifierStart( text.codePointAt(0) ) ) {
 									names.add(text);
-									if (setParameterNames.contains(text)) {
+									if ( setParameterNames.contains(text) ) {
 										continue;
 									}
 								}
@@ -155,7 +167,7 @@ public class Validation {
 								}
 								break;
 							case HqlLexer.QUESTION_MARK:
-								if (next.getType() == HqlLexer.INTEGER_LITERAL) {
+								if ( next.getType() == HqlLexer.INTEGER_LITERAL ) {
 									int label;
 									try {
 										label = parseInt(text);
@@ -164,7 +176,7 @@ public class Validation {
 										continue;
 									}
 									labels.add(label);
-									if (setParameterLabels.contains(label)) {
+									if ( setParameterLabels.contains(label) ) {
 										continue;
 									}
 								}
@@ -186,34 +198,38 @@ public class Validation {
 						break;
 				}
 			}
-			if (unsetParams != null) {
-				handler.warn(start-errorOffset+1, end-errorOffset, parameters + unsetParams + notSet);
+			if ( unsetParams != null ) {
+				handler.warn( start-errorOffset+1, end-errorOffset, parameters + unsetParams + notSet );
 			}
 
 			setParameterNames.removeAll(names);
 			setParameterLabels.removeAll(labels);
 
-			int count = setParameterNames.size() + setParameterLabels.size();
-			if (count > 0) {
-				String missingParams =
-						concat(setParameterNames.stream().map(name -> ":" + name),
-								setParameterLabels.stream().map(label -> "?" + label))
-								.reduce((x, y) -> x + ", " + y)
-								.orElse(null);
-				String params =
-						count == 1 ?
-								"Parameter " :
-								"Parameters ";
-				String notOccur =
-						count == 1 ?
-								" does not occur in the query" :
-								" do not occur in the query";
-				handler.warn(0, 0, params + missingParams + notOccur);
-			}
+			reportMissingParams( setParameterLabels, setParameterNames, handler );
 		}
 		finally {
 			setParameterNames.clear();
 			setParameterLabels.clear();
+		}
+	}
+
+	private static void reportMissingParams(Set<Integer> setParameterLabels, Set<String> setParameterNames, Handler handler) {
+		final int count = setParameterNames.size() + setParameterLabels.size();
+		if (count > 0) {
+			final String missingParams =
+					concat( setParameterNames.stream().map(name -> ":" + name),
+							setParameterLabels.stream().map(label -> "?" + label) )
+							.reduce((x, y) -> x + ", " + y)
+							.orElse(null);
+			final String params =
+					count == 1 ?
+							"Parameter " :
+							"Parameters ";
+			final String notOccur =
+					count == 1 ?
+							" does not occur in the query" :
+							" do not occur in the query";
+			handler.warn(0, 0, params + missingParams + notOccur);
 		}
 	}
 }

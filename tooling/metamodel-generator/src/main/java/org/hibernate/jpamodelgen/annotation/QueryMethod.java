@@ -62,7 +62,7 @@ public class QueryMethod implements MetaAttribute {
 	@Override
 	public String getAttributeDeclarationString() {
 		List<String> paramTypes = this.paramTypes.stream()
-				.map(ptype->isOrderParam(ptype) && ptype.endsWith("[]") ? ptype.replace("[]", "...") : ptype)
+				.map(ptype->isOrderParam(ptype) && ptype.endsWith("[]") ? ptype.substring(0, ptype.length()-2) + "..." : ptype)
 				.collect(toList());
 		StringBuilder declaration = new StringBuilder();
 		declaration

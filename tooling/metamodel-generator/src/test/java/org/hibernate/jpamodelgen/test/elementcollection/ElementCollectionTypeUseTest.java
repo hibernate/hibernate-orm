@@ -8,13 +8,11 @@ package org.hibernate.jpamodelgen.test.elementcollection;
 
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestForIssue;
+import org.hibernate.jpamodelgen.test.util.TestUtil;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
 import org.junit.Test;
 
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertListAttributeTypeInMetaModelFor;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMapAttributesInMetaModelFor;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
-import static org.hibernate.jpamodelgen.test.util.TestUtil.assertSetAttributeTypeInMetaModelFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.*;
 
 /**
  * @author Chris Cranford
@@ -24,6 +22,7 @@ public class ElementCollectionTypeUseTest extends CompilationTest {
 	@TestForIssue(jiraKey = "HHH-12612")
 	@WithClasses(OfficeBuildingValidated.class)
 	public void testAnnotatedCollectionElements() {
+		System.out.println( TestUtil.getMetaModelSourceAsString( OfficeBuildingValidated.class ) );
 		assertMetamodelClassGeneratedFor( OfficeBuildingValidated.class );
 
 		assertMapAttributesInMetaModelFor(

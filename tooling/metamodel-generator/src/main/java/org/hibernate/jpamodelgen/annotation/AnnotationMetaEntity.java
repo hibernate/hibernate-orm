@@ -15,10 +15,12 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
@@ -32,8 +34,6 @@ import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.AccessType;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
-import org.hibernate.jpamodelgen.util.NullnessUtil;
-import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.validation.ProcessorSessionFactory;
 import org.hibernate.jpamodelgen.validation.Validation;
 
@@ -41,7 +41,9 @@ import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isOrderParam;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isPageParam;
+import static org.hibernate.jpamodelgen.util.NullnessUtil.castNonNull;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
+import static org.hibernate.jpamodelgen.util.TypeUtils.determineAccessTypeForHierarchy;
 import static org.hibernate.jpamodelgen.util.TypeUtils.determineAnnotationSpecifiedAccessType;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValue;
@@ -191,28 +193,26 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "AnnotationMetaEntity" );
-		sb.append( "{element=" ).append( element );
-		sb.append( ", members=" ).append( members );
-		sb.append( '}' );
-		return sb.toString();
+		return new StringBuilder()
+				.append( "AnnotationMetaEntity" )
+				.append( "{element=" )
+				.append( element )
+				.append( ", members=" )
+				.append( members )
+				.append( '}' )
+				.toString();
 	}
 
 	protected final void init() {
 		getContext().logMessage( Diagnostic.Kind.OTHER, "Initializing type " + getQualifiedName() + "." );
 
-		TypeUtils.determineAccessTypeForHierarchy( element, context );
-		AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( getQualifiedName() );
-		entityAccessTypeInfo = NullnessUtil.castNonNull( accessTypeInfo );
+		determineAccessTypeForHierarchy( element, context );
+		entityAccessTypeInfo = castNonNull( context.getAccessTypeInfo( getQualifiedName() ) );
 
-		List<? extends Element> fieldsOfClass = ElementFilter.fieldsIn( element.getEnclosedElements() );
-		addPersistentMembers( fieldsOfClass, AccessType.FIELD );
-
-		List<? extends Element> methodsOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
-		List<Element> gettersAndSettersOfClass = new ArrayList<>();
-		List<ExecutableElement> queryMethods = new ArrayList<>();
-
+		final List<? extends Element> fieldsOfClass = ElementFilter.fieldsIn( element.getEnclosedElements() );
+		final List<? extends Element> methodsOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
+		final List<Element> gettersAndSettersOfClass = new ArrayList<>();
+		final List<ExecutableElement> queryMethods = new ArrayList<>();
 		for ( Element rawMethodOfClass: methodsOfClass ) {
 			if ( isGetterOrSetter( rawMethodOfClass ) ) {
 				gettersAndSettersOfClass.add( rawMethodOfClass );
@@ -222,6 +222,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				queryMethods.add( (ExecutableElement) rawMethodOfClass );
 			}
 		}
+
+		addPersistentMembers( fieldsOfClass, AccessType.FIELD );
 		addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
 
 		addAuxiliaryMembers();
@@ -241,46 +243,46 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * @return whether method respects Java Bean conventions.
 	 */
 	private boolean isGetterOrSetter(Element methodOfClass) {
-		ExecutableType methodType = (ExecutableType) methodOfClass.asType();
-		String methodSimpleName = methodOfClass.getSimpleName().toString();
-		List<? extends TypeMirror> methodParameterTypes = methodType.getParameterTypes();
-		TypeMirror returnType = methodType.getReturnType();
-
-		return isSetter(methodSimpleName, methodParameterTypes, returnType)
-			|| isGetter(methodSimpleName, methodParameterTypes, returnType);
+		final ExecutableType methodType = (ExecutableType) methodOfClass.asType();
+		final Name methodSimpleName = methodOfClass.getSimpleName();
+		final List<? extends TypeMirror> methodParameterTypes = methodType.getParameterTypes();
+		final TypeMirror returnType = methodType.getReturnType();
+		return isSetter( methodSimpleName, methodParameterTypes, returnType )
+			|| isGetter( methodSimpleName, methodParameterTypes, returnType );
 	}
 
-	private static boolean isGetter(String methodSimpleName, List<? extends TypeMirror> methodParameterTypes, TypeMirror returnType) {
-		return (methodSimpleName.startsWith("get") || methodSimpleName.startsWith("is"))
+	private static boolean isGetter(Name methodSimpleName, List<? extends TypeMirror> methodParameterTypes, TypeMirror returnType) {
+		return ( methodSimpleName.subSequence(0,3).toString().equals("get")
+				|| methodSimpleName.subSequence(0,2).toString().equals("is") )
 			&& methodParameterTypes.isEmpty()
-			&& !"void".equalsIgnoreCase(returnType.toString());
+			&& returnType.getKind() != TypeKind.VOID;
 	}
 
-	private static boolean isSetter(String methodSimpleName, List<? extends TypeMirror> methodParameterTypes, TypeMirror returnType) {
-		return methodSimpleName.startsWith("set")
+	private static boolean isSetter(Name methodSimpleName, List<? extends TypeMirror> methodParameterTypes, TypeMirror returnType) {
+		return methodSimpleName.subSequence(0,3).toString().equals("set")
 			&& methodParameterTypes.size() == 1
-			&& "void".equalsIgnoreCase(returnType.toString());
+			&& returnType.getKind() != TypeKind.VOID;
 	}
 
 	private void addPersistentMembers(List<? extends Element> membersOfClass, AccessType membersKind) {
 		for ( Element memberOfClass : membersOfClass ) {
-			AccessType forcedAccessType = determineAnnotationSpecifiedAccessType( memberOfClass );
-			if ( entityAccessTypeInfo.getAccessType() != membersKind && forcedAccessType == null ) {
-				continue;
-			}
-
-			if ( containsAnnotation( memberOfClass, Constants.TRANSIENT )
-					|| memberOfClass.getModifiers().contains( Modifier.TRANSIENT )
-					|| memberOfClass.getModifiers().contains( Modifier.STATIC ) ) {
-				continue;
-			}
-
-			MetaAttributeGenerationVisitor visitor = new MetaAttributeGenerationVisitor( this, context );
-			AnnotationMetaAttribute result = memberOfClass.asType().accept( visitor, memberOfClass );
-			if ( result != null ) {
-				members.put( result.getPropertyName(), result );
+			if ( isPersistent( memberOfClass, membersKind ) ) {
+				final AnnotationMetaAttribute result =
+						memberOfClass.asType()
+								.accept( new MetaAttributeGenerationVisitor(this, context ), memberOfClass );
+				if ( result != null ) {
+					members.put( result.getPropertyName(), result );
+				}
 			}
 		}
+	}
+
+	private boolean isPersistent(Element memberOfClass, AccessType membersKind) {
+		return ( entityAccessTypeInfo.getAccessType() == membersKind
+					|| determineAnnotationSpecifiedAccessType( memberOfClass ) != null )
+			&& !containsAnnotation( memberOfClass, Constants.TRANSIENT )
+			&& !memberOfClass.getModifiers().contains( Modifier.TRANSIENT )
+			&& !memberOfClass.getModifiers().contains( Modifier.STATIC );
 	}
 
 	private void addQueryMethods(List<ExecutableElement> queryMethods) {
@@ -317,11 +319,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					addQueryMethod( method, methodName, returnTypeName, containerTypeName );
 				}
 				else {
-					context.message( method, "incorrect return type '" + containerTypeName + "'", Diagnostic.Kind.ERROR );
+					context.message( method,
+							"incorrect return type '" + containerTypeName + "'",
+							Diagnostic.Kind.ERROR );
 				}
 			}
 			else {
-				context.message( method, "incorrect return type '" + declaredType + "'", Diagnostic.Kind.ERROR );
+				context.message( method,
+						"incorrect return type '" + declaredType + "'",
+						Diagnostic.Kind.ERROR );
 			}
 		}
 	}
@@ -392,9 +398,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 //				checkHqlSyntax( method, mirror, hql );
 				Validation.validate(
 						hql,
-						false,
+						false, true,
 						emptySet(), emptySet(),
-						new ErrorHandler( method, mirror, hql, context),
+						new ErrorHandler( method, mirror, hql, context ),
 						ProcessorSessionFactory.create( context.getProcessingEnvironment() )
 				);
 			}
@@ -404,13 +410,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void checkParameters(ExecutableElement method, List<String> paramNames, List<String> paramTypes, AnnotationMirror mirror, String hql) {
 		for (int i = 1; i <= paramNames.size(); i++) {
 			final String param = paramNames.get(i-1);
-			final String ptype = paramTypes.get(i-1);
-			if ( !hql.contains(":" + param) && !hql.contains("?" + i)
-					&& !isPageParam(ptype) && !isOrderParam(ptype)) {
+			final String type = paramTypes.get(i-1);
+			if ( parameterIsMissing( hql, i, param, type ) ) {
 				context.message( method, mirror, "missing query parameter for '" + param
 						+ "' (no parameter named :" + param + " or ?" + i + ")", Diagnostic.Kind.ERROR );
 			}
 		}
+	}
+
+	private static boolean parameterIsMissing(String hql, int i, String param, String type) {
+		return !hql.contains(":" + param)
+			&& !hql.contains("?" + i)
+			&& !isPageParam(type)
+			&& !isOrderParam(type);
 	}
 
 //	private void checkHqlSyntax(ExecutableElement method, AnnotationMirror mirror, String queryString) {

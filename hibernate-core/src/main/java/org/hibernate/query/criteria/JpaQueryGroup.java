@@ -27,12 +27,16 @@ public interface JpaQueryGroup<T> extends JpaQueryPart<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 
+	@Override
 	JpaQueryGroup<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications);
 
+	@Override
 	JpaQueryGroup<T> setOffset(JpaExpression<?> offset);
 
+	@Override
 	JpaQueryGroup<T> setFetch(JpaExpression<?> fetch);
 
+	@Override
 	JpaQueryGroup<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType);
 
 }

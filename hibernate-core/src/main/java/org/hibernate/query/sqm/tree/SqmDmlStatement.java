@@ -24,10 +24,12 @@ public interface SqmDmlStatement<E> extends SqmStatement<E>, SqmCteContainer, Jp
 	/**
 	 * Get the root path that is the target of the DML statement.
 	 */
+	@Override
 	SqmRoot<E> getTarget();
 
 	/**
 	 * Set the root path
 	 */
+	@Override
 	void setTarget(JpaRoot<E> root);
 }

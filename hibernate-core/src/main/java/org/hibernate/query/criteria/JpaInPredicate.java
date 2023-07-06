@@ -17,6 +17,7 @@ public interface JpaInPredicate<T> extends JpaPredicate, CriteriaBuilder.In<T>  
 	 * list of values.
 	 * @return expression
 	 */
+	@Override
 	JpaExpression<T> getExpression();
 
 	/**
@@ -24,6 +25,7 @@ public interface JpaInPredicate<T> extends JpaPredicate, CriteriaBuilder.In<T>  
 	 *  @param value value
 	 *  @return in predicate
 	 */
+	@Override
 	JpaInPredicate<T> value(T value);
 
 	/**

@@ -143,12 +143,11 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		}
 
 		//noinspection unchecked
-		getOrderByClause().setSortSpecifications( (List) sortSpecifications );
+		getOrderByClause().setSortSpecifications( (List<SqmSortSpecification>) sortSpecifications );
 
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public SqmExpression<?> getOffset() {
 		return getOffsetExpression();
@@ -160,7 +159,6 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		return this;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public SqmExpression<?> getFetch() {
 		return getFetchExpression();

@@ -445,21 +445,9 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public SqmExpression<?> getOffset() {
-		return getOffsetExpression();
-	}
-
-	@Override
 	public SqmQuerySpec<T> setOffset(JpaExpression<?> offset) {
 		setOffsetExpression( (SqmExpression<?>) offset );
 		return this;
-	}
-
-	@Override
-	@SuppressWarnings("unchecked")
-	public SqmExpression<?> getFetch() {
-		return getFetchExpression();
 	}
 
 	@Override

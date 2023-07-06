@@ -445,20 +445,20 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 	}
 
 	@Override
-	public SqmQuerySpec<T> setOffset(JpaExpression<?> offset) {
-		setOffsetExpression( (SqmExpression<?>) offset );
+	public SqmQuerySpec<T> setOffset(JpaExpression<? extends Number> offset) {
+		setOffsetExpression( (SqmExpression<? extends Number>) offset );
 		return this;
 	}
 
 	@Override
-	public SqmQuerySpec<T> setFetch(JpaExpression<?> fetch) {
-		setFetchExpression( (SqmExpression<?>) fetch );
+	public SqmQuerySpec<T> setFetch(JpaExpression<? extends Number> fetch) {
+		setFetchExpression( (SqmExpression<? extends Number>) fetch );
 		return this;
 	}
 
 	@Override
-	public SqmQuerySpec<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType) {
-		setFetchExpression( (SqmExpression<?>) fetch, fetchClauseType );
+	public SqmQuerySpec<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+		setFetchExpression( (SqmExpression<? extends Number>) fetch, fetchClauseType );
 		return this;
 	}
 

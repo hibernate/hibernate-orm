@@ -87,11 +87,11 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	JpaQueryStructure<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications);
 
 	@Override
-	JpaQueryStructure<T> setOffset(JpaExpression<?> offset);
+	JpaQueryStructure<T> setOffset(JpaExpression<? extends Number> offset);
 
 	@Override
-	JpaQueryStructure<T> setFetch(JpaExpression<?> fetch);
+	JpaQueryStructure<T> setFetch(JpaExpression<? extends Number> fetch);
 
 	@Override
-	JpaQueryStructure<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType);
+	JpaQueryStructure<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 }

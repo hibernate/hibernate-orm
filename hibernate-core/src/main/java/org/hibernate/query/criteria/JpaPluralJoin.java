@@ -22,15 +22,21 @@ public interface JpaPluralJoin<O, C, E> extends JpaJoin<O, E>, PluralJoin<O, C, 
 	@Override
 	PluralPersistentAttribute<? super O, C, E> getAttribute();
 
+	@Override
 	JpaPluralJoin<O, ? extends C, E> on(JpaExpression<Boolean> restriction);
 
+	@Override
 	JpaPluralJoin<O, ? extends C, E> on(Expression<Boolean> restriction);
 
+	@Override
 	JpaPluralJoin<O, ? extends C, E> on(JpaPredicate... restrictions);
 
+	@Override
 	JpaPluralJoin<O, ? extends C, E> on(Predicate... restrictions);
 
+	@Override
 	<S extends E> JpaPluralJoin<O, ?, S> treatAs(Class<S> treatAsType);
 
+	@Override
 	<S extends E> JpaPluralJoin<O, ?, S> treatAs(EntityDomainType<S> treatAsType);
 }

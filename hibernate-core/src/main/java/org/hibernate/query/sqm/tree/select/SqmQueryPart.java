@@ -28,8 +28,8 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 
 	private SqmOrderByClause orderByClause;
 
-	private SqmExpression<?> offsetExpression;
-	private SqmExpression<?> fetchExpression;
+	private SqmExpression<? extends Number> offsetExpression;
+	private SqmExpression<? extends Number> fetchExpression;
 	private FetchClauseType fetchClauseType = FetchClauseType.ROWS_ONLY;
 
 	public SqmQueryPart(NodeBuilder nodeBuilder) {
@@ -85,26 +85,26 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 		this.orderByClause = orderByClause;
 	}
 
-	public SqmExpression<?> getFetchExpression() {
+	public SqmExpression<? extends Number> getFetchExpression() {
 		return fetchExpression;
 	}
 
-	public SqmExpression<?> getOffsetExpression() {
+	public SqmExpression<? extends Number> getOffsetExpression() {
 		return offsetExpression;
 	}
 
-	public void setOffsetExpression(SqmExpression<?> offsetExpression) {
+	public void setOffsetExpression(SqmExpression<? extends Number> offsetExpression) {
 		if ( offsetExpression != null ) {
 			offsetExpression.applyInferableType( nodeBuilder.getIntegerType() );
 		}
 		this.offsetExpression = offsetExpression;
 	}
 
-	public void setFetchExpression(SqmExpression<?> fetchExpression) {
+	public void setFetchExpression(SqmExpression<? extends Number> fetchExpression) {
 		setFetchExpression( fetchExpression, FetchClauseType.ROWS_ONLY );
 	}
 
-	public void setFetchExpression(SqmExpression<?> fetchExpression, FetchClauseType fetchClauseType) {
+	public void setFetchExpression(SqmExpression<? extends Number> fetchExpression, FetchClauseType fetchClauseType) {
 		if ( fetchExpression == null ) {
 			this.fetchExpression = null;
 			this.fetchClauseType = null;
@@ -149,30 +149,30 @@ public abstract class SqmQueryPart<T> implements SqmVisitableNode, JpaQueryPart<
 	}
 
 	@Override
-	public SqmExpression<?> getOffset() {
+	public JpaExpression<? extends Number> getOffset() {
 		return getOffsetExpression();
 	}
 
 	@Override
-	public SqmQueryPart<T> setOffset(JpaExpression<?> offset) {
-		setOffsetExpression( (SqmExpression<?>) offset );
+	public SqmQueryPart<T> setOffset(JpaExpression<? extends Number> offset) {
+		setOffsetExpression( (SqmExpression<? extends Number>) offset );
 		return this;
 	}
 
 	@Override
-	public SqmExpression<?> getFetch() {
+	public JpaExpression<? extends Number> getFetch() {
 		return getFetchExpression();
 	}
 
 	@Override
-	public SqmQueryPart<T> setFetch(JpaExpression<?> fetch) {
-		setFetchExpression( (SqmExpression<?>) fetch );
+	public SqmQueryPart<T> setFetch(JpaExpression<? extends Number> fetch) {
+		setFetchExpression( (SqmExpression<? extends Number>) fetch );
 		return this;
 	}
 
 	@Override
-	public JpaQueryPart<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType) {
-		setFetchExpression( (SqmExpression<?>) fetch, fetchClauseType );
+	public JpaQueryPart<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+		setFetchExpression( (SqmExpression<? extends Number>) fetch, fetchClauseType );
 		return this;
 	}
 

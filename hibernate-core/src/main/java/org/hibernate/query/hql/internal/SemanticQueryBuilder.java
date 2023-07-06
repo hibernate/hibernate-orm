@@ -1089,19 +1089,25 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				);
 			}
 
-			sqmQueryPart.setOffsetExpression( visitOffsetClause( offsetClauseContext ) );
-			if ( limitClauseContext == null ) {
-				sqmQueryPart.setFetchExpression(
-						visitFetchClause( fetchClauseContext ),
-						visitFetchClauseType( fetchClauseContext )
-				);
-			}
-			else if ( fetchClauseContext == null ) {
-				sqmQueryPart.setFetchExpression( visitLimitClause( limitClauseContext ) );
-			}
-			else {
-				throw new SemanticException("The 'limit' and 'fetch' clauses may not be used together" );
-			}
+			setOffsetFetchLimit(sqmQueryPart, limitClauseContext, offsetClauseContext, fetchClauseContext);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private void setOffsetFetchLimit(SqmQueryPart<?> sqmQueryPart, HqlParser.LimitClauseContext limitClauseContext, HqlParser.OffsetClauseContext offsetClauseContext, HqlParser.FetchClauseContext fetchClauseContext) {
+		// these casts are all fine because the parser only accepts literals and parameters
+		sqmQueryPart.setOffsetExpression((SqmExpression<? extends Number>) visitOffsetClause(offsetClauseContext));
+		if ( limitClauseContext == null ) {
+			sqmQueryPart.setFetchExpression(
+					(SqmExpression<? extends Number>) visitFetchClause(fetchClauseContext),
+					visitFetchClauseType(fetchClauseContext)
+			);
+		}
+		else if ( fetchClauseContext == null ) {
+			sqmQueryPart.setFetchExpression( (SqmExpression<? extends Number>) visitLimitClause(limitClauseContext) );
+		}
+		else {
+			throw new SemanticException("The 'limit' and 'fetch' clauses may not be used together" );
 		}
 	}
 

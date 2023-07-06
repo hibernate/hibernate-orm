@@ -117,22 +117,26 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 
 	@Override
 	public SqmQueryGroup<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications) {
-		return (SqmQueryGroup<T>) super.setSortSpecifications( sortSpecifications );
+		super.setSortSpecifications( sortSpecifications );
+		return this;
 	}
 
 	@Override
-	public SqmQueryGroup<T> setOffset(JpaExpression<?> offset) {
-		return (SqmQueryGroup<T>) super.setOffset( offset );
+	public SqmQueryGroup<T> setOffset(JpaExpression<? extends Number> offset) {
+		super.setOffset( offset );
+		return this;
 	}
 
 	@Override
-	public SqmQueryGroup<T> setFetch(JpaExpression<?> fetch) {
-		return (SqmQueryGroup<T>) super.setFetch( fetch );
+	public SqmQueryGroup<T> setFetch(JpaExpression<? extends Number> fetch) {
+		super.setFetch( fetch );
+		return this;
 	}
 
 	@Override
-	public SqmQueryGroup<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType) {
-		return (SqmQueryGroup<T>) super.setFetch( fetch, fetchClauseType );
+	public SqmQueryGroup<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType) {
+		super.setFetch( fetch, fetchClauseType );
+		return this;
 	}
 
 	@Override
@@ -155,7 +159,7 @@ public class SqmQueryGroup<T> extends SqmQueryPart<T> implements JpaQueryGroup<T
 		for ( int i = 0; i < queryParts.size(); i++ ) {
 			final SqmQueryPart<T> queryPart = queryParts.get( i );
 			if ( queryPart instanceof SqmQueryGroup<?> ) {
-				( (SqmQueryGroup<Object>) queryPart ).validateQueryGroupFetchStructure( typedNodes );
+				( (SqmQueryGroup<?>) queryPart ).validateQueryGroupFetchStructure( typedNodes );
 			}
 			else {
 				final SqmQuerySpec<?> querySpec = (SqmQuerySpec<?>) queryPart;

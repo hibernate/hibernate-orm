@@ -31,12 +31,12 @@ public interface JpaQueryGroup<T> extends JpaQueryPart<T> {
 	JpaQueryGroup<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications);
 
 	@Override
-	JpaQueryGroup<T> setOffset(JpaExpression<?> offset);
+	JpaQueryGroup<T> setOffset(JpaExpression<? extends Number> offset);
 
 	@Override
-	JpaQueryGroup<T> setFetch(JpaExpression<?> fetch);
+	JpaQueryGroup<T> setFetch(JpaExpression<? extends Number> fetch);
 
 	@Override
-	JpaQueryGroup<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType);
+	JpaQueryGroup<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 
 }

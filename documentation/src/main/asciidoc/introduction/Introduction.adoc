@@ -619,20 +619,16 @@ It might return a single `Book`.
 
 [source,java]
 ----
-interface Queries {
-    @HQL("from Book where isbn = :isbn")
-    Book findBookByIsbn(String isbn);
-}
+@HQL("from Book where isbn = :isbn")
+Book findBookByIsbn(String isbn);
 ----
 
 It might even return `TypedQuery` or `SelectionQuery`:
 
 [source,java]
 ----
-interface Queries {
-    @HQL("from Book where title like :title")
-    SelectionQuery<Book> findBooksByTitle(String title);
-}
+@HQL("from Book where title like :title")
+SelectionQuery<Book> findBooksByTitle(String title);
 ----
 
 This is extremely useful at times, since it allows the client to further manipulate the query:
@@ -641,9 +637,12 @@ This is extremely useful at times, since it allows the client to further manipul
 ----
 List<Book> books =
         Queries_.findBooksByTitle(entityManager, titlePattern)
-            .ascending(Book_.title)                   // order the results
-            .setMaxResults(RESULTS_PER_PAGE)          // return at most 20 results
-            .setFirstResult(page*RESULTS_PER_PAGE)    // start from the given page of results
+            .setOrder(Order.asc(Book_.title))                   // order the results
+            .setPage(Page.page(RESULTS_PER_PAGE, page))         // return the given page of results
+            .setFlushMode(FlushModeType.COMMIT)                 // don't flush session before query execution
+            .setReadOnly(true)                                  // load the entities in read-only mode
+            .setCacheStoreMode(CacheStoreMode.BYPASS)           // don't cache the results
+            .setComment("Hello world!")                         // add a comment to the generated SQL
             .getResultList();
 ----
 

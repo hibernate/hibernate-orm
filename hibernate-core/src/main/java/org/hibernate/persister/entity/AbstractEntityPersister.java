@@ -33,6 +33,7 @@ import org.hibernate.JDBCException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
 import org.hibernate.Session;
 import org.hibernate.StaleObjectStateException;
@@ -4726,10 +4727,22 @@ public abstract class AbstractEntityPersister
 		if ( isVersioned() ) {
 			// let this take precedence if defined, since it works for
 			// assigned identifiers
-			Boolean result = entityMetamodel.getVersionProperty()
+			final Boolean isUnsaved = entityMetamodel.getVersionProperty()
 					.getUnsavedValue().isUnsaved( version );
-			if ( result != null ) {
-				return result;
+			if ( isUnsaved != null ) {
+				if ( isUnsaved ) {
+					final Boolean unsaved = entityMetamodel.getIdentifierProperty()
+							.getUnsavedValue().isUnsaved( id );
+					if ( unsaved != null && !unsaved ) {
+						throw new PropertyValueException(
+								"Detached entity with generated id '" + id + "' has an uninitialized version value '" + version + "'",
+								getEntityName(),
+								getVersionColumnName()
+						);
+					}
+				}
+
+				return isUnsaved;
 			}
 		}
 

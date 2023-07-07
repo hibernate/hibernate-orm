@@ -9,8 +9,6 @@ package org.hibernate.sql.model;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
-import org.hibernate.engine.jdbc.mutation.internal.EntityMutationOperationGroup;
-
 /**
  * Group of {@link MutationOperation} references for a specific
  * logical operation (target + type)

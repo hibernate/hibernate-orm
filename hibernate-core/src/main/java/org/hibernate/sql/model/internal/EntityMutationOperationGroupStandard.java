@@ -8,7 +8,7 @@ package org.hibernate.sql.model.internal;
 
 import java.util.Locale;
 
-import org.hibernate.engine.jdbc.mutation.internal.EntityMutationOperationGroup;
+import org.hibernate.sql.model.EntityMutationOperationGroup;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationType;

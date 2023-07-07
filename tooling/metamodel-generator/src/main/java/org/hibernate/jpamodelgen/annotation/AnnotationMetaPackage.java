@@ -52,6 +52,11 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	}
 
 	@Override
+	public boolean isImplementation() {
+		return false;
+	}
+
+	@Override
 	public final String getSimpleName() {
 		return element.getSimpleName().toString();
 	}

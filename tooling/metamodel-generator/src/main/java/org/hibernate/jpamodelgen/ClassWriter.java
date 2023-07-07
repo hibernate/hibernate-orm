@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 import javax.annotation.processing.FilerException;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -99,11 +100,11 @@ public final class ClassWriter {
 		try ( PrintWriter pw = new PrintWriter(sw) ) {
 
 			if ( entity.getElement() instanceof TypeElement ) {
-				pw.println( writeStaticMetaModelAnnotation(entity) );
+				pw.println( writeStaticMetaModelAnnotation( entity ) );
 			}
 
 			if ( context.addGeneratedAnnotation() ) {
-				pw.println( writeGeneratedAnnotation(entity, context) );
+				pw.println( writeGeneratedAnnotation( entity, context ) );
 			}
 			if ( context.isAddSuppressWarningsAnnotation() ) {
 				pw.println( writeSuppressWarnings() );
@@ -117,12 +118,12 @@ public final class ClassWriter {
 			for ( MetaAttribute metaMember : members ) {
 				if ( metaMember.hasTypedAttribute() ) {
 					metaMember.getAttributeDeclarationString().lines()
-							.forEach(line -> pw.println("	" + line));
+							.forEach(line -> pw.println('\t' + line));
 				}
 			}
 			pw.println();
 			for ( MetaAttribute metaMember : members ) {
-				pw.println( "	" + metaMember.getAttributeNameDeclarationString() );
+				pw.println( '\t' + metaMember.getAttributeNameDeclarationString() );
 			}
 
 			pw.println();
@@ -132,11 +133,16 @@ public final class ClassWriter {
 	}
 
 	private static void printClassDeclaration(Metamodel entity, PrintWriter pw, Context context) {
-		pw.print( "public abstract class " + entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX );
+		pw.print( entity.isImplementation() ? "public class " : "public abstract class " );
+		pw.print( entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX );
 
 		String superClassName = findMappedSuperClass( entity, context );
 		if ( superClassName != null ) {
 			pw.print( " extends " + superClassName + META_MODEL_CLASS_NAME_SUFFIX );
+		}
+		if ( entity.isImplementation() ) {
+			pw.print( entity.getElement().getKind() == ElementKind.CLASS ? " extends " : " implements " );
+			pw.print( entity.getSimpleName() );
 		}
 
 		pw.println( " {" );

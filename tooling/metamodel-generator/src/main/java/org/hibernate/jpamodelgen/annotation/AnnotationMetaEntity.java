@@ -13,19 +13,23 @@ import java.util.List;
 import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.ElementFilter;
 import javax.tools.Diagnostic;
 
+import jakarta.persistence.EntityManager;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.Session;
+import org.hibernate.StatelessSession;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.model.ImportContext;
@@ -39,6 +43,8 @@ import org.hibernate.jpamodelgen.validation.Validation;
 
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
+import static javax.lang.model.util.ElementFilter.fieldsIn;
+import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isOrderParam;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isPageParam;
 import static org.hibernate.jpamodelgen.util.NullnessUtil.castNonNull;
@@ -85,6 +91,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 */
 	private Metamodel entityToMerge;
 
+	/**
+	 * True if this "metamodel class" is actually an instantiable DAO-style repository.
+	 */
+	private boolean dao;
+
 	public AnnotationMetaEntity(TypeElement element, Context context) {
 		this.element = element;
 		this.context = context;
@@ -107,6 +118,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	@Override
 	public final Context getContext() {
 		return context;
+	}
+
+	@Override
+	public boolean isImplementation() {
+		return dao;
 	}
 
 	@Override
@@ -209,17 +225,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		determineAccessTypeForHierarchy( element, context );
 		entityAccessTypeInfo = castNonNull( context.getAccessTypeInfo( getQualifiedName() ) );
 
-		final List<? extends Element> fieldsOfClass = ElementFilter.fieldsIn( element.getEnclosedElements() );
-		final List<? extends Element> methodsOfClass = ElementFilter.methodsIn( element.getEnclosedElements() );
-		final List<Element> gettersAndSettersOfClass = new ArrayList<>();
+		final List<VariableElement> fieldsOfClass = fieldsIn( element.getEnclosedElements() );
+		final List<ExecutableElement> methodsOfClass = methodsIn( element.getEnclosedElements() );
+		final List<ExecutableElement> gettersAndSettersOfClass = new ArrayList<>();
 		final List<ExecutableElement> queryMethods = new ArrayList<>();
-		for ( Element rawMethodOfClass: methodsOfClass ) {
+		for ( ExecutableElement rawMethodOfClass: methodsOfClass ) {
 			if ( isGetterOrSetter( rawMethodOfClass ) ) {
 				gettersAndSettersOfClass.add( rawMethodOfClass );
 			}
-			else if ( rawMethodOfClass instanceof ExecutableElement
-					&& containsAnnotation( rawMethodOfClass, Constants.HQL, Constants.SQL ) ) {
-				queryMethods.add( (ExecutableElement) rawMethodOfClass );
+			else if ( containsAnnotation( rawMethodOfClass, Constants.HQL, Constants.SQL ) ) {
+				queryMethods.add( rawMethodOfClass );
+			}
+		}
+
+		if ( !containsAnnotation( element, Constants.ENTITY ) ) {
+			for ( ExecutableElement getterOrSetter : gettersAndSettersOfClass ) {
+				if ( isSessionGetter( getterOrSetter ) ) {
+					dao = true;
+					addDaoConstructor( getterOrSetter );
+				}
 			}
 		}
 
@@ -233,6 +257,29 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		addQueryMethods( queryMethods );
 
 		initialized = true;
+	}
+
+	private void addDaoConstructor(ExecutableElement getterOrSetter) {
+		String name = getterOrSetter.getSimpleName().toString();
+		String typeName = element.getSimpleName().toString() + '_';
+		String type = getterOrSetter.getReturnType().toString();
+		putMember( name, new DaoConstructor(this, typeName, name, type, context.addInjectAnnotation() ) );
+	}
+
+	private static boolean isSessionGetter(ExecutableElement getterOrSetter) {
+		final TypeMirror type = getterOrSetter.getReturnType();
+		if ( type.getKind() == TypeKind.DECLARED ) {
+			final Element element = ((DeclaredType) type).asElement();
+			if ( element.getKind() == ElementKind.INTERFACE ) {
+				final Name name = ((TypeElement) element).getQualifiedName();
+				if ( name.contentEquals( Session.class.getName() )
+						|| name.contentEquals( EntityManager.class.getName() )
+						|| name.contentEquals( StatelessSession.class.getName() ) ) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -287,7 +334,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void addQueryMethods(List<ExecutableElement> queryMethods) {
 		for ( ExecutableElement method : queryMethods) {
-			addQueryMethod( method );
+			if ( method.getModifiers().contains(Modifier.ABSTRACT) ) {
+				addQueryMethod( method );
+			}
 		}
 	}
 
@@ -300,7 +349,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( typeArguments.size() == 0 ) {
 				final String typeName = declaredType.toString();
 				if ( containsAnnotation( declaredType.asElement(), Constants.ENTITY ) ) {
-					addQueryMethod(method, methodName, typeName, null);
+					addQueryMethod( method, methodName, typeName, null );
 				}
 				else {
 					if ( isLegalRawResultType( typeName ) ) {
@@ -389,7 +438,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							containerTypeName,
 							paramNames,
 							paramTypes,
-							isNative
+							isNative,
+							dao
 					);
 			putMember( attribute.getPropertyName() + paramTypes, attribute );
 

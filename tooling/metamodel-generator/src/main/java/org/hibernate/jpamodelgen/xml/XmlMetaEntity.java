@@ -632,4 +632,9 @@ public class XmlMetaEntity implements Metamodel {
 	public Context getContext() {
 		return context;
 	}
+
+	@Override
+	public boolean isImplementation() {
+		return false;
+	}
 }

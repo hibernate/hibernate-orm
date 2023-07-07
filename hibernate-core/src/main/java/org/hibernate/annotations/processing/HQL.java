@@ -30,7 +30,7 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  *     List&lt;Book&gt; findBooksByTitleWithPagination(String title, int max, int start);
  *
  *     &#64;HQL("from Book where title like ?1")
- *     TypedQuery&lt;Book&gt; findBooksByTitle(String title);
+ *     TypedQuery&lt;Book&gt; createBooksByTitleQuery(String title);
  * }
  * </pre>
  * <p>

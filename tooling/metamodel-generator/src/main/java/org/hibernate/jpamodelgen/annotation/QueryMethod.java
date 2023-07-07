@@ -70,7 +70,9 @@ public class QueryMethod implements MetaAttribute {
 	@Override
 	public String getAttributeDeclarationString() {
 		List<String> paramTypes = this.paramTypes.stream()
-				.map(ptype->isOrderParam(ptype) && ptype.endsWith("[]") ? ptype.substring(0, ptype.length()-2) + "..." : ptype)
+				.map(ptype -> isOrderParam(ptype) && ptype.endsWith("[]")
+						? ptype.substring(0, ptype.length()-2) + "..."
+						: ptype)
 				.collect(toList());
 		StringBuilder declaration = new StringBuilder();
 		declaration
@@ -79,7 +81,8 @@ public class QueryMethod implements MetaAttribute {
 				.append("#")
 				.append(methodName)
 				.append("(")
-				.append(join(",", paramTypes.stream().map(this::strip).map(annotationMetaEntity::importType).toArray()))
+				.append(join(",", paramTypes.stream().map(this::strip)
+						.map(annotationMetaEntity::importType).toArray()))
 				.append(")")
 				.append("\n **/\n");
 		boolean hasVarargs = paramTypes.stream().anyMatch(ptype -> ptype.endsWith("..."));
@@ -103,7 +106,8 @@ public class QueryMethod implements MetaAttribute {
 		if (containerTypeName != null) {
 			type.append(annotationMetaEntity.importType(containerTypeName));
 			if (returnTypeName != null) {
-				type.append("<").append(annotationMetaEntity.importType(returnTypeName)).append(">");
+				type.append("<")
+						.append(annotationMetaEntity.importType(returnTypeName)).append(">");
 			}
 		}
 		else if (returnTypeName != null)  {
@@ -205,10 +209,12 @@ public class QueryMethod implements MetaAttribute {
 			}
 		}
 		if ( containerTypeName == null) {
-			declaration.append("\n\t\t\t.getSingleResult()");
+			declaration
+					.append("\n\t\t\t.getSingleResult()");
 		}
 		else if ( containerTypeName.equals("java.util.List") ) {
-			declaration.append("\n\t\t\t.getResultList()");
+			declaration
+					.append("\n\t\t\t.getResultList()");
 		}
 		declaration.append(";\n}");
 		return declaration.toString();

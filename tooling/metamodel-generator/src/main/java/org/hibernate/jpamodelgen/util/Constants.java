@@ -19,6 +19,7 @@ public final class Constants {
 	public static final String EMBEDDABLE = "jakarta.persistence.Embeddable";
 	public static final String ID = "jakarta.persistence.Id";
 	public static final String EMBEDDED_ID = "jakarta.persistence.EmbeddedId";
+	public static final String NATURAL_ID = "org.hibernate.annotations.NaturalId";
 	public static final String TRANSIENT = "jakarta.persistence.Transient";
 	public static final String BASIC = "jakarta.persistence.Basic";
 	public static final String ONE_TO_ONE = "jakarta.persistence.OneToOne";

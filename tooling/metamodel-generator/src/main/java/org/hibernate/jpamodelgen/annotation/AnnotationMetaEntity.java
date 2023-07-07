@@ -272,11 +272,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final Element element = ((DeclaredType) type).asElement();
 			if ( element.getKind() == ElementKind.INTERFACE ) {
 				final Name name = ((TypeElement) element).getQualifiedName();
-				if ( name.contentEquals( Session.class.getName() )
-						|| name.contentEquals( EntityManager.class.getName() )
-						|| name.contentEquals( StatelessSession.class.getName() ) ) {
-					return true;
-				}
+				return name.contentEquals(Session.class.getName())
+					|| name.contentEquals(EntityManager.class.getName())
+					|| name.contentEquals(StatelessSession.class.getName());
 			}
 		}
 		return false;
@@ -414,12 +412,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			ExecutableElement method,
 			@Nullable TypeMirror returnType,
 			@Nullable TypeElement containerType) {
-		if ( containerType != null ) {
-			context.message( method,
-					"incorrect return type '" + containerType.getQualifiedName() + "' is not an entity type",
-					Diagnostic.Kind.ERROR );
-		}
-		else if ( returnType == null || returnType.getKind() != TypeKind.DECLARED ) {
+		if ( returnType == null || returnType.getKind() != TypeKind.DECLARED ) {
 			context.message( method,
 					"incorrect return type '" + returnType + "' is not an entity type",
 					Diagnostic.Kind.ERROR );
@@ -433,62 +426,184 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						Diagnostic.Kind.ERROR );
 			}
 			else {
-				switch ( method.getParameters().size() ) {
-					case 0:
-						context.message( method,
-								"missing parameter",
-								Diagnostic.Kind.ERROR );
-						break;
-					case 1:
-						final VariableElement parameter = method.getParameters().get(0);
-						validateFinderParameter( entity, parameter);
-						final String methodName = method.getSimpleName().toString();
-						putMember( methodName,
-								new FinderMethod(
-										this,
-										methodName,
-										returnType.toString(),
-										parameter.getSimpleName().toString(),
-										parameter.asType().toString(),
-										dao
-								)
-						);
-						break;
-					default:
-						context.message( method,
-								"too many parameters ('@IdClass' not yet supported)",
-								Diagnostic.Kind.ERROR );
+				if ( containerType != null ) {
+					// it has to be a criteria finder (multiple results)
+					createContainerResultFinder( method, returnType, containerType, entity );
+				}
+				else {
+					switch ( method.getParameters().size() ) {
+						case 0: {
+							context.message( method,
+									"missing parameter",
+									Diagnostic.Kind.ERROR );
+							break;
+						}
+						case 1: {
+							createSingleParameterFinder( method, returnType, entity );
+							break;
+						}
+						default: {
+							createMultipleParameterFinder( method, returnType, entity );
+						}
+					}
 				}
 			}
 		}
 	}
 
-	private void validateFinderParameter(TypeElement entity, VariableElement param) {
-		entity.getEnclosedElements().stream()
-				.filter(member -> member.getSimpleName().contentEquals( param.getSimpleName() )
-						&& member.getAnnotationMirrors().stream()
-						.anyMatch(annotation -> {
-							final TypeElement annotationType = (TypeElement)
-									annotation.getAnnotationType().asElement();
-							final Name annotatioName = annotationType.getQualifiedName();
-							return annotatioName.contentEquals(Constants.ID)
-								|| annotatioName.contentEquals(Constants.EMBEDDED_ID);
-						}))
-				.findAny()
-				.ifPresentOrElse(
-						member -> {
-							final String memberType = member.asType().toString();
-							final String paramType = param.asType().toString();
-							if ( !memberType.equals(paramType)) {
-								context.message( param,
-										"matching '@Id' field in entity class has type '" + memberType + "'",
-										Diagnostic.Kind.ERROR );
-							}
-						},
-						() -> context.message( param,
-								"no matching '@Id' field in entity class",
-								Diagnostic.Kind.ERROR )
-				);
+	private void createContainerResultFinder(ExecutableElement method, TypeMirror returnType, TypeElement containerType, TypeElement entity) {
+		final String methodName = method.getSimpleName().toString();
+		final List<String> paramNames = parameterNames(method);
+		final List<String> paramTypes = parameterTypes(method);
+		final String methodKey = methodName + paramTypes;
+		for ( VariableElement param : method.getParameters() ) {
+			validateFinderParameter(entity, param );
+		}
+		putMember( methodKey,
+				new CriteriaFinderMethod(
+						this,
+						methodName,
+						returnType.toString(),
+						containerType.toString(),
+						paramNames,
+						paramTypes,
+						dao
+				)
+		);
+	}
+
+	private void createMultipleParameterFinder(ExecutableElement method, TypeMirror returnType, TypeElement entity) {
+		final String methodName = method.getSimpleName().toString();
+		final List<String> paramNames = parameterNames(method);
+		final List<String> paramTypes = parameterTypes(method);
+		final String methodKey = methodName + paramTypes;
+		if ( matchesNaturalKey(method, entity) ) {
+			putMember( methodKey,
+					new NaturalIdFinderMethod(
+							this,
+							methodName,
+							returnType.toString(),
+							paramNames,
+							paramTypes,
+							dao
+					)
+			);
+		}
+		else {
+			putMember( methodKey,
+					new CriteriaFinderMethod(
+							this,
+							methodName,
+							returnType.toString(),
+							null,
+							paramNames,
+							paramTypes,
+							dao
+					)
+			);
+		}
+	}
+
+	private void createSingleParameterFinder(ExecutableElement method, TypeMirror returnType, TypeElement entity) {
+		final String methodName = method.getSimpleName().toString();
+		final VariableElement parameter = method.getParameters().get(0);
+		final FieldType fieldType = validateFinderParameter(entity, parameter );
+		if ( fieldType != null ) {
+			final String methodKey = methodName + "!";
+			switch ( fieldType ) {
+				case NATURAL_ID:
+					putMember( methodKey,
+							new NaturalIdFinderMethod(
+									this,
+									methodName,
+									returnType.toString(),
+									List.of( parameter.getSimpleName().toString() ),
+									List.of( parameter.asType().toString() ),
+									dao
+							)
+					);
+					break;
+				case ID:
+					putMember( methodKey,
+							new IdFinderMethod(
+									this,
+									methodName,
+									returnType.toString(),
+									parameter.getSimpleName().toString(),
+									parameter.asType().toString(),
+									dao
+							)
+					);
+					break;
+				case BASIC:
+					putMember( methodKey,
+							new CriteriaFinderMethod(
+									this,
+									methodName,
+									returnType.toString(),
+									null,
+									List.of( parameter.getSimpleName().toString() ),
+									List.of( parameter.asType().toString() ),
+									dao
+							)
+					);
+					break;
+			}
+		}
+	}
+
+	private boolean matchesNaturalKey(ExecutableElement method, TypeElement entity) {
+		boolean result = true;
+		List<? extends VariableElement> parameters = method.getParameters();
+		for ( VariableElement param : parameters) {
+			if ( validateFinderParameter( entity, param ) != FieldType.NATURAL_ID ) {
+				// no short-circuit here because we want to validate
+				// all of them and get the nice error report
+				result = false;
+			}
+		}
+		return result && countNaturalIdFields( entity ) == parameters.size() ;
+	}
+
+	enum FieldType {
+		ID, NATURAL_ID, BASIC
+	}
+
+	private int countNaturalIdFields(TypeElement entity) {
+		int count = 0;
+		for ( Element member : entity.getEnclosedElements() ) {
+			if ( containsAnnotation( member, Constants.NATURAL_ID ) ) {
+				count ++;
+			}
+		}
+		return count;
+	}
+
+	private @Nullable FieldType validateFinderParameter(TypeElement entity, VariableElement param) {
+		for ( Element member : entity.getEnclosedElements() ) {
+			if ( member.getSimpleName().contentEquals( param.getSimpleName() ) ) {
+				final String memberType = member.asType().toString();
+				final String paramType = param.asType().toString();
+				if ( !memberType.equals(paramType) ) {
+					context.message( param,
+							"matching field in entity class has type '" + memberType + "'",
+							Diagnostic.Kind.ERROR );
+				}
+				if ( containsAnnotation( member, Constants.ID, Constants.EMBEDDED_ID ) ) {
+					return FieldType.ID;
+				}
+				else if ( containsAnnotation( member, Constants.NATURAL_ID ) ) {
+					return FieldType.NATURAL_ID;
+				}
+				else {
+					return FieldType.BASIC;
+				}
+			}
+		}
+		context.message( param,
+				"no matching field named '" + param.getSimpleName() + "' in entity class",
+				Diagnostic.Kind.ERROR );
+		return null;
 	}
 
 	private void addQueryMethod(

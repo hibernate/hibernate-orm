@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.orm.test.jpa.criteria.subfetch.FetchDepth1Entity_;
-import org.hibernate.orm.test.jpa.criteria.subfetch.FetchDepth2Entity_;
-import org.hibernate.orm.test.jpa.criteria.subfetch.FetchRootEntity_;
+import org.hibernate.orm.test.jpa.criteria.nestedfetch.FetchDepth1Entity_;
+import org.hibernate.orm.test.jpa.criteria.nestedfetch.FetchDepth2Entity_;
+import org.hibernate.orm.test.jpa.criteria.nestedfetch.FetchRootEntity_;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.JiraKey;

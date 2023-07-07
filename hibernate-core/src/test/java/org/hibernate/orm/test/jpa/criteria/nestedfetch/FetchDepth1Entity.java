@@ -22,10 +22,6 @@ public class FetchDepth1Entity implements Serializable {
 	@ManyToOne(fetch = FetchType.LAZY)
 	private FetchRootEntity rootEntity;
 
-	public int getUserId() {
-		return rootEntity.getId();
-	}
-
 	@Id
 	@PrimaryKeyJoinColumn (name = "depth2Id", referencedColumnName = "id")
 	@ManyToOne(fetch = FetchType.LAZY)

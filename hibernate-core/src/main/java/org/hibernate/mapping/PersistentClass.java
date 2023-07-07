@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.engine.spi.Mapping;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.internal.util.collections.SingletonIterator;
@@ -1003,7 +1004,8 @@ public abstract class PersistentClass implements AttributeContainer, Serializabl
 		for ( Selectable columnOrFormula : value.getSelectables() ) {
 			if ( !columnOrFormula.isFormula() ) {
 				Column col = (Column) columnOrFormula;
-				if (col.getValue().getColumnUpdateability()[0] || col.getValue().getColumnInsertability()[0]) {
+				if (!ArrayHelper.isAllFalse(col.getValue().getColumnUpdateability())
+						|| !ArrayHelper.isAllFalse(col.getValue().getColumnInsertability())) {
 					if (!distinctColumns.add(col.getName())) {
 						throw new MappingException(
 								"Column '" + col.getName()

@@ -10,8 +10,10 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.internal.Formatter;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.build.AllowSysOut;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.service.Service;
 
+import org.hibernate.stat.spi.StatisticsImplementor;
 import org.jboss.logging.Logger;
 
 import java.sql.Statement;
@@ -27,8 +29,8 @@ public class SqlStatementLogger implements Service {
 	private static final Logger LOG = CoreLogging.logger( "org.hibernate.SQL" );
 	private static final Logger LOG_SLOW = CoreLogging.logger( "org.hibernate.SQL_SLOW" );
 
-	private boolean logToStdout;
-	private boolean format;
+	private final boolean logToStdout;
+	private final boolean format;
 	private final boolean highlight;
 
 	/**
@@ -46,7 +48,7 @@ public class SqlStatementLogger implements Service {
 	/**
 	 * Constructs a new {@code SqlStatementLogger} instance.
 	 *
-	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
+	 * @param logToStdout Should we log to STDOUT in addition to our internal logger?
 	 * @param format Should we format the statements in the console and log
 	 */
 	public SqlStatementLogger(boolean logToStdout, boolean format) {
@@ -56,7 +58,7 @@ public class SqlStatementLogger implements Service {
 	/**
 	 * Constructs a new {@code SqlStatementLogger} instance.
 	 *
-	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
+	 * @param logToStdout Should we log to STDOUT in addition to our internal logger?
 	 * @param format Should we format the statements in the console and log
 	 * @param highlight Should we highlight the statements in the console
 	 */
@@ -67,7 +69,7 @@ public class SqlStatementLogger implements Service {
 	/**
 	 * Constructs a new {@code SqlStatementLogger} instance.
 	 *
-	 * @param logToStdout Should we log to STDOUT in addition to our internal logger.
+	 * @param logToStdout Should we log to STDOUT in addition to our internal logger?
 	 * @param format Should we format the statements in the console and log
 	 * @param highlight Should we highlight the statements in the console
 	 * @param logSlowQuery Should we logs query which executed slower than specified milliseconds. 0 - disabled.
@@ -143,8 +145,8 @@ public class SqlStatementLogger implements Service {
 	 * @param statement SQL statement.
 	 * @param startTimeNanos Start time in nanoseconds.
 	 */
-	public void logSlowQuery(Statement statement, long startTimeNanos) {
-		logSlowQuery( statement::toString, startTimeNanos );
+	public void logSlowQuery(Statement statement, long startTimeNanos, JdbcSessionContext context) {
+		logSlowQuery( statement::toString, startTimeNanos, context );
 	}
 
 	/**
@@ -154,8 +156,8 @@ public class SqlStatementLogger implements Service {
 	 * @param startTimeNanos Start time in nanoseconds.
 	 */
 	@AllowSysOut
-	public void logSlowQuery(String sql, long startTimeNanos) {
-		logSlowQuery( () -> sql, startTimeNanos );
+	public void logSlowQuery(String sql, long startTimeNanos, JdbcSessionContext context) {
+		logSlowQuery( sql::toString, startTimeNanos, context );
 	}
 
 	/**
@@ -163,7 +165,7 @@ public class SqlStatementLogger implements Service {
 	 * @param startTimeNanos Start time in nanoseconds.
 	 */
 	@AllowSysOut
-	private void logSlowQuery(Supplier<String> sqlSupplier, long startTimeNanos) {
+	private void logSlowQuery(Supplier<String> sqlSupplier, long startTimeNanos, JdbcSessionContext context) {
 		if ( logSlowQuery < 1 ) {
 			return;
 		}
@@ -174,10 +176,17 @@ public class SqlStatementLogger implements Service {
 		long queryExecutionMillis = TimeUnit.NANOSECONDS.toMillis( System.nanoTime() - startTimeNanos );
 
 		if ( queryExecutionMillis > logSlowQuery ) {
-			String logData = "SlowQuery: " + queryExecutionMillis + " milliseconds. SQL: '" + sqlSupplier.get() + "'";
+			final String sql = sqlSupplier.get();
+			final String logData = "Slow query took " + queryExecutionMillis + " milliseconds [" + sql + "]";
 			LOG_SLOW.info( logData );
 			if ( logToStdout ) {
 				System.out.println( logData );
+			}
+			if ( context != null ) {
+				final StatisticsImplementor statisticsImplementor = context.getStatistics();
+				if ( statisticsImplementor != null && statisticsImplementor.isStatisticsEnabled() ) {
+					statisticsImplementor.slowQuery( sql, queryExecutionMillis );
+				}
 			}
 		}
 	}

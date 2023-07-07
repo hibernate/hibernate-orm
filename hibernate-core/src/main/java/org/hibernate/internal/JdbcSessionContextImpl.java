@@ -16,6 +16,7 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * @author Steve Ebersole
@@ -130,5 +131,10 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 	@Override
 	public boolean isActive() {
 		return !sessionFactory.isClosed();
+	}
+
+	@Override
+	public StatisticsImplementor getStatistics() {
+		return sessionFactory.getStatistics();
 	}
 }

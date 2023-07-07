@@ -24,6 +24,7 @@ import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcLockStrategy;
@@ -240,7 +241,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			}
 			finally {
 				eventListenerManager.jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( preparedStatement, executeStartNanos );
+				sqlStatementLogger.logSlowQuery( preparedStatement, executeStartNanos, context() );
 			}
 
 			skipRows( resultSet );
@@ -262,6 +263,10 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 		finally {
 			logicalConnection.afterStatement();
 		}
+	}
+
+	private JdbcSessionContext context() {
+		return executionContext.getSession().getJdbcCoordinator().getJdbcSessionOwner().getJdbcSessionContext();
 	}
 
 	protected void skipRows(ResultSet resultSet) throws SQLException {

@@ -11,6 +11,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 /**
  * Provides the "JDBC session" with contextual information it needs during its lifecycle.
@@ -59,6 +60,8 @@ public interface JdbcSessionContext {
 	StatementInspector getStatementInspector();
 
 	JpaCompliance getJpaCompliance();
+
+	StatisticsImplementor getStatistics();
 
 	/**
 	 * @deprecated since {@link JdbcObserver} is deprecated

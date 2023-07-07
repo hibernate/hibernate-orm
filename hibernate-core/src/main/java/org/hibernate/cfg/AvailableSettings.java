@@ -2273,6 +2273,8 @@ public interface AvailableSettings {
 	 * time to execute will be logged.
 	 * <p>
 	 * A value of {@code 0}, the default, disables logging of "slow" queries.
+	 *
+	 * @see org.hibernate.stat.Statistics#getSlowQueries()
 	 */
 	String LOG_SLOW_QUERY = "hibernate.log_slow_query";
 
@@ -2686,6 +2688,8 @@ public interface AvailableSettings {
 	 * The default value is {@value org.hibernate.stat.Statistics#DEFAULT_QUERY_STATISTICS_MAX_SIZE}.
 	 *
 	 * @since 5.4
+	 *
+	 * @see org.hibernate.stat.Statistics#getQueries()
 	 */
 	String QUERY_STATISTICS_MAX_SIZE = "hibernate.statistics.query_max_size";
 

@@ -980,6 +980,28 @@ long publisherCacheMissCount =
 Hibernate's statistics enable observability.
 Both {micrometer}[Micrometer] and {smallrye-metrics}[SmallRye Metrics] are capable of exposing these metrics.
 
+[[slow-queries]]
+=== Tracking down slow queries
+
+When a poorly-performing SQL query is discovered in production, it can sometimes be hard to track down exactly where in the Java code the query originates.
+Hibernate offers two configuration properties that can make it easier to identify a slow query and find its source.
+
+.Settings for tracking slow queries
+[%breakable,cols="25,~,~"]
+|===
+| Configuration property name | Purpose | Property value
+
+| `hibernate.log_slow_query` | Log slow queries at the `INFO` level | The minimum execution time, in milliseconds, which characterizes a "slow" query
+| `hibernate.use_sql_comments` | Prepend comments to the executed SQL | `true` or `false`
+|===
+
+When `hibernate.use_sql_comments` is enabled, the text of the HQL query is prepended as a comment to the generated SQL, which usually makes it easy to find the HQL in the Java code.
+
+The comment text may be customized:
+
+- by calling `Query.setComment(comment)` or `Query.setHint(AvailableHints.HINT_COMMENT,comment)`, or
+- via the `@NamedQuery` annotation.
+
 [[hibernate-reactive]]
 === Reactive programming with Hibernate
 

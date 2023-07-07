@@ -2268,6 +2268,15 @@ public interface AvailableSettings {
 	String GENERATE_STATISTICS = "hibernate.generate_statistics";
 
 	/**
+	 * Specifies a duration in milliseconds defining the minimum query execution time that
+	 * characterizes a "slow" query. Any SQL query which takes longer than this amount of
+	 * time to execute will be logged.
+	 * <p>
+	 * A value of {@code 0}, the default, disables logging of "slow" queries.
+	 */
+	String LOG_SLOW_QUERY = "hibernate.log_slow_query";
+
+	/**
 	 * Controls whether {@linkplain org.hibernate.stat.SessionStatistics session metrics}
 	 * should be {@linkplain org.hibernate.engine.internal.StatisticalLoggingSessionEventListener
 	 * logged} for any session in which statistics are being collected.
@@ -2276,15 +2285,6 @@ public interface AvailableSettings {
 	 * is enabled.
 	 */
 	String LOG_SESSION_METRICS = "hibernate.session.events.log";
-
-	/**
-	 * Specifies a duration in milliseconds defining the minimum query execution time that
-	 * characterizes a "slow" query. Any SQL query which takes longer than this amount of
-	 * time to execute will be logged.
-	 * <p>
-	 * A value of {@code 0}, the default, disables logging of "slow" queries.
-	 */
-	String LOG_SLOW_QUERY = "hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS";
 
 	/**
 	 * Defines a default {@link org.hibernate.SessionEventListener} to be applied to

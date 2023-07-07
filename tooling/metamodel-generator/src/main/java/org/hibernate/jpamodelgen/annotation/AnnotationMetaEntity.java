@@ -233,7 +233,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( isGetterOrSetter( rawMethodOfClass ) ) {
 				gettersAndSettersOfClass.add( rawMethodOfClass );
 			}
-			else if ( containsAnnotation( rawMethodOfClass, Constants.HQL, Constants.SQL ) ) {
+			else if ( containsAnnotation( rawMethodOfClass, Constants.HQL, Constants.SQL, Constants.FIND ) ) {
 				queryMethods.add( rawMethodOfClass );
 			}
 		}
@@ -341,35 +341,33 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addQueryMethod(ExecutableElement method) {
-		final String methodName = method.getSimpleName().toString();
 		final TypeMirror returnType = method.getReturnType();
-		if ( returnType instanceof DeclaredType ) {
+		if ( returnType.getKind() == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = (DeclaredType) returnType;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 			if ( typeArguments.size() == 0 ) {
-				final String typeName = declaredType.toString();
 				if ( containsAnnotation( declaredType.asElement(), Constants.ENTITY ) ) {
-					addQueryMethod( method, methodName, typeName, null );
+					addQueryMethod( method, declaredType, null );
 				}
 				else {
-					if ( isLegalRawResultType( typeName ) ) {
-						addQueryMethod( method, methodName, null, typeName );
+					if ( isLegalRawResultType( typeElement.getQualifiedName().toString() ) ) {
+						addQueryMethod( method, null, typeElement );
 					}
 					else {
 						// probably a projection
-						addQueryMethod( method, methodName, typeName, null );
+						addQueryMethod( method, declaredType, null );
 					}
 				}
 			}
 			else if ( typeArguments.size() == 1 ) {
-				final String containerTypeName = declaredType.asElement().toString();
-				final String returnTypeName = typeArguments.get(0).toString();
-				if ( isLegalGenericResultType( containerTypeName ) ) {
-					addQueryMethod( method, methodName, returnTypeName, containerTypeName );
+				final Element containerType = declaredType.asElement();
+				if ( isLegalGenericResultType( containerType.toString() ) ) {
+					addQueryMethod( method, typeArguments.get(0), typeElement );
 				}
 				else {
 					context.message( method,
-							"incorrect return type '" + containerTypeName + "'",
+							"incorrect return type '" + containerType + "'",
 							Diagnostic.Kind.ERROR );
 				}
 			}
@@ -396,46 +394,121 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void addQueryMethod(
 			ExecutableElement method,
-			String methodName,
-			@Nullable String returnTypeName,
-			@Nullable String containerTypeName) {
+			@Nullable TypeMirror returnType,
+			@Nullable TypeElement containerType) {
 		final AnnotationMirror hql = getAnnotationMirror( method, Constants.HQL );
 		if ( hql != null ) {
-			addQueryMethod( method, methodName, returnTypeName, containerTypeName, hql, false );
+			addQueryMethod( method, returnType, containerType, hql, false );
 		}
 		final AnnotationMirror sql = getAnnotationMirror( method, Constants.SQL );
 		if ( sql != null ) {
-			addQueryMethod( method, methodName, returnTypeName, containerTypeName, sql, true );
+			addQueryMethod( method, returnType, containerType, sql, true );
 		}
+		final AnnotationMirror find = getAnnotationMirror( method, Constants.FIND );
+		if ( find != null ) {
+			addFinderMethod( method, returnType, containerType );
+		}
+	}
+
+	private void addFinderMethod(
+			ExecutableElement method,
+			@Nullable TypeMirror returnType,
+			@Nullable TypeElement containerType) {
+		if ( containerType != null ) {
+			context.message( method,
+					"incorrect return type '" + containerType.getQualifiedName() + "' is not an entity type",
+					Diagnostic.Kind.ERROR );
+		}
+		else if ( returnType == null || returnType.getKind() != TypeKind.DECLARED ) {
+			context.message( method,
+					"incorrect return type '" + returnType + "' is not an entity type",
+					Diagnostic.Kind.ERROR );
+		}
+		else {
+			final DeclaredType declaredType = (DeclaredType) returnType;
+			final TypeElement entity = (TypeElement) declaredType.asElement();
+			if ( !containsAnnotation( entity, Constants.ENTITY ) ) {
+				context.message( method,
+						"incorrect return type '" + returnType + "' is not annotated '@Entity'",
+						Diagnostic.Kind.ERROR );
+			}
+			else {
+				switch ( method.getParameters().size() ) {
+					case 0:
+						context.message( method,
+								"missing parameter",
+								Diagnostic.Kind.ERROR );
+						break;
+					case 1:
+						final VariableElement parameter = method.getParameters().get(0);
+						validateFinderParameter( entity, parameter);
+						final String methodName = method.getSimpleName().toString();
+						putMember( methodName,
+								new FinderMethod(
+										this,
+										methodName,
+										returnType.toString(),
+										parameter.getSimpleName().toString(),
+										parameter.asType().toString(),
+										dao
+								)
+						);
+						break;
+					default:
+						context.message( method,
+								"too many parameters ('@IdClass' not yet supported)",
+								Diagnostic.Kind.ERROR );
+				}
+			}
+		}
+	}
+
+	private void validateFinderParameter(TypeElement entity, VariableElement param) {
+		entity.getEnclosedElements().stream()
+				.filter(member -> member.getSimpleName().contentEquals( param.getSimpleName() )
+						&& member.getAnnotationMirrors().stream()
+						.anyMatch(annotation -> {
+							final TypeElement annotationType = (TypeElement)
+									annotation.getAnnotationType().asElement();
+							final Name annotatioName = annotationType.getQualifiedName();
+							return annotatioName.contentEquals(Constants.ID)
+								|| annotatioName.contentEquals(Constants.EMBEDDED_ID);
+						}))
+				.findAny()
+				.ifPresentOrElse(
+						member -> {
+							final String memberType = member.asType().toString();
+							final String paramType = param.asType().toString();
+							if ( !memberType.equals(paramType)) {
+								context.message( param,
+										"matching '@Id' field in entity class has type '" + memberType + "'",
+										Diagnostic.Kind.ERROR );
+							}
+						},
+						() -> context.message( param,
+								"no matching '@Id' field in entity class",
+								Diagnostic.Kind.ERROR )
+				);
 	}
 
 	private void addQueryMethod(
 			ExecutableElement method,
-			String methodName,
-			@Nullable
-			String returnTypeName,
-			@Nullable
-			String containerTypeName,
+			@Nullable TypeMirror returnType,
+			@Nullable TypeElement containerType,
 			AnnotationMirror mirror,
 			boolean isNative) {
 		final Object queryString = getAnnotationValue( mirror, "value" );
 		if ( queryString instanceof String ) {
-			final List<String> paramNames =
-					method.getParameters().stream()
-							.map( param -> param.getSimpleName().toString() )
-							.collect( toList() );
-			final List<String> paramTypes =
-					method.getParameters().stream()
-							.map( param -> param.asType().toString() )
-							.collect( toList() );
+			final List<String> paramNames = parameterNames( method );
+			final List<String> paramTypes = parameterTypes( method );
 			final String hql = (String) queryString;
 			final QueryMethod attribute =
 					new QueryMethod(
 							this,
-							methodName,
+							method.getSimpleName().toString(),
 							hql,
-							returnTypeName,
-							containerTypeName,
+							returnType == null ? null : returnType.toString(),
+							containerType == null ? null : containerType.getQualifiedName().toString(),
 							paramNames,
 							paramTypes,
 							isNative,
@@ -455,6 +528,18 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				);
 			}
 		}
+	}
+
+	private static List<String> parameterTypes(ExecutableElement method) {
+		return method.getParameters().stream()
+				.map(param -> param.asType().toString())
+				.collect(toList());
+	}
+
+	private static List<String> parameterNames(ExecutableElement method) {
+		return method.getParameters().stream()
+				.map(param -> param.getSimpleName().toString())
+				.collect(toList());
 	}
 
 	private void checkParameters(ExecutableElement method, List<String> paramNames, List<String> paramTypes, AnnotationMirror mirror, String hql) {

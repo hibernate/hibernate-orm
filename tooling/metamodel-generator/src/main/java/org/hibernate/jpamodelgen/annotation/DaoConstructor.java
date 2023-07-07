@@ -9,6 +9,9 @@ package org.hibernate.jpamodelgen.annotation;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 
+/**
+ * @author Gavin King
+ */
 public class DaoConstructor implements MetaAttribute {
 	private final Metamodel annotationMetaEntity;
 	private final String constructorName;
@@ -30,8 +33,17 @@ public class DaoConstructor implements MetaAttribute {
 	}
 
 	@Override
+	public boolean hasStringAttribute() {
+		return false;
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
 		return new StringBuilder()
+				.append("\nprivate final ")
+				.append(annotationMetaEntity.importType(returnTypeName))
+				.append(" entityManager;")
+				.append("\n")
 				.append(inject ? "\n@" + annotationMetaEntity.importType("jakarta.inject.Inject") : "")
 				.append("\npublic ")
 				.append(constructorName)
@@ -53,11 +65,7 @@ public class DaoConstructor implements MetaAttribute {
 
 	@Override
 	public String getAttributeNameDeclarationString() {
-		return new StringBuilder()
-				.append("\n\tprivate final ")
-				.append(annotationMetaEntity.importType(returnTypeName))
-				.append(" entityManager;")
-				.toString();
+		throw new UnsupportedOperationException();
 	}
 
 	@Override

@@ -63,6 +63,11 @@ public class QueryMethod implements MetaAttribute {
 	}
 
 	@Override
+	public boolean hasStringAttribute() {
+		return true;
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
 		List<String> paramTypes = this.paramTypes.stream()
 				.map(ptype->isOrderParam(ptype) && ptype.endsWith("[]") ? ptype.substring(0, ptype.length()-2) + "..." : ptype)

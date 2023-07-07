@@ -24,7 +24,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.tools.Diagnostic;
 
@@ -38,6 +37,8 @@ import org.hibernate.jpamodelgen.xml.JpaDescriptorParser;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static javax.lang.model.util.ElementFilter.fieldsIn;
+import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.jpamodelgen.util.Constants.HQL;
 import static org.hibernate.jpamodelgen.util.Constants.SQL;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
@@ -56,6 +57,7 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.isAnnotationMirrorOfType;
 		Constants.EMBEDDABLE,
 		Constants.HQL,
 		Constants.SQL,
+		Constants.FIND,
 		Constants.NAMED_QUERY,
 		Constants.NAMED_NATIVE_QUERY,
 		Constants.NAMED_ENTITY_GRAPH,
@@ -247,7 +249,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				if ( entity.equals( containedEntity ) ) {
 					continue;
 				}
-				for ( Element subElement : ElementFilter.fieldsIn( entity.getElement().getEnclosedElements() ) ) {
+				for ( Element subElement : fieldsIn( entity.getElement().getEnclosedElements() ) ) {
 					TypeMirror mirror = subElement.asType();
 					if ( TypeKind.DECLARED == mirror.getKind() ) {
 						if ( mirror.accept( visitor, subElement ) ) {
@@ -255,7 +257,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 						}
 					}
 				}
-				for ( Element subElement : ElementFilter.methodsIn( entity.getElement().getEnclosedElements() ) ) {
+				for ( Element subElement : methodsIn( entity.getElement().getEnclosedElements() ) ) {
 					TypeMirror mirror = subElement.asType();
 					if ( TypeKind.DECLARED == mirror.getKind() ) {
 						if ( mirror.accept( visitor, subElement ) ) {

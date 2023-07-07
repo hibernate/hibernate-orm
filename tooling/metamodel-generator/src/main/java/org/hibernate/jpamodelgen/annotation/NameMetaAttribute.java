@@ -30,6 +30,11 @@ class NameMetaAttribute implements MetaAttribute {
 	}
 
 	@Override
+	public boolean hasStringAttribute() {
+		return true;
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
 		throw new UnsupportedOperationException();
 	}

@@ -2,6 +2,7 @@ package org.hibernate.jpamodelgen.test.dao;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
+import org.hibernate.annotations.processing.Find;
 import org.hibernate.annotations.processing.HQL;
 import org.hibernate.annotations.processing.SQL;
 
@@ -10,6 +11,9 @@ import java.util.List;
 public interface Dao {
 
     EntityManager getEntityManager();
+
+    @Find
+    Book getBook(String isbn);
 
     @HQL("from Book where title like ?1")
     TypedQuery<Book> findByTitle(String title);

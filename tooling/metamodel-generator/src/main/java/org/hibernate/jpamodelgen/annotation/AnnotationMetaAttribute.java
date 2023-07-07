@@ -40,6 +40,11 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 	}
 
 	@Override
+	public boolean hasStringAttribute() {
+		return true;
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
 		return new StringBuilder()
 				.append("\n/**\n * @see ")

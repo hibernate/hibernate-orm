@@ -32,6 +32,7 @@ public class QueryMethod implements MetaAttribute {
 	private final List<String> paramNames;
 	private final List<String> paramTypes;
 	private final boolean isNative;
+	private final boolean belongsToDao;
 
 	public QueryMethod(
 			Metamodel annotationMetaEntity,
@@ -43,7 +44,8 @@ public class QueryMethod implements MetaAttribute {
 			String containerTypeName,
 			List<String> paramNames,
 			List<String> paramTypes,
-			boolean isNative) {
+			boolean isNative,
+			boolean belongsToDao) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.queryString = queryString;
@@ -52,6 +54,7 @@ public class QueryMethod implements MetaAttribute {
 		this.paramNames = paramNames;
 		this.paramTypes = paramTypes;
 		this.isNative = isNative;
+		this.belongsToDao = belongsToDao;
 	}
 
 	@Override
@@ -74,12 +77,23 @@ public class QueryMethod implements MetaAttribute {
 				.append(join(",", paramTypes.stream().map(this::strip).map(annotationMetaEntity::importType).toArray()))
 				.append(")")
 				.append("\n **/\n");
-		if ( paramTypes.stream().anyMatch(ptype -> ptype.endsWith("..."))) {
+		boolean hasVarargs = paramTypes.stream().anyMatch(ptype -> ptype.endsWith("..."));
+		if ( hasVarargs ) {
 			declaration
 					.append("@SafeVarargs\n");
 		}
-		declaration
-				.append("public static ");
+		if ( belongsToDao ) {
+			declaration
+					.append("@Override\npublic ");
+			if ( hasVarargs ) {
+				declaration
+						.append("final ");
+			}
+		}
+		else {
+			declaration
+					.append("public static ");
+		}
 		StringBuilder type = new StringBuilder();
 		if (containerTypeName != null) {
 			type.append(annotationMetaEntity.importType(containerTypeName));
@@ -94,18 +108,26 @@ public class QueryMethod implements MetaAttribute {
 				.append(type)
 				.append(" ")
 				.append(methodName)
-				.append("(")
-				.append(annotationMetaEntity.importType("jakarta.persistence.EntityManager"))
-				.append(" entityManager");
+				.append("(");
+		if ( !belongsToDao ) {
+			declaration
+					.append(annotationMetaEntity.importType("jakarta.persistence.EntityManager"))
+					.append(" entityManager");
+		}
 
-		for (int i =0; i<paramNames.size(); i++) {
+		for (int i = 0; i<paramNames.size(); i++ ) {
 			String ptype = paramTypes.get(i);
 			String param = paramNames.get(i);
 			String rptype = returnTypeName != null
 					? ptype.replace(returnTypeName, annotationMetaEntity.importType(returnTypeName))
 					: ptype;
+
+			if ( !belongsToDao || i>0 ) {
+				declaration
+						.append(", ");
+			}
+
 			declaration
-					.append(", ")
 					.append(annotationMetaEntity.importType(rptype))
 					.append(" ")
 					.append(param);
@@ -113,7 +135,7 @@ public class QueryMethod implements MetaAttribute {
 		declaration
 				.append(")")
 				.append(" {")
-				.append("\n    return ");
+				.append("\n\treturn ");
 		if ( isNative && returnTypeName != null
 				|| containerTypeName != null && containerTypeName.startsWith("org.hibernate") ) {
 			declaration.append("(").append(type).append(") ");
@@ -136,7 +158,7 @@ public class QueryMethod implements MetaAttribute {
 			String ptype = paramTypes.get(i-1);
 			if (queryString.contains(":" + param)) {
 				declaration
-						.append("\n			.setParameter(\"")
+						.append("\n\t\t\t.setParameter(\"")
 						.append(param)
 						.append("\", ")
 						.append(param)
@@ -144,7 +166,7 @@ public class QueryMethod implements MetaAttribute {
 			}
 			else if (queryString.contains("?" + i)) {
 				declaration
-						.append("\n			.setParameter(")
+						.append("\n\t\t\t.setParameter(")
 						.append(i)
 						.append(", ")
 						.append(param)
@@ -154,7 +176,7 @@ public class QueryMethod implements MetaAttribute {
 				unwrap( declaration, unwrapped );
 				unwrapped = true;
 				declaration
-						.append("\n			.setPage(")
+						.append("\n\t\t\t.setPage(")
 						.append(param)
 						.append(")");
 			}
@@ -163,7 +185,7 @@ public class QueryMethod implements MetaAttribute {
 				unwrapped = true;
 				if (ptype.endsWith("...")) {
 					declaration
-							.append("\n			.setOrder(")
+							.append("\n\t\t\t.setOrder(")
 							.append(annotationMetaEntity.importType(List.class.getName()))
 							.append(".of(")
 							.append(param)
@@ -171,17 +193,17 @@ public class QueryMethod implements MetaAttribute {
 				}
 				else {
 					declaration
-							.append("\n			.setOrder(")
+							.append("\n\t\t\t.setOrder(")
 							.append(param)
 							.append(")");
 				}
 			}
 		}
 		if ( containerTypeName == null) {
-			declaration.append("\n			.getSingleResult()");
+			declaration.append("\n\t\t\t.getSingleResult()");
 		}
 		else if ( containerTypeName.equals("java.util.List") ) {
-			declaration.append("\n			.getResultList()");
+			declaration.append("\n\t\t\t.getResultList()");
 		}
 		declaration.append(";\n}");
 		return declaration.toString();
@@ -205,7 +227,7 @@ public class QueryMethod implements MetaAttribute {
 	private void unwrap(StringBuilder declaration, boolean unwrapped) {
 		if ( !unwrapped ) {
 			declaration
-					.append("\n			.unwrap(")
+					.append("\n\t\t\t.unwrap(")
 					.append(annotationMetaEntity.importType(SelectionQuery.class.getName()))
 					.append(".class)");
 		}

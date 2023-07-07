@@ -97,6 +97,11 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				Diagnostic.Kind.NOTE, "Hibernate JPA 2 Static-Metamodel Generator " + Version.getVersionString()
 		);
 
+		PackageElement jakartaInjectPackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "jakarta.inject" );
+		context.setAddInjectAnnotation( jakartaInjectPackage != null );
+
 		String tmp = env.getOptions().get( JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION );
 		if ( tmp != null ) {
 			boolean addGeneratedAnnotation = Boolean.parseBoolean( tmp );

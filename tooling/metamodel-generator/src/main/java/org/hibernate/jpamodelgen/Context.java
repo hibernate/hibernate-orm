@@ -62,6 +62,7 @@ public final class Context {
 	 * place.
 	 */
 	private Boolean fullyXmlConfigured;
+	private boolean addInjectAnnotation = false;
 	private boolean addGeneratedAnnotation = true;
 	private boolean addGenerationDate;
 	private boolean addSuppressWarningsAnnotation;
@@ -104,6 +105,14 @@ public final class Context {
 
 	public ProcessingEnvironment getProcessingEnvironment() {
 		return pe;
+	}
+
+	public boolean addInjectAnnotation() {
+		return addInjectAnnotation;
+	}
+
+	public void setAddInjectAnnotation(boolean addInjectAnnotation) {
+		this.addInjectAnnotation = addInjectAnnotation;
 	}
 
 	public boolean addGeneratedAnnotation() {

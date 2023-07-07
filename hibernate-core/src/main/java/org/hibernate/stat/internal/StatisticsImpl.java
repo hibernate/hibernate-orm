@@ -9,7 +9,9 @@ package org.hibernate.stat.internal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.LongAdder;
 import java.util.function.Function;
@@ -119,6 +121,11 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 	 * Keyed by region name
 	 */
 	private final StatsNamedContainer<CacheRegionStatisticsImpl> l2CacheStatsMap = new StatsNamedContainer<>();
+
+	/**
+	 * Keyed by query SQL
+	 */
+	private final Map<String, Long> slowQueries = new ConcurrentHashMap<>();
 
 	public StatisticsImpl(SessionFactoryImplementor sessionFactory) {
 		Objects.requireNonNull( sessionFactory );
@@ -1021,5 +1028,15 @@ public class StatisticsImpl implements StatisticsImplementor, Service {
 		}
 
 		return new CacheRegionStatisticsImpl( region );
+	}
+
+	@Override
+	public Map<String, Long> getSlowQueries() {
+		return slowQueries;
+	}
+
+	@Override
+	public void slowQuery(String sql, long executionTime) {
+		slowQueries.merge( sql, executionTime, Math::max );
 	}
 }

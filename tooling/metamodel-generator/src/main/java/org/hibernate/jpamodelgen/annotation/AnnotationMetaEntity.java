@@ -431,9 +431,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						Diagnostic.Kind.ERROR );
 			}
 			else {
-				if ( containerType != null || Constants.HIB_STATELESS_SESSION.equals(sessionType) ) {
-					// multiple results or stateless session
-					// it has to be a criteria finder
+				if ( containerType != null ) {
+					// multiple results, it has to be a criteria finder
 					createCriteriaFinder( method, returnType, containerType, entity );
 				}
 				else {
@@ -492,10 +491,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void createMultipleParameterFinder(ExecutableElement method, TypeMirror returnType, TypeElement entity) {
 		final String methodName = method.getSimpleName().toString();
-		final List<String> paramNames = parameterNames(method);
-		final List<String> paramTypes = parameterTypes(method);
+		final List<String> paramNames = parameterNames( method );
+		final List<String> paramTypes = parameterTypes( method );
 		final String methodKey = methodName + paramTypes;
-		if ( matchesNaturalKey(method, entity) ) {
+		if (  !Constants.HIB_STATELESS_SESSION.equals(sessionType) // no byNaturalId() lookup API for SS
+				&& matchesNaturalKey( method, entity ) ) {
 			putMember( methodKey,
 					new NaturalIdFinderMethod(
 							this,
@@ -529,38 +529,43 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void createSingleParameterFinder(ExecutableElement method, TypeMirror returnType, TypeElement entity) {
 		final String methodName = method.getSimpleName().toString();
 		final VariableElement parameter = method.getParameters().get(0);
-		final FieldType fieldType = validateFinderParameter(entity, parameter );
+		final FieldType fieldType = validateFinderParameter( entity, parameter );
 		if ( fieldType != null ) {
 			final String methodKey = methodName + "!";
 			switch ( fieldType ) {
-				case NATURAL_ID:
-					putMember( methodKey,
-							new NaturalIdFinderMethod(
-									this,
-									methodName,
-									returnType.toString(),
-									List.of( parameter.getSimpleName().toString() ),
-									List.of( parameter.asType().toString() ),
-									dao,
-									sessionType,
-									enabledFetchProfiles( method )
-							)
-					);
-					break;
 				case ID:
-					putMember( methodKey,
-							new IdFinderMethod(
-									this,
-									methodName,
-									returnType.toString(),
-									parameter.getSimpleName().toString(),
-									parameter.asType().toString(),
-									dao,
-									sessionType,
-									enabledFetchProfiles( method )
-							)
-					);
-					break;
+					if ( !Constants.HIB_STATELESS_SESSION.equals(sessionType)
+							|| enabledFetchProfiles( method ).isEmpty() ) {  // no byId() API for SS, only get()
+						putMember( methodKey,
+								new IdFinderMethod(
+										this,
+										methodName,
+										returnType.toString(),
+										parameter.getSimpleName().toString(),
+										parameter.asType().toString(),
+										dao,
+										sessionType,
+										enabledFetchProfiles( method )
+								)
+						);
+						break;
+					}
+				case NATURAL_ID:
+					if ( !Constants.HIB_STATELESS_SESSION.equals(sessionType) ) { // no byNaturalId() lookup API for SS
+						putMember( methodKey,
+								new NaturalIdFinderMethod(
+										this,
+										methodName,
+										returnType.toString(),
+										List.of( parameter.getSimpleName().toString() ),
+										List.of( parameter.asType().toString() ),
+										dao,
+										sessionType,
+										enabledFetchProfiles( method )
+								)
+						);
+						break;
+					}
 				case BASIC:
 					putMember( methodKey,
 							new CriteriaFinderMethod(

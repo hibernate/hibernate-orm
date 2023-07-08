@@ -8,6 +8,7 @@ package org.hibernate.jpamodelgen;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -18,6 +19,7 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -29,6 +31,7 @@ import javax.tools.Diagnostic;
 
 import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
 import org.hibernate.jpamodelgen.annotation.AnnotationMetaPackage;
+import org.hibernate.jpamodelgen.annotation.ProcessLaterException;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.StringUtil;
@@ -37,8 +40,10 @@ import org.hibernate.jpamodelgen.xml.JpaDescriptorParser;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static java.lang.Boolean.parseBoolean;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
+import static org.hibernate.jpamodelgen.util.Constants.FIND;
 import static org.hibernate.jpamodelgen.util.Constants.HQL;
 import static org.hibernate.jpamodelgen.util.Constants.SQL;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
@@ -87,46 +92,20 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	public static final String ADD_GENERATED_ANNOTATION = "addGeneratedAnnotation";
 	public static final String ADD_SUPPRESS_WARNINGS_ANNOTATION = "addSuppressWarningsAnnotation";
 
-	private static final Boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = Boolean.FALSE;
+	private static final boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = false;
 
 	private Context context;
 
 	@Override
-	public void init(ProcessingEnvironment env) {
-		super.init( env );
-		context = new Context( env );
+	public synchronized void init(ProcessingEnvironment processingEnvironment) {
+		super.init( processingEnvironment );
+		context = new Context( processingEnvironment );
 		context.logMessage(
-				Diagnostic.Kind.NOTE, "Hibernate JPA 2 Static-Metamodel Generator " + Version.getVersionString()
+				Diagnostic.Kind.NOTE,
+				"Hibernate/JPA static Metamodel Generator " + Version.getVersionString()
 		);
 
-		PackageElement jakartaInjectPackage =
-				context.getProcessingEnvironment().getElementUtils()
-						.getPackageElement( "jakarta.inject" );
-		context.setAddInjectAnnotation( jakartaInjectPackage != null );
-
-		String tmp = env.getOptions().get( JPAMetaModelEntityProcessor.ADD_GENERATED_ANNOTATION );
-		if ( tmp != null ) {
-			boolean addGeneratedAnnotation = Boolean.parseBoolean( tmp );
-			context.setAddGeneratedAnnotation( addGeneratedAnnotation );
-		}
-		else {
-			PackageElement jakartaAnnotationPackage =
-					context.getProcessingEnvironment().getElementUtils()
-							.getPackageElement( "jakarta.annotation" );
-			context.setAddGeneratedAnnotation( jakartaAnnotationPackage != null );
-		}
-
-		tmp = env.getOptions().get( JPAMetaModelEntityProcessor.ADD_GENERATION_DATE );
-		boolean addGenerationDate = Boolean.parseBoolean( tmp );
-		context.setAddGenerationDate( addGenerationDate );
-
-		tmp = env.getOptions().get( JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION );
-		boolean addSuppressWarningsAnnotation = Boolean.parseBoolean( tmp );
-		context.setAddSuppressWarningsAnnotation( addSuppressWarningsAnnotation );
-
-		tmp = env.getOptions().get( JPAMetaModelEntityProcessor.FULLY_ANNOTATION_CONFIGURED_OPTION );
-		boolean fullyAnnotationConfigured = Boolean.parseBoolean( tmp );
-
+		boolean fullyAnnotationConfigured = handleSettings( processingEnvironment );
 		if ( !fullyAnnotationConfigured ) {
 			JpaDescriptorParser parser = new JpaDescriptorParser( context );
 			parser.parseXml();
@@ -136,6 +115,32 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		}
 	}
 
+	private boolean handleSettings(ProcessingEnvironment environment) {
+		final PackageElement jakartaInjectPackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "jakarta.inject" );
+		context.setAddInjectAnnotation( jakartaInjectPackage != null );
+
+		final Map<String, String> options = environment.getOptions();
+
+		String setting = options.get( ADD_GENERATED_ANNOTATION );
+		if ( setting != null ) {
+			context.setAddGeneratedAnnotation( parseBoolean( setting ) );
+		}
+		else {
+			PackageElement jakartaAnnotationPackage =
+					context.getProcessingEnvironment().getElementUtils()
+							.getPackageElement( "jakarta.annotation" );
+			context.setAddGeneratedAnnotation( jakartaAnnotationPackage != null );
+		}
+
+		context.setAddGenerationDate(parseBoolean( options.get( ADD_GENERATION_DATE ) ) );
+
+		context.setAddSuppressWarningsAnnotation( parseBoolean( options.get( ADD_SUPPRESS_WARNINGS_ANNOTATION ) ) );
+
+		return parseBoolean( options.get( FULLY_ANNOTATION_CONFIGURED_OPTION ) );
+	}
+
 	@Override
 	public SourceVersion getSupportedSourceVersion() {
 		return SourceVersion.latestSupported();
@@ -143,50 +148,80 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 	@Override
 	public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnvironment) {
-		// see also METAGEN-45
-		if ( roundEnvironment.processingOver() || annotations.size() == 0 ) {
-			return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
-		}
 
-		if ( context.isFullyXmlConfigured() ) {
+		// https://hibernate.atlassian.net/browse/METAGEN-45 claims that we need
+		// if ( roundEnvironment.processingOver() || annotations.size() == 0)
+		// but that was back on JDK 6 and I don't see why it should be necessary
+		// - in fact we want to use the last round to run the 'elementsToRedo'
+		if ( roundEnvironment.processingOver() ) {
+			final Set<CharSequence> elementsToRedo = context.getElementsToRedo();
+			if ( !elementsToRedo.isEmpty() ) {
+				context.logMessage( Diagnostic.Kind.ERROR, "Failed to generate code for " + elementsToRedo );
+			}
+		}
+		else if ( context.isFullyXmlConfigured() ) {
 			context.logMessage(
 					Diagnostic.Kind.OTHER,
-					"Skipping the processing of annotations since persistence unit is purely xml configured."
+					"Skipping the processing of annotations since persistence unit is purely XML configured."
 			);
-			return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
 		}
-
-		try {
-			processClasses( roundEnvironment );
-			createMetaModelClasses();
+		else {
+			try {
+				processClasses( roundEnvironment );
+				createMetaModelClasses();
+			}
+			catch (Exception e) {
+				context.logMessage( Diagnostic.Kind.ERROR, "Error generating JPA metamodel:" + e.getMessage() );
+			}
 		}
-		catch (Exception e) {
-			context.logMessage( Diagnostic.Kind.ERROR, "Error generating JPA metamodel:" + e.getMessage() );
-		}
-
 		return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;
 	}
 
 	private void processClasses(RoundEnvironment roundEnvironment) {
+		for ( CharSequence elementName : new HashSet<>( context.getElementsToRedo() ) ) {
+			context.logMessage( Diagnostic.Kind.OTHER, "Redoing element: " + elementName );
+			final TypeElement typeElement = context.getElementUtils().getTypeElement( elementName );
+			try {
+				final AnnotationMetaEntity metaEntity =
+						AnnotationMetaEntity.create( typeElement, context, false );
+				context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+				context.removeElementToRedo( elementName );
+			}
+			catch (ProcessLaterException processLaterException) {
+				// leave it there for next time
+			}
+		}
+
 		for ( Element element : roundEnvironment.getRootElements() ) {
-			if ( isJPAEntity( element ) ) {
-				context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class " + element.toString() );
-				handleRootElementAnnotationMirrors( element );
-			}
-			else if ( hasAuxiliaryAnnotations( element ) ) {
-				context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class " + element.toString() );
-				handleRootElementAuxiliaryAnnotationMirrors( element );
-			}
-			else if ( element instanceof TypeElement ) {
-				for ( Element enclosedElement : element.getEnclosedElements() ) {
-					if ( containsAnnotation( enclosedElement, HQL, SQL ) ) {
-						final AnnotationMetaEntity metaEntity =
-								AnnotationMetaEntity.create( (TypeElement) element, context, false );
-						context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
-						break;
+				if ( isJPAEntity( element ) ) {
+					context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class " + element );
+					handleRootElementAnnotationMirrors( element );
+				}
+				else if ( hasAuxiliaryAnnotations( element ) ) {
+					context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class " + element );
+					handleRootElementAuxiliaryAnnotationMirrors( element );
+				}
+				else if ( element instanceof TypeElement ) {
+					final TypeElement typeElement = (TypeElement) element;
+					try {
+						for ( Element member : typeElement.getEnclosedElements() ) {
+							if ( containsAnnotation( member, HQL, SQL, FIND ) ) {
+								final AnnotationMetaEntity metaEntity =
+										AnnotationMetaEntity.create( typeElement, context, false );
+								context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
+								break;
+							}
+						}
+					}
+					catch (ProcessLaterException processLaterException) {
+						final Name qualifiedName = typeElement.getQualifiedName();
+						context.logMessage(
+								Diagnostic.Kind.OTHER,
+								"Could not process: " + qualifiedName + " (will redo in next round)"
+						);
+						context.addElementToRedo( qualifiedName );
 					}
 				}
-			}
 		}
 	}
 
@@ -370,8 +405,8 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 	static class ContainsAttributeTypeVisitor extends SimpleTypeVisitor8<Boolean, Element> {
 
-		private Context context;
-		private TypeElement type;
+		private final Context context;
+		private final TypeElement type;
 
 		ContainsAttributeTypeVisitor(TypeElement elem, Context context) {
 			this.context = context;

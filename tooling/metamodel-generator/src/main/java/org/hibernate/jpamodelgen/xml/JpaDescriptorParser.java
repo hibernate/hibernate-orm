@@ -58,7 +58,7 @@ public class JpaDescriptorParser {
 
 	public JpaDescriptorParser(Context context) {
 		this.context = context;
-		this.entityMappings = new ArrayList<EntityMappings>();
+		this.entityMappings = new ArrayList<>();
 		this.xmlParserHelper = new XmlParserHelper( context );
 	}
 
@@ -87,7 +87,7 @@ public class JpaDescriptorParser {
 	}
 
 	private Collection<String> determineMappingFileNames() {
-		Collection<String> mappingFileNames = new ArrayList<String>();
+		Collection<String> mappingFileNames = new ArrayList<>();
 
 		Persistence persistence = getPersistence();
 		if ( persistence != null ) {
@@ -227,10 +227,7 @@ public class JpaDescriptorParser {
 					}
 				}
 			}
-			catch (IOException e) {
-				//handled in the outer scope
-			}
-			catch (ClassNotFoundException e) {
+			catch (IOException|ClassNotFoundException e) {
 				//handled in the outer scope
 			}
 		}
@@ -436,12 +433,7 @@ public class JpaDescriptorParser {
 		for ( EntityMappings mappings : entityMappings ) {
 			PersistenceUnitMetadata meta = mappings.getPersistenceUnitMetadata();
 			if ( meta != null ) {
-				if ( meta.getXmlMappingMetadataComplete() != null ) {
-					context.mappingDocumentFullyXmlConfigured( true );
-				}
-				else {
-					context.mappingDocumentFullyXmlConfigured( false );
-				}
+				context.mappingDocumentFullyXmlConfigured( meta.getXmlMappingMetadataComplete() != null );
 
 				PersistenceUnitDefaults persistenceUnitDefaults = meta.getPersistenceUnitDefaults();
 				if ( persistenceUnitDefaults != null ) {

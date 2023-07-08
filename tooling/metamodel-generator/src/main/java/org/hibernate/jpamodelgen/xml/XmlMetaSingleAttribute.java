@@ -7,6 +7,7 @@
 package org.hibernate.jpamodelgen.xml;
 
 import org.hibernate.jpamodelgen.model.MetaSingleAttribute;
+import org.hibernate.jpamodelgen.util.Constants;
 
 /**
  * @author Hardy Ferentschik
@@ -19,6 +20,6 @@ public class XmlMetaSingleAttribute extends XmlMetaAttribute implements MetaSing
 
 	@Override
 	public String getMetaType() {
-		return "jakarta.persistence.metamodel.SingularAttribute";
+		return Constants.SINGULAR_ATTRIBUTE;
 	}
 }

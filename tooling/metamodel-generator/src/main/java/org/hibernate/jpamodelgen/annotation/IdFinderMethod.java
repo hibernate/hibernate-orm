@@ -8,6 +8,7 @@ package org.hibernate.jpamodelgen.annotation;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
+import org.hibernate.jpamodelgen.util.Constants;
 
 /**
  * @author Gavin King
@@ -71,7 +72,7 @@ public class IdFinderMethod implements MetaAttribute {
 				.append("(");
 		if ( !belongsToDao ) {
 			declaration
-					.append(annotationMetaEntity.importType("jakarta.persistence.EntityManager"))
+					.append(annotationMetaEntity.importType(Constants.ENTITY_MANAGER))
 					.append(" entityManager, ");
 		}
 		declaration

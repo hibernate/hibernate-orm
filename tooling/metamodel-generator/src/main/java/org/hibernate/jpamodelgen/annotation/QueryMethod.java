@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
+import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.SelectionQuery;
@@ -120,7 +121,7 @@ public class QueryMethod implements MetaAttribute {
 				.append("(");
 		if ( !belongsToDao ) {
 			declaration
-					.append(annotationMetaEntity.importType("jakarta.persistence.EntityManager"))
+					.append(annotationMetaEntity.importType(Constants.ENTITY_MANAGER))
 					.append(" entityManager");
 		}
 
@@ -212,7 +213,7 @@ public class QueryMethod implements MetaAttribute {
 			declaration
 					.append("\n\t\t\t.getSingleResult()");
 		}
-		else if ( containerTypeName.equals("java.util.List") ) {
+		else if ( containerTypeName.equals(Constants.LIST) ) {
 			declaration
 					.append("\n\t\t\t.getResultList()");
 		}
@@ -280,7 +281,7 @@ public class QueryMethod implements MetaAttribute {
 
 	@Override
 	public String getTypeDeclaration() {
-		return "jakarta.persistence.Query";
+		return Constants.QUERY;
 	}
 
 	@Override

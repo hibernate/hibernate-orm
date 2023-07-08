@@ -8,6 +8,7 @@ package org.hibernate.jpamodelgen.annotation;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
+import org.hibernate.jpamodelgen.util.Constants;
 
 /**
  * @author Gavin King
@@ -80,7 +81,7 @@ public class DaoConstructor implements MetaAttribute {
 
 	@Override
 	public String getTypeDeclaration() {
-		return "jakarta.persistence.EntityManager";
+		return Constants.ENTITY_MANAGER;
 	}
 
 	@Override

@@ -289,14 +289,14 @@ class BasicAttributeVisitor extends SimpleTypeVisitor8<Boolean, Element> {
 	}
 
 	@Override
-	public Boolean visitPrimitive(PrimitiveType t, Element element) {
+	public Boolean visitPrimitive(PrimitiveType primitiveType, Element element) {
 		return true;
 	}
 
 	@Override
-	public Boolean visitArray(ArrayType t, Element element) {
+	public Boolean visitArray(ArrayType arrayType, Element element) {
 		final TypeElement componentElement = (TypeElement)
-				context.getTypeUtils().asElement( t.getComponentType() );
+				context.getTypeUtils().asElement( arrayType.getComponentType() );
 		return Constants.BASIC_ARRAY_TYPES.contains( componentElement.getQualifiedName().toString() );
 	}
 
@@ -316,7 +316,9 @@ class BasicAttributeVisitor extends SimpleTypeVisitor8<Boolean, Element> {
 				return true;
 			}
 			final TypeMirror serializableType =
-					context.getElementUtils().getTypeElement("java.io.Serializable").asType();
+					context.getElementUtils()
+							.getTypeElement(java.io.Serializable.class.getName())
+							.asType();
 			if ( context.getTypeUtils().isSubtype( typeElement.asType(), serializableType) ) {
 				return true;
 			}

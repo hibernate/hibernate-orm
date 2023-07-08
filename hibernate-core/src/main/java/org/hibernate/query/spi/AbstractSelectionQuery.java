@@ -11,9 +11,11 @@ import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -39,6 +41,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -416,6 +419,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	private FlushMode sessionFlushMode;
 	private CacheMode sessionCacheMode;
+	private HashSet<String> fetchProfiles;
 
 	@Override
 	public List<R> list() {
@@ -462,11 +466,33 @@ public abstract class AbstractSelectionQuery<R>
 			sessionCacheMode = getSession().getCacheMode();
 			getSession().setCacheMode( effectiveCacheMode );
 		}
+
+		final LoadQueryInfluencers loadQueryInfluencers = getSession().getLoadQueryInfluencers();
+		fetchProfiles = loadQueryInfluencers.hasEnabledFetchProfiles()
+				? new HashSet<>( loadQueryInfluencers.getEnabledFetchProfileNames() )
+				: null;
+		final Set<String> disabledFetchProfiles = getQueryOptions().getDisabledFetchProfiles();
+		if ( disabledFetchProfiles != null ) {
+			for ( String name: disabledFetchProfiles ) {
+				loadQueryInfluencers.disableFetchProfile( name );
+
+			}
+		}
+		final Set<String> enabledFetchProfiles = getQueryOptions().getEnabledFetchProfiles();
+		if ( enabledFetchProfiles != null ) {
+			for ( String name: enabledFetchProfiles ) {
+				loadQueryInfluencers.enableFetchProfile( name );
+
+			}
+		}
 	}
 
 	protected abstract void prepareForExecution();
 
 	protected void afterQuery(boolean success) {
+
+		getSession().getLoadQueryInfluencers().setEnabledFetchProfileNames( fetchProfiles );
+
 		afterQuery();
 		if ( !getSession().isTransactionInProgress() ) {
 			getSession().getJdbcCoordinator().getLogicalConnection().afterTransaction();
@@ -634,6 +660,18 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
 		applyGraph( (RootGraphImplementor<R>) graph, semantic );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> enableFetchProfile(String profileName) {
+		getQueryOptions().enableFetchProfile( profileName );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> disableFetchProfile(String profileName) {
+		getQueryOptions().disableFetchProfile( profileName );
 		return this;
 	}
 

@@ -63,7 +63,7 @@ public class LoaderSqlAstCreationState
 
 	private boolean resolvingCircularFetch;
 	private ForeignKeyDescriptor.Nature currentlyResolvingForeignKeySide;
-	private Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
+	private final Set<AssociationKey> visitedAssociationKeys = new HashSet<>();
 
 	public LoaderSqlAstCreationState(
 			QueryPart queryPart,
@@ -243,12 +243,12 @@ public class LoaderSqlAstCreationState
 	}
 
 	@Override
-	public TupleTransformer getTupleTransformer() {
+	public TupleTransformer<?> getTupleTransformer() {
 		return null;
 	}
 
 	@Override
-	public ResultListTransformer getResultListTransformer() {
+	public ResultListTransformer<?> getResultListTransformer() {
 		return null;
 	}
 
@@ -299,6 +299,16 @@ public class LoaderSqlAstCreationState
 
 	@Override
 	public Limit getLimit() {
+		return null;
+	}
+
+	@Override
+	public Set<String> getEnabledFetchProfiles() {
+		return null;
+	}
+
+	@Override
+	public Set<String> getDisabledFetchProfiles() {
 		return null;
 	}
 }

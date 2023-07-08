@@ -79,6 +79,40 @@ public class NewFetchTest {
 		assertTrue( isInitialized( ee.f ) );
 	}
 
+	@Test void testQuery(SessionFactoryScope scope) {
+		scope.inTransaction( s-> {
+			G g = new G();
+			F f = new F();
+			E e = new E();
+			f.g = g;
+			e.f = f;
+			s.persist(g);
+			s.persist(f);
+			s.persist(e);
+		});
+
+		F f = scope.fromSession( s ->
+				s.createSelectionQuery("from F where id = 1", F.class)
+						.getSingleResult());
+		assertFalse( isInitialized( f.g ) );
+		assertFalse( isInitialized( f.es ) );
+		F ff = scope.fromSession( s ->
+				s.createSelectionQuery("from F where id = 1", F.class)
+						.enableFetchProfile(NEW_PROFILE).getSingleResult());
+		assertTrue( isInitialized( ff.g ) );
+		assertTrue( isInitialized( ff.es ) );
+
+		E e = scope.fromSession( s ->
+				s.createSelectionQuery("from E where id = 1", E.class)
+						.getSingleResult());
+		assertFalse( isInitialized( e.f ) );
+		E ee = scope.fromSession( s ->
+				s.createSelectionQuery("from E where id = 1", E.class)
+						.enableFetchProfile(OLD_PROFILE)
+						.getSingleResult());
+		assertTrue( isInitialized( ee.f ) );
+	}
+
 	@Test void testStyles(SessionFactoryScope scope) {
 		long id = scope.fromTransaction( s-> {
 			G g = new G();

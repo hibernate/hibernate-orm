@@ -11,11 +11,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.Filter;
+import org.hibernate.Internal;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
@@ -230,7 +230,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Set<String> getEnabledFetchProfileNames() {
-		return Objects.requireNonNullElse( enabledFetchProfileNames, emptySet() );
+		return enabledFetchProfileNames == null ? emptySet() : enabledFetchProfileNames;
 	}
 
 	private void checkFetchProfileName(String name) {
@@ -258,6 +258,11 @@ public class LoadQueryInfluencers implements Serializable {
 		if ( enabledFetchProfileNames != null ) {
 			enabledFetchProfileNames.remove( name );
 		}
+	}
+
+	@Internal
+	public void setEnabledFetchProfileNames(HashSet<String> enabledFetchProfileNames) {
+		this.enabledFetchProfileNames = enabledFetchProfileNames;
 	}
 
 	public EffectiveEntityGraph getEffectiveEntityGraph() {

@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.persistence.EntityGraph;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -904,6 +905,15 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 
 	@Override
 	Query<R> setHint(String hintName, Object value);
+
+	@Override
+	Query<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
+
+	@Override
+	Query<R> enableFetchProfile(String profileName);
+
+	@Override
+	Query<R> disableFetchProfile(String profileName);
 
 	@Override
 	Query<R> setFlushMode(FlushModeType flushMode);

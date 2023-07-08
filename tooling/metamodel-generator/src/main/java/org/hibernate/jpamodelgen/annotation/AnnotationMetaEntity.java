@@ -586,7 +586,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final String paramType = param.asType().toString();
 				if ( !memberType.equals(paramType) ) {
 					context.message( param,
-							"matching field in entity class has type '" + memberType + "'",
+							"matching field has type '" + memberType
+									+ "' in entity class '" + entity.getQualifiedName() + "'",
 							Diagnostic.Kind.ERROR );
 				}
 				if ( containsAnnotation( member, Constants.ID, Constants.EMBEDDED_ID ) ) {
@@ -601,7 +602,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		context.message( param,
-				"no matching field named '" + param.getSimpleName() + "' in entity class",
+				"no matching field named '" + param.getSimpleName()
+						+ "' in entity class '" + entity.getQualifiedName() + "'",
 				Diagnostic.Kind.ERROR );
 		return null;
 	}

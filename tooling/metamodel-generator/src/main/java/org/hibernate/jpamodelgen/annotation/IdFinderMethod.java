@@ -10,6 +10,8 @@ import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 
+import java.util.List;
+
 /**
  * @author Gavin King
  */
@@ -21,13 +23,15 @@ public class IdFinderMethod implements MetaAttribute {
 	private final String paramType;
 	private final boolean belongsToDao;
 	private final String sessionType;
+	private final List<String> fetchProfiles;
 
 	public IdFinderMethod(
 			Metamodel annotationMetaEntity,
 			String methodName, String entity,
 			String paramName, String paramType,
 			boolean belongsToDao,
-			String sessionType) {
+			String sessionType,
+			List<String> fetchProfiles) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.entity = entity;
@@ -35,6 +39,7 @@ public class IdFinderMethod implements MetaAttribute {
 		this.paramType = paramType;
 		this.belongsToDao = belongsToDao;
 		this.sessionType = sessionType;
+		this.fetchProfiles = fetchProfiles;
 	}
 
 	@Override
@@ -83,13 +88,39 @@ public class IdFinderMethod implements MetaAttribute {
 				.append(" ")
 				.append(paramName)
 				.append(") {")
-				.append("\n\treturn entityManager")
-				.append(Constants.HIB_STATELESS_SESSION.equals(sessionType) ? ".get(" : ".find(")
-				.append(annotationMetaEntity.importType(entity))
-				.append(".class, ")
-				.append(paramName)
-				.append(");")
-				.append("\n}");
+				.append("\n\treturn entityManager");
+		if ( fetchProfiles.isEmpty() ) {
+			declaration
+					.append(Constants.HIB_STATELESS_SESSION.equals(sessionType) ? ".get(" : ".find(")
+					.append(annotationMetaEntity.importType(entity))
+					.append(".class, ")
+					.append(paramName)
+					.append(");")
+					.append("\n}");
+		}
+		else {
+			if ( Constants.ENTITY_MANAGER.equals(sessionType) ) {
+				declaration
+						.append(".unwrap(")
+						.append(annotationMetaEntity.importType(Constants.HIB_SESSION))
+						.append(".class)\n\t\t\t");
+			}
+			declaration
+					.append(".byId(")
+					.append(annotationMetaEntity.importType(entity))
+					.append(".class)");
+			for ( String profile : fetchProfiles ) {
+				declaration
+						.append("\n\t\t\t.enableFetchProfile(")
+						.append(profile)
+						.append(")");
+			}
+			declaration
+					.append("\n\t\t\t.load(")
+					.append(paramName)
+					.append(");\n}");
+
+		}
 		return declaration.toString();
 	}
 

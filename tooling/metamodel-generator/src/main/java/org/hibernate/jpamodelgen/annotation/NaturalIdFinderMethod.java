@@ -23,13 +23,15 @@ public class NaturalIdFinderMethod implements MetaAttribute {
 	private final List<String> paramTypes;
 	private final boolean belongsToDao;
 	private final String sessionType;
+	private final List<String> fetchProfiles;
 
 	public NaturalIdFinderMethod(
 			Metamodel annotationMetaEntity,
 			String methodName, String entity,
 			List<String> paramNames, List<String> paramTypes,
 			boolean belongsToDao,
-			String sessionType) {
+			String sessionType,
+			List<String> fetchProfiles) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.entity = entity;
@@ -37,6 +39,7 @@ public class NaturalIdFinderMethod implements MetaAttribute {
 		this.paramTypes = paramTypes;
 		this.belongsToDao = belongsToDao;
 		this.sessionType = sessionType;
+		this.fetchProfiles = fetchProfiles;
 	}
 
 	@Override
@@ -111,6 +114,12 @@ public class NaturalIdFinderMethod implements MetaAttribute {
 					.append(paramNames.get(i))
 					.append(", ")
 					.append(paramNames.get(i))
+					.append(")");
+		}
+		for ( String profile : fetchProfiles ) {
+			declaration
+					.append("\n\t\t\t.enableFetchProfile(")
+					.append(profile)
 					.append(")");
 		}
 		declaration

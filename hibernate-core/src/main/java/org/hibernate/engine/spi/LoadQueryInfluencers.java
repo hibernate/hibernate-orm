@@ -264,10 +264,13 @@ public class LoadQueryInfluencers implements Serializable {
 	public HashSet<String> adjustFetchProfiles(Set<String> disabledFetchProfiles, Set<String> enabledFetchProfiles) {
 		final HashSet<String> oldFetchProfiles =
 				hasEnabledFetchProfiles() ? new HashSet<>( enabledFetchProfileNames ) : null;
-		if ( disabledFetchProfiles != null ) {
+		if ( disabledFetchProfiles != null && enabledFetchProfileNames != null ) {
 			enabledFetchProfileNames.removeAll( disabledFetchProfiles );
 		}
 		if ( enabledFetchProfiles != null ) {
+			if ( enabledFetchProfileNames == null ) {
+				enabledFetchProfileNames = new HashSet<>();
+			}
 			enabledFetchProfileNames.addAll( enabledFetchProfiles );
 		}
 		return oldFetchProfiles;

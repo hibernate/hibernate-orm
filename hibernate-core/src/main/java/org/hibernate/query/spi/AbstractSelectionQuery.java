@@ -40,6 +40,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
+import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -649,6 +650,9 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public SelectionQuery<R> enableFetchProfile(String profileName) {
+		if ( !getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
+			throw new UnknownProfileException( profileName );
+		}
 		getQueryOptions().enableFetchProfile( profileName );
 		return this;
 	}

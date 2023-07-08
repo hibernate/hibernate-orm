@@ -13,12 +13,10 @@ import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
-import org.hibernate.query.SelectionQuery;
 
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
-import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -34,6 +32,7 @@ public class QueryMethod implements MetaAttribute {
 	private final List<String> paramTypes;
 	private final boolean isNative;
 	private final boolean belongsToDao;
+	private final String sessionType;
 
 	public QueryMethod(
 			Metamodel annotationMetaEntity,
@@ -46,7 +45,8 @@ public class QueryMethod implements MetaAttribute {
 			List<String> paramNames,
 			List<String> paramTypes,
 			boolean isNative,
-			boolean belongsToDao) {
+			boolean belongsToDao,
+			String sessionType) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.queryString = queryString;
@@ -56,6 +56,7 @@ public class QueryMethod implements MetaAttribute {
 		this.paramTypes = paramTypes;
 		this.isNative = isNative;
 		this.belongsToDao = belongsToDao;
+		this.sessionType = sessionType;
 	}
 
 	@Override
@@ -82,8 +83,7 @@ public class QueryMethod implements MetaAttribute {
 				.append("#")
 				.append(methodName)
 				.append("(")
-				.append(join(",", paramTypes.stream().map(this::strip)
-						.map(annotationMetaEntity::importType).toArray()))
+				.append(parameterList())
 				.append(")")
 				.append("\n **/\n");
 		boolean hasVarargs = paramTypes.stream().anyMatch(ptype -> ptype.endsWith("..."));
@@ -147,7 +147,9 @@ public class QueryMethod implements MetaAttribute {
 				.append(" {")
 				.append("\n\treturn ");
 		if ( isNative && returnTypeName != null
-				|| containerTypeName != null && containerTypeName.startsWith("org.hibernate") ) {
+				|| containerTypeName != null
+					&& Constants.ENTITY_MANAGER.equals(sessionType)
+					&& containerTypeName.startsWith("org.hibernate") ) {
 			declaration.append("(").append(type).append(") ");
 		}
 		declaration
@@ -162,7 +164,7 @@ public class QueryMethod implements MetaAttribute {
 					.append(".class");
 		}
 		declaration.append(")");
-		boolean unwrapped = false;
+		boolean unwrapped = !Constants.ENTITY_MANAGER.equals(sessionType);
 		for (int i = 1; i <= paramNames.size(); i++) {
 			String param = paramNames.get(i-1);
 			String ptype = paramTypes.get(i-1);
@@ -221,6 +223,14 @@ public class QueryMethod implements MetaAttribute {
 		return declaration.toString();
 	}
 
+	private String parameterList() {
+		return paramTypes.stream()
+				.map(this::strip)
+				.map(annotationMetaEntity::importType)
+				.reduce((x, y) -> x + y)
+				.orElse("");
+	}
+
 	private String strip(String type) {
 		int index = type.indexOf("<");
 		String stripped = index > 0 ? type.substring(0, index) : type;
@@ -240,7 +250,7 @@ public class QueryMethod implements MetaAttribute {
 		if ( !unwrapped ) {
 			declaration
 					.append("\n\t\t\t.unwrap(")
-					.append(annotationMetaEntity.importType(SelectionQuery.class.getName()))
+					.append(annotationMetaEntity.importType(Constants.HIB_SELECTION_QUERY))
 					.append(".class)");
 		}
 	}

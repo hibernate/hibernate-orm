@@ -18,6 +18,9 @@ public interface Dao {
     @Find
     Book getBook(String title, String isbn);
 
+    @Find
+    Book getBookByNaturalKey(String authorName, String title);
+
     @HQL("from Book where title like ?1")
     TypedQuery<Book> findByTitle(String title);
 

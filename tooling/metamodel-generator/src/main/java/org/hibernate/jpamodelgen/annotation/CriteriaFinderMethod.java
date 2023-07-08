@@ -26,13 +26,15 @@ public class CriteriaFinderMethod implements MetaAttribute {
 	private final List<String> paramNames;
 	private final List<String> paramTypes;
 	private final boolean belongsToDao;
+	private final String sessionType;
 
 	public CriteriaFinderMethod(
 			Metamodel annotationMetaEntity,
 			String methodName, String entity,
 			@Nullable String containerType,
 			List<String> paramNames, List<String> paramTypes,
-			boolean belongsToDao) {
+			boolean belongsToDao,
+			String sessionType) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.entity = entity;
@@ -40,6 +42,7 @@ public class CriteriaFinderMethod implements MetaAttribute {
 		this.paramNames = paramNames;
 		this.paramTypes = paramTypes;
 		this.belongsToDao = belongsToDao;
+		this.sessionType = sessionType;
 	}
 
 	@Override
@@ -102,7 +105,11 @@ public class CriteriaFinderMethod implements MetaAttribute {
 		}
 		declaration
 				.append(") {")
-				.append("\n\tvar builder = entityManager.getEntityManagerFactory().getCriteriaBuilder();")
+				.append("\n\tvar builder = entityManager")
+				.append(Constants.ENTITY_MANAGER.equals(sessionType)
+						? ".getEntityManagerFactory()"
+						: ".getFactory()")
+				.append(".getCriteriaBuilder();")
 				.append("\n\tvar query = builder.createQuery(")
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class);")
@@ -129,7 +136,9 @@ public class CriteriaFinderMethod implements MetaAttribute {
 		declaration
 				.append("\n\t);")
 				.append("\n\treturn ");
-		if ( containerType != null && containerType.startsWith("org.hibernate") ) {
+		if ( containerType != null
+				&& Constants.ENTITY_MANAGER.equals(sessionType)
+				&& containerType.startsWith("org.hibernate") ) {
 			declaration
 					.append("(")
 					.append(type)
@@ -139,11 +148,11 @@ public class CriteriaFinderMethod implements MetaAttribute {
 				.append("entityManager.createQuery(query)");
 		if ( containerType == null) {
 			declaration
-					.append("\n\t\t\t.getSingleResult()");
+					.append(".getSingleResult()");
 		}
 		else if ( containerType.equals(Constants.LIST) ) {
 			declaration
-					.append("\n\t\t\t.getResultList()");
+					.append(".getResultList()");
 		}
 		declaration
 				.append(";\n}");

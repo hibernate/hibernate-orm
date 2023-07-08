@@ -18,10 +18,14 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassG
  */
 public class DaoTest extends CompilationTest {
 	@Test
-	@WithClasses({ Book.class, Dao.class })
+	@WithClasses({ Book.class, Dao.class, StatefulDao.class, StatelessDao.class })
 	public void testGeneratedAnnotationNotGenerated() {
 		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( StatefulDao.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( StatelessDao.class ) );
 		assertMetamodelClassGeneratedFor( Book.class );
 		assertMetamodelClassGeneratedFor( Dao.class );
+		assertMetamodelClassGeneratedFor( StatefulDao.class );
+		assertMetamodelClassGeneratedFor( StatelessDao.class );
 	}
 }

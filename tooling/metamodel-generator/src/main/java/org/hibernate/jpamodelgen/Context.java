@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
@@ -36,7 +37,7 @@ public final class Context {
 	private static final String DEFAULT_PERSISTENCE_XML_LOCATION = "/META-INF/persistence.xml";
 
 	/**
-	 * Used for keeping track of parsed entities and mapped super classes (xml + annotations).
+	 * Used for keeping track of parsed entities and mapped super classes (XML + annotations).
 	 */
 	private final Map<String, Metamodel> metaEntities = new HashMap<>();
 
@@ -50,7 +51,9 @@ public final class Context {
 
 	private final Map<String, AccessTypeInformation> accessTypeInformation = new HashMap<>();
 
-	private final ProcessingEnvironment pe;
+	private final Set<CharSequence> elementsToRedo = new HashSet<>();
+
+	private final ProcessingEnvironment processingEnvironment;
 	private final boolean logDebug;
 	private final boolean lazyXmlParsing;
 	private final String persistenceXmlLocation;
@@ -68,12 +71,12 @@ public final class Context {
 	private AccessType persistenceUnitDefaultAccessType;
 
 	// keep track of all classes for which model have been generated
-	private final Collection<String> generatedModelClasses = new HashSet<String>();
+	private final Collection<String> generatedModelClasses = new HashSet<>();
 
-	public Context(ProcessingEnvironment pe) {
-		this.pe = pe;
+	public Context(ProcessingEnvironment processingEnvironment) {
+		this.processingEnvironment = processingEnvironment;
 
-		String persistenceXmlOption = pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
+		String persistenceXmlOption = processingEnvironment.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
 		if ( persistenceXmlOption != null ) {
 			if ( !persistenceXmlOption.startsWith("/") ) {
 				persistenceXmlOption = "/" + persistenceXmlOption;
@@ -84,7 +87,7 @@ public final class Context {
 			persistenceXmlLocation = DEFAULT_PERSISTENCE_XML_LOCATION;
 		}
 
-		String ormXmlOption = pe.getOptions().get( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
+		String ormXmlOption = processingEnvironment.getOptions().get( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
 		if ( ormXmlOption != null ) {
 			ormXmlFiles = new ArrayList<>();
 			for ( String ormFile : ormXmlOption.split( "," ) ) {
@@ -98,12 +101,12 @@ public final class Context {
 			ormXmlFiles = Collections.emptyList();
 		}
 
-		lazyXmlParsing = Boolean.parseBoolean( pe.getOptions().get( JPAMetaModelEntityProcessor.LAZY_XML_PARSING ) );
-		logDebug = Boolean.parseBoolean( pe.getOptions().get( JPAMetaModelEntityProcessor.DEBUG_OPTION ) );
+		lazyXmlParsing = Boolean.parseBoolean( processingEnvironment.getOptions().get( JPAMetaModelEntityProcessor.LAZY_XML_PARSING ) );
+		logDebug = Boolean.parseBoolean( processingEnvironment.getOptions().get( JPAMetaModelEntityProcessor.DEBUG_OPTION ) );
 	}
 
 	public ProcessingEnvironment getProcessingEnvironment() {
-		return pe;
+		return processingEnvironment;
 	}
 
 	public boolean addInjectAnnotation() {
@@ -139,11 +142,11 @@ public final class Context {
 	}
 
 	public Elements getElementUtils() {
-		return pe.getElementUtils();
+		return processingEnvironment.getElementUtils();
 	}
 
 	public Types getTypeUtils() {
-		return pe.getTypeUtils();
+		return processingEnvironment.getTypeUtils();
 	}
 
 	public String getPersistenceXmlLocation() {
@@ -207,7 +210,7 @@ public final class Context {
 	}
 
 	public TypeElement getTypeElementForFullyQualifiedName(String fqcn) {
-		Elements elementUtils = pe.getElementUtils();
+		Elements elementUtils = processingEnvironment.getElementUtils();
 		return elementUtils.getTypeElement( fqcn );
 	}
 
@@ -219,9 +222,21 @@ public final class Context {
 		return generatedModelClasses.contains( name );
 	}
 
+	public Set<CharSequence> getElementsToRedo() {
+		return elementsToRedo;
+	}
+
+	public void addElementToRedo(CharSequence qualifiedName) {
+		elementsToRedo.add( qualifiedName );
+	}
+
+	public void removeElementToRedo(CharSequence qualifiedName) {
+		elementsToRedo.remove( qualifiedName );
+	}
+
 	public void logMessage(Diagnostic.Kind type, String message) {
 		if ( logDebug || type != Diagnostic.Kind.OTHER ) {
-			pe.getMessager().printMessage( type, message );
+			processingEnvironment.getMessager().printMessage( type, message );
 		}
 	}
 

@@ -18,7 +18,6 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
@@ -144,8 +143,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static String getPackageName(Context context, TypeElement element) {
-		PackageElement packageOf = context.getElementUtils().getPackageOf( element );
-		return context.getElementUtils().getName( packageOf.getQualifiedName() ).toString();
+		return context.getElementUtils().getPackageOf( element ).getQualifiedName().toString();
 	}
 
 	@Override
@@ -485,7 +483,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else {
 			@SuppressWarnings("unchecked")
 			final List<AnnotationValue> annotationValues = (List<AnnotationValue>) enabledFetchProfiles;
-			return annotationValues.stream().map(AnnotationValue::toString).collect(toList());
+			List<String> result = annotationValues.stream().map(AnnotationValue::toString).collect(toList());
+			if ( result.stream().anyMatch("<error>"::equals) ) {
+				throw new ProcessLaterException();
+			}
+			return result;
 		}
 	}
 

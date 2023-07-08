@@ -17,6 +17,7 @@ import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Function;
 
+import jakarta.persistence.EntityGraph;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
 import org.hibernate.FlushMode;
@@ -41,6 +42,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.graph.internal.RootGraphImpl;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
@@ -1371,6 +1374,38 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		final QuerySqmImpl<T> query = new QuerySqmImpl<>( criteria, resultType, this );
 		applyQuerySettingsAndHints( query );
 		return query;
+	}
+
+	@Override
+	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
+		checkOpen();
+		return new RootGraphImpl<>( null, getFactory().getJpaMetamodel().entity( rootType ) );
+	}
+
+	@Override
+	public RootGraphImplementor<?> createEntityGraph(String graphName) {
+		checkOpen();
+		final RootGraphImplementor<?> named = getFactory().findEntityGraphByName( graphName );
+		if ( named == null ) {
+			return null;
+		}
+		return named.makeRootGraph( graphName, true );
+	}
+
+	@Override
+	public RootGraphImplementor<?> getEntityGraph(String graphName) {
+		checkOpen();
+		final RootGraphImplementor<?> named = getFactory().findEntityGraphByName( graphName );
+		if ( named == null ) {
+			throw new IllegalArgumentException( "Could not locate EntityGraph with given name : " + graphName );
+		}
+		return named;
+	}
+
+	@Override
+	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
+		checkOpen();
+		return getFactory().findEntityGraphsByType( entityClass );
 	}
 
 	private void writeObject(ObjectOutputStream oos) throws IOException {

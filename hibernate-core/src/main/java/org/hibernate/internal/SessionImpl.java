@@ -2860,38 +2860,6 @@ public class SessionImpl
 		return getFactory().getJpaMetamodel();
 	}
 
-	@Override
-	public <T> RootGraphImplementor<T> createEntityGraph(Class<T> rootType) {
-		checkOpen();
-		return new RootGraphImpl<>( null, getFactory().getJpaMetamodel().entity( rootType ) );
-	}
-
-	@Override
-	public RootGraphImplementor<?> createEntityGraph(String graphName) {
-		checkOpen();
-		final RootGraphImplementor<?> named = getEntityManagerFactory().findEntityGraphByName( graphName );
-		if ( named == null ) {
-			return null;
-		}
-		return named.makeRootGraph( graphName, true );
-	}
-
-	@Override
-	public RootGraphImplementor<?> getEntityGraph(String graphName) {
-		checkOpen();
-		final RootGraphImplementor<?> named = getEntityManagerFactory().findEntityGraphByName( graphName );
-		if ( named == null ) {
-			throw new IllegalArgumentException( "Could not locate EntityGraph with given name : " + graphName );
-		}
-		return named;
-	}
-
-	@Override
-	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
-		checkOpen();
-		return getEntityManagerFactory().findEntityGraphsByType( entityClass );
-	}
-
 	/**
 	 * Used by JDK serialization...
 	 *

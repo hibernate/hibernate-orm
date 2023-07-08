@@ -6,14 +6,19 @@
  */
 package org.hibernate.jpamodelgen.util;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author Hardy Ferentschik
  */
 public final class Constants {
-	// we are trying to reference jpa annotations directly
+
+	// All this is to avoid loading classes we don't need to load
+
 	public static final String ENTITY = "jakarta.persistence.Entity";
 	public static final String MAPPED_SUPERCLASS = "jakarta.persistence.MappedSuperclass";
 	public static final String EMBEDDABLE = "jakarta.persistence.Embeddable";
@@ -30,7 +35,6 @@ public final class Constants {
 	public static final String MAP_KEY_CLASS = "jakarta.persistence.MapKeyClass";
 	public static final String ELEMENT_COLLECTION = "jakarta.persistence.ElementCollection";
 	public static final String ACCESS = "jakarta.persistence.Access";
-	public static final String MAP_ATTRIBUTE = "jakarta.persistence.metamodel.MapAttribute";
 	public static final String CONVERT = "jakarta.persistence.Convert";
 	public static final String HIBERNATE_TYPE = "org.hibernate.annotations.Type";
 
@@ -58,55 +62,60 @@ public final class Constants {
 
 	public static final String CHECK_HQL = "org.hibernate.annotations.processing.CheckHQL";
 
-	public static final Map<String, String> COLLECTIONS = allCollectionTypes();
+	public static final String ENTITY_MANAGER = "jakarta.persistence.EntityManager";
+	public static final String QUERY = "jakarta.persistence.Query";
+	public static final String TYPED_QUERY = "jakarta.persistence.TypedQuery";
+	public static final String HIB_QUERY = "org.hibernate.query.Query";
+	public static final String HIB_SELECTION_QUERY = "org.hibernate.query.SelectionQuery";
+	public static final String HIB_SESSION = "org.hibernate.Session";
 
-	private static Map<String, String> allCollectionTypes() {
-		Map<String, String> map = new java.util.HashMap<>();
-		map.put( java.util.Collection.class.getName(), "jakarta.persistence.metamodel.CollectionAttribute" );
-		map.put( java.util.Set.class.getName(), "jakarta.persistence.metamodel.SetAttribute" );
-		map.put( List.class.getName(), "jakarta.persistence.metamodel.ListAttribute" );
-		map.put( Map.class.getName(), "jakarta.persistence.metamodel.MapAttribute" );
+	public static final String SINGULAR_ATTRIBUTE = "jakarta.persistence.metamodel.SingularAttribute";
+	public static final String COLLECTION_ATTRIBUTE = "jakarta.persistence.metamodel.CollectionAttribute";
+	public static final String SET_ATTRIBUTE = "jakarta.persistence.metamodel.SetAttribute";
+	public static final String LIST_ATTRIBUTE = "jakarta.persistence.metamodel.ListAttribute";
+	public static final String MAP_ATTRIBUTE = "jakarta.persistence.metamodel.MapAttribute";
 
-		// Hibernate also supports the SortedSet and SortedMap interfaces
-		map.put( java.util.SortedSet.class.getName(), "jakarta.persistence.metamodel.SetAttribute" );
-		map.put( java.util.SortedMap.class.getName(), "jakarta.persistence.metamodel.MapAttribute" );
-		return java.util.Collections.unmodifiableMap( map );
-	}
+	public static final String COLLECTION = java.util.Collection.class.getName();
+	public static final String LIST = java.util.List.class.getName();
+	public static final String MAP = java.util.Map.class.getName();
+	public static final String SET = java.util.Set.class.getName();
 
-	public static final List<String> BASIC_TYPES = allBasicTypes();
+	public static final Map<String, String> COLLECTIONS = Map.of(
+			COLLECTION, Constants.COLLECTION_ATTRIBUTE,
+			SET, Constants.SET_ATTRIBUTE,
+			LIST, Constants.LIST_ATTRIBUTE,
+			MAP, Constants.MAP_ATTRIBUTE,
+			// Hibernate also supports the SortedSet and SortedMap interfaces
+			java.util.SortedSet.class.getName(), Constants.SET_ATTRIBUTE,
+			java.util.SortedMap.class.getName(), Constants.MAP_ATTRIBUTE
+	);
 
-	private static List<String> allBasicTypes() {
-		java.util.ArrayList<String> strings = new java.util.ArrayList<>();
-		strings.add( String.class.getName() );
-		strings.add( Boolean.class.getName() );
-		strings.add( Byte.class.getName() );
-		strings.add( Character.class.getName() );
-		strings.add( Short.class.getName() );
-		strings.add( Integer.class.getName() );
-		strings.add( Long.class.getName() );
-		strings.add( Float.class.getName() );
-		strings.add( Double.class.getName() );
-		strings.add( java.math.BigInteger.class.getName() );
-		strings.add( java.math.BigDecimal.class.getName() );
-		strings.add( java.util.Date.class.getName() );
-		strings.add( java.util.Calendar.class.getName() );
-		strings.add( java.sql.Date.class.getName() );
-		strings.add( java.sql.Time.class.getName() );
-		strings.add( java.sql.Timestamp.class.getName() );
-		strings.add( java.sql.Blob.class.getName() );
-		return java.util.Collections.unmodifiableList( strings );
-	}
+	//TODO: this is not even an exhaustive list of built-in basic types
+	//      so any logic that relies on incomplete this list is broken!
+	public static final Set<String> BASIC_TYPES =  Set.of(
+			String.class.getName(),
+			Boolean.class.getName(),
+			Byte.class.getName(),
+			Character.class.getName(),
+			Short.class.getName(),
+			Integer.class.getName(),
+			Long.class.getName(),
+			Float.class.getName(),
+			Double.class.getName(),
+			BigInteger.class.getName(),
+			BigDecimal.class.getName(),
+			java.util.Date.class.getName(),
+			java.util.Calendar.class.getName(),
+			java.sql.Date.class.getName(),
+			java.sql.Time.class.getName(),
+			java.sql.Timestamp.class.getName(),
+			java.sql.Blob.class.getName()
+	);
 
-	public static final List<String> BASIC_ARRAY_TYPES = allBasicArrayTypes();
-
-	private static List<String> allBasicArrayTypes() {
-		java.util.ArrayList<String> strings = new java.util.ArrayList<>();
-		strings.add( Character.class.getName() );
-		strings.add( Byte.class.getName() );
-		return java.util.Collections.unmodifiableList( strings );
-	}
-
-	public static final String PATH_SEPARATOR = "/";
+	public static final List<String> BASIC_ARRAY_TYPES = List.of(
+			Character.class.getName(),
+			Byte.class.getName()
+	);
 
 	private Constants() {
 	}

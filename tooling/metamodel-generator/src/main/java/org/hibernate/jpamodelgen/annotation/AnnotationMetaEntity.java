@@ -378,16 +378,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean isLegalRawResultType(String containerTypeName) {
-		return containerTypeName.equals("java.util.List")
-			|| containerTypeName.equals("jakarta.persistence.Query")
-			|| containerTypeName.equals("org.hibernate.query.Query");
+		return containerTypeName.equals(List.class.getName())
+			|| containerTypeName.equals(Constants.QUERY)
+			|| containerTypeName.equals(Constants.HIB_QUERY);
 	}
 
 	private static boolean isLegalGenericResultType(String containerTypeName) {
-		return containerTypeName.equals("java.util.List")
-			|| containerTypeName.equals("jakarta.persistence.TypedQuery")
-			|| containerTypeName.equals("org.hibernate.query.Query")
-			|| containerTypeName.equals("org.hibernate.query.SelectionQuery");
+		return containerTypeName.equals(List.class.getName())
+			|| containerTypeName.equals(Constants.TYPED_QUERY)
+			|| containerTypeName.equals(Constants.HIB_QUERY)
+			|| containerTypeName.equals(Constants.HIB_SELECTION_QUERY);
 	}
 
 	private void addQueryMethod(

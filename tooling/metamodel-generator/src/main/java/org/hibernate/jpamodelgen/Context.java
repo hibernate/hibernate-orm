@@ -24,7 +24,6 @@ import javax.tools.Diagnostic;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.AccessType;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
-import org.hibernate.jpamodelgen.util.Constants;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -76,8 +75,8 @@ public final class Context {
 
 		String persistenceXmlOption = pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
 		if ( persistenceXmlOption != null ) {
-			if ( !persistenceXmlOption.startsWith( Constants.PATH_SEPARATOR ) ) {
-				persistenceXmlOption = Constants.PATH_SEPARATOR + persistenceXmlOption;
+			if ( !persistenceXmlOption.startsWith("/") ) {
+				persistenceXmlOption = "/" + persistenceXmlOption;
 			}
 			persistenceXmlLocation = persistenceXmlOption;
 		}
@@ -89,8 +88,8 @@ public final class Context {
 		if ( ormXmlOption != null ) {
 			ormXmlFiles = new ArrayList<>();
 			for ( String ormFile : ormXmlOption.split( "," ) ) {
-				if ( !ormFile.startsWith( Constants.PATH_SEPARATOR ) ) {
-					ormFile = Constants.PATH_SEPARATOR + ormFile;
+				if ( !ormFile.startsWith("/") ) {
+					ormFile = "/" + ormFile;
 				}
 				ormXmlFiles.add( ormFile );
 			}

@@ -23,7 +23,6 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
 import org.hibernate.jpamodelgen.Context;
-import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.NullnessUtil;
 import org.hibernate.jpamodelgen.xml.jaxb.ObjectFactory;
 
@@ -144,20 +143,20 @@ public class XmlParserHelper {
 	}
 
 	private String getPackage(String resourceName) {
-		if ( !resourceName.contains( Constants.PATH_SEPARATOR ) ) {
+		if ( !resourceName.contains("/") ) {
 			return "";
 		}
 		else {
-			return resourceName.substring( 0, resourceName.lastIndexOf( Constants.PATH_SEPARATOR ) );
+			return resourceName.substring( 0, resourceName.lastIndexOf("/") );
 		}
 	}
 
 	private String getRelativeName(String resourceName) {
-		if ( !resourceName.contains( Constants.PATH_SEPARATOR ) ) {
+		if ( !resourceName.contains("/") ) {
 			return resourceName;
 		}
 		else {
-			return resourceName.substring( resourceName.lastIndexOf( Constants.PATH_SEPARATOR ) + 1 );
+			return resourceName.substring( resourceName.lastIndexOf("/") + 1 );
 		}
 	}
 

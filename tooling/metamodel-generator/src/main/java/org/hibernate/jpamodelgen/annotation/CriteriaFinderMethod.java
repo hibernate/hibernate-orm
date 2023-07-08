@@ -9,6 +9,7 @@ package org.hibernate.jpamodelgen.annotation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
+import org.hibernate.jpamodelgen.util.Constants;
 
 import java.util.List;
 
@@ -86,7 +87,7 @@ public class CriteriaFinderMethod implements MetaAttribute {
 				.append("(");
 		if ( !belongsToDao ) {
 			declaration
-					.append(annotationMetaEntity.importType("jakarta.persistence.EntityManager"))
+					.append(annotationMetaEntity.importType(Constants.ENTITY_MANAGER))
 					.append(" entityManager");
 		}
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
@@ -140,7 +141,7 @@ public class CriteriaFinderMethod implements MetaAttribute {
 			declaration
 					.append("\n\t\t\t.getSingleResult()");
 		}
-		else if ( containerType.equals("java.util.List") ) {
+		else if ( containerType.equals(Constants.LIST) ) {
 			declaration
 					.append("\n\t\t\t.getResultList()");
 		}

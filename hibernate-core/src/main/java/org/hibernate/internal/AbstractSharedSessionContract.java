@@ -61,6 +61,7 @@ import org.hibernate.query.Query;
 import org.hibernate.query.QueryTypeMismatchException;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownNamedQueryException;
+import org.hibernate.query.criteria.CriteriaDefinition;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.hql.spi.SqmQueryImplementor;
@@ -768,8 +769,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public <R> SelectionQuery<R> createSelectionQuery(CriteriaQuery<R> criteria) {
-		SqmUtil.verifyIsSelectStatement( (SqmStatement<?>) criteria, null );
-		return new SqmSelectionQueryImpl<>( (SqmSelectStatement<R>) criteria, criteria.getResultType(), this );
+		if ( criteria instanceof CriteriaDefinition ) {
+			return ((CriteriaDefinition<R>) criteria).createSelectionQuery(this);
+		}
+		else {
+			SqmUtil.verifyIsSelectStatement( (SqmStatement<?>) criteria, null );
+			return new SqmSelectionQueryImpl<>( (SqmSelectStatement<R>) criteria, criteria.getResultType(), this );
+		}
 	}
 
 	@Override
@@ -1307,25 +1313,29 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public <T> QueryImplementor<T> createQuery(CriteriaQuery<T> criteriaQuery) {
 		checkOpen();
-
-		try {
-			final SqmSelectStatement<T> selectStatement = (SqmSelectStatement<T>) criteriaQuery;
-			if ( ! ( selectStatement.getQueryPart() instanceof SqmQueryGroup ) ) {
-				final SqmQuerySpec<T> querySpec = selectStatement.getQuerySpec();
-				if ( querySpec.getSelectClause().getSelections().isEmpty() ) {
-					if ( querySpec.getFromClause().getRoots().size() == 1 ) {
-						querySpec.getSelectClause().setSelection( querySpec.getFromClause().getRoots().get(0) );
+		if ( criteriaQuery instanceof CriteriaDefinition ) {
+			return (QueryImplementor<T>) ((CriteriaDefinition<T>) criteriaQuery).createSelectionQuery(this);
+		}
+		else {
+			try {
+				final SqmSelectStatement<T> selectStatement = (SqmSelectStatement<T>) criteriaQuery;
+				if ( ! ( selectStatement.getQueryPart() instanceof SqmQueryGroup ) ) {
+					final SqmQuerySpec<T> querySpec = selectStatement.getQuerySpec();
+					if ( querySpec.getSelectClause().getSelections().isEmpty() ) {
+						if ( querySpec.getFromClause().getRoots().size() == 1 ) {
+							querySpec.getSelectClause().setSelection( querySpec.getFromClause().getRoots().get(0) );
+						}
 					}
 				}
-			}
 
-			return createCriteriaQuery( selectStatement, criteriaQuery.getResultType() );
-		}
-		catch (RuntimeException e) {
-			if ( getSessionFactory().getJpaMetamodel().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
-				markForRollbackOnly();
+				return createCriteriaQuery( selectStatement, criteriaQuery.getResultType() );
 			}
-			throw getExceptionConverter().convert( e );
+			catch (RuntimeException e) {
+				if ( getSessionFactory().getJpaMetamodel().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
+					markForRollbackOnly();
+				}
+				throw getExceptionConverter().convert( e );
+			}
 		}
 	}
 

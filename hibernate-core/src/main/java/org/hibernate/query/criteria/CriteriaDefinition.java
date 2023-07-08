@@ -6,11 +6,15 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.Incubating;
-import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.SharedSessionContract;
+import org.hibernate.query.QueryProducer;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.spi.HibernateCriteriaBuilderDelegate;
 import org.hibernate.query.sqm.FetchClauseType;
@@ -22,7 +26,7 @@ import java.util.function.Function;
 
 /**
  * A utility class that makes it easier to build {@linkplain CriteriaQuery criteria queries}.
- * From within an implementation of the {@link #define()} method, all operations of the
+ * From within an initializer block of a (usually anonymous) subclass, all operations of the
  * {@link CriteriaBuilder} and {@link CriteriaQuery} may be called without the need for
  * specifying the target object.
  * <p>
@@ -30,17 +34,16 @@ import java.util.function.Function;
  * <pre>
  * sessionFactory.inTransaction(session -&gt; {
  *     List&lt;Book&gt; books
- *             = new CriteriaDefinition&lt;&gt;(sessionFactory, Book.class) {
- *                 public void define() {
- *                     var book = from(Book.class);
- *                     where(like(book.get(Book_.title), "%Hibernate%"));
- *                     orderBy(desc(book.get(Book_.publicationDate)), asc(book.get(Book_.isbn)));
- *                     book.fetch(Book_.authors);
- *                 }
- *             }
+ *             = new CriteriaDefinition&lt;&gt;(sessionFactory, Book.class) {{
+ *                 var book = from(Book.class);
+ *                 where(like(book.get(Book_.title), "%Hibernate%"));
+ *                 orderBy(desc(book.get(Book_.publicationDate)), asc(book.get(Book_.isbn)));
+ *                 book.fetch(Book_.authors);
+ *             }}
  *             .createSelectionQuery(session)
  *             .setMaxResults(10)
  *             .getResultList();
+ *     ...
  * });
  * </pre>
  * <p>
@@ -49,20 +52,45 @@ import java.util.function.Function;
  * sessionFactory.inTransaction(session -&gt; {
  *     List&lt;Book&gt; books
  *             = new CriteriaDefinition&lt;&gt;(sessionFactory, Book.class,
- *                     "from Book left join fetch authors where type = BOOK") {
- *                 public void define() {
- *                     var book = (JpaRoot&lt;Book&gt;) getSelection();
- *                     where(getRestriction(), like(book.get(Book_.title), "%Hibernate%"));
- *                     orderBy(desc(book.get(Book_.publicationDate)), asc(book.get(Book_.isbn)));
- *                 }
- *             }
+ *                     "from Book left join fetch authors where type = BOOK") {{
+ *                 var book = (JpaRoot&lt;Book&gt;) getSelection();
+ *                 where(getRestriction(), like(book.get(Book_.title), "%Hibernate%"));
+ *                 orderBy(desc(book.get(Book_.publicationDate)), asc(book.get(Book_.isbn)));
+ *             }}
  *             .createSelectionQuery(session)
  *             .getResultList();
+ *     ...
+ * });
+ * </pre>
+ * For queries which don't change between executions, the {@code CriteriaDefinition} may be
+ * safely built and cached at startup:
+ * <pre>
+ * // build and cache the query
+ * static final CriteriaQuery&lt;Book&gt; bookQuery =
+ *         new CriteriaDefinition&lt;&gt;(sessionFactory, Book.class) {{
+ *             var book = from(Book.class);
+ *             where(like(book.get(Book_.title), "%Hibernate%"));
+ *             orderBy(desc(book.get(Book_.publicationDate)), asc(book.get(Book_.isbn)));
+ *             book.fetch(Book_.authors);
+ *         }};
+ *
+ * ...
+ *
+ * // execute it in a session
+ * sessionFactory.inTransaction(session -&gt; {
+ *     List&lt;Book&gt; books =
+ *             session.createQuery(bookQuery)
+ *                     .setMaxResults(10)
+ *                     .getResultList();
+ *     ...
  * });
  * </pre>
  *
- *
  * @param <R> the query result type
+ *
+ * @since 6.3
+ *
+ * @author Gavin King
  */
 @Incubating
 public abstract class CriteriaDefinition<R>
@@ -74,38 +102,64 @@ public abstract class CriteriaDefinition<R>
 	public CriteriaDefinition(SessionFactory factory, Class<R> resultType) {
 		super( factory.getCriteriaBuilder() );
 		query = createQuery( resultType );
-		define();
 	}
 
 	public CriteriaDefinition(SessionFactory factory, Class<R> resultType, String baseHql) {
 		super( factory.getCriteriaBuilder() );
 		query = createQuery( baseHql, resultType );
-		define();
 	}
 
 	public CriteriaDefinition(SessionFactory factory, CriteriaQuery<R> baseQuery) {
 		super( factory.getCriteriaBuilder() );
 		query = (JpaCriteriaQuery<R>) baseQuery;
-		define();
 	}
 
-	public CriteriaDefinition(Session session, Class<R> resultType) {
-		this( session.getSessionFactory(), resultType );
+	public CriteriaDefinition(EntityManagerFactory factory, Class<R> resultType) {
+		super( factory.getCriteriaBuilder() );
+		query = createQuery( resultType );
 	}
 
-	public CriteriaDefinition(Session session, Class<R> resultType, String baseHql) {
-		this( session.getSessionFactory(), resultType, baseHql );
+	public CriteriaDefinition(EntityManagerFactory factory, Class<R> resultType, String baseHql) {
+		super( factory.getCriteriaBuilder() );
+		query = createQuery( baseHql, resultType );
 	}
 
-	public CriteriaDefinition(Session session, CriteriaQuery<R> baseQuery) {
-		this( session.getSessionFactory(), baseQuery );
+	public CriteriaDefinition(EntityManagerFactory factory, CriteriaQuery<R> baseQuery) {
+		super( factory.getCriteriaBuilder() );
+		query = (JpaCriteriaQuery<R>) baseQuery;
 	}
 
-	public SelectionQuery<R> createSelectionQuery(Session session) {
-		return session.createSelectionQuery( query );
+	public CriteriaDefinition(SharedSessionContract session, Class<R> resultType) {
+		this( session.getFactory(), resultType );
 	}
 
-	public abstract void define();
+	public CriteriaDefinition(SharedSessionContract session, Class<R> resultType, String baseHql) {
+		this( session.getFactory(), resultType, baseHql );
+	}
+
+	public CriteriaDefinition(SharedSessionContract session, CriteriaQuery<R> baseQuery) {
+		this( session.getFactory(), baseQuery );
+	}
+
+	public CriteriaDefinition(EntityManager entityManager, Class<R> resultType) {
+		this( entityManager.getEntityManagerFactory(), resultType );
+	}
+
+	public CriteriaDefinition(EntityManager entityManager, Class<R> resultType, String baseHql) {
+		this( entityManager.getEntityManagerFactory(), resultType, baseHql );
+	}
+
+	public CriteriaDefinition(EntityManager entityManager, CriteriaQuery<R> baseQuery) {
+		this( entityManager.getEntityManagerFactory(), baseQuery );
+	}
+
+	public SelectionQuery<R> createSelectionQuery(QueryProducer session) {
+		return session.createQuery( query );
+	}
+
+	public TypedQuery<R> createQuery(EntityManager entityManager) {
+		return entityManager.createQuery( query );
+	}
 
 	@Override
 	public JpaCriteriaQuery<R> select(Selection<? extends R> selection) {

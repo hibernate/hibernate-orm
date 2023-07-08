@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.Incubating;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -74,6 +75,10 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	public HibernateCriteriaBuilderDelegate(HibernateCriteriaBuilder criteriaBuilder) {
 		this.criteriaBuilder = criteriaBuilder;
+	}
+
+	public HibernateCriteriaBuilderDelegate(CriteriaBuilder criteriaBuilder) {
+		this.criteriaBuilder = (HibernateCriteriaBuilder) criteriaBuilder;
 	}
 
 	protected HibernateCriteriaBuilder getCriteriaBuilder() {

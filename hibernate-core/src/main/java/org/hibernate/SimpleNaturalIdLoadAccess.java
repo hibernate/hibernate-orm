@@ -37,6 +37,10 @@ public interface SimpleNaturalIdLoadAccess<T> {
 	 */
 	SimpleNaturalIdLoadAccess<T> with(LockOptions lockOptions);
 
+	SimpleNaturalIdLoadAccess<T> enableFetchProfile(String profileName);
+
+	SimpleNaturalIdLoadAccess<T> disableFetchProfile(String profileName);
+
 	/**
 	 * For entities with mutable natural ids, should Hibernate perform
 	 * "synchronization" prior to performing lookups? The default is

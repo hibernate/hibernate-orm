@@ -108,4 +108,17 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 	public Optional<T> loadOptional(Object naturalIdValue) {
 		return Optional.ofNullable( load( naturalIdValue ) );
 	}
+
+
+	@Override
+	public SimpleNaturalIdLoadAccess<T> enableFetchProfile(String profileName) {
+		super.enableFetchProfile( profileName );
+		return this;
+	}
+
+	@Override
+	public SimpleNaturalIdLoadAccess<T> disableFetchProfile(String profileName) {
+		super.enableFetchProfile( profileName );
+		return this;
+	}
 }

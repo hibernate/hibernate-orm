@@ -75,4 +75,16 @@ public class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> i
 	public Optional<T> loadOptional() {
 		return Optional.ofNullable( load() );
 	}
+
+	@Override
+	public NaturalIdLoadAccess<T> enableFetchProfile(String profileName) {
+		super.enableFetchProfile( profileName );
+		return this;
+	}
+
+	@Override
+	public NaturalIdLoadAccess<T> disableFetchProfile(String profileName) {
+		super.enableFetchProfile( profileName );
+		return this;
+	}
 }

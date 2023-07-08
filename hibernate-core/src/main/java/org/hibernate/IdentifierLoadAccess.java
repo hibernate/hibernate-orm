@@ -104,6 +104,10 @@ public interface IdentifierLoadAccess<T> {
 	 */
 	IdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
 
+	IdentifierLoadAccess<T> enableFetchProfile(String profileName);
+
+	IdentifierLoadAccess<T> disableFetchProfile(String profileName);
+
 	/**
 	 * Return the persistent instance with the given identifier, assuming
 	 * that the instance exists. This method might return a proxied instance

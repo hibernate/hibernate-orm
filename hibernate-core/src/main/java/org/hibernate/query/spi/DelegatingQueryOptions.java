@@ -7,6 +7,8 @@
 package org.hibernate.query.spi;
 
 import java.util.List;
+import java.util.Set;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
@@ -107,6 +109,16 @@ public class DelegatingQueryOptions implements QueryOptions {
 	@Override
 	public Integer getFetchSize() {
 		return queryOptions.getFetchSize();
+	}
+
+	@Override
+	public Set<String> getEnabledFetchProfiles() {
+		return queryOptions.getEnabledFetchProfiles();
+	}
+
+	@Override
+	public Set<String> getDisabledFetchProfiles() {
+		return queryOptions.getDisabledFetchProfiles();
 	}
 
 	@Override

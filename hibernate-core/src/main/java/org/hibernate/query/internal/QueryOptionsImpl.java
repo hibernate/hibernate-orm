@@ -8,7 +8,10 @@ package org.hibernate.query.internal;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
@@ -42,11 +45,13 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	private Boolean readOnlyEnabled;
 	private Boolean queryPlanCachingEnabled;
 
-	private TupleTransformer tupleTransformer;
-	private ResultListTransformer resultListTransformer;
+	private TupleTransformer<?> tupleTransformer;
+	private ResultListTransformer<?> resultListTransformer;
 
 	private RootGraphImplementor<?> rootGraph;
 	private GraphSemantic graphSemantic;
+	private Set<String> enabledFetchProfiles;
+	private Set<String> disabledFetchProfiles;
 
 	@Override
 	public Integer getTimeout() {
@@ -91,12 +96,12 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
-	public void setTupleTransformer(TupleTransformer transformer) {
+	public void setTupleTransformer(TupleTransformer<?> transformer) {
 		this.tupleTransformer = transformer;
 	}
 
 	@Override
-	public void setResultListTransformer(ResultListTransformer transformer) {
+	public void setResultListTransformer(ResultListTransformer<?> transformer) {
 		this.resultListTransformer = transformer;
 	}
 
@@ -165,12 +170,12 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	}
 
 	@Override
-	public TupleTransformer getTupleTransformer() {
+	public TupleTransformer<?> getTupleTransformer() {
 		return tupleTransformer;
 	}
 
 	@Override
-	public ResultListTransformer getResultListTransformer() {
+	public ResultListTransformer<?> getResultListTransformer() {
 		return resultListTransformer;
 	}
 
@@ -203,6 +208,38 @@ public class QueryOptionsImpl implements MutableQueryOptions, AppliedGraph {
 	public void applyGraph(RootGraphImplementor<?> rootGraph, GraphSemantic graphSemantic) {
 		this.rootGraph = rootGraph;
 		this.graphSemantic = graphSemantic;
+	}
+
+	@Override
+	public void enableFetchProfile(String profileName) {
+		if ( enabledFetchProfiles == null ) {
+			enabledFetchProfiles = new HashSet<>();
+		}
+		enabledFetchProfiles.add( profileName );
+		if ( disabledFetchProfiles != null ) {
+			disabledFetchProfiles.remove( profileName );
+		}
+	}
+
+	@Override
+	public void disableFetchProfile(String profileName) {
+		if ( disabledFetchProfiles == null ) {
+			disabledFetchProfiles = new HashSet<>();
+		}
+		disabledFetchProfiles.add( profileName );
+		if ( enabledFetchProfiles != null ) {
+			enabledFetchProfiles.remove( profileName );
+		}
+	}
+
+	@Override
+	public Set<String> getEnabledFetchProfiles() {
+		return enabledFetchProfiles;
+	}
+
+	@Override
+	public Set<String> getDisabledFetchProfiles() {
+		return disabledFetchProfiles;
 	}
 
 	@Override

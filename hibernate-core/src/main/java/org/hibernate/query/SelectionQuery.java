@@ -29,6 +29,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.UnknownProfileException;
 import org.hibernate.dialect.Dialect;
 
 import jakarta.persistence.FlushModeType;
@@ -213,6 +214,37 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * @since 6.3
 	 */
 	SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
+
+	/**
+	 * Enable the {@link org.hibernate.annotations.FetchProfile fetch profile}
+	 * for this query. If the requested fetch profile is already enabled,
+	 * the call has no effect.
+	 * <p>
+	 * This is an alternative way to specify the associations which
+	 * should be fetched as part of the initial query.
+	 *
+	 * @param profileName the name of the fetch profile to be enabled
+	 *
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 *                                 match any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 */
+	SelectionQuery<R> enableFetchProfile(String profileName);
+
+	/**
+	 * Disable the {@link org.hibernate.annotations.FetchProfile fetch profile}
+	 * with the given name in this session. If the requested fetch profile
+	 * is not currently enabled, the call has no effect.
+	 *
+	 * @param profileName the name of the fetch profile to be disabled
+	 *
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 *                                 match any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 */
+	SelectionQuery<R> disableFetchProfile(String profileName);
 
 	@Override
 	SelectionQuery<R> setFlushMode(FlushModeType flushMode);

@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
+import jakarta.persistence.EntityGraph;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -871,11 +872,6 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public LockOptions getLockOptions() {
-		return getQueryOptions().getLockOptions();
-	}
-
-	@Override
 	public SqmQueryImplementor<R> setLockOptions(LockOptions lockOptions) {
 		// No verifySelect call, because in Hibernate we support locking in subqueries
 		getQueryOptions().getLockOptions().overlay( lockOptions );
@@ -1017,6 +1013,24 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> setHint(String hintName, Object value) {
 		applyHint( hintName, value );
+		return this;
+	}
+
+	@Override
+	public Query<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
+		super.setEntityGraph( graph, semantic );
+		return this;
+	}
+
+	@Override
+	public Query<R> enableFetchProfile(String profileName) {
+		super.enableFetchProfile( profileName );
+		return this;
+	}
+
+	@Override
+	public Query<R> disableFetchProfile(String profileName) {
+		super.disableFetchProfile( profileName );
 		return this;
 	}
 

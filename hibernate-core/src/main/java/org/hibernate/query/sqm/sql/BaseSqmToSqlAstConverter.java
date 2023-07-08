@@ -7884,8 +7884,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //					if ( fetchTiming != FetchTiming.IMMEDIATE || fetchable.incrementFetchDepth() ) {
 						final String fetchableRole = fetchable.getNavigableRole().getFullPath();
 
-						for ( String enabledFetchProfileName : getLoadQueryInfluencers()
-								.getEnabledFetchProfileNames() ) {
+						for ( String enabledFetchProfileName :
+								getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
 							final FetchProfile enabledFetchProfile = getCreationContext()
 									.getSessionFactory()
 									.getFetchProfile( enabledFetchProfileName );

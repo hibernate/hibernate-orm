@@ -8,6 +8,8 @@ package org.hibernate.query.spi;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 
@@ -96,12 +98,22 @@ public abstract class QueryOptionsAdapter implements QueryOptions {
 	}
 
 	@Override
-	public TupleTransformer getTupleTransformer() {
+	public TupleTransformer<?> getTupleTransformer() {
 		return null;
 	}
 
 	@Override
-	public ResultListTransformer getResultListTransformer() {
+	public ResultListTransformer<?> getResultListTransformer() {
+		return null;
+	}
+
+	@Override
+	public Set<String> getEnabledFetchProfiles() {
+		return null;
+	}
+
+	@Override
+	public Set<String> getDisabledFetchProfiles() {
 		return null;
 	}
 }

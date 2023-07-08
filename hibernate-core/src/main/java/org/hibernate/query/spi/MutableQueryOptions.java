@@ -89,9 +89,13 @@ public interface MutableQueryOptions extends QueryOptions {
 	 */
 	void addDatabaseHint(String hint);
 
-	void setTupleTransformer(TupleTransformer transformer);
+	void setTupleTransformer(TupleTransformer<?> transformer);
 
-	void setResultListTransformer(ResultListTransformer transformer);
+	void setResultListTransformer(ResultListTransformer<?> transformer);
 
 	void applyGraph(RootGraphImplementor<?> rootGraph, GraphSemantic graphSemantic);
+
+	void enableFetchProfile(String profileName);
+
+	void disableFetchProfile(String profileName);
 }

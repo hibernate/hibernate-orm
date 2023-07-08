@@ -27,6 +27,7 @@ public class CriteriaFinderMethod implements MetaAttribute {
 	private final List<String> paramTypes;
 	private final boolean belongsToDao;
 	private final String sessionType;
+	private final List<String> fetchProfiles;
 
 	public CriteriaFinderMethod(
 			Metamodel annotationMetaEntity,
@@ -34,7 +35,8 @@ public class CriteriaFinderMethod implements MetaAttribute {
 			@Nullable String containerType,
 			List<String> paramNames, List<String> paramTypes,
 			boolean belongsToDao,
-			String sessionType) {
+			String sessionType,
+			List<String> fetchProfiles) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.entity = entity;
@@ -43,6 +45,7 @@ public class CriteriaFinderMethod implements MetaAttribute {
 		this.paramTypes = paramTypes;
 		this.belongsToDao = belongsToDao;
 		this.sessionType = sessionType;
+		this.fetchProfiles = fetchProfiles;
 	}
 
 	@Override
@@ -146,6 +149,23 @@ public class CriteriaFinderMethod implements MetaAttribute {
 		}
 		declaration
 				.append("entityManager.createQuery(query)");
+		if ( !fetchProfiles.isEmpty() ) {
+			if ( Constants.ENTITY_MANAGER.equals(sessionType) ) {
+				declaration
+						.append("\n\t\t\t.unwrap(")
+						.append(annotationMetaEntity.importType(Constants.HIB_SELECTION_QUERY))
+						.append(".class)");
+			}
+		}
+		for ( String profile : fetchProfiles ) {
+			declaration
+					.append("\n\t\t\t.enableFetchProfile(")
+					.append(profile)
+					.append(")");
+		}
+		if ( !fetchProfiles.isEmpty() ) {
+			declaration.append("\n\t\t\t");
+		}
 		if ( containerType == null) {
 			declaration
 					.append(".getSingleResult()");

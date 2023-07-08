@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -41,6 +42,7 @@ import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.validation.ProcessorSessionFactory;
 import org.hibernate.jpamodelgen.validation.Validation;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
@@ -468,9 +470,24 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						paramNames,
 						paramTypes,
 						dao,
-						sessionType
+						sessionType,
+						enabledFetchProfiles( method )
 				)
 		);
+	}
+
+	private static List<String> enabledFetchProfiles(ExecutableElement method) {
+		final Object enabledFetchProfiles =
+				getAnnotationValue( castNonNull( getAnnotationMirror( method, Constants.FIND ) ),
+						"enabledFetchProfiles" );
+		if ( enabledFetchProfiles == null ) {
+			return emptyList();
+		}
+		else {
+			@SuppressWarnings("unchecked")
+			final List<AnnotationValue> annotationValues = (List<AnnotationValue>) enabledFetchProfiles;
+			return annotationValues.stream().map(AnnotationValue::toString).collect(toList());
+		}
 	}
 
 	private void createMultipleParameterFinder(ExecutableElement method, TypeMirror returnType, TypeElement entity) {
@@ -487,7 +504,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							paramNames,
 							paramTypes,
 							dao,
-							sessionType
+							sessionType,
+							enabledFetchProfiles( method )
 					)
 			);
 		}
@@ -501,7 +519,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							paramNames,
 							paramTypes,
 							dao,
-							sessionType
+							sessionType,
+							enabledFetchProfiles( method )
 					)
 			);
 		}
@@ -523,7 +542,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									List.of( parameter.getSimpleName().toString() ),
 									List.of( parameter.asType().toString() ),
 									dao,
-									sessionType
+									sessionType,
+									enabledFetchProfiles( method )
 							)
 					);
 					break;
@@ -536,7 +556,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									parameter.getSimpleName().toString(),
 									parameter.asType().toString(),
 									dao,
-									sessionType
+									sessionType,
+									enabledFetchProfiles( method )
 							)
 					);
 					break;
@@ -550,7 +571,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									List.of( parameter.getSimpleName().toString() ),
 									List.of( parameter.asType().toString() ),
 									dao,
-									sessionType
+									sessionType,
+									enabledFetchProfiles( method )
 							)
 					);
 					break;

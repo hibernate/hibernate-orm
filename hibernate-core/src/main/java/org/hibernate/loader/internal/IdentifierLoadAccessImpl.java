@@ -15,6 +15,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectNotFoundException;
+import org.hibernate.UnknownProfileException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
@@ -279,6 +280,9 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 
 	@Override
 	public IdentifierLoadAccess<T> enableFetchProfile(String profileName) {
+		if ( !context.getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
+			throw new UnknownProfileException( profileName );
+		}
 		if ( enabledFetchProfiles == null ) {
 			enabledFetchProfiles = new HashSet<>();
 		}

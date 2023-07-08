@@ -16,6 +16,9 @@ public interface Dao {
     @Find
     Book getBook(String isbn);
 
+    @Find(enabledFetchProfiles="Goodbye")
+    Book getBookFetching(String isbn);
+
     @Find
     Book getBook(String title, String author);
 

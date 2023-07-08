@@ -14,6 +14,7 @@ import java.util.Set;
 import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.LockOptions;
+import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
@@ -61,6 +62,9 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 	}
 
 	public Object enableFetchProfile(String profileName) {
+		if ( !context.getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
+			throw new UnknownProfileException( profileName );
+		}
 		if ( enabledFetchProfiles == null ) {
 			enabledFetchProfiles = new HashSet<>();
 		}

@@ -214,7 +214,7 @@ public final class TypeUtils {
 		assert parameterValue != null;
 		for ( Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry
 				: annotationMirror.getElementValues().entrySet() ) {
-			if ( parameterValue.equals( entry.getKey().getSimpleName().toString() ) ) {
+			if ( entry.getKey().getSimpleName().contentEquals( parameterValue ) ) {
 				return entry.getValue().getValue();
 			}
 		}

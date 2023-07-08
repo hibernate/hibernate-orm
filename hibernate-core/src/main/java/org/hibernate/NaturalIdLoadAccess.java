@@ -44,6 +44,10 @@ public interface NaturalIdLoadAccess<T> {
 	 */
 	NaturalIdLoadAccess<T> with(LockOptions lockOptions);
 
+	NaturalIdLoadAccess<T> enableFetchProfile(String profileName);
+
+	NaturalIdLoadAccess<T> disableFetchProfile(String profileName);
+
 	/**
 	 * Add a {@link org.hibernate.annotations.NaturalId @NaturalId}
 	 * attribute value in a typesafe way.

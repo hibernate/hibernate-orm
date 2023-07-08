@@ -14,6 +14,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
@@ -668,7 +669,7 @@ public class QuerySqmImpl<R>
 	public int executeUpdate() {
 		verifyUpdate();
 		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
-		beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQuery();
 		boolean success = false;
 		try {
 			final int result = doExecuteUpdate();
@@ -685,7 +686,7 @@ public class QuerySqmImpl<R>
 			throw getSession().getExceptionConverter().convert( e );
 		}
 		finally {
-			afterQuery( success );
+			afterQuery( success, fetchProfiles );
 		}
 	}
 

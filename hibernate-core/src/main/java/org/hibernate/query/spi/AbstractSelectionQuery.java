@@ -15,7 +15,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -41,7 +40,6 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -419,11 +417,10 @@ public abstract class AbstractSelectionQuery<R>
 
 	private FlushMode sessionFlushMode;
 	private CacheMode sessionCacheMode;
-	private HashSet<String> fetchProfiles;
 
 	@Override
 	public List<R> list() {
-		beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQuery();
 		boolean success = false;
 		try {
 			final List<R> result = doList();
@@ -440,16 +437,17 @@ public abstract class AbstractSelectionQuery<R>
 			throw getSession().getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );
 		}
 		finally {
-			afterQuery( success );
+			afterQuery( success, fetchProfiles );
 		}
 	}
 
-	protected void beforeQuery() {
+	protected HashSet<String> beforeQuery() {
 		getQueryParameterBindings().validate();
 
-		getSession().prepareForQueryExecution(
-				requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() )
-		);
+		final SharedSessionContractImplementor session = getSession();
+		final MutableQueryOptions options = getQueryOptions();
+
+		session.prepareForQueryExecution( requiresTxn( options.getLockOptions().findGreatestLockMode() ) );
 		prepareForExecution();
 
 		assert sessionFlushMode == null;
@@ -457,47 +455,33 @@ public abstract class AbstractSelectionQuery<R>
 
 		final FlushMode effectiveFlushMode = getHibernateFlushMode();
 		if ( effectiveFlushMode != null ) {
-			sessionFlushMode = getSession().getHibernateFlushMode();
-			getSession().setHibernateFlushMode( effectiveFlushMode );
+			sessionFlushMode = session.getHibernateFlushMode();
+			session.setHibernateFlushMode( effectiveFlushMode );
 		}
 
 		final CacheMode effectiveCacheMode = getCacheMode();
 		if ( effectiveCacheMode != null ) {
-			sessionCacheMode = getSession().getCacheMode();
-			getSession().setCacheMode( effectiveCacheMode );
+			sessionCacheMode = session.getCacheMode();
+			session.setCacheMode( effectiveCacheMode );
 		}
 
-		final LoadQueryInfluencers loadQueryInfluencers = getSession().getLoadQueryInfluencers();
-		fetchProfiles = loadQueryInfluencers.hasEnabledFetchProfiles()
-				? new HashSet<>( loadQueryInfluencers.getEnabledFetchProfileNames() )
-				: null;
-		final Set<String> disabledFetchProfiles = getQueryOptions().getDisabledFetchProfiles();
-		if ( disabledFetchProfiles != null ) {
-			for ( String name: disabledFetchProfiles ) {
-				loadQueryInfluencers.disableFetchProfile( name );
-
-			}
-		}
-		final Set<String> enabledFetchProfiles = getQueryOptions().getEnabledFetchProfiles();
-		if ( enabledFetchProfiles != null ) {
-			for ( String name: enabledFetchProfiles ) {
-				loadQueryInfluencers.enableFetchProfile( name );
-
-			}
-		}
+		return session.getLoadQueryInfluencers()
+				.adjustFetchProfiles( options.getDisabledFetchProfiles(), options.getEnabledFetchProfiles() );
 	}
 
 	protected abstract void prepareForExecution();
 
-	protected void afterQuery(boolean success) {
+	protected void afterQuery(boolean success, HashSet<String> fetchProfiles) {
 
-		getSession().getLoadQueryInfluencers().setEnabledFetchProfileNames( fetchProfiles );
+		final SharedSessionContractImplementor session = getSession();
+
+		session.getLoadQueryInfluencers().setEnabledFetchProfileNames( fetchProfiles );
 
 		afterQuery();
-		if ( !getSession().isTransactionInProgress() ) {
-			getSession().getJdbcCoordinator().getLogicalConnection().afterTransaction();
+		if ( !session.isTransactionInProgress() ) {
+			session.getJdbcCoordinator().getLogicalConnection().afterTransaction();
 		}
-		getSession().afterOperation( success );
+		session.afterOperation( success );
 	}
 
 	protected void afterQuery() {

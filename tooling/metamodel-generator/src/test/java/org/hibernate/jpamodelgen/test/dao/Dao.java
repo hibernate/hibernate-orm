@@ -19,11 +19,17 @@ public interface Dao {
     @Find
     Book getBook(String title, String author);
 
+    @Find(enabledFetchProfiles="Hello")
+    Book getBookFetching(String title, String author);
+
     @Find
     Book getBook(String title, String isbn, String author);
 
     @Find
     List<Book> getBooks(String title);
+
+    @Find(enabledFetchProfiles="Hello")
+    List<Book> getBooksFetching(String title);
 
     @Find
     SelectionQuery<Book> createBooksSelectionQuery(String title);

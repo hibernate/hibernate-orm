@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -631,7 +632,7 @@ public abstract class AbstractQuery<R>
 	@Override
 	public int executeUpdate() throws HibernateException {
 		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
-		beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQuery();
 		boolean success = false;
 		try {
 			final int result = doExecuteUpdate();
@@ -648,7 +649,7 @@ public abstract class AbstractQuery<R>
 			throw getSession().getExceptionConverter().convert( e );
 		}
 		finally {
-			afterQuery( success );
+			afterQuery( success, fetchProfiles );
 		}
 	}
 

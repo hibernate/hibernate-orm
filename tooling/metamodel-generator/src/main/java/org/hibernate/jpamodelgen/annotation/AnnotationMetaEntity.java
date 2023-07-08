@@ -94,7 +94,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	/**
 	 * True if this "metamodel class" is actually an instantiable DAO-style repository.
 	 */
-	private boolean dao;
+	private boolean dao = false;
+	private String sessionType = Constants.ENTITY_MANAGER;
 
 	public AnnotationMetaEntity(TypeElement element, Context context) {
 		this.element = element;
@@ -242,7 +243,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			for ( ExecutableElement getterOrSetter : gettersAndSettersOfClass ) {
 				if ( isSessionGetter( getterOrSetter ) ) {
 					dao = true;
-					addDaoConstructor( getterOrSetter );
+					sessionType = addDaoConstructor( getterOrSetter );
 				}
 			}
 		}
@@ -259,11 +260,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		initialized = true;
 	}
 
-	private void addDaoConstructor(ExecutableElement getterOrSetter) {
+	private String addDaoConstructor(ExecutableElement getterOrSetter) {
 		String name = getterOrSetter.getSimpleName().toString();
 		String typeName = element.getSimpleName().toString() + '_';
-		String type = getterOrSetter.getReturnType().toString();
-		putMember( name, new DaoConstructor(this, typeName, name, type, context.addInjectAnnotation() ) );
+		String sessionType = getterOrSetter.getReturnType().toString();
+		putMember( name,
+				new DaoConstructor(this, typeName, name, sessionType, context.addInjectAnnotation() ) );
+		return sessionType;
 	}
 
 	private static boolean isSessionGetter(ExecutableElement getterOrSetter) {
@@ -426,32 +429,29 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						Diagnostic.Kind.ERROR );
 			}
 			else {
-				if ( containerType != null ) {
-					// it has to be a criteria finder (multiple results)
-					createContainerResultFinder( method, returnType, containerType, entity );
+				if ( containerType != null || Constants.HIB_STATELESS_SESSION.equals(sessionType) ) {
+					// multiple results or stateless session
+					// it has to be a criteria finder
+					createCriteriaFinder( method, returnType, containerType, entity );
 				}
 				else {
 					switch ( method.getParameters().size() ) {
-						case 0: {
-							context.message( method,
-									"missing parameter",
-									Diagnostic.Kind.ERROR );
+						case 0:
+							context.message( method, "missing parameter", Diagnostic.Kind.ERROR );
 							break;
-						}
-						case 1: {
+						case 1:
 							createSingleParameterFinder( method, returnType, entity );
 							break;
-						}
-						default: {
+						default:
 							createMultipleParameterFinder( method, returnType, entity );
-						}
 					}
 				}
 			}
 		}
 	}
 
-	private void createContainerResultFinder(ExecutableElement method, TypeMirror returnType, TypeElement containerType, TypeElement entity) {
+	private void createCriteriaFinder(
+			ExecutableElement method, TypeMirror returnType, @Nullable TypeElement containerType, TypeElement entity) {
 		final String methodName = method.getSimpleName().toString();
 		final List<String> paramNames = parameterNames(method);
 		final List<String> paramTypes = parameterTypes(method);
@@ -464,10 +464,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						this,
 						methodName,
 						returnType.toString(),
-						containerType.toString(),
+						containerType == null ? null : containerType.toString(),
 						paramNames,
 						paramTypes,
-						dao
+						dao,
+						sessionType
 				)
 		);
 	}
@@ -485,7 +486,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							returnType.toString(),
 							paramNames,
 							paramTypes,
-							dao
+							dao,
+							sessionType
 					)
 			);
 		}
@@ -498,7 +500,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							null,
 							paramNames,
 							paramTypes,
-							dao
+							dao,
+							sessionType
 					)
 			);
 		}
@@ -519,7 +522,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									returnType.toString(),
 									List.of( parameter.getSimpleName().toString() ),
 									List.of( parameter.asType().toString() ),
-									dao
+									dao,
+									sessionType
 							)
 					);
 					break;
@@ -531,7 +535,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									returnType.toString(),
 									parameter.getSimpleName().toString(),
 									parameter.asType().toString(),
-									dao
+									dao,
+									sessionType
 							)
 					);
 					break;
@@ -544,7 +549,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									null,
 									List.of( parameter.getSimpleName().toString() ),
 									List.of( parameter.asType().toString() ),
-									dao
+									dao,
+									sessionType
 							)
 					);
 					break;
@@ -629,7 +635,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							paramNames,
 							paramTypes,
 							isNative,
-							dao
+							dao,
+							sessionType
 					);
 			putMember( attribute.getPropertyName() + paramTypes, attribute );
 

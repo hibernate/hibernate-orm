@@ -12,8 +12,6 @@ import org.hibernate.jpamodelgen.util.Constants;
 
 import java.util.List;
 
-import static org.hibernate.internal.util.StringHelper.join;
-
 /**
  * @author Gavin King
  */
@@ -24,18 +22,21 @@ public class NaturalIdFinderMethod implements MetaAttribute {
 	private final List<String> paramNames;
 	private final List<String> paramTypes;
 	private final boolean belongsToDao;
+	private final String sessionType;
 
 	public NaturalIdFinderMethod(
 			Metamodel annotationMetaEntity,
 			String methodName, String entity,
 			List<String> paramNames, List<String> paramTypes,
-			boolean belongsToDao) {
+			boolean belongsToDao,
+			String sessionType) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.entity = entity;
 		this.paramNames = paramNames;
 		this.paramTypes = paramTypes;
 		this.belongsToDao = belongsToDao;
+		this.sessionType = sessionType;
 	}
 
 	@Override
@@ -57,7 +58,7 @@ public class NaturalIdFinderMethod implements MetaAttribute {
 				.append("#")
 				.append(methodName)
 				.append("(")
-				.append(join(",", paramTypes.stream().map(this::strip).map(annotationMetaEntity::importType).toArray()))
+				.append(parameterList())
 				.append(")")
 				.append("\n **/\n");
 		if ( belongsToDao ) {
@@ -91,11 +92,14 @@ public class NaturalIdFinderMethod implements MetaAttribute {
 		}
 		declaration
 				.append(") {")
-				.append("\n\treturn entityManager")
-				//TODO: skip if unnecessary:
-				.append(".unwrap(")
-				.append(annotationMetaEntity.importType(Constants.HIB_SESSION))
-				.append(".class)\n\t\t\t")
+				.append("\n\treturn entityManager");
+		if ( Constants.ENTITY_MANAGER.equals(sessionType) ) {
+			declaration
+					.append(".unwrap(")
+					.append(annotationMetaEntity.importType(Constants.HIB_SESSION))
+					.append(".class)\n\t\t\t");
+		}
+		declaration
 				.append(".byNaturalId(")
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class)");
@@ -112,6 +116,14 @@ public class NaturalIdFinderMethod implements MetaAttribute {
 		declaration
 				.append("\n\t\t\t.load();\n}");
 		return declaration.toString();
+	}
+
+	private String parameterList() {
+		return paramTypes.stream()
+				.map(this::strip)
+				.map(annotationMetaEntity::importType)
+				.reduce((x, y) -> x + y)
+				.orElse("");
 	}
 
 	private String strip(String type) {

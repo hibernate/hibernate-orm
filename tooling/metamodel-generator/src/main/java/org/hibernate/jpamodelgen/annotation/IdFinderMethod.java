@@ -20,18 +20,21 @@ public class IdFinderMethod implements MetaAttribute {
 	private final String paramName;
 	private final String paramType;
 	private final boolean belongsToDao;
+	private final String sessionType;
 
 	public IdFinderMethod(
 			Metamodel annotationMetaEntity,
 			String methodName, String entity,
 			String paramName, String paramType,
-			boolean belongsToDao) {
+			boolean belongsToDao,
+			String sessionType) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.entity = entity;
 		this.paramName = paramName;
 		this.paramType = paramType;
 		this.belongsToDao = belongsToDao;
+		this.sessionType = sessionType;
 	}
 
 	@Override
@@ -80,7 +83,8 @@ public class IdFinderMethod implements MetaAttribute {
 				.append(" ")
 				.append(paramName)
 				.append(") {")
-				.append("\n\treturn entityManager.find(")
+				.append("\n\treturn entityManager")
+				.append(Constants.HIB_STATELESS_SESSION.equals(sessionType) ? ".get(" : ".find(")
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class, ")
 				.append(paramName)

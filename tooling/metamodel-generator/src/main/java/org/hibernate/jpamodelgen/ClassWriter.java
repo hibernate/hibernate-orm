@@ -26,14 +26,13 @@ import javax.tools.FileObject;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
-import org.hibernate.jpamodelgen.util.TypeUtils;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 
 /**
- * Helper class to write the actual meta model class using the  {@link javax.annotation.processing.Filer} API.
+ * Helper class to write the actual metamodel class using the  {@link javax.annotation.processing.Filer} API.
  *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
@@ -194,8 +193,8 @@ public final class ClassWriter {
 		// to allow for the case that the metamodel class for the super entity is for example contained in another
 		// jar file we use reflection. However, we need to consider the fact that there is xml configuration
 		// and annotations should be ignored
-		if ( !entityMetaComplete && ( containsAnnotation( superClassElement, Constants.ENTITY )
-				|| containsAnnotation( superClassElement, Constants.MAPPED_SUPERCLASS ) ) ) {
+		if ( !entityMetaComplete
+				&& containsAnnotation( superClassElement, Constants.ENTITY, Constants.MAPPED_SUPERCLASS ) ) {
 			return true;
 		}
 

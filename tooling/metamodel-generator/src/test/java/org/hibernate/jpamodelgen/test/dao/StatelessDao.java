@@ -1,7 +1,7 @@
 package org.hibernate.jpamodelgen.test.dao;
 
-import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
+import org.hibernate.StatelessSession;
 import org.hibernate.annotations.processing.Find;
 import org.hibernate.annotations.processing.HQL;
 import org.hibernate.annotations.processing.SQL;
@@ -9,9 +9,9 @@ import org.hibernate.query.SelectionQuery;
 
 import java.util.List;
 
-public interface Dao {
+public interface StatelessDao {
 
-    EntityManager getEntityManager();
+    StatelessSession getSession();
 
     @Find
     Book getBook(String isbn);

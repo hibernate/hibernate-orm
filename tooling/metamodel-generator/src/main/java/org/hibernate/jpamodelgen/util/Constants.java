@@ -68,6 +68,7 @@ public final class Constants {
 	public static final String HIB_QUERY = "org.hibernate.query.Query";
 	public static final String HIB_SELECTION_QUERY = "org.hibernate.query.SelectionQuery";
 	public static final String HIB_SESSION = "org.hibernate.Session";
+	public static final String HIB_STATELESS_SESSION = "org.hibernate.StatelessSession";
 
 	public static final String SINGULAR_ATTRIBUTE = "jakarta.persistence.metamodel.SingularAttribute";
 	public static final String COLLECTION_ATTRIBUTE = "jakarta.persistence.metamodel.CollectionAttribute";

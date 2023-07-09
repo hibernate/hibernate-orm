@@ -37,7 +37,9 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 			String entity,
 			boolean belongsToDao,
 			String sessionType,
-			List<String> fetchProfiles, List<String> paramNames, List<String> paramTypes) {
+			List<String> fetchProfiles,
+			List<String> paramNames,
+			List<String> paramTypes) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.entity = entity;

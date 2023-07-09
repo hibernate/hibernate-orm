@@ -32,8 +32,6 @@ import org.hibernate.jpamodelgen.annotation.AnnotationMetaEntity;
 import org.hibernate.jpamodelgen.annotation.AnnotationMetaPackage;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
-import org.hibernate.jpamodelgen.util.StringUtil;
-import org.hibernate.jpamodelgen.util.TypeUtils;
 import org.hibernate.jpamodelgen.xml.JpaDescriptorParser;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -44,8 +42,8 @@ import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.jpamodelgen.util.Constants.FIND;
 import static org.hibernate.jpamodelgen.util.Constants.HQL;
 import static org.hibernate.jpamodelgen.util.Constants.SQL;
-import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
-import static org.hibernate.jpamodelgen.util.TypeUtils.isAnnotationMirrorOfType;
+import static org.hibernate.jpamodelgen.util.StringUtil.isProperty;
+import static org.hibernate.jpamodelgen.util.TypeUtils.*;
 
 /**
  * Main annotation processor.
@@ -105,8 +103,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 		boolean fullyAnnotationConfigured = handleSettings( processingEnvironment );
 		if ( !fullyAnnotationConfigured ) {
-			JpaDescriptorParser parser = new JpaDescriptorParser( context );
-			parser.parseXml();
+			new JpaDescriptorParser( context ).parseXml();
 			if ( context.isFullyXmlConfigured() ) {
 				createMetaModelClasses();
 			}
@@ -132,7 +129,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			context.setAddGeneratedAnnotation( jakartaAnnotationPackage != null );
 		}
 
-		context.setAddGenerationDate(parseBoolean( options.get( ADD_GENERATION_DATE ) ) );
+		context.setAddGenerationDate( parseBoolean( options.get( ADD_GENERATION_DATE ) ) );
 
 		context.setAddSuppressWarningsAnnotation( parseBoolean( options.get( ADD_SUPPRESS_WARNINGS_ANNOTATION ) ) );
 
@@ -351,11 +348,9 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 									+ "' since xml configuration is metadata complete.");
 				}
 				else {
-					boolean requiresLazyMemberInitialization = false;
-					if ( containsAnnotation( element, Constants.EMBEDDABLE ) ||
-							containsAnnotation( element, Constants.MAPPED_SUPERCLASS ) ) {
-						requiresLazyMemberInitialization = true;
-					}
+					boolean requiresLazyMemberInitialization
+							= containsAnnotation( element, Constants.EMBEDDABLE )
+							|| containsAnnotation( element, Constants.MAPPED_SUPERCLASS );
 					final AnnotationMetaEntity metaEntity =
 							AnnotationMetaEntity.create( (TypeElement) element, context, requiresLazyMemberInitialization );
 					if ( alreadyExistingMetaEntity != null ) {
@@ -369,12 +364,12 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 	private void handleRootElementAuxiliaryAnnotationMirrors(final Element element) {
 		if ( element instanceof TypeElement ) {
-			AnnotationMetaEntity metaEntity =
+			final AnnotationMetaEntity metaEntity =
 					AnnotationMetaEntity.create( (TypeElement) element, context, false );
 			context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 		}
 		else if ( element instanceof PackageElement ) {
-			AnnotationMetaPackage metaEntity =
+			final AnnotationMetaPackage metaEntity =
 					AnnotationMetaPackage.create( (PackageElement) element, context );
 			context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 		}
@@ -382,15 +377,14 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	}
 
 	private @Nullable Metamodel tryGettingExistingEntityFromContext(AnnotationMirror mirror, String qualifiedName) {
-		Metamodel alreadyExistingMetaEntity = null;
 		if ( isAnnotationMirrorOfType( mirror, Constants.ENTITY )
 				|| isAnnotationMirrorOfType( mirror, Constants.MAPPED_SUPERCLASS ) ) {
-			alreadyExistingMetaEntity = context.getMetaEntity( qualifiedName );
+			return context.getMetaEntity( qualifiedName );
 		}
 		else if ( isAnnotationMirrorOfType( mirror, Constants.EMBEDDABLE ) ) {
-			alreadyExistingMetaEntity = context.getMetaEmbeddable( qualifiedName );
+			return context.getMetaEmbeddable( qualifiedName );
 		}
-		return alreadyExistingMetaEntity;
+		return null;
 	}
 
 	private void addMetaEntityToContext(AnnotationMirror mirror, AnnotationMetaEntity metaEntity) {
@@ -420,36 +414,26 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		public Boolean visitDeclared(DeclaredType declaredType, Element element) {
 			TypeElement returnedElement = (TypeElement) context.getTypeUtils().asElement( declaredType );
 
-			String fqNameOfReturnType = returnedElement.getQualifiedName().toString();
-			String collection = Constants.COLLECTIONS.get( fqNameOfReturnType );
+			final String fqNameOfReturnType = returnedElement.getQualifiedName().toString();
+			final String collection = Constants.COLLECTIONS.get( fqNameOfReturnType );
 			if ( collection != null ) {
-				TypeMirror collectionElementType = TypeUtils.getCollectionElementType(
-						declaredType, fqNameOfReturnType, null, context
-				);
-
+				final TypeMirror collectionElementType =
+						getCollectionElementType( declaredType, fqNameOfReturnType, null, context );
 				final Element collectionElement = context.getTypeUtils().asElement( collectionElementType );
 				if ( ElementKind.TYPE_PARAMETER.equals( collectionElement.getKind() ) ) {
-					return Boolean.FALSE;
+					return false;
 				}
-
 				returnedElement = (TypeElement) collectionElement;
 			}
 
-			return type.getQualifiedName().toString().equals( returnedElement.getQualifiedName().toString() );
+			return type.getQualifiedName().contentEquals( returnedElement.getQualifiedName() );
 		}
 
 		@Override
 		public Boolean visitExecutable(ExecutableType t, Element element) {
-			if ( !element.getKind().equals( ElementKind.METHOD ) ) {
-				return false;
-			}
-
-			String string = element.getSimpleName().toString();
-			if ( !StringUtil.isProperty( string, TypeUtils.toTypeString( t.getReturnType() ) ) ) {
-				return false;
-			}
-
-			return t.getReturnType().accept( this, element );
+			return element.getKind().equals(ElementKind.METHOD)
+				&& isProperty( element.getSimpleName().toString(), toTypeString( t.getReturnType() ) )
+				&& t.getReturnType().accept( this, element );
 		}
 	}
 }

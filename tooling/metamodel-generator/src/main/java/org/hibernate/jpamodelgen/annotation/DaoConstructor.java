@@ -20,7 +20,12 @@ public class DaoConstructor implements MetaAttribute {
 	private final String returnTypeName;
 	private final boolean inject;
 
-	public DaoConstructor(Metamodel annotationMetaEntity, String constructorName, String methodName, String returnTypeName, boolean inject) {
+	public DaoConstructor(
+			Metamodel annotationMetaEntity,
+			String constructorName,
+			String methodName,
+			String returnTypeName,
+			boolean inject) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.constructorName = constructorName;
 		this.methodName = methodName;

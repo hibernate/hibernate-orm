@@ -50,7 +50,7 @@ public interface SqmExpressible<J> extends BindableType<J> {
 	default String getTypeName() {
 		// default impl to handle the general case returning the Java type name
 		JavaType<J> expressibleJavaType = getExpressibleJavaType();
-		return expressibleJavaType == null ? "unknown" : expressibleJavaType.getJavaType().getTypeName();
+		return expressibleJavaType == null ? "unknown" : expressibleJavaType.getTypeName();
 	}
 
 	DomainType<J> getSqmType();

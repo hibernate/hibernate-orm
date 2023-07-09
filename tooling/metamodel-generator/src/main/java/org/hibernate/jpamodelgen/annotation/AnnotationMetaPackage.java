@@ -133,4 +133,9 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	void putMember(String name, MetaAttribute nameMetaAttribute) {
 		members.put( name, nameMetaAttribute );
 	}
+
+	@Override
+	boolean belongsToDao() {
+		return false;
+	}
 }

@@ -87,6 +87,13 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	/**
+	 * Get the name of the Java type.
+	 */
+	default String getTypeName() {
+		return getJavaType().getTypeName();
+	}
+
+	/**
 	 * Is the given value an instance of the described type?
 	 * <p>
 	 * Usually just {@link #getJavaTypeClass() getJavaTypeClass().}{@link Class#isInstance isInstance(value)},

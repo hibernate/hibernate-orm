@@ -221,6 +221,18 @@ public final class TypeUtils {
 		return null;
 	}
 
+	public static @Nullable AnnotationValue getAnnotationValueRef(AnnotationMirror annotationMirror, String parameterValue) {
+		assert annotationMirror != null;
+		assert parameterValue != null;
+		for ( Map.Entry<? extends ExecutableElement, ? extends AnnotationValue> entry
+				: annotationMirror.getElementValues().entrySet() ) {
+			if ( entry.getKey().getSimpleName().contentEquals( parameterValue ) ) {
+				return entry.getValue();
+			}
+		}
+		return null;
+	}
+
 	public static void determineAccessTypeForHierarchy(TypeElement searchedElement, Context context) {
 		final String fqcn = searchedElement.getQualifiedName().toString();
 		context.logMessage( Diagnostic.Kind.OTHER, "Determining access type for " + fqcn );

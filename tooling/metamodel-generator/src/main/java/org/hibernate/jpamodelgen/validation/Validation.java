@@ -12,6 +12,7 @@ import org.antlr.v4.runtime.DefaultErrorStrategy;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.atn.PredictionMode;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.PropertyNotFoundException;
 import org.hibernate.QueryException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -22,6 +23,7 @@ import org.hibernate.query.hql.internal.SemanticQueryBuilder;
 import org.hibernate.query.sqm.EntityTypeException;
 import org.hibernate.query.sqm.PathElementException;
 import org.hibernate.query.sqm.TerminalPathException;
+import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 
 import java.util.ArrayList;
@@ -46,17 +48,17 @@ public class Validation {
 		int getErrorCount();
 	}
 
-	public static void validate(
+	public static @Nullable SqmStatement<?> validate(
 			String hql,
 			boolean checkParams, boolean checkTyping,
 			Set<Integer> setParameterLabels,
 			Set<String> setParameterNames,
 			Handler handler,
 			SessionFactoryImplementor factory) {
-		validate( hql, checkParams, checkTyping, setParameterLabels, setParameterNames, handler, factory, 0 );
+		return validate( hql, checkParams, checkTyping, setParameterLabels, setParameterNames, handler, factory, 0 );
 	}
 
-	public static void validate(
+	public static @Nullable SqmStatement<?> validate(
 			String hql,
 			boolean checkParams, boolean checkTyping,
 			Set<Integer> setParameterLabels,
@@ -69,25 +71,28 @@ public class Validation {
 		try {
 			final HqlParser.StatementContext statementContext = parseAndCheckSyntax( hql, handler );
 			if ( checkTyping && handler.getErrorCount() == 0 ) {
-				checkTyping( hql, handler, factory, errorOffset, statementContext );
-			}
-			if ( checkParams ) {
-				checkParameterBinding( hql, setParameterLabels, setParameterNames, handler, errorOffset );
+				final SqmStatement<?> statement =
+						checkTyping( hql, handler, factory, errorOffset, statementContext );
+				if ( checkParams ) {
+					checkParameterBinding( hql, setParameterLabels, setParameterNames, handler, errorOffset );
+				}
+				return statement;
 			}
 		}
 		catch (Exception e) {
 //			e.printStackTrace();
 		}
+		return null;
 	}
 
-	private static void checkTyping(
+	private static @Nullable SqmStatement<?> checkTyping(
 			String hql,
 			Handler handler,
 			SessionFactoryImplementor factory,
 			int errorOffset,
 			HqlParser.StatementContext statementContext) {
 		try {
-			new SemanticQueryBuilder<>( Object[].class, () -> false, factory )
+			return new SemanticQueryBuilder<>( Object[].class, () -> false, factory )
 					.visitStatement( statementContext );
 		}
 		catch ( JdbcTypeRecommendationException ignored ) {
@@ -95,11 +100,12 @@ public class Validation {
 		}
 		catch ( QueryException | PathElementException | TerminalPathException | EntityTypeException
 				| PropertyNotFoundException se ) { //TODO is this one really thrown by core? It should not be!
-			String message = se.getMessage();
+			final String message = se.getMessage();
 			if ( message != null ) {
 				handler.error( -errorOffset +1, -errorOffset + hql.length(), message );
 			}
 		}
+		return null;
 	}
 
 	private static HqlParser.StatementContext parseAndCheckSyntax(String hql, Handler handler) {

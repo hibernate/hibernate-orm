@@ -6,18 +6,22 @@
  */
 package org.hibernate.jpamodelgen.annotation;
 
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.validation.ProcessorSessionFactory;
 import org.hibernate.jpamodelgen.validation.Validation;
+import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import java.util.List;
 
 import static java.util.Collections.emptySet;
-import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
-import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
+import static org.hibernate.jpamodelgen.util.TypeUtils.*;
 
 public abstract class AnnotationMeta implements Metamodel {
 
@@ -44,61 +48,90 @@ public abstract class AnnotationMeta implements Metamodel {
 	void checkNamedQueries() {
 		boolean checkHql = containsAnnotation( getElement(), Constants.CHECK_HQL )
 						|| containsAnnotation( getElement().getEnclosingElement(), Constants.CHECK_HQL );
-		checkNamedQueriesForAnnotation( Constants.NAMED_QUERY, checkHql );
-		checkNamedQueriesForRepeatableAnnotation( Constants.NAMED_QUERIES, checkHql );
-		checkNamedQueriesForAnnotation( Constants.HIB_NAMED_QUERY, checkHql );
-		checkNamedQueriesForRepeatableAnnotation( Constants.HIB_NAMED_QUERIES, checkHql );
+		handleNamedQueryAnnotation( Constants.NAMED_QUERY, checkHql );
+		handleNamedQueryRepeatableAnnotation( Constants.NAMED_QUERIES, checkHql );
+		handleNamedQueryAnnotation( Constants.HIB_NAMED_QUERY, checkHql );
+		handleNamedQueryRepeatableAnnotation( Constants.HIB_NAMED_QUERIES, checkHql );
 	}
 
-	private void checkNamedQueriesForAnnotation(String annotationName, boolean checkHql) {
+	private void handleNamedQueryAnnotation(String annotationName, boolean checkHql) {
 		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			checkNamedQueriesForMirror( mirror, checkHql );
+			handleNamedQuery( mirror, checkHql );
 		}
 	}
 
-	private void checkNamedQueriesForRepeatableAnnotation(String annotationName, boolean checkHql) {
+	private void handleNamedQueryRepeatableAnnotation(String annotationName, boolean checkHql) {
 		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			mirror.getElementValues().forEach((key, value) -> {
-				if ( key.getSimpleName().contentEquals("value") ) {
-					List<? extends AnnotationMirror> values =
-							(List<? extends AnnotationMirror>) value.getValue();
-					for ( AnnotationMirror annotationMirror : values ) {
-						checkNamedQueriesForMirror( annotationMirror, checkHql );
+			final Object value = getAnnotationValue( mirror, "value" );
+			if ( value instanceof List ) {
+				@SuppressWarnings("unchecked")
+				final List<? extends AnnotationMirror> values =
+						(List<? extends AnnotationMirror>) value;
+				for ( AnnotationMirror annotationMirror : values ) {
+					handleNamedQuery( annotationMirror, checkHql );
+				}
+			}
+		}
+	}
+
+	private void handleNamedQuery(AnnotationMirror mirror, boolean checkHql) {
+		final Object nameValue = getAnnotationValue( mirror, "name" );
+		if ( nameValue instanceof String ) {
+			final String name = nameValue.toString();
+			final boolean reportErrors = getContext().checkNamedQuery( name );
+			final AnnotationValue value = getAnnotationValueRef( mirror, "query" );
+			if ( value != null ) {
+				final Object query = value.getValue();
+				if ( query instanceof String ) {
+					final String hql = (String) query;
+					final SqmStatement<?> statement =
+							Validation.validate(
+									hql,
+									false, true,
+									emptySet(), emptySet(),
+									// If we are in the scope of @CheckHQL, semantic errors in the
+									// query result in compilation errors. Otherwise, they only
+									// result in warnings, so we don't break working code.
+									new WarningErrorHandler( mirror, value, hql, reportErrors, checkHql ),
+									ProcessorSessionFactory.create( getContext().getProcessingEnvironment() )
+							);
+					if ( statement instanceof SqmSelectStatement
+							&& isQueryMethodName( name ) ) {
+						putMember( name,
+								new NamedQueryMethod(
+										this,
+										(SqmSelectStatement<?>) statement,
+										name.substring(1),
+										belongsToDao()
+								)
+						);
 					}
 				}
-			});
+			}
 		}
 	}
 
-	private void checkNamedQueriesForMirror(AnnotationMirror mirror, boolean checkHql) {
-		mirror.getElementValues().forEach((key, value) -> {
-			if ( key.getSimpleName().contentEquals("query") ) {
-				final String hql = value.getValue().toString();
-				Validation.validate(
-						hql,
-						false, checkHql,
-						emptySet(), emptySet(),
-						new ErrorHandler( getElement(), mirror, hql, getContext() ),
-						ProcessorSessionFactory.create( getContext().getProcessingEnvironment() )
-				);
-			}
-		});
+	private static boolean isQueryMethodName(String name) {
+		return name.length() >= 2
+			&& name.charAt(0) == '#'
+			&& Character.isJavaIdentifierStart( name.charAt(1) )
+			&& name.substring(2).chars().allMatch(Character::isJavaIdentifierPart);
 	}
 
 	private void addAuxiliaryMembersForRepeatableAnnotation(String annotationName, String prefix) {
 		final AnnotationMirror mirror = getAnnotationMirror( getElement(), annotationName );
 		if ( mirror != null ) {
-			mirror.getElementValues().forEach((key, value) -> {
-				if ( key.getSimpleName().contentEquals("value") ) {
-					List<? extends AnnotationMirror> values =
-							(List<? extends AnnotationMirror>) value.getValue();
-					for ( AnnotationMirror annotationMirror : values ) {
-						addAuxiliaryMembersForMirror( annotationMirror, prefix );
-					}
+			final Object value = getAnnotationValue( mirror, "value" );
+			if ( value instanceof List ) {
+				@SuppressWarnings("unchecked")
+				final List<? extends AnnotationMirror> values =
+						(List<? extends AnnotationMirror>) value;
+				for ( AnnotationMirror annotationMirror : values ) {
+					addAuxiliaryMembersForMirror( annotationMirror, prefix );
 				}
-			});
+			}
 		}
 	}
 
@@ -113,11 +146,52 @@ public abstract class AnnotationMeta implements Metamodel {
 		mirror.getElementValues().forEach((key, value) -> {
 			if ( key.getSimpleName().contentEquals("name") ) {
 				final String name = value.getValue().toString();
-				putMember( prefix + name,
-						new NameMetaAttribute( this, name, prefix ) );
+				if ( !name.isEmpty() ) {
+					putMember( prefix + name,
+							new NameMetaAttribute( this, name, prefix ) );
+				}
 			}
 		});
 	}
 
+	abstract boolean belongsToDao();
+
 	abstract void putMember(String name, MetaAttribute nameMetaAttribute);
+
+	private class WarningErrorHandler extends ErrorHandler {
+		private final boolean reportErrors;
+		private final boolean checkHql;
+
+		public WarningErrorHandler(AnnotationMirror mirror, AnnotationValue value, String hql, boolean reportErrors, boolean checkHql) {
+			super( AnnotationMeta.this.getElement(), mirror, value, hql, AnnotationMeta.this.getContext() );
+			this.reportErrors = reportErrors;
+			this.checkHql = checkHql;
+		}
+
+		@Override
+		public void error(int start, int end, String message) {
+			if (reportErrors) {
+				if (checkHql) {
+					super.error( start, end, message );
+				}
+				else {
+					super.warn( start, end, message );
+				}
+			}
+		}
+
+		@Override
+		public void warn(int start, int end, String message) {
+			if (reportErrors) {
+				super.warn( start, end, message );
+			}
+		}
+
+		@Override
+		public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String message, RecognitionException e) {
+			if (reportErrors) {
+				super.syntaxError( recognizer, offendingSymbol, line, charPositionInLine, message, e );
+			}
+		}
+	}
 }

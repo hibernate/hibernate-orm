@@ -13,6 +13,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.GenericArrayType;
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.URL;
@@ -78,8 +79,21 @@ public class TestUtil {
 		);
 	}
 
+	public static void assertPresenceOfMethodInMetamodelFor(Class<?> clazz, String methodName, Class<?>... params) {
+		assertPresenceOfMethodInMetamodelFor(
+				clazz,
+				methodName,
+				"'" + methodName + "' should appear in metamodel class",
+				params
+		);
+	}
+
 	public static void assertPresenceOfFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
 		assertTrue( buildErrorString( errorString, clazz ), hasFieldInMetamodelFor( clazz, fieldName ) );
+	}
+
+	public static void assertPresenceOfMethodInMetamodelFor(Class<?> clazz, String fieldName, String errorString, Class<?>... params) {
+		assertTrue( buildErrorString( errorString, clazz ), hasMethodInMetamodelFor( clazz, fieldName, params ) );
 	}
 
 	public static void assertPresenceOfNameFieldInMetamodelFor(Class<?> clazz, String fieldName, String errorString) {
@@ -254,14 +268,22 @@ public class TestUtil {
 
 	public static Field getFieldFromMetamodelFor(Class<?> entityClass, String fieldName) {
 		Class<?> metaModelClass = getMetamodelClassFor( entityClass );
-		Field field;
 		try {
-			field = metaModelClass.getDeclaredField( fieldName );
+			return metaModelClass.getDeclaredField( fieldName );
 		}
 		catch ( NoSuchFieldException e ) {
-			field = null;
+			return null;
 		}
-		return field;
+	}
+
+	public static Method getMethodFromMetamodelFor(Class<?> entityClass, String methodName, Class<?>... params) {
+		Class<?> metaModelClass = getMetamodelClassFor( entityClass );
+		try {
+			return metaModelClass.getDeclaredMethod( methodName, params );
+		}
+		catch ( NoSuchMethodException e ) {
+			return null;
+		}
 	}
 
 	public static String fcnToPath(String fcn) {
@@ -270,6 +292,10 @@ public class TestUtil {
 
 	private static boolean hasFieldInMetamodelFor(Class<?> clazz, String fieldName) {
 		return getFieldFromMetamodelFor( clazz, fieldName ) != null;
+	}
+
+	private static boolean hasMethodInMetamodelFor(Class<?> clazz, String fieldName, Class<?>... params) {
+		return getMethodFromMetamodelFor( clazz, fieldName, params ) != null;
 	}
 
 	private static String buildErrorString(String baseError, Class<?> clazz) {

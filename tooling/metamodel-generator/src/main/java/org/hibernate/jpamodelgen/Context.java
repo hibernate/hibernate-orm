@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -72,6 +73,9 @@ public final class Context {
 
 	// keep track of all classes for which model have been generated
 	private final Collection<String> generatedModelClasses = new HashSet<>();
+
+	// keep track of which named queries have been checked
+	private Set<String> checkedNamedQueries = new HashSet<>();
 
 	public Context(ProcessingEnvironment processingEnvironment) {
 		this.processingEnvironment = processingEnvironment;
@@ -266,13 +270,15 @@ public final class Context {
 		getProcessingEnvironment().getMessager()
 				.printMessage( severity, message, method );
 	}
+
+	public void message(Element method, AnnotationMirror mirror, AnnotationValue value, String message, Diagnostic.Kind severity) {
+		getProcessingEnvironment().getMessager()
+				.printMessage( severity, message, method, mirror, value );
+	}
+
 	public void message(Element method, AnnotationMirror mirror, String message, Diagnostic.Kind severity) {
 		getProcessingEnvironment().getMessager()
-				.printMessage( severity, message, method, mirror,
-						mirror.getElementValues().entrySet().stream()
-								.filter( entry -> entry.getKey().getSimpleName().contentEquals("query")
-										|| entry.getKey().getSimpleName().contentEquals("value") )
-								.map(Map.Entry::getValue).findAny().orElseThrow() );
+				.printMessage( severity, message, method, mirror );
 	}
 
 	@Override
@@ -287,5 +293,9 @@ public final class Context {
 		sb.append( ", persistenceXmlLocation='" ).append( persistenceXmlLocation ).append( '\'' );
 		sb.append( '}' );
 		return sb.toString();
+	}
+
+	public boolean checkNamedQuery(String name) {
+		return checkedNamedQueries.add(name);
 	}
 }

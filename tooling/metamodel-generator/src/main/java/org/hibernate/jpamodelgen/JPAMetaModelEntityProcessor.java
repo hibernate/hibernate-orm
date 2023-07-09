@@ -164,12 +164,13 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			);
 		}
 		else {
+			context.logMessage( Diagnostic.Kind.OTHER, "Starting new round" );
 			try {
 				processClasses( roundEnvironment );
 				createMetaModelClasses();
 			}
 			catch (Exception e) {
-				context.logMessage( Diagnostic.Kind.ERROR, "Error generating JPA metamodel:" + e.getMessage() );
+				context.logMessage( Diagnostic.Kind.ERROR, "Error generating JPA metamodel: " + e.getMessage() );
 			}
 		}
 		return ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS;

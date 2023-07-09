@@ -8,7 +8,8 @@ package org.hibernate.jpamodelgen.annotation;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
-import org.hibernate.jpamodelgen.util.StringUtil;
+
+import static org.hibernate.jpamodelgen.util.StringUtil.nameToFieldName;
 
 /**
  * @author Gavin King
@@ -46,13 +47,17 @@ class NameMetaAttribute implements MetaAttribute {
 				.append(annotationMetaEntity.importType(String.class.getName()))
 				.append(" ")
 				.append(prefix)
-				.append(StringUtil.nameToFieldName(name))
+				.append(fieldName())
 				.append(" = ")
 				.append("\"")
 				.append(name)
 				.append("\"")
 				.append(";")
 				.toString();
+	}
+
+	private String fieldName() {
+		return nameToFieldName(name.charAt(0) == '#' ? name.substring(1) : name);
 	}
 
 	@Override

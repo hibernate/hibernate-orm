@@ -142,13 +142,12 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 	}
 
 	static Type propertyType(Element member, String entityName, String path, AccessType defaultAccessType) {
-		TypeMirror memberType = memberType(member);
+		final TypeMirror memberType = memberType(member);
 		if (isEmbeddedProperty(member)) {
 			return component.make(asElement(memberType), entityName, path, defaultAccessType);
 		}
 		else if (isToOneAssociation(member)) {
-			String targetEntity = getToOneTargetEntity(member);
-			return new ManyToOneType(typeConfiguration, targetEntity);
+			return new ManyToOneType(typeConfiguration, getToOneTargetEntity(member));
 		}
 		else if (isToManyAssociation(member)) {
 			return collectionType(memberType, qualify(entityName, path));
@@ -157,12 +156,33 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 			return collectionType(memberType, qualify(entityName, path));
 		}
 		else if (isEnumProperty(member)) {
-			return new BasicTypeImpl(new EnumJavaType(Enum.class), enumJdbcType(member));
+			return enumType( member, memberType );
 		}
 		else {
 			return typeConfiguration.getBasicTypeRegistry()
 					.getRegisteredType(qualifiedName(memberType));
 		}
+	}
+
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private static BasicType<?> enumType(Element member, TypeMirror memberType) {
+		final Class<Enum> enumClass = Enum.class; // because we can't load the real enum class!
+		return enumType( member, qualifiedName( memberType ), enumClass );
+	}
+
+	private static <T extends Enum<T>> BasicType<T> enumType(Element member, String typeName, Class<T> enumClass) {
+		final EnumJavaType<T> javaType = new EnumJavaType<>( enumClass ) {
+			@Override
+			public String getTypeName() {
+				return typeName;
+			}
+		};
+		return new BasicTypeImpl<>( javaType, enumJdbcType(member) ) {
+			@Override
+			public String getTypeName() {
+				return typeName;
+			}
+		};
 	}
 
 	private static JdbcType enumJdbcType(Element member) {
@@ -395,7 +415,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		return null;
 	}
 
-	private static TypeElement findEntityByUnqualifiedName(String entityName, ModuleElement module) {
+	public static TypeElement findEntityByUnqualifiedName(String entityName, ModuleElement module) {
 		for (Element element: module.getEnclosedElements()) {
 			if (element.getKind() == ElementKind.PACKAGE) {
 				PackageElement pack = (PackageElement) element;

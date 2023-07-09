@@ -47,6 +47,7 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.determineAccessTypeForHie
 import static org.hibernate.jpamodelgen.util.TypeUtils.determineAnnotationSpecifiedAccessType;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValue;
+import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValueRef;
 
 /**
  * Class used to collect meta information about an annotated type (entity, embeddable or mapped superclass).
@@ -199,6 +200,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	@Override
 	void putMember(String name, MetaAttribute nameMetaAttribute) {
 		members.put( name, nameMetaAttribute );
+	}
+
+	@Override
+	public boolean belongsToDao() {
+		return dao;
 	}
 
 	@Override
@@ -642,36 +648,39 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			@Nullable TypeElement containerType,
 			AnnotationMirror mirror,
 			boolean isNative) {
-		final Object queryString = getAnnotationValue( mirror, "value" );
-		if ( queryString instanceof String ) {
-			final List<String> paramNames = parameterNames( method );
-			final List<String> paramTypes = parameterTypes( method );
-			final String hql = (String) queryString;
-			final QueryMethod attribute =
-					new QueryMethod(
-							this,
-							method.getSimpleName().toString(),
-							hql,
-							returnType == null ? null : returnType.toString(),
-							containerType == null ? null : containerType.getQualifiedName().toString(),
-							paramNames,
-							paramTypes,
-							isNative,
-							dao,
-							sessionType
-					);
-			putMember( attribute.getPropertyName() + paramTypes, attribute );
+		final AnnotationValue value = getAnnotationValueRef( mirror, "value" );
+		if ( value != null ) {
+			final Object query = value.getValue();
+			if ( query instanceof String ) {
+				final String hql = (String) query;
+				final List<String> paramNames = parameterNames( method );
+				final List<String> paramTypes = parameterTypes( method );
+				final QueryMethod attribute =
+						new QueryMethod(
+								this,
+								method.getSimpleName().toString(),
+								hql,
+								returnType == null ? null : returnType.toString(),
+								containerType == null ? null : containerType.getQualifiedName().toString(),
+								paramNames,
+								paramTypes,
+								isNative,
+								dao,
+								sessionType
+						);
+				putMember( attribute.getPropertyName() + paramTypes, attribute );
 
-			checkParameters( method, paramNames, paramTypes, mirror, hql );
-			if ( !isNative ) {
-//				checkHqlSyntax( method, mirror, hql );
-				Validation.validate(
-						hql,
-						false, true,
-						emptySet(), emptySet(),
-						new ErrorHandler( method, mirror, hql, context ),
-						ProcessorSessionFactory.create( context.getProcessingEnvironment() )
-				);
+				checkParameters( method, paramNames, paramTypes, mirror, value, hql );
+				if ( !isNative ) {
+	//				checkHqlSyntax( method, mirror, hql );
+					Validation.validate(
+							hql,
+							false, true,
+							emptySet(), emptySet(),
+							new ErrorHandler( method, mirror, value, hql, context ),
+							ProcessorSessionFactory.create( context.getProcessingEnvironment() )
+					);
+				}
 			}
 		}
 	}
@@ -688,13 +697,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				.collect(toList());
 	}
 
-	private void checkParameters(ExecutableElement method, List<String> paramNames, List<String> paramTypes, AnnotationMirror mirror, String hql) {
+	private void checkParameters(
+			ExecutableElement method,
+			List<String> paramNames, List<String> paramTypes,
+			AnnotationMirror mirror,
+			AnnotationValue value,
+			String hql) {
 		for (int i = 1; i <= paramNames.size(); i++) {
 			final String param = paramNames.get(i-1);
 			final String type = paramTypes.get(i-1);
 			if ( parameterIsMissing( hql, i, param, type ) ) {
-				context.message( method, mirror, "missing query parameter for '" + param
-						+ "' (no parameter named :" + param + " or ?" + i + ")", Diagnostic.Kind.ERROR );
+				context.message( method, mirror, value,
+						"missing query parameter for '" + param
+								+ "' (no parameter named :" + param + " or ?" + i + ")",
+						Diagnostic.Kind.ERROR );
 			}
 		}
 	}

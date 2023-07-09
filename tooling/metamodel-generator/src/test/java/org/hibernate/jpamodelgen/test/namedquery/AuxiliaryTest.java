@@ -6,12 +6,14 @@
  */
 package org.hibernate.jpamodelgen.test.namedquery;
 
+import jakarta.persistence.EntityManager;
 import org.hibernate.jpamodelgen.test.util.CompilationTest;
 import org.hibernate.jpamodelgen.test.util.TestUtil;
 import org.hibernate.jpamodelgen.test.util.WithClasses;
 import org.junit.Test;
 
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassGeneratedFor;
+import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfMethodInMetamodelFor;
 import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfNameFieldInMetamodelFor;
 
 /**
@@ -20,8 +22,9 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertPresenceOfNameF
 public class AuxiliaryTest extends CompilationTest {
 	@Test
 	@WithClasses({ Book.class, Main.class })
-	public void testGeneratedAnnotationNotGenerated() {
+	public void test() {
 		System.out.println( TestUtil.getMetaModelSourceAsString( Main.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( Book.class ) );
 		assertMetamodelClassGeneratedFor( Book.class );
 		assertMetamodelClassGeneratedFor( Main.class );
 		assertPresenceOfNameFieldInMetamodelFor(
@@ -74,10 +77,59 @@ public class AuxiliaryTest extends CompilationTest {
 				"QUERY__SYSDATE_",
 				"Missing fetch profile attribute."
 		);
+		assertPresenceOfMethodInMetamodelFor(
+				Main.class,
+				"bookByIsbn",
+				EntityManager.class,
+				String.class
+		);
+		assertPresenceOfMethodInMetamodelFor(
+				Main.class,
+				"bookByTitle",
+				EntityManager.class,
+				String.class
+		);
+
 		assertPresenceOfNameFieldInMetamodelFor(
 				Book.class,
 				"GRAPH_ENTITY_GRAPH",
 				"Missing fetch profile attribute."
+		);
+		assertPresenceOfMethodInMetamodelFor(
+				Book.class,
+				"findByTitle",
+				EntityManager.class,
+				String.class
+		);
+		assertPresenceOfMethodInMetamodelFor(
+				Book.class,
+				"findByTitleAndType",
+				EntityManager.class,
+				String.class,
+				Type.class
+		);
+		assertPresenceOfMethodInMetamodelFor(
+				Book.class,
+				"getTitles",
+				EntityManager.class
+		);
+		assertPresenceOfMethodInMetamodelFor(
+				Book.class,
+				"getUpperLowerTitles",
+				EntityManager.class
+		);
+		assertPresenceOfMethodInMetamodelFor(
+				Book.class,
+				"typeOfBook",
+				EntityManager.class,
+				String.class
+		);
+		assertPresenceOfMethodInMetamodelFor(
+				Book.class,
+				"crazy",
+				EntityManager.class,
+				Object.class,
+				Object.class
 		);
 	}
 }

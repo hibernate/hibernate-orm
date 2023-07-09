@@ -15,6 +15,7 @@ import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.validation.Validation;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic;
 import java.util.BitSet;
@@ -27,13 +28,15 @@ import static org.hibernate.query.hql.internal.StandardHqlTranslator.prettifyAnt
 class ErrorHandler implements Validation.Handler {
 	private final Element element;
 	private final AnnotationMirror mirror;
+	private final AnnotationValue value;
 	private final String queryString;
 	private final Context context;
 	private int errorCount;
 
-	public ErrorHandler(Element element, AnnotationMirror mirror, String queryString, Context context) {
+	public ErrorHandler(Element element, AnnotationMirror mirror, AnnotationValue value, String queryString, Context context) {
 		this.element = element;
 		this.mirror = mirror;
+		this.value = value;
 		this.queryString = queryString;
 		this.context = context;
 	}
@@ -46,11 +49,12 @@ class ErrorHandler implements Validation.Handler {
 	@Override
 	public void error(int start, int end, String message) {
 		errorCount++;
-		context.message( element, mirror, message, Diagnostic.Kind.ERROR );
+		context.message( element, mirror, value, message, Diagnostic.Kind.ERROR );
 	}
 
 	@Override
 	public void warn(int start, int end, String message) {
+		context.message( element, mirror, value, message, Diagnostic.Kind.WARNING );
 	}
 
 	@Override
@@ -58,7 +62,7 @@ class ErrorHandler implements Validation.Handler {
 		errorCount++;
 		String prettyMessage = "illegal HQL syntax - "
 				+ prettifyAntlrError( offendingSymbol, line, charPositionInLine, message, e, queryString, false );
-		context.message( element, mirror, prettyMessage, Diagnostic.Kind.ERROR );
+		context.message( element, mirror, value, prettyMessage, Diagnostic.Kind.ERROR );
 	}
 
 	@Override

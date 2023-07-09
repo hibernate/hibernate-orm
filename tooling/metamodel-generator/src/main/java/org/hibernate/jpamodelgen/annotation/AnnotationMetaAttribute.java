@@ -13,7 +13,8 @@ import javax.lang.model.util.Elements;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
-import org.hibernate.jpamodelgen.util.StringUtil;
+
+import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
  * Captures all information about an annotated persistent attribute.
@@ -70,7 +71,7 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 				.append("public static final ")
 				.append(parent.importType(String.class.getName()))
 				.append(" ")
-				.append(StringUtil.getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName()))
+				.append(getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName()))
 				.append(" = ")
 				.append("\"")
 				.append(getPropertyName())

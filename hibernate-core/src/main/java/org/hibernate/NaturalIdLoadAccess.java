@@ -110,7 +110,7 @@ public interface NaturalIdLoadAccess<T> {
 	 * Determines if cached natural id cross-references are synchronized
 	 * before query execution with unflushed modifications made in memory
 	 * to {@linkplain org.hibernate.annotations.NaturalId#mutable mutable}
-	 * natural ids .
+	 * natural ids.
 	 * <p>
 	 * By default, every cached cross-reference is updated to reflect any
 	 * modification made in memory.

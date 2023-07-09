@@ -8,7 +8,6 @@ package org.hibernate.loader.ast.internal;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockMode;

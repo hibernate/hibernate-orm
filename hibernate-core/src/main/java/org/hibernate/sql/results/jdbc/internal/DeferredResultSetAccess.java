@@ -232,7 +232,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 					.getEventListenerManager();
 
 			long executeStartNanos = 0;
-			if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
+			if ( sqlStatementLogger.getLogSlowQuery() > 0 ) {
 				executeStartNanos = System.nanoTime();
 			}
 			try {

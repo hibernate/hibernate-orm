@@ -20,7 +20,6 @@ import org.hibernate.query.internal.SimpleQueryOptions;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryOptionsAdapter;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.CallbackImpl;
@@ -34,14 +33,14 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 /**
- * todo (6.0) : this can generically define a load-by-uk as well.  only the SQL AST and `restrictivePart` vary and they are passed as ctor args
- *
  * Describes a plan for loading an entity by identifier.
  *
  * @implNote Made up of (1) a SQL AST for the SQL SELECT and (2) the `ModelPart` used as the restriction
  *
  * @author Steve Ebersole
  */
+// todo (6.0) : this can generically define a load-by-uk as well.
+// only the SQL AST and `restrictivePart` vary and they are passed as constructor args
 public class SingleIdLoadPlan<T> implements SingleEntityLoadPlan {
 	private final EntityMappingType entityMappingType;
 	private final ModelPart restrictivePart;

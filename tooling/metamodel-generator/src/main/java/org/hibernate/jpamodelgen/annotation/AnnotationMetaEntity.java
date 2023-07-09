@@ -11,17 +11,22 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.lang.model.element.*;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic;
 
-import jakarta.persistence.EntityManager;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.Session;
-import org.hibernate.StatelessSession;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.ProcessLaterException;
@@ -168,7 +173,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	public void mergeInMembers(Metamodel other) {
-		// store the entity in order do the merge lazily in case of a non-initialized embeddedable or mapped superclass
+		// store the entity in order do the merge lazily in case of
+		// an uninitialized embeddedable or mapped superclass
 		if ( !initialized ) {
 			this.entityToMerge = other;
 		}
@@ -220,7 +226,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	protected final void init() {
-		getContext().logMessage( Diagnostic.Kind.OTHER, "Initializing type " + getQualifiedName() + "." );
+		getContext().logMessage( Diagnostic.Kind.OTHER, "Initializing type '" + getQualifiedName() + "'" );
 
 		determineAccessTypeForHierarchy( element, context );
 		entityAccessTypeInfo = castNonNull( context.getAccessTypeInfo( getQualifiedName() ) );
@@ -271,12 +277,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private static boolean isSessionGetter(ExecutableElement getterOrSetter) {
 		final TypeMirror type = getterOrSetter.getReturnType();
 		if ( type.getKind() == TypeKind.DECLARED ) {
-			final Element element = ((DeclaredType) type).asElement();
+			final DeclaredType declaredType = (DeclaredType) type;
+			final Element element = declaredType.asElement();
 			if ( element.getKind() == ElementKind.INTERFACE ) {
 				final Name name = ((TypeElement) element).getQualifiedName();
-				return name.contentEquals(Session.class.getName())
-					|| name.contentEquals(EntityManager.class.getName())
-					|| name.contentEquals(StatelessSession.class.getName());
+				return name.contentEquals(Constants.HIB_SESSION)
+					|| name.contentEquals(Constants.HIB_STATELESS_SESSION)
+					|| name.contentEquals(Constants.ENTITY_MANAGER);
 			}
 		}
 		return false;
@@ -495,7 +502,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<String> paramNames = parameterNames( method );
 		final List<String> paramTypes = parameterTypes( method );
 		final String methodKey = methodName + paramTypes;
-		if (  !Constants.HIB_STATELESS_SESSION.equals(sessionType) // no byNaturalId() lookup API for SS
+		if (  !usingStatelessSession() // no byNaturalId() lookup API for SS
 				&& matchesNaturalKey( method, entity ) ) {
 			putMember( methodKey,
 					new NaturalIdFinderMethod(
@@ -535,7 +542,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final String methodKey = methodName + "!";
 			switch ( fieldType ) {
 				case ID:
-					if ( !Constants.HIB_STATELESS_SESSION.equals(sessionType)
+					if ( !usingStatelessSession()
 							|| enabledFetchProfiles( method ).isEmpty() ) {  // no byId() API for SS, only get()
 						putMember( methodKey,
 								new IdFinderMethod(
@@ -552,7 +559,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						break;
 					}
 				case NATURAL_ID:
-					if ( !Constants.HIB_STATELESS_SESSION.equals(sessionType) ) { // no byNaturalId() lookup API for SS
+					if ( !usingStatelessSession()) { // no byNaturalId() lookup API for SS
 						putMember( methodKey,
 								new NaturalIdFinderMethod(
 										this,
@@ -720,5 +727,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			&& !hql.contains("?" + i)
 			&& !isPageParam(type)
 			&& !isOrderParam(type);
+	}
+
+	private boolean usingStatelessSession() {
+		return Constants.HIB_STATELESS_SESSION.equals(sessionType);
 	}
 }

@@ -138,7 +138,7 @@ public class QueryMethod implements MetaAttribute {
 				if ( paramType.endsWith("...") ) {
 					declaration
 							.append("\n\t\t\t.setOrder(")
-							.append(annotationMetaEntity.importType(List.class.getName()))
+							.append(annotationMetaEntity.importType(Constants.LIST))
 							.append(".of(")
 							.append(paramName)
 							.append("))");

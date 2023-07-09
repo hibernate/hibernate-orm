@@ -17,6 +17,7 @@ import java.util.List;
 public class IdFinderMethod extends AbstractFinderMethod {
 
 	private final String paramName;
+	private final boolean usingStatelessSession;
 
 	public IdFinderMethod(
 			Metamodel annotationMetaEntity,
@@ -28,6 +29,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, fetchProfiles,
 				List.of(paramName), List.of(paramType) );
 		this.paramName = paramName;
+		usingStatelessSession = Constants.HIB_STATELESS_SESSION.equals(sessionType);
 	}
 
 	@Override
@@ -35,7 +37,6 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		preamble( declaration );
-		final boolean usingStatelessSession = Constants.HIB_STATELESS_SESSION.equals(sessionType);
 		if ( usingStatelessSession || usingEntityManager && fetchProfiles.isEmpty() ) {
 			declaration
 					.append(usingStatelessSession ? ".get(" : ".find(")

@@ -11,15 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
-import javax.lang.model.element.Name;
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
+import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
@@ -32,6 +24,7 @@ import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
+import org.hibernate.jpamodelgen.ProcessLaterException;
 import org.hibernate.jpamodelgen.model.ImportContext;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
@@ -712,32 +705,4 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			&& !isPageParam(type)
 			&& !isOrderParam(type);
 	}
-
-//	private void checkHqlSyntax(ExecutableElement method, AnnotationMirror mirror, String queryString) {
-//		final ANTLRErrorListener errorListener = new ErrorHandler( method, mirror, queryString );
-//		final HqlLexer hqlLexer = HqlParseTreeBuilder.INSTANCE.buildHqlLexer( queryString );
-//		final HqlParser hqlParser = HqlParseTreeBuilder.INSTANCE.buildHqlParser( queryString, hqlLexer );
-//		hqlLexer.addErrorListener( errorListener );
-//		hqlParser.getInterpreter().setPredictionMode( PredictionMode.SLL );
-//		hqlParser.removeErrorListeners();
-//		hqlParser.addErrorListener( errorListener );
-//		hqlParser.setErrorHandler( new BailErrorStrategy() );
-//
-//		try {
-//			hqlParser.statement();
-//		}
-//		catch ( ParseCancellationException e) {
-//			// reset the input token stream and parser state
-//			hqlLexer.reset();
-//			hqlParser.reset();
-//
-//			// fall back to LL(k)-based parsing
-//			hqlParser.getInterpreter().setPredictionMode( PredictionMode.LL );
-//			hqlParser.setErrorHandler( new DefaultErrorStrategy() );
-//
-//			hqlParser.statement();
-//		}
-//	}
-
-
 }

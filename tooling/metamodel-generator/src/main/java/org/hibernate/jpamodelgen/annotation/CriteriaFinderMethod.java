@@ -7,7 +7,6 @@
 package org.hibernate.jpamodelgen.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 
@@ -16,16 +15,9 @@ import java.util.List;
 /**
  * @author Gavin King
  */
-public class CriteriaFinderMethod implements MetaAttribute {
-	private final Metamodel annotationMetaEntity;
-	private final String methodName;
-	private final String entity;
+public class CriteriaFinderMethod extends AbstractFinderMethod {
+
 	private final @Nullable String containerType;
-	private final List<String> paramNames;
-	private final List<String> paramTypes;
-	private final boolean belongsToDao;
-	private final String sessionType;
-	private final List<String> fetchProfiles;
 
 	public CriteriaFinderMethod(
 			Metamodel annotationMetaEntity,
@@ -35,79 +27,23 @@ public class CriteriaFinderMethod implements MetaAttribute {
 			boolean belongsToDao,
 			String sessionType,
 			List<String> fetchProfiles) {
-		this.annotationMetaEntity = annotationMetaEntity;
-		this.methodName = methodName;
-		this.entity = entity;
+		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, fetchProfiles,
+				paramNames, paramTypes );
 		this.containerType = containerType;
-		this.paramNames = paramNames;
-		this.paramTypes = paramTypes;
-		this.belongsToDao = belongsToDao;
-		this.sessionType = sessionType;
-		this.fetchProfiles = fetchProfiles;
-	}
-
-	@Override
-	public boolean hasTypedAttribute() {
-		return true;
-	}
-
-	@Override
-	public boolean hasStringAttribute() {
-		return false;
 	}
 
 	@Override
 	public String getAttributeDeclarationString() {
-		final boolean usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
-
-		StringBuilder declaration = new StringBuilder();
+		final StringBuilder declaration = new StringBuilder();
+		comment( declaration );
+		modifiers( declaration );
 		declaration
-				.append("\n/**\n * @see ")
-				.append(annotationMetaEntity.getQualifiedName())
-				.append("#")
-				.append(methodName)
-				.append("(")
-				.append(parameterList())
-				.append(")")
-				.append("\n **/\n");
-		if ( belongsToDao ) {
-			declaration
-					.append("@Override\npublic ");
-		}
-		else {
-			declaration
-					.append("public static ");
-		}
-		StringBuilder type = new StringBuilder();
-		if ( containerType != null ) {
-			type.append(annotationMetaEntity.importType(containerType)).append('<');
-		}
-		type.append(annotationMetaEntity.importType(entity));
-		if ( containerType != null ) {
-			type.append('>');
-		}
-		declaration
-				.append(type)
+				.append(returnType())
 				.append(" ")
-				.append(methodName)
-				.append("(");
-		if ( !belongsToDao ) {
-			declaration
-					.append(annotationMetaEntity.importType(Constants.ENTITY_MANAGER))
-					.append(" entityManager");
-		}
-		for ( int i = 0; i < paramNames.size(); i ++ ) {
-			if ( !belongsToDao || i > 0 ) {
-				declaration
-						.append(", ");
-			}
-			declaration
-					.append(annotationMetaEntity.importType(paramTypes.get(i)))
-					.append(" ")
-					.append(paramNames.get(i));
-		}
+				.append(methodName);
+		parameters( declaration );
 		declaration
-				.append(") {")
+				.append(" {")
 				.append("\n\tvar builder = entityManager")
 				.append(usingEntityManager
 						? ".getEntityManagerFactory()"
@@ -125,22 +61,23 @@ public class CriteriaFinderMethod implements MetaAttribute {
 				declaration
 						.append(", ");
 			}
+			final String paramName = paramNames.get(i);
 			declaration
 					.append("\n\t\t\tbuilder.equal(entity.get(")
-					.append(annotationMetaEntity.importType(entity+'_'))
+					.append(annotationMetaEntity.importType(entity + '_'))
 					.append('.')
-					.append(paramNames.get(i))
+					.append(paramName)
 					.append("), ")
 					//TODO: only safe if we are binding literals as parameters!!!
-					.append(paramNames.get(i))
+					.append(paramName)
 					.append(")");
 		}
 		declaration
 				.append("\n\t);")
 				.append("\n\treturn entityManager.createQuery(query)");
-		boolean hasEnabledFetchProfiles = !fetchProfiles.isEmpty();
-		boolean hasNativeReturnType = containerType != null && containerType.startsWith("org.hibernate");
-		boolean unwrap =
+		final boolean hasEnabledFetchProfiles = !fetchProfiles.isEmpty();
+		final boolean hasNativeReturnType = containerType != null && containerType.startsWith("org.hibernate");
+		final boolean unwrap =
 				( hasEnabledFetchProfiles || hasNativeReturnType )
 						&& usingEntityManager;
 		if ( unwrap ) {
@@ -149,12 +86,7 @@ public class CriteriaFinderMethod implements MetaAttribute {
 					.append(annotationMetaEntity.importType(Constants.HIB_SELECTION_QUERY))
 					.append(".class)");
 		}
-		for ( String profile : fetchProfiles ) {
-			declaration
-					.append("\n\t\t\t.enableFetchProfile(")
-					.append(profile)
-					.append(")");
-		}
+		enableFetchProfile( declaration );
 		if ( containerType == null) {
 			if ( unwrap || hasEnabledFetchProfiles) {
 				declaration.append("\n\t\t\t");
@@ -174,42 +106,16 @@ public class CriteriaFinderMethod implements MetaAttribute {
 		return declaration.toString();
 	}
 
-	private String parameterList() {
-		return paramTypes.stream()
-				.map(this::strip)
-				.map(annotationMetaEntity::importType)
-				.reduce((x, y) -> x + y)
-				.orElse("");
+	private StringBuilder returnType() {
+		StringBuilder type = new StringBuilder();
+		if ( containerType != null ) {
+			type.append(annotationMetaEntity.importType(containerType)).append('<');
+		}
+		type.append(annotationMetaEntity.importType(entity));
+		if ( containerType != null ) {
+			type.append('>');
+		}
+		return type;
 	}
 
-	private String strip(String type) {
-		int index = type.indexOf("<");
-		String stripped = index > 0 ? type.substring(0, index) : type;
-		return type.endsWith("...") ? stripped + "..." : stripped;
-	}
-
-	@Override
-	public String getAttributeNameDeclarationString() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public String getMetaType() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public String getPropertyName() {
-		return methodName;
-	}
-
-	@Override
-	public String getTypeDeclaration() {
-		return entity;
-	}
-
-	@Override
-	public Metamodel getHostingEntity() {
-		return annotationMetaEntity;
-	}
 }

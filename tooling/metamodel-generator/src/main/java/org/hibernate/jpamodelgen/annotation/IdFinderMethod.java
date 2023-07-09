@@ -54,6 +54,8 @@ public class IdFinderMethod implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
+		final boolean usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
+
 		StringBuilder declaration = new StringBuilder();
 		declaration
 				.append("\n/**\n * @see ")
@@ -99,7 +101,7 @@ public class IdFinderMethod implements MetaAttribute {
 					.append("\n}");
 		}
 		else {
-			if ( Constants.ENTITY_MANAGER.equals(sessionType) ) {
+			if ( usingEntityManager ) {
 				declaration
 						.append(".unwrap(")
 						.append(annotationMetaEntity.importType(Constants.HIB_SESSION))

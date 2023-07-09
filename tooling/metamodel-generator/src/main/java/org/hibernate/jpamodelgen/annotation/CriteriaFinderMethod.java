@@ -13,8 +13,6 @@ import org.hibernate.jpamodelgen.util.Constants;
 
 import java.util.List;
 
-import static org.hibernate.internal.util.StringHelper.join;
-
 /**
  * @author Gavin King
  */
@@ -60,6 +58,8 @@ public class CriteriaFinderMethod implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
+		final boolean usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
+
 		StringBuilder declaration = new StringBuilder();
 		declaration
 				.append("\n/**\n * @see ")
@@ -67,7 +67,7 @@ public class CriteriaFinderMethod implements MetaAttribute {
 				.append("#")
 				.append(methodName)
 				.append("(")
-				.append(join(",", paramTypes.stream().map(this::strip).map(annotationMetaEntity::importType).toArray()))
+				.append(parameterList())
 				.append(")")
 				.append("\n **/\n");
 		if ( belongsToDao ) {
@@ -109,7 +109,7 @@ public class CriteriaFinderMethod implements MetaAttribute {
 		declaration
 				.append(") {")
 				.append("\n\tvar builder = entityManager")
-				.append(Constants.ENTITY_MANAGER.equals(sessionType)
+				.append(usingEntityManager
 						? ".getEntityManagerFactory()"
 						: ".getFactory()")
 				.append(".getCriteriaBuilder();")
@@ -135,27 +135,19 @@ public class CriteriaFinderMethod implements MetaAttribute {
 					.append(paramNames.get(i))
 					.append(")");
 		}
-
 		declaration
 				.append("\n\t);")
-				.append("\n\treturn ");
-		if ( containerType != null
-				&& Constants.ENTITY_MANAGER.equals(sessionType)
-				&& containerType.startsWith("org.hibernate") ) {
+				.append("\n\treturn entityManager.createQuery(query)");
+		boolean hasEnabledFetchProfiles = !fetchProfiles.isEmpty();
+		boolean hasNativeReturnType = containerType != null && containerType.startsWith("org.hibernate");
+		boolean unwrap =
+				( hasEnabledFetchProfiles || hasNativeReturnType )
+						&& usingEntityManager;
+		if ( unwrap ) {
 			declaration
-					.append("(")
-					.append(type)
-					.append(") ");
-		}
-		declaration
-				.append("entityManager.createQuery(query)");
-		if ( !fetchProfiles.isEmpty() ) {
-			if ( Constants.ENTITY_MANAGER.equals(sessionType) ) {
-				declaration
-						.append("\n\t\t\t.unwrap(")
-						.append(annotationMetaEntity.importType(Constants.HIB_SELECTION_QUERY))
-						.append(".class)");
-			}
+					.append("\n\t\t\t.unwrap(")
+					.append(annotationMetaEntity.importType(Constants.HIB_SELECTION_QUERY))
+					.append(".class)");
 		}
 		for ( String profile : fetchProfiles ) {
 			declaration
@@ -163,20 +155,31 @@ public class CriteriaFinderMethod implements MetaAttribute {
 					.append(profile)
 					.append(")");
 		}
-		if ( !fetchProfiles.isEmpty() ) {
-			declaration.append("\n\t\t\t");
-		}
 		if ( containerType == null) {
+			if ( unwrap || hasEnabledFetchProfiles) {
+				declaration.append("\n\t\t\t");
+			}
 			declaration
 					.append(".getSingleResult()");
 		}
 		else if ( containerType.equals(Constants.LIST) ) {
+			if ( unwrap || hasEnabledFetchProfiles) {
+				declaration.append("\n\t\t\t");
+			}
 			declaration
 					.append(".getResultList()");
 		}
 		declaration
 				.append(";\n}");
 		return declaration.toString();
+	}
+
+	private String parameterList() {
+		return paramTypes.stream()
+				.map(this::strip)
+				.map(annotationMetaEntity::importType)
+				.reduce((x, y) -> x + y)
+				.orElse("");
 	}
 
 	private String strip(String type) {

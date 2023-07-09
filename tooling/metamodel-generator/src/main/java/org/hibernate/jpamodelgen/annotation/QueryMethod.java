@@ -71,6 +71,8 @@ public class QueryMethod implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
+		final boolean usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
+
 		List<String> paramTypes = this.paramTypes.stream()
 				.map(ptype -> isOrderParam(ptype) && ptype.endsWith("[]")
 						? ptype.substring(0, ptype.length()-2) + "..."
@@ -146,11 +148,13 @@ public class QueryMethod implements MetaAttribute {
 				.append(")")
 				.append(" {")
 				.append("\n\treturn ");
-		if ( isNative && returnTypeName != null
-				|| containerTypeName != null
-					&& Constants.ENTITY_MANAGER.equals(sessionType)
-					&& containerTypeName.startsWith("org.hibernate") ) {
-			declaration.append("(").append(type).append(") ");
+		if ( isNative && returnTypeName != null && containerTypeName == null
+				&& usingEntityManager) {
+			// EntityManager.createNativeQuery() does not return TypedQuery,
+			// so we need to cast to the entity type
+			declaration.append("(")
+					.append(type)
+					.append(") ");
 		}
 		declaration
 				.append("entityManager.")
@@ -164,7 +168,7 @@ public class QueryMethod implements MetaAttribute {
 					.append(".class");
 		}
 		declaration.append(")");
-		boolean unwrapped = !Constants.ENTITY_MANAGER.equals(sessionType);
+		boolean unwrapped = !usingEntityManager;
 		for (int i = 1; i <= paramNames.size(); i++) {
 			String param = paramNames.get(i-1);
 			String ptype = paramTypes.get(i-1);
@@ -218,6 +222,17 @@ public class QueryMethod implements MetaAttribute {
 		else if ( containerTypeName.equals(Constants.LIST) ) {
 			declaration
 					.append("\n\t\t\t.getResultList()");
+		}
+		else {
+			if ( usingEntityManager && !unwrapped
+					&& ( containerTypeName.startsWith("org.hibernate")
+						|| isNative && returnTypeName != null ) ) {
+				declaration
+						.append("\n\t\t\t.unwrap(")
+						.append(annotationMetaEntity.importType(containerTypeName))
+						.append(".class)");
+
+			}
 		}
 		declaration.append(";\n}");
 		return declaration.toString();

@@ -6,7 +6,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.BiConsumer;
@@ -49,17 +48,15 @@ import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.*;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.stat.spi.StatisticsImplementor;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 /**
- * Base support for NaturalIdLoader implementations
+ * Base support for {@link NaturalIdLoader} implementations
  */
 public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
@@ -91,35 +88,82 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 	@Override
 	public T load(Object naturalIdValue, NaturalIdLoadOptions options, SharedSessionContractImplementor session) {
-		return selectByNaturalId(
+		final SessionFactoryImplementor sessionFactory = session.getFactory();
+
+		final LockOptions lockOptions = options.getLockOptions() == null ? LockOptions.NONE : options.getLockOptions();
+
+		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
+				getLoadable(),
+				// null here means to select everything
+				null,
+				true,
+				emptyList(), // we're going to add the restrictions ourselves
+				null,
+				1,
+				session.getLoadQueryInfluencers(),
+				lockOptions,
+				JdbcParametersList.newBuilder()::add,
+				sessionFactory
+		);
+
+		// we have to add the restrictions ourselves manually because we want special null handling
+		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( naturalIdMapping.getJdbcTypeCount() );
+		applyNaturalIdRestriction(
 				naturalIdMapping().normalizeInput( naturalIdValue ),
-				options,
-				(tableGroup, creationState) -> entityDescriptor.createDomainResult(
-						new NavigablePath( entityDescriptor().getRootPathName() ),
-						tableGroup,
-						null,
-						creationState
+				sqlSelect.getQuerySpec().getFromClause().getRoots().get(0),
+				sqlSelect.getQuerySpec()::applyPredicate,
+				jdbcParamBindings::addBinding,
+				new LoaderSqlAstCreationState(
+						sqlSelect.getQuerySpec(),
+						new SqlAliasBaseManager(),
+						new SimpleFromClauseAccessImpl(),
+						lockOptions,
+						AbstractNaturalIdLoader::visitFetches,
+						true,
+						new LoadQueryInfluencers( sessionFactory ),
+						sessionFactory
 				),
-				AbstractNaturalIdLoader::visitFetches,
-				(statsEnabled) -> {
-//					entityDescriptor().getPreLoadListener().startingLoad( entityDescriptor, naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
-					return statsEnabled ? System.nanoTime() : -1;
-				},
-				(result,startToken) -> {
-//					entityDescriptor().getPostLoadListener().completedLoad( result, entityDescriptor(), naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
-					if ( startToken > 0 ) {
-						session.getFactory().getStatistics().naturalIdQueryExecuted(
-								entityDescriptor().getEntityPersister().getRootEntityName(),
-								System.nanoTime() - startToken
-						);
-//						// todo (6.0) : need a "load-by-natural-id" stat
-//						//		e.g.,
-//						// final Object identifier = entityDescriptor().getIdentifierMapping().getIdentifier( result, session );
-//						// session.getFactory().getStatistics().entityLoadedByNaturalId( entityDescriptor(), identifier );
-					}
-				},
 				session
 		);
+
+		final QueryOptions queryOptions = new SimpleQueryOptions( lockOptions, false );
+		final JdbcOperationQuerySelect jdbcSelect =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( sessionFactory, sqlSelect )
+						.translate( jdbcParamBindings, queryOptions );
+
+		final long startToken = sessionFactory.getStatistics().isStatisticsEnabled() ? System.nanoTime() : -1;
+
+		//noinspection unchecked
+		final List<T> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+				jdbcSelect,
+				jdbcParamBindings,
+				new NaturalIdLoaderWithOptionsExecutionContext( session, queryOptions ),
+				row -> (T) row[0],
+				ListResultsConsumer.UniqueSemantic.FILTER
+		);
+
+		if ( results.size() > 1 ) {
+			throw new HibernateException(
+					String.format(
+							"Loading by natural-id returned more that one row : %s",
+							entityDescriptor.getEntityName()
+					)
+			);
+		}
+
+		final T result = results.isEmpty() ? null : results.get(0);
+//		entityDescriptor().getPostLoadListener().completedLoad( result, entityDescriptor(), naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
+		if ( startToken > 0 ) {
+			session.getFactory().getStatistics().naturalIdQueryExecuted(
+					entityDescriptor().getEntityPersister().getRootEntityName(),
+					System.nanoTime() - startToken
+			);
+//			// todo (6.0) : need a "load-by-natural-id" stat, e.g.,
+//			// final Object identifier = entityDescriptor().getIdentifierMapping().getIdentifier( result, session );
+//			// session.getFactory().getStatistics().entityLoadedByNaturalId( entityDescriptor(), identifier );
+		}
+		return result;
 	}
 
 	/**
@@ -134,17 +178,8 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			BiConsumer<Object,Long> statementCompletionHandler,
 			SharedSessionContractImplementor session) {
 		final SessionFactoryImplementor sessionFactory = session.getFactory();
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
 
-		final LockOptions lockOptions;
-		if ( options.getLockOptions() != null ) {
-			lockOptions = options.getLockOptions();
-		}
-		else {
-			lockOptions = LockOptions.NONE;
-		}
+		final LockOptions lockOptions = options.getLockOptions() != null ? options.getLockOptions() : LockOptions.NONE;
 
 		final NavigablePath entityPath = new NavigablePath( entityDescriptor.getRootPathName() );
 		final QuerySpec rootQuerySpec = new QuerySpec( true );
@@ -174,7 +209,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 		final DomainResult<?> domainResult = domainResultProducer.apply( rootTableGroup, sqlAstCreationState );
 
-		final SelectStatement sqlSelect = new SelectStatement( rootQuerySpec, Collections.singletonList( domainResult ) );
+		final SelectStatement sqlSelect = new SelectStatement( rootQuerySpec, singletonList( domainResult ) );
 
 		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( naturalIdMapping.getJdbcTypeCount() );
 
@@ -188,11 +223,12 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		);
 
 		final QueryOptions queryOptions = new SimpleQueryOptions( lockOptions, false );
-		final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
-				.translate( jdbcParamBindings, queryOptions );
+		final JdbcOperationQuerySelect jdbcSelect =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( sessionFactory, sqlSelect )
+						.translate( jdbcParamBindings, queryOptions );
 
-		final StatisticsImplementor statistics = sessionFactory.getStatistics();
-		final Long startToken = statementStartHandler.apply( statistics.isStatisticsEnabled() );
+		final Long startToken = statementStartHandler.apply( sessionFactory.getStatistics().isStatisticsEnabled() );
 
 		//noinspection unchecked
 		final List<L> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
@@ -212,16 +248,8 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			);
 		}
 
-		final L result;
-		if ( results.isEmpty() ) {
-			result = null;
-		}
-		else {
-			result = results.get( 0 );
-		}
-
+		final L result = results.isEmpty() ? null : results.get(0);
 		statementCompletionHandler.accept( result, startToken );
-
 		return result;
 	}
 
@@ -246,7 +274,11 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 			SelectableMapping selectableMapping,
 			SqlExpressionResolver sqlExpressionResolver,
 			@SuppressWarnings("unused") SessionFactoryImplementor sessionFactory) {
-		final TableReference tableReference = rootTableGroup.getTableReference( rootTableGroup.getNavigablePath(), selectableMapping.getContainingTableExpression() );
+		final TableReference tableReference =
+				rootTableGroup.getTableReference(
+						rootTableGroup.getNavigablePath(),
+						selectableMapping.getContainingTableExpression()
+				);
 		if ( tableReference == null ) {
 			throw new IllegalStateException(
 					String.format(
@@ -300,7 +332,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		JdbcParametersList.Builder jdbcParametersBuilder = JdbcParametersList.newBuilder();
 		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
 				entityDescriptor(),
-				Collections.singletonList( naturalIdMapping() ),
+				singletonList( naturalIdMapping() ),
 				entityDescriptor().getIdentifierMapping(),
 				null,
 				1,
@@ -324,8 +356,9 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				session
 		);
 		assert offset == jdbcParameters.size();
-		final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
-				.translate( jdbcParamBindings, QueryOptions.NONE );
+		final JdbcOperationQuerySelect jdbcSelect =
+				sqlAstTranslatorFactory.buildSelectTranslator( sessionFactory, sqlSelect )
+						.translate( jdbcParamBindings, QueryOptions.NONE );
 
 		final List<Object> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
@@ -339,21 +372,20 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
 
-		if ( results.isEmpty() ) {
-			return null;
+		switch ( results.size() ) {
+			case 0:
+				return null;
+			case 1:
+				return results.get( 0 );
+			default:
+				throw new HibernateException(
+						String.format(
+								"Resolving id to natural-id returned more that one row : %s #%s",
+								entityDescriptor().getEntityName(),
+								id
+						)
+				);
 		}
-
-		if ( results.size() > 1 ) {
-			throw new HibernateException(
-					String.format(
-							"Resolving id to natural-id returned more that one row : %s #%s",
-							entityDescriptor().getEntityName(),
-							id
-					)
-			);
-		}
-
-		return results.get( 0 );
 	}
 
 	private static ImmutableFetchList visitFetches(

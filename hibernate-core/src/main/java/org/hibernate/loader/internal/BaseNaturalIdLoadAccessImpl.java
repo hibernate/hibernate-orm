@@ -8,7 +8,6 @@ package org.hibernate.loader.internal;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.HibernateException;
@@ -98,18 +97,18 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 	protected void synchronizationEnabled(boolean synchronizationEnabled) {
 		this.synchronizationEnabled = synchronizationEnabled;
 	}
-
-	protected final Object resolveNaturalId(Map<String, Object> naturalIdParameters) {
-		performAnyNeededCrossReferenceSynchronizations();
-
-		final Object resolvedId = entityPersister()
-				.getNaturalIdLoader()
-				.resolveNaturalIdToId( naturalIdParameters, context.getSession() );
-
-		return resolvedId == INVALID_NATURAL_ID_REFERENCE
-				? null
-				: resolvedId;
-	}
+//
+//	protected final Object resolveNaturalId(Map<String, Object> naturalIdParameters) {
+//		performAnyNeededCrossReferenceSynchronizations();
+//
+//		final Object resolvedId = entityPersister()
+//				.getNaturalIdLoader()
+//				.resolveNaturalIdToId( naturalIdParameters, context.getSession() );
+//
+//		return resolvedId == INVALID_NATURAL_ID_REFERENCE
+//				? null
+//				: resolvedId;
+//	}
 
 	protected void performAnyNeededCrossReferenceSynchronizations() {
 		if ( !synchronizationEnabled ) {

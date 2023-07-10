@@ -56,6 +56,10 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValueRef;
 
 /**
  * Class used to collect meta information about an annotated type (entity, embeddable or mapped superclass).
+ * Also repurposed for any type with "auxiliary" annotations like {@code @NamedQuery}, {@code @FetchProfile},
+ * {@code @Find}, or {@code @HQL}. We do not distinguish these two kinds of thing, since an entity class may
+ * {@code @NamedQuery} or {@code @FetchProfile} annotations. Entities may not, however, have methods annotated
+ * {@code @Find} or {@code @HQL}, since entity classes are usually concrete classes.
  *
  * @author Max Andersen
  * @author Hardy Ferentschik
@@ -74,19 +78,19 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	/**
 	 * Whether the members of this type have already been initialized or not.
 	 * <p>
-	 * Embeddables and mapped superclasses need to be lazily initialized since the access type may be determined by
-	 * the class which is embedding or subclassing the entity or superclass. This might not be known until
+	 * Embeddables and mapped superclasses need to be lazily initialized since the access type may be determined
+	 * by the class which is embedding or subclassing the entity or superclass. This might not be known until
 	 * annotations are processed.
 	 * <p>
 	 * Also note, that if two different classes with different access types embed this entity or extend this mapped
-	 * super-class, the access type of the embeddable/superclass will be the one of the last embedding/subclassing
+	 * superclass, the access type of the embeddable/superclass will be the one of the last embedding/subclassing
 	 * entity processed. The result is not determined (that's ok according to the spec).
 	 */
 	private boolean initialized;
 
 	/**
 	 * Another meta entity for the same type which should be merged lazily with this meta entity. Doing the merge
-	 * lazily is required for embeddedables and mapped supertypes to only pull in those members matching the access
+	 * lazily is required for embeddables and mapped supertypes, to only pull in those members matching the access
 	 * type as configured via the embedding entity or subclass (also see METAGEN-85).
 	 */
 	private Metamodel entityToMerge;
@@ -95,6 +99,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * True if this "metamodel class" is actually an instantiable DAO-style repository.
 	 */
 	private boolean dao = false;
+
+	/**
+	 * The type of the "session getter" method of a DAO-style repository.
+	 */
 	private String sessionType = Constants.ENTITY_MANAGER;
 
 	public AnnotationMetaEntity(TypeElement element, Context context) {
@@ -235,23 +243,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<ExecutableElement> methodsOfClass = methodsIn( element.getEnclosedElements() );
 		final List<ExecutableElement> gettersAndSettersOfClass = new ArrayList<>();
 		final List<ExecutableElement> queryMethods = new ArrayList<>();
-		for ( ExecutableElement rawMethodOfClass: methodsOfClass ) {
-			if ( isGetterOrSetter( rawMethodOfClass ) ) {
-				gettersAndSettersOfClass.add( rawMethodOfClass );
+		for ( ExecutableElement method: methodsOfClass ) {
+			if ( isGetterOrSetter( method ) ) {
+				gettersAndSettersOfClass.add( method );
 			}
-			else if ( containsAnnotation( rawMethodOfClass, Constants.HQL, Constants.SQL, Constants.FIND ) ) {
-				queryMethods.add( rawMethodOfClass );
+			else if ( containsAnnotation( method, Constants.HQL, Constants.SQL, Constants.FIND ) ) {
+				queryMethods.add( method );
 			}
 		}
 
-		if ( !containsAnnotation( element, Constants.ENTITY ) ) {
-			for ( ExecutableElement getterOrSetter : gettersAndSettersOfClass ) {
-				if ( isSessionGetter( getterOrSetter ) ) {
-					dao = true;
-					sessionType = addDaoConstructor( getterOrSetter );
-				}
-			}
-		}
+		findSessionGetter( methodsOfClass );
 
 		addPersistentMembers( fieldsOfClass, AccessType.FIELD );
 		addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );
@@ -265,6 +266,22 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		initialized = true;
 	}
 
+	private void findSessionGetter(List<ExecutableElement> methodsOfClass) {
+		if ( !containsAnnotation( element, Constants.ENTITY ) ) {
+			for ( ExecutableElement method : methodsOfClass ) {
+				if ( isSessionGetter( method ) ) {
+					dao = true;
+					sessionType = addDaoConstructor( method );
+				}
+			}
+		}
+	}
+
+	/**
+	 * If there is a session getter method, we generate an instance
+	 * variable backing it, together with a constructor that initializes
+	 * it.
+	 */
 	private String addDaoConstructor(ExecutableElement getterOrSetter) {
 		String name = getterOrSetter.getSimpleName().toString();
 		String typeName = element.getSimpleName().toString() + '_';
@@ -274,16 +291,23 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return sessionType;
 	}
 
-	private static boolean isSessionGetter(ExecutableElement getterOrSetter) {
-		final TypeMirror type = getterOrSetter.getReturnType();
-		if ( type.getKind() == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) type;
-			final Element element = declaredType.asElement();
-			if ( element.getKind() == ElementKind.INTERFACE ) {
-				final Name name = ((TypeElement) element).getQualifiedName();
-				return name.contentEquals(Constants.HIB_SESSION)
-					|| name.contentEquals(Constants.HIB_STATELESS_SESSION)
-					|| name.contentEquals(Constants.ENTITY_MANAGER);
+	/**
+	 * The session getter method doesn't have to be a JavaBeans-style
+	 * getter. It can be any method with no parameters and one of the
+	 * needed return types.
+	 */
+	private static boolean isSessionGetter(ExecutableElement method) {
+		if ( method.getParameters().isEmpty() ) {
+			final TypeMirror type = method.getReturnType();
+			if ( type.getKind() == TypeKind.DECLARED ) {
+				final DeclaredType declaredType = (DeclaredType) type;
+				final Element element = declaredType.asElement();
+				if ( element.getKind() == ElementKind.INTERFACE ) {
+					final Name name = ((TypeElement) element).getQualifiedName();
+					return name.contentEquals(Constants.HIB_SESSION)
+						|| name.contentEquals(Constants.HIB_STATELESS_SESSION)
+						|| name.contentEquals(Constants.ENTITY_MANAGER);
+				}
 			}
 		}
 		return false;
@@ -684,7 +708,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							hql,
 							false, true,
 							emptySet(), emptySet(),
-							new ErrorHandler( method, mirror, value, hql, context ),
+							new ErrorHandler(context, method, mirror, value, hql),
 							ProcessorSessionFactory.create( context.getProcessingEnvironment() )
 					);
 				}

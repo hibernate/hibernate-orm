@@ -23,6 +23,9 @@ import java.util.BitSet;
 import static org.hibernate.query.hql.internal.StandardHqlTranslator.prettifyAntlrError;
 
 /**
+ * Responsible for forwarding errors from the HQL typechecker to the Java compiler,
+ * via {@link Context#message}.
+ *
  * @author Gavin King
  */
 class ErrorHandler implements Validation.Handler {
@@ -33,11 +36,11 @@ class ErrorHandler implements Validation.Handler {
 	private final Context context;
 	private int errorCount;
 
-	public ErrorHandler(Element element, AnnotationMirror mirror, AnnotationValue value, String queryString, Context context) {
+	public ErrorHandler(Context context, Element element, AnnotationMirror mirror, AnnotationValue value, String hql) {
 		this.element = element;
 		this.mirror = mirror;
 		this.value = value;
-		this.queryString = queryString;
+		this.queryString = hql;
 		this.context = context;
 	}
 

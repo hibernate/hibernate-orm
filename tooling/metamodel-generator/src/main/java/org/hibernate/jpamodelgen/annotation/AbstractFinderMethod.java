@@ -193,7 +193,6 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 //					.append(constantName())
 //					.append(")");
 //		}
-		// currently unused: no way to specify explicit fetch profiles
 		for ( String profile : fetchProfiles ) {
 			declaration
 					.append("\n\t\t\t.enableFetchProfile(")

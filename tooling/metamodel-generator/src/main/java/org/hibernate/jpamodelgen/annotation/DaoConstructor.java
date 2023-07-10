@@ -19,18 +19,21 @@ public class DaoConstructor implements MetaAttribute {
 	private final String methodName;
 	private final String returnTypeName;
 	private final boolean inject;
+	private final boolean addNonnullAnnotation;
 
 	public DaoConstructor(
 			Metamodel annotationMetaEntity,
 			String constructorName,
 			String methodName,
 			String returnTypeName,
-			boolean inject) {
+			boolean inject,
+			boolean addNonnullAnnotation) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.constructorName = constructorName;
 		this.methodName = methodName;
 		this.returnTypeName = returnTypeName;
 		this.inject = inject;
+		this.addNonnullAnnotation = addNonnullAnnotation;
 	}
 
 	@Override
@@ -45,28 +48,44 @@ public class DaoConstructor implements MetaAttribute {
 
 	@Override
 	public String getAttributeDeclarationString() {
-		return new StringBuilder()
-				.append("\nprivate final ")
+		StringBuilder declaration = new StringBuilder();
+		declaration
+				.append("\nprivate final ");
+		notNull( declaration );
+		declaration
 				.append(annotationMetaEntity.importType(returnTypeName))
 				.append(" entityManager;")
 				.append("\n")
 				.append(inject ? "\n@" + annotationMetaEntity.importType("jakarta.inject.Inject") : "")
 				.append("\npublic ")
 				.append(constructorName)
-				.append("(")
+				.append("(");
+		notNull( declaration );
+		declaration
 				.append(annotationMetaEntity.importType(returnTypeName))
 				.append(" entityManager) {")
 				.append("\n\tthis.entityManager = entityManager;")
 				.append("\n}")
 				.append("\n\n")
-				.append("public ")
+				.append("public ");
+		notNull( declaration );
+		declaration
 				.append(annotationMetaEntity.importType(returnTypeName))
 				.append(" ")
 				.append(methodName)
 				.append("() {")
 				.append("\n\treturn entityManager;")
-				.append("\n}")
-				.toString();
+				.append("\n}");
+		return declaration.toString();
+	}
+
+	private void notNull(StringBuilder declaration) {
+		if ( addNonnullAnnotation ) {
+			declaration
+					.append('@')
+					.append(annotationMetaEntity.importType("jakarta.annotation.Nonnull"))
+					.append(' ');
+		}
 	}
 
 	@Override

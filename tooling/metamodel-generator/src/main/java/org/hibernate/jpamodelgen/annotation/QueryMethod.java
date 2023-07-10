@@ -33,6 +33,7 @@ public class QueryMethod implements MetaAttribute {
 	private final boolean isNative;
 	private final boolean belongsToDao;
 	final boolean usingEntityManager;
+	private final boolean addNonnullAnnotation;
 
 	public QueryMethod(
 			Metamodel annotationMetaEntity,
@@ -46,7 +47,8 @@ public class QueryMethod implements MetaAttribute {
 			List<String> paramTypes,
 			boolean isNative,
 			boolean belongsToDao,
-			String sessionType) {
+			String sessionType,
+			boolean addNonnullAnnotation) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.queryString = queryString;
@@ -56,7 +58,8 @@ public class QueryMethod implements MetaAttribute {
 		this.paramTypes = paramTypes;
 		this.isNative = isNative;
 		this.belongsToDao = belongsToDao;
-		usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
+		this.usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
+		this.addNonnullAnnotation = addNonnullAnnotation;
 	}
 
 	@Override
@@ -177,6 +180,7 @@ public class QueryMethod implements MetaAttribute {
 	private void parameters(List<String> paramTypes, StringBuilder declaration) {
 		declaration.append("(");
 		if ( !belongsToDao ) {
+			notNull( declaration );
 			declaration
 					.append(annotationMetaEntity.importType(Constants.ENTITY_MANAGER))
 					.append(" entityManager");
@@ -313,6 +317,15 @@ public class QueryMethod implements MetaAttribute {
 							.map(StringHelper::unqualify)
 							.reduce((x,y) -> x + '_' + y)
 							.orElse("");
+		}
+	}
+
+	private void notNull(StringBuilder declaration) {
+		if ( addNonnullAnnotation ) {
+			declaration
+					.append('@')
+					.append(annotationMetaEntity.importType("jakarta.annotation.Nonnull"))
+					.append(' ');
 		}
 	}
 

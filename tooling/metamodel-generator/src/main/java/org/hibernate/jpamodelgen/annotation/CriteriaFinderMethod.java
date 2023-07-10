@@ -29,11 +29,17 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			boolean isId,
 			boolean belongsToDao,
 			String sessionType,
-			List<String> fetchProfiles) {
+			List<String> fetchProfiles,
+			boolean addNonnullAnnotation) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, fetchProfiles,
-				paramNames, paramTypes );
+				paramNames, paramTypes, addNonnullAnnotation );
 		this.containerType = containerType;
 		this.isId = isId;
+	}
+
+	@Override
+	public boolean isId() {
+		return isId;
 	}
 
 	@Override

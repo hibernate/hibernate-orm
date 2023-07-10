@@ -57,7 +57,24 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * @see jakarta.persistence.EntityManager#createQuery(String,Class)
  * @see org.hibernate.Session#createSelectionQuery(String,Class)
  *
+ * @implNote The static HQL type checker is not aware of metadata defined
+ *           purely in XML, nor of JPA converters, and therefore sometimes
+ *           reports false positives. That is, it rejects queries at compile
+ *           time that would be accepted at runtime.
+ *           <p>
+ *           Therefore, by default, HQL specified in {@code NamedQuery}
+ *           annotations is always validated for both syntax and semantics,
+ *           but only illegal syntax is reported with severity
+ *           {@link javax.tools.Diagnostic.Kind#ERROR}. Problems with the
+ *           semantics of HQL named queries (typing problem) are reported to
+ *           the Java compiler by the Metamodel Generator with severity
+ *           {@link javax.tools.Diagnostic.Kind#WARNING}.
+ *           <p>
+ *           So, actually, the effect of {@code CheckHQL} is only to change
+ *           the severity of reported problem.
+ *
  * @author Gavin King
+ * @since 6.3
  */
 @Target({PACKAGE, TYPE})
 @Retention(CLASS)

@@ -100,10 +100,12 @@ public final class ClassWriter {
 		final StringWriter sw = new StringWriter();
 		try ( PrintWriter pw = new PrintWriter(sw) ) {
 
+			if ( context.addDependentAnnotation() && entity.isInjectable() ) {
+				pw.println( writeDependentAnnotation( entity ) );
+			}
 			if ( entity.getElement() instanceof TypeElement ) {
 				pw.println( writeStaticMetaModelAnnotation( entity ) );
 			}
-
 			if ( context.addGeneratedAnnotation() ) {
 				pw.println( writeGeneratedAnnotation( entity, context ) );
 			}
@@ -239,7 +241,12 @@ public final class ClassWriter {
 		return "@SuppressWarnings({ \"deprecation\", \"rawtypes\" })";
 	}
 
+	private static String writeDependentAnnotation(Metamodel entity) {
+		return "@" + entity.importType( "jakarta.enterprise.context.Dependent" );
+	}
+
 	private static String writeStaticMetaModelAnnotation(Metamodel entity) {
-		return "@" + entity.importType( "jakarta.persistence.metamodel.StaticMetamodel" ) + "(" + entity.getSimpleName() + ".class)";
+		return "@" + entity.importType( "jakarta.persistence.metamodel.StaticMetamodel" )
+				+ "(" + entity.getSimpleName() + ".class)";
 	}
 }

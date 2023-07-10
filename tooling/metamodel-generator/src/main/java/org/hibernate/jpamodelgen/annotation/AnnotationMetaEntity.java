@@ -222,6 +222,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	@Override
+	public boolean isInjectable() {
+		return dao;
+	}
+
+	@Override
 	public String toString() {
 		return new StringBuilder()
 				.append( "AnnotationMetaEntity" )

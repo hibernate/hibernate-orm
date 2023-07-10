@@ -18,7 +18,7 @@ public class DaoConstructor implements MetaAttribute {
 	private final String constructorName;
 	private final String methodName;
 	private final String returnTypeName;
-	private final boolean inject;
+	private final boolean addInjectAnnotation;
 	private final boolean addNonnullAnnotation;
 
 	public DaoConstructor(
@@ -26,13 +26,13 @@ public class DaoConstructor implements MetaAttribute {
 			String constructorName,
 			String methodName,
 			String returnTypeName,
-			boolean inject,
+			boolean addInjectAnnotation,
 			boolean addNonnullAnnotation) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.constructorName = constructorName;
 		this.methodName = methodName;
 		this.returnTypeName = returnTypeName;
-		this.inject = inject;
+		this.addInjectAnnotation = addInjectAnnotation;
 		this.addNonnullAnnotation = addNonnullAnnotation;
 	}
 
@@ -55,8 +55,9 @@ public class DaoConstructor implements MetaAttribute {
 		declaration
 				.append(annotationMetaEntity.importType(returnTypeName))
 				.append(" entityManager;")
-				.append("\n")
-				.append(inject ? "\n@" + annotationMetaEntity.importType("jakarta.inject.Inject") : "")
+				.append("\n");
+		inject( declaration );
+		declaration
 				.append("\npublic ")
 				.append(constructorName)
 				.append("(");
@@ -77,6 +78,14 @@ public class DaoConstructor implements MetaAttribute {
 				.append("\n\treturn entityManager;")
 				.append("\n}");
 		return declaration.toString();
+	}
+
+	private void inject(StringBuilder declaration) {
+		if ( addInjectAnnotation ) {
+			declaration
+					.append("\n@")
+					.append(annotationMetaEntity.importType("jakarta.inject.Inject"));
+		}
 	}
 
 	private void notNull(StringBuilder declaration) {

@@ -138,4 +138,9 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	boolean belongsToDao() {
 		return false;
 	}
+
+	@Override
+	public boolean isInjectable() {
+		return false;
+	}
 }

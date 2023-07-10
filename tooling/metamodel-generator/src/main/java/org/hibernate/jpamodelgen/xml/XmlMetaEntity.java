@@ -622,4 +622,9 @@ public class XmlMetaEntity implements Metamodel {
 	public boolean isImplementation() {
 		return false;
 	}
+
+	@Override
+	public boolean isInjectable() {
+		return false;
+	}
 }

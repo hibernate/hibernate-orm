@@ -288,9 +288,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * it.
 	 */
 	private String addDaoConstructor(ExecutableElement getterOrSetter) {
-		String name = getterOrSetter.getSimpleName().toString();
-		String typeName = element.getSimpleName().toString() + '_';
-		String sessionType = getterOrSetter.getReturnType().toString();
+		final String name = getterOrSetter.getSimpleName().toString();
+		final String typeName = element.getSimpleName().toString() + '_';
+		final String sessionType = getterOrSetter.getReturnType().toString();
 		putMember( name,
 				new DaoConstructor(
 						this,
@@ -424,13 +424,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean isLegalRawResultType(String containerTypeName) {
-		return containerTypeName.equals(List.class.getName())
+		return containerTypeName.equals(Constants.LIST)
 			|| containerTypeName.equals(Constants.QUERY)
 			|| containerTypeName.equals(Constants.HIB_QUERY);
 	}
 
 	private static boolean isLegalGenericResultType(String containerTypeName) {
-		return containerTypeName.equals(List.class.getName())
+		return containerTypeName.equals(Constants.LIST)
 			|| containerTypeName.equals(Constants.TYPED_QUERY)
 			|| containerTypeName.equals(Constants.HIB_QUERY)
 			|| containerTypeName.equals(Constants.HIB_SELECTION_QUERY);

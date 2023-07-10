@@ -14,6 +14,8 @@ import java.util.Optional;
 import org.hibernate.HibernateException;
 import org.hibernate.LockOptions;
 import org.hibernate.SimpleNaturalIdLoadAccess;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.SimpleNaturalIdMapping;
@@ -109,6 +111,16 @@ public class SimpleNaturalIdLoadAccessImpl<T>
 		return Optional.ofNullable( load( naturalIdValue ) );
 	}
 
+	@Override
+	public SimpleNaturalIdLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
+		super.with( graph, semantic );
+		return this;
+	}
+
+	@Override
+	public SimpleNaturalIdLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+		return SimpleNaturalIdLoadAccess.super.withLoadGraph(graph);
+	}
 
 	@Override
 	public SimpleNaturalIdLoadAccess<T> enableFetchProfile(String profileName) {

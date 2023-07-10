@@ -7,6 +7,8 @@
 package org.hibernate;
 
 import jakarta.persistence.metamodel.SingularAttribute;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
 
 import java.util.Map;
 import java.util.Optional;
@@ -43,6 +45,31 @@ public interface NaturalIdLoadAccess<T> {
 	 * @return {@code this}, for method chaining
 	 */
 	NaturalIdLoadAccess<T> with(LockOptions lockOptions);
+
+	/**
+	 * Override the associations fetched by default by specifying
+	 * the complete list of associations to be fetched as an
+	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 */
+	default NaturalIdLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
+		return with( graph, GraphSemantic.FETCH );
+	}
+
+	/**
+	 * Augment the associations fetched by default by specifying a
+	 * list of additional associations to be fetched as an
+	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 */
+	default NaturalIdLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+		return with( graph, GraphSemantic.LOAD );
+	}
+
+	/**
+	 * Customize the associations fetched by specifying an
+	 * {@linkplain jakarta.persistence.EntityGraph entity graph},
+	 * and how it should be {@linkplain GraphSemantic interpreted}.
+	 */
+	NaturalIdLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
 
 	/**
 	 * Customize the associations fetched by specifying a

@@ -19,6 +19,8 @@ import org.hibernate.Internal;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.SessionCreationOptions;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
@@ -81,6 +83,17 @@ public class LoadQueryInfluencers implements Serializable {
 		this.sessionFactory = sessionFactory;
 		batchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
+	}
+
+	public EffectiveEntityGraph applyEntityGraph(RootGraphImplementor<?> rootGraph, GraphSemantic graphSemantic) {
+		final EffectiveEntityGraph effectiveEntityGraph = getEffectiveEntityGraph();
+		if ( graphSemantic != null ) {
+			if ( rootGraph == null ) {
+				throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
+			}
+			effectiveEntityGraph.applyGraph( rootGraph, graphSemantic );
+		}
+		return effectiveEntityGraph;
 	}
 
 	public SessionFactoryImplementor getSessionFactory() {

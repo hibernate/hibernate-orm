@@ -360,7 +360,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			if ( isPersistent( memberOfClass, membersKind ) ) {
 				final AnnotationMetaAttribute result =
 						memberOfClass.asType()
-								.accept( new MetaAttributeGenerationVisitor(this, context ), memberOfClass );
+								.accept( new MetaAttributeGenerationVisitor( this, context ), memberOfClass );
 				if ( result != null ) {
 					members.put( result.getPropertyName(), result );
 				}
@@ -390,35 +390,36 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
-			if ( typeArguments.size() == 0 ) {
-				if ( containsAnnotation( declaredType.asElement(), Constants.ENTITY ) ) {
-					addQueryMethod( method, declaredType, null );
-				}
-				else {
-					if ( isLegalRawResultType( typeElement.getQualifiedName().toString() ) ) {
-						addQueryMethod( method, null, typeElement );
-					}
-					else {
-						// probably a projection
+			switch ( typeArguments.size() ) {
+				case 0:
+					if ( containsAnnotation( declaredType.asElement(), Constants.ENTITY ) ) {
 						addQueryMethod( method, declaredType, null );
 					}
-				}
-			}
-			else if ( typeArguments.size() == 1 ) {
-				final Element containerType = declaredType.asElement();
-				if ( isLegalGenericResultType( containerType.toString() ) ) {
-					addQueryMethod( method, typeArguments.get(0), typeElement );
-				}
-				else {
+					else {
+						if ( isLegalRawResultType( typeElement.getQualifiedName().toString() ) ) {
+							addQueryMethod( method, null, typeElement );
+						}
+						else {
+							// probably a projection
+							addQueryMethod( method, declaredType, null );
+						}
+					}
+					break;
+				case 1:
+					if ( isLegalGenericResultType( typeElement.toString() ) ) {
+						addQueryMethod( method, typeArguments.get(0), typeElement );
+					}
+					else {
+						context.message( method,
+								"incorrect return type '" + typeElement + "'",
+								Diagnostic.Kind.ERROR );
+					}
+					break;
+				default:
 					context.message( method,
-							"incorrect return type '" + containerType + "'",
+							"incorrect return type '" + declaredType + "'",
 							Diagnostic.Kind.ERROR );
-				}
-			}
-			else {
-				context.message( method,
-						"incorrect return type '" + declaredType + "'",
-						Diagnostic.Kind.ERROR );
+					break;
 			}
 		}
 	}
@@ -688,6 +689,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 				else {
 					return FieldType.BASIC;
+				}
+			}
+		}
+		final AnnotationMirror idClass = getAnnotationMirror( entity, Constants.ID_CLASS );
+		if ( idClass != null ) {
+			final Object value = getAnnotationValue( idClass, "value" );
+			if ( value instanceof TypeMirror ) {
+				if ( context.getTypeUtils().isSameType( param.asType(), (TypeMirror) value ) ) {
+					return FieldType.ID;
 				}
 			}
 		}

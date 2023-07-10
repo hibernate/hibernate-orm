@@ -276,13 +276,13 @@ public class QueryMethod implements MetaAttribute {
 		return type.endsWith("...") ? stripped + "..." : stripped;
 	}
 
-	static boolean isPageParam(String ptype) {
-		return Page.class.getName().equals(ptype);
+	static boolean isPageParam(String parameterType) {
+		return Page.class.getName().equals(parameterType);
 	}
 
-	static boolean isOrderParam(String ptype) {
-		return ptype.startsWith(Order.class.getName())
-			|| ptype.startsWith(List.class.getName() + "<" + Order.class.getName());
+	static boolean isOrderParam(String parameterType) {
+		return parameterType.startsWith(Order.class.getName())
+			|| parameterType.startsWith(List.class.getName() + "<" + Order.class.getName());
 	}
 
 	private void unwrap(StringBuilder declaration, boolean unwrapped) {

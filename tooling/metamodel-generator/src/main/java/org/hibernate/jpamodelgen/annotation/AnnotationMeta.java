@@ -22,8 +22,10 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import java.util.List;
 
-import static java.util.Collections.emptySet;
-import static org.hibernate.jpamodelgen.util.TypeUtils.*;
+import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
+import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
+import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValue;
+import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValueRef;
 
 public abstract class AnnotationMeta implements Metamodel {
 
@@ -91,8 +93,7 @@ public abstract class AnnotationMeta implements Metamodel {
 					final SqmStatement<?> statement =
 							Validation.validate(
 									hql,
-									false, true,
-									emptySet(), emptySet(),
+									true,
 									// If we are in the scope of @CheckHQL, semantic errors in the
 									// query result in compilation errors. Otherwise, they only
 									// result in warnings, so we don't break working code.

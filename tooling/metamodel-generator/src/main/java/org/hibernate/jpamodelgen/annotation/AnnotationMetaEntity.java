@@ -38,9 +38,11 @@ import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.validation.ProcessorSessionFactory;
 import org.hibernate.jpamodelgen.validation.Validation;
+import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.tree.SqmStatement;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
@@ -721,6 +723,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final String hql = (String) query;
 				final List<String> paramNames = parameterNames( method );
 				final List<String> paramTypes = parameterTypes( method );
+
 				final QueryMethod attribute =
 						new QueryMethod(
 								this,
@@ -737,18 +740,92 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						);
 				putMember( attribute.getPropertyName() + paramTypes, attribute );
 
-				checkParameters( method, paramNames, paramTypes, mirror, value, hql );
 				if ( !isNative ) {
-	//				checkHqlSyntax( method, mirror, hql );
-					Validation.validate(
-							hql,
-							false, true,
-							emptySet(), emptySet(),
-							new ErrorHandler(context, method, mirror, value, hql),
-							ProcessorSessionFactory.create( context.getProcessingEnvironment() )
-					);
+					final SqmStatement<?> statement =
+							Validation.validate(
+									hql,
+									true,
+									new ErrorHandler( context, method, mirror, value, hql ),
+									ProcessorSessionFactory.create( context.getProcessingEnvironment() )
+							);
+					if ( statement != null ) {
+						for ( SqmParameter<?> param : statement.getSqmParameters() ) {
+							checkParameter( param, paramNames, paramTypes, method, mirror, value );
+						}
+					}
 				}
+				//TODO: for SQL queries check that there is a method parameter for every query parameter
+
+				// now check that the query has a parameter for every method parameter
+				checkParameters( method, paramNames, paramTypes, mirror, value, hql );
 			}
+		}
+	}
+
+	private void checkParameter(
+			SqmParameter<?> param, List<String> paramNames, List<String> paramTypes,
+			ExecutableElement method, AnnotationMirror mirror, AnnotationValue value) {
+		final SqmExpressible<?> expressible = param.getExpressible();
+		final String queryParamType = expressible == null ? "unknown" : expressible.getTypeName(); //getTypeName() can return "unknown"
+		if ( param.getName() != null ) {
+			final String name = param.getName();
+			int index = paramNames.indexOf( name );
+			if ( index < 0 ) {
+				context.message( method, mirror, value,
+						"missing method parameter for query parameter :" + name
+						+ " (add a parameter '" + queryParamType + ' ' + name + "' to '" + method.getSimpleName() + "')",
+						Diagnostic.Kind.ERROR );
+			}
+			else if ( !isLegalAssignment( paramTypes.get(index), queryParamType ) ) {
+				context.message( method, mirror, value,
+						"parameter matching query parameter :" + name + " has the wrong type"
+								+ " (change the method parameter type to '" + queryParamType + "')",
+						Diagnostic.Kind.ERROR );
+			}
+		}
+		else if ( param.getPosition() != null ) {
+			int position = param.getPosition();
+			if ( position > paramNames.size() ) {
+				context.message( method, mirror, value,
+						"missing method parameter for query parameter ?" + position
+								+ " (add a parameter of type '" + queryParamType + "' to '" + method.getSimpleName() + "')",
+						Diagnostic.Kind.ERROR );
+			}
+			else if ( !isLegalAssignment( paramTypes.get(position-1), queryParamType ) ) {
+				context.message( method, mirror, value,
+						"parameter matching query parameter ?" + position + " has the wrong type"
+								+ " (change the method parameter type to '" + queryParamType + "')",
+						Diagnostic.Kind.ERROR );
+			}
+		}
+	}
+
+	private static boolean isLegalAssignment(String argType, String paramType) {
+		return paramType.equals("unknown")
+			|| paramType.equals(argType)
+			|| paramType.equals(fromPrimitive(argType));
+	}
+
+	private static @Nullable String fromPrimitive(String argType) {
+		switch (argType) {
+			case "boolean":
+				return Boolean.class.getName();
+			case "char":
+				return Character.class.getName();
+			case "int":
+				return Integer.class.getName();
+			case "long":
+				return Long.class.getName();
+			case "short":
+				return Short.class.getName();
+			case "byte":
+				return Byte.class.getName();
+			case "float":
+				return Float.class.getName();
+			case "double":
+				return Double.class.getName();
+			default:
+				return null;
 		}
 	}
 
@@ -783,8 +860,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean parameterIsMissing(String hql, int i, String param, String type) {
-		return !hql.contains(":" + param)
-			&& !hql.contains("?" + i)
+		return !hql.matches(".*(:" + param + "|\\?" + i + ")\\b.*")
 			&& !isPageParam(type)
 			&& !isOrderParam(type);
 	}

@@ -479,6 +479,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
+	/**
+	 * Create a finder method which returns multiple results.
+	 */
 	private void createCriteriaFinder(
 			ExecutableElement method, TypeMirror returnType, @Nullable TypeElement containerType, TypeElement entity) {
 		final String methodName = method.getSimpleName().toString();
@@ -496,6 +499,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						containerType == null ? null : containerType.toString(),
 						paramNames,
 						paramTypes,
+						false,
 						dao,
 						sessionType,
 						enabledFetchProfiles( method )
@@ -550,6 +554,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							null,
 							paramNames,
 							paramTypes,
+							false,
 							dao,
 							sessionType,
 							enabledFetchProfiles( method )
@@ -607,6 +612,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									null,
 									List.of( parameter.getSimpleName().toString() ),
 									List.of( parameter.asType().toString() ),
+									fieldType == FieldType.ID,
 									dao,
 									sessionType,
 									enabledFetchProfiles( method )

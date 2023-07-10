@@ -14,12 +14,10 @@ import org.hibernate.HibernateException;
 import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.LockOptions;
 import org.hibernate.UnknownProfileException;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.LoadQueryInfluencers;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.spi.*;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.LoaderLogging;
 import org.hibernate.loader.ast.spi.NaturalIdLoadOptions;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -45,6 +43,9 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 	private Set<String> enabledFetchProfiles;
 	private Set<String> disabledFetchProfiles;
 
+	private RootGraphImplementor<T> rootGraph;
+	private GraphSemantic graphSemantic;
+
 	protected BaseNaturalIdLoadAccessImpl(LoadAccessContext context, EntityMappingType entityDescriptor) {
 		this.context = context;
 		this.entityDescriptor = entityDescriptor;
@@ -58,6 +59,12 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 
 	public LockOptions getLockOptions() {
 		return lockOptions;
+	}
+
+	public Object with(RootGraph<T> graph, GraphSemantic semantic) {
+		this.rootGraph = (RootGraphImplementor<T>) graph;
+		this.graphSemantic = semantic;
+		return this;
 	}
 
 	public Object enableFetchProfile(String profileName) {
@@ -218,6 +225,8 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
 			final HashSet<String> fetchProfiles =
 					influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
+			final EffectiveEntityGraph effectiveEntityGraph =
+					session.getLoadQueryInfluencers().applyEntityGraph( rootGraph, graphSemantic);
 			try {
 				final T loaded = cachedResolution != null
 						? (T) getIdentifierLoadAccess().load(cachedResolution)
@@ -236,6 +245,7 @@ public abstract class BaseNaturalIdLoadAccessImpl<T> implements NaturalIdLoadOpt
 			}
 			finally {
 				context.delayedAfterCompletion();
+				effectiveEntityGraph.clear();
 				influencers.setEnabledFetchProfileNames( fetchProfiles );
 			}
 		}

@@ -107,21 +107,12 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 			final HashSet<String> fetchProfiles =
 					influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
 			final EffectiveEntityGraph effectiveEntityGraph =
-					session.getLoadQueryInfluencers().getEffectiveEntityGraph();
-			if ( graphSemantic != null ) {
-				if ( rootGraph == null ) {
-					throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
-				}
-				effectiveEntityGraph.applyGraph( rootGraph, graphSemantic );
-			}
-
+					session.getLoadQueryInfluencers().applyEntityGraph( rootGraph, graphSemantic);
 			try {
 				return executor.get();
 			}
 			finally {
-				if ( graphSemantic != null ) {
-					effectiveEntityGraph.clear();
-				}
+				effectiveEntityGraph.clear();
 				influencers.setEnabledFetchProfileNames( fetchProfiles );
 			}
 		}

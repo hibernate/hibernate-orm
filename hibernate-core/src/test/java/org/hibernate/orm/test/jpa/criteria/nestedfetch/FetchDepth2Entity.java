@@ -24,12 +24,10 @@ public class FetchDepth2Entity implements Serializable {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "depth3id", referencedColumnName = "id", nullable = false)
-	private FetchDepth3Entity depth3Entity;
-
 	@OneToMany(mappedBy = "depth2Entity")
 	private Set<FetchDepth1Entity> depth1Entities = new HashSet<>();
+
+	private String val;
 
 	public void setId(int value) {
 		this.id = value;
@@ -37,14 +35,6 @@ public class FetchDepth2Entity implements Serializable {
 
 	public int getId() {
 		return id;
-	}
-
-	public void setDepth3Entity(FetchDepth3Entity value) {
-		this.depth3Entity = value;
-	}
-
-	public FetchDepth3Entity getDepth3Entity() {
-		return depth3Entity;
 	}
 
 	public void setDepth1Entities(Set<FetchDepth1Entity> value) {
@@ -55,4 +45,11 @@ public class FetchDepth2Entity implements Serializable {
 		return depth1Entities;
 	}
 
+	public String getVal() {
+		return val;
+	}
+
+	public void setVal(String val) {
+		this.val = val;
+	}
 }

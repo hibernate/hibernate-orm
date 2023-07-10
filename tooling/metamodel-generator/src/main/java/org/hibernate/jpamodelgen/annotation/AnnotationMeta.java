@@ -8,6 +8,7 @@ package org.hibernate.jpamodelgen.annotation;
 
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
+import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
@@ -18,6 +19,7 @@ import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
 import java.util.List;
 
 import static java.util.Collections.emptySet;
@@ -94,7 +96,8 @@ public abstract class AnnotationMeta implements Metamodel {
 									// If we are in the scope of @CheckHQL, semantic errors in the
 									// query result in compilation errors. Otherwise, they only
 									// result in warnings, so we don't break working code.
-									new WarningErrorHandler( mirror, value, hql, reportErrors, checkHql ),
+									new WarningErrorHandler( getContext(), getElement(), mirror, value, hql,
+											reportErrors, checkHql ),
 									ProcessorSessionFactory.create( getContext().getProcessingEnvironment() )
 							);
 					if ( statement instanceof SqmSelectStatement
@@ -158,12 +161,29 @@ public abstract class AnnotationMeta implements Metamodel {
 
 	abstract void putMember(String name, MetaAttribute nameMetaAttribute);
 
-	private class WarningErrorHandler extends ErrorHandler {
+	/**
+	 * Adjusts the severity of validation errors that occur type-checking
+	 * a named HQL query, depending on whether we are within the scope
+	 * of a {@link org.hibernate.annotations.processing.CheckHQL} annotation.
+	 * <p>
+	 * We always type-check; but when there's no {@code CheckHQL} in scope,
+	 * we report problems as warnings only. This is necessary, since we don't
+	 * yet accept absolutely everything that is legal: we don't know about
+	 * XML, we don't handle converters, and we don't handle {@code enum}
+	 * types very well.
+	 */
+	private static class WarningErrorHandler extends ErrorHandler {
 		private final boolean reportErrors;
 		private final boolean checkHql;
 
-		public WarningErrorHandler(AnnotationMirror mirror, AnnotationValue value, String hql, boolean reportErrors, boolean checkHql) {
-			super( AnnotationMeta.this.getElement(), mirror, value, hql, AnnotationMeta.this.getContext() );
+		private WarningErrorHandler(
+				Context context,
+				Element element,
+				AnnotationMirror mirror,
+				AnnotationValue value, String hql,
+				boolean reportErrors,
+				boolean checkHql) {
+			super(context, element, mirror, value, hql);
 			this.reportErrors = reportErrors;
 			this.checkHql = checkHql;
 		}
@@ -188,7 +208,9 @@ public abstract class AnnotationMeta implements Metamodel {
 		}
 
 		@Override
-		public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String message, RecognitionException e) {
+		public void syntaxError(
+				Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine,
+				String message, RecognitionException e) {
 			if (reportErrors) {
 				super.syntaxError( recognizer, offendingSymbol, line, charPositionInLine, message, e );
 			}

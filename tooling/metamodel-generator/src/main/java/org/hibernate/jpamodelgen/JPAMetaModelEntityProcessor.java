@@ -117,10 +117,14 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		final PackageElement jakartaAnnotationPackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "jakarta.annotation" );
+		final PackageElement jakartaContextPackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "jakarta.enterprise.context" );
 
 		context.setAddInjectAnnotation( jakartaInjectPackage != null );
 		context.setAddNonnullAnnotation( jakartaAnnotationPackage != null );
 		context.setAddGeneratedAnnotation( jakartaAnnotationPackage != null );
+		context.setAddDependentAnnotation( jakartaContextPackage != null );
 
 		final Map<String, String> options = environment.getOptions();
 

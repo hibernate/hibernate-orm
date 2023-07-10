@@ -66,6 +66,7 @@ public final class Context {
 	 */
 	private Boolean fullyXmlConfigured;
 	private boolean addInjectAnnotation = false;
+	private boolean addDependentAnnotation = false;
 	private boolean addNonnullAnnotation = false;
 	private boolean addGeneratedAnnotation = true;
 	private boolean addGenerationDate;
@@ -120,6 +121,14 @@ public final class Context {
 
 	public void setAddInjectAnnotation(boolean addInjectAnnotation) {
 		this.addInjectAnnotation = addInjectAnnotation;
+	}
+
+	public boolean addDependentAnnotation() {
+		return addDependentAnnotation;
+	}
+
+	public void setAddDependentAnnotation(boolean addDependentAnnotation) {
+		this.addDependentAnnotation = addDependentAnnotation;
 	}
 
 	public boolean addNonnullAnnotation() {

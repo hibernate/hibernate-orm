@@ -942,8 +942,9 @@ public class LoaderSelectBuilder {
 						joined = false;
 					}
 					else if ( fetchDepth > maximumFetchDepth + 1 ) {
+						// We can preserve the existing value of joined for basic and embedded values
 						if ( !( fetchable instanceof BasicValuedModelPart ) && !( fetchable instanceof EmbeddedAttributeMapping ) ) {
-							return;
+							joined = false;
 						}
 					}
 				}

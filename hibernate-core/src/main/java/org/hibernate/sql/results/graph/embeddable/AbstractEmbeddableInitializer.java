@@ -33,6 +33,7 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer.BATCH_PROPERTY;
 
 /**
@@ -68,7 +69,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
 		this.rowState = new Object[ size ];
 
-		this.isPartOfKey = isPartOfKey( embedded, navigablePath );
+		this.isPartOfKey = isPartOfKey( embedded, navigablePath, findFirstEntityDescriptorAccess() );
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
 		this.createEmptyCompositesEnabled = !isPartOfKey && embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
 
@@ -76,17 +77,26 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		this.assemblers = createAssemblers( resultDescriptor, creationState, embeddableTypeDescriptor );
 	}
 
-	private static boolean isPartOfKey(EmbeddableValuedModelPart modelPart, NavigablePath navigablePath) {
+	private static boolean isPartOfKey(
+			EmbeddableValuedModelPart modelPart,
+			NavigablePath navigablePath,
+			FetchParentAccess firstEntityAccess) {
 		return modelPart.isEntityIdentifierMapping()
-				|| isPartOfKey( navigablePath )
+				|| isPartOfKey( navigablePath, firstEntityAccess )
 				|| modelPart.getNavigableRole() != null && isPartOfKey( modelPart.getNavigableRole() );
 	}
 
-	private static boolean isPartOfKey(NavigablePath navigablePath) {
+	private static boolean isPartOfKey(NavigablePath navigablePath, FetchParentAccess firstEntityAccess) {
+		if ( firstEntityAccess != null && firstEntityAccess.getNavigablePath() == navigablePath ) {
+			// Stop if we find the navigable path of the first entity fetch parent access
+			// since we might be inside an associated entity nested in another embeddable
+			return false;
+		}
 		return ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
 				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() )
 				|| navigablePath instanceof EntityIdentifierNavigablePath
-				|| navigablePath.getParent().getParent() != null && isPartOfKey( navigablePath.getParent() );
+				|| castNonNull( navigablePath.getParent() ).getParent() != null
+				&& isPartOfKey( navigablePath.getParent(), firstEntityAccess );
 	}
 
 	private static boolean isPartOfKey(NavigableRole navigableRole) {

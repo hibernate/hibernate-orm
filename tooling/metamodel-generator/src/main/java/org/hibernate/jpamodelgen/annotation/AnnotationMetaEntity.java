@@ -287,7 +287,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		String typeName = element.getSimpleName().toString() + '_';
 		String sessionType = getterOrSetter.getReturnType().toString();
 		putMember( name,
-				new DaoConstructor(this, typeName, name, sessionType, context.addInjectAnnotation() ) );
+				new DaoConstructor(
+						this,
+						typeName,
+						name,
+						sessionType,
+						context.addInjectAnnotation(),
+						context.addNonnullAnnotation()
+				)
+		);
 		return sessionType;
 	}
 
@@ -502,7 +510,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						false,
 						dao,
 						sessionType,
-						enabledFetchProfiles( method )
+						enabledFetchProfiles( method ),
+						context.addNonnullAnnotation()
 				)
 		);
 	}
@@ -541,7 +550,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							paramTypes,
 							dao,
 							sessionType,
-							enabledFetchProfiles( method )
+							enabledFetchProfiles( method ),
+							context.addNonnullAnnotation()
 					)
 			);
 		}
@@ -557,7 +567,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							false,
 							dao,
 							sessionType,
-							enabledFetchProfiles( method )
+							enabledFetchProfiles( method ),
+							context.addNonnullAnnotation()
 					)
 			);
 		}
@@ -582,7 +593,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 										parameter.asType().toString(),
 										dao,
 										sessionType,
-										enabledFetchProfiles( method )
+										enabledFetchProfiles( method ),
+										context.addNonnullAnnotation()
 								)
 						);
 						break;
@@ -598,7 +610,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 										List.of( parameter.asType().toString() ),
 										dao,
 										sessionType,
-										enabledFetchProfiles( method )
+										enabledFetchProfiles( method ),
+										context.addNonnullAnnotation()
 								)
 						);
 						break;
@@ -615,7 +628,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									fieldType == FieldType.ID,
 									dao,
 									sessionType,
-									enabledFetchProfiles( method )
+									enabledFetchProfiles( method ),
+									context.addNonnullAnnotation()
 							)
 					);
 					break;
@@ -703,7 +717,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								paramTypes,
 								isNative,
 								dao,
-								sessionType
+								sessionType,
+								context.addNonnullAnnotation()
 						);
 				putMember( attribute.getPropertyName() + paramTypes, attribute );
 

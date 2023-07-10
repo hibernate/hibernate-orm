@@ -114,19 +114,19 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 		final PackageElement jakartaInjectPackage =
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "jakarta.inject" );
+		final PackageElement jakartaAnnotationPackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "jakarta.annotation" );
+
 		context.setAddInjectAnnotation( jakartaInjectPackage != null );
+		context.setAddNonnullAnnotation( jakartaAnnotationPackage != null );
+		context.setAddGeneratedAnnotation( jakartaAnnotationPackage != null );
 
 		final Map<String, String> options = environment.getOptions();
 
 		String setting = options.get( ADD_GENERATED_ANNOTATION );
 		if ( setting != null ) {
 			context.setAddGeneratedAnnotation( parseBoolean( setting ) );
-		}
-		else {
-			PackageElement jakartaAnnotationPackage =
-					context.getProcessingEnvironment().getElementUtils()
-							.getPackageElement( "jakarta.annotation" );
-			context.setAddGeneratedAnnotation( jakartaAnnotationPackage != null );
 		}
 
 		context.setAddGenerationDate( parseBoolean( options.get( ADD_GENERATION_DATE ) ) );

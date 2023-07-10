@@ -26,6 +26,7 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 	final boolean belongsToDao;
 	final String sessionType;
 	final boolean usingEntityManager;
+	private final boolean addNonnullAnnotation;
 	final List<String> fetchProfiles;
 
 	final List<String> paramNames;
@@ -39,7 +40,8 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 			String sessionType,
 			List<String> fetchProfiles,
 			List<String> paramNames,
-			List<String> paramTypes) {
+			List<String> paramTypes,
+			boolean addNonnullAnnotation) {
 		this.annotationMetaEntity = annotationMetaEntity;
 		this.methodName = methodName;
 		this.entity = entity;
@@ -48,7 +50,8 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 		this.fetchProfiles = fetchProfiles;
 		this.paramNames = paramNames;
 		this.paramTypes = paramTypes;
-		usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
+		this.usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
+		this.addNonnullAnnotation = addNonnullAnnotation;
 	}
 
 	@Override
@@ -81,6 +84,7 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 		return annotationMetaEntity;
 	}
 
+	abstract boolean isId();
 
 	@Override
 	public String getAttributeNameDeclarationString() {
@@ -123,13 +127,53 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 
 	void comment(StringBuilder declaration) {
 		declaration
-				.append("\n/**\n * @see ")
+				.append("\n/**")
+				.append("\n * Find ")
+				.append("{@link ")
+				.append(annotationMetaEntity.importType(entity))
+				.append("} by ");
+		int paramCount = paramNames.size();
+		for (int i = 0; i < paramCount; i++) {
+			String param = paramNames.get(i);
+			if ( i>0 ) {
+				if ( i + 1 == paramCount) {
+					declaration
+							.append(paramCount>2 ? ", and " : " and "); //Oxford comma
+				}
+				else {
+					declaration
+							.append(", ");
+				}
+			}
+			declaration
+					.append("{@link ")
+					.append(annotationMetaEntity.importType(entity))
+					.append('#')
+					.append(param)
+					.append(' ')
+					.append(param)
+					.append("}");
+		}
+		declaration
+				.append('.')
+				.append("\n *")
+				.append("\n * @see ")
 				.append(annotationMetaEntity.getQualifiedName())
 				.append("#")
 				.append(methodName)
 				.append("(")
 				.append(parameterList())
-				.append(")")
+				.append(")");
+//		declaration
+//				.append("\n *");
+//		for (String param : paramNames) {
+//			declaration
+//					.append("\n * @see ")
+//					.append(annotationMetaEntity.importType(entity))
+//					.append('#')
+//					.append(param);
+//		}
+		declaration
 				.append("\n **/\n");
 	}
 
@@ -180,6 +224,7 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 		declaration
 				.append("(");
 		if ( !belongsToDao ) {
+			notNull( declaration );
 			declaration
 					.append(annotationMetaEntity.importType(Constants.ENTITY_MANAGER))
 					.append(" entityManager");
@@ -189,6 +234,9 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 				declaration
 						.append(", ");
 			}
+			if ( isId() ) {
+				notNull( declaration );
+			}
 			declaration
 					.append(annotationMetaEntity.importType(paramTypes.get(i)))
 					.append(" ")
@@ -196,5 +244,14 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 		}
 		declaration
 				.append(')');
+	}
+
+	private void notNull(StringBuilder declaration) {
+		if ( addNonnullAnnotation ) {
+			declaration
+					.append('@')
+					.append(annotationMetaEntity.importType("jakarta.annotation.Nonnull"))
+					.append(' ');
+		}
 	}
 }

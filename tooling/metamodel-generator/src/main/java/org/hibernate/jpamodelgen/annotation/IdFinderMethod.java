@@ -25,11 +25,17 @@ public class IdFinderMethod extends AbstractFinderMethod {
 			String paramName, String paramType,
 			boolean belongsToDao,
 			String sessionType,
-			List<String> fetchProfiles) {
+			List<String> fetchProfiles,
+			boolean addNonnullAnnotation) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, fetchProfiles,
-				List.of(paramName), List.of(paramType) );
+				List.of(paramName), List.of(paramType), addNonnullAnnotation );
 		this.paramName = paramName;
 		usingStatelessSession = Constants.HIB_STATELESS_SESSION.equals(sessionType);
+	}
+
+	@Override
+	boolean isId() {
+		return true;
 	}
 
 	@Override

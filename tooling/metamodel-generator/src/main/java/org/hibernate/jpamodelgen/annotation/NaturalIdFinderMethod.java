@@ -21,9 +21,16 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			List<String> paramNames, List<String> paramTypes,
 			boolean belongsToDao,
 			String sessionType,
-			List<String> fetchProfiles) {
+			List<String> fetchProfiles,
+			boolean addNonnullAnnotation) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, fetchProfiles,
-				paramNames, paramTypes );
+				paramNames, paramTypes, addNonnullAnnotation );
+	}
+
+	@Override
+	boolean isId() {
+		// natural ids can be null
+		return false;
 	}
 
 	@Override

@@ -104,8 +104,28 @@ public interface IdentifierLoadAccess<T> {
 	 */
 	IdentifierLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
 
+	/**
+	 * Customize the associations fetched by specifying a
+	 * {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
+	 * that should be enabled during this operation.
+	 * <p>
+	 * This allows the {@linkplain Session#isFetchProfileEnabled(String)
+	 * session-level fetch profiles} to be temporarily overridden.
+	 *
+	 * @since 6.3
+	 */
 	IdentifierLoadAccess<T> enableFetchProfile(String profileName);
 
+	/**
+	 * Customize the associations fetched by specifying a
+	 * {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
+	 * that should be disabled during this operation.
+	 * <p>
+	 * This allows the {@linkplain Session#isFetchProfileEnabled(String)
+	 * session-level fetch profiles} to be temporarily overridden.
+	 *
+	 * @since 6.3
+	 */
 	IdentifierLoadAccess<T> disableFetchProfile(String profileName);
 
 	/**

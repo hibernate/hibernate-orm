@@ -43,28 +43,35 @@ public class IdFinderMethod extends AbstractFinderMethod {
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		preamble( declaration );
-		if ( usingStatelessSession || usingEntityManager && fetchProfiles.isEmpty() ) {
-			declaration
-					.append(usingStatelessSession ? ".get(" : ".find(")
-					.append(annotationMetaEntity.importType(entity))
-					.append(".class, ")
-					.append(paramName)
-					.append(");")
-					.append("\n}");
+		if ( fetchProfiles.isEmpty() ) {
+			findWithNoFetchProfiles( declaration );
 		}
 		else {
-			unwrapSession( declaration );
-			declaration
-					.append(".byId(")
-					.append(annotationMetaEntity.importType(entity))
-					.append(".class)");
-			enableFetchProfile( declaration );
-			declaration
-					.append("\n\t\t\t.load(")
-					.append(paramName)
-					.append(");\n}");
-
+			findWithFetchProfiles( declaration );
 		}
 		return declaration.toString();
+	}
+
+	private void findWithFetchProfiles(StringBuilder declaration) {
+		unwrapSession( declaration );
+		declaration
+				.append(".byId(")
+				.append(annotationMetaEntity.importType(entity))
+				.append(".class)");
+		enableFetchProfile(declaration);
+		declaration
+				.append("\n\t\t\t.load(")
+				.append(paramName)
+				.append(");\n}");
+	}
+
+	private void findWithNoFetchProfiles(StringBuilder declaration) {
+		declaration
+				.append(usingStatelessSession ? ".get(" : ".find(")
+				.append(annotationMetaEntity.importType(entity))
+				.append(".class, ")
+				.append(paramName)
+				.append(");")
+				.append("\n}");
 	}
 }

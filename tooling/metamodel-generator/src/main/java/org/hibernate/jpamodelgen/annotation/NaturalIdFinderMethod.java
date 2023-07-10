@@ -39,6 +39,17 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		comment( declaration );
 		preamble( declaration );
 		unwrapSession( declaration );
+		if ( reactive ) {
+			findReactively( declaration );
+		}
+		else {
+			findBlockingly( declaration );
+		}
+		declaration.append(";\n}");
+		return declaration.toString();
+	}
+
+	private void findBlockingly(StringBuilder declaration) {
 		declaration
 				.append(".byNaturalId(")
 				.append(annotationMetaEntity.importType(entity))
@@ -56,8 +67,49 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 					.append(")");
 		}
 		declaration
-				.append("\n\t\t\t.load();\n}");
-		return declaration.toString();
+				.append("\n\t\t\t.load()");
+	}
+
+	private void findReactively(StringBuilder declaration) {
+		boolean composite = paramNames.size() > 1;
+		declaration
+				.append(".find(");
+		if (composite) {
+			declaration.append("\n\t\t\t");
+		}
+		declaration
+				.append(annotationMetaEntity.importType(entity))
+				.append(".class, ");
+		if (composite) {
+			declaration
+					.append("\n\t\t\t")
+					.append(annotationMetaEntity.importType("org.hibernate.reactive.common.Identifier"))
+					.append(".composite(");
+		}
+		for ( int i = 0; i < paramNames.size(); i ++ ) {
+			if ( i>0 ) {
+				declaration
+						.append(", ");
+			}
+			if (composite) {
+				declaration
+						.append("\n\t\t\t\t");
+			}
+			final String paramName = paramNames.get(i);
+			declaration
+					.append(annotationMetaEntity.importType("org.hibernate.reactive.common.Identifier"))
+					.append(".id(")
+					.append(annotationMetaEntity.importType(entity + '_'))
+					.append('.')
+					.append(paramName)
+					.append(", ")
+					.append(paramName)
+					.append(")");
+		}
+		if (composite) {
+			declaration.append("\n\t\t\t)\n\t");
+		}
+		declaration.append(")");
 	}
 
 }

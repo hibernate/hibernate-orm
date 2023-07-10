@@ -8,7 +8,6 @@ package org.hibernate.jpamodelgen;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -28,6 +27,9 @@ import org.hibernate.jpamodelgen.util.AccessType;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.lang.Boolean.parseBoolean;
+import static java.util.Collections.emptyList;
 
 /**
  * @author Max Andersen
@@ -77,12 +79,14 @@ public final class Context {
 	private final Collection<String> generatedModelClasses = new HashSet<>();
 
 	// keep track of which named queries have been checked
-	private Set<String> checkedNamedQueries = new HashSet<>();
+	private final Set<String> checkedNamedQueries = new HashSet<>();
 
 	public Context(ProcessingEnvironment processingEnvironment) {
 		this.processingEnvironment = processingEnvironment;
 
-		String persistenceXmlOption = processingEnvironment.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
+		final Map<String, String> options = processingEnvironment.getOptions();
+
+		String persistenceXmlOption = options.get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
 		if ( persistenceXmlOption != null ) {
 			if ( !persistenceXmlOption.startsWith("/") ) {
 				persistenceXmlOption = "/" + persistenceXmlOption;
@@ -93,7 +97,7 @@ public final class Context {
 			persistenceXmlLocation = DEFAULT_PERSISTENCE_XML_LOCATION;
 		}
 
-		String ormXmlOption = processingEnvironment.getOptions().get( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
+		String ormXmlOption = options.get( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
 		if ( ormXmlOption != null ) {
 			ormXmlFiles = new ArrayList<>();
 			for ( String ormFile : ormXmlOption.split( "," ) ) {
@@ -104,11 +108,11 @@ public final class Context {
 			}
 		}
 		else {
-			ormXmlFiles = Collections.emptyList();
+			ormXmlFiles = emptyList();
 		}
 
-		lazyXmlParsing = Boolean.parseBoolean( processingEnvironment.getOptions().get( JPAMetaModelEntityProcessor.LAZY_XML_PARSING ) );
-		logDebug = Boolean.parseBoolean( processingEnvironment.getOptions().get( JPAMetaModelEntityProcessor.DEBUG_OPTION ) );
+		lazyXmlParsing = parseBoolean( options.get( JPAMetaModelEntityProcessor.LAZY_XML_PARSING ) );
+		logDebug = parseBoolean( options.get( JPAMetaModelEntityProcessor.DEBUG_OPTION ) );
 	}
 
 	public ProcessingEnvironment getProcessingEnvironment() {

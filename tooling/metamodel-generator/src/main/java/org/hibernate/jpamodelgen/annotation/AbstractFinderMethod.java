@@ -26,6 +26,7 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 	final boolean belongsToDao;
 	final String sessionType;
 	final boolean usingEntityManager;
+	final boolean reactive;
 	private final boolean addNonnullAnnotation;
 	final List<String> fetchProfiles;
 
@@ -50,8 +51,9 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 		this.fetchProfiles = fetchProfiles;
 		this.paramNames = paramNames;
 		this.paramTypes = paramTypes;
-		this.usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
 		this.addNonnullAnnotation = addNonnullAnnotation;
+		this.usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
+		this.reactive = Constants.MUTINY_SESSION.equals(sessionType);
 	}
 
 	@Override
@@ -203,8 +205,7 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 
 	void preamble(StringBuilder declaration) {
 		modifiers( declaration );
-		declaration
-				.append(annotationMetaEntity.importType(entity));
+		entityType( declaration );
 		declaration
 				.append(" ")
 				.append(methodName);
@@ -212,6 +213,20 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 		declaration
 				.append(" {")
 				.append("\n\treturn entityManager");
+	}
+
+	private void entityType(StringBuilder declaration) {
+		if ( reactive ) {
+			declaration
+					.append(annotationMetaEntity.importType(Constants.UNI))
+					.append('<');
+		}
+		declaration
+				.append(annotationMetaEntity.importType(entity));
+		if ( reactive ) {
+			declaration
+					.append('>');
+		}
 	}
 
 	void modifiers(StringBuilder declaration) {

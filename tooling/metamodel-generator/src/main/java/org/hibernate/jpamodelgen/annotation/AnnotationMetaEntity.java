@@ -219,8 +219,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	@Override
-	public boolean belongsToDao() {
+	boolean belongsToDao() {
 		return dao;
+	}
+
+	@Override
+	String getSessionType() {
+		return sessionType;
 	}
 
 	@Override
@@ -289,10 +294,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 * variable backing it, together with a constructor that initializes
 	 * it.
 	 */
-	private String addDaoConstructor(ExecutableElement getterOrSetter) {
-		final String name = getterOrSetter.getSimpleName().toString();
+	private String addDaoConstructor(ExecutableElement method) {
+		final String name = method.getSimpleName().toString();
 		final String typeName = element.getSimpleName().toString() + '_';
-		final String sessionType = getterOrSetter.getReturnType().toString();
+		final String sessionType = method.getReturnType().toString();
 		putMember( name,
 				new DaoConstructor(
 						this,
@@ -321,6 +326,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					final Name name = ((TypeElement) element).getQualifiedName();
 					return name.contentEquals(Constants.HIB_SESSION)
 						|| name.contentEquals(Constants.HIB_STATELESS_SESSION)
+						|| name.contentEquals(Constants.MUTINY_SESSION)
 						|| name.contentEquals(Constants.ENTITY_MANAGER);
 				}
 			}
@@ -389,7 +395,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void addQueryMethod(ExecutableElement method) {
 		final TypeMirror returnType = method.getReturnType();
 		if ( returnType.getKind() == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) returnType;
+			final DeclaredType declaredType = ununi((DeclaredType) returnType);
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 			switch ( typeArguments.size() ) {
@@ -424,6 +430,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					break;
 			}
 		}
+	}
+
+	private static DeclaredType ununi(DeclaredType returnType) {
+		final TypeElement typeElement = (TypeElement) returnType.asElement();
+		return typeElement.getQualifiedName().contentEquals(Constants.UNI)
+				? (DeclaredType) returnType.getTypeArguments().get(0)
+				: returnType;
 	}
 
 	private static boolean isLegalRawResultType(String containerTypeName) {
@@ -467,7 +480,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					Diagnostic.Kind.ERROR );
 		}
 		else {
-			final DeclaredType declaredType = (DeclaredType) returnType;
+			final DeclaredType declaredType = ununi( (DeclaredType) returnType );
 			final TypeElement entity = (TypeElement) declaredType.asElement();
 			if ( !containsAnnotation( entity, Constants.ENTITY ) ) {
 				context.message( method,
@@ -588,42 +601,39 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final FieldType fieldType = validateFinderParameter( entity, parameter );
 		if ( fieldType != null ) {
 			final String methodKey = methodName + "!";
-			switch ( fieldType ) {
+			final List<String> profiles = enabledFetchProfiles( method );
+			switch ( pickStrategy( fieldType, profiles ) ) {
 				case ID:
-					if ( !usingStatelessSession()
-							|| enabledFetchProfiles( method ).isEmpty() ) {  // no byId() API for SS, only get()
-						putMember( methodKey,
-								new IdFinderMethod(
-										this,
-										methodName,
-										returnType.toString(),
-										parameter.getSimpleName().toString(),
-										parameter.asType().toString(),
-										dao,
-										sessionType,
-										enabledFetchProfiles( method ),
-										context.addNonnullAnnotation()
-								)
-						);
-						break;
-					}
+					putMember( methodKey,
+							new IdFinderMethod(
+									this,
+									methodName,
+									returnType.toString(),
+									parameter.getSimpleName().toString(),
+									parameter.asType().toString(),
+									dao,
+									sessionType,
+									profiles,
+									context.addNonnullAnnotation()
+							)
+					);
+					break;
 				case NATURAL_ID:
-					if ( !usingStatelessSession()) { // no byNaturalId() lookup API for SS
-						putMember( methodKey,
-								new NaturalIdFinderMethod(
-										this,
-										methodName,
-										returnType.toString(),
-										List.of( parameter.getSimpleName().toString() ),
-										List.of( parameter.asType().toString() ),
-										dao,
-										sessionType,
-										enabledFetchProfiles( method ),
-										context.addNonnullAnnotation()
-								)
-						);
-						break;
-					}
+					context.message( method, sessionType, Diagnostic.Kind.WARNING );
+					putMember( methodKey,
+							new NaturalIdFinderMethod(
+									this,
+									methodName,
+									returnType.toString(),
+									List.of( parameter.getSimpleName().toString() ),
+									List.of( parameter.asType().toString() ),
+									dao,
+									sessionType,
+									profiles,
+									context.addNonnullAnnotation()
+							)
+					);
+					break;
 				case BASIC:
 					putMember( methodKey,
 							new CriteriaFinderMethod(
@@ -636,12 +646,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									fieldType == FieldType.ID,
 									dao,
 									sessionType,
-									enabledFetchProfiles( method ),
+									profiles,
 									context.addNonnullAnnotation()
 							)
 					);
 					break;
 			}
+		}
+	}
+
+	private FieldType pickStrategy(FieldType fieldType, List<String> profiles) {
+		switch (fieldType) {
+			case ID:
+				// no byId() API for SS or M.S, only get()
+				return (usingStatelessSession() || usingReactiveSession()) && !profiles.isEmpty()
+						? FieldType.BASIC : FieldType.ID;
+			case NATURAL_ID:
+				// no byNaturalId() lookup API for SS
+				// no byNaturalId() in M.S, but we do have Identifier workaround
+				return usingStatelessSession() || (usingReactiveSession() && !profiles.isEmpty())
+						? FieldType.BASIC : FieldType.NATURAL_ID;
+			default:
+				return FieldType.BASIC;
 		}
 	}
 
@@ -863,6 +889,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return !hql.matches(".*(:" + param + "|\\?" + i + ")\\b.*")
 			&& !isPageParam(type)
 			&& !isOrderParam(type);
+	}
+
+	private boolean usingReactiveSession() {
+		return Constants.MUTINY_SESSION.equals(sessionType);
 	}
 
 	private boolean usingStatelessSession() {

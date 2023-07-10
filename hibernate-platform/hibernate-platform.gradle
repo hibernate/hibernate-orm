@@ -17,6 +17,7 @@ dependencies {
 
         api project( ":hibernate-envers" )
         api project( ":hibernate-spatial" )
+        api project( ":hibernate-community-dialects" )
 
         api project( ":hibernate-agroal" )
         api project( ":hibernate-c3p0" )

@@ -186,7 +186,8 @@ public final class TypeUtils {
 	public static boolean isAnnotationMirrorOfType(AnnotationMirror annotationMirror, String fqcn) {
 		assert annotationMirror != null;
 		assert fqcn != null;
-		return annotationMirror.getAnnotationType().toString().equals( fqcn );
+		final Element element = annotationMirror.getAnnotationType().asElement();
+		return ((TypeElement) element).getQualifiedName().contentEquals( fqcn );
 	}
 
 	/**
@@ -453,6 +454,13 @@ public final class TypeUtils {
 		else {
 			return extractClosestRealTypeAsString( typeArguments.get( 0 ), context );
 		}
+	}
+
+	public static boolean isClassOrRecordType(Element element) {
+		final ElementKind kind = element.getKind();
+		// we want to accept classes and records but not enums,
+		// and we want to avoid depending on ElementKind.RECORD
+		return kind.isClass() && kind != ElementKind.ENUM;
 	}
 
 	static class EmbeddedAttributeVisitor extends SimpleTypeVisitor8<@Nullable String, Element> {

@@ -27,6 +27,7 @@ import org.hibernate.jpamodelgen.util.Constants;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.jpamodelgen.util.TypeUtils.isClassOrRecordType;
 import static org.hibernate.jpamodelgen.util.NullnessUtil.castNonNull;
 import static org.hibernate.jpamodelgen.util.StringUtil.isProperty;
 import static org.hibernate.jpamodelgen.util.TypeUtils.DEFAULT_ANNOTATION_PARAMETER_NAME;
@@ -306,7 +307,8 @@ class BasicAttributeVisitor extends SimpleTypeVisitor8<Boolean, Element> {
 			return true;
 		}
 
-		if ( element.getKind() == ElementKind.CLASS || element.getKind() == ElementKind.INTERFACE ) {
+		if ( isClassOrRecordType( element )
+				|| element.getKind() == ElementKind.INTERFACE ) {
 			final TypeElement typeElement = (TypeElement) element;
 			final String typeName = typeElement.getQualifiedName().toString();
 			if ( Constants.BASIC_TYPES.contains( typeName ) ) {

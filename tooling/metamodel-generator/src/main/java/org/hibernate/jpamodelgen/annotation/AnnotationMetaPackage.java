@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpamodelgen.annotation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.model.ImportContext;
@@ -137,6 +138,11 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	@Override
 	boolean belongsToDao() {
 		return false;
+	}
+
+	@Override
+	@Nullable String getSessionType() {
+		return null;
 	}
 
 	@Override

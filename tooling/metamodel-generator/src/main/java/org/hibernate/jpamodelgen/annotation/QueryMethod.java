@@ -32,7 +32,8 @@ public class QueryMethod implements MetaAttribute {
 	private final List<String> paramTypes;
 	private final boolean isNative;
 	private final boolean belongsToDao;
-	final boolean usingEntityManager;
+	private final boolean usingEntityManager;
+	private final boolean reactive;
 	private final boolean addNonnullAnnotation;
 
 	public QueryMethod(
@@ -58,8 +59,9 @@ public class QueryMethod implements MetaAttribute {
 		this.paramTypes = paramTypes;
 		this.isNative = isNative;
 		this.belongsToDao = belongsToDao;
-		this.usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
 		this.addNonnullAnnotation = addNonnullAnnotation;
+		this.usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
+		this.reactive = Constants.MUTINY_SESSION.equals(sessionType);
 	}
 
 	@Override
@@ -209,15 +211,22 @@ public class QueryMethod implements MetaAttribute {
 
 	private StringBuilder returnType() {
 		StringBuilder type = new StringBuilder();
+		boolean returnsUni = reactive
+				&& (containerTypeName == null || Constants.LIST.equals(containerTypeName));
+		if ( returnsUni ) {
+			type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
+		}
 		if ( containerTypeName != null ) {
 			type.append(annotationMetaEntity.importType(containerTypeName));
 			if ( returnTypeName != null ) {
-				type.append("<")
-						.append(annotationMetaEntity.importType(returnTypeName)).append(">");
+				type.append("<").append(annotationMetaEntity.importType(returnTypeName)).append(">");
 			}
 		}
 		else if ( returnTypeName != null )  {
 			type.append(annotationMetaEntity.importType(returnTypeName));
+		}
+		if ( returnsUni ) {
+			type.append('>');
 		}
 		return type;
 	}

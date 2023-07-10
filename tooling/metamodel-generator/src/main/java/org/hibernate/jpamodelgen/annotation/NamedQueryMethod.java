@@ -32,12 +32,19 @@ class NamedQueryMethod implements MetaAttribute {
 	private final SqmSelectStatement<?> select;
 	private final String name;
 	private final boolean belongsToDao;
+	private final boolean reactive;
 
-	public NamedQueryMethod(AnnotationMeta annotationMeta, SqmSelectStatement<?> select, String name, boolean belongsToDao) {
+	public NamedQueryMethod(
+			AnnotationMeta annotationMeta,
+			SqmSelectStatement<?> select,
+			String name,
+			boolean belongsToDao,
+			@Nullable String sessionType) {
 		this.annotationMeta = annotationMeta;
 		this.select = select;
 		this.name = name;
 		this.belongsToDao = belongsToDao;
+		this.reactive = Constants.MUTINY_SESSION.equals(sessionType);
 	}
 
 	@Override
@@ -54,11 +61,10 @@ class NamedQueryMethod implements MetaAttribute {
 	public String getAttributeDeclarationString() {
 		final TreeSet<SqmParameter<?>> sortedParameters =
 				new TreeSet<>( select.getSqmParameters() );
-		final String returnType = returnType();
 		StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );
-		returnType( returnType, declaration );
+		returnType( declaration );
 		parameters( sortedParameters, declaration );
 		declaration
 				.append(" {")
@@ -116,13 +122,22 @@ class NamedQueryMethod implements MetaAttribute {
 				.append(belongsToDao ? "public " : "public static ");
 	}
 
-	private void returnType(String returnType, StringBuilder declaration) {
+	private void returnType(StringBuilder declaration) {
+		if ( reactive ) {
+			declaration
+					.append(annotationMeta.importType(Constants.UNI))
+					.append('<');
+		}
 		declaration
 				.append(annotationMeta.importType(Constants.LIST))
 				.append('<')
-				.append(annotationMeta.importType(returnType))
+				.append(annotationMeta.importType(returnType()))
 				.append("> ")
 				.append(name);
+		if ( reactive ) {
+			declaration
+					.append('>');
+		}
 	}
 
 	private void parameters(TreeSet<SqmParameter<?>> sortedParameters, StringBuilder declaration) {

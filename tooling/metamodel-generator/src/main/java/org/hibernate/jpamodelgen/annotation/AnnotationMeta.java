@@ -8,6 +8,7 @@ package org.hibernate.jpamodelgen.annotation;
 
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
@@ -108,7 +109,8 @@ public abstract class AnnotationMeta implements Metamodel {
 										this,
 										(SqmSelectStatement<?>) statement,
 										name.substring(1),
-										belongsToDao()
+										belongsToDao(),
+										getSessionType()
 								)
 						);
 					}
@@ -159,6 +161,8 @@ public abstract class AnnotationMeta implements Metamodel {
 	}
 
 	abstract boolean belongsToDao();
+
+	abstract @Nullable String getSessionType();
 
 	abstract void putMember(String name, MetaAttribute nameMetaAttribute);
 

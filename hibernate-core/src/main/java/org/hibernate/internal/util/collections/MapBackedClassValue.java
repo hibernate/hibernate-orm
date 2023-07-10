@@ -40,7 +40,7 @@ public final class MapBackedClassValue<V> {
 	public MapBackedClassValue(final Map<Class<?>, V> map) {
 		//Defensive copy, and implicit null check.
 		//Choose the Map.copyOf implementation as it has a compact layout;
-		//it doesn't have great get() performance but it's acceptable since we're performing that at most
+		//it doesn't have great get() performance, but it's acceptable since we're performing that at most
 		//once per key before caching it via the ClassValue.
 		this.map = Map.copyOf( map );
 	}
@@ -50,17 +50,17 @@ public final class MapBackedClassValue<V> {
 	}
 
 	/**
-	 * Use this to wipe the backing map, but N.B.
-	 * we won't be clearing the ClassValue: this is useful
-	 * only to avoid classloader leaks since the Map
-	 * may hold references to user classes.
-	 * Since ClassValue is also possibly caching state,
-	 * it might be possible to retrieve some values after this
-	 * but shouldn't be relied on.
-	 * ClassValue doesn't leak references to classes.
+	 * Use this to wipe the backing map, important
+	 * to avoid classloader leaks.
 	 */
 	public void dispose() {
+		Map<Class<?>, V> existing = this.map;
 		this.map = null;
+		if ( existing != null ) {
+			for ( Map.Entry<Class<?>, V> entry : existing.entrySet() ) {
+				this.classValue.remove( entry.getKey() );
+			}
+		}
 	}
 
 }

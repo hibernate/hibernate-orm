@@ -23,6 +23,7 @@ public final class Constants {
 	public static final String MAPPED_SUPERCLASS = "jakarta.persistence.MappedSuperclass";
 	public static final String EMBEDDABLE = "jakarta.persistence.Embeddable";
 	public static final String ID = "jakarta.persistence.Id";
+	public static final String ID_CLASS = "jakarta.persistence.IdClass";
 	public static final String EMBEDDED_ID = "jakarta.persistence.EmbeddedId";
 	public static final String NATURAL_ID = "org.hibernate.annotations.NaturalId";
 	public static final String TRANSIENT = "jakarta.persistence.Transient";

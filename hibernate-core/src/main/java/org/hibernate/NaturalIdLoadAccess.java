@@ -44,8 +44,28 @@ public interface NaturalIdLoadAccess<T> {
 	 */
 	NaturalIdLoadAccess<T> with(LockOptions lockOptions);
 
+	/**
+	 * Customize the associations fetched by specifying a
+	 * {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
+	 * that should be enabled during this operation.
+	 * <p>
+	 * This allows the {@linkplain Session#isFetchProfileEnabled(String)
+	 * session-level fetch profiles} to be temporarily overridden.
+	 *
+	 * @since 6.3
+	 */
 	NaturalIdLoadAccess<T> enableFetchProfile(String profileName);
 
+	/**
+	 * Customize the associations fetched by specifying a
+	 * {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
+	 * that should be disabled during this operation.
+	 * <p>
+	 * This allows the {@linkplain Session#isFetchProfileEnabled(String)
+	 * session-level fetch profiles} to be temporarily overridden.
+	 *
+	 * @since 6.3
+	 */
 	NaturalIdLoadAccess<T> disableFetchProfile(String profileName);
 
 	/**

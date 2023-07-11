@@ -88,12 +88,9 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
-import org.hibernate.sql.results.graph.entity.internal.EntityDelayedResultImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
-import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
-import org.hibernate.sql.results.graph.entity.internal.NotFoundSnapshotResult;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
 import org.hibernate.type.ComponentType;
@@ -1709,73 +1706,17 @@ public class ToOneAttributeMapping
 			TableGroup parentTableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		// We need a join if either
-		//		- the association is mapped with `@NotFound`
-		// 		- the key is on the referring side i.e. this is an inverse to-one
-		// 			and if the FK refers to a non-PK
-		final boolean forceJoin = hasNotFoundAction()
-				|| sideNature == ForeignKeyDescriptor.Nature.TARGET
-				|| referencedPropertyName != null;
-		final TableGroup tableGroupToUse;
-		if ( forceJoin ) {
-			tableGroupToUse = creationState.getSqlAstCreationState().getFromClauseAccess().resolveTableGroup(
-					navigablePath,
-					np -> {
-						final TableGroupJoin tableGroupJoin = createTableGroupJoin(
-								navigablePath,
-								parentTableGroup,
-								null,
-								null,
-								getDefaultSqlAstJoinType( parentTableGroup ),
-								true,
-								false,
-								creationState.getSqlAstCreationState()
-						);
-						parentTableGroup.addTableGroupJoin( tableGroupJoin );
-						return tableGroupJoin.getJoinedGroup();
-					}
-			);
-		}
-		else {
-			tableGroupToUse = createTableGroupForDelayedFetch(
+		// it's a Snapshot then we just need the value of the FK when it belongs to the parentTableGroup
+		if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
+			return foreignKeyDescriptor.getKeyPart().createDomainResult(
 					navigablePath,
 					parentTableGroup,
 					resultVariable,
 					creationState
 			);
 		}
-
-		if ( hasNotFoundAction() ) {
-			assert tableGroupToUse != parentTableGroup;
-			//noinspection unchecked
-			return new NotFoundSnapshotResult(
-					navigablePath,
-					this,
-					parentTableGroup,
-					tableGroupToUse,
-					creationState
-			);
-		}
-		if ( referencedPropertyName == null ) {
-			//noinspection unchecked
-			return new EntityDelayedResultImpl(
-					navigablePath.append( EntityIdentifierMapping.ID_ROLE_NAME ),
-					this,
-					tableGroupToUse,
-					creationState
-			);
-		}
 		else {
-			// We don't support proxies based on a non-PK yet, so we must fetch the whole entity
-			final EntityResultImpl entityResult = new EntityResultImpl(
-					navigablePath,
-					this,
-					tableGroupToUse,
-					null
-			);
-			entityResult.afterInitialize( entityResult, creationState );
-			//noinspection unchecked
-			return entityResult;
+			return null;
 		}
 	}
 
@@ -2360,7 +2301,20 @@ public class ToOneAttributeMapping
 
 	@Override
 	public void addToCacheKey(MutableCacheKeyBuilder cacheKey, Object value, SharedSessionContractImplementor session) {
-		foreignKeyDescriptor.addToCacheKey( cacheKey, foreignKeyDescriptor.getAssociationKeyFromSide( value, sideNature.inverse(), session ), session );
+		final Object cacheValue;
+		// the value may come from a database snapshot, in this case it corresponds to the value of the key and can be
+		// added to the cache key
+		if ( value != null && foreignKeyDescriptor.getJavaType().getJavaTypeClass() == value.getClass() ) {
+			cacheValue = value;
+		}
+		else {
+			cacheValue = foreignKeyDescriptor.getAssociationKeyFromSide(
+					value,
+					sideNature.inverse(),
+					session
+			);
+		}
+		foreignKeyDescriptor.addToCacheKey( cacheKey, cacheValue, session );
 	}
 
 	@Override

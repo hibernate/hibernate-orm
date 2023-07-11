@@ -469,8 +469,7 @@ public class BookResource {
         var books = sessionFactory.fromTransaction(session -> {
             return entityManager.createQuery("from Book where title like ?1 order by title", Book.class)
                     .setParameter(1, titlePattern)
-                    .setMaxResults(RESULTS_PER_PAGE)          // return at most 20 results
-                    .setFirstResult(page*RESULTS_PER_PAGE)    // start from the given page of results
+                    .setPage(Page.page(RESULTS_PER_PAGE, page))
                     .getResultList();
         });
         return books.isEmpty() ? Response.status(404).build() : books;
@@ -487,11 +486,10 @@ Let's hit the code with our favorite thing, the Extract Method refactoring. We o
 [source,java]
 ----
 static List<Book> findBooksByTitleWithPagination(EntityManager entityManager,
-                                                 String titlePattern, int max, int start) {
+                                                 String titlePattern, Page page) {
     return entityManager.createQuery("from Book where title like ?1 order by title", Book.class)
             .setParameter(1, titlePattern)
-            .setMaxResults(max)
-            .setFirstResult(start)
+            .setPage(page)
             .getResultList();
 }
 ----
@@ -512,11 +510,10 @@ We need a place to put the annotation, so lets move our query method to a new cl
 class Queries {
 
     static List<Book> findBooksByTitleWithPagination(EntityManager entityManager,
-                                                     String titlePattern, int max, int start) {
+                                                     String titlePattern, Page page) {
         return entityManager.createNamedQuery("findBooksByTitle", Book.class)
                 .setParameter("title", titlePattern)
-                .setMaxResults(max)
-                .setFirstResult(start)
+                .setPage(page)
                 .getResultList();
     }
 }
@@ -540,7 +537,7 @@ Whatever the case, the code which orchestrates a unit of work usually just calls
 public List<Book> findBooks(String titlePattern) {
     var books = sessionFactory.fromTransaction(session ->
             Queries.findBooksByTitleWithPagination(session, titlePattern,
-                                                   RESULTS_PER_PAGE, RESULTS_PER_PAGE*page));
+                    Page.page(RESULTS_PER_PAGE, page));
     return books.isEmpty() ? Response.status(404).build() : books;
 }
 ----
@@ -550,137 +547,49 @@ That's true, perhaps, but we're much more concerned that it's not very typesafe.
 Indeed, for many years, the lack of compile-time checking for HQL queries and code which binds arguments to query parameters was our number one source of discomfort with Hibernate.
 
 Fortunately, there's now a solution to both problems: as an incubating feature of Hibernate 6.3, we now offer the possibility to have the Metamodel Generator fill in the implementation of such query methods for you.
+This facility is the topic of <<generator,a whole chapter of this introduction>>, so for now we'll just leave you with one simple example.
 
-[[generated-query-methods]]
-=== Generated query methods
-
-The Metamodel Generator is a standard part of JPA.
-// It's an annotation processor that produces a statically-typed metamodel of the entity classes in a Java program.
-We've actually already seen its handiwork in the code examples <<main-jpa,above>>: it's the author of the class `Book_` which contains the static metamodel of the <<book,entity class>> `Book`.
-
-[[metamodel-generator]]
-.The Metamodel Generator
-****
-
-:generator: https://hibernate.org/orm/tooling/
-:generator-guide: {userGuideBase}#tooling-modelgen
-
-Hibernate's {generator}[Metamodel Generator] is an annotation processor that produces what JPA calls a _static metamodel_.
-That is, it produces a typed model of the persistent classes in our program, giving us a type-safe way to refer to their attributes in Java code.
-In particular, it lets us specify <<entity-graph,entity graphs>> and <<criteria-queries,criteria queries>> in a completely type-safe way.
-
-Now, you don't have to use the Metamodel Generator with Hibernate—the APIs we just mentioned also accept plain strings—but we find that it works well with Gradle and integrates well with our IDE, and the advantage in typesafety is compelling.
-
-We've already seen how to set up the annotation processor in the <<hello-hibernate,Gradle build>> we saw earlier.
-// You can find more information in the {generator-guide}[User Guide].
-****
-
-_Query method generation_ is a new feature of Hibernate's implementation of the Metamodel Generator, an extension to the functionality defined by the JPA specification.
-Let's see how it works.
-
-In an interface or abstract class, write down the "signature" of the query as a function, and specify the HQL or SQL query string itself using a `@HQL` or `@SQL` annotation:
-
-[source,java]
-----
-interface Queries {
-    @HQL("from Book where title like :title order by title offset :start fetch first :max rows only")
-    List<Book> findBooksByTitleWithPagination(String title, int max, int start);
-}
-----
-
-The Metamodel Generator verifies that:
-
-- the parameters of this method match the parameters of the HQL or SQL query,
-- the query is syntactically legal and semantically well-typed, that is, that the entities, attributes, and functions referenced in the query actually exist and have compatible types.
-
-The `@CheckHQL` annotation which instructs Hibernate to validate named queries is not necessary for query methods.
-
-[TIP]
-====
-:query-validator: https://github.com/hibernate/query-validator/
-
-Don't like putting queries in annotations?
-No problem.
-If we set up the {query-validator}[Query Validator], we get validation of queries passed as strings directly to the Hibernate session.
-====
-
-A query method with a similar signature and return type is generated in the corresponding static metamodel class `Queries_`.
-We can call the generated query method like this:
-
-[source,java]
-----
-List<Book> books =
-        Queries_.findBooksByTitleWithPagination(entityManager, titlePattern,
-                        RESULTS_PER_PAGE, page*RESULTS_PER_PAGE);
-----
-
-Optionally, a query method may have additional "magic" parameters which do not map to query parameters:
-
-[cols="19,~,32m"]
-|===
-| Parameter type | Purpose | Example argument
-
-| `Page` | Specifies a page of query results | Page.first(20)
-| `Order<? super E>` | Specifies an entity attribute to order by, if `E` is the entity type returned by the query | Order.asc(Book_.title)
-| `List<Order? super E>` +
-(or varargs) | Specifies entity attributes to order by, if `E` is the entity type returned by the query | List.of(Order.asc(Book_.title), Order.asc(Book_.isbn))
-| `Order<Object[]>` | Specifies a column to order by, if the query returns a projection list | Order.asc(1)
-| `List<Object[]>` +
-(or varargs) | Specifies columns to order by, if the query returns a projection list | List.of(Order.asc(1), Order.desc(2))
-|===
-
-Thus, if we redefine our query method as follows:
+Suppose we simplify `Queries` to just the following:
 
 [source,java]
 ----
 interface Queries {
     @HQL("from Book where title like :title order by title")
-    List<Book> findBooksByTitleWithPagination(String title, Page page, Order<? super Book>... order);
+    List<Book> findBooksByTitleWithPagination(String title, Page page);
 }
 ----
 
-Then we can call it like this:
+Then the Metamodel Generator automatically produces an implementation of the method annotated `@HQL` in a class named `Queries_`.
+We can call it just like we called our handwritten version:
 
 [source,java]
 ----
-List<Book> books =
-        Queries_.findBooksByTitleWithPagination(entityManager, titlePattern,
-                        Page.page(RESULTS_PER_PAGE, page), Order.asc(Book_.isbn));
+@GET
+@Path("books/{titlePattern}")
+public List<Book> findBooks(String titlePattern) {
+    var books = sessionFactory.fromTransaction(session ->
+            Queries_.findBooksByTitleWithPagination(session, titlePattern,
+                    Page.page(RESULTS_PER_PAGE, page));
+    return books.isEmpty() ? Response.status(404).build() : books;
+}
 ----
 
-A query method doesn't need to return `List`.
-It might return a single `Book`.
+In this case, the quantity of code eliminated is pretty trivial.
+The real value is in improved type safety.
+We now find out about errors in assignments of arguments to query parameters at compile time.
 
-[source,java]
-----
-@HQL("from Book where isbn = :isbn")
-Book findBookByIsbn(String isbn);
-----
+[NOTE]
+====
+At this point, we're certain you're full of doubts about this idea.
+And quite rightly so.
+We would love to answer your objections right here, but that will take us much too far off track.
+So we ask you to file away these thoughts for now.
+We promise to make it make sense when we <<generator,properly address this topic later>>.
+And, after that, if you still don't like this approach, please understand that it's completely optional.
+Nobody's going to come around to your house to force it down your throat.
+====
 
-It might even return `TypedQuery` or `SelectionQuery`:
-
-[source,java]
-----
-@HQL("from Book where title like :title")
-SelectionQuery<Book> findBooksByTitle(String title);
-----
-
-This is extremely useful at times, since it allows the client to further manipulate the query:
-
-[source,java]
-----
-List<Book> books =
-        Queries_.findBooksByTitle(entityManager, titlePattern)
-            .setOrder(Order.asc(Book_.title))                   // order the results
-            .setPage(Page.page(RESULTS_PER_PAGE, page))         // return the given page of results
-            .setFlushMode(FlushModeType.COMMIT)                 // don't flush session before query execution
-            .setReadOnly(true)                                  // load the entities in read-only mode
-            .setCacheStoreMode(CacheStoreMode.BYPASS)           // don't cache the results
-            .setComment("Hello world!")                         // add a comment to the generated SQL
-            .getResultList();
-----
-
-Now that we have a rough picture of what our persistence logic might look like, it's natural to ask how we should test this code.
+Now that we have a rough picture of what our persistence logic might look like, it's natural to ask how we should test our code.
 
 [[testing]]
 === Testing persistence logic
@@ -911,7 +820,8 @@ This introduction will guide you through the basic tasks involved in developing 
 2. writing a _domain model_, that is, a set of _entity classes_ which represent the persistent types in your program, and which map to tables of your database,
 3. customizing these mappings when the model maps to a pre-existing relational schema,
 4. using the `Session` or `EntityManager` to perform operations which query the database and return entity instances, or which update the data held in the database,
-5. writing complex queries using the Hibernate Query Language (HQL) or native SQL, and, finally
-6. tuning performance of the data access logic.
+5. using the Hibernate Metamodel Generator to improve compile-time type-safety,
+6. writing complex queries using the Hibernate Query Language (HQL) or native SQL, and, finally
+7. tuning performance of the data access logic.
 
 Naturally, we'll start at the top of this list, with the least-interesting topic: _configuration_.

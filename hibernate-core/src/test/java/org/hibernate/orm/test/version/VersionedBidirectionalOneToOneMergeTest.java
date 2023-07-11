@@ -29,7 +29,7 @@ public class VersionedBidirectionalOneToOneMergeTest {
 		AnotherTestEntity anotherTestEntity = new AnotherTestEntity();
 		scope.inTransaction(
 				session -> {
-					session.persist( anotherTestEntity );
+					session.merge( anotherTestEntity );
 				}
 		);
 
@@ -65,6 +65,8 @@ public class VersionedBidirectionalOneToOneMergeTest {
 	public static class AnotherTestEntity {
 		@Id
 		UUID uuid = UUID.randomUUID();
+
+		String name;
 
 		@OneToOne(mappedBy = "anotherTestEntity")
 		TestEntity testEntity;

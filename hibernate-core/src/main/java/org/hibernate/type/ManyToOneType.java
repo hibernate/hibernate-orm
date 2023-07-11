@@ -149,11 +149,10 @@ public class ManyToOneType extends EntityType {
 			return true;
 		}
 
-		assert current.getClass().isAssignableFrom( old.getClass() );
 
 		// the ids are fully resolved, so compare them with isDirty(), not isModified()
 		return getIdentifierOrUniqueKeyType( session.getFactory() )
-				.isDirty( getIdentifier( old, session ), getIdentifier( current, session ), session );
+				.isDirty( old, getIdentifier( current, session ), session );
 	}
 
 	@Override

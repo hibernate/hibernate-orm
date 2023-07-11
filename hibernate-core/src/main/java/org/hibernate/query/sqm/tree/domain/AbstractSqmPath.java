@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -27,11 +26,14 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
@@ -226,21 +228,37 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	 * and if not creates a copy of the navigable path with the correct parent.
 	 */
 	protected NavigablePath getNavigablePathCopy(SqmPath<?> parent) {
-		final NavigablePath parentNavigablePath = NullnessUtil.castNonNull( navigablePath.getRealParent() );
-		if ( parent.getNavigablePath() == parentNavigablePath ) {
+		return getNavigablePathCopy( castNonNull( navigablePath.getRealParent() ), parent.getNavigablePath(), false, null );
+	}
+
+	private NavigablePath getNavigablePathCopy(
+			NavigablePath realParent,
+			NavigablePath parent,
+			boolean isId,
+			String identifierAttributeName) {
+		if ( parent == realParent ) {
 			return navigablePath;
 		}
-		else if ( CollectionPart.Nature.fromNameExact( parentNavigablePath.getLocalName() ) != null ) {
-			if ( parent.getNavigablePath() == parentNavigablePath.getRealParent() ) {
+		else if ( !isId && realParent instanceof EntityIdentifierNavigablePath ) {
+			return getNavigablePathCopy(
+					castNonNull( realParent.getRealParent() ),
+					parent,
+					true,
+					( (EntityIdentifierNavigablePath) realParent ).getIdentifierAttributeName()
+			);
+		}
+		else if ( CollectionPart.Nature.fromNameExact( realParent.getLocalName() ) != null ) {
+			if ( parent == realParent.getRealParent() ) {
 				return navigablePath;
 			}
 			else {
-				return parent.getNavigablePath()
-						.append( parentNavigablePath.getLocalName() )
-						.append( navigablePath.getLocalName(), navigablePath.getAlias() );
+				parent = parent.append( realParent.getLocalName() );
 			}
 		}
-		return parent.getNavigablePath().append( navigablePath.getLocalName(), navigablePath.getAlias() );
+		if ( isId ) {
+			parent = new EntityIdentifierNavigablePath( parent, identifierAttributeName );
+		}
+		return parent.append( navigablePath.getLocalName(), navigablePath.getAlias() );
 	}
 
 	@Override

@@ -168,7 +168,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	private final transient Map<String,Object> settings;
 
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
-	private final transient EventEngine eventEngine;
+	private final transient EventEngine eventEngine;//Needs to be closed!
 	private final transient JdbcServices jdbcServices;
 	private final transient SqlStringGenerationContext sqlStringGenerationContext;
 
@@ -895,6 +895,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 			if ( queryEngine != null ) {
 				queryEngine.close();
+			}
+			if ( eventEngine != null ) {
+				eventEngine.stop();
 			}
 		}
 		finally {

@@ -133,14 +133,15 @@ class DatabaseSnapshotExecutor {
 		entityDescriptor.forEachAttributeMapping(
 				attributeMapping -> {
 					final NavigablePath navigablePath = rootPath.append( attributeMapping.getAttributeName() );
-					domainResults.add(
-							attributeMapping.createSnapshotDomainResult(
-									navigablePath,
-									rootTableGroup,
-									null,
-									state
-							)
+					final DomainResult<Object> snapshotDomainResult = attributeMapping.createSnapshotDomainResult(
+							navigablePath,
+							rootTableGroup,
+							null,
+							state
 					);
+					if ( snapshotDomainResult != null ) {
+						domainResults.add( snapshotDomainResult );
+					}
 				}
 		);
 

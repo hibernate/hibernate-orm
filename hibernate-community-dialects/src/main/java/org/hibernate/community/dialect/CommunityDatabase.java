@@ -67,6 +67,27 @@ public enum CommunityDatabase {
 		}
 	},
 
+
+	SINODB {
+		@Override
+		public Dialect createDialect(DialectResolutionInfo info) {
+			return new SinoDBDialect( info );
+		}
+		@Override
+		public boolean productNameMatches(String databaseName) {
+			//usually "Informix Dynamic Server"
+			return databaseName.toLowerCase().startsWith( "informix" );
+		}
+		@Override
+		public String getDriverClassName(String jdbcUrl) {
+			return "com.sinodbms.jdbc.IfxDriver" ;
+		}
+		@Override
+		public String getUrlPrefix() {
+			return "jdbc:informix-";
+		}
+	},
+
 	FIREBIRD {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {

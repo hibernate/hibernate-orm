@@ -7,6 +7,8 @@
 package org.hibernate.jdbc;
 import org.hibernate.HibernateException;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Indicates a failed batch entry (-3 return).
  *
@@ -17,7 +19,7 @@ public class BatchFailedException extends HibernateException {
 		super( s );
 	}
 
-	public BatchFailedException(String string, Throwable root) {
+	public BatchFailedException(String string, @Nullable Throwable root) {
 		super( string, root );
 	}
 }

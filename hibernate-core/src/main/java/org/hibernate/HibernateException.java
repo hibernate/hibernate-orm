@@ -7,6 +7,7 @@
 package org.hibernate;
 
 import jakarta.persistence.PersistenceException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * The base type for exceptions thrown by Hibernate.
@@ -31,7 +32,7 @@ public class HibernateException extends PersistenceException {
 	 *
 	 * @param cause The underlying cause.
 	 */
-	public HibernateException(Throwable cause) {
+	public HibernateException(@Nullable Throwable cause) {
 		super( cause );
 	}
 
@@ -41,7 +42,7 @@ public class HibernateException extends PersistenceException {
 	 * @param message The message explaining the reason for the exception.
 	 * @param cause The underlying cause.
 	 */
-	public HibernateException(String message, Throwable cause) {
+	public HibernateException(String message, @Nullable Throwable cause) {
 		super( message, cause );
 	}
 }

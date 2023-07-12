@@ -12,6 +12,7 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,9 +39,10 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.Order;
+import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
-import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.TupleTransformer;
 import org.hibernate.query.named.NamedQueryMemento;
 
@@ -294,6 +296,16 @@ public abstract class AbstractQuery<R>
 		getSession().checkOpen();
 		super.setHibernateLockMode( LockModeTypeHelper.getLockMode( lockModeType ) );
 		return this;
+	}
+
+	@Override
+	public Query<R> setOrder(List<Order<? super R>> orders) {
+		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
+	}
+
+	@Override
+	public Query<R> setOrder(Order<? super R> order) {
+		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
 	}
 
 	@Override
@@ -632,7 +644,7 @@ public abstract class AbstractQuery<R>
 	@Override
 	public int executeUpdate() throws HibernateException {
 		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
-		final HashSet<String> fetchProfiles = beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
 		try {
 			final int result = doExecuteUpdate();
@@ -649,7 +661,7 @@ public abstract class AbstractQuery<R>
 			throw getSession().getExceptionConverter().convert( e );
 		}
 		finally {
-			afterQuery( success, fetchProfiles );
+			afterQueryHandlingFetchProfiles( success, fetchProfiles );
 		}
 	}
 

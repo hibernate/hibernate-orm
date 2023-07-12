@@ -421,7 +421,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public List<R> list() {
-		final HashSet<String> fetchProfiles = beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
 		try {
 			final List<R> result = doList();
@@ -438,11 +438,20 @@ public abstract class AbstractSelectionQuery<R>
 			throw getSession().getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );
 		}
 		finally {
-			afterQuery( success, fetchProfiles );
+			afterQueryHandlingFetchProfiles( success, fetchProfiles );
 		}
 	}
 
-	protected HashSet<String> beforeQuery() {
+	protected HashSet<String> beforeQueryHandlingFetchProfiles() {
+		beforeQuery();
+
+		final MutableQueryOptions options = getQueryOptions();
+
+		return getSession().getLoadQueryInfluencers()
+				.adjustFetchProfiles( options.getDisabledFetchProfiles(), options.getEnabledFetchProfiles() );
+	}
+
+	protected void beforeQuery() {
 		getQueryParameterBindings().validate();
 
 		final SharedSessionContractImplementor session = getSession();
@@ -465,20 +474,28 @@ public abstract class AbstractSelectionQuery<R>
 			sessionCacheMode = session.getCacheMode();
 			session.setCacheMode( effectiveCacheMode );
 		}
-
-		return session.getLoadQueryInfluencers()
-				.adjustFetchProfiles( options.getDisabledFetchProfiles(), options.getEnabledFetchProfiles() );
 	}
 
 	protected abstract void prepareForExecution();
 
-	protected void afterQuery(boolean success, HashSet<String> fetchProfiles) {
+	protected void afterQueryHandlingFetchProfiles(boolean success, HashSet<String> fetchProfiles) {
+		resetFetchProfiles( fetchProfiles );
+		afterQuery( success );
+	}
+
+	private void afterQueryHandlingFetchProfiles(HashSet<String> fetchProfiles) {
+		resetFetchProfiles( fetchProfiles );
+		afterQuery();
+	}
+
+	private void resetFetchProfiles(HashSet<String> fetchProfiles) {
+		getSession().getLoadQueryInfluencers().setEnabledFetchProfileNames( fetchProfiles );
+	}
+
+	protected void afterQuery(boolean success) {
+		afterQuery();
 
 		final SharedSessionContractImplementor session = getSession();
-
-		session.getLoadQueryInfluencers().setEnabledFetchProfileNames( fetchProfiles );
-
-		afterQuery();
 		if ( !session.isTransactionInProgress() ) {
 			session.getJdbcCoordinator().getLogicalConnection().afterTransaction();
 		}
@@ -509,12 +526,12 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
-		beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
 		try {
 			return doScroll( scrollMode );
 		}
 		finally {
-			afterQuery();
+			afterQueryHandlingFetchProfiles( fetchProfiles );
 		}
 	}
 

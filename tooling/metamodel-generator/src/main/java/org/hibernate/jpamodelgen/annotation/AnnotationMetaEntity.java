@@ -548,7 +548,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else {
 			@SuppressWarnings("unchecked")
 			final List<AnnotationValue> annotationValues = (List<AnnotationValue>) enabledFetchProfiles;
-			List<String> result = annotationValues.stream().map(AnnotationValue::toString).collect(toList());
+			final List<String> result = annotationValues.stream().map(AnnotationValue::toString).collect(toList());
 			if ( result.stream().anyMatch("<error>"::equals) ) {
 				throw new ProcessLaterException();
 			}

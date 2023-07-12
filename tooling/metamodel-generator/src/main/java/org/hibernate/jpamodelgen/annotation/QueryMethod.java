@@ -109,53 +109,7 @@ public class QueryMethod implements MetaAttribute {
 					.append(".class");
 		}
 		declaration.append(")");
-		boolean unwrapped = !usingEntityManager;
-		for (int i = 1; i <= paramNames.size(); i++) {
-			final String paramName = paramNames.get(i-1);
-			final String paramType = paramTypes.get(i-1);
-			if ( queryString.contains(":" + paramName) ) {
-				declaration
-						.append("\n\t\t\t.setParameter(\"")
-						.append(paramName)
-						.append("\", ")
-						.append(paramName)
-						.append(")");
-			}
-			else if ( queryString.contains("?" + i) ) {
-				declaration
-						.append("\n\t\t\t.setParameter(")
-						.append(i)
-						.append(", ")
-						.append(paramName)
-						.append(")");
-			}
-			else if ( isPageParam(paramType) ) {
-				unwrap( declaration, unwrapped );
-				unwrapped = true;
-				declaration
-						.append("\n\t\t\t.setPage(")
-						.append(paramName)
-						.append(")");
-			}
-			else if ( isOrderParam(paramType) ) {
-				unwrap( declaration, unwrapped );
-				unwrapped = true;
-				if ( paramType.endsWith("...") ) {
-					declaration
-							.append("\n\t\t\t.setOrder(")
-							.append(annotationMetaEntity.importType(Constants.LIST))
-							.append(".of(")
-							.append(paramName)
-							.append("))");
-				}
-				else {
-					declaration
-							.append("\n\t\t\t.setOrder(")
-							.append(paramName)
-							.append(")");
-				}
-			}
-		}
+		boolean unwrapped = setParameters( paramTypes, declaration );
 		if ( containerTypeName == null) {
 			declaration
 					.append("\n\t\t\t.getSingleResult()");
@@ -177,6 +131,82 @@ public class QueryMethod implements MetaAttribute {
 		}
 		declaration.append(";\n}");
 		return declaration.toString();
+	}
+
+	private boolean setParameters(List<String> paramTypes, StringBuilder declaration) {
+		boolean unwrapped = !usingEntityManager;
+		for (int i = 1; i <= paramNames.size(); i++) {
+			final String paramName = paramNames.get(i-1);
+			final String paramType = paramTypes.get(i-1);
+			if ( queryString.contains(":" + paramName) ) {
+				setNamedParameter( declaration, paramName );
+			}
+			else if ( queryString.contains("?" + i) ) {
+				setOrdinalParameter( declaration, i, paramName );
+			}
+			else if ( isPageParam(paramType) ) {
+				setPage( declaration, paramName );
+			}
+			else if ( isOrderParam(paramType) ) {
+				unwrapped = setOrder( declaration, unwrapped, paramName, paramType );
+			}
+		}
+		return unwrapped;
+	}
+
+	private static void setOrdinalParameter(StringBuilder declaration, int i, String paramName) {
+		declaration
+				.append("\n\t\t\t.setParameter(")
+				.append(i)
+				.append(", ")
+				.append(paramName)
+				.append(")");
+	}
+
+	private static void setNamedParameter(StringBuilder declaration, String paramName) {
+		declaration
+				.append("\n\t\t\t.setParameter(\"")
+				.append(paramName)
+				.append("\", ")
+				.append(paramName)
+				.append(")");
+	}
+
+	private void setPage(StringBuilder declaration, String paramName) {
+		if ( usingEntityManager ) {
+			declaration
+					.append("\n\t\t\t.setFirstResult(")
+					.append(paramName)
+					.append(".getFirstResult())")
+					.append("\n\t\t\t.setMaxResults(")
+					.append(paramName)
+					.append(".getMaxResults())");
+		}
+		else {
+			declaration
+					.append("\n\t\t\t.setPage(")
+					.append(paramName)
+					.append(")");
+		}
+	}
+
+	private boolean setOrder(StringBuilder declaration, boolean unwrapped, String paramName, String paramType) {
+		unwrap( declaration, unwrapped );
+		if ( paramType.endsWith("...") ) {
+			declaration
+					.append("\n\t\t\t.setOrder(")
+					.append(annotationMetaEntity.importType(Constants.LIST))
+					.append(".of(")
+					.append(paramName)
+					.append("))");
+		}
+		else {
+			declaration
+					.append("\n\t\t\t.setOrder(")
+					.append(paramName)
+					.append(")");
+		}
+		return true;
 	}
 
 	private void parameters(List<String> paramTypes, StringBuilder declaration) {

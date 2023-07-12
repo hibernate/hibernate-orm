@@ -29,7 +29,6 @@ import java.util.Objects;
  * @see SelectionQuery#setOrder(java.util.List)
  *
  * @author Gavin King
- *
  * @since 6.3
  */
 @Incubating

@@ -112,6 +112,21 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	}
 
 	/**
+	 * Obtain the query results in a {@linkplain Pager paged form}.
+	 *
+	 * @param initialPage an initial {@link Page}, for example,
+	 *                    {@code Page.first(pageSize)}
+	 *
+	 * @return a {@link Pager} for the query results
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	default Pager<R> getResultPager(Page initialPage) {
+		return new Pager<>( this, initialPage );
+	}
+
+	/**
 	 * Returns scrollable access to the query results.
 	 * <p>
 	 * This form calls {@link #scroll(ScrollMode)} using {@link Dialect#defaultScrollMode()}

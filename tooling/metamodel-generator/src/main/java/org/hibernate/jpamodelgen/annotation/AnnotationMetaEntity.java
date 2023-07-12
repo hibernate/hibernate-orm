@@ -619,7 +619,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					);
 					break;
 				case NATURAL_ID:
-					context.message( method, sessionType, Diagnostic.Kind.WARNING );
 					putMember( methodKey,
 							new NaturalIdFinderMethod(
 									this,

@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpamodelgen.annotation;
 
+import java.beans.Introspector;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -698,14 +699,17 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private @Nullable FieldType validateFinderParameter(TypeElement entity, VariableElement param) {
+		final String entityClassName = entity.getQualifiedName().toString();
+		determineAccessTypeForHierarchy( entity, context );
+		final AccessType accessType = castNonNull( context.getAccessTypeInfo( entityClassName ) ).getAccessType();
 		for ( Element member : entity.getEnclosedElements() ) {
-			if ( member.getSimpleName().contentEquals( param.getSimpleName() ) ) {
-				final String memberType = member.asType().toString();
+			if ( fieldMatchesParameter( param, member, accessType ) ) {
+				final String memberType = memberType( member ).toString();
 				final String paramType = param.asType().toString();
 				if ( !memberType.equals(paramType) ) {
 					context.message( param,
 							"matching field has type '" + memberType
-									+ "' in entity class '" + entity.getQualifiedName() + "'",
+									+ "' in entity class '" + entityClassName + "'",
 							Diagnostic.Kind.ERROR );
 				}
 				if ( containsAnnotation( member, Constants.ID, Constants.EMBEDDED_ID ) ) {
@@ -730,9 +734,38 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		context.message( param,
 				"no matching field named '" + param.getSimpleName()
-						+ "' in entity class '" + entity.getQualifiedName() + "'",
+						+ "' in entity class '" + entityClassName + "'",
 				Diagnostic.Kind.ERROR );
 		return null;
+	}
+
+	private static TypeMirror memberType(Element member) {
+		if (member.getKind() == ElementKind.METHOD) {
+			ExecutableElement method = (ExecutableElement) member;
+			return method.getReturnType();
+		}
+		else {
+			return member.asType();
+		}
+	}
+
+	private static boolean fieldMatchesParameter(VariableElement param, Element member, AccessType accessType) {
+		final Name name = member.getSimpleName();
+		final Name paramName = param.getSimpleName();
+		if ( accessType == AccessType.FIELD ) {
+			return name.contentEquals(paramName);
+		}
+		else {
+			if ( name.length() > 3 && name.subSequence(0,3).toString().equals("get")) {
+				final String propertyName = Introspector.decapitalize(name.subSequence(3, name.length()).toString());
+				return paramName.contentEquals(propertyName);
+			}
+			if ( name.length() > 2 && name.subSequence(0,2).toString().equals("is")) {
+				final String propertyName = Introspector.decapitalize(name.subSequence(2, name.length()).toString());
+				return paramName.contentEquals(propertyName);
+			}
+			return false;
+		}
 	}
 
 	private void addQueryMethod(

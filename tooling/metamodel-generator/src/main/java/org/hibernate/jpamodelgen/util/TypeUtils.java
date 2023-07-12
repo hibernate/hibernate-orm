@@ -16,6 +16,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
@@ -179,31 +180,31 @@ public final class TypeUtils {
 	 * <a href="http://www.retep.org/2009/02/getting-class-values-from-annotations.html">getting-class-values-from-annotations</a>.
 	 *
 	 * @param annotationMirror The annotation mirror
-	 * @param fqcn the fully qualified class name to check against
+	 * @param qualifiedName the fully qualified class name to check against
 	 *
 	 * @return {@code true} if the provided annotation type is of the same type as the provided class, {@code false} otherwise.
 	 */
-	public static boolean isAnnotationMirrorOfType(AnnotationMirror annotationMirror, String fqcn) {
+	public static boolean isAnnotationMirrorOfType(AnnotationMirror annotationMirror, String qualifiedName) {
 		assert annotationMirror != null;
-		assert fqcn != null;
+		assert qualifiedName != null;
 		final Element element = annotationMirror.getAnnotationType().asElement();
-		return ((TypeElement) element).getQualifiedName().contentEquals( fqcn );
+		return ((TypeElement) element).getQualifiedName().contentEquals( qualifiedName );
 	}
 
 	/**
 	 * Checks whether the {@code Element} hosts the annotation with the given fully qualified class name.
 	 *
 	 * @param element the element to check for the hosted annotation
-	 * @param fqcn the fully qualified class name of the annotation to check for
+	 * @param qualifiedName the fully qualified class name of the annotation to check for
 	 *
 	 * @return the annotation mirror for the specified annotation class from the {@code Element} or {@code null} in case
 	 *         the {@code TypeElement} does not host the specified annotation.
 	 */
-	public static @Nullable AnnotationMirror getAnnotationMirror(Element element, String fqcn) {
+	public static @Nullable AnnotationMirror getAnnotationMirror(Element element, String qualifiedName) {
 		assert element != null;
-		assert fqcn != null;
+		assert qualifiedName != null;
 		for ( AnnotationMirror mirror : element.getAnnotationMirrors() ) {
-			if ( isAnnotationMirrorOfType( mirror, fqcn ) ) {
+			if ( isAnnotationMirrorOfType( mirror, qualifiedName ) ) {
 				return mirror;
 			}
 		}
@@ -235,9 +236,9 @@ public final class TypeUtils {
 	}
 
 	public static void determineAccessTypeForHierarchy(TypeElement searchedElement, Context context) {
-		final String fqcn = searchedElement.getQualifiedName().toString();
-		context.logMessage( Diagnostic.Kind.OTHER, "Determining access type for " + fqcn );
-		final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( fqcn );
+		final String qualifiedName = searchedElement.getQualifiedName().toString();
+		context.logMessage( Diagnostic.Kind.OTHER, "Determining access type for " + qualifiedName );
+		final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( qualifiedName );
 		if ( accessTypeInfo != null && accessTypeInfo.isAccessTypeResolved() ) {
 			context.logMessage(
 					Diagnostic.Kind.OTHER,
@@ -253,8 +254,8 @@ public final class TypeUtils {
 						"Explicit access type on " + searchedElement + ":" + forcedAccessType
 				);
 				final AccessTypeInformation newAccessTypeInfo =
-						new AccessTypeInformation( fqcn, forcedAccessType, null );
-				context.addAccessTypeInformation( fqcn, newAccessTypeInfo );
+						new AccessTypeInformation( qualifiedName, forcedAccessType, null );
+				context.addAccessTypeInformation( qualifiedName, newAccessTypeInfo );
 				updateEmbeddableAccessType( searchedElement, context, forcedAccessType );
 			}
 			else {
@@ -264,8 +265,8 @@ public final class TypeUtils {
 				final AccessType defaultAccessType = getAccessTypeInCaseElementIsRoot( searchedElement, context );
 				if ( defaultAccessType != null ) {
 					final AccessTypeInformation newAccessTypeInfo =
-							new AccessTypeInformation(fqcn, null, defaultAccessType);
-					context.addAccessTypeInformation( fqcn, newAccessTypeInfo );
+							new AccessTypeInformation(qualifiedName, null, defaultAccessType);
+					context.addAccessTypeInformation( qualifiedName, newAccessTypeInfo );
 					updateEmbeddableAccessType( searchedElement, context, defaultAccessType );
 					setDefaultAccessTypeForMappedSuperclassesInHierarchy( searchedElement, defaultAccessType, context );
 				}
@@ -277,8 +278,8 @@ public final class TypeUtils {
 						newDefaultAccessType = AccessType.PROPERTY;
 					}
 					final AccessTypeInformation newAccessTypeInfo =
-							new AccessTypeInformation( fqcn, null, newDefaultAccessType );
-					context.addAccessTypeInformation( fqcn, newAccessTypeInfo );
+							new AccessTypeInformation( qualifiedName, null, newDefaultAccessType );
+					context.addAccessTypeInformation( qualifiedName, newAccessTypeInfo );
 					updateEmbeddableAccessType( searchedElement, context, newDefaultAccessType );
 				}
 			}
@@ -335,8 +336,8 @@ public final class TypeUtils {
 		do {
 			superClass = getSuperclassTypeElement( superClass );
 			if ( superClass != null ) {
-				final String fqcn = superClass.getQualifiedName().toString();
-				final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( fqcn );
+				final String qualifiedName = superClass.getQualifiedName().toString();
+				final AccessTypeInformation accessTypeInfo = context.getAccessTypeInfo( qualifiedName );
 				if ( accessTypeInfo != null && accessTypeInfo.getDefaultAccessType() != null ) {
 					return accessTypeInfo.getDefaultAccessType();
 				}
@@ -344,8 +345,8 @@ public final class TypeUtils {
 					defaultAccessType = getAccessTypeInCaseElementIsRoot( superClass, context );
 					if ( defaultAccessType != null ) {
 						final AccessTypeInformation newAccessTypeInfo
-								= new AccessTypeInformation( fqcn, null, defaultAccessType );
-						context.addAccessTypeInformation( fqcn, newAccessTypeInfo );
+								= new AccessTypeInformation( qualifiedName, null, defaultAccessType );
+						context.addAccessTypeInformation( qualifiedName, newAccessTypeInfo );
 
 						// we found an id within the class hierarchy and determined a default access type
 						// there cannot be any super entity classes (otherwise it would be a configuration error)
@@ -373,14 +374,14 @@ public final class TypeUtils {
 		do {
 			superClass = getSuperclassTypeElement( superClass );
 			if ( superClass != null ) {
-				final String fqcn = superClass.getQualifiedName().toString();
+				final String qualifiedName = superClass.getQualifiedName().toString();
 				if ( containsAnnotation( superClass, Constants.MAPPED_SUPERCLASS ) ) {
 					final AccessType forcedAccessType = determineAnnotationSpecifiedAccessType( superClass );
 					final AccessTypeInformation accessTypeInfo =
 							forcedAccessType != null
-									? new AccessTypeInformation( fqcn, null, forcedAccessType )
-									: new AccessTypeInformation( fqcn, null, defaultAccessType );
-					context.addAccessTypeInformation( fqcn, accessTypeInfo );
+									? new AccessTypeInformation( qualifiedName, null, forcedAccessType )
+									: new AccessTypeInformation( qualifiedName, null, defaultAccessType );
+					context.addAccessTypeInformation( qualifiedName, accessTypeInfo );
 				}
 			}
 		}
@@ -425,15 +426,15 @@ public final class TypeUtils {
 	}
 
 	public static @Nullable AccessType determineAnnotationSpecifiedAccessType(Element element) {
-		final AnnotationMirror accessAnnotationMirror = TypeUtils.getAnnotationMirror( element, Constants.ACCESS );
-		if ( accessAnnotationMirror != null ) {
-			final Element accessElement = (Element)
-					castNonNull( getAnnotationValue( accessAnnotationMirror, DEFAULT_ANNOTATION_PARAMETER_NAME ) );
-			if ( accessElement.getKind() == ElementKind.ENUM_CONSTANT ) {
-				if ( accessElement.getSimpleName().contentEquals( AccessType.PROPERTY.toString() ) ) {
+		final AnnotationMirror mirror = getAnnotationMirror( element, Constants.ACCESS );
+		if ( mirror != null ) {
+			final Object accessType = getAnnotationValue( mirror, DEFAULT_ANNOTATION_PARAMETER_NAME );
+			if ( accessType instanceof VariableElement) {
+				final VariableElement enumValue = (VariableElement) accessType;
+				if ( enumValue.getSimpleName().contentEquals( AccessType.PROPERTY.toString() ) ) {
 					return AccessType.PROPERTY;
 				}
-				else if ( accessElement.getSimpleName().contentEquals( AccessType.FIELD.toString() ) ) {
+				else if ( enumValue.getSimpleName().contentEquals( AccessType.FIELD.toString() ) ) {
 					return AccessType.FIELD;
 				}
 			}

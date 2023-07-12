@@ -669,7 +669,7 @@ public class QuerySqmImpl<R>
 	public int executeUpdate() {
 		verifyUpdate();
 		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
-		final HashSet<String> fetchProfiles = beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
 		try {
 			final int result = doExecuteUpdate();
@@ -686,7 +686,7 @@ public class QuerySqmImpl<R>
 			throw getSession().getExceptionConverter().convert( e );
 		}
 		finally {
-			afterQuery( success, fetchProfiles );
+			afterQueryHandlingFetchProfiles( success, fetchProfiles );
 		}
 	}
 

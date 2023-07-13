@@ -1041,9 +1041,10 @@ Note that the code which executes the named query is not aware of whether the qu
 
 It's nice to have our queries checked at startup time.
 It's even better to have them checked at compile time.
-Back in <<generated-query-methods>>, we mentioned that the {query-validator}[Query Validator] can do that for us.
-In fact, the Query Validator will even check HQL query strings that occur as arguments to `createQuery()` and friends.
-So if we use the Query Validator, there's not much advantage to the use of named queries.
+Back in <<generated-query-methods>>, we mentioned that the Metamodel Generator can do that for us, and we presented that as a reason to use `@NamedQuery`.
+
+But actually, Hibernate has a separate <<query-validator,Query Validator>> capable of performing compile-time validation of HQL query strings that occur as arguments to `createQuery()` and friends.
+If we use the Query Validator, there's not much advantage to the use of named queries.
 ====
 
 [[load-access]]

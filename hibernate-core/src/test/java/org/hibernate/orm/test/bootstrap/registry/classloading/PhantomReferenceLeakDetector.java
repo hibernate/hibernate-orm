@@ -62,10 +62,12 @@ public class PhantomReferenceLeakDetector {
 	 */
 	public static <T> void assertActionNotLeaking(Supplier<T> action) {
 		Assert.assertTrue("Operation apparently leaked the critical resource",
-						verifyActionNotLeaking( action,
-						GC_ATTEMPTS,
-						MAX_TOTAL_WAIT_SECONDS )
+						verifyActionNotLeaking( action )
 		);
+	}
+
+	static <T> boolean verifyActionNotLeaking(Supplier<T> action) {
+		return verifyActionNotLeaking( action, GC_ATTEMPTS, MAX_TOTAL_WAIT_SECONDS );
 	}
 
 	/**

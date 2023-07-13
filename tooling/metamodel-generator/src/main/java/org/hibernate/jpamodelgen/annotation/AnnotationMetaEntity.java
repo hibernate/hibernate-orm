@@ -49,6 +49,7 @@ import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isOrderParam;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isPageParam;
+import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
 import static org.hibernate.jpamodelgen.util.NullnessUtil.castNonNull;
 import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
 import static org.hibernate.jpamodelgen.util.TypeUtils.determineAccessTypeForHierarchy;
@@ -494,7 +495,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 					createCriteriaFinder( method, returnType, containerType, entity );
 				}
 				else {
-					switch ( method.getParameters().size() ) {
+					final long parameterCount =
+							method.getParameters().stream()
+									.filter(AnnotationMetaEntity::isFinderParameterMappingToAttribute)
+									.count();
+					switch ( (int) parameterCount ) {
 						case 0:
 							context.message( method, "missing parameter", Diagnostic.Kind.ERROR );
 							break;
@@ -517,9 +522,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String methodName = method.getSimpleName().toString();
 		final List<String> paramNames = parameterNames(method);
 		final List<String> paramTypes = parameterTypes(method);
+		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
+		removeSessionFromParameters(paramNames, paramTypes);
 		final String methodKey = methodName + paramTypes;
 		for ( VariableElement param : method.getParameters() ) {
-			validateFinderParameter(entity, param );
+			if ( isFinderParameterMappingToAttribute( param ) ) {
+				validateFinderParameter( entity, param );
+			}
 		}
 		putMember( methodKey,
 				new CriteriaFinderMethod(
@@ -531,11 +540,38 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						paramTypes,
 						false,
 						dao,
-						sessionType,
+						sessionType[0],
+						sessionType[1],
 						enabledFetchProfiles( method ),
 						context.addNonnullAnnotation()
 				)
 		);
+	}
+
+	private static boolean isFinderParameterMappingToAttribute(VariableElement param) {
+		return !SESSION_TYPES.contains(param.asType().toString());
+	}
+
+	private static void removeSessionFromParameters(List<String> paramNames, List<String> paramTypes) {
+		for ( int i = 0; i < paramNames.size(); i ++ ) {
+			final String type = paramTypes.get(i);
+			if ( SESSION_TYPES.contains(type) ) {
+				paramNames.remove(i);
+				paramTypes.remove(i);
+				break;
+			}
+		}
+	}
+
+	private String[] sessionTypeFromParameters(List<String> paramNames, List<String> paramTypes) {
+		for ( int i = 0; i < paramNames.size(); i ++ ) {
+			final String type = paramTypes.get(i);
+			final String name = paramNames.get(i);
+			if ( SESSION_TYPES.contains(type) ) {
+				return new String[] { type, name };
+			}
+		}
+		return new String[] { sessionType, "entityManager" };
 	}
 
 	private static List<String> enabledFetchProfiles(ExecutableElement method) {
@@ -560,8 +596,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String methodName = method.getSimpleName().toString();
 		final List<String> paramNames = parameterNames( method );
 		final List<String> paramTypes = parameterTypes( method );
+		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
+		removeSessionFromParameters( paramNames, paramTypes );
 		final String methodKey = methodName + paramTypes;
-		if (  !usingStatelessSession() // no byNaturalId() lookup API for SS
+		if (  !usingStatelessSession(sessionType[0]) // no byNaturalId() lookup API for SS
 				&& matchesNaturalKey( method, entity ) ) {
 			putMember( methodKey,
 					new NaturalIdFinderMethod(
@@ -571,7 +609,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							paramNames,
 							paramTypes,
 							dao,
-							sessionType,
+							sessionType[0],
+							sessionType[1],
 							enabledFetchProfiles( method ),
 							context.addNonnullAnnotation()
 					)
@@ -588,7 +627,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							paramTypes,
 							false,
 							dao,
-							sessionType,
+							sessionType[0],
+							sessionType[1],
 							enabledFetchProfiles( method ),
 							context.addNonnullAnnotation()
 					)
@@ -598,22 +638,30 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void createSingleParameterFinder(ExecutableElement method, TypeMirror returnType, TypeElement entity) {
 		final String methodName = method.getSimpleName().toString();
-		final VariableElement parameter = method.getParameters().get(0);
+		final VariableElement parameter =
+				method.getParameters().stream()
+						.filter(AnnotationMetaEntity::isFinderParameterMappingToAttribute)
+						.findFirst().orElseThrow();
+		final List<String> paramNames = parameterNames(method);
+		final List<String> paramTypes = parameterTypes(method);
+		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
+		removeSessionFromParameters(paramNames, paramTypes);
 		final FieldType fieldType = validateFinderParameter( entity, parameter );
 		if ( fieldType != null ) {
 			final String methodKey = methodName + "!";
 			final List<String> profiles = enabledFetchProfiles( method );
-			switch ( pickStrategy( fieldType, profiles ) ) {
+			switch ( pickStrategy( fieldType, sessionType[0], profiles ) ) {
 				case ID:
 					putMember( methodKey,
 							new IdFinderMethod(
 									this,
 									methodName,
 									returnType.toString(),
-									parameter.getSimpleName().toString(),
-									parameter.asType().toString(),
+									paramNames.get(0),
+									paramTypes.get(0),
 									dao,
-									sessionType,
+									sessionType[0],
+									sessionType[1],
 									profiles,
 									context.addNonnullAnnotation()
 							)
@@ -625,10 +673,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									this,
 									methodName,
 									returnType.toString(),
-									List.of( parameter.getSimpleName().toString() ),
-									List.of( parameter.asType().toString() ),
+									paramNames,
+									paramTypes,
 									dao,
-									sessionType,
+									sessionType[0],
+									sessionType[1],
 									profiles,
 									context.addNonnullAnnotation()
 							)
@@ -641,11 +690,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									methodName,
 									returnType.toString(),
 									null,
-									List.of( parameter.getSimpleName().toString() ),
-									List.of( parameter.asType().toString() ),
+									paramNames,
+									paramTypes,
 									fieldType == FieldType.ID,
 									dao,
-									sessionType,
+									sessionType[0],
+									sessionType[1],
 									profiles,
 									context.addNonnullAnnotation()
 							)
@@ -655,16 +705,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private FieldType pickStrategy(FieldType fieldType, List<String> profiles) {
+	private FieldType pickStrategy(FieldType fieldType, String sessionType, List<String> profiles) {
 		switch (fieldType) {
 			case ID:
 				// no byId() API for SS or M.S, only get()
-				return (usingStatelessSession() || usingReactiveSession()) && !profiles.isEmpty()
+				return (usingStatelessSession(sessionType) || usingReactiveSession(sessionType)) && !profiles.isEmpty()
 						? FieldType.BASIC : FieldType.ID;
 			case NATURAL_ID:
 				// no byNaturalId() lookup API for SS
 				// no byNaturalId() in M.S, but we do have Identifier workaround
-				return usingStatelessSession() || (usingReactiveSession() && !profiles.isEmpty())
+				return usingStatelessSession(sessionType) || (usingReactiveSession(sessionType) && !profiles.isEmpty())
 						? FieldType.BASIC : FieldType.NATURAL_ID;
 			default:
 				return FieldType.BASIC;
@@ -673,12 +723,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private boolean matchesNaturalKey(ExecutableElement method, TypeElement entity) {
 		boolean result = true;
-		List<? extends VariableElement> parameters = method.getParameters();
-		for ( VariableElement param : parameters) {
-			if ( validateFinderParameter( entity, param ) != FieldType.NATURAL_ID ) {
-				// no short-circuit here because we want to validate
-				// all of them and get the nice error report
-				result = false;
+		final List<? extends VariableElement> parameters = method.getParameters();
+		for ( VariableElement param : parameters ) {
+			if ( isFinderParameterMappingToAttribute( param ) ) {
+				if ( validateFinderParameter( entity, param ) != FieldType.NATURAL_ID ) {
+					// no short-circuit here because we want to validate
+					// all of them and get the nice error report
+					result = false;
+				}
 			}
 		}
 		return result && countNaturalIdFields( entity ) == parameters.size() ;
@@ -781,7 +833,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final String hql = (String) query;
 				final List<String> paramNames = parameterNames( method );
 				final List<String> paramTypes = parameterTypes( method );
-
+				final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
+				removeSessionFromParameters(paramNames, paramTypes);
 				final QueryMethod attribute =
 						new QueryMethod(
 								this,
@@ -793,7 +846,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								paramTypes,
 								isNative,
 								dao,
-								sessionType,
+								sessionType[0],
+								sessionType[1],
 								context.addNonnullAnnotation()
 						);
 				putMember( attribute.getPropertyName() + paramTypes, attribute );
@@ -923,11 +977,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			&& !isOrderParam(type);
 	}
 
-	private boolean usingReactiveSession() {
+	private boolean usingReactiveSession(String sessionType) {
 		return Constants.MUTINY_SESSION.equals(sessionType);
 	}
 
-	private boolean usingStatelessSession() {
+	private boolean usingStatelessSession(String sessionType) {
 		return Constants.HIB_STATELESS_SESSION.equals(sessionType);
 	}
 }

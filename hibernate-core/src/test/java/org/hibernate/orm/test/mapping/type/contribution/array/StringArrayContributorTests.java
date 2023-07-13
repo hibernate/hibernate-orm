@@ -60,8 +60,12 @@ public class StringArrayContributorTests {
 
 	@Test
 	public void testAsQueryParameter(SessionFactoryScope scope) {
+		scope.getSessionFactory().getQueryEngine()
+				.getSqmFunctionRegistry()
+				.registerNamed("array_contains",
+						scope.getSessionFactory().getTypeConfiguration().standardBasicTypeForJavaType(Boolean.class));
 		scope.inTransaction( (session) -> {
-			session.createQuery( "select p  from Post p where array_contains(:arr, p.title) = true" )
+			session.createQuery( "select p from Post p where array_contains(:arr, p.title) = true" )
 					.setParameter( "arr", Arrays.array( "a", "b" ) )
 					.list();
 		} );

@@ -30,12 +30,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
  */
 @SessionFactory
 @DomainModel(annotatedClasses = {
-		EmbeddableWithParentWithInheritanceTest.Food.class,
-		EmbeddableWithParentWithInheritanceTest.Cheese.class,
-		EmbeddableWithParentWithInheritanceTest.Smell.class
+		EmbeddableWithParentWithInheritance2Test.Food.class,
+		EmbeddableWithParentWithInheritance2Test.Cheese.class,
+		EmbeddableWithParentWithInheritance2Test.Smell.class
 })
 @JiraKey("HHH-16812")
-public class EmbeddableWithParentWithInheritanceTest {
+public class EmbeddableWithParentWithInheritance2Test {
 
 	@Test
 	public void test(SessionFactoryScope scope) {
@@ -45,7 +45,10 @@ public class EmbeddableWithParentWithInheritanceTest {
 			Smell smell = new Smell();
 
 			roquefort.setSmell( smell );
-			smell.setCheese( roquefort );
+			SmellOf smellOf = new SmellOf();
+			smellOf.setCheese( roquefort );
+			smellOf.setIntensity( 2 );
+			smell.setSmellOf( smellOf );
 			smell.setName( "blue roquefort" );
 
 			s.persist( roquefort );
@@ -57,20 +60,18 @@ public class EmbeddableWithParentWithInheritanceTest {
 			Object unproxied = Hibernate.unproxy( food );
 			assertThat( unproxied ).isInstanceOf( Cheese.class );
 			Cheese cheese = (Cheese) unproxied;
-			assertThat( cheese.getSmell() ).isNotNull();
-			assertThat( cheese.getSmell().getCheese() ).isNotNull();
+			assertThat(cheese.getSmell()).isNotNull();
+			assertThat(cheese.getSmell().getSmellOf()).isNotNull();
+			assertThat(cheese.getSmell().getSmellOf().getCheese()).isNotNull();
 		} );
 	}
 
 	@Entity(name = "Food")
-	@BatchSize(size = 512)
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	@DiscriminatorColumn(discriminatorType = DiscriminatorType.STRING, name = "type")
 	@DiscriminatorValue(value = "FOOD")
 	public static class Food {
 		Long id;
-
-		String description;
 
 		public Food() {
 		}
@@ -87,14 +88,6 @@ public class EmbeddableWithParentWithInheritanceTest {
 
 		public void setId(Long id) {
 			this.id = id;
-		}
-
-		public String getDescription() {
-			return description;
-		}
-
-		public void setDescription(String description) {
-			this.description = description;
 		}
 	}
 
@@ -119,9 +112,32 @@ public class EmbeddableWithParentWithInheritanceTest {
 
 	@Embeddable
 	public static class Smell {
-		Cheese cheese;
+		SmellOf smellOf;
 
 		String name;
+
+		public SmellOf getSmellOf() {
+			return smellOf;
+		}
+
+		public void setSmellOf(SmellOf smellOf) {
+			this.smellOf = smellOf;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+	}
+
+	@Embeddable
+	public static class SmellOf {
+		Cheese cheese;
+
+		Integer intensity;
 
 		@Parent
 		public Cheese getCheese() {
@@ -132,12 +148,12 @@ public class EmbeddableWithParentWithInheritanceTest {
 			this.cheese = cheese;
 		}
 
-		public String getName() {
-			return name;
+		public Integer getIntensity() {
+			return intensity;
 		}
 
-		public void setName(String name) {
-			this.name = name;
+		public void setIntensity(Integer intensity) {
+			this.intensity = intensity;
 		}
 	}
 }

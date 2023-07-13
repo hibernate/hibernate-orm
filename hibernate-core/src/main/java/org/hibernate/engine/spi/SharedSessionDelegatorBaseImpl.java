@@ -608,6 +608,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
+	public <T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
+		return delegate.createEntityGraph( rootType, graphName );
+	}
+
+	@Override
 	public RootGraph<?> getEntityGraph(String graphName) {
 		return delegate.getEntityGraph( graphName );
 	}

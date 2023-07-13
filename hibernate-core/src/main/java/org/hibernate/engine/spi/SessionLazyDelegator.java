@@ -531,6 +531,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
+		return this.lazySession.get().createEntityGraph( rootType, graphName );
+	}
+
+	@Override
 	public RootGraph<?> getEntityGraph(String graphName) {
 		return this.lazySession.get().getEntityGraph( graphName );
 	}

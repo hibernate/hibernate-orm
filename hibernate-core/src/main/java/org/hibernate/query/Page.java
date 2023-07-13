@@ -19,7 +19,7 @@ import org.hibernate.Incubating;
  * A parameter of a {@linkplain org.hibernate.annotations.processing.HQL
  * HQL query method} may be declared with type {@code Page}.
  *
- * @see Query#setPage(Page)
+ * @see SelectionQuery#setPage(Page)
  *
  * @since 6.3
  *
@@ -38,6 +38,10 @@ public class Page {
 		return number;
 	}
 
+	public boolean isFirst() {
+		return number == 0;
+	}
+
 	public int getMaxResults() {
 		return size;
 	}
@@ -47,6 +51,12 @@ public class Page {
 	}
 
 	private Page(int size, int number) {
+		if ( size <= 0 ) {
+			throw new IllegalArgumentException("page size must be strictly positive");
+		}
+		if ( number < 0 ) {
+			throw new IllegalArgumentException("page number must be non-negative");
+		}
 		this.size = size;
 		this.number = number;
 	}
@@ -64,7 +74,10 @@ public class Page {
 	}
 
 	public Page previous() {
-		return new Page( size, number+1 );
+		if ( isFirst() ) {
+			throw new IllegalStateException("already at first page");
+		}
+		return new Page( size, number-1 );
 	}
 
 	public Page first() {

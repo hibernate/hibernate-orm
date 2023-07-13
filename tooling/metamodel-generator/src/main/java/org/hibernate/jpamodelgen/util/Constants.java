@@ -67,6 +67,7 @@ public final class Constants {
 	public static final String QUERY = "jakarta.persistence.Query";
 	public static final String TYPED_QUERY = "jakarta.persistence.TypedQuery";
 	public static final String HIB_QUERY = "org.hibernate.query.Query";
+	public static final String PAGER = "org.hibernate.query.Pager";
 	public static final String HIB_SELECTION_QUERY = "org.hibernate.query.SelectionQuery";
 	public static final String HIB_SESSION = "org.hibernate.Session";
 	public static final String HIB_STATELESS_SESSION = "org.hibernate.StatelessSession";

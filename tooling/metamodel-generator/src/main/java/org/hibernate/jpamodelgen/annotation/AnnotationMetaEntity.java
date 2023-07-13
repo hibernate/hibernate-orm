@@ -448,6 +448,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private static boolean isLegalGenericResultType(String containerTypeName) {
 		return containerTypeName.equals(Constants.LIST)
+			|| containerTypeName.equals(Constants.PAGER)
 			|| containerTypeName.equals(Constants.TYPED_QUERY)
 			|| containerTypeName.equals(Constants.HIB_QUERY)
 			|| containerTypeName.equals(Constants.HIB_SELECTION_QUERY);
@@ -548,7 +549,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		else {
 			@SuppressWarnings("unchecked")
 			final List<AnnotationValue> annotationValues = (List<AnnotationValue>) enabledFetchProfiles;
-			List<String> result = annotationValues.stream().map(AnnotationValue::toString).collect(toList());
+			final List<String> result = annotationValues.stream().map(AnnotationValue::toString).collect(toList());
 			if ( result.stream().anyMatch("<error>"::equals) ) {
 				throw new ProcessLaterException();
 			}

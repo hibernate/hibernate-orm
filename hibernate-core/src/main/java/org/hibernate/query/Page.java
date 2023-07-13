@@ -10,7 +10,8 @@ import org.hibernate.Incubating;
 
 /**
  * Identifies a page of query results by {@linkplain #size page size}
- * and {@linkplain #number page number}.
+ * and {@linkplain #number page number}. The first page is the page
+ * with page number {@code 0}.
  * <p>
  * This is a convenience class which allows a reference to a page of
  * results to be passed around the system before being applied to
@@ -19,11 +20,12 @@ import org.hibernate.Incubating;
  * A parameter of a {@linkplain org.hibernate.annotations.processing.HQL
  * HQL query method} may be declared with type {@code Page}.
  *
- * @see Query#setPage(Page)
- *
- * @since 6.3
+ * @see SelectionQuery#setPage(Page)
+ * @see SelectionQuery#getResultPager(Page)
+ * @see Pager#getCurrentPage()
  *
  * @author Gavin King
+ * @since 6.3
  */
 @Incubating
 public class Page {
@@ -38,6 +40,10 @@ public class Page {
 		return number;
 	}
 
+	public boolean isFirst() {
+		return number == 0;
+	}
+
 	public int getMaxResults() {
 		return size;
 	}
@@ -47,6 +53,12 @@ public class Page {
 	}
 
 	private Page(int size, int number) {
+		if ( size <= 0 ) {
+			throw new IllegalArgumentException("page size must be strictly positive");
+		}
+		if ( number < 0 ) {
+			throw new IllegalArgumentException("page number must be non-negative");
+		}
 		this.size = size;
 		this.number = number;
 	}
@@ -64,7 +76,10 @@ public class Page {
 	}
 
 	public Page previous() {
-		return new Page( size, number+1 );
+		if ( isFirst() ) {
+			throw new IllegalStateException("already at first page");
+		}
+		return new Page( size, number-1 );
 	}
 
 	public Page first() {

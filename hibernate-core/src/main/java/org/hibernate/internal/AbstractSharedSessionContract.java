@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.function.Function;
@@ -42,6 +43,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.uuid.StandardRandomStrategy;
@@ -52,6 +54,7 @@ import org.hibernate.jpa.spi.NativeQueryConstructorTransformer;
 import org.hibernate.jpa.spi.NativeQueryListTransformer;
 import org.hibernate.jpa.spi.NativeQueryMapTransformer;
 import org.hibernate.jpa.spi.NativeQueryTupleTransformer;
+import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.procedure.internal.ProcedureCallImpl;
@@ -1381,6 +1384,22 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		checkOpen();
 		return new RootGraphImpl<>( null, getFactory().getJpaMetamodel().entity( rootType ) );
 	}
+
+	@Override @SuppressWarnings("unchecked")
+	public <T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
+		final RootGraph<?> entityGraph = createEntityGraph( graphName );
+		if ( entityGraph == null ) {
+			return null;
+		}
+		final ManagedDomainType<T> type = getFactory().getJpaMetamodel().managedType( rootType );
+		final ManagedDomainType<?> graphedType = entityGraph.getGraphedType();
+		if ( !Objects.equals( graphedType.getTypeName(), type.getTypeName() ) ) {
+			throw new IllegalArgumentException( "Named entity graph '" + graphName
+					+ "' is for type '" + graphedType.getTypeName() + "'");
+		}
+		return (RootGraph<T>) entityGraph;
+	}
+
 
 	@Override
 	public RootGraphImplementor<?> createEntityGraph(String graphName) {

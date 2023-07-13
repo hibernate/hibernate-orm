@@ -246,6 +246,8 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	/**
 	 * Create a new mutable {@link EntityGraph} with only a root node.
 	 *
+	 * @param rootType the root entity class of the graph
+	 *
 	 * @since 6.3
 	 */
 	<T> RootGraph<T> createEntityGraph(Class<T> rootType);
@@ -262,6 +264,23 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	 * @since 6.3
 	 */
 	RootGraph<?> createEntityGraph(String graphName);
+
+	/**
+	 * Create a new mutable copy of the named {@link EntityGraph},
+	 * or return {@code null} if there is no graph with the given
+	 * name.
+	 *
+	 * @param rootType the root entity class of the graph
+	 * @param graphName the name of the graph
+	 *
+	 * @see jakarta.persistence.EntityManagerFactory#addNamedEntityGraph(String, EntityGraph)
+	 *
+	 * @throws IllegalArgumentException if the graph with the given
+	 *         name does not have the given entity type as its root
+	 *
+	 * @since 6.3
+	 */
+	<T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName);
 
 	/**
 	 * Retrieve the named {@link EntityGraph} as an immutable graph,

@@ -377,6 +377,17 @@ public final class ManagedTypeHelper {
 		throw new ClassCastException( "Object of type '" + entity.getClass() + "' can't be cast to SelfDirtinessTracker" );
 	}
 
+	/**
+	 * Cast the object to an HibernateProxy, or return null in case it is not an instance of HibernateProxy
+	 * @param entity the entity to cast
+	 * @return the same instance after casting or null if it is not an instance of HibernateProxy
+	 */
+	public static HibernateProxy asHibernateProxyOrNull(final Object entity) {
+		return entity instanceof PrimeAmongSecondarySupertypes ?
+				( (PrimeAmongSecondarySupertypes) entity ).asHibernateProxy() :
+				null;
+	}
+
 	private static final class TypeMeta {
 		final boolean isManagedType;
 		final boolean isSelfDirtinessTrackerType;

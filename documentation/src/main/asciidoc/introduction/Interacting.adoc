@@ -759,6 +759,38 @@ List<Book> matchingBooks = session.createSelectionQuery(query).getResultList();
 ----
 ====
 
+Do you find some of the code above a bit too verbose?
+We do.
+
+[[criteria-definition]]
+=== A more comfortable way to write criteria queries
+
+Actually, what makes the JPA criteria API less ergonomic that it should be is the need to call all operations of the `CriteriaBuilder` as instance methods, instead of having them as `static` functions.
+The reason it works this way is that each JPA providor has its own implementation of `CriteriaBuilder`.
+
+// [%unbreakable]
+// [TIP]
+// ====
+Hibernate 6.3 introduces the helper class `CriteriaDefinition` to reduce the verbosity of criteria queries.
+Our example looks like this:
+
+[source,java]
+----
+CriteriaQuery<Book> query =
+        new CriteriaDefinition(entityManagerFactory, Book.class) {{
+            select(book);
+            if (titlePattern != null) {
+                restrict(like(book.get(Book_.title), titlePattern));
+            }
+            if (namePattern != null) {
+                var author = book.join(Book_.author);
+                restrict(like(author.get(Author_.name), namePattern));
+            }
+            orderBy(asc(book.get(Book_.title)));
+        }};
+----
+// ====
+
 When all else fails, and sometimes even before that, we're left with the option of writing a query in SQL.
 
 [[native-queries]]

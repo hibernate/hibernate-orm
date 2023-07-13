@@ -29,9 +29,10 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			boolean isId,
 			boolean belongsToDao,
 			String sessionType,
+			String sessionName,
 			List<String> fetchProfiles,
 			boolean addNonnullAnnotation) {
-		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, fetchProfiles,
+		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
 				paramNames, paramTypes, addNonnullAnnotation );
 		this.containerType = containerType;
 		this.isId = isId;
@@ -61,7 +62,8 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 					.append(" == null) throw new IllegalArgumentException(\"Null identifier\");");
 		}
 		declaration
-				.append("\n\tvar builder = entityManager")
+				.append("\n\tvar builder = ")
+				.append(sessionName)
 				.append(usingEntityManager
 						? ".getEntityManagerFactory()"
 						: ".getFactory()")
@@ -104,7 +106,9 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		}
 		declaration
 				.append("\n\t);")
-				.append("\n\treturn entityManager.createQuery(query)");
+				.append("\n\treturn ")
+				.append(sessionName)
+				.append(".createQuery(query)");
 		final boolean hasEnabledFetchProfiles = !fetchProfiles.isEmpty();
 		final boolean hasNativeReturnType = containerType != null && containerType.startsWith("org.hibernate");
 		final boolean unwrap =

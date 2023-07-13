@@ -18,10 +18,12 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassG
  */
 public class QueryMethodTest extends CompilationTest {
 	@Test
-	@WithClasses({ Book.class, Dao.class })
+	@WithClasses({ Book.class, Dao.class, Books.class })
 	public void testQueryMethod() {
 		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class ) );
+		System.out.println( TestUtil.getMetaModelSourceAsString( Books.class ) );
 		assertMetamodelClassGeneratedFor( Book.class );
 		assertMetamodelClassGeneratedFor( Dao.class );
+		assertMetamodelClassGeneratedFor( Books.class );
 	}
 }

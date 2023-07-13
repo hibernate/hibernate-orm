@@ -95,6 +95,14 @@ public final class Constants {
 			java.util.SortedMap.class.getName(), Constants.MAP_ATTRIBUTE
 	);
 
+	public static final Set<String> SESSION_TYPES =
+			Set.of(
+					Constants.ENTITY_MANAGER,
+					Constants.HIB_SESSION,
+					Constants.HIB_STATELESS_SESSION,
+					Constants.MUTINY_SESSION
+			);
+
 	//TODO: this is not even an exhaustive list of built-in basic types
 	//      so any logic that relies on incomplete this list is broken!
 	public static final Set<String> BASIC_TYPES =  Set.of(

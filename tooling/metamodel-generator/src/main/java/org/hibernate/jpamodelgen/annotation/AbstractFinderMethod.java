@@ -7,7 +7,6 @@
 package org.hibernate.jpamodelgen.annotation;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 
@@ -19,19 +18,9 @@ import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFr
 /**
  * @author Gavin King
  */
-public abstract class AbstractFinderMethod implements MetaAttribute {
-	final Metamodel annotationMetaEntity;
-	final String methodName;
+public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	final String entity;
-	final boolean belongsToDao;
-	final String sessionType;
-	final boolean usingEntityManager;
-	final boolean reactive;
-	private final boolean addNonnullAnnotation;
 	final List<String> fetchProfiles;
-
-	final List<String> paramNames;
-	final List<String> paramTypes;
 
 	public AbstractFinderMethod(
 			Metamodel annotationMetaEntity,
@@ -39,21 +28,14 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 			String entity,
 			boolean belongsToDao,
 			String sessionType,
+			String sessionName,
 			List<String> fetchProfiles,
 			List<String> paramNames,
 			List<String> paramTypes,
 			boolean addNonnullAnnotation) {
-		this.annotationMetaEntity = annotationMetaEntity;
-		this.methodName = methodName;
+		super( annotationMetaEntity, methodName, paramNames, paramTypes, sessionType, sessionName, belongsToDao, addNonnullAnnotation );
 		this.entity = entity;
-		this.belongsToDao = belongsToDao;
-		this.sessionType = sessionType;
 		this.fetchProfiles = fetchProfiles;
-		this.paramNames = paramNames;
-		this.paramTypes = paramTypes;
-		this.addNonnullAnnotation = addNonnullAnnotation;
-		this.usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
-		this.reactive = Constants.MUTINY_SESSION.equals(sessionType);
 	}
 
 	@Override
@@ -67,23 +49,8 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 	}
 
 	@Override
-	public String getMetaType() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public String getPropertyName() {
-		return methodName;
-	}
-
-	@Override
 	public String getTypeDeclaration() {
 		return entity;
-	}
-
-	@Override
-	public Metamodel getHostingEntity() {
-		return annotationMetaEntity;
 	}
 
 	abstract boolean isId();
@@ -102,20 +69,6 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 				.append(")")
 				.append("\";")
 				.toString();
-	}
-
-	private String parameterList() {
-		return paramTypes.stream()
-				.map(this::strip)
-				.map(annotationMetaEntity::importType)
-				.reduce((x, y) -> x + ',' + y)
-				.orElse("");
-	}
-
-	private String strip(String type) {
-		int index = type.indexOf("<");
-		String stripped = index > 0 ? type.substring(0, index) : type;
-		return type.endsWith("...") ? stripped + "..." : stripped;
 	}
 
 	String constantName() {
@@ -212,7 +165,8 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 		parameters( declaration) ;
 		declaration
 				.append(" {")
-				.append("\n\treturn entityManager");
+				.append("\n\treturn ")
+				.append(sessionName);
 	}
 
 	private void entityType(StringBuilder declaration) {
@@ -237,12 +191,7 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 	void parameters(StringBuilder declaration) {
 		declaration
 				.append("(");
-		if ( !belongsToDao ) {
-			notNull( declaration );
-			declaration
-					.append(annotationMetaEntity.importType(Constants.ENTITY_MANAGER))
-					.append(" entityManager");
-		}
+		sessionParameter( declaration );
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
 			if ( !belongsToDao || i > 0 ) {
 				declaration
@@ -258,14 +207,5 @@ public abstract class AbstractFinderMethod implements MetaAttribute {
 		}
 		declaration
 				.append(')');
-	}
-
-	private void notNull(StringBuilder declaration) {
-		if ( addNonnullAnnotation ) {
-			declaration
-					.append('@')
-					.append(annotationMetaEntity.importType("jakarta.annotation.Nonnull"))
-					.append(' ');
-		}
 	}
 }

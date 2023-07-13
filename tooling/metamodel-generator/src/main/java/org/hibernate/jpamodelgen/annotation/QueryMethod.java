@@ -8,7 +8,6 @@ package org.hibernate.jpamodelgen.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.query.Order;
@@ -22,19 +21,11 @@ import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFr
 /**
  * @author Gavin King
  */
-public class QueryMethod implements MetaAttribute {
-	private final Metamodel annotationMetaEntity;
-	private final String methodName;
+public class QueryMethod extends AbstractQueryMethod {
 	private final String queryString;
 	private final @Nullable String returnTypeName;
 	private final @Nullable String containerTypeName;
-	private final List<String> paramNames;
-	private final List<String> paramTypes;
 	private final boolean isNative;
-	private final boolean belongsToDao;
-	private final boolean usingEntityManager;
-	private final boolean reactive;
-	private final boolean addNonnullAnnotation;
 
 	public QueryMethod(
 			Metamodel annotationMetaEntity,
@@ -49,19 +40,13 @@ public class QueryMethod implements MetaAttribute {
 			boolean isNative,
 			boolean belongsToDao,
 			String sessionType,
+			String sessionName,
 			boolean addNonnullAnnotation) {
-		this.annotationMetaEntity = annotationMetaEntity;
-		this.methodName = methodName;
+		super( annotationMetaEntity, methodName, paramNames, paramTypes, sessionType, sessionName, belongsToDao, addNonnullAnnotation );
 		this.queryString = queryString;
 		this.returnTypeName = returnTypeName;
 		this.containerTypeName = containerTypeName;
-		this.paramNames = paramNames;
-		this.paramTypes = paramTypes;
 		this.isNative = isNative;
-		this.belongsToDao = belongsToDao;
-		this.addNonnullAnnotation = addNonnullAnnotation;
-		this.usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
-		this.reactive = Constants.MUTINY_SESSION.equals(sessionType);
 	}
 
 	@Override
@@ -98,8 +83,8 @@ public class QueryMethod implements MetaAttribute {
 					.append(") ");
 		}
 		declaration
-				.append("entityManager.")
-				.append(isNative ? "createNativeQuery" : "createQuery")
+				.append(sessionName)
+				.append(isNative ? ".createNativeQuery" : ".createQuery")
 				.append("(")
 				.append(getConstantName());
 		if ( returnTypeName != null ) {
@@ -210,30 +195,22 @@ public class QueryMethod implements MetaAttribute {
 	}
 
 	private void parameters(List<String> paramTypes, StringBuilder declaration) {
-		declaration.append("(");
-		if ( !belongsToDao ) {
-			notNull( declaration );
-			declaration
-					.append(annotationMetaEntity.importType(Constants.ENTITY_MANAGER))
-					.append(" entityManager");
-		}
-
-		for (int i = 0; i<paramNames.size(); i++ ) {
-			String ptype = paramTypes.get(i);
-			String param = paramNames.get(i);
-			String rptype = returnTypeName != null
-					? ptype.replace(returnTypeName, annotationMetaEntity.importType(returnTypeName))
-					: ptype;
-
-			if ( !belongsToDao || i>0 ) {
+		declaration
+				.append("(");
+		sessionParameter( declaration );
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			if ( !belongsToDao || i > 0 ) {
 				declaration
 						.append(", ");
 			}
-
+			final String type = paramTypes.get(i);
+			final String paramType = returnTypeName != null
+					? type.replace(returnTypeName, annotationMetaEntity.importType(returnTypeName))
+					: type;
 			declaration
-					.append(annotationMetaEntity.importType(rptype))
+					.append(annotationMetaEntity.importType(paramType))
 					.append(" ")
-					.append(param);
+					.append(paramNames.get(i));
 		}
 		declaration
 				.append(")");
@@ -301,20 +278,6 @@ public class QueryMethod implements MetaAttribute {
 		}
 	}
 
-	private String parameterList() {
-		return paramTypes.stream()
-				.map(this::strip)
-				.map(annotationMetaEntity::importType)
-				.reduce((x, y) -> x + ',' + y)
-				.orElse("");
-	}
-
-	private String strip(String type) {
-		int index = type.indexOf("<");
-		String stripped = index > 0 ? type.substring(0, index) : type;
-		return type.endsWith("...") ? stripped + "..." : stripped;
-	}
-
 	static boolean isPageParam(String parameterType) {
 		return Page.class.getName().equals(parameterType);
 	}
@@ -359,32 +322,7 @@ public class QueryMethod implements MetaAttribute {
 		}
 	}
 
-	private void notNull(StringBuilder declaration) {
-		if ( addNonnullAnnotation ) {
-			declaration
-					.append('@')
-					.append(annotationMetaEntity.importType("jakarta.annotation.Nonnull"))
-					.append(' ');
-		}
-	}
-
-	@Override
-	public String getMetaType() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public String getPropertyName() {
-		return methodName;
-	}
-
-	@Override
 	public String getTypeDeclaration() {
 		return Constants.QUERY;
-	}
-
-	@Override
-	public Metamodel getHostingEntity() {
-		return annotationMetaEntity;
 	}
 }

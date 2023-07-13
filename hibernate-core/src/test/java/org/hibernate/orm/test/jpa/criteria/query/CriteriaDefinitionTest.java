@@ -47,6 +47,13 @@ public class CriteriaDefinitionTest {
             orderBy(asc(message.get("text")));
         }};
 
+        var query4 = new CriteriaDefinition<>(factory, Message.class) {{
+            var message = from(Message.class);
+            restrict(like(message.get("text"), "hell%"));
+            restrict(message.get("id").equalTo(1));
+            orderBy(asc(message.get("id")));
+        }};
+
         scope.inSession(session -> {
             var idAndText = session.createSelectionQuery(query1).getSingleResult();
             assertNotNull(idAndText);
@@ -61,6 +68,10 @@ public class CriteriaDefinitionTest {
             var messages = session.createSelectionQuery(query3).getResultList();
             assertEquals(2,messages.size());
 
+            var msg = session.createSelectionQuery(query4).getSingleResult();
+            assertNotNull(msg);
+            assertEquals(1L,msg.id);
+            assertEquals("hello",msg.text);
         });
     }
 
@@ -91,6 +102,13 @@ public class CriteriaDefinitionTest {
             orderBy(asc(message.get("text")));
         }};
 
+        var query4 = new CriteriaDefinition<>(factory, Message.class) {{
+            var message = from(Message.class);
+            restrict(like(message.get("text"), "hell%"));
+            restrict(message.get("id").equalTo(1));
+            orderBy(asc(message.get("id")));
+        }};
+
         scope.inTransaction(entityManager -> {
             var idAndText = entityManager.createQuery(query1).getSingleResult();
             assertNotNull(idAndText);
@@ -105,6 +123,10 @@ public class CriteriaDefinitionTest {
             var messages = entityManager.createQuery(query3).getResultList();
             assertEquals(2,messages.size());
 
+            var msg = entityManager.createQuery(query4).getSingleResult();
+            assertNotNull(msg);
+            assertEquals(1L,msg.id);
+            assertEquals("hello",msg.text);
         });
     }
 

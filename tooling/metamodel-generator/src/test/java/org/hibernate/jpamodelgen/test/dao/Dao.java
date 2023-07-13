@@ -60,4 +60,10 @@ public interface Dao {
 
     @SQL("select * from Book where isbn = :isbn")
     Book findByIsbnNative(String isbn);
+
+    @Find
+    Bean beanByIdProperty(Long key);
+
+    @Find
+    List<Bean> beansForText(String text);
 }

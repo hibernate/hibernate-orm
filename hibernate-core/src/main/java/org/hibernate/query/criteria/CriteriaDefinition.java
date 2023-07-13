@@ -161,6 +161,12 @@ public abstract class CriteriaDefinition<R>
 		return entityManager.createQuery( query );
 	}
 
+	@Incubating
+	public JpaCriteriaQuery<R> restrict(Predicate predicate) {
+		final JpaPredicate existing = getRestriction();
+		return existing == null ? where( predicate ) : where( existing, predicate );
+	}
+
 	@Override
 	public JpaCriteriaQuery<R> select(Selection<? extends R> selection) {
 		return query.select(selection);

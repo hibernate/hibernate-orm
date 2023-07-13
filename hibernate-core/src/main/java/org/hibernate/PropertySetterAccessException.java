@@ -8,6 +8,8 @@ package org.hibernate;
 
 import java.util.Collection;
 
+import org.hibernate.proxy.HibernateProxy;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -49,7 +51,7 @@ public class PropertySetterAccessException extends PropertyAccessException {
 	}
 
 	public static String loggablePropertyValueString(Object value) {
-		if ( value instanceof Collection ) {
+		if ( value instanceof Collection || value instanceof HibernateProxy ) {
 			return value.getClass().getSimpleName();
 		}
 		return value.toString();

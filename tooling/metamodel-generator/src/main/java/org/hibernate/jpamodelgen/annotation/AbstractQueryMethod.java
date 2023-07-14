@@ -19,7 +19,7 @@ import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
  * @author Gavin King
  */
 public abstract class AbstractQueryMethod implements MetaAttribute {
-	final Metamodel annotationMetaEntity;
+	final AnnotationMetaEntity annotationMetaEntity;
 	final String methodName;
 	final List<String> paramNames;
 	final List<String> paramTypes;
@@ -30,7 +30,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	final boolean addNonnullAnnotation;
 
 	public AbstractQueryMethod(
-			Metamodel annotationMetaEntity,
+			AnnotationMetaEntity annotationMetaEntity,
 			String methodName,
 			List<String> paramNames, List<String> paramTypes,
 			@Nullable String returnTypeName,

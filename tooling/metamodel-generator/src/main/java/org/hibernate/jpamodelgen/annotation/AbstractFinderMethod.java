@@ -7,12 +7,12 @@
 package org.hibernate.jpamodelgen.annotation;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 
 import java.util.List;
 import java.util.Locale;
 
+import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -23,7 +23,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	final List<String> fetchProfiles;
 
 	public AbstractFinderMethod(
-			Metamodel annotationMetaEntity,
+			AnnotationMetaEntity annotationMetaEntity,
 			String methodName,
 			String entity,
 			boolean belongsToDao,
@@ -104,13 +104,14 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 							.append(", ");
 				}
 			}
+			final String path = param.replace('$', '.');
 			declaration
 					.append("{@link ")
 					.append(annotationMetaEntity.importType(entity))
 					.append('#')
-					.append(param)
+					.append(qualifier(path))
 					.append(' ')
-					.append(param)
+					.append(path)
 					.append("}");
 		}
 		declaration

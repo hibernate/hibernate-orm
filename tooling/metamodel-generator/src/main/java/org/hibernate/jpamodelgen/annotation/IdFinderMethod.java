@@ -17,21 +17,28 @@ import java.util.List;
 public class IdFinderMethod extends AbstractFinderMethod {
 
 	private final String paramName;
-	private final boolean usingStatelessSession;
 
 	public IdFinderMethod(
 			Metamodel annotationMetaEntity,
 			String methodName, String entity,
-			String paramName, String paramType,
+			List<String> paramNames, List<String> paramTypes,
 			boolean belongsToDao,
 			String sessionType,
 			String sessionName,
 			List<String> fetchProfiles,
 			boolean addNonnullAnnotation) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
-				List.of(paramName), List.of(paramType), addNonnullAnnotation );
-		this.paramName = paramName;
-		usingStatelessSession = Constants.HIB_STATELESS_SESSION.equals(sessionType);
+				paramNames, paramTypes, addNonnullAnnotation );
+		this.paramName = idParameterName( paramNames, paramTypes );
+	}
+
+	private static String idParameterName(List<String> paramNames, List<String> paramTypes) {
+		for (int i = 0; i < paramNames.size(); i ++ ) {
+			if ( !isSessionParameter( paramTypes.get(i) ) ) {
+				return paramNames.get(i);
+			}
+		}
+		return ""; // should never occur!
 	}
 
 	@Override
@@ -68,7 +75,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 
 	private void findWithNoFetchProfiles(StringBuilder declaration) {
 		declaration
-				.append(usingStatelessSession ? ".get(" : ".find(")
+				.append(isUsingStatelessSession() ? ".get(" : ".find(")
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class, ")
 				.append(paramName)

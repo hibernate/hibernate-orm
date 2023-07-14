@@ -6,12 +6,12 @@
  */
 package org.hibernate.jpamodelgen.annotation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 
 import java.util.List;
-import java.util.Set;
 
 import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
 
@@ -23,17 +23,17 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	final String methodName;
 	final List<String> paramNames;
 	final List<String> paramTypes;
+	final @Nullable String returnTypeName;
 	final String sessionType;
 	final String sessionName;
 	final boolean belongsToDao;
-	final boolean usingEntityManager;
-	final boolean reactive;
 	final boolean addNonnullAnnotation;
 
 	public AbstractQueryMethod(
 			Metamodel annotationMetaEntity,
 			String methodName,
 			List<String> paramNames, List<String> paramTypes,
+			@Nullable String returnTypeName,
 			String sessionType,
 			String sessionName,
 			boolean belongsToDao,
@@ -42,12 +42,11 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		this.methodName = methodName;
 		this.paramNames = paramNames;
 		this.paramTypes = paramTypes;
+		this.returnTypeName = returnTypeName;
 		this.sessionType = sessionType;
 		this.sessionName = sessionName;
 		this.belongsToDao = belongsToDao;
 		this.addNonnullAnnotation = addNonnullAnnotation;
-		this.usingEntityManager = Constants.ENTITY_MANAGER.equals(sessionType);
-		this.reactive = Constants.MUTINY_SESSION.equals(sessionType);
 	}
 
 	@Override
@@ -65,6 +64,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		return methodName;
 	}
 
+	abstract boolean isId();
+
 	String parameterList() {
 		return paramTypes.stream()
 				.map(this::strip)
@@ -79,13 +80,49 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		return type.endsWith("...") ? stripped + "..." : stripped;
 	}
 
+	void parameters(List<String> paramTypes, StringBuilder declaration) {
+		declaration
+				.append("(");
+		sessionParameter( declaration );
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			if ( i > 0 ) {
+				declaration
+						.append(", ");
+			}
+			final String paramType = paramTypes.get(i);
+			if ( isId() || isSessionParameter(paramType) ) {
+				notNull( declaration );
+			}
+			declaration
+					.append(annotationMetaEntity.importType(importReturnTypeArgument(paramType)))
+					.append(" ")
+					.append(paramNames.get(i));
+		}
+		declaration
+				.append(")");
+	}
+
+	static boolean isSessionParameter(String paramType) {
+		return SESSION_TYPES.contains(paramType);
+	}
+
+	private String importReturnTypeArgument(String type) {
+		return returnTypeName != null
+				? type.replace(returnTypeName, annotationMetaEntity.importType(returnTypeName))
+				: type;
+	}
+
 	void sessionParameter(StringBuilder declaration) {
-		if ( !belongsToDao ) {
+		if ( !belongsToDao && paramTypes.stream().noneMatch(SESSION_TYPES::contains) ) {
 			notNull(declaration);
 			declaration
 					.append(annotationMetaEntity.importType(sessionType))
 					.append(' ')
 					.append(sessionName);
+			if ( !paramNames.isEmpty() ) {
+				declaration
+					.append(", ");
+			}
 		}
 	}
 
@@ -96,5 +133,28 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					.append(annotationMetaEntity.importType("jakarta.annotation.Nonnull"))
 					.append(' ');
 		}
+	}
+
+	void see(StringBuilder declaration) {
+		declaration
+				.append("\n * @see ")
+				.append(annotationMetaEntity.getQualifiedName())
+				.append("#")
+				.append(methodName)
+				.append("(")
+				.append(parameterList())
+				.append(")");
+	}
+
+	boolean isUsingEntityManager() {
+		return Constants.ENTITY_MANAGER.equals(sessionType);
+	}
+
+	boolean isUsingStatelessSession() {
+		return Constants.HIB_STATELESS_SESSION.equals(sessionType);
+	}
+
+	boolean isReactive() {
+		return Constants.MUTINY_SESSION.equals(sessionType);
 	}
 }

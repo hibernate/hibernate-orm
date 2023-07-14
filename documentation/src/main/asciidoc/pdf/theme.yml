@@ -62,10 +62,20 @@ sidebar:
   title:
     align: center
 admonition:
+  label:
+    vertical-align: top
+  padding: [4, 8, 4, 8]
   column-rule:
     style: solid
     width: 3
     color: #f0f0f0
+  icon:
+    tip:
+      stroke-color: #FFC300
+    warning:
+      stroke-color: #FF5733
+    caution:
+      stroke-color: #FF5733
 heading:
   font:
     color: #b22222

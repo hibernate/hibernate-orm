@@ -115,7 +115,13 @@ For example, you could use it to create your own criteria query API.
 Automatic generation of _finder methods_ and _query methods_ is a new feature of Hibernate's implementation of the Metamodel Generator, and an extension to the functionality defined by the JPA specification.
 In this chapter, we're going to explore these features.
 
-To whet our appetites, let's see how it works for a `@NamedQuery`.
+We're going to meet three different kinds of generated method:
+
+- a _named query method_ has its signature and implementation generated directly from a `@NamedQuery` annotation,
+- a _query method_ has a signature that's explicitly declared, and a generated implementation which executes a HQL or SQL query specified via a `@HQL` or `@SQL` annotation, and
+- a _finder method_ annotated `@Find` has a signature that's explicitly declared, and a generated implementation inferred from the parameter list.
+
+To whet our appetites, let's see how this works for a `@NamedQuery`.
 
 [[generated-named-queries]]
 === Named queries and the Metamodel Generator
@@ -128,9 +134,7 @@ Let's just stick it on the `Book` class:
 ----
 @CheckHQL // validate the query at compile time
 @NamedQuery(name = "#findByTitleAndType",
-        query = "select book from Book book " +
-                "where book.title like :titlePattern " +
-                "  and book.type = :type")
+        query = "select book from Book book where book.title like :titlen and book.type = :type")
 @Entity
 public class Book { ... }
 ----
@@ -141,11 +145,11 @@ Now the Metamodel Generator adds the following method declaration to the metamod
 .Generated Code
 ----
 /**
- * Executes named query {@value #QUERY_FIND_BY_TITLE_AND_TYPE} defined by annotation of {@link Book}.
+ * Execute named query {@value #QUERY_FIND_BY_TITLE_AND_TYPE} defined by annotation of {@link Book}.
  **/
-public static List<Book> findByTitleAndType(EntityManager entityManager, String titlePattern, Type type) {
+public static List<Book> findByTitleAndType(@Nonnull EntityManager entityManager, String title, Type type) {
     return entityManager.createNamedQuery(QUERY_FIND_BY_TITLE_AND_TYPE)
-            .setParameter("titlePattern", titlePattern)
+            .setParameter("titlePattern", title)
             .setParameter("type", type)
             .getResultList();
 }
@@ -164,8 +168,8 @@ Now, this is quite nice, but it's a bit inflexible in various ways, and so this 
 [[generated-query-methods]]
 === Generated query methods
 
-The problem with generating the query method straight from the `@NamedQuery` annotation is that it doesn't let us explicitly specify the return type or parameter list.
-The Metamodel Generator does a good job of inferring the query return type and parameter types, but we're often going to need a bit more control.
+The principal problem with generating the query method straight from the `@NamedQuery` annotation is that it doesn't let us explicitly specify the return type or parameter list.
+In the case we just saw, the Metamodel Generator does a reasonable job of inferring the query return type and parameter types, but we're often going to need a bit more control.
 
 The solution is to write down the signature of the query method _explicitly_, as an abstract method in Java.
 We'll need a place to put this method, and since our `Book` entity isn't an abstract class, we'll just introduce a new interface for this purpose:
@@ -179,7 +183,6 @@ interface Queries {
 ----
 
 Instead of `@NamedQuery`, which is a type-level annotation, we specify the HQL query using the new `@HQL` annotation, which we place directly on the query method.
-
 This results in the following generated code in the `Queries_` class:
 
 [source,java]
@@ -209,6 +212,23 @@ public abstract class Queries_ {
 
 Notice that the signature differs just slightly from the one we wrote down in the `Queries` interface: the Metamodel Generator has prepended a parameter accepting `EntityManager` to the parameter list.
 
+If we want to explicitly specify the name and type of this parameter, we may declare it explicitly:
+
+[source,java]
+----
+interface Queries {
+    @HQL("from Book where title like :title and type = :type")
+    List<Book> findBooksByTitleAndType(StatelessSession session, String title, String type);
+}
+----
+
+The Metamodel Generator defaults to using `EntityManager` as the session type, but other types are allowed:
+
+- `Session`,
+- `StatelessSession`, or
+- `Mutiny.Session` from Hibernate Reactive.
+
+The real value of all this is in the checks which can now be done at compile time.
 The Metamodel Generator verifies that the parameters of our abstract method declaration match the parameters of the HQL query, for example:
 
 - for a named parameter `:alice`, there must be a method parameter named `alice` with exactly the same type, or
@@ -237,6 +257,7 @@ But if this function is called from many places, it's probably better to promote
 Fortunately, this is straightforward.
 
 All we need to do is add an abstract getter method for the session object to our `Queries` interface.
+(And remove the session from the method parameter list.)
 We may call this method anything we like:
 
 [source,java]
@@ -249,11 +270,7 @@ interface Queries {
 }
 ----
 
-Here we've used `EntityManager` as the session type, but other types are allowed:
-
-- `Session`,
-- `StatelessSession`, or
-- `Mutiny.Session` from Hibernate Reactive.
+Here we've used `EntityManager` as the session type, but other types are allowed, as we saw above.
 
 Now the Metamodel Generator does something a bit different:
 

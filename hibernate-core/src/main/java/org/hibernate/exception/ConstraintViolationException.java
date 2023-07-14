@@ -9,8 +9,6 @@ import java.sql.SQLException;
 
 import org.hibernate.JDBCException;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 /**
  * A {@link JDBCException} indicating that the requested DML operation
  * resulted in violation of a defined integrity constraint.
@@ -19,14 +17,14 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class ConstraintViolationException extends JDBCException {
 
-	private final @Nullable String constraintName;
+	private final String constraintName;
 
-	public ConstraintViolationException(String message, SQLException root, @Nullable String constraintName) {
+	public ConstraintViolationException(String message, SQLException root, String constraintName) {
 		super( message, root );
 		this.constraintName = constraintName;
 	}
 
-	public ConstraintViolationException(String message, SQLException root, String sql, @Nullable String constraintName) {
+	public ConstraintViolationException(String message, SQLException root, String sql, String constraintName) {
 		super( message, root, sql );
 		this.constraintName = constraintName;
 	}
@@ -36,7 +34,7 @@ public class ConstraintViolationException extends JDBCException {
 	 *
 	 * @return The name of the violated constraint, or null if not known.
 	 */
-	public @Nullable String getConstraintName() {
+	public String getConstraintName() {
 		return constraintName;
 	}
 }

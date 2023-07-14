@@ -21,8 +21,6 @@ import org.hibernate.exception.spi.AbstractSQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.ConversionContext;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 /**
  * A {@link org.hibernate.exception.spi.SQLExceptionConverter} implementation which performs conversion based
  * on the underlying SQLState. Interpretation of a SQL error based on SQLState is not nearly as accurate as
@@ -79,7 +77,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 	}
 
 	@Override
-	public @Nullable JDBCException convert(SQLException sqlException, String message, String sql) {
+	public JDBCException convert(SQLException sqlException, String message, String sql) {
 		final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 		final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 

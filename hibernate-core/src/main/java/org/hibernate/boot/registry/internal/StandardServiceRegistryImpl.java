@@ -30,14 +30,6 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 	//Access to this field requires synchronization on -this-
 	private Map<String,Object> configurationValues;
 
-	protected StandardServiceRegistryImpl(
-			boolean autoCloseRegistry,
-			BootstrapServiceRegistry bootstrapServiceRegistry,
-			Map<String,Object> configurationValues) {
-		super( bootstrapServiceRegistry, autoCloseRegistry );
-		this.configurationValues = configurationValues;
-	}
-
 	/**
 	 * Constructs a StandardServiceRegistryImpl.  Should not be instantiated directly; use
 	 * {@link org.hibernate.boot.registry.StandardServiceRegistryBuilder} instead
@@ -49,13 +41,12 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 	 *
 	 * @see org.hibernate.boot.registry.StandardServiceRegistryBuilder
 	 */
-	public static StandardServiceRegistryImpl create(
+	public StandardServiceRegistryImpl(
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			List<StandardServiceInitiator<?>> serviceInitiators,
 			List<ProvidedService<?>> providedServices,
 			Map<String,Object> configurationValues) {
-
-		return create( true, bootstrapServiceRegistry, serviceInitiators, providedServices, configurationValues );
+		this( true, bootstrapServiceRegistry, serviceInitiators, providedServices, configurationValues );
 	}
 
 	/**
@@ -71,21 +62,20 @@ public class StandardServiceRegistryImpl extends AbstractServiceRegistryImpl imp
 	 *
 	 * @see org.hibernate.boot.registry.StandardServiceRegistryBuilder
 	 */
-	public static StandardServiceRegistryImpl create(
+	public StandardServiceRegistryImpl(
 			boolean autoCloseRegistry,
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			List<StandardServiceInitiator<?>> serviceInitiators,
 			List<ProvidedService<?>> providedServices,
 			Map<String,Object> configurationValues) {
+		super( bootstrapServiceRegistry, autoCloseRegistry );
 
-		StandardServiceRegistryImpl instance = new StandardServiceRegistryImpl( autoCloseRegistry, bootstrapServiceRegistry, configurationValues );
-		instance.initialize();
-		instance.applyServiceRegistrations( serviceInitiators, providedServices );
+		this.configurationValues = configurationValues;
 
-		return instance;
+		applyServiceRegistrations( serviceInitiators, providedServices );
 	}
 
-	protected void applyServiceRegistrations(List<StandardServiceInitiator<?>> serviceInitiators, List<ProvidedService<?>> providedServices) {
+	private void applyServiceRegistrations(List<StandardServiceInitiator<?>> serviceInitiators, List<ProvidedService<?>> providedServices) {
 		try {
 			// process initiators
 			for ( ServiceInitiator<?> initiator : serviceInitiators ) {

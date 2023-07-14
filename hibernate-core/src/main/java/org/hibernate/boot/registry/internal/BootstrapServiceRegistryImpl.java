@@ -29,8 +29,6 @@ import org.hibernate.service.spi.ServiceInitiator;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 /**
  * {@link ServiceRegistry} implementation containing specialized "bootstrap" services, specifically:<ul>
  *     <li>{@link ClassLoaderService}</li>
@@ -119,7 +117,7 @@ public class BootstrapServiceRegistryImpl
 		this.integratorServiceBinding = new ServiceBinding<>(
 				this,
 				IntegratorService.class,
-				IntegratorServiceImpl.create( providedIntegrators, classLoaderService )
+				new IntegratorServiceImpl( providedIntegrators, classLoaderService )
 		);
 	}
 
@@ -187,7 +185,7 @@ public class BootstrapServiceRegistryImpl
 
 
 	@Override
-	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
+	public <R extends Service> R getService(Class<R> serviceRole) {
 		final ServiceBinding<R> binding = locateServiceBinding( serviceRole );
 		return binding == null ? null : binding.getService();
 	}
@@ -237,7 +235,7 @@ public class BootstrapServiceRegistryImpl
 	}
 
 	@Override
-	public @Nullable ServiceRegistry getParentServiceRegistry() {
+	public ServiceRegistry getParentServiceRegistry() {
 		return null;
 	}
 

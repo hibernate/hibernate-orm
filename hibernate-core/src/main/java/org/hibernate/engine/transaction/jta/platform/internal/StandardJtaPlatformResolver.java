@@ -13,7 +13,6 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformProvider;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformResolver;
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.jboss.logging.Logger;
@@ -28,7 +27,7 @@ public class StandardJtaPlatformResolver implements JtaPlatformResolver {
 
 	@Override
 	public JtaPlatform resolveJtaPlatform(Map configurationValues, ServiceRegistryImplementor registry) {
-		final ClassLoaderService classLoaderService = NullnessUtil.castNonNull( registry.getService( ClassLoaderService.class ) );
+		final ClassLoaderService classLoaderService = registry.getService( ClassLoaderService.class );
 
 		// Initially look for a JtaPlatformProvider
 		for ( JtaPlatformProvider provider : classLoaderService.loadJavaServices( JtaPlatformProvider.class ) ) {

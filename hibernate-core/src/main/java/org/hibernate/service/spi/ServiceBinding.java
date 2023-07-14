@@ -10,8 +10,6 @@ import org.hibernate.service.Service;
 
 import org.jboss.logging.Logger;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 /**
  * Models a binding for a particular service.
  *
@@ -32,7 +30,7 @@ public final class ServiceBinding<R extends Service> {
 
 	private final ServiceLifecycleOwner lifecycleOwner;
 	private final Class<R> serviceRole;
-	private final @Nullable ServiceInitiator<R> serviceInitiator;
+	private final ServiceInitiator<R> serviceInitiator;
 	private volatile R service;
 
 	public ServiceBinding(ServiceLifecycleOwner lifecycleOwner, Class<R> serviceRole, R service) {
@@ -56,7 +54,7 @@ public final class ServiceBinding<R extends Service> {
 		return serviceRole;
 	}
 
-	public @Nullable ServiceInitiator<R> getServiceInitiator() {
+	public ServiceInitiator<R> getServiceInitiator() {
 		return serviceInitiator;
 	}
 

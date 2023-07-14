@@ -365,7 +365,7 @@ public class StandardServiceRegistryBuilder {
 		settingsCopy.put( LOADED_CONFIG_KEY, aggregatedCfgXml );
 		ConfigurationHelper.resolvePlaceHolders( settingsCopy );
 
-		return StandardServiceRegistryImpl.create(
+		return new StandardServiceRegistryImpl(
 				autoCloseRegistry,
 				bootstrapServiceRegistry,
 				initiators,

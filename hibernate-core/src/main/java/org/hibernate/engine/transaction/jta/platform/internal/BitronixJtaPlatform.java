@@ -12,7 +12,6 @@ import jakarta.transaction.UserTransaction;
 
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatformException;
-import org.hibernate.internal.util.NullnessUtil;
 
 /**
  * @author Steve Ebersole
@@ -23,7 +22,7 @@ public class BitronixJtaPlatform extends AbstractJtaPlatform {
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		try {
-			Class transactionManagerServicesClass = NullnessUtil.castNonNull( serviceRegistry().getService( ClassLoaderService.class ) ).classForName( TM_CLASS_NAME );
+			Class transactionManagerServicesClass = serviceRegistry().getService( ClassLoaderService.class ).classForName( TM_CLASS_NAME );
 			final Method getTransactionManagerMethod = transactionManagerServicesClass.getMethod( "getTransactionManager" );
 			return (TransactionManager) getTransactionManagerMethod.invoke( null );
 		}

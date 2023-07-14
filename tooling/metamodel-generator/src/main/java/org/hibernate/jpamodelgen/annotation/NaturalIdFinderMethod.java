@@ -40,7 +40,7 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 		comment( declaration );
 		preamble( declaration );
 		unwrapSession( declaration );
-		if ( reactive ) {
+		if ( isReactive() ) {
 			findReactively( declaration );
 		}
 		else {
@@ -57,22 +57,25 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 				.append(".class)");
 		enableFetchProfile( declaration );
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
-			final String paramName = paramNames.get(i);
-			declaration
-					.append("\n\t\t\t.using(")
-					.append(annotationMetaEntity.importType(entity + '_'))
-					.append('.')
-					.append(paramName)
-					.append(", ")
-					.append(paramName)
-					.append(")");
+			if ( !isSessionParameter( paramTypes.get(i) ) ) {
+				final String paramName = paramNames.get(i);
+				declaration
+						.append("\n\t\t\t.using(")
+						.append(annotationMetaEntity.importType(entity + '_'))
+						.append('.')
+						.append(paramName)
+						.append(", ")
+						.append(paramName)
+						.append(")");
+			}
 		}
 		declaration
 				.append("\n\t\t\t.load()");
 	}
 
 	private void findReactively(StringBuilder declaration) {
-		boolean composite = paramNames.size() > 1;
+		boolean composite = paramTypes.stream()
+				.filter(type -> !isSessionParameter(type)).count()>1;
 		declaration
 				.append(".find(");
 		if (composite) {
@@ -87,25 +90,31 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 					.append(annotationMetaEntity.importType("org.hibernate.reactive.common.Identifier"))
 					.append(".composite(");
 		}
+		boolean first = true;
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
-			if ( i>0 ) {
+			if ( !isSessionParameter( paramTypes.get(i) ) ) {
+				if ( first ) {
+					first = false;
+				}
+				else {
+					declaration
+							.append(", ");
+				}
+				if (composite) {
+					declaration
+							.append("\n\t\t\t\t");
+				}
+				final String paramName = paramNames.get(i);
 				declaration
-						.append(", ");
+						.append(annotationMetaEntity.importType("org.hibernate.reactive.common.Identifier"))
+						.append(".id(")
+						.append(annotationMetaEntity.importType(entity + '_'))
+						.append('.')
+						.append(paramName)
+						.append(", ")
+						.append(paramName)
+						.append(")");
 			}
-			if (composite) {
-				declaration
-						.append("\n\t\t\t\t");
-			}
-			final String paramName = paramNames.get(i);
-			declaration
-					.append(annotationMetaEntity.importType("org.hibernate.reactive.common.Identifier"))
-					.append(".id(")
-					.append(annotationMetaEntity.importType(entity + '_'))
-					.append('.')
-					.append(paramName)
-					.append(", ")
-					.append(paramName)
-					.append(")");
 		}
 		if (composite) {
 			declaration.append("\n\t\t\t)\n\t");

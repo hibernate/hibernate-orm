@@ -523,7 +523,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<String> paramNames = parameterNames(method);
 		final List<String> paramTypes = parameterTypes(method);
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
-		removeSessionFromParameters(paramNames, paramTypes);
 		final String methodKey = methodName + paramTypes;
 		for ( VariableElement param : method.getParameters() ) {
 			if ( isFinderParameterMappingToAttribute( param ) ) {
@@ -549,25 +548,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean isFinderParameterMappingToAttribute(VariableElement param) {
-		return !SESSION_TYPES.contains(param.asType().toString());
-	}
-
-	private static void removeSessionFromParameters(List<String> paramNames, List<String> paramTypes) {
-		for ( int i = 0; i < paramNames.size(); i ++ ) {
-			final String type = paramTypes.get(i);
-			if ( SESSION_TYPES.contains(type) ) {
-				paramNames.remove(i);
-				paramTypes.remove(i);
-				break;
-			}
-		}
+		return !isSessionParameter( param.asType().toString() );
 	}
 
 	private String[] sessionTypeFromParameters(List<String> paramNames, List<String> paramTypes) {
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
 			final String type = paramTypes.get(i);
 			final String name = paramNames.get(i);
-			if ( SESSION_TYPES.contains(type) ) {
+			if ( isSessionParameter(type) ) {
 				return new String[] { type, name };
 			}
 		}
@@ -597,7 +585,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<String> paramNames = parameterNames( method );
 		final List<String> paramTypes = parameterTypes( method );
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
-		removeSessionFromParameters( paramNames, paramTypes );
 		final String methodKey = methodName + paramTypes;
 		if (  !usingStatelessSession(sessionType[0]) // no byNaturalId() lookup API for SS
 				&& matchesNaturalKey( method, entity ) ) {
@@ -645,7 +632,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final List<String> paramNames = parameterNames(method);
 		final List<String> paramTypes = parameterTypes(method);
 		final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
-		removeSessionFromParameters(paramNames, paramTypes);
 		final FieldType fieldType = validateFinderParameter( entity, parameter );
 		if ( fieldType != null ) {
 			final String methodKey = methodName + "!";
@@ -657,8 +643,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									this,
 									methodName,
 									returnType.toString(),
-									paramNames.get(0),
-									paramTypes.get(0),
+									paramNames,
+									paramTypes,
 									dao,
 									sessionType[0],
 									sessionType[1],
@@ -724,8 +710,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private boolean matchesNaturalKey(ExecutableElement method, TypeElement entity) {
 		boolean result = true;
 		final List<? extends VariableElement> parameters = method.getParameters();
+		int count = 0;
 		for ( VariableElement param : parameters ) {
 			if ( isFinderParameterMappingToAttribute( param ) ) {
+				count ++;
 				if ( validateFinderParameter( entity, param ) != FieldType.NATURAL_ID ) {
 					// no short-circuit here because we want to validate
 					// all of them and get the nice error report
@@ -733,7 +721,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 		}
-		return result && countNaturalIdFields( entity ) == parameters.size() ;
+		return result && countNaturalIdFields( entity ) == count;
 	}
 
 	enum FieldType {
@@ -834,7 +822,6 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				final List<String> paramNames = parameterNames( method );
 				final List<String> paramTypes = parameterTypes( method );
 				final String[] sessionType = sessionTypeFromParameters( paramNames, paramTypes );
-				removeSessionFromParameters(paramNames, paramTypes);
 				final QueryMethod attribute =
 						new QueryMethod(
 								this,
@@ -973,8 +960,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private static boolean parameterIsMissing(String hql, int i, String param, String type) {
 		return !hql.matches(".*(:" + param + "|\\?" + i + ")\\b.*")
+			&& !isSessionParameter(type)
 			&& !isPageParam(type)
 			&& !isOrderParam(type);
+	}
+
+	private static boolean isSessionParameter(String type) {
+		return SESSION_TYPES.contains(type);
 	}
 
 	private boolean usingReactiveSession(String sessionType) {

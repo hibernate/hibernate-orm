@@ -19,10 +19,13 @@ public abstract class Books {
     @Find
     abstract Book getBookByNaturalKey(Session session, String authorName, String title);
 
-    @HQL("from Book where title like ?1")
+    @HQL("from Book where title is not null")
+    abstract List<Book> allbooks(StatelessSession ss);
+
+    @HQL("from Book where title like ?2")
     abstract TypedQuery<Book> findByTitle(EntityManager entityManager, String title);
 
-    @HQL("from Book where title like ?1 order by title fetch first ?2 rows only")
+    @HQL("from Book where title like ?2 order by title fetch first ?3 rows only")
     abstract List<Book> findFirstNByTitle(Session session, String title, int N);
 
 

@@ -33,7 +33,11 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 			List<String> paramNames,
 			List<String> paramTypes,
 			boolean addNonnullAnnotation) {
-		super( annotationMetaEntity, methodName, paramNames, paramTypes, sessionType, sessionName, belongsToDao, addNonnullAnnotation );
+		super( annotationMetaEntity,
+				methodName,
+				paramNames, paramTypes, entity,
+				sessionType, sessionName,
+				belongsToDao, addNonnullAnnotation );
 		this.entity = entity;
 		this.fetchProfiles = fetchProfiles;
 	}
@@ -111,14 +115,8 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 		}
 		declaration
 				.append('.')
-				.append("\n *")
-				.append("\n * @see ")
-				.append(annotationMetaEntity.getQualifiedName())
-				.append("#")
-				.append(methodName)
-				.append("(")
-				.append(parameterList())
-				.append(")");
+				.append("\n *");
+		see( declaration );
 //		declaration
 //				.append("\n *");
 //		for (String param : paramNames) {
@@ -133,7 +131,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	}
 
 	void unwrapSession(StringBuilder declaration) {
-		if ( usingEntityManager ) {
+		if ( isUsingEntityManager() ) {
 			declaration
 					.append(".unwrap(")
 					.append(annotationMetaEntity.importType(Constants.HIB_SESSION))
@@ -162,7 +160,7 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 		declaration
 				.append(" ")
 				.append(methodName);
-		parameters( declaration) ;
+		parameters( paramTypes, declaration) ;
 		declaration
 				.append(" {")
 				.append("\n\treturn ")
@@ -170,14 +168,14 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	}
 
 	private void entityType(StringBuilder declaration) {
-		if ( reactive ) {
+		if ( isReactive() ) {
 			declaration
 					.append(annotationMetaEntity.importType(Constants.UNI))
 					.append('<');
 		}
 		declaration
 				.append(annotationMetaEntity.importType(entity));
-		if ( reactive ) {
+		if ( isReactive() ) {
 			declaration
 					.append('>');
 		}
@@ -186,26 +184,5 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	void modifiers(StringBuilder declaration) {
 		declaration
 				.append(belongsToDao ? "@Override\npublic " : "public static ");
-	}
-
-	void parameters(StringBuilder declaration) {
-		declaration
-				.append("(");
-		sessionParameter( declaration );
-		for ( int i = 0; i < paramNames.size(); i ++ ) {
-			if ( !belongsToDao || i > 0 ) {
-				declaration
-						.append(", ");
-			}
-			if ( isId() ) {
-				notNull( declaration );
-			}
-			declaration
-					.append(annotationMetaEntity.importType(paramTypes.get(i)))
-					.append(" ")
-					.append(paramNames.get(i));
-		}
-		declaration
-				.append(')');
 	}
 }

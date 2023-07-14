@@ -42,7 +42,11 @@ public class QueryMethod extends AbstractQueryMethod {
 			String sessionType,
 			String sessionName,
 			boolean addNonnullAnnotation) {
-		super( annotationMetaEntity, methodName, paramNames, paramTypes, sessionType, sessionName, belongsToDao, addNonnullAnnotation );
+		super( annotationMetaEntity,
+				methodName,
+				paramNames, paramTypes, returnTypeName,
+				sessionType, sessionName,
+				belongsToDao, addNonnullAnnotation );
 		this.queryString = queryString;
 		this.returnTypeName = returnTypeName;
 		this.containerTypeName = containerTypeName;
@@ -57,6 +61,11 @@ public class QueryMethod extends AbstractQueryMethod {
 	@Override
 	public boolean hasStringAttribute() {
 		return true;
+	}
+
+	@Override
+	boolean isId() {
+		return false;
 	}
 
 	@Override
@@ -75,7 +84,7 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append(" {")
 				.append("\n\treturn ");
 		if ( isNative && returnTypeName != null && containerTypeName == null
-				&& usingEntityManager) {
+				&& isUsingEntityManager() ) {
 			// EntityManager.createNativeQuery() does not return TypedQuery,
 			// so we need to cast to the entity type
 			declaration.append("(")
@@ -104,7 +113,7 @@ public class QueryMethod extends AbstractQueryMethod {
 					.append("\n\t\t\t.getResultList()");
 		}
 		else {
-			if ( usingEntityManager && !unwrapped
+			if ( isUsingEntityManager() && !unwrapped
 					&& ( containerTypeName.startsWith("org.hibernate")
 						|| isNative && returnTypeName != null ) ) {
 				declaration
@@ -119,21 +128,24 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	private boolean setParameters(List<String> paramTypes, StringBuilder declaration) {
-		boolean unwrapped = !usingEntityManager;
-		for (int i = 1; i <= paramNames.size(); i++) {
-			final String paramName = paramNames.get(i-1);
-			final String paramType = paramTypes.get(i-1);
-			if ( queryString.contains(":" + paramName) ) {
-				setNamedParameter( declaration, paramName );
-			}
-			else if ( queryString.contains("?" + i) ) {
-				setOrdinalParameter( declaration, i, paramName );
-			}
-			else if ( isPageParam(paramType) ) {
-				setPage( declaration, paramName );
-			}
-			else if ( isOrderParam(paramType) ) {
-				unwrapped = setOrder( declaration, unwrapped, paramName, paramType );
+		boolean unwrapped = !isUsingEntityManager();
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			final String paramName = paramNames.get(i);
+			final String paramType = paramTypes.get(i);
+			if ( !isSessionParameter(paramType) ) {
+				final int ordinal = i+1;
+				if ( queryString.contains(":" + paramName) ) {
+					setNamedParameter( declaration, paramName );
+				}
+				else if ( queryString.contains("?" + ordinal) ) {
+					setOrdinalParameter( declaration, ordinal, paramName );
+				}
+				else if ( isPageParam(paramType) ) {
+					setPage( declaration, paramName );
+				}
+				else if ( isOrderParam(paramType) ) {
+					unwrapped = setOrder( declaration, unwrapped, paramName, paramType );
+				}
 			}
 		}
 		return unwrapped;
@@ -158,7 +170,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	private void setPage(StringBuilder declaration, String paramName) {
-		if ( usingEntityManager ) {
+		if ( isUsingEntityManager() ) {
 			declaration
 					.append("\n\t\t\t.setFirstResult(")
 					.append(paramName)
@@ -194,31 +206,9 @@ public class QueryMethod extends AbstractQueryMethod {
 		return true;
 	}
 
-	private void parameters(List<String> paramTypes, StringBuilder declaration) {
-		declaration
-				.append("(");
-		sessionParameter( declaration );
-		for ( int i = 0; i < paramNames.size(); i++ ) {
-			if ( !belongsToDao || i > 0 ) {
-				declaration
-						.append(", ");
-			}
-			final String type = paramTypes.get(i);
-			final String paramType = returnTypeName != null
-					? type.replace(returnTypeName, annotationMetaEntity.importType(returnTypeName))
-					: type;
-			declaration
-					.append(annotationMetaEntity.importType(paramType))
-					.append(" ")
-					.append(paramNames.get(i));
-		}
-		declaration
-				.append(")");
-	}
-
 	private StringBuilder returnType() {
 		StringBuilder type = new StringBuilder();
-		boolean returnsUni = reactive
+		boolean returnsUni = isReactive()
 				&& (containerTypeName == null || Constants.LIST.equals(containerTypeName));
 		if ( returnsUni ) {
 			type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
@@ -248,13 +238,9 @@ public class QueryMethod extends AbstractQueryMethod {
 
 	private void comment(StringBuilder declaration) {
 		declaration
-				.append("\n/**\n * @see ")
-				.append(annotationMetaEntity.getQualifiedName())
-				.append("#")
-				.append(methodName)
-				.append("(")
-				.append(parameterList())
-				.append(")")
+				.append("\n/**");
+		see( declaration );
+		declaration
 				.append("\n **/\n");
 	}
 

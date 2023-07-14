@@ -52,7 +52,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 				.append(returnType())
 				.append(" ")
 				.append(methodName);
-		parameters( declaration );
+		parameters( paramTypes, declaration );
 		declaration
 				.append(" {");
 		if ( isId ) {
@@ -64,7 +64,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		declaration
 				.append("\n\tvar builder = ")
 				.append(sessionName)
-				.append(usingEntityManager
+				.append(isUsingEntityManager()
 						? ".getEntityManagerFactory()"
 						: ".getFactory()")
 				.append(".getCriteriaBuilder();")
@@ -75,34 +75,40 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 				.append(annotationMetaEntity.importType(entity))
 				.append(".class);")
 				.append("\n\tquery.where(");
+		boolean first = true;
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
-			if ( i>0 ) {
-				declaration
-						.append(", ");
-			}
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
-			declaration
-					.append("\n\t\t\t");
-			if ( !isId && !isPrimitive( paramType ) ) { //TODO: check the entity to see if it's @Basic(optional=false)
+			if ( !isSessionParameter(paramType) ) {
+				if ( first ) {
+					first = false;
+				}
+				else {
+					declaration
+							.append(", ");
+				}
 				declaration
-						.append(paramName)
-						.append("==null")
-						.append("\n\t\t\t\t? ")
-						.append("entity.get(");
+						.append("\n\t\t\t");
+				if ( !isId && !isPrimitive(paramType) ) { //TODO: check the entity to see if it's @Basic(optional=false)
+					declaration
+							.append(paramName)
+							.append("==null")
+							.append("\n\t\t\t\t? ")
+							.append("entity.get(");
+					attributeRef( declaration, paramName );
+					declaration
+							.append(").isNull()")
+							.append("\n\t\t\t\t: ");
+				}
+				declaration
+						.append("builder.equal(entity.get(");
 				attributeRef( declaration, paramName );
 				declaration
-						.append(").isNull()")
-						.append("\n\t\t\t\t: ");
+						.append("), ")
+						//TODO: only safe if we are binding literals as parameters!!!
+						.append(paramName)
+						.append(")");
 			}
-			declaration
-					.append("builder.equal(entity.get(");
-			attributeRef( declaration, paramName );
-			declaration
-					.append("), ")
-					//TODO: only safe if we are binding literals as parameters!!!
-					.append(paramName)
-					.append(")");
 		}
 		declaration
 				.append("\n\t);")
@@ -110,10 +116,11 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 				.append(sessionName)
 				.append(".createQuery(query)");
 		final boolean hasEnabledFetchProfiles = !fetchProfiles.isEmpty();
-		final boolean hasNativeReturnType = containerType != null && containerType.startsWith("org.hibernate");
+		final boolean hasNativeReturnType =
+				containerType != null && containerType.startsWith("org.hibernate");
 		final boolean unwrap =
 				( hasEnabledFetchProfiles || hasNativeReturnType )
-						&& usingEntityManager;
+						&& isUsingEntityManager();
 		if ( unwrap ) {
 			declaration
 					.append("\n\t\t\t.unwrap(")
@@ -156,7 +163,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 
 	private StringBuilder returnType() {
 		StringBuilder type = new StringBuilder();
-		boolean returnsUni = reactive
+		boolean returnsUni = isReactive()
 				&& (containerType == null || Constants.LIST.equals(containerType));
 		if ( returnsUni ) {
 			type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');

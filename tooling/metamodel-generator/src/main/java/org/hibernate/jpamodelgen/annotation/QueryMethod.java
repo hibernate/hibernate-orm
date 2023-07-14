@@ -239,6 +239,11 @@ public class QueryMethod extends AbstractQueryMethod {
 	private void comment(StringBuilder declaration) {
 		declaration
 				.append("\n/**");
+		declaration
+				.append("\n * Execute the query {@value #")
+				.append(getConstantName())
+				.append("}.")
+				.append("\n *");
 		see( declaration );
 		declaration
 				.append("\n **/\n");

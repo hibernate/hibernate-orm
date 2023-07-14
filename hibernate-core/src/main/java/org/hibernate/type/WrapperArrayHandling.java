@@ -12,8 +12,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.type.descriptor.java.ByteArrayJavaType;
 import org.hibernate.type.descriptor.java.CharacterArrayJavaType;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 /**
  * Possible options for how to handle {@code Byte[]} and {@code Character[]} basic mappings
  * encountered in the application domain model.
@@ -72,7 +70,7 @@ public enum WrapperArrayHandling {
 	 * Form of {@link #interpretExternalSetting(Object)} which allows incoming {@code null} values and
 	 * simply returns {@code null}.  Useful for chained resolutions
 	 */
-	public static WrapperArrayHandling interpretExternalSettingLeniently(@Nullable Object value) {
+	public static WrapperArrayHandling interpretExternalSettingLeniently(Object value) {
 		if ( value == null ) {
 			return null;
 		}

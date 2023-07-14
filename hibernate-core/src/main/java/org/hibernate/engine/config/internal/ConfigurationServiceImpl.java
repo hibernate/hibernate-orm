@@ -13,14 +13,10 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.jboss.logging.Logger;
-
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.PolyNull;
 
 /**
  * The standard {@link ConfigurationService} implementation.
@@ -56,12 +52,12 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 	}
 
 	@Override
-	public <T> @Nullable T getSetting(String name, Converter<T> converter) {
+	public <T> T getSetting(String name, Converter<T> converter) {
 		return getSetting( name, converter, null );
 	}
 
 	@Override
-	public <T> @PolyNull T getSetting(String name, Converter<T> converter, @PolyNull T defaultValue) {
+	public <T> T getSetting(String name, Converter<T> converter, T defaultValue) {
 		final Object value = settings.get( name );
 		if ( value == null ) {
 			return defaultValue;
@@ -71,14 +67,14 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 	}
 
 	@Override
-	public <T> @PolyNull T getSetting(String name, Class<T> expected, @PolyNull T defaultValue) {
+	public <T> T getSetting(String name, Class<T> expected, T defaultValue) {
 		final Object value = settings.get( name );
 		final T target = cast( expected, value );
 		return target !=null ? target : defaultValue;
 	}
 
 	@SuppressWarnings("unchecked")
-	public <T> @Nullable T cast(Class<T> expected, @Nullable Object candidate){
+	public <T> T cast(Class<T> expected, Object candidate){
 		if (candidate == null) {
 			return null;
 		}
@@ -93,7 +89,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, ServiceRe
 		}
 		else {
 			try {
-				target = NullnessUtil.castNonNull( serviceRegistry.getService( ClassLoaderService.class ) ).classForName( candidate.toString() );
+				target = serviceRegistry.getService( ClassLoaderService.class ).classForName( candidate.toString() );
 			}
 			catch ( ClassLoadingException e ) {
 				LOG.debugf( "Unable to locate %s implementation class %s", expected.getName(), candidate.toString() );

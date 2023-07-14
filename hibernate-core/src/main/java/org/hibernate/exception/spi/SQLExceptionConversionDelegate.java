@@ -10,8 +10,6 @@ import java.sql.SQLException;
 
 import org.hibernate.JDBCException;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 /**
  * Allow a {@link SQLExceptionConverter} to work by chaining together
  * multiple delegates. The main difference between a delegate and a
@@ -33,6 +31,6 @@ public interface SQLExceptionConversionDelegate {
 	 *         if this delegate does not know how to interpret the
 	 *         given {@link SQLException}.
 	 */
-	@Nullable JDBCException convert(SQLException sqlException, String message, String sql);
+	JDBCException convert(SQLException sqlException, String message, String sql);
 
 }

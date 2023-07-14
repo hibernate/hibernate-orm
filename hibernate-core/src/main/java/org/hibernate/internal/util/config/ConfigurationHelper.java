@@ -592,6 +592,10 @@ public final class ConfigurationHelper {
 
 		@Override
 		public Integer convert(Object value) {
+			if ( value == null ) {
+				throw new IllegalArgumentException( "Null value passed to convert" );
+			}
+
 			if ( value instanceof Number ) {
 				return ( (Number) value ).intValue();
 			}

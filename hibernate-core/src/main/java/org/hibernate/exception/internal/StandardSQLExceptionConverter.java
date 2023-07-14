@@ -16,8 +16,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 /**
  * A {@link SQLExceptionConverter} that delegates to a chain of
  * {@link SQLExceptionConversionDelegate}.
@@ -46,7 +44,7 @@ public class StandardSQLExceptionConverter implements SQLExceptionConverter {
 	 * @deprecated use {@link #StandardSQLExceptionConverter(SQLExceptionConversionDelegate...)}
 	 */
 	@Deprecated(since = "6.0")
-	public void addDelegate(@Nullable SQLExceptionConversionDelegate delegate) {
+	public void addDelegate(SQLExceptionConversionDelegate delegate) {
 		if ( delegate != null ) {
 			this.delegates.add( delegate );
 		}

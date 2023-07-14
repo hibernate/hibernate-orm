@@ -85,7 +85,8 @@ public class HibernateQueryMetrics implements MeterBinder {
 	@Override
 	public void bindTo(MeterRegistry meterRegistry) {
 		if ( sessionFactory instanceof SessionFactoryImplementor ) {
-			EventListenerRegistry eventListenerRegistry = ( (SessionFactoryImplementor) sessionFactory ).getEventEngine().getListenerRegistry();
+			EventListenerRegistry eventListenerRegistry = ( (SessionFactoryImplementor) sessionFactory ).getServiceRegistry()
+					.getService( EventListenerRegistry.class );
 			MetricsEventHandler metricsEventHandler = new MetricsEventHandler( meterRegistry );
 			eventListenerRegistry.appendListeners( EventType.POST_LOAD, metricsEventHandler );
 		}

@@ -6,12 +6,12 @@
  */
 package org.hibernate.jpamodelgen.annotation;
 
-import java.beans.Introspector;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.StringTokenizer;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -43,10 +43,12 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
+import static java.beans.Introspector.decapitalize;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 import static javax.lang.model.util.ElementFilter.methodsIn;
+import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isOrderParam;
 import static org.hibernate.jpamodelgen.annotation.QueryMethod.isPageParam;
 import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
@@ -109,6 +111,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 */
 	private String sessionType = Constants.ENTITY_MANAGER;
 
+	private final Map<String,String> memberTypes = new HashMap<>();
+
 	public AnnotationMetaEntity(TypeElement element, Context context) {
 		this.element = element;
 		this.context = context;
@@ -122,6 +126,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			annotationMetaEntity.init();
 		}
 		return annotationMetaEntity;
+	}
+
+	public @Nullable String getMemberType(String entityType, String memberName) {
+		return memberTypes.get( qualify(entityType, memberName) );
 	}
 
 	public AccessTypeInformation getEntityAccessTypeInfo() {
@@ -739,19 +747,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private @Nullable FieldType validateFinderParameter(TypeElement entity, VariableElement param) {
-		final String entityClassName = entity.getQualifiedName().toString();
-		determineAccessTypeForHierarchy( entity, context );
-		final AccessType accessType = castNonNull( context.getAccessTypeInfo( entityClassName ) ).getAccessType();
+		final AccessType accessType = getAccessType(entity);
 		for ( Element member : entity.getEnclosedElements() ) {
-			if ( fieldMatchesParameter( param, member, accessType ) ) {
-				final String memberType = memberType( member ).toString();
-				final String paramType = param.asType().toString();
-				if ( !memberType.equals(paramType) ) {
-					context.message( param,
-							"matching field has type '" + memberType
-									+ "' in entity class '" + entityClassName + "'",
-							Diagnostic.Kind.ERROR );
-				}
+			if ( fieldMatchesParameter( entity, param, member, accessType ) ) {
 				if ( containsAnnotation( member, Constants.ID, Constants.EMBEDDED_ID ) ) {
 					return FieldType.ID;
 				}
@@ -773,15 +771,22 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		context.message( param,
-				"no matching field named '" + param.getSimpleName()
-						+ "' in entity class '" + entityClassName + "'",
+				"no matching field named '"
+						+ param.getSimpleName().toString().replace('$', '.')
+						+ "' in entity class '" + entity + "'",
 				Diagnostic.Kind.ERROR );
 		return null;
 	}
 
+	private AccessType getAccessType(TypeElement entity) {
+		final String entityClassName = entity.getQualifiedName().toString();
+		determineAccessTypeForHierarchy(entity, context );
+		return castNonNull( context.getAccessTypeInfo( entityClassName ) ).getAccessType();
+	}
+
 	private static TypeMirror memberType(Element member) {
-		if (member.getKind() == ElementKind.METHOD) {
-			ExecutableElement method = (ExecutableElement) member;
+		if ( member.getKind() == ElementKind.METHOD ) {
+			final ExecutableElement method = (ExecutableElement) member;
 			return method.getReturnType();
 		}
 		else {
@@ -789,21 +794,84 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private static boolean fieldMatchesParameter(VariableElement param, Element member, AccessType accessType) {
-		final Name name = member.getSimpleName();
-		final Name paramName = param.getSimpleName();
-		if ( accessType == AccessType.FIELD ) {
-			return name.contentEquals(paramName);
+	private boolean fieldMatchesParameter(TypeElement entityType, VariableElement param, Element member, AccessType accessType) {
+		final StringTokenizer tokens = new StringTokenizer( param.getSimpleName().toString(), "$" );
+		return fieldMatchesParameter( entityType, param, member, accessType, tokens, tokens.nextToken() );
+	}
+
+	private boolean fieldMatchesParameter(
+			TypeElement entityType,
+			VariableElement param,
+			Element member,
+			AccessType accessType,
+			StringTokenizer tokens,
+			String token) {
+		final Name memberName = member.getSimpleName();
+		final TypeMirror type;
+		if ( accessType == AccessType.FIELD && member.getKind() == ElementKind.FIELD ) {
+			if ( !fieldMatches(token, memberName) ) {
+				return false;
+			}
+			else {
+				type = member.asType();
+			}
+		}
+		else if ( accessType == AccessType.PROPERTY && member.getKind() == ElementKind.METHOD ) {
+			if ( !getterMatches(token, memberName) ) {
+				return false;
+			}
+			else {
+				final ExecutableElement method = (ExecutableElement) member;
+				type = method.getReturnType();
+			}
 		}
 		else {
-			if ( name.length() > 3 && name.subSequence(0,3).toString().equals("get")) {
-				final String propertyName = Introspector.decapitalize(name.subSequence(3, name.length()).toString());
-				return paramName.contentEquals(propertyName);
+			return false;
+		}
+
+		if ( tokens.hasMoreTokens() ) {
+			final String nextToken = tokens.nextToken();
+			if ( type.getKind() == TypeKind.DECLARED ) {
+				final DeclaredType declaredType = (DeclaredType) type;
+				final TypeElement memberType = (TypeElement) declaredType.asElement();
+				memberTypes.put( qualify(entityType.getQualifiedName().toString(), memberName.toString()),
+						memberType.getQualifiedName().toString()  );
+				final AccessType memberAccessType = getAccessType(memberType);
+				for ( Element entityMember : memberType.getEnclosedElements() ) {
+					if ( fieldMatchesParameter(memberType, param, entityMember, memberAccessType, tokens, nextToken) ) {
+						return true;
+					}
+				}
 			}
-			if ( name.length() > 2 && name.subSequence(0,2).toString().equals("is")) {
-				final String propertyName = Introspector.decapitalize(name.subSequence(2, name.length()).toString());
-				return paramName.contentEquals(propertyName);
+			return false;
+		}
+		else {
+			final String memberType = memberType( member ).toString();
+			final String paramType = param.asType().toString();
+			if ( !isLegalAssignment( paramType, memberType ) ) {
+				context.message( param,
+						"matching field has type '" + memberType
+								+ "' in entity class '" + entityType + "'",
+						Diagnostic.Kind.ERROR );
 			}
+			return true;
+		}
+	}
+
+	private static boolean fieldMatches(String token, Name fieldName) {
+		return fieldName.contentEquals(token);
+	}
+
+	private static boolean getterMatches(String token, Name methodName) {
+		if ( methodName.length() > 3 && methodName.subSequence(0,3).toString().equals("get")) {
+			final String propertyName = decapitalize(methodName.subSequence(3, methodName.length()).toString());
+			return token.equals(propertyName);
+		}
+		else if ( methodName.length() > 2 && methodName.subSequence(0,2).toString().equals("is")) {
+			final String propertyName = decapitalize(methodName.subSequence(2, methodName.length()).toString());
+			return token.equals(propertyName);
+		}
+		else {
 			return false;
 		}
 	}

@@ -41,4 +41,7 @@ public interface Dao {
 
     @SQL("select * from Book where isbn = :isbn")
     Book findByIsbnNative(String isbn);
+
+    @Find
+    List<Book> publishedBooks(String publisher$name);
 }

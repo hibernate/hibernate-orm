@@ -8,7 +8,6 @@ package org.hibernate.jpamodelgen.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.query.Order;
 import org.hibernate.query.Page;
@@ -28,7 +27,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	private final boolean isNative;
 
 	public QueryMethod(
-			Metamodel annotationMetaEntity,
+			AnnotationMetaEntity annotationMetaEntity,
 			String methodName,
 			String queryString,
 			@Nullable

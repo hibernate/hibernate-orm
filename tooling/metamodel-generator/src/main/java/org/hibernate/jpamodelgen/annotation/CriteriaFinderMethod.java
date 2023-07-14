@@ -7,11 +7,11 @@
 package org.hibernate.jpamodelgen.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
 
 import java.util.List;
 import java.util.Set;
+import java.util.StringTokenizer;
 
 /**
  * @author Gavin King
@@ -22,7 +22,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	private final boolean isId;
 
 	public CriteriaFinderMethod(
-			Metamodel annotationMetaEntity,
+			AnnotationMetaEntity annotationMetaEntity,
 			String methodName, String entity,
 			@Nullable String containerType,
 			List<String> paramNames, List<String> paramTypes,
@@ -94,20 +94,20 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 							.append(paramName)
 							.append("==null")
 							.append("\n\t\t\t\t? ")
-							.append("entity.get(");
-					attributeRef( declaration, paramName );
+							.append("entity");
+					path( declaration, paramName );
 					declaration
-							.append(").isNull()")
+							.append(".isNull()")
 							.append("\n\t\t\t\t: ");
 				}
 				declaration
-						.append("builder.equal(entity.get(");
-				attributeRef( declaration, paramName );
+						.append("builder.equal(entity");
+				path( declaration, paramName );
 				declaration
-						.append("), ")
+						.append(", ")
 						//TODO: only safe if we are binding literals as parameters!!!
 						.append(paramName)
-						.append(")");
+						.append(')');
 			}
 		}
 		declaration
@@ -136,7 +136,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 					.append(".getSingleResult()");
 		}
 		else if ( containerType.equals(Constants.LIST) ) {
-			if ( unwrap || hasEnabledFetchProfiles) {
+			if ( unwrap || hasEnabledFetchProfiles ) {
 				declaration.append("\n\t\t\t");
 			}
 			declaration
@@ -147,19 +147,27 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		return declaration.toString();
 	}
 
+	private void path(StringBuilder declaration, String paramName) {
+		final StringTokenizer tokens = new StringTokenizer(paramName, "$");
+		String typeName = entity;
+		while ( typeName!= null && tokens.hasMoreTokens() ) {
+			final String memberName = tokens.nextToken();
+			declaration
+					.append(".get(")
+					.append(annotationMetaEntity.importType(typeName + '_'))
+					.append('.')
+					.append(memberName)
+					.append(')');
+			typeName = annotationMetaEntity.getMemberType(typeName, memberName);
+		}
+	}
+
 	private static boolean isPrimitive(String paramType) {
 		return PRIMITIVE_TYPES.contains( paramType );
 	}
 
 	private static final Set<String> PRIMITIVE_TYPES =
 			Set.of("boolean", "char", "long", "int", "short", "byte", "double", "float");
-
-	private void attributeRef(StringBuilder declaration, String paramName) {
-		declaration
-				.append(annotationMetaEntity.importType(entity + '_'))
-				.append('.')
-				.append(paramName);
-	}
 
 	private StringBuilder returnType() {
 		StringBuilder type = new StringBuilder();

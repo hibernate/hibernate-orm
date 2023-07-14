@@ -18,7 +18,7 @@ import static org.hibernate.jpamodelgen.test.util.TestUtil.assertMetamodelClassG
  */
 public class QueryMethodTest extends CompilationTest {
 	@Test
-	@WithClasses({ Book.class, Dao.class, Books.class })
+	@WithClasses({ Book.class, Publisher.class, Dao.class, Books.class })
 	public void testQueryMethod() {
 		System.out.println( TestUtil.getMetaModelSourceAsString( Dao.class ) );
 		System.out.println( TestUtil.getMetaModelSourceAsString( Books.class ) );

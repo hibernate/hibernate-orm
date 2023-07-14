@@ -6,8 +6,6 @@
  */
 package org.hibernate.jpamodelgen.annotation;
 
-import org.hibernate.jpamodelgen.model.Metamodel;
-
 import java.util.List;
 
 /**
@@ -16,7 +14,7 @@ import java.util.List;
 public class NaturalIdFinderMethod extends AbstractFinderMethod {
 
 	public NaturalIdFinderMethod(
-			Metamodel annotationMetaEntity,
+			AnnotationMetaEntity annotationMetaEntity,
 			String methodName, String entity,
 			List<String> paramNames, List<String> paramTypes,
 			boolean belongsToDao,

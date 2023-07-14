@@ -6,9 +6,6 @@
  */
 package org.hibernate.jpamodelgen.annotation;
 
-import org.hibernate.jpamodelgen.model.Metamodel;
-import org.hibernate.jpamodelgen.util.Constants;
-
 import java.util.List;
 
 /**
@@ -19,7 +16,7 @@ public class IdFinderMethod extends AbstractFinderMethod {
 	private final String paramName;
 
 	public IdFinderMethod(
-			Metamodel annotationMetaEntity,
+			AnnotationMetaEntity annotationMetaEntity,
 			String methodName, String entity,
 			List<String> paramNames, List<String> paramTypes,
 			boolean belongsToDao,

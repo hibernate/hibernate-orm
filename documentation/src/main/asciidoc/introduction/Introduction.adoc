@@ -672,9 +672,10 @@ We do need to be careful here if our persistence code uses native SQL, or if it 
 
 Whether we're testing against your real database, or against an in-memory Java database, we'll need to export the schema at the beginning of a test suite.
 We _usually_ do this when we create the Hibernate `SessionFactory` or JPA `EntityManager`, and so traditionally we've used a <<automatic-schema-export,configuration property>> for this.
+
 The JPA-standard property is `jakarta.persistence.schema-generation.database.action`.
 
-Alternatively, in Hibernate 6, we may use the new `SchemaManager` API, just as we did <<main-hibernate,above>>.
+Alternatively, in Hibernate 6, we may use the new `SchemaManager` API to export the schema, just as we did <<main-hibernate,above>>.
 
 [source,java]
 ----
@@ -706,6 +707,7 @@ insert into Books (isbn, title) values ('9781617290459', 'Java Persistence with 
 ----
 
 If we name this file `import.sql`, and place it in the root classpath, that's all we need to do.
+
 Otherwise, we need to specify the file in the <<automatic-schema-export,configuration property>> `jakarta.persistence.schema-generation.create-script-source`.
 
 This SQL script will be executed every time `exportMappedObjects()` or `truncateMappedObjects()` is called.
@@ -737,6 +739,7 @@ But we do ask you to consider the cost in boilerplate of any architectural layer
 
 To add a little background texture to this discussion, and at the risk of our Introduction degenerating into a rant at such an early stage, we're going ask you to humor us while talk a little more about ancient history.
 
+[%unbreakable]
 .An epic tale of DAOs and Repositories
 ****
 Back in the dark days of Java EE 4, before the standardization of Hibernate, and subsequent ascendance of JPA in Java enterprise development, it was common to hand-code the messy JDBC interactions that Hibernate takes care of today.
@@ -802,7 +805,7 @@ And, on the contrary, a layer is only easily replaceable if it has a very _narro
 [TIP]
 ====
 Some people do indeed use mock repositories for testing, but we really struggle to see any value in this.
-If you don't want to run your tests against your real database, it's usually very easy to "mock" the database itself by running tests against an in-memory Java database like H2.
+If you don't want to run your tests against our real database, it's usually very easy to "mock" the database itself by running tests against an in-memory Java database like H2.
 This works even better in Hibernate 6 than in older versions of Hibernate, since HQL is now _much_ more portable between platforms.
 ====
 

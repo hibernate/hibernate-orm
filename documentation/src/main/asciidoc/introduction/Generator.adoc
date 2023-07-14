@@ -189,6 +189,8 @@ This results in the following generated code in the `Queries_` class:
 public abstract class Queries_ {
 
     /**
+     * Execute the query {@value #FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type}.
+     *  
      * @see org.example.Queries#findBooksByTitleAndType(String,Type)
      **/
     public static List<Book> findBooksByTitleAndType(@Nonnull EntityManager entityManager, String title, Type type) {
@@ -263,24 +265,26 @@ public class Queries_ implements Queries {
 
     private final @Nonnull EntityManager entityManager;
 
-	public Queries_(@Nonnull EntityManager entityManager) {
-		this.entityManager = entityManager;
-	}
+    public Queries_(@Nonnull EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
 
-	public @Nonnull EntityManager entityManager() {
-		return entityManager;
-	}
+    public @Nonnull EntityManager entityManager() {
+        return entityManager;
+    }
 
-	/**
-	 * @see org.example.Queries#findBooksByTitleAndType(String,Type)
-	 **/
-	@Override
-	public List<Book> findBooksByTitleAndType(String title, Type type) {
-		return entityManager.createQuery(FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type, Book.class)
-				.setParameter("title", title)
-				.setParameter("type", type)
-				.getResultList();
-	}
+    /**
+     * Execute the query {@value #FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type}.
+     * 
+     * @see org.example.Queries#findBooksByTitleAndType(String,Type)
+     **/
+    @Override
+    public List<Book> findBooksByTitleAndType(String title, Type type) {
+        return entityManager.createQuery(FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type, Book.class)
+                .setParameter("title", title)
+                .setParameter("type", type)
+                .getResultList();
+    }
 
     static final String FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type =
             "from Book where title like :title and type = :type";
@@ -299,10 +303,32 @@ List<Book> books = queries.findByTitleAndType(titlePattern, Type.BOOK);
 ----
 
 If we ever need to swap out the generated query method with one we write by hand, without impacting clients, all we need to do is replace the abstract method with a `default` method of the `Queries` interface.
+For example:
 
+[source,java]
+----
+interface Queries {
+    EntityManager entityManager();
+
+    // handwritten method replacing previous generated implementation
+    default List<Book> findBooksByTitleAndType(String title, String type) {
+        entityManager()
+                .createQuery("from Book where title like :title and type = :type", Book.class)
+                        .setParameter("title", title)
+                        .setParameter("type", type)
+                        .setFlushMode(COMMIT)
+                        .setMaxResults(100)
+                        .getResultList();
+    }
+}
+----
+
+What if we would like to inject a `Queries` object instead of calling its constructor directly?
+
+[%unbreakable]
 [TIP]
 ====
-As you recall, we don't think these things really need to be container-managed objects.
+As you <<architecture,recall>>, we don't think these things really need to be container-managed objects.
 But if you _want_ them to be—if you're allergic to calling constructors, for some reason—then:
 
 - placing `jakarta.inject` on the build path will cause an `@Inject` annotation to be added to the constructor of `Queries_`, and
@@ -358,6 +384,7 @@ Considering our first example, `Book` has a persistent field `String isbn`, so t
 If there were no field named `isbn` in `Book`, or if it had a different type, this method declaration would be rejected with a meaningful error at compile time.
 Similarly, the second example is legal, since `Book` has fields `String title` and `Type type`.
 
+[%unbreakable]
 [IMPORTANT]
 ====
 You might notice that our solution to this problem is very different from the approach taken by others.
@@ -378,6 +405,42 @@ The code generated for this finder method depends on what kind of fields match t
 |===
 
 The generated code also depends on what kind of session we have, since the capabilities of stateless sessions, and of reactive sessions, differ slightly from the capabilities of regular stateful sessions.
+
+With `EntityManager` as the session type, we obtain:
+
+[source,java]
+----
+/**
+ * Find {@link Book} by {@link Book#isbn isbn}.
+ *
+ * @see org.example.Dao#getBook(String)
+ **/
+@Override
+public Book getBook(@Nonnull String isbn) {
+	return entityManager.find(Book.class, isbn);
+}
+
+/**
+ * Find {@link Book} by {@link Book#title title} and {@link Book#type type}.
+ *
+ * @see org.example.Dao#getBooksByTitle(String,Type)
+ **/
+@Override
+public List<Book> getBooksByTitle(String title, Type type) {
+	var builder = entityManager.getEntityManagerFactory().getCriteriaBuilder();
+	var query = builder.createQuery(Book.class);
+	var entity = query.from(Book.class);
+	query.where(
+			title==null
+				? entity.get(Book_.title).isNull()
+				: builder.equal(entity.get(Book_.title), title),
+			type==null
+				? entity.get(Book_.type).isNull()
+				: builder.equal(entity.get(Book_.type), type)
+	);
+	return entityManager.createQuery(query).getResultList();
+}
+----
 
 A finder method may specify <<fetch-profiles,fetch profiles>>, for example:
 
@@ -500,29 +563,29 @@ List<Book> books =
             .getResultList();
 ----
 
-Finally, a query method might return a `Pager`.
-This is an incubating API in Hibernate 6.3 that makes it easy to paginate query result sets.
-A query method returning type `Pager` must accept a `Page` object specifying the initial page.
-
-[source,java]
-----
-@HQL("from Book where title like :title")
-Pager<Book> findBooksByTitle(String title, Page initialPage);
-----
-
-There are several idioms for the use of `Pager`, here's one:
-
-[source,java]
-----
-new Queries_(session)
-        .findBooksByTitle(title, Page.first(pageSize))
-                .forEachRemainingPage(books -> {
-                    for (Book book : books) {
-                        ...
-                    }
-                    session.clear();
-                })
-----
+// Finally, a query method might return a `Pager`.
+// This is an incubating API in Hibernate 6.3 that makes it easy to paginate query result sets.
+// A query method returning type `Pager` must accept a `Page` object specifying the initial page.
+//
+// [source,java]
+// ----
+// @HQL("from Book where title like :title")
+// Pager<Book> findBooksByTitle(String title, Page initialPage);
+// ----
+//
+// There are several idioms for the use of `Pager`, here's one:
+//
+// [source,java]
+// ----
+// new Queries_(session)
+//         .findBooksByTitle(title, Page.first(pageSize))
+//                 .forEachRemainingPage(books -> {
+//                     for (Book book : books) {
+//                         ...
+//                     }
+//                     session.clear();
+//                 })
+// ----
 
 On the other hand, finder methods are currently much more limited.
 A finder method must return an entity type like `Book`, or a list of the entity type, `List<Book>`, for example.
@@ -547,5 +610,5 @@ The Query Validator works in `javac`, Gradle, Maven, and the Eclipse Java Compil
 
 [CAUTION]
 ====
-Unlike the Metamodel Generator, which is a bog-standard Java annotation processor based on only standard Java APIs, the Query Validator makes use of internal compiler APIs in `javac` and `ecj`. This means it can't be guaranteed to work in every Java compiler. The current release is known to work in JDK 11 and above, though JDK 15 or above is preferred.
+Unlike the Metamodel Generator, which is a completely bog-standard Java annotation processor based on only standard Java APIs, the Query Validator makes use of internal compiler APIs in `javac` and `ecj`. This means it can't be guaranteed to work in every Java compiler. The current release is known to work in JDK 11 and above, though JDK 15 or above is preferred.
 ====

@@ -33,18 +33,21 @@ class NamedQueryMethod implements MetaAttribute {
 	private final String name;
 	private final boolean belongsToDao;
 	private final boolean reactive;
+	private final boolean addNonnullAnnotation;
 
 	public NamedQueryMethod(
 			AnnotationMeta annotationMeta,
 			SqmSelectStatement<?> select,
 			String name,
 			boolean belongsToDao,
-			@Nullable String sessionType) {
+			@Nullable String sessionType,
+			boolean addNonnullAnnotation) {
 		this.annotationMeta = annotationMeta;
 		this.select = select;
 		this.name = name;
 		this.belongsToDao = belongsToDao;
 		this.reactive = Constants.MUTINY_SESSION.equals(sessionType);
+		this.addNonnullAnnotation = addNonnullAnnotation;
 	}
 
 	@Override
@@ -108,9 +111,18 @@ class NamedQueryMethod implements MetaAttribute {
 		}
 	}
 
+	void notNull(StringBuilder declaration) {
+		if ( addNonnullAnnotation ) {
+			declaration
+					.append('@')
+					.append(annotationMeta.importType("jakarta.annotation.Nonnull"))
+					.append(' ');
+		}
+	}
+
 	private void comment(StringBuilder declaration) {
 		declaration
-				.append("\n/**\n * Executes named query {@value #")
+				.append("\n/**\n * Execute named query {@value #")
 				.append(fieldName())
 				.append("} defined by annotation of {@link ")
 				.append(annotationMeta.getSimpleName())
@@ -144,6 +156,7 @@ class NamedQueryMethod implements MetaAttribute {
 		declaration
 				.append('(');
 		if ( !belongsToDao ) {
+			notNull( declaration );
 			declaration
 					.append(annotationMeta.importType(Constants.ENTITY_MANAGER))
 					.append(" entityManager");

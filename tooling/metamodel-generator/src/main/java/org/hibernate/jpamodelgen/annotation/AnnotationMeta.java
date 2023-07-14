@@ -110,7 +110,8 @@ public abstract class AnnotationMeta implements Metamodel {
 										(SqmSelectStatement<?>) statement,
 										name.substring(1),
 										belongsToDao(),
-										getSessionType()
+										getSessionType(),
+										getContext().addNonnullAnnotation()
 								)
 						);
 					}

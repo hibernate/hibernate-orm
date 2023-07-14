@@ -459,6 +459,15 @@ public List<Book> getBooksByTitle(String title, Type type) {
 }
 ----
 
+It's even possible to match a parameter of a finder method against a property of an associated entity or embeddable.
+The natural syntax would be a parameter declaration like `String publisher.name`, but because that's not legal Java, we can write it as `String publisher$name`, taking advantage of a legal Java identifier character that nobody ever uses for anything else:
+
+[source,java]
+----
+@Find
+List<Book> getBooksByPublisherName(String publisher$name);
+----
+
 A finder method may specify <<fetch-profiles,fetch profiles>>, for example:
 
 [source,java]

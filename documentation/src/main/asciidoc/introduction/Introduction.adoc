@@ -613,7 +613,7 @@ So, since most persistence logic written using Hibernate 6 is _extremely_ portab
 We do need to be careful here if our persistence code uses native SQL, or if it uses concurrency-management features like pessimistic locks.
 ====
 
-Whether we're testing against your real database, or against an in-memory Java database, we'll need to export the schema at the beginning of a test suite.
+Whether we're testing against our real database, or against an in-memory Java database, we'll need to export the schema at the beginning of a test suite.
 We _usually_ do this when we create the Hibernate `SessionFactory` or JPA `EntityManager`, and so traditionally we've used a <<automatic-schema-export,configuration property>> for this.
 
 The JPA-standard property is `jakarta.persistence.schema-generation.database.action`.

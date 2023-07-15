@@ -6,6 +6,8 @@
  */
 package org.hibernate.tool.schema;
 
+import static org.hibernate.cfg.AvailableSettings.HBM2DDL_AUTO;
+
 /**
  * Enumerates the actions that may be performed by the
  * {@linkplain org.hibernate.tool.schema.spi.SchemaManagementTool schema management tooling}.
@@ -19,34 +21,43 @@ package org.hibernate.tool.schema;
  *     {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_SCRIPTS_ACTION}.
  * </ul>
  *
+ * @apiNote There is an ambiguity surrounding the value {@code "create"} here. The old-school
+ *          Hibernate configuration interprets this as the action {@link #CREATE}, which drops
+ *          the schema before recreating it. The JPA standard interprets it to mean the action
+ *          {@link #CREATE_ONLY} which does not first drop the schema.
+ *
  * @author Steve Ebersole
  */
 public enum Action {
 	/**
 	 * No action.
-	 * <p>
-	 * Valid in JPA; compatible with Hibernate's HBM2DDL action of the same name.
+	 *
+	 * @apiNote Valid in JPA; identical to the HBM2DDL action of the same name.
 	 */
 	NONE,
 	/**
 	 * Create the schema.
-	 * <p>
-	 * This is an action introduced by JPA; Hibernate's legacy HBM2DDL had no such
-	 * action. Its "create" action was actually equivalent to {@link #CREATE}.
+	 *
+	 * @apiNote This is an action introduced by JPA; the legacy HBM2DDL tool had
+	 *          no such action. Its action named {@code "create"} was equivalent
+	 *          to {@link #CREATE}.
 	 *
 	 * @see org.hibernate.tool.schema.spi.SchemaCreator
 	 */
 	CREATE_ONLY,
 	/**
 	 * Drop the schema.
-	 * <p>
-	 * Valid in JPA; compatible with Hibernate's HBM2DDL action of the same name.
+	 *
+	 * @apiNote Valid in JPA; identical to the HBM2DDL action of the same name.
 	 *
 	 * @see org.hibernate.tool.schema.spi.SchemaDropper
 	 */
 	DROP,
 	/**
 	 * Drop and then recreate the schema.
+	 *
+	 * @apiNote This action is called {@code "drop-and-create"} by JPA, but simply
+	 *          {@code "create"} by the legacy HBM2DDL tool.
 	 *
 	 * @see org.hibernate.tool.schema.spi.SchemaDropper
 	 * @see org.hibernate.tool.schema.spi.SchemaCreator
@@ -56,16 +67,16 @@ public enum Action {
 	 * Drop the schema and then recreate it on {@code SessionFactory} startup.
 	 * Additionally, drop the schema on {@code SessionFactory} shutdown.
 	 * <p>
-	 * This action is not defined by JPA.
-	 * <p>
-	 * While this is a valid option for auto schema tooling, it's not a
-	 * valid action for the {@code SchemaManagementTool}; instead the
-	 * caller of {@code SchemaManagementTool} must split this into two
-	 * separate requests to:
+	 * While this is a valid option for auto schema tooling, it's not a valid
+	 * action for the {@code SchemaManagementTool}; instead the caller of
+	 * {@code SchemaManagementTool} must split this into two separate requests
+	 * to:
 	 * <ol>
 	 *     <li>{@linkplain #CREATE drop and create} the schema, and then</li>
 	 *     <li>later, {@linkplain #DROP drop} the schema again.</li>
 	 * </ol>
+	 *
+	 * @apiNote This action is not defined by JPA.
 	 *
 	 * @see org.hibernate.tool.schema.spi.SchemaDropper
 	 * @see org.hibernate.tool.schema.spi.SchemaCreator
@@ -73,24 +84,24 @@ public enum Action {
 	CREATE_DROP,
 	/**
 	 * Validate the database schema.
-	 * <p>
-	 * This action is not defined by JPA.
+	 *
+	 * @apiNote This action is not defined by JPA.
 	 *
 	 * @see org.hibernate.tool.schema.spi.SchemaValidator
 	 */
 	VALIDATE,
 	/**
 	 * Update (alter) the database schema.
-	 * <p>
-	 * This action is not defined by JPA.
+	 *
+	 * @apiNote This action is not defined by JPA.
 	 *
 	 * @see org.hibernate.tool.schema.spi.SchemaMigrator
 	 */
 	UPDATE,
 	/**
 	 * Truncate the tables in the schema.
-	 * <p>
-	 * This action is not defined by JPA.
+	 *
+	 * @apiNote This action is not defined by JPA.
 	 *
 	 * @see org.hibernate.tool.schema.spi.SchemaTruncator
 	 *
@@ -98,37 +109,92 @@ public enum Action {
 	 */
 	TRUNCATE;
 
+	/**
+	 * @see #NONE
+	 */
+	public static final String ACTION_NONE = "none";
+	/**
+	 * @see #DROP
+	 */
+	public static final String ACTION_DROP = "drop";
+	/**
+	 * @see #CREATE_ONLY
+	 */
+	public static final String ACTION_CREATE_ONLY = "create-only";
+	/**
+	 * @see #CREATE
+	 */
+	public static final String ACTION_CREATE = "create";
+	/**
+	 * @see #CREATE_DROP
+	 */
+	public static final String ACTION_CREATE_THEN_DROP = "create-drop";
+	/**
+	 * @see #VALIDATE
+	 */
+	public static final String ACTION_VALIDATE = "validate";
+	/**
+	 * @see #UPDATE
+	 */
+	public static final String ACTION_UPDATE = "update";
+
+	/**
+	 * @see #NONE
+	 */
+	public static final String SPEC_ACTION_NONE = "none";
+	/**
+	 * @see #DROP
+	 */
+	public static final String SPEC_ACTION_DROP = "drop";
+	/**
+	 * @see #CREATE_ONLY
+	 */
+	public static final String SPEC_ACTION_CREATE = "create";
+	/**
+	 * @see #CREATE
+	 */
+	public static final String SPEC_ACTION_DROP_AND_CREATE = "drop-and-create";
+
+	/**
+	 * The string configuration value identifying this action in JPA-standard configuration
+	 * via {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}
+	 * or {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_SCRIPTS_ACTION}.
+	 */
 	public String getExternalJpaName() {
 		switch (this) {
 			case NONE:
-				return "none";
+				return SPEC_ACTION_NONE;
 			case CREATE_ONLY:
-				return "create";
+				return SPEC_ACTION_CREATE;
 			case DROP:
-				return "drop";
+				return SPEC_ACTION_DROP;
 			case CREATE:
-				return "drop-and-create";
+				return SPEC_ACTION_DROP_AND_CREATE;
 			default:
 				return null;
 		}
 	}
 
+	/**
+	 * The string configuration value identifying this action in old-school Hibernate
+	 * configuration via  {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_AUTO}.
+	 */
 	public String getExternalHbm2ddlName() {
 		switch (this) {
 			case NONE:
-				return "none";
+				return ACTION_NONE;
 			case CREATE_ONLY:
-				return "create-only";
+				return ACTION_CREATE_ONLY;
 			case DROP:
-				return "drop";
+				return ACTION_DROP;
 			case CREATE:
-				return "create";
+				return ACTION_CREATE;
 			case CREATE_DROP:
-				return "create-drop";
+				return ACTION_CREATE_THEN_DROP;
 			case VALIDATE:
-				return "validate";
+				return ACTION_VALIDATE;
 			case UPDATE:
-				return "update";
+				return ACTION_UPDATE;
 			default:
 				return null;
 		}
@@ -136,17 +202,20 @@ public enum Action {
 
 	@Override
 	public String toString() {
-		return getClass().getSimpleName() + "(externalJpaName=" + getExternalJpaName() + ", externalHbm2ddlName=" + getExternalHbm2ddlName() + ")";
+		return getClass().getSimpleName()
+				+ "(externalJpaName=" + getExternalJpaName()
+				+ ", externalHbm2ddlName=" + getExternalHbm2ddlName() + ")";
 	}
 
 	/**
-	 * Used when processing JPA configuration to interpret the user config values.  Generally
-	 * this will be a value specified by {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}
+	 * Interpret the value of the JPA-standard configuration property
+	 * {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}
 	 * or {@value org.hibernate.cfg.AvailableSettings#JAKARTA_HBM2DDL_SCRIPTS_ACTION}
+	 * as an instance of {@link Action}.
 	 *
 	 * @param value The encountered config value
 	 *
-	 * @return The matching enum value.  An empty value will return {@link #NONE}.
+	 * @return The matching enum value. An empty value will return {@link #NONE}.
 	 *
 	 * @throws IllegalArgumentException If the incoming value is unrecognized
 	 */
@@ -160,29 +229,23 @@ public enum Action {
 		}
 
 		final String name = value.toString().trim();
-		if ( name.isEmpty() || NONE.getExternalJpaName().equals( name ) ) {
+		if ( name.isEmpty() ) {
 			// default is NONE
 			return NONE;
 		}
 
 		// prefer JPA external names
 		for ( Action action : values() ) {
-			if ( action.getExternalJpaName() == null ) {
-				continue;
-			}
-
-			if ( action.getExternalJpaName().equals( name ) ) {
+			final String jpaName = action.getExternalJpaName();
+			if ( jpaName != null && jpaName.equals( name ) ) {
 				return action;
 			}
 		}
 
 		// then check hbm2ddl names
 		for ( Action action : values() ) {
-			if ( action.getExternalHbm2ddlName() == null ) {
-				continue;
-			}
-
-			if ( action.getExternalHbm2ddlName().equals( name ) ) {
+			final String hbm2ddlName = action.getExternalHbm2ddlName();
+			if ( hbm2ddlName != null && hbm2ddlName.equals( name ) ) {
 				return action;
 			}
 		}
@@ -194,15 +257,17 @@ public enum Action {
 			}
 		}
 
-		throw new IllegalArgumentException( "Unrecognized JPA schema generation action value : " + value );
+		throw new IllegalArgumentException( "Unrecognized JPA schema management action setting: '" + value + "'" );
 	}
 
 	/**
-	 * Used to interpret the value of {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_AUTO}
+	 * Interpret the value of the old-school Hibernate configuration property
+	 * {@value org.hibernate.cfg.AvailableSettings#HBM2DDL_AUTO} as an instance
+	 * of {@link Action}.
 	 *
 	 * @param value The encountered config value
 	 *
-	 * @return The matching enum value.  An empty value will return {@link #NONE}.
+	 * @return The matching enum value. An empty value will return {@link #NONE}.
 	 *
 	 * @throws IllegalArgumentException If the incoming value is unrecognized
 	 */
@@ -212,42 +277,32 @@ public enum Action {
 		}
 
 		if ( value instanceof Action ) {
-			return hbm2ddlSetting( (Action) value );
+			return (Action) value;
 		}
 
 		final String name = value.toString().trim();
-		if ( name.isEmpty() || NONE.getExternalJpaName().equals( name ) ) {
+		if ( name.isEmpty() ) {
 			// default is NONE
 			return NONE;
 		}
 
 		// prefer hbm2ddl names
 		for ( Action action : values() ) {
-			if ( action.getExternalHbm2ddlName() == null ) {
-				continue;
-			}
-
-			if ( action.getExternalHbm2ddlName().equals( name ) ) {
-				return hbm2ddlSetting( action );
+			final String hbm2ddlName = action.getExternalHbm2ddlName();
+			if ( hbm2ddlName != null && hbm2ddlName.equals( name ) ) {
+				return action;
 			}
 		}
 
 		// then check JPA external names
 		for ( Action action : values() ) {
-			if ( action.getExternalJpaName() == null ) {
-				continue;
-			}
-
-			if ( action.getExternalJpaName().equals( name ) ) {
-				return hbm2ddlSetting( action );
+			final String jpaName = action.getExternalJpaName();
+			if ( jpaName != null && jpaName.equals( name ) ) {
+				return action;
 			}
 		}
 
-		throw new IllegalArgumentException( "Unrecognized legacy `hibernate.hbm2ddl.auto` value : `" + value + "`");
-	}
-
-	private static Action hbm2ddlSetting(Action action) {
-		return action;
+		throw new IllegalArgumentException( "Unrecognized '" + HBM2DDL_AUTO + "' setting: '" + name + "'" );
 	}
 
 }

@@ -39,8 +39,8 @@ public class IdFinderMethod extends AbstractFinderMethod {
 	}
 
 	@Override
-	boolean isId() {
-		return true;
+	boolean isNullable(int index) {
+		return false;
 	}
 
 	@Override

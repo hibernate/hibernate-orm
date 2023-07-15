@@ -12,7 +12,6 @@ import org.hibernate.jpamodelgen.util.Constants;
 import java.util.List;
 import java.util.Locale;
 
-import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -56,8 +55,6 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 	public String getTypeDeclaration() {
 		return entity;
 	}
-
-	abstract boolean isId();
 
 	@Override
 	public String getAttributeNameDeclarationString() {
@@ -129,6 +126,11 @@ public abstract class AbstractFinderMethod extends AbstractQueryMethod  {
 //		}
 		declaration
 				.append("\n **/\n");
+	}
+
+	String qualifier(String name) {
+		final int index = name.indexOf('$');
+		return index > 0 ? name.substring(0, index) : name;
 	}
 
 	void unwrapSession(StringBuilder declaration) {

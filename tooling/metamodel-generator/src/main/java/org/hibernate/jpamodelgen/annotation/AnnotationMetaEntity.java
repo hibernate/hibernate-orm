@@ -44,6 +44,7 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 
 import static java.beans.Introspector.decapitalize;
+import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
@@ -545,7 +546,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						containerType == null ? null : containerType.toString(),
 						paramNames,
 						paramTypes,
-						false,
+						parameterNullability(method, entity),
 						dao,
 						sessionType[0],
 						sessionType[1],
@@ -603,6 +604,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							returnType.toString(),
 							paramNames,
 							paramTypes,
+							parameterNullability(method, entity),
 							dao,
 							sessionType[0],
 							sessionType[1],
@@ -620,7 +622,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 							null,
 							paramNames,
 							paramTypes,
-							false,
+							parameterNullability(method, entity),
 							dao,
 							sessionType[0],
 							sessionType[1],
@@ -669,6 +671,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									returnType.toString(),
 									paramNames,
 									paramTypes,
+									parameterNullability(method, entity),
 									dao,
 									sessionType[0],
 									sessionType[1],
@@ -686,7 +689,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 									null,
 									paramNames,
 									paramTypes,
-									fieldType == FieldType.ID,
+									parameterNullability(method, entity),
 									dao,
 									sessionType[0],
 									sessionType[1],
@@ -746,22 +749,29 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return count;
 	}
 
-	private @Nullable FieldType validateFinderParameter(TypeElement entity, VariableElement param) {
-		final AccessType accessType = getAccessType(entity);
-		for ( Element member : entity.getEnclosedElements() ) {
-			if ( fieldMatchesParameter( entity, param, member, accessType ) ) {
-				if ( containsAnnotation( member, Constants.ID, Constants.EMBEDDED_ID ) ) {
-					return FieldType.ID;
-				}
-				else if ( containsAnnotation( member, Constants.NATURAL_ID ) ) {
-					return FieldType.NATURAL_ID;
-				}
-				else {
-					return FieldType.BASIC;
-				}
+	private @Nullable FieldType validateFinderParameter(TypeElement entityType, VariableElement param) {
+		final Element member = memberMatchingParameter(entityType, param);
+		if ( member != null) {
+			final String memberType = memberType( member ).toString();
+			final String paramType = param.asType().toString();
+			if ( !isLegalAssignment( paramType, memberType ) ) {
+				context.message( param,
+						"matching field has type '" + memberType
+								+ "' in entity class '" + entityType + "'",
+						Diagnostic.Kind.ERROR );
+			}
+
+			if ( containsAnnotation( member, Constants.ID, Constants.EMBEDDED_ID ) ) {
+				return FieldType.ID;
+			}
+			else if ( containsAnnotation( member, Constants.NATURAL_ID ) ) {
+				return FieldType.NATURAL_ID;
+			}
+			else {
+				return FieldType.BASIC;
 			}
 		}
-		final AnnotationMirror idClass = getAnnotationMirror( entity, Constants.ID_CLASS );
+		final AnnotationMirror idClass = getAnnotationMirror( entityType, Constants.ID_CLASS );
 		if ( idClass != null ) {
 			final Object value = getAnnotationValue( idClass, "value" );
 			if ( value instanceof TypeMirror ) {
@@ -773,9 +783,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		context.message( param,
 				"no matching field named '"
 						+ param.getSimpleName().toString().replace('$', '.')
-						+ "' in entity class '" + entity + "'",
+						+ "' in entity class '" + entityType + "'",
 				Diagnostic.Kind.ERROR );
 		return null;
+	}
+
+	private boolean finderParameterNullable(TypeElement entity, VariableElement param) {
+		final Element member = memberMatchingParameter(entity, param);
+		return member == null || isNullable(member);
 	}
 
 	private AccessType getAccessType(TypeElement entity) {
@@ -794,67 +809,66 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private boolean fieldMatchesParameter(TypeElement entityType, VariableElement param, Element member, AccessType accessType) {
+	private @Nullable Element memberMatchingParameter(TypeElement entityType, VariableElement param) {
 		final StringTokenizer tokens = new StringTokenizer( param.getSimpleName().toString(), "$" );
-		return fieldMatchesParameter( entityType, param, member, accessType, tokens, tokens.nextToken() );
+		return memberMatchingParameter( entityType, param, tokens );
 	}
 
-	private boolean fieldMatchesParameter(
+	private @Nullable Element memberMatchingParameter(TypeElement entityType, VariableElement param, StringTokenizer tokens) {
+		final AccessType accessType = getAccessType(entityType);
+		final String nextToken = tokens.nextToken();
+		for ( Element member : entityType.getEnclosedElements() ) {
+			final Element match =
+					memberMatchingParameter(entityType, param, member, accessType, tokens, nextToken);
+			if ( match != null ) {
+				return match;
+			}
+		}
+		return null;
+	}
+
+	private @Nullable Element memberMatchingParameter(
 			TypeElement entityType,
 			VariableElement param,
-			Element member,
+			Element candidate,
 			AccessType accessType,
 			StringTokenizer tokens,
 			String token) {
-		final Name memberName = member.getSimpleName();
+		final Name memberName = candidate.getSimpleName();
 		final TypeMirror type;
-		if ( accessType == AccessType.FIELD && member.getKind() == ElementKind.FIELD ) {
+		if ( accessType == AccessType.FIELD && candidate.getKind() == ElementKind.FIELD ) {
 			if ( !fieldMatches(token, memberName) ) {
-				return false;
+				return null;
 			}
 			else {
-				type = member.asType();
+				type = candidate.asType();
 			}
 		}
-		else if ( accessType == AccessType.PROPERTY && member.getKind() == ElementKind.METHOD ) {
+		else if ( accessType == AccessType.PROPERTY && candidate.getKind() == ElementKind.METHOD ) {
 			if ( !getterMatches(token, memberName) ) {
-				return false;
+				return null;
 			}
 			else {
-				final ExecutableElement method = (ExecutableElement) member;
+				final ExecutableElement method = (ExecutableElement) candidate;
 				type = method.getReturnType();
 			}
 		}
 		else {
-			return false;
+			return null;
 		}
 
 		if ( tokens.hasMoreTokens() ) {
-			final String nextToken = tokens.nextToken();
 			if ( type.getKind() == TypeKind.DECLARED ) {
 				final DeclaredType declaredType = (DeclaredType) type;
 				final TypeElement memberType = (TypeElement) declaredType.asElement();
-				memberTypes.put( qualify(entityType.getQualifiedName().toString(), memberName.toString()),
-						memberType.getQualifiedName().toString()  );
-				final AccessType memberAccessType = getAccessType(memberType);
-				for ( Element entityMember : memberType.getEnclosedElements() ) {
-					if ( fieldMatchesParameter(memberType, param, entityMember, memberAccessType, tokens, nextToken) ) {
-						return true;
-					}
-				}
+				memberTypes.put( qualify( entityType.getQualifiedName().toString(), memberName.toString() ),
+						memberType.getQualifiedName().toString() );
+				return memberMatchingParameter( memberType, param, tokens );
 			}
-			return false;
+			return null;
 		}
 		else {
-			final String memberType = memberType( member ).toString();
-			final String paramType = param.asType().toString();
-			if ( !isLegalAssignment( paramType, memberType ) ) {
-				context.message( param,
-						"matching field has type '" + memberType
-								+ "' in entity class '" + entityType + "'",
-						Diagnostic.Kind.ERROR );
-			}
-			return true;
+			return candidate;
 		}
 	}
 
@@ -996,6 +1010,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
+	private List<Boolean> parameterNullability(ExecutableElement method, TypeElement entity) {
+		return method.getParameters().stream()
+				.map(param -> finderParameterNullable(entity, param))
+				.collect(toList());
+	}
+
 	private static List<String> parameterTypes(ExecutableElement method) {
 		return method.getParameters().stream()
 				.map(param -> param.asType().toString())
@@ -1006,6 +1026,39 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return method.getParameters().stream()
 				.map(param -> param.getSimpleName().toString())
 				.collect(toList());
+	}
+
+	private static boolean isNullable(Element member) {
+		switch ( member.getKind() ) {
+			case METHOD:
+				final ExecutableElement method = (ExecutableElement) member;
+				if ( method.getReturnType().getKind().isPrimitive() ) {
+					return false;
+				}
+			case FIELD:
+				if ( member.asType().getKind().isPrimitive() ) {
+					return false;
+				}
+		}
+		boolean nullable = true;
+		for ( AnnotationMirror mirror : member.getAnnotationMirrors() ) {
+			final TypeElement annotationType = (TypeElement) mirror.getAnnotationType().asElement();
+			final Name name = annotationType.getQualifiedName();
+			if ( name.contentEquals(Constants.ID) ) {
+				nullable = false;
+			}
+			if ( name.contentEquals("jakarta.validation.constraints.NotNull")) {
+				nullable = false;
+			}
+			if ( name.contentEquals(Constants.BASIC)
+					|| name.contentEquals(Constants.MANY_TO_ONE)
+					|| name.contentEquals(Constants.ONE_TO_ONE)) {
+				if ( FALSE.equals( getAnnotationValue(mirror, "optional") ) ) {
+					nullable = false;
+				}
+			}
+		}
+		return nullable;
 	}
 
 	private void checkParameters(

@@ -493,4 +493,11 @@ public final class TypeUtils {
 			}
 		}
 	}
+
+	public static boolean isPrimitive(String paramType) {
+		return PRIMITIVE_TYPES.contains( paramType );
+	}
+
+	public static final Set<String> PRIMITIVE_TYPES =
+			Set.of("boolean", "char", "long", "int", "short", "byte", "double", "float");
 }

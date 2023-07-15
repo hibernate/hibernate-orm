@@ -219,7 +219,7 @@ SessionFactory sessionFactory =
             .setProperty(AvailableSettings.JAKARTA_JDBC_PASSWORD, password)
             // Automatic schema export
             .setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
-                         Action.CREATE.getExternalJpaName())
+                         Action.SPEC_ACTION_DROP_AND_CREATE)
             // SQL statement logging
             .setProperty(AvailableSettings.SHOW_SQL, TRUE.toString())
             .setProperty(AvailableSettings.FORMAT_SQL, TRUE.toString())

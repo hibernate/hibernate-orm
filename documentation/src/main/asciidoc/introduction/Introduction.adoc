@@ -622,7 +622,7 @@ For example, if we're using `Configuration` to configure Hibernate, we could wri
 [source,java]
 ----
 configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
-                          Action.CREATE.getExternalJpaName());
+                          Action.SPEC_ACTION_DROP_AND_CREATE);
 ----
 
 Alternatively, in Hibernate 6, we may use the new `SchemaManager` API to export the schema, just as we did <<main-hibernate,above>>.
@@ -691,6 +691,24 @@ You'll need to:
 Actually, some tests might require multiple sessions.
 But be careful not to leak a session between different tests.
 
+[TIP]
+=====
+Another important test we'll need is one which validates our <<object-relational-mapping,O/R mapping annotations>> against the actual database schema.
+This is again the job of the schema management tooling, either:
+[source,java]
+----
+configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
+                          Action.ACTION_VALIDATE);
+
+----
+Or:
+[source,java]
+----
+sessionFactory.getSchemaManager().validateMappedObjects();
+----
+This "test" is one which many people like to run even in production, when the system starts up.
+=====
+
 [[architecture]]
 === Architecture and the persistence layer
 
@@ -757,9 +775,10 @@ At least _consider_ the possibility that it might be OK to call the `EntityManag
 
 image::images/architecture.png[API overview,pdfwidth="100%",width=1100,align="center"]
 
-> Sssssssss. Heresy!
+We can already hear you hissing at our heresy.
+But before slamming shut the lid of your laptop and heading off to fetch garlic and a pitchfork, take a couple of hours to weigh what we're proposing.
 
-OK, look, if it makes you feel better, one way to view `EntityManager` is to think of it as a single _generic_ "repository" that works for every entity in your system.
+OK, so, look, if it makes you feel better, one way to view `EntityManager` is to think of it as a single _generic_ "repository" that works for every entity in your system.
 From this point of view, JPA _is_ your persistence layer.
 And there's few good reasons to wrap this abstraction in a second abstraction that's _less_ generic.
 
@@ -810,7 +829,7 @@ This works even better in Hibernate 6 than in older versions of Hibernate, since
 // This is a much worse query language than HQL.
 // I think you can see why we didn't implement this idea in Hibernate.
 //
-OK, _phew_, let's move on.
+_Phew_, let's move on.
 
 [[overview]]
 === Overview

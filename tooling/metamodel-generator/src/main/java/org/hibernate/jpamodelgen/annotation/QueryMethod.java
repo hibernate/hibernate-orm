@@ -63,8 +63,8 @@ public class QueryMethod extends AbstractQueryMethod {
 	}
 
 	@Override
-	boolean isId() {
-		return false;
+	boolean isNullable(int index) {
+		return true;
 	}
 
 	@Override

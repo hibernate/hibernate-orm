@@ -14,6 +14,7 @@ import org.hibernate.jpamodelgen.util.Constants;
 import java.util.List;
 
 import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
+import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
 
 /**
  * @author Gavin King
@@ -64,7 +65,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 		return methodName;
 	}
 
-	abstract boolean isId();
+	abstract boolean isNullable(int index);
 
 	String parameterList() {
 		return paramTypes.stream()
@@ -90,7 +91,8 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 						.append(", ");
 			}
 			final String paramType = paramTypes.get(i);
-			if ( isId() || isSessionParameter(paramType) ) {
+			if ( !isNullable(i) && !isPrimitive(paramType)
+					|| isSessionParameter(paramType) ) {
 				notNull( declaration );
 			}
 			declaration

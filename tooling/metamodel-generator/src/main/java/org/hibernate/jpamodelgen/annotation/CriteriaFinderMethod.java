@@ -10,8 +10,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.util.Constants;
 
 import java.util.List;
-import java.util.Set;
 import java.util.StringTokenizer;
+
+import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
 
 /**
  * @author Gavin King
@@ -19,14 +20,14 @@ import java.util.StringTokenizer;
 public class CriteriaFinderMethod extends AbstractFinderMethod {
 
 	private final @Nullable String containerType;
-	private final boolean isId;
+	private final List<Boolean> paramNullability;
 
 	public CriteriaFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
 			String methodName, String entity,
 			@Nullable String containerType,
 			List<String> paramNames, List<String> paramTypes,
-			boolean isId,
+			List<Boolean> paramNullability,
 			boolean belongsToDao,
 			String sessionType,
 			String sessionName,
@@ -35,12 +36,12 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
 				paramNames, paramTypes, addNonnullAnnotation );
 		this.containerType = containerType;
-		this.isId = isId;
+		this.paramNullability = paramNullability;
 	}
 
 	@Override
-	public boolean isId() {
-		return isId;
+	public boolean isNullable(int index) {
+		return paramNullability.get(index);
 	}
 
 	@Override
@@ -55,11 +56,17 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		parameters( paramTypes, declaration );
 		declaration
 				.append(" {");
-		if ( isId ) {
-			declaration
-					.append("\n\tif (")
-					.append(paramNames.get(0))
-					.append(" == null) throw new IllegalArgumentException(\"Null identifier\");");
+		for ( int i = 0; i< paramNames.size(); i++ ) {
+			final String paramName = paramNames.get(i);
+			final String paramType = paramTypes.get(i);
+			if ( !isNullable(i) && !isPrimitive(paramType) ) {
+				declaration
+						.append("\n\tif (")
+						.append(paramName)
+						.append(" == null) throw new IllegalArgumentException(\"Null \" + ")
+						.append(paramName)
+						.append(");");
+			}
 		}
 		declaration
 				.append("\n\tvar builder = ")
@@ -89,7 +96,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 				}
 				declaration
 						.append("\n\t\t\t");
-				if ( !isId && !isPrimitive(paramType) ) { //TODO: check the entity to see if it's @Basic(optional=false)
+				if ( isNullable(i) && !isPrimitive(paramType) ) {
 					declaration
 							.append(paramName)
 							.append("==null")
@@ -161,13 +168,6 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 			typeName = annotationMetaEntity.getMemberType(typeName, memberName);
 		}
 	}
-
-	private static boolean isPrimitive(String paramType) {
-		return PRIMITIVE_TYPES.contains( paramType );
-	}
-
-	private static final Set<String> PRIMITIVE_TYPES =
-			Set.of("boolean", "char", "long", "int", "short", "byte", "double", "float");
 
 	private StringBuilder returnType() {
 		StringBuilder type = new StringBuilder();

@@ -13,10 +13,13 @@ import java.util.List;
  */
 public class NaturalIdFinderMethod extends AbstractFinderMethod {
 
+	private final List<Boolean> paramNullability;
+
 	public NaturalIdFinderMethod(
 			AnnotationMetaEntity annotationMetaEntity,
 			String methodName, String entity,
 			List<String> paramNames, List<String> paramTypes,
+			List<Boolean> paramNullability,
 			boolean belongsToDao,
 			String sessionType,
 			String sessionName,
@@ -24,12 +27,13 @@ public class NaturalIdFinderMethod extends AbstractFinderMethod {
 			boolean addNonnullAnnotation) {
 		super( annotationMetaEntity, methodName, entity, belongsToDao, sessionType, sessionName, fetchProfiles,
 				paramNames, paramTypes, addNonnullAnnotation );
+		this.paramNullability = paramNullability;
 	}
 
 	@Override
-	boolean isId() {
+	boolean isNullable(int index) {
 		// natural ids can be null
-		return false;
+		return paramNullability.get(index);
 	}
 
 	@Override

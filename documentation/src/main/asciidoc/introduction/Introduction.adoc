@@ -674,6 +674,13 @@ Whether we're testing against our real database, or against an in-memory Java da
 We _usually_ do this when we create the Hibernate `SessionFactory` or JPA `EntityManager`, and so traditionally we've used a <<automatic-schema-export,configuration property>> for this.
 
 The JPA-standard property is `jakarta.persistence.schema-generation.database.action`.
+For example, if we're using `Configuration` to configure Hibernate, we could write:
+
+[source,java]
+----
+configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
+                          Action.SPEC_ACTION_DROP_AND_CREATE);
+----
 
 Alternatively, in Hibernate 6, we may use the new `SchemaManager` API to export the schema, just as we did <<main-hibernate,above>>.
 
@@ -711,6 +718,24 @@ If we name this file `import.sql`, and place it in the root classpath, that's al
 Otherwise, we need to specify the file in the <<automatic-schema-export,configuration property>> `jakarta.persistence.schema-generation.create-script-source`.
 
 This SQL script will be executed every time `exportMappedObjects()` or `truncateMappedObjects()` is called.
+
+[TIP]
+=====
+Another important test we'll need is one which validates our <<object-relational-mapping,O/R mapping annotations>> against the actual database schema.
+This is again the job of the schema management tooling, either:
+[source,java]
+----
+configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
+                          Action.ACTION_VALIDATE);
+
+----
+Or:
+[source,java]
+----
+sessionFactory.getSchemaManager().validateMappedObjects();
+----
+This "test" is one which many people like to run even in production, when the system starts up.
+=====
 
 [[architecture]]
 === Architecture and the persistence layer
@@ -778,9 +803,10 @@ At least _consider_ the possibility that it might be OK to call the `EntityManag
 
 image::images/architecture.png[API overview,pdfwidth="100%",width=1100,align="center"]
 
-> Sssssssss. Heresy!
+We can already hear you hissing at our heresy.
+But before slamming shut the lid of your laptop and heading off to fetch garlic and a pitchfork, take a couple of hours to weigh what we're proposing.
 
-OK, look, if it makes you feel better, one way to view `EntityManager` is to think of it as a single _generic_ "repository" that works for every entity in your system.
+OK, so, look, if it makes you feel better, one way to view `EntityManager` is to think of it as a single _generic_ "repository" that works for every entity in your system.
 From this point of view, JPA _is_ your persistence layer.
 And there's few good reasons to wrap this abstraction in a second abstraction that's _less_ generic.
 
@@ -831,7 +857,7 @@ This works even better in Hibernate 6 than in older versions of Hibernate, since
 // This is a much worse query language than HQL.
 // I think you can see why we didn't implement this idea in Hibernate.
 //
-OK, _phew_, let's move on.
+_Phew_, let's move on.
 
 [[overview]]
 === Overview

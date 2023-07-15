@@ -100,9 +100,9 @@ But it's something to watch out for.
 
 If you're completely new to Hibernate and JPA, you might already be wondering how the persistence-related code is structured.
 
-Well, typically, your persistence-related code comes in two layers:
+Well, typically, our persistence-related code comes in two layers:
 
-. a representation of your data model in Java, which takes the form of a set of annotated entity classes, and
+. a representation of our data model in Java, which takes the form of a set of annotated entity classes, and
 . a larger number of functions which interact with Hibernate's APIs to perform the persistence operations associated with your various transactions.
 
 The first part, the data or "domain" model, is usually easier to write, but doing a great and very clean job of it will strongly affect your success in the second part.

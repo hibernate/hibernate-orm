@@ -10,6 +10,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
 import javax.persistence.FetchType;
+import javax.persistence.FlushModeType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -17,8 +18,6 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
@@ -49,18 +48,20 @@ public class CriteriaPerformanceTest extends BaseEntityManagerFunctionalTestCase
 	@Test
 	public void testFetchEntityWithAssociationsPerformance() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.createQuery( "delete Author" ).executeUpdate();
+			entityManager.createQuery( "delete Book" ).executeUpdate();
 			for ( int i = 0; i < 1000; i++ ) {
 				populateData( entityManager );
 			}
 		} );
+
 		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.setFlushMode( FlushModeType.COMMIT );
+
 			final Instant startTime = Instant.now();
 
 			for ( int i = 0; i < 100_000; i++ ) {
-				final CriteriaBuilder builder = entityManager.getCriteriaBuilder();
-				final CriteriaQuery<Author> query = builder.createQuery( Author.class );
-				query.from( Author.class );
-				final List<Author> authors = entityManager.createQuery( query ).getResultList();
+				final List<Author> authors = entityManager.createQuery( "from Author", Author.class ).getResultList();
 				assertNotNull( authors );
 				authors.forEach( author -> assertFalse( author.books.isEmpty() ) );
 			}
@@ -71,6 +72,33 @@ public class CriteriaPerformanceTest extends BaseEntityManagerFunctionalTestCase
 					Duration.between( startTime, Instant.now() )
 			) );
 		} );
+	}
+
+	@Test
+	public void testFetchEntityWithAssociationsPerformanceSmallTransactions() {
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			entityManager.createQuery( "delete Author" ).executeUpdate();
+			entityManager.createQuery( "delete Book" ).executeUpdate();
+			for ( int i = 0; i < 1000; i++ ) {
+				populateData( entityManager );
+			}
+		} );
+
+		final Instant startTime = Instant.now();
+
+		for ( int i = 0; i < 1_000; i++ ) {
+			doInJPA( this::entityManagerFactory, entityManager -> {
+				final List<Author> authors = entityManager.createQuery( "from Author", Author.class ).getResultList();
+				assertNotNull( authors );
+				authors.forEach( author -> assertFalse( author.books.isEmpty() ) );
+			} );
+		}
+
+		System.out.println( MessageFormat.format(
+				"{0} took {1}",
+				"Query",
+				Duration.between( startTime, Instant.now() )
+		) );
 	}
 
 	public void populateData(EntityManager entityManager) {

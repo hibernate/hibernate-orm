@@ -2117,8 +2117,8 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			final Object[] localNaturalIdValues = getNaturalIdXrefDelegate().removeNaturalIdCrossReference(
 					persister,
 					id,
-					naturalIdValues
-			);
+					naturalIdValues,
+					true);
 
 			return localNaturalIdValues != null ? localNaturalIdValues : naturalIdValues;
 		}
@@ -2235,11 +2235,12 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 
 		@Override
-		public void handleEviction(Object object, EntityPersister persister, Serializable identifier) {
+		public void handleEviction(Object object, EntityPersister persister, Serializable identifier, boolean evictOnNaturalIdCache) {
 			getNaturalIdXrefDelegate().removeNaturalIdCrossReference(
 					persister,
 					identifier,
-					findCachedNaturalId( persister, identifier )
+					findCachedNaturalId( persister, identifier ),
+					evictOnNaturalIdCache
 			);
 		}
 	};

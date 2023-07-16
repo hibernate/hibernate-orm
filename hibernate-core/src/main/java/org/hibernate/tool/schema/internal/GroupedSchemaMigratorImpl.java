@@ -63,6 +63,7 @@ public class GroupedSchemaMigratorImpl extends AbstractSchemaMigrator {
 					tryToCreateSchemas,
 					exportedCatalogs,
 					namespace,
+					sqlStringGenerationContext,
 					targets
 			);
 			final NameSpaceTablesInformation tables = existingDatabase.getTablesInformation( namespace );

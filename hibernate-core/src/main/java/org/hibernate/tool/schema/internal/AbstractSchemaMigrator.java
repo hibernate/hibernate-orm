@@ -535,14 +535,18 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 			Formatter formatter,
 			boolean tryToCreateCatalogs,
 			boolean tryToCreateSchemas,
-			Set<Identifier> exportedCatalogs, Namespace namespace, GenerationTarget[] targets) {
+			Set<Identifier> exportedCatalogs, Namespace namespace,
+			SqlStringGenerationContext context,
+			GenerationTarget[] targets) {
 		if ( tryToCreateCatalogs || tryToCreateSchemas ) {
-			if ( tryToCreateCatalogs ) {
-				final Identifier catalogLogicalName = namespace.getName().getCatalog();
-				final Identifier catalogPhysicalName = namespace.getPhysicalName().getCatalog();
+			Namespace.Name logicalName = namespace.getName();
+			Namespace.Name physicalName = namespace.getPhysicalName();
 
+			if ( tryToCreateCatalogs ) {
+				final Identifier catalogLogicalName = logicalName.getCatalog();
+				final Identifier catalogPhysicalName = context.catalogWithDefault( physicalName.getCatalog() );
 				if ( catalogPhysicalName != null && !exportedCatalogs.contains( catalogLogicalName )
-						&& !existingDatabase.catalogExists( catalogLogicalName ) ) {
+						&& !existingDatabase.catalogExists( catalogPhysicalName ) ) {
 					applySqlStrings(
 							false,
 							dialect.getCreateCatalogCommand( catalogPhysicalName.render( dialect ) ),
@@ -554,16 +558,17 @@ public abstract class AbstractSchemaMigrator implements SchemaMigrator {
 				}
 			}
 
-			if ( tryToCreateSchemas
-					&& namespace.getPhysicalName().getSchema() != null
-					&& !existingDatabase.schemaExists( namespace.getName() ) ) {
-				applySqlStrings(
-						false,
-						dialect.getCreateSchemaCommand( namespace.getPhysicalName().getSchema().render( dialect ) ),
-						formatter,
-						options,
-						targets
-				);
+			if ( tryToCreateSchemas ) {
+				final Identifier schemaPhysicalName = context.schemaWithDefault( physicalName.getSchema() );
+				if ( schemaPhysicalName != null && !existingDatabase.schemaExists( physicalName ) ) {
+					applySqlStrings(
+							false,
+							dialect.getCreateSchemaCommand( schemaPhysicalName.render( dialect ) ),
+							formatter,
+							options,
+							targets
+					);
+				}
 			}
 		}
 	}

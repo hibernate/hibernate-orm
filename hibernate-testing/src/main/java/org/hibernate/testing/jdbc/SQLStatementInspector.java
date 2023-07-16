@@ -19,6 +19,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
+import org.assertj.core.api.Assertions;
+
 /**
  * @author Andrea Boriero
  */
@@ -97,6 +99,18 @@ public class SQLStatementInspector implements StatementInspector {
 	public void assertIsUpdate(int queryNumber) {
 		String query = sqlQueries.get( queryNumber );
 		assertTrue( query.toLowerCase( Locale.ROOT ).startsWith( "update" ) );
+	}
+
+	public void assertNoUpdate() {
+		Assertions.assertThat( sqlQueries )
+				.isNotEmpty()
+				.allSatisfy( sql -> Assertions.assertThat( sql.toLowerCase( Locale.ROOT ) ).doesNotStartWith( "update" ) );
+	}
+
+	public void assertUpdate() {
+		Assertions.assertThat( sqlQueries )
+				.isNotEmpty()
+				.anySatisfy( sql -> Assertions.assertThat( sql.toLowerCase( Locale.ROOT ) ).startsWith( "update" ) );
 	}
 
 	public static SQLStatementInspector extractFromSession(SessionImplementor session) {

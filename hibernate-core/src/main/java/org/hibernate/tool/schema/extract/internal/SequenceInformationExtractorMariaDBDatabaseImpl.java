@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.QualifiedSequenceName;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.tool.schema.extract.spi.ExtractionContext;
@@ -28,7 +29,7 @@ public class SequenceInformationExtractorMariaDBDatabaseImpl extends SequenceInf
 
 	// SQL to get metadata from individual sequence
 	private static final String SQL_SEQUENCE_QUERY =
-			"SELECT '%1$s' as sequence_name, minimum_value, maximum_value, start_value, increment, cache_size FROM %1$s ";
+			"SELECT '%1$s' as sequence_name, minimum_value, maximum_value, start_value, increment, cache_size FROM %2$s ";
 
 	private static final String UNION_ALL =
 			"UNION ALL ";
@@ -56,7 +57,7 @@ public class SequenceInformationExtractorMariaDBDatabaseImpl extends SequenceInf
 				if ( sequenceInfoQueryBuilder.length() > 0 ) {
 					sequenceInfoQueryBuilder.append( UNION_ALL );
 				}
-				sequenceInfoQueryBuilder.append( String.format( SQL_SEQUENCE_QUERY, sequenceName ) );
+				sequenceInfoQueryBuilder.append( String.format( SQL_SEQUENCE_QUERY, sequenceName, Identifier.toIdentifier( sequenceName, false, true ) ) );
 			}
 			return extractionContext.getQueryResults(
 					sequenceInfoQueryBuilder.toString(),

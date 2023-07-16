@@ -417,7 +417,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void addQueryMethod(ExecutableElement method) {
 		final TypeMirror returnType = method.getReturnType();
-		if ( returnType.getKind() == TypeKind.DECLARED ) {
+		final TypeKind kind = returnType.getKind();
+		if ( kind == TypeKind.VOID || kind.isPrimitive() ) {
+			addQueryMethod( method, returnType, null );
+		}
+		else if ( kind == TypeKind.DECLARED ) {
 			final DeclaredType declaredType = ununi((DeclaredType) returnType);
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
@@ -925,6 +929,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								containerType == null ? null : containerType.getQualifiedName().toString(),
 								paramNames,
 								paramTypes,
+								// update/delete/insert query methods must return int or void
+								returnType != null
+										&& returnType.getKind() != TypeKind.DECLARED
+										&& returnType.getKind() != TypeKind.ARRAY,
 								isNative,
 								dao,
 								sessionType[0],
@@ -959,48 +967,75 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 						ProcessorSessionFactory.create( context.getProcessingEnvironment() )
 				);
 		if ( statement != null ) {
-			if ( statement instanceof SqmSelectStatement && returnType != null ) {
-				final SqmSelectStatement<?> select = (SqmSelectStatement<?>) statement;
-				final JpaSelection<?> selection = select.getSelection();
-				boolean returnTypeCorrect;
-				if ( selection.isCompoundSelection() ) {
-					switch ( returnType.getKind() ) {
-						case ARRAY:
-							returnTypeCorrect = checkReturnedArrayType((ArrayType) returnType);
-							break;
-						case DECLARED:
-							if ( !checkConstructorReturn( (DeclaredType) returnType, selection ) ) {
-								context.message(method, mirror, value,
-										"return type '" + returnType
-												+ "' of method has no constructor matching query selection list",
-										Diagnostic.Kind.ERROR);
-							}
-							returnTypeCorrect = true;
-							break;
-						default:
-							returnTypeCorrect = false;
-					}
-				}
-				else if ( selection instanceof JpaEntityJoin ) {
-					final JpaEntityJoin<?> from = (JpaEntityJoin<?>) selection;
-					returnTypeCorrect = checkReturnedEntity( from.getModel(), returnType );
-				}
-				else if ( selection instanceof JpaRoot ) {
-					final JpaRoot<?> from = (JpaRoot<?>) selection;
-					returnTypeCorrect = checkReturnedEntity( from.getModel(), returnType );
-				}
-				else {
-					// TODO: anything more we can do here? e.g. check constructor
-					returnTypeCorrect = true;
-				}
-				if ( !returnTypeCorrect ) {
-					context.message(method, mirror, value,
-							"return type of query did not match return type '" + returnType + "' of method",
-							Diagnostic.Kind.ERROR);
-				}
+			if ( statement instanceof SqmSelectStatement ) {
+				validateSelectHql( method, returnType, mirror, value, (SqmSelectStatement<?>) statement );
+			}
+			else {
+				validateUpdateHql( method, returnType, mirror, value );
 			}
 			for ( SqmParameter<?> param : statement.getSqmParameters() ) {
 				checkParameter( param, paramNames, paramTypes, method, mirror, value);
+			}
+		}
+	}
+
+	private void validateUpdateHql(
+			ExecutableElement method,
+			@Nullable TypeMirror returnType,
+			AnnotationMirror mirror,
+			AnnotationValue value) {
+		if ( returnType == null
+				|| returnType.getKind() != TypeKind.VOID
+				&& returnType.getKind() != TypeKind.INT ) {
+			context.message( method, mirror, value,
+					"return type of mutation query method must be 'int' or 'void'",
+					Diagnostic.Kind.ERROR );
+		}
+	}
+
+	private void validateSelectHql(
+			ExecutableElement method,
+			@Nullable TypeMirror returnType,
+			AnnotationMirror mirror,
+			AnnotationValue value,
+			SqmSelectStatement<?> statement) {
+		if ( returnType != null ) {
+			final JpaSelection<?> selection = statement.getSelection();
+			boolean returnTypeCorrect;
+			if ( selection.isCompoundSelection() ) {
+				switch ( returnType.getKind() ) {
+					case ARRAY:
+						returnTypeCorrect = checkReturnedArrayType( (ArrayType) returnType );
+						break;
+					case DECLARED:
+						if ( !checkConstructorReturn( (DeclaredType) returnType, selection ) ) {
+							context.message(method, mirror, value,
+									"return type '" + returnType
+											+ "' of method has no constructor matching query selection list",
+									Diagnostic.Kind.ERROR);
+						}
+						returnTypeCorrect = true;
+						break;
+					default:
+						returnTypeCorrect = false;
+				}
+			}
+			else if ( selection instanceof JpaEntityJoin ) {
+				final JpaEntityJoin<?> from = (JpaEntityJoin<?>) selection;
+				returnTypeCorrect = checkReturnedEntity( from.getModel(), returnType );
+			}
+			else if ( selection instanceof JpaRoot ) {
+				final JpaRoot<?> from = (JpaRoot<?>) selection;
+				returnTypeCorrect = checkReturnedEntity( from.getModel(), returnType );
+			}
+			else {
+				// TODO: anything more we can do here? e.g. check constructor
+				returnTypeCorrect = true;
+			}
+			if ( !returnTypeCorrect ) {
+				context.message(method, mirror, value,
+						"return type of query did not match return type '" + returnType + "' of method",
+						Diagnostic.Kind.ERROR);
 			}
 		}
 	}

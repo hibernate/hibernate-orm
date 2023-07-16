@@ -6,6 +6,7 @@ import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.annotations.processing.Find;
 import org.hibernate.annotations.processing.HQL;
+import org.hibernate.query.Order;
 
 import java.util.List;
 
@@ -28,5 +29,8 @@ public abstract class Books {
     @HQL("from Book where title like ?2 order by title fetch first ?3 rows only")
     abstract List<Book> findFirstNByTitle(Session session, String title, int N);
 
+    static class Summary { Summary(String title, String publisher, String isbn) {} }
 
+    @HQL("select title, publisher.name, isbn from Book")
+    abstract List<Summary> summarize(Session session, Order order);
 }

@@ -72,6 +72,8 @@ public final class Constants {
 	public static final String HIB_STATELESS_SESSION = "org.hibernate.StatelessSession";
 	public static final String MUTINY_SESSION = "org.hibernate.reactive.mutiny.Mutiny.Session";
 
+	public static final String TUPLE = "jakarta.persistence.Tuple";
+
 	public static final String UNI = "io.smallrye.mutiny.Uni";
 
 	public static final String SINGULAR_ATTRIBUTE = "jakarta.persistence.metamodel.SingularAttribute";

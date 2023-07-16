@@ -21,6 +21,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.ExecutableType;
 import javax.lang.model.type.TypeKind;
@@ -39,9 +40,14 @@ import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.validation.ProcessorSessionFactory;
 import org.hibernate.jpamodelgen.validation.Validation;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.JpaEntityJoin;
+import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import static java.beans.Introspector.decapitalize;
 import static java.lang.Boolean.FALSE;
@@ -922,18 +928,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				putMember( attribute.getPropertyName() + paramTypes, attribute );
 
 				if ( !isNative ) {
-					final SqmStatement<?> statement =
-							Validation.validate(
-									hql,
-									true,
-									new ErrorHandler( context, method, mirror, value, hql ),
-									ProcessorSessionFactory.create( context.getProcessingEnvironment() )
-							);
-					if ( statement != null ) {
-						for ( SqmParameter<?> param : statement.getSqmParameters() ) {
-							checkParameter( param, paramNames, paramTypes, method, mirror, value );
-						}
-					}
+					validateHql( method, returnType, mirror, value, hql, paramNames, paramTypes );
 				}
 				//TODO: for SQL queries check that there is a method parameter for every query parameter
 
@@ -941,6 +936,159 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				checkParameters( method, paramNames, paramTypes, mirror, value, hql );
 			}
 		}
+	}
+
+	private void validateHql(
+			ExecutableElement method,
+			@Nullable TypeMirror returnType,
+			AnnotationMirror mirror,
+			AnnotationValue value,
+			String hql,
+			List<String> paramNames, List<String> paramTypes) {
+		final SqmStatement<?> statement =
+				Validation.validate(
+						hql,
+						true,
+						new ErrorHandler( context, method, mirror, value, hql),
+						ProcessorSessionFactory.create( context.getProcessingEnvironment() )
+				);
+		if ( statement != null ) {
+			if ( statement instanceof SqmSelectStatement && returnType != null ) {
+				final SqmSelectStatement<?> select = (SqmSelectStatement<?>) statement;
+				final JpaSelection<?> selection = select.getSelection();
+				boolean returnTypeCorrect;
+				if ( selection.isCompoundSelection() ) {
+					switch ( returnType.getKind() ) {
+						case ARRAY:
+							returnTypeCorrect = checkReturnedArrayType((ArrayType) returnType);
+							break;
+						case DECLARED:
+							if ( !checkConstructorReturn( (DeclaredType) returnType, selection ) ) {
+								context.message(method, mirror, value,
+										"return type '" + returnType
+												+ "' of method has no constructor matching query selection list",
+										Diagnostic.Kind.ERROR);
+							}
+							returnTypeCorrect = true;
+							break;
+						default:
+							returnTypeCorrect = false;
+					}
+				}
+				else if ( selection instanceof JpaEntityJoin ) {
+					final JpaEntityJoin<?> from = (JpaEntityJoin<?>) selection;
+					returnTypeCorrect = checkReturnedEntity( from.getModel(), returnType );
+				}
+				else if ( selection instanceof JpaRoot ) {
+					final JpaRoot<?> from = (JpaRoot<?>) selection;
+					returnTypeCorrect = checkReturnedEntity( from.getModel(), returnType );
+				}
+				else {
+					// TODO: anything more we can do here? e.g. check constructor
+					returnTypeCorrect = true;
+				}
+				if ( !returnTypeCorrect ) {
+					context.message(method, mirror, value,
+							"return type of query did not match return type '" + returnType + "' of method",
+							Diagnostic.Kind.ERROR);
+				}
+			}
+			for ( SqmParameter<?> param : statement.getSqmParameters() ) {
+				checkParameter( param, paramNames, paramTypes, method, mirror, value);
+			}
+		}
+	}
+
+	private static boolean checkConstructorReturn(DeclaredType returnType, JpaSelection<?> selection) {
+		final List<? extends JpaSelection<?>> selectionItems = selection.getSelectionItems();
+		if ( selectionItems == null ) {
+			// should not occur
+			return true;
+		}
+		final TypeElement typeElement = (TypeElement) returnType.asElement();
+		final Name qualifiedName = typeElement.getQualifiedName();
+		if ( qualifiedName.contentEquals(Constants.TUPLE)
+				|| qualifiedName.contentEquals(Constants.LIST)
+				|| qualifiedName.contentEquals(Constants.MAP) ) {
+			// these are exceptionally allowed
+			return true;
+		}
+		else {
+			// otherwise we need appropriate constructor
+			for ( Element member : typeElement.getEnclosedElements() ) {
+				if ( member.getKind() == ElementKind.CONSTRUCTOR ) {
+					final ExecutableElement constructor = (ExecutableElement) member;
+					if ( constructorMatches( selectionItems, constructor.getParameters() ) ) {
+						return true;
+					}
+				}
+			}
+			return false;
+		}
+	}
+
+	private static boolean constructorMatches(
+			List<? extends JpaSelection<?>> selectionItems,
+			List<? extends VariableElement> parameters) {
+		int itemCount = selectionItems.size();
+		if ( parameters.size() == itemCount ) {
+			for (int i = 0; i < itemCount; i++ ) {
+				final JpaSelection<?> item = selectionItems.get(i);
+				if ( item != null && item.getJavaType() != null ) {
+					if ( !parameterMatches( parameters.get(i), item ) ) {
+						return false;
+					}
+				}
+			}
+			return true;
+		}
+		else {
+			return false;
+		}
+	}
+
+	private static boolean parameterMatches(VariableElement parameter, JpaSelection<?> item) {
+		final Class<?> itemType = item.getJavaType();
+		final TypeMirror parameterType = parameter.asType();
+		final TypeKind kind = parameterType.getKind();
+		final String itemTypeName = itemType.getName();
+		if ( kind == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) parameterType;
+			final TypeElement paramTypeElement = (TypeElement) declaredType.asElement();
+			return paramTypeElement.getQualifiedName().contentEquals(itemTypeName);
+		}
+		else if ( kind.isPrimitive() ) {
+			return parameterType.toString().equals(itemTypeName);
+		}
+		else {
+			return false;
+		}
+	}
+
+	private static boolean checkReturnedArrayType(ArrayType returnType) {
+		final TypeMirror componentType = returnType.getComponentType();
+		if ( componentType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) componentType;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			return typeElement.getQualifiedName().contentEquals("java.lang.Object");
+		}
+		else {
+			return false;
+		}
+	}
+
+	private boolean checkReturnedEntity(EntityDomainType<?> model, TypeMirror returnType) {
+		if ( returnType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) returnType;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			final AnnotationMirror mirror = getAnnotationMirror(typeElement, Constants.ENTITY );
+			if ( mirror != null ) {
+				final Object value = getAnnotationValue( mirror, "name" );
+				final String entityName = value instanceof String ? (String) value : typeElement.getSimpleName().toString();
+				return model.getHibernateEntityName().equals( entityName );
+			}
+		}
+		return false;
 	}
 
 	private void checkParameter(

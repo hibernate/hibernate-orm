@@ -211,6 +211,10 @@ public final class TypeUtils {
 		return null;
 	}
 
+	public static boolean hasAnnotation(Element element, String qualifiedName) {
+		return getAnnotationMirror( element, qualifiedName ) != null;
+	}
+
 	public static @Nullable Object getAnnotationValue(AnnotationMirror annotationMirror, String parameterValue) {
 		assert annotationMirror != null;
 		assert parameterValue != null;

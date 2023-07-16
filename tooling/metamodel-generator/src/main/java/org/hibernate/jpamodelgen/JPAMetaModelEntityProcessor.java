@@ -187,7 +187,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 			final TypeElement typeElement = context.getElementUtils().getTypeElement( elementName );
 			try {
 				final AnnotationMetaEntity metaEntity =
-						AnnotationMetaEntity.create( typeElement, context, false );
+						AnnotationMetaEntity.create( typeElement, context, false, false );
 				context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 				context.removeElementToRedo( elementName );
 			}
@@ -212,7 +212,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 							if ( containsAnnotation( member, HQL, SQL, FIND ) ) {
 								context.logMessage( Diagnostic.Kind.OTHER, "Processing annotated class '" + element + "'" );
 								final AnnotationMetaEntity metaEntity =
-										AnnotationMetaEntity.create( typeElement, context, false );
+										AnnotationMetaEntity.create( typeElement, context, false, false );
 								context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 								break;
 							}
@@ -357,7 +357,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 							= containsAnnotation( element, Constants.EMBEDDABLE )
 							|| containsAnnotation( element, Constants.MAPPED_SUPERCLASS );
 					final AnnotationMetaEntity metaEntity =
-							AnnotationMetaEntity.create( typeElement, context, requiresLazyMemberInitialization );
+							AnnotationMetaEntity.create( typeElement, context, requiresLazyMemberInitialization, true );
 					if ( alreadyExistingMetaEntity != null ) {
 						metaEntity.mergeInMembers( alreadyExistingMetaEntity );
 					}
@@ -370,7 +370,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 	private void handleRootElementAuxiliaryAnnotationMirrors(final Element element) {
 		if ( element instanceof TypeElement ) {
 			final AnnotationMetaEntity metaEntity =
-					AnnotationMetaEntity.create( (TypeElement) element, context, false );
+					AnnotationMetaEntity.create( (TypeElement) element, context, false, false );
 			context.addMetaAuxiliary( metaEntity.getQualifiedName(), metaEntity );
 		}
 		else if ( element instanceof PackageElement ) {

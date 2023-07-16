@@ -655,6 +655,12 @@ public class MetadataContext {
 			final Class<?> metamodelClass = Class.forName( metamodelClassName, true, managedTypeClass.getClassLoader() );
 			// we found the class; so populate it...
 			registerAttributes( metamodelClass, managedType );
+			try {
+				injectField( metamodelClass, "class_", managedType, false );
+			}
+			catch (NoSuchFieldException e) {
+				// ignore
+			}
 		}
 		catch (ClassNotFoundException ignore) {
 			// nothing to do...
@@ -715,25 +721,39 @@ public class MetadataContext {
 					attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED
 							|| attribute.getDeclaringType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE;
 
-			final Field field = allowNonDeclaredFieldReference
-					? metamodelClass.getField( name )
-					: metamodelClass.getDeclaredField( name );
-			try {
-				// should be public anyway, but to be sure...
-				ReflectHelper.ensureAccessibility( field );
-				field.set( null, attribute );
-			}
-			catch (IllegalAccessException e) {
-				// todo : exception type?
-				throw new AssertionFailure(
-						"Unable to inject static metamodel attribute : " + metamodelClass.getName() + '#' + name,
-						e
-				);
-			}
-			catch (IllegalArgumentException e) {
-				// most likely a mismatch in the type we are injecting and the defined field; this represents a
-				// mismatch in how the annotation processor interpreted the attribute and how our metamodel
-				// and/or annotation binder did.
+			injectField( metamodelClass, name, attribute, allowNonDeclaredFieldReference );
+		}
+		catch (NoSuchFieldException e) {
+			LOG.unableToLocateStaticMetamodelField( metamodelClass.getName(), name );
+//			throw new AssertionFailure(
+//					"Unable to locate static metamodel field : " + metamodelClass.getName() + '#' + name
+//			);
+		}
+	}
+
+	private static <X> void injectField(
+			Class<?> metamodelClass, String name, Object model,
+			boolean allowNonDeclaredFieldReference)
+				throws NoSuchFieldException {
+		final Field field = allowNonDeclaredFieldReference
+				? metamodelClass.getField(name)
+				: metamodelClass.getDeclaredField(name);
+		try {
+			// should be public anyway, but to be sure...
+			ReflectHelper.ensureAccessibility( field );
+			field.set( null, model);
+		}
+		catch (IllegalAccessException e) {
+			// todo : exception type?
+			throw new AssertionFailure(
+					"Unable to inject static metamodel attribute : " + metamodelClass.getName() + '#' + name,
+					e
+			);
+		}
+		catch (IllegalArgumentException e) {
+			// most likely a mismatch in the type we are injecting and the defined field; this represents a
+			// mismatch in how the annotation processor interpreted the attribute and how our metamodel
+			// and/or annotation binder did.
 
 //              This is particularly the case as arrays are not handled properly by the StaticMetamodel generator
 
@@ -742,19 +762,12 @@ public class MetadataContext {
 //								+ "; expected type :  " + attribute.getClass().getName()
 //								+ "; encountered type : " + field.getType().getName()
 //				);
-				LOG.illegalArgumentOnStaticMetamodelFieldInjection(
-						metamodelClass.getName(),
-						name,
-						attribute.getClass().getName(),
-						field.getType().getName()
-				);
-			}
-		}
-		catch (NoSuchFieldException e) {
-			LOG.unableToLocateStaticMetamodelField( metamodelClass.getName(), name );
-//			throw new AssertionFailure(
-//					"Unable to locate static metamodel field : " + metamodelClass.getName() + '#' + name
-//			);
+			LOG.illegalArgumentOnStaticMetamodelFieldInjection(
+					metamodelClass.getName(),
+					name,
+					model.getClass().getName(),
+					field.getType().getName()
+			);
 		}
 	}
 

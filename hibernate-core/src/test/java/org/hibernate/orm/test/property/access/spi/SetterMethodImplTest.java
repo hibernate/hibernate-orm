@@ -86,14 +86,14 @@ public class SetterMethodImplTest {
 		Setter runtimeException = setter( TargetThrowingExceptions.class, "runtimeException", String.class );
 		assertThatThrownBy( () -> runtimeException.set( target, "foo" ) )
 				.isInstanceOf( PropertyAccessException.class )
-				.hasMessage( "Exception occurred inside : `" + TargetThrowingExceptions.class.getName() +".runtimeException` (setter)" )
+				.hasMessage( "Exception occurred inside: '" + TargetThrowingExceptions.class.getName() +".runtimeException' (setter)" )
 				.getCause() // Not the root cause, the *direct* cause! We don't want extra wrapping.
 				.isExactlyInstanceOf( RuntimeException.class );
 
 		Setter checkedException = setter( TargetThrowingExceptions.class, "checkedException", String.class );
 		assertThatThrownBy( () -> checkedException.set( target, "foo" ) )
 				.isInstanceOf( PropertyAccessException.class )
-				.hasMessage( "Exception occurred inside : `" + TargetThrowingExceptions.class.getName() +".checkedException` (setter)" )
+				.hasMessage( "Exception occurred inside: '" + TargetThrowingExceptions.class.getName() +".checkedException' (setter)" )
 				.getCause() // Not the root cause, the *direct* cause! We don't want extra wrapping.
 				.isExactlyInstanceOf( Exception.class );
 

@@ -6,7 +6,7 @@
  */
 package org.hibernate;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.qualify;
 
 /**
  * A problem occurred accessing a property of an instance of a
@@ -64,7 +64,7 @@ public class PropertyAccessException extends HibernateException {
 	@Override
 	public String getMessage() {
 		return originalMessage()
-				+ " : `" + StringHelper.qualify( persistentClass.getName(), propertyName )
-				+ ( wasSetter ? "` (setter)" : "` (getter)" );
+				+ ": '" + qualify( persistentClass.getName(), propertyName ) + "'"
+				+ ( wasSetter ? " (setter)" : " (getter)" );
 	}
 }

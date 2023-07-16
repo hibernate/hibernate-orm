@@ -48,7 +48,7 @@ public class NativeQueryConstructorTransformer<T> implements TupleTransformer<T>
 				}
 			}
 			catch (Exception e) {
-				throw new InstantiationException( "Cannot instantiate query result type ", resultClass, e );
+				throw new InstantiationException( "Cannot instantiate query result type", resultClass, e );
 			}
 			if ( constructor == null ) {
 				throw new InstantiationException( "Result class must have a single constructor with exactly "

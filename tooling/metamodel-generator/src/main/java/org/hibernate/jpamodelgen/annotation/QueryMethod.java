@@ -24,6 +24,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	private final String queryString;
 	private final @Nullable String returnTypeName;
 	private final @Nullable String containerTypeName;
+	private final boolean isUpdate;
 	private final boolean isNative;
 
 	public QueryMethod(
@@ -36,6 +37,7 @@ public class QueryMethod extends AbstractQueryMethod {
 			String containerTypeName,
 			List<String> paramNames,
 			List<String> paramTypes,
+			boolean isUpdate,
 			boolean isNative,
 			boolean belongsToDao,
 			String sessionType,
@@ -49,6 +51,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		this.queryString = queryString;
 		this.returnTypeName = returnTypeName;
 		this.containerTypeName = containerTypeName;
+		this.isUpdate = isUpdate;
 		this.isNative = isNative;
 	}
 
@@ -81,7 +84,11 @@ public class QueryMethod extends AbstractQueryMethod {
 		parameters( paramTypes, declaration );
 		declaration
 				.append(" {")
-				.append("\n\treturn ");
+				.append("\n\t");
+		if ( returnTypeName == null || !returnTypeName.equals("void") ) {
+			declaration
+					.append("return ");
+		}
 		if ( isNative && returnTypeName != null && containerTypeName == null
 				&& isUsingEntityManager() ) {
 			// EntityManager.createNativeQuery() does not return TypedQuery,
@@ -95,7 +102,7 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append(isNative ? ".createNativeQuery" : ".createQuery")
 				.append("(")
 				.append(getConstantName());
-		if ( returnTypeName != null ) {
+		if ( returnTypeName != null && !isUpdate ) {
 			declaration
 					.append(", ")
 					.append(annotationMetaEntity.importType(returnTypeName))
@@ -103,7 +110,17 @@ public class QueryMethod extends AbstractQueryMethod {
 		}
 		declaration.append(")");
 		boolean unwrapped = setParameters( paramTypes, declaration );
-		if ( containerTypeName == null) {
+		execute( declaration, unwrapped );
+		declaration.append(";\n}");
+		return declaration.toString();
+	}
+
+	private void execute(StringBuilder declaration, boolean unwrapped) {
+		if ( isUpdate ) {
+			declaration
+					.append("\n\t\t\t.executeUpdate()");
+		}
+		else if ( containerTypeName == null) {
 			declaration
 					.append("\n\t\t\t.getSingleResult()");
 		}
@@ -122,8 +139,6 @@ public class QueryMethod extends AbstractQueryMethod {
 
 			}
 		}
-		declaration.append(";\n}");
-		return declaration.toString();
 	}
 
 	private boolean setParameters(List<String> paramTypes, StringBuilder declaration) {

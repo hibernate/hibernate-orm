@@ -578,6 +578,16 @@ But when there's just one item in the `select` list, the type of that item shoul
 String getBookTitleByIsbn(String isbn);
 ----
 
+A query which returns a selection list may have a query method which repackages the result as a record, as we saw in <<projection-lists>>.
+
+[source,java]
+----
+record IsbnTitle(String isbn, String title) {}
+
+@HQL("select isbn, title from Book")
+List<IsbnTitle> listIsbnAndTitleForEachBook(Page page);
+----
+
 A query method might even return `TypedQuery` or `SelectionQuery`:
 
 [source,java]
@@ -624,6 +634,14 @@ List<Book> books =
 //                     session.clear();
 //                 })
 // ----
+
+An `insert`, `update`, or `delete` query must return `int` or `void`.
+
+[source,java]
+----
+@HQL("delete from Book")
+void deleteAllBooks();
+----
 
 On the other hand, finder methods are currently much more limited.
 A finder method must return an entity type like `Book`, or a list of the entity type, `List<Book>`, for example.

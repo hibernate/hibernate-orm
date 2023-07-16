@@ -85,6 +85,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private final TypeElement element;
 	private final Map<String, MetaAttribute> members;
 	private final Context context;
+	private final boolean managed;
 
 	private AccessTypeInformation entityAccessTypeInfo;
 
@@ -120,15 +121,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private final Map<String,String> memberTypes = new HashMap<>();
 
-	public AnnotationMetaEntity(TypeElement element, Context context) {
+	public AnnotationMetaEntity(TypeElement element, Context context, boolean managed) {
 		this.element = element;
 		this.context = context;
+		this.managed = managed;
 		this.members = new HashMap<>();
 		this.importContext = new ImportContextImpl( getPackageName( context, element ) );
 	}
 
-	public static AnnotationMetaEntity create(TypeElement element, Context context, boolean lazilyInitialised) {
-		final AnnotationMetaEntity annotationMetaEntity = new AnnotationMetaEntity( element, context );
+	public static AnnotationMetaEntity create(TypeElement element, Context context, boolean lazilyInitialised, boolean managed) {
+		final AnnotationMetaEntity annotationMetaEntity = new AnnotationMetaEntity( element, context, managed );
 		if ( !lazilyInitialised ) {
 			annotationMetaEntity.init();
 		}
@@ -282,6 +284,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 
 		findSessionGetter( methodsOfClass );
+
+		if ( managed ) {
+			putMember( "class", new AnnotationMetaType(this) );
+		}
 
 		addPersistentMembers( fieldsOfClass, AccessType.FIELD );
 		addPersistentMembers( gettersAndSettersOfClass, AccessType.PROPERTY );

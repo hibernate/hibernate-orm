@@ -111,7 +111,7 @@ public class AttributePathTests extends BaseSqmUnitTest {
 		final EntityDomainType<OddOne> entity = sessionFactory().getRuntimeMetamodels()
 				.getJpaMetamodel()
 				.entity( OddOne.class );
-		final SingularPersistentAttribute<OddOne, ?> idAttribute = entity.findIdAttribute();
+		final SingularPersistentAttribute<? super OddOne, ?> idAttribute = entity.findIdAttribute();
 
 		final SqmSelectStatement<?> sqmSelectStatement = interpretSelect( "select s.id from OddOne s where s.pk = ?1" );
 

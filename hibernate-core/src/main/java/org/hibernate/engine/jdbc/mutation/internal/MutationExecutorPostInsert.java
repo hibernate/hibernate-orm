@@ -22,6 +22,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.sql.model.EntityMutationOperationGroup;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
@@ -61,8 +62,8 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 
 	protected final JdbcValueBindingsImpl valueBindings;
 
-	public MutationExecutorPostInsert(MutationOperationGroup mutationOperationGroup, SharedSessionContractImplementor session) {
-		this.mutationTarget = (EntityMutationTarget) mutationOperationGroup.getMutationTarget();
+	public MutationExecutorPostInsert(EntityMutationOperationGroup mutationOperationGroup, SharedSessionContractImplementor session) {
+		this.mutationTarget = mutationOperationGroup.getMutationTarget();
 		this.valueBindings = new JdbcValueBindingsImpl(
 				MutationType.INSERT,
 				mutationTarget,
@@ -71,7 +72,7 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 		);
 		this.mutationOperationGroup = mutationOperationGroup;
 
-		final PreparableMutationOperation identityInsertOperation = mutationOperationGroup.getOperation( mutationTarget.getIdentifierTableName() );
+		final PreparableMutationOperation identityInsertOperation = (PreparableMutationOperation) mutationOperationGroup.getOperation( mutationTarget.getIdentifierTableName() );
 		this.identityInsertStatementDetails = ModelMutationHelper.identityPreparation(
 				identityInsertOperation,
 				session
@@ -79,9 +80,8 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 
 		List<PreparableMutationOperation> secondaryTableMutations = null;
 
-		final List<MutationOperation> operations = mutationOperationGroup.getOperations();
-		for ( int i = 0; i < operations.size(); i++ ) {
-			final MutationOperation operation = operations.get( i );
+		for ( int i = 0; i < mutationOperationGroup.getNumberOfOperations(); i++ ) {
+			final MutationOperation operation = mutationOperationGroup.getOperation( i );
 
 			if ( operation.getTableDetails().isIdentifierTable() ) {
 				// the identifier table is handled via `identityInsertStatementDetails`

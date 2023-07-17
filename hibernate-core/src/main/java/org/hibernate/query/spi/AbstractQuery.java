@@ -11,16 +11,18 @@ import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
-import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -29,6 +31,7 @@ import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.graph.GraphSemantic;
 import org.hibernate.internal.EntityManagerMessageLogger;
 import org.hibernate.internal.HEMLogging;
 import org.hibernate.jpa.AvailableHints;
@@ -36,6 +39,7 @@ import org.hibernate.jpa.internal.util.FlushModeTypeHelper;
 import org.hibernate.jpa.internal.util.LockModeTypeHelper;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.Order;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryParameter;
 import org.hibernate.query.ResultListTransformer;
@@ -117,10 +121,27 @@ public abstract class AbstractQuery<R>
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// QueryOptions handling
 
-
 	@Override
 	public QueryImplementor<R> setHint(String hintName, Object value) {
 		super.setHint( hintName, value );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
+		super.setEntityGraph( graph, semantic );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> enableFetchProfile(String profileName) {
+		super.enableFetchProfile( profileName );
+		return this;
+	}
+
+	@Override
+	public QueryImplementor<R> disableFetchProfile(String profileName) {
+		super.disableFetchProfile( profileName );
 		return this;
 	}
 
@@ -278,27 +299,12 @@ public abstract class AbstractQuery<R>
 	}
 
 	@Override
-	public Query<R> ascending(SingularAttribute<? super R, ?> attribute) {
+	public Query<R> setOrder(List<Order<? super R>> orders) {
 		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
 	}
 
 	@Override
-	public Query<R> descending(SingularAttribute<? super R, ?> attribute) {
-		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
-	}
-
-	@Override
-	public Query<R> ascending(int element) {
-		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
-	}
-
-	@Override
-	public Query<R> descending(int element) {
-		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
-	}
-
-	@Override
-	public Query<R> unordered() {
+	public Query<R> setOrder(Order<? super R> order) {
 		throw new UnsupportedOperationException( "Should be implemented by " + this.getClass().getName() );
 	}
 
@@ -638,7 +644,7 @@ public abstract class AbstractQuery<R>
 	@Override
 	public int executeUpdate() throws HibernateException {
 		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
-		beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
 		try {
 			final int result = doExecuteUpdate();
@@ -655,7 +661,7 @@ public abstract class AbstractQuery<R>
 			throw getSession().getExceptionConverter().convert( e );
 		}
 		finally {
-			afterQuery( success );
+			afterQueryHandlingFetchProfiles( success, fetchProfiles );
 		}
 	}
 

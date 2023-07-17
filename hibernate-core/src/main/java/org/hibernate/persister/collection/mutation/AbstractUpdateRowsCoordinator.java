@@ -7,6 +7,7 @@
 package org.hibernate.persister.collection.mutation;
 
 import org.hibernate.collection.spi.PersistentCollection;
+import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
@@ -18,10 +19,12 @@ import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER
 public abstract class AbstractUpdateRowsCoordinator implements UpdateRowsCoordinator {
 	private final CollectionMutationTarget mutationTarget;
 	private final SessionFactoryImplementor sessionFactory;
+	protected final MutationExecutorService mutationExecutorService;
 
 	public AbstractUpdateRowsCoordinator(CollectionMutationTarget mutationTarget, SessionFactoryImplementor sessionFactory) {
 		this.mutationTarget = mutationTarget;
 		this.sessionFactory = sessionFactory;
+		this.mutationExecutorService = sessionFactory.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
 	@Override

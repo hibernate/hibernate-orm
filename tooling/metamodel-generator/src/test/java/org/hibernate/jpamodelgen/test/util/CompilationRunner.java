@@ -6,7 +6,6 @@
  */
 package org.hibernate.jpamodelgen.test.util;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -35,10 +34,10 @@ public class CompilationRunner extends BlockJUnit4ClassRunner {
 
 	public CompilationRunner(Class<?> clazz) throws InitializationError {
 		super( clazz );
-		this.testEntities = new ArrayList<Class<?>>();
-		this.preCompileEntities = new ArrayList<Class<?>>();
-		this.mappingFiles = new ArrayList<String>();
-		this.processorOptions = new HashMap<String, String>();
+		this.testEntities = new ArrayList<>();
+		this.preCompileEntities = new ArrayList<>();
+		this.mappingFiles = new ArrayList<>();
+		this.processorOptions = new HashMap<>();
 		Package pkg = clazz.getPackage();
 		this.packageName = pkg != null ? pkg.getName() : null;
 

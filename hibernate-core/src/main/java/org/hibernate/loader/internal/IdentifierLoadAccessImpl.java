@@ -6,17 +6,21 @@
  */
 package org.hibernate.loader.internal;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
 import org.hibernate.IdentifierLoadAccess;
 import org.hibernate.LockOptions;
 import org.hibernate.ObjectNotFoundException;
+import org.hibernate.UnknownProfileException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.event.spi.EventSource;
@@ -46,6 +50,8 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	private Boolean readOnly;
 	private RootGraphImplementor<T> rootGraph;
 	private GraphSemantic graphSemantic;
+	private Set<String> enabledFetchProfiles;
+	private Set<String> disabledFetchProfiles;
 
 	public IdentifierLoadAccessImpl(LoadAccessContext context, EntityPersister entityPersister) {
 		this.context = context;
@@ -97,22 +103,17 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 		}
 
 		try {
+			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
+			final HashSet<String> fetchProfiles =
+					influencers.adjustFetchProfiles( disabledFetchProfiles, enabledFetchProfiles );
 			final EffectiveEntityGraph effectiveEntityGraph =
-					session.getLoadQueryInfluencers().getEffectiveEntityGraph();
-			if ( graphSemantic != null ) {
-				if ( rootGraph == null ) {
-					throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
-				}
-				effectiveEntityGraph.applyGraph( rootGraph, graphSemantic );
-			}
-
+					session.getLoadQueryInfluencers().applyEntityGraph( rootGraph, graphSemantic);
 			try {
 				return executor.get();
 			}
 			finally {
-				if ( graphSemantic != null ) {
-					effectiveEntityGraph.clear();
-				}
+				effectiveEntityGraph.clear();
+				influencers.setEnabledFetchProfileNames( fetchProfiles );
 			}
 		}
 		finally {
@@ -173,7 +174,7 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 			String entityName,
 			Boolean readOnly) {
 		if ( lockOptions != null ) {
-			final LoadEvent event = new LoadEvent(id, entityName, lockOptions, eventSource, readOnly);
+			final LoadEvent event = new LoadEvent( id, entityName, lockOptions, eventSource, readOnly );
 			context.fireLoad( event, LoadEventListener.LOAD );
 			return event.getResult();
 		}
@@ -266,5 +267,32 @@ public class IdentifierLoadAccessImpl<T> implements IdentifierLoadAccess<T>, Jav
 	@Override
 	public TypeConfiguration getTypeConfiguration() {
 		return context.getSession().getSessionFactory().getTypeConfiguration();
+	}
+
+	@Override
+	public IdentifierLoadAccess<T> enableFetchProfile(String profileName) {
+		if ( !context.getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
+			throw new UnknownProfileException( profileName );
+		}
+		if ( enabledFetchProfiles == null ) {
+			enabledFetchProfiles = new HashSet<>();
+		}
+		enabledFetchProfiles.add( profileName );
+		if ( disabledFetchProfiles != null ) {
+			disabledFetchProfiles.remove( profileName );
+		}
+		return this;
+	}
+
+	@Override
+	public IdentifierLoadAccess<T> disableFetchProfile(String profileName) {
+		if ( disabledFetchProfiles == null ) {
+			disabledFetchProfiles = new HashSet<>();
+		}
+		disabledFetchProfiles.add( profileName );
+		if ( enabledFetchProfiles != null ) {
+			enabledFetchProfiles.remove( profileName );
+		}
+		return this;
 	}
 }

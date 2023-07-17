@@ -134,7 +134,7 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.InterpretationException;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -562,7 +562,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
 			if ( appliedGraph != null && appliedGraph.getSemantic() != null && appliedGraph.getGraph() != null ) {
 				this.entityGraphTraversalState = new StandardEntityGraphTraversalStateImpl(
-						appliedGraph.getSemantic(), appliedGraph.getGraph() );
+						appliedGraph.getSemantic(), appliedGraph.getGraph(),
+						creationContext.getSessionFactory().getJpaMetamodel()
+				);
 			}
 			else {
 				this.entityGraphTraversalState = null;
@@ -2516,7 +2518,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		return new SortSpecification(
 				expression,
-				sortSpecification.getSortOrder(),
+				sortSpecification.getSortDirection(),
 				sortSpecification.getNullPrecedence()
 		);
 	}
@@ -4799,7 +4801,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								subQuerySpec.addSortSpecification(
 										new SortSpecification(
 												columnReference,
-												max ? SortOrder.DESCENDING : SortOrder.ASCENDING
+												max ? SortDirection.DESCENDING : SortDirection.ASCENDING
 										)
 								);
 							}
@@ -5077,7 +5079,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 
 			final DiscriminatorPathInterpretation<?> typeExpression = new DiscriminatorPathInterpretation<>(
-					tableGroup.getNavigablePath().append( EntityDiscriminatorMapping.ROLE_NAME ),
+					tableGroup.getNavigablePath().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 					entityMapping,
 					tableGroup,
 					this
@@ -5347,10 +5349,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					);
 				}
 				else {
-					throw new SqlTreeCreationException(
+					throw new SemanticException(
 							String.format(
 									Locale.ROOT,
-									"QueryLiteral type [`%s`] did not match domain Java-type [`%s`] nor JDBC Java-type [`%s`]",
+									"Literal type '%s' did not match domain type '%s' nor converted type '%s'",
 									value.getClass(),
 									valueConverter.getDomainJavaType().getJavaTypeClass().getName(),
 									valueConverter.getRelationalJavaType().getJavaTypeClass().getName()
@@ -7882,8 +7884,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //					if ( fetchTiming != FetchTiming.IMMEDIATE || fetchable.incrementFetchDepth() ) {
 						final String fetchableRole = fetchable.getNavigableRole().getFullPath();
 
-						for ( String enabledFetchProfileName : getLoadQueryInfluencers()
-								.getEnabledFetchProfileNames() ) {
+						for ( String enabledFetchProfileName :
+								getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
 							final FetchProfile enabledFetchProfile = getCreationContext()
 									.getSessionFactory()
 									.getFetchProfile( enabledFetchProfileName );
@@ -8256,7 +8258,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					offset = countIndividualSelections( ( (SqmDynamicInstantiation<?>) selectableNode ).getArguments() ) - 1;
 				}
 				else if ( selectableNode instanceof SqmJpaCompoundSelection<?> ) {
-					offset += ( (SqmJpaCompoundSelection<?>) selectableNode ).getSelectionItems().size() - 1;
+					for ( SqmSelectableNode<?> node : ( (SqmJpaCompoundSelection<?>) selectableNode ).getSelectionItems() ) {
+						if ( node instanceof SqmDynamicInstantiation<?> ) {
+							offset += countIndividualSelections( ( (SqmDynamicInstantiation<?>) node ).getArguments() ) ;
+						}
+						else {
+							offset += 1;
+						}
+					}
+					offset -= 1;
 				}
 			}
 			return offset + selections.size();

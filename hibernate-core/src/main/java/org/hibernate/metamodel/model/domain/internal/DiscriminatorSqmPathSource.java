@@ -6,14 +6,15 @@
  */
 package org.hibernate.metamodel.model.domain.internal;
 
-import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.ReturnableType;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+
+import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRIBUTE;
+import static org.hibernate.metamodel.mapping.EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME;
 
 /**
  * SqmPathSource implementation for entity discriminator
@@ -29,21 +30,29 @@ public class DiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 			DomainType<D> discriminatorValueType,
 			EntityDomainType<?> entityDomainType,
 			EntityMappingType entityMapping) {
-		super( EntityDiscriminatorMapping.ROLE_NAME, null, discriminatorValueType, BindableType.SINGULAR_ATTRIBUTE );
+		super( DISCRIMINATOR_ROLE_NAME, null, discriminatorValueType, SINGULAR_ATTRIBUTE );
 		this.entityDomainType = entityDomainType;
 		this.entityMapping = entityMapping;
 	}
 
+	public EntityDomainType<?> getEntityDomainType() {
+		return entityDomainType;
+	}
+
+	public EntityMappingType getEntityMapping() {
+		return entityMapping;
+	}
+
 	@Override
 	public SqmPath<D> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
-		final NavigablePath navigablePath;
-		if ( intermediatePathSource == null ) {
-			navigablePath = lhs.getNavigablePath().append( getPathName() );
-		}
-		else {
-			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
-		}
-		return new EntityDiscriminatorSqmPath( navigablePath, pathModel, lhs, entityDomainType, entityMapping, lhs.nodeBuilder() );
+		return new EntityDiscriminatorSqmPath<>(
+				PathHelper.append( lhs, this, intermediatePathSource ),
+				pathModel,
+				lhs,
+				entityDomainType,
+				entityMapping,
+				lhs.nodeBuilder()
+		);
 	}
 
 	@Override

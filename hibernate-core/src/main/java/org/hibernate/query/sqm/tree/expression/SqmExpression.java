@@ -36,7 +36,7 @@ import static java.util.Arrays.asList;
 public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T> {
 	/**
 	 * The expression's type.
-	 *
+	 * <p>
 	 * Can change as a result of calls to {@link #applyInferableType}
 	 */
 	@Override
@@ -91,6 +91,12 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 
 	@Override
 	SqmPredicate isNotNull();
+
+	@Override
+	SqmPredicate equalTo(Expression<T> that);
+
+	@Override
+	SqmPredicate equalTo(T that);
 
 	@Override
 	SqmPredicate in(Object... values);

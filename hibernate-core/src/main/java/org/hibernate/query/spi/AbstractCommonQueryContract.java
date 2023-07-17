@@ -401,7 +401,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		final String entityName = runtimeMetamodels.getImportedName( graphString.substring( 0, separatorPosition ).trim() );
 		final String graphNodes = graphString.substring( separatorPosition + 1, terminatorPosition );
 
-		final RootGraphImpl<?> rootGraph = new RootGraphImpl<>( null, jpaMetamodel.entity( entityName ), jpaMetamodel );
+		final RootGraphImpl<?> rootGraph = new RootGraphImpl<>( null, jpaMetamodel.entity( entityName ) );
 		GraphParser.parseInto( (EntityGraph<?>) rootGraph, graphNodes, getSession().getSessionFactory() );
 		applyGraph( rootGraph, graphSemantic );
 	}

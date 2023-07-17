@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.LockMode;
@@ -28,7 +27,6 @@ import org.hibernate.query.named.NamedQueryMemento;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.SqmQuery;
-import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.transform.ResultTransformer;
 
@@ -68,16 +66,16 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	SqmQueryImplementor<R> setReadOnly(boolean readOnly);
 
 	@Override
-	SqmQueryImplementor<R> applyGraph(RootGraph graph, GraphSemantic semantic);
+	SqmQueryImplementor<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic);
 
 	@Override
-	default SqmQueryImplementor<R> applyFetchGraph(RootGraph graph) {
+	default SqmQueryImplementor<R> applyFetchGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		QueryImplementor.super.applyFetchGraph( graph );
 		return this;
 	}
 
 	@Override
-	default SqmQueryImplementor<R> applyLoadGraph(RootGraph graph) {
+	default SqmQueryImplementor<R> applyLoadGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		QueryImplementor.super.applyLoadGraph( graph );
 		return this;
 	}
@@ -98,7 +96,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	<T> SqmQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer);
 
 	@Override
-	SqmQueryImplementor<R> setResultListTransformer(ResultListTransformer transformer);
+	SqmQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
 	@Override
 	@Deprecated(since = "5.2")
@@ -123,37 +121,6 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 
 	@Override
 	SqmQueryImplementor<R> setLockMode(LockModeType lockMode);
-
-	@Override
-	default SqmQueryImplementor<R> ascending(SingularAttribute<? super R, ?> attribute) {
-		addOrdering( attribute, SortOrder.ASCENDING );
-		return this;
-	}
-
-	@Override
-	default SqmQueryImplementor<R> descending(SingularAttribute<? super R, ?> attribute) {
-		addOrdering( attribute, SortOrder.DESCENDING );
-		return this;
-	}
-
-	@Override
-	default SqmQueryImplementor<R> ascending(int element) {
-		addOrdering( element, SortOrder.ASCENDING );
-		return this;
-	}
-
-	@Override
-	default SqmQueryImplementor<R> descending(int element) {
-		addOrdering( element, SortOrder.DESCENDING );
-		return this;
-	}
-
-	SqmQueryImplementor<R> addOrdering(SingularAttribute<? super R, ?> attribute, SortOrder order);
-
-	SqmQueryImplementor<R> addOrdering(int element, SortOrder order);
-
-	@Override
-	SqmQueryImplementor<R> unordered();
 
 	@Override
 	SqmQueryImplementor<R> setParameter(String name, Object value);
@@ -210,7 +177,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	SqmQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	SqmQueryImplementor<R> setParameterList(String name, Collection values);
+	SqmQueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> SqmQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
@@ -267,5 +234,5 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	SqmQueryImplementor<R> setProperties(Object bean);
 
 	@Override
-	SqmQueryImplementor<R> setProperties(Map bean);
+	SqmQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 }

@@ -77,7 +77,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 
 		final PropertyAccess propertyAccess = PropertyAccessStrategyMapImpl.INSTANCE.buildPropertyAccess(
 				null,
-				EntityIdentifierMapping.ROLE_LOCAL_NAME,
+				EntityIdentifierMapping.ID_ROLE_NAME,
 				true );
 		final AttributeMetadata attributeMetadata = MappingModelCreationHelper.getAttributeMetadata(
 				propertyAccess
@@ -86,7 +86,7 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		embedded = new EmbeddedAttributeMapping(
 				NavigablePath.IDENTIFIER_MAPPER_PROPERTY,
 				identifiedEntityMapping.getNavigableRole()
-						.append( EntityIdentifierMapping.ROLE_LOCAL_NAME )
+						.append( EntityIdentifierMapping.ID_ROLE_NAME )
 						.append( NavigablePath.IDENTIFIER_MAPPER_PROPERTY ),
 				-1,
 				-1,

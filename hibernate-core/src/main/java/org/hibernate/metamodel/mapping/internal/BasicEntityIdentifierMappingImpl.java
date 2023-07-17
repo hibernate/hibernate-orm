@@ -113,7 +113,7 @@ public class BasicEntityIdentifierMappingImpl implements BasicEntityIdentifierMa
 		propertyAccess = entityPersister.getRepresentationStrategy()
 				.resolvePropertyAccess( bootEntityDescriptor.getIdentifierProperty() );
 
-		idRole = entityPersister.getNavigableRole().append( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		idRole = entityPersister.getNavigableRole().append( EntityIdentifierMapping.ID_ROLE_NAME );
 		sessionFactory = creationProcess.getCreationContext().getSessionFactory();
 
 		unsavedStrategy = UnsavedValueFactory.getUnsavedIdentifierValue(

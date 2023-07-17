@@ -14,12 +14,12 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import jakarta.persistence.criteria.Order;
-import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.EntityGraph;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -43,15 +43,15 @@ import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
-import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.IllegalSelectQueryException;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
+import org.hibernate.query.Order;
 import org.hibernate.query.Query;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
@@ -79,9 +79,6 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SortOrder;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -91,7 +88,6 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -103,7 +99,6 @@ import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
-import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.results.internal.TupleMetadata;
@@ -116,9 +111,8 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
-import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
@@ -134,8 +128,9 @@ import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOption
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.generateNonSelectKey;
 import static org.hibernate.query.sqm.internal.SqmUtil.isSelect;
+import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
 import static org.hibernate.query.sqm.internal.SqmUtil.verifyIsNonSelectStatement;
-import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
+import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
 
 /**
  * {@link Query} implementation based on an SQM
@@ -357,48 +352,10 @@ public class QuerySqmImpl<R>
 			final SqmAssignment<?> assignment = assignments.get( i );
 			final SqmPath<?> targetPath = assignment.getTargetPath();
 			final SqmExpression<?> expression = assignment.getValue();
-			if ( !isAssignable( targetPath, expression ) ) {
-				throw new SemanticException(
-						String.format(
-								"Cannot assign expression of type '%s' to target path '%s' of type '%s'",
-								expression.getNodeJavaType().getJavaType().getTypeName(),
-								targetPath.toHqlString(),
-								targetPath.getNodeJavaType().getJavaType().getTypeName()
-						),
-						hqlString,
-						null
-				);
-			}
+			assertAssignable( hqlString, targetPath, expression, getSessionFactory() );
 		}
 	}
 
-	/**
-	 * @see SqmCriteriaNodeBuilder#areTypesComparable(SqmExpressible, SqmExpressible)
-	 */
-	public static boolean isAssignable(SqmPath<?> targetPath, SqmExpression<?> expression) {
-		DomainType<?> lhsDomainType = targetPath.getExpressible().getSqmType();
-		DomainType<?> rhsDomainType = expression.getExpressible().getSqmType();
-		if ( lhsDomainType instanceof JdbcMapping && rhsDomainType instanceof JdbcMapping ) {
-			JdbcType lhsJdbcType = ((JdbcMapping) lhsDomainType).getJdbcType();
-			JdbcType rhsJdbcType = ((JdbcMapping) rhsDomainType).getJdbcType();
-			if ( lhsJdbcType.getJdbcTypeCode() == rhsJdbcType.getJdbcTypeCode()
-					|| lhsJdbcType.isStringLike() && rhsJdbcType.isStringLike()
-					|| lhsJdbcType.isInteger() && rhsJdbcType.isInteger() ) {
-				return true;
-			}
-		}
-
-		JavaType<?> targetType = targetPath.getNodeJavaType();
-		JavaType<?> assignedType = expression.getNodeJavaType();
-		return targetType == assignedType
-			// If we don't know the java types, let's just be lenient
-			|| isUnknown( targetType)
-			|| isUnknown( assignedType )
-			// Assume we can coerce one to another
-			|| targetType.isWider( assignedType )
-			// Enum assignment, other strange user type mappings
-			|| targetType.getJavaTypeClass().isAssignableFrom( assignedType.getJavaTypeClass() );
-	}
 
 	private void verifyInsertTypesMatch(String hqlString, SqmInsertStatement<R> sqmStatement) {
 		final List<SqmPath<?>> insertionTargetPaths = sqmStatement.getInsertionTargetPaths();
@@ -439,21 +396,23 @@ public class QuerySqmImpl<R>
 		}
 		for ( int i = 0; i < expressionsSize; i++ ) {
 			final SqmTypedNode<?> expression = expressions.get( i );
-			if ( expression.getNodeJavaType() == null ) {
-				continue;
-			}
-			if ( insertionTargetPaths.get( i ).getJavaTypeDescriptor() != expression.getNodeJavaType() ) {
-				throw new SemanticException(
-						String.format(
-								"Expected insert attribute type [%s] did not match Query selection type [%s] at selection index [%d]",
-								insertionTargetPaths.get( i ).getJavaTypeDescriptor().getJavaType().getTypeName(),
-								expression.getNodeJavaType().getJavaType().getTypeName(),
-								i
-						),
-						hqlString,
-						null
-				);
-			}
+			final SqmPath<?> targetPath = insertionTargetPaths.get(i);
+			assertAssignable( hqlString, targetPath, expression, getSessionFactory() );
+//			if ( expression.getNodeJavaType() == null ) {
+//				continue;
+//			}
+//			if ( insertionTargetPaths.get( i ).getJavaTypeDescriptor() != expression.getNodeJavaType() ) {
+//				throw new SemanticException(
+//						String.format(
+//								"Expected insert attribute type [%s] did not match Query selection type [%s] at selection index [%d]",
+//								insertionTargetPaths.get( i ).getJavaTypeDescriptor().getJavaType().getTypeName(),
+//								expression.getNodeJavaType().getJavaType().getTypeName(),
+//								i
+//						),
+//						hqlString,
+//						null
+//				);
+//			}
 		}
 	}
 
@@ -710,7 +669,7 @@ public class QuerySqmImpl<R>
 	public int executeUpdate() {
 		verifyUpdate();
 		getSession().checkTransactionNeededForUpdateOperation( "Executing an update/delete query" );
-		beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
 		try {
 			final int result = doExecuteUpdate();
@@ -727,7 +686,7 @@ public class QuerySqmImpl<R>
 			throw getSession().getExceptionConverter().convert( e );
 		}
 		finally {
-			afterQuery( success );
+			afterQueryHandlingFetchProfiles( success, fetchProfiles );
 		}
 	}
 
@@ -879,7 +838,7 @@ public class QuerySqmImpl<R>
 		final EntityIdentifierMapping identifierMapping = entityDescriptor.getIdentifierMapping();
 		final String partName = identifierMapping instanceof SingleAttributeIdentifierMapping
 				? identifierMapping.getAttributeName()
-				: EntityIdentifierMapping.ROLE_LOCAL_NAME;
+				: EntityIdentifierMapping.ID_ROLE_NAME;
 		for ( SqmPath<?> insertionTargetPath : sqmInsert.getInsertionTargetPaths() ) {
 			final SqmPath<?> lhs = insertionTargetPath.getLhs();
 			if ( !( lhs instanceof SqmRoot<?> ) ) {
@@ -911,11 +870,6 @@ public class QuerySqmImpl<R>
 	public SqmQueryImplementor<R> addQueryHint(String hint) {
 		getQueryOptions().addDatabaseHint( hint );
 		return this;
-	}
-
-	@Override
-	public LockOptions getLockOptions() {
-		return getQueryOptions().getLockOptions();
 	}
 
 	@Override
@@ -993,70 +947,33 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
-	public SqmQueryImplementor<R> addOrdering(SingularAttribute<? super R, ?> attribute, SortOrder order) {
+	public Query<R> setOrder(List<Order<? super R>> orderList) {
 		if ( sqm instanceof SqmSelectStatement ) {
 			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
-			NodeBuilder nodeBuilder = sqm.nodeBuilder();
 			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
-			List<Order> orders = new ArrayList<>( select.getOrderList() );
-			select.getQuerySpec().getRoots().forEach( root -> {
-				@SuppressWarnings("unchecked")
-				SqmRoot<R> singleRoot = (SqmRoot<R>) root;
-				SqmPath<?> ref = singleRoot.get( attribute );
-				orders.add( nodeBuilder.sort( ref, order) );
-
-			} );
-			select.orderBy( orders );
+			select.orderBy( orderList.stream().map( order -> sortSpecification( select, order ) ).collect( toList() ) );
 			return this;
 		}
 		else {
-			throw new IllegalStateException( "Not a select query" );
+			throw new IllegalSelectQueryException( "Not a select query" );
 		}
 	}
 
 	@Override
-	public SqmQueryImplementor<R> addOrdering(int element, SortOrder order) {
+	public Query<R> setOrder(Order<? super R> order) {
 		if ( sqm instanceof SqmSelectStatement ) {
 			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
 			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
-			int size = select.getSelection().getSelectionItems().size();
-			if ( element < 1) {
-				throw new IllegalArgumentException("Cannot order by element " + element + " (the first select item is element 1)");
-			}
-			if ( element > size) {
-				throw new IllegalArgumentException("Cannot order by element " + element + " (there are " + size + " select items)");
-			}
-			NodeBuilder nodeBuilder = sqm.nodeBuilder();
-			List<Order> orders = new ArrayList<>( select.getOrderList() );
-			orders.add( new SqmSortSpecification(
-					new SqmAliasedNodeRef(
-						element,
-						nodeBuilder.getTypeConfiguration().standardBasicTypeForJavaType( Integer.class ),
-						nodeBuilder
-					),
-					order
-			) );
-			select.orderBy( orders );
+			select.orderBy( sortSpecification( select, order ) );
 			return this;
 		}
 		else {
-			throw new IllegalStateException( "Not a select query" );
+			throw new IllegalSelectQueryException( "Not a select query" );
 		}
 	}
 
 	@Override
-	public SqmQueryImplementor<R> unordered() {
-		if ( sqm instanceof SqmSelectStatement ) {
-			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
-			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
-			select.getQueryPart().setOrderByClause( null );
-
-		}
-		return this;
-	}
-
-	@Override
-	public List<Order> getOrder() {
+	public List<jakarta.persistence.criteria.Order> getOrder() {
 		return sqm instanceof SqmSelectStatement
 				? ((SqmSelectStatement<R>) sqm).getOrderList()
 				: null;
@@ -1097,6 +1014,24 @@ public class QuerySqmImpl<R>
 	@Override
 	public SqmQueryImplementor<R> setHint(String hintName, Object value) {
 		applyHint( hintName, value );
+		return this;
+	}
+
+	@Override
+	public Query<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
+		super.setEntityGraph( graph, semantic );
+		return this;
+	}
+
+	@Override
+	public Query<R> enableFetchProfile(String profileName) {
+		super.enableFetchProfile( profileName );
+		return this;
+	}
+
+	@Override
+	public Query<R> disableFetchProfile(String profileName) {
+		super.disableFetchProfile( profileName );
 		return this;
 	}
 

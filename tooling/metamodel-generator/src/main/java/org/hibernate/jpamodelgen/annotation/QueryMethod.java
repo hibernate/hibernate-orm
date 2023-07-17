@@ -8,30 +8,27 @@ package org.hibernate.jpamodelgen.annotation;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.jpamodelgen.model.MetaAttribute;
-import org.hibernate.jpamodelgen.model.Metamodel;
+import org.hibernate.jpamodelgen.util.Constants;
+import org.hibernate.query.Order;
+import org.hibernate.query.Page;
 
 import java.util.List;
 
 import static java.util.stream.Collectors.toList;
-import static org.hibernate.internal.util.StringHelper.join;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
  * @author Gavin King
  */
-public class QueryMethod implements MetaAttribute {
-	private final Metamodel annotationMetaEntity;
-	private final String methodName;
+public class QueryMethod extends AbstractQueryMethod {
 	private final String queryString;
 	private final @Nullable String returnTypeName;
 	private final @Nullable String containerTypeName;
-	private final List<String> paramNames;
-	private final List<String> paramTypes;
+	private final boolean isUpdate;
 	private final boolean isNative;
 
 	public QueryMethod(
-			Metamodel annotationMetaEntity,
+			AnnotationMetaEntity annotationMetaEntity,
 			String methodName,
 			String queryString,
 			@Nullable
@@ -40,14 +37,21 @@ public class QueryMethod implements MetaAttribute {
 			String containerTypeName,
 			List<String> paramNames,
 			List<String> paramTypes,
-			boolean isNative) {
-		this.annotationMetaEntity = annotationMetaEntity;
-		this.methodName = methodName;
+			boolean isUpdate,
+			boolean isNative,
+			boolean belongsToDao,
+			String sessionType,
+			String sessionName,
+			boolean addNonnullAnnotation) {
+		super( annotationMetaEntity,
+				methodName,
+				paramNames, paramTypes, returnTypeName,
+				sessionType, sessionName,
+				belongsToDao, addNonnullAnnotation );
 		this.queryString = queryString;
 		this.returnTypeName = returnTypeName;
 		this.containerTypeName = containerTypeName;
-		this.paramNames = paramNames;
-		this.paramTypes = paramTypes;
+		this.isUpdate = isUpdate;
 		this.isNative = isNative;
 	}
 
@@ -57,95 +61,250 @@ public class QueryMethod implements MetaAttribute {
 	}
 
 	@Override
-	public String getAttributeDeclarationString() {
-		StringBuilder declaration = new StringBuilder();
-		declaration
-				.append("\n/**\n * @see ")
-				.append(annotationMetaEntity.getQualifiedName())
-				.append("#")
-				.append(methodName)
-				.append("(")
-				.append(join(",", paramTypes.stream().map(annotationMetaEntity::importType).toArray()))
-				.append(")")
-				.append("\n **/\n")
-				.append("public static ");
-		StringBuilder type = new StringBuilder();
-		if (containerTypeName != null) {
-			type.append(annotationMetaEntity.importType(containerTypeName));
-			if (returnTypeName != null) {
-				type.append("<").append(annotationMetaEntity.importType(returnTypeName)).append(">");
-			}
-		}
-		else if (returnTypeName != null)  {
-			type.append(annotationMetaEntity.importType(returnTypeName));
-		}
-		declaration
-				.append(type)
-				.append(" ")
-				.append(methodName)
-				.append("(")
-				.append(annotationMetaEntity.importType("jakarta.persistence.EntityManager"))
-				.append(" entityManager");
+	public boolean hasStringAttribute() {
+		return true;
+	}
 
-		for (int i =0; i<paramNames.size(); i++) {
-			declaration
-					.append(", ")
-					.append(annotationMetaEntity.importType(paramTypes.get(i)))
-					.append(" ")
-					.append(paramNames.get(i));
-		}
+	@Override
+	boolean isNullable(int index) {
+		return true;
+	}
+
+	@Override
+	public String getAttributeDeclarationString() {
+		final List<String> paramTypes = parameterTypes();
+		final StringBuilder returnType = returnType();
+		final StringBuilder declaration = new StringBuilder();
+		comment( declaration );
+		modifiers( paramTypes, declaration );
 		declaration
-				.append(")")
+				.append(returnType)
+				.append(" ")
+				.append(methodName);
+		parameters( paramTypes, declaration );
+		declaration
 				.append(" {")
-				.append("\n    return ");
-		if ( isNative && returnTypeName != null
-				|| containerTypeName != null && containerTypeName.startsWith("org.hibernate") ) {
-			declaration.append("(").append(type).append(") ");
+				.append("\n\t");
+		if ( returnTypeName == null || !returnTypeName.equals("void") ) {
+			declaration
+					.append("return ");
+		}
+		if ( isNative && returnTypeName != null && containerTypeName == null
+				&& isUsingEntityManager() ) {
+			// EntityManager.createNativeQuery() does not return TypedQuery,
+			// so we need to cast to the entity type
+			declaration.append("(")
+					.append(returnType)
+					.append(") ");
 		}
 		declaration
-				.append("entityManager.")
-				.append(isNative ? "createNativeQuery" :"createQuery")
+				.append(sessionName)
+				.append(isNative ? ".createNativeQuery" : ".createQuery")
 				.append("(")
 				.append(getConstantName());
-		if (returnTypeName != null) {
+		if ( returnTypeName != null && !isUpdate ) {
 			declaration
 					.append(", ")
 					.append(annotationMetaEntity.importType(returnTypeName))
 					.append(".class");
 		}
 		declaration.append(")");
-		for (int i = 1; i <= paramNames.size(); i++) {
-			String param = paramNames.get(i-1);
-			if (queryString.contains(":" + param)) {
-				declaration
-						.append("\n			.setParameter(\"")
-						.append(param)
-						.append("\", ")
-						.append(param)
-						.append(")");
-			}
-			else if (queryString.contains("?" + i)) {
-				declaration
-						.append("\n			.setParameter(")
-						.append(i)
-						.append(", ")
-						.append(param)
-						.append(")");
-			}
-		}
-		if ( containerTypeName == null) {
-			declaration.append("\n			.getSingleResult()");
-		}
-		else if ( containerTypeName.equals("java.util.List") ) {
-			declaration.append("\n			.getResultList()");
-		}
+		boolean unwrapped = setParameters( paramTypes, declaration );
+		execute( declaration, unwrapped );
 		declaration.append(";\n}");
 		return declaration.toString();
 	}
 
+	private void execute(StringBuilder declaration, boolean unwrapped) {
+		if ( isUpdate ) {
+			declaration
+					.append("\n\t\t\t.executeUpdate()");
+		}
+		else if ( containerTypeName == null) {
+			declaration
+					.append("\n\t\t\t.getSingleResult()");
+		}
+		else if ( containerTypeName.equals(Constants.LIST) ) {
+			declaration
+					.append("\n\t\t\t.getResultList()");
+		}
+		else {
+			if ( isUsingEntityManager() && !unwrapped
+					&& ( containerTypeName.startsWith("org.hibernate")
+						|| isNative && returnTypeName != null ) ) {
+				declaration
+						.append("\n\t\t\t.unwrap(")
+						.append(annotationMetaEntity.importType(containerTypeName))
+						.append(".class)");
+
+			}
+		}
+	}
+
+	private boolean setParameters(List<String> paramTypes, StringBuilder declaration) {
+		boolean unwrapped = !isUsingEntityManager();
+		for ( int i = 0; i < paramNames.size(); i++ ) {
+			final String paramName = paramNames.get(i);
+			final String paramType = paramTypes.get(i);
+			if ( !isSessionParameter(paramType) ) {
+				final int ordinal = i+1;
+				if ( queryString.contains(":" + paramName) ) {
+					setNamedParameter( declaration, paramName );
+				}
+				else if ( queryString.contains("?" + ordinal) ) {
+					setOrdinalParameter( declaration, ordinal, paramName );
+				}
+				else if ( isPageParam(paramType) ) {
+					setPage( declaration, paramName );
+				}
+				else if ( isOrderParam(paramType) ) {
+					unwrapped = setOrder( declaration, unwrapped, paramName, paramType );
+				}
+			}
+		}
+		return unwrapped;
+	}
+
+	private static void setOrdinalParameter(StringBuilder declaration, int i, String paramName) {
+		declaration
+				.append("\n\t\t\t.setParameter(")
+				.append(i)
+				.append(", ")
+				.append(paramName)
+				.append(")");
+	}
+
+	private static void setNamedParameter(StringBuilder declaration, String paramName) {
+		declaration
+				.append("\n\t\t\t.setParameter(\"")
+				.append(paramName)
+				.append("\", ")
+				.append(paramName)
+				.append(")");
+	}
+
+	private void setPage(StringBuilder declaration, String paramName) {
+		if ( isUsingEntityManager() ) {
+			declaration
+					.append("\n\t\t\t.setFirstResult(")
+					.append(paramName)
+					.append(".getFirstResult())")
+					.append("\n\t\t\t.setMaxResults(")
+					.append(paramName)
+					.append(".getMaxResults())");
+		}
+		else {
+			declaration
+					.append("\n\t\t\t.setPage(")
+					.append(paramName)
+					.append(")");
+		}
+	}
+
+	private boolean setOrder(StringBuilder declaration, boolean unwrapped, String paramName, String paramType) {
+		unwrap( declaration, unwrapped );
+		if ( paramType.endsWith("...") ) {
+			declaration
+					.append("\n\t\t\t.setOrder(")
+					.append(annotationMetaEntity.importType(Constants.LIST))
+					.append(".of(")
+					.append(paramName)
+					.append("))");
+		}
+		else {
+			declaration
+					.append("\n\t\t\t.setOrder(")
+					.append(paramName)
+					.append(")");
+		}
+		return true;
+	}
+
+	private StringBuilder returnType() {
+		StringBuilder type = new StringBuilder();
+		boolean returnsUni = isReactive()
+				&& (containerTypeName == null || Constants.LIST.equals(containerTypeName));
+		if ( returnsUni ) {
+			type.append(annotationMetaEntity.importType(Constants.UNI)).append('<');
+		}
+		if ( containerTypeName != null ) {
+			type.append(annotationMetaEntity.importType(containerTypeName));
+			if ( returnTypeName != null ) {
+				type.append("<").append(annotationMetaEntity.importType(returnTypeName)).append(">");
+			}
+		}
+		else if ( returnTypeName != null )  {
+			type.append(annotationMetaEntity.importType(returnTypeName));
+		}
+		if ( returnsUni ) {
+			type.append('>');
+		}
+		return type;
+	}
+
+	private List<String> parameterTypes() {
+		return paramTypes.stream()
+				.map(paramType -> isOrderParam(paramType) && paramType.endsWith("[]")
+						? paramType.substring(0, paramType.length() - 2) + "..."
+						: paramType)
+				.collect(toList());
+	}
+
+	private void comment(StringBuilder declaration) {
+		declaration
+				.append("\n/**");
+		declaration
+				.append("\n * Execute the query {@value #")
+				.append(getConstantName())
+				.append("}.")
+				.append("\n *");
+		see( declaration );
+		declaration
+				.append("\n **/\n");
+	}
+
+	private void modifiers(List<String> paramTypes, StringBuilder declaration) {
+		boolean hasVarargs = paramTypes.stream().anyMatch(ptype -> ptype.endsWith("..."));
+		if ( hasVarargs ) {
+			declaration
+					.append("@SafeVarargs\n");
+		}
+		if ( belongsToDao ) {
+			declaration
+					.append("@Override\npublic ");
+			if ( hasVarargs ) {
+				declaration
+						.append("final ");
+			}
+		}
+		else {
+			declaration
+					.append("public static ");
+		}
+	}
+
+	static boolean isPageParam(String parameterType) {
+		return Page.class.getName().equals(parameterType);
+	}
+
+	static boolean isOrderParam(String parameterType) {
+		return parameterType.startsWith(Order.class.getName())
+			|| parameterType.startsWith(List.class.getName() + "<" + Order.class.getName());
+	}
+
+	private void unwrap(StringBuilder declaration, boolean unwrapped) {
+		if ( !unwrapped ) {
+			declaration
+					.append("\n\t\t\t.unwrap(")
+					.append(annotationMetaEntity.importType(Constants.HIB_SELECTION_QUERY))
+					.append(".class)");
+		}
+	}
+
 	@Override
 	public String getAttributeNameDeclarationString() {
-		return new StringBuilder().append("public static final String ")
+		return new StringBuilder()
+				.append("static final String ")
 				.append(getConstantName())
 				.append(" = \"")
 				.append(queryString)
@@ -159,28 +318,16 @@ public class QueryMethod implements MetaAttribute {
 			return stem;
 		}
 		else {
-			return stem + "_" + StringHelper.join("_",
-					paramTypes.stream().map(StringHelper::unqualify).collect(toList()));
+			return stem + "_"
+					+ paramTypes.stream()
+							.filter(name -> !isPageParam(name) && !isOrderParam(name))
+							.map(StringHelper::unqualify)
+							.reduce((x,y) -> x + '_' + y)
+							.orElse("");
 		}
 	}
 
-	@Override
-	public String getMetaType() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public String getPropertyName() {
-		return methodName;
-	}
-
-	@Override
 	public String getTypeDeclaration() {
-		return "jakarta.persistence.Query";
-	}
-
-	@Override
-	public Metamodel getHostingEntity() {
-		return annotationMetaEntity;
+		return Constants.QUERY;
 	}
 }

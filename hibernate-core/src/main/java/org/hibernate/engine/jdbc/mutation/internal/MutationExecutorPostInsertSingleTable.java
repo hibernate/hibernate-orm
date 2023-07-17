@@ -17,7 +17,7 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
-import org.hibernate.sql.model.MutationOperationGroup;
+import org.hibernate.sql.model.EntityMutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.ValuesAnalysis;
@@ -52,14 +52,14 @@ public class MutationExecutorPostInsertSingleTable implements MutationExecutor, 
 	private final JdbcValueBindingsImpl valueBindings;
 
 	public MutationExecutorPostInsertSingleTable(
-			MutationOperationGroup mutationOperationGroup,
+			EntityMutationOperationGroup mutationOperationGroup,
 			SharedSessionContractImplementor session) {
-		this.mutationTarget = (EntityMutationTarget) mutationOperationGroup.getMutationTarget();
+		this.mutationTarget = mutationOperationGroup.getMutationTarget();
 		this.session = session;
 
 		assert mutationOperationGroup.getNumberOfOperations() == 1;
 
-		this.operation = mutationOperationGroup.getOperation( mutationTarget.getIdentifierTableName() );
+		this.operation = (PreparableMutationOperation) mutationOperationGroup.getOperation( mutationTarget.getIdentifierTableName() );
 		this.identityInsertStatementDetails = identityPreparation( operation, session );
 
 		this.valueBindings = new JdbcValueBindingsImpl(

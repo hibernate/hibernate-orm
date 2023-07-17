@@ -13,6 +13,8 @@ public interface MetaAttribute {
 
 	boolean hasTypedAttribute();
 
+	boolean hasStringAttribute();
+
 	String getAttributeDeclarationString();
 
 	String getAttributeNameDeclarationString();

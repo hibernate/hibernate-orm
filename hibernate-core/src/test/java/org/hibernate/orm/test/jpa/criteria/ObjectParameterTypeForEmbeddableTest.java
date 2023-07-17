@@ -1,5 +1,6 @@
 package org.hibernate.orm.test.jpa.criteria;
 
+import org.hibernate.query.QueryArgumentException;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -75,8 +76,8 @@ public class ObjectParameterTypeForEmbeddableTest {
 
 	@Test
 	public void testSettingParameterOfTypeWrongType(EntityManagerFactoryScope scope) {
-		IllegalArgumentException thrown = assertThrows(
-				IllegalArgumentException.class, () ->
+		QueryArgumentException thrown = assertThrows(
+				QueryArgumentException.class, () ->
 						scope.inTransaction(
 								entityManager -> {
 									final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
@@ -92,8 +93,7 @@ public class ObjectParameterTypeForEmbeddableTest {
 						)
 		);
 
-		assertThat( thrown.getMessage() ).startsWith(
-				"Argument [org.hibernate.orm.test.jpa.criteria.ObjectParameterTypeForEmbeddableTest" );
+		assertThat( thrown.getMessage() ).contains( "did not match parameter type" );
 	}
 
 	@Entity(name = "TestEntity")

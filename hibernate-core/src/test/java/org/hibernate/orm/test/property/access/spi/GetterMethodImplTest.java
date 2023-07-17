@@ -83,14 +83,14 @@ public class GetterMethodImplTest {
 		Getter runtimeException = getter( TargetThrowingExceptions.class, "runtimeException" );
 		assertThatThrownBy( () -> runtimeException.get( target ) )
 				.isInstanceOf( PropertyAccessException.class )
-				.hasMessage( "Exception occurred inside : `" + TargetThrowingExceptions.class.getName() +".runtimeException` (getter)" )
+				.hasMessage( "Exception occurred inside: '" + TargetThrowingExceptions.class.getName() +".runtimeException' (getter)" )
 				.getCause() // Not the root cause, the *direct* cause! We don't want extra wrapping.
 				.isExactlyInstanceOf( RuntimeException.class );
 
 		Getter checkedException = getter( TargetThrowingExceptions.class, "checkedException" );
 		assertThatThrownBy( () -> checkedException.get( target ) )
 				.isInstanceOf( PropertyAccessException.class )
-				.hasMessage( "Exception occurred inside : `" + TargetThrowingExceptions.class.getName() +".checkedException` (getter)" )
+				.hasMessage( "Exception occurred inside: '" + TargetThrowingExceptions.class.getName() +".checkedException' (getter)" )
 				.getCause() // Not the root cause, the *direct* cause! We don't want extra wrapping.
 				.isExactlyInstanceOf( Exception.class );
 

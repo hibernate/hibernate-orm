@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,6 +40,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
+import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -419,7 +421,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public List<R> list() {
-		beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
 		try {
 			final List<R> result = doList();
@@ -436,16 +438,26 @@ public abstract class AbstractSelectionQuery<R>
 			throw getSession().getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );
 		}
 		finally {
-			afterQuery( success );
+			afterQueryHandlingFetchProfiles( success, fetchProfiles );
 		}
+	}
+
+	protected HashSet<String> beforeQueryHandlingFetchProfiles() {
+		beforeQuery();
+
+		final MutableQueryOptions options = getQueryOptions();
+
+		return getSession().getLoadQueryInfluencers()
+				.adjustFetchProfiles( options.getDisabledFetchProfiles(), options.getEnabledFetchProfiles() );
 	}
 
 	protected void beforeQuery() {
 		getQueryParameterBindings().validate();
 
-		getSession().prepareForQueryExecution(
-				requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() )
-		);
+		final SharedSessionContractImplementor session = getSession();
+		final MutableQueryOptions options = getQueryOptions();
+
+		session.prepareForQueryExecution( requiresTxn( options.getLockOptions().findGreatestLockMode() ) );
 		prepareForExecution();
 
 		assert sessionFlushMode == null;
@@ -453,25 +465,41 @@ public abstract class AbstractSelectionQuery<R>
 
 		final FlushMode effectiveFlushMode = getHibernateFlushMode();
 		if ( effectiveFlushMode != null ) {
-			sessionFlushMode = getSession().getHibernateFlushMode();
-			getSession().setHibernateFlushMode( effectiveFlushMode );
+			sessionFlushMode = session.getHibernateFlushMode();
+			session.setHibernateFlushMode( effectiveFlushMode );
 		}
 
 		final CacheMode effectiveCacheMode = getCacheMode();
 		if ( effectiveCacheMode != null ) {
-			sessionCacheMode = getSession().getCacheMode();
-			getSession().setCacheMode( effectiveCacheMode );
+			sessionCacheMode = session.getCacheMode();
+			session.setCacheMode( effectiveCacheMode );
 		}
 	}
 
 	protected abstract void prepareForExecution();
 
+	protected void afterQueryHandlingFetchProfiles(boolean success, HashSet<String> fetchProfiles) {
+		resetFetchProfiles( fetchProfiles );
+		afterQuery( success );
+	}
+
+	private void afterQueryHandlingFetchProfiles(HashSet<String> fetchProfiles) {
+		resetFetchProfiles( fetchProfiles );
+		afterQuery();
+	}
+
+	private void resetFetchProfiles(HashSet<String> fetchProfiles) {
+		getSession().getLoadQueryInfluencers().setEnabledFetchProfileNames( fetchProfiles );
+	}
+
 	protected void afterQuery(boolean success) {
 		afterQuery();
-		if ( !getSession().isTransactionInProgress() ) {
-			getSession().getJdbcCoordinator().getLogicalConnection().afterTransaction();
+
+		final SharedSessionContractImplementor session = getSession();
+		if ( !session.isTransactionInProgress() ) {
+			session.getJdbcCoordinator().getLogicalConnection().afterTransaction();
 		}
-		getSession().afterOperation( success );
+		session.afterOperation( success );
 	}
 
 	protected void afterQuery() {
@@ -498,12 +526,12 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
-		beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
 		try {
 			return doScroll( scrollMode );
 		}
 		finally {
-			afterQuery();
+			afterQueryHandlingFetchProfiles( fetchProfiles );
 		}
 	}
 
@@ -618,13 +646,10 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public SelectionQuery<R> setFirstResult(int startPosition) {
 		getSession().checkOpen();
-
 		if ( startPosition < 0 ) {
 			throw new IllegalArgumentException( "first-result value cannot be negative : " + startPosition );
 		}
-
 		getQueryOptions().getLimit().setFirstRow( startPosition );
-
 		return this;
 	}
 
@@ -637,6 +662,21 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
 		applyGraph( (RootGraphImplementor<R>) graph, semantic );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> enableFetchProfile(String profileName) {
+		if ( !getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
+			throw new UnknownProfileException( profileName );
+		}
+		getQueryOptions().enableFetchProfile( profileName );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> disableFetchProfile(String profileName) {
+		getQueryOptions().disableFetchProfile( profileName );
 		return this;
 	}
 

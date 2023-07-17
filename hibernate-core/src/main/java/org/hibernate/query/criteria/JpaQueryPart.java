@@ -31,15 +31,17 @@ public interface JpaQueryPart<T> extends JpaCriteriaNode {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause
 
-	<X> JpaExpression<X> getOffset();
+	//TODO: these operations should only accept integer literals or parameters
 
-	JpaQueryPart<T> setOffset(JpaExpression<?> offset);
+	JpaExpression<? extends Number> getOffset();
 
-	<X> JpaExpression<X> getFetch();
+	JpaQueryPart<T> setOffset(JpaExpression<? extends Number> offset);
 
-	JpaQueryPart<T> setFetch(JpaExpression<?> fetch);
+	JpaExpression<? extends Number> getFetch();
 
-	JpaQueryPart<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType);
+	JpaQueryPart<T> setFetch(JpaExpression<? extends Number> fetch);
+
+	JpaQueryPart<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 
 	FetchClauseType getFetchClauseType();
 }

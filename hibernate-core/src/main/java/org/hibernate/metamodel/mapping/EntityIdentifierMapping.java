@@ -25,11 +25,17 @@ import jakarta.persistence.IdClass;
  */
 public interface EntityIdentifierMapping extends ValuedModelPart {
 
-	String ROLE_LOCAL_NAME = "{id}";
+	String ID_ROLE_NAME = "{id}";
+	String LEGACY_ID_NAME = "id";
+
+	static boolean matchesRoleName(String name) {
+		return LEGACY_ID_NAME.equalsIgnoreCase( name )
+			|| ID_ROLE_NAME.equals( name );
+	}
 
 	@Override
 	default String getPartName() {
-		return ROLE_LOCAL_NAME;
+		return ID_ROLE_NAME;
 	}
 
 	/**

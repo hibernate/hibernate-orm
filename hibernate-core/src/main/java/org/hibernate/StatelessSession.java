@@ -6,6 +6,9 @@
  */
 package org.hibernate;
 
+import jakarta.persistence.EntityGraph;
+import org.hibernate.graph.GraphSemantic;
+
 /**
  * A command-oriented API often used for performing bulk operations against
  * the database. A stateless session has no persistence context, and always
@@ -162,6 +165,38 @@ public interface StatelessSession extends SharedSessionContract {
 	 * @return a detached entity instance
 	 */
 	<T> T get(Class<T> entityClass, Object id, LockMode lockMode);
+
+	/**
+	 * Retrieve a row, fetching associations specified by the
+	 * given {@link EntityGraph}.
+	 *
+	 * @param graph The {@link EntityGraph}
+	 * @param graphSemantic a {@link GraphSemantic} specifying
+	 *                      how the graph should be interpreted
+	 * @param id The id of the entity to retrieve
+	 *
+	 * @return a detached entity instance
+	 *
+	 * @since 6.3
+	 */
+	<T> T get(EntityGraph<T> graph, GraphSemantic graphSemantic, Object id);
+
+	/**
+	 * Retrieve a row, fetching associations specified by the
+	 * given {@link EntityGraph}, and obtaining the specified
+	 * lock mode.
+	 *
+	 * @param graph The {@link EntityGraph}
+	 * @param graphSemantic a {@link GraphSemantic} specifying
+	 *                      how the graph should be interpreted
+	 * @param id The id of the entity to retrieve
+	 * @param lockMode The lock mode to apply to the entity
+	 *
+	 * @return a detached entity instance
+	 *
+	 * @since 6.3
+	 */
+	<T> T get(EntityGraph<T> graph, GraphSemantic graphSemantic, Object id, LockMode lockMode);
 
 	/**
 	 * Refresh the entity instance state from the database.

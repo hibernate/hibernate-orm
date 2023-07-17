@@ -75,21 +75,28 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 			Map<String, SqmCteStatement<?>> cteStatements,
 			SqmQuerySource querySource,
 			NodeBuilder builder) {
-		super( builder, cteStatements, resultType );
+		super( queryPart, cteStatements, resultType, builder );
 		this.querySource = querySource;
-		setQueryPart( queryPart );
 	}
 
 	/**
-	 * @implNote This form is used from Hibernate's JPA criteria handling.
+	 * @implNote This form is used from the criteria query API.
 	 */
 	public SqmSelectStatement(Class<T> resultJavaType, NodeBuilder nodeBuilder) {
 		super( resultJavaType, nodeBuilder );
-
 		this.querySource = SqmQuerySource.CRITERIA;
-
 		getQuerySpec().setSelectClause( new SqmSelectClause( false, nodeBuilder ) );
 		getQuerySpec().setFromClause( new SqmFromClause() );
+	}
+
+	/**
+	 * @implNote This form is used when transforming HQL to criteria.
+	 *           All it does is change the SqmQuerySource to CRITERIA
+	 *           in order to allow correct parameter handing.
+	 */
+	public SqmSelectStatement(SqmSelectStatement<T> original) {
+		super( original.getQueryPart(), original.getCteStatementMap(), original.getResultType(), original.nodeBuilder() );
+		this.querySource = SqmQuerySource.CRITERIA;
 	}
 
 	private SqmSelectStatement(

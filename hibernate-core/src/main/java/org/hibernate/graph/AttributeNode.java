@@ -12,26 +12,27 @@ import jakarta.persistence.Subgraph;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
- * Hibernate extension to the JPA entity-graph AttributeNode contract.
+ * Extends the JPA-defined {@link AttributeNode} with additional operations.
  *
  * @author Strong Liu
  * @author Steve Ebersole
  * @author Andrea Boriero
  */
 public interface AttributeNode<J> extends GraphNode<J>, jakarta.persistence.AttributeNode<J> {
+
 	PersistentAttribute<?, J> getAttributeDescriptor();
 
 	Map<Class<? extends J>, SubGraph<? extends J>> getSubGraphs();
 	Map<Class<? extends J>, SubGraph<? extends J>> getKeySubGraphs();
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	default Map<Class, Subgraph> getSubgraphs() {
 		return (Map) getSubGraphs();
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	default Map<Class, Subgraph> getKeySubgraphs() {
 		return (Map) getKeySubGraphs();
 	}

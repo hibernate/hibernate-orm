@@ -23,17 +23,16 @@ import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.persister.entity.PropertyMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
-import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -376,7 +375,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 
 		if ( referencedPropertyName == null ) {
 			final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
-			targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+			targetKeyPropertyNames.add( EntityIdentifierMapping.ID_ROLE_NAME );
 			final Type propertyType;
 			if ( entityBinding.getIdentifierMapper() == null ) {
 				propertyType = entityBinding.getIdentifier().getType();
@@ -396,7 +395,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 					);
 					ToOneAttributeMapping.addPrefixedPropertyNames(
 							targetKeyPropertyNames,
-							EntityIdentifierMapping.ROLE_LOCAL_NAME,
+							EntityIdentifierMapping.ID_ROLE_NAME,
 							propertyType,
 							creationProcess.getCreationContext().getSessionFactory()
 					);
@@ -451,7 +450,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 				);
 				ToOneAttributeMapping.addPrefixedPropertyNames(
 						targetKeyPropertyNames,
-						EntityIdentifierMapping.ROLE_LOCAL_NAME,
+						EntityIdentifierMapping.ID_ROLE_NAME,
 						propertyType,
 						creationProcess.getCreationContext().getSessionFactory()
 				);
@@ -459,7 +458,7 @@ public abstract class AbstractEntityCollectionPart implements EntityCollectionPa
 			}
 			else {
 				final Set<String> targetKeyPropertyNames = new HashSet<>( 2 );
-				targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+				targetKeyPropertyNames.add( EntityIdentifierMapping.ID_ROLE_NAME );
 				targetKeyPropertyNames.add( referencedPropertyName );
 				final String mapsIdAttributeName;
 				if ( ( mapsIdAttributeName = ToOneAttributeMapping.findMapsIdPropertyName( elementTypeDescriptor, referencedPropertyName ) ) != null ) {

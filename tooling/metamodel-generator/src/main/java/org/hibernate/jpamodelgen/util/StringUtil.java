@@ -50,7 +50,8 @@ public final class StringUtil {
 			return true;
 		}
 
-		if ( isValidPropertyName( methodName, PROPERTY_PREFIX_IS ) || isValidPropertyName( methodName, PROPERTY_PREFIX_HAS ) ) {
+		if ( isValidPropertyName( methodName, PROPERTY_PREFIX_IS )
+				|| isValidPropertyName( methodName, PROPERTY_PREFIX_HAS ) ) {
 			return isBooleanGetter( returnTypeAsString );
 		}
 

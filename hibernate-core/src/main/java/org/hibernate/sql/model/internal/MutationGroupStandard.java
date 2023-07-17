@@ -50,18 +50,17 @@ public class MutationGroupStandard implements MutationGroup {
 	}
 
 	@Override
-	public <O extends MutationOperation, M extends TableMutation<O>> M getSingleTableMutation() {
+	public TableMutation getSingleTableMutation() {
 		throw new IllegalStateException( "Group contains multiple table mutations : " + mutationTarget.getNavigableRole() );
 	}
 
 	@Override
-	public <O extends MutationOperation, M extends TableMutation<O>> M getTableMutation(String tableName) {
+	public TableMutation getTableMutation(String tableName) {
 		for ( int i = 0; i < tableMutationList.size(); i++ ) {
 			final TableMutation<?> tableMutation = tableMutationList.get( i );
 			if ( tableMutation != null ) {
 				if ( tableMutation.getMutatingTable().getTableName().equals( tableName ) ) {
-					//noinspection unchecked
-					return (M) tableMutation;
+					return tableMutation;
 				}
 			}
 		}
@@ -75,4 +74,10 @@ public class MutationGroupStandard implements MutationGroup {
 			action.accept( i, (M)tableMutationList.get( i ) );
 		}
 	}
+
+	@Override
+	public TableMutation getTableMutation(int i) {
+		return tableMutationList.get( i );
+	}
+
 }

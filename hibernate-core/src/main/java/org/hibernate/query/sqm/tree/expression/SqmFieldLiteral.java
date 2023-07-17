@@ -153,6 +153,16 @@ public class SqmFieldLiteral<T> implements SqmExpression<T>, SqmExpressible<T>, 
 	}
 
 	@Override
+	public SqmPredicate equalTo(Expression<T> that) {
+		return nodeBuilder().equal( this, that );
+	}
+
+	@Override
+	public SqmPredicate equalTo(T that) {
+		return nodeBuilder().equal( this, that );
+	}
+
+	@Override
 	public SqmPredicate isNotNull() {
 		return nodeBuilder().isNotNull( this );
 	}

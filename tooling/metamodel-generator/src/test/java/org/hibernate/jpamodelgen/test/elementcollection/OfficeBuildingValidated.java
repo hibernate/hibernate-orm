@@ -14,13 +14,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 
 /**
  * @author Chris Cranford
  */
-@Entity
+@Entity @Access(AccessType.FIELD)
 public class OfficeBuildingValidated {
 
 	// mock a bean validation annotation using TYPE_USE

@@ -6,6 +6,9 @@
  */
 package org.hibernate;
 
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
+
 import java.util.Optional;
 
 /**
@@ -36,6 +39,55 @@ public interface SimpleNaturalIdLoadAccess<T> {
 	 * @return {@code this}, for method chaining
 	 */
 	SimpleNaturalIdLoadAccess<T> with(LockOptions lockOptions);
+
+	/**
+	 * Override the associations fetched by default by specifying
+	 * the complete list of associations to be fetched as an
+	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 */
+	default SimpleNaturalIdLoadAccess<T> withFetchGraph(RootGraph<T> graph) {
+		return with( graph, GraphSemantic.FETCH );
+	}
+
+	/**
+	 * Augment the associations fetched by default by specifying a
+	 * list of additional associations to be fetched as an
+	 * {@linkplain jakarta.persistence.EntityGraph entity graph}.
+	 */
+	default SimpleNaturalIdLoadAccess<T> withLoadGraph(RootGraph<T> graph) {
+		return with( graph, GraphSemantic.LOAD );
+	}
+
+	/**
+	 * Customize the associations fetched by specifying an
+	 * {@linkplain jakarta.persistence.EntityGraph entity graph},
+	 * and how it should be {@linkplain GraphSemantic interpreted}.
+	 */
+	SimpleNaturalIdLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic);
+
+	/**
+	 * Customize the associations fetched by specifying a
+	 * {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
+	 * that should be enabled during this operation.
+	 * <p>
+	 * This allows the {@linkplain Session#isFetchProfileEnabled(String)
+	 * session-level fetch profiles} to be temporarily overridden.
+	 *
+	 * @since 6.3
+	 */
+	SimpleNaturalIdLoadAccess<T> enableFetchProfile(String profileName);
+
+	/**
+	 * Customize the associations fetched by specifying a
+	 * {@linkplain org.hibernate.annotations.FetchProfile fetch profile}
+	 * that should be disabled during this operation.
+	 * <p>
+	 * This allows the {@linkplain Session#isFetchProfileEnabled(String)
+	 * session-level fetch profiles} to be temporarily overridden.
+	 *
+	 * @since 6.3
+	 */
+	SimpleNaturalIdLoadAccess<T> disableFetchProfile(String profileName);
 
 	/**
 	 * For entities with mutable natural ids, should Hibernate perform

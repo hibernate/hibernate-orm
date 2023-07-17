@@ -40,8 +40,8 @@ public class AnonymousTupleSqmAssociationPathSource<O, J> extends AnonymousTuple
 	}
 
 	@Override
-	public SqmJoin createSqmJoin(
-			SqmFrom lhs,
+	public SqmJoin<O, J> createSqmJoin(
+			SqmFrom<?, O> lhs,
 			SqmJoinType joinType,
 			String alias,
 			boolean fetched,

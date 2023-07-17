@@ -12,12 +12,12 @@ import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 
 /**
- * Hibernate extension to the JPA {@link SingularAttribute} descriptor
+ * Extension of the JPA-defined {@link SingularAttribute} interface.
  *
  * @author Steve Ebersole
  */
 public interface SingularPersistentAttribute<D,J>
-		extends SingularAttribute<D,J>, PersistentAttribute<D,J>, SqmPathSource<J>, SqmJoinable {
+		extends SingularAttribute<D,J>, PersistentAttribute<D,J>, SqmPathSource<J>, SqmJoinable<D,J> {
 	@Override
 	SimpleDomainType<J> getType();
 

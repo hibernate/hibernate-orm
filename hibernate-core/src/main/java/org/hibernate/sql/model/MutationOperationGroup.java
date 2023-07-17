@@ -6,7 +6,6 @@
  */
 package org.hibernate.sql.model;
 
-import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
@@ -17,6 +16,7 @@ import java.util.function.BiFunction;
  * @author Steve Ebersole
  */
 public interface MutationOperationGroup {
+
 	/**
 	 * The type of mutation (at the model-level) represented by this group.
 	 */
@@ -25,7 +25,7 @@ public interface MutationOperationGroup {
 	/**
 	 * The model-part being mutated
 	 */
-	MutationTarget<?> getMutationTarget();
+	MutationTarget getMutationTarget();
 
 	/**
 	 * Number of operations in this group
@@ -37,22 +37,50 @@ public interface MutationOperationGroup {
 	 *
 	 * Throws an exception if there are more than one.
 	 */
-	<O extends MutationOperation> O getSingleOperation();
+	MutationOperation getSingleOperation();
 
-	<O extends MutationOperation> List<O> getOperations();
+	/**
+	 * Gets a specific MutationOperation from the group
+	 * @param idx the index, starting from zero.
+	 * @return
+	 */
+	MutationOperation getOperation(int idx);
 
 	/**
 	 * Get the operation for a specific table.
 	 */
-	<O extends MutationOperation> O getOperation(String tableName);
+	MutationOperation getOperation(String tableName);
 
 	/**
-	 * Visit each operation
+	 * Attempt to cast to the frequently uses subtype EntityMutationOperationGroup;
+	 * returns null if this is not possible.
+	 * @return
 	 */
-	<O extends MutationOperation> void forEachOperation(BiConsumer<Integer, O> action);
+	default EntityMutationOperationGroup asEntityMutationOperationGroup() {
+		return null;
+	}
 
 	/**
-	 * Test whether any operations match the condition
+	 * @deprecated Will be removed. Use the other methods to visit each operation.
 	 */
-	<O extends MutationOperation> boolean hasMatching(BiFunction<Integer, O, Boolean> matcher);
+	@Deprecated(forRemoval = true)
+	default <O extends MutationOperation> void forEachOperation(BiConsumer<Integer, O> action) {
+		for ( int i = 0; i < getNumberOfOperations(); i++ ) {
+			action.accept( i, (O) getOperation( i ) );
+		}
+	}
+
+	/**
+	 * @deprecated Will be removed. Use the other methods to visit each operation.
+	 */
+	@Deprecated(forRemoval = true)
+	default <O extends MutationOperation> boolean hasMatching(BiFunction<Integer, O, Boolean> matcher) {
+		for ( int i = 0; i < getNumberOfOperations(); i++ ) {
+			if ( matcher.apply( i, (O) getOperation( i ) ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 }

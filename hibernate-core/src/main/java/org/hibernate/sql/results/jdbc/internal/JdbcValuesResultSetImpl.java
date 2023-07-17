@@ -39,7 +39,6 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	private final ExecutionContext executionContext;
 
 	private final SqlSelection[] sqlSelections;
-	private final SqlSelection[] eagerSqlSelections;
 	private final BitSet initializedIndexes;
 	private final Object[] currentRowJdbcValues;
 
@@ -62,48 +61,13 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 		this.valuesMapping = valuesMapping;
 		this.executionContext = executionContext;
 
-		this.sqlSelections = valuesMapping.getSqlSelections().toArray( new SqlSelection[0] );
-		this.eagerSqlSelections = extractEagerSqlSelections( sqlSelections );
-		this.initializedIndexes = new BitSet( valuesMapping.getRowSize() );
-		this.currentRowJdbcValues = new Object[ valuesMapping.getRowSize() ];
-	}
-
-	/**
-	 * Determine the selections which are eager i.e. safe to always extract.
-	 * If a virtual selection exists, we must extract the value for that JDBC position lazily.
-	 */
-	private SqlSelection[] extractEagerSqlSelections(SqlSelection[] sqlSelections) {
-		BitSet lazyValuesPositions = null;
-		for ( int i = 0; i < sqlSelections.length; i++ ) {
-			final SqlSelection sqlSelection = sqlSelections[i];
-			if ( sqlSelection.isVirtual() ) {
-				if ( lazyValuesPositions == null ) {
-					lazyValuesPositions = new BitSet();
-				}
-				lazyValuesPositions.set( sqlSelection.getValuesArrayPosition() );
-				// Find the one preceding selection that refers to the same JDBC position
-				// and treat that as virtual to do lazy extraction
-				for ( int j = 0; j < i; j++ ) {
-					if ( sqlSelections[j].getJdbcResultSetIndex() == sqlSelection.getJdbcResultSetIndex() ) {
-						// There can only be a single selection which also has to be non-virtual
-						assert !sqlSelections[j].isVirtual();
-						lazyValuesPositions.set( sqlSelections[j].getValuesArrayPosition() );
-						break;
-					}
-				}
-			}
+		final int rowSize = valuesMapping.getRowSize();
+		this.sqlSelections = new SqlSelection[rowSize];
+		for ( SqlSelection selection : valuesMapping.getSqlSelections() ) {
+			this.sqlSelections[selection.getValuesArrayPosition()] = selection;
 		}
-		if ( lazyValuesPositions == null ) {
-			return sqlSelections;
-		}
-		final SqlSelection[] eagerSqlSelections = new SqlSelection[sqlSelections.length - lazyValuesPositions.cardinality()];
-		int i = 0;
-		for ( SqlSelection sqlSelection : sqlSelections ) {
-			if ( !lazyValuesPositions.get( sqlSelection.getValuesArrayPosition() ) ) {
-				eagerSqlSelections[i++] = sqlSelection;
-			}
-		}
-		return eagerSqlSelections;
+		this.initializedIndexes = new BitSet( rowSize );
+		this.currentRowJdbcValues = new Object[rowSize];
 	}
 
 	private static QueryCachePutManager resolveQueryCachePutManager(
@@ -305,26 +269,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	}
 
 	private void readCurrentRowValues() {
-		final ResultSet resultSet = resultSetAccess.getResultSet();
-		final SharedSessionContractImplementor session = executionContext.getSession();
 		initializedIndexes.clear();
-		for ( final SqlSelection sqlSelection : eagerSqlSelections ) {
-			initializedIndexes.set( sqlSelection.getValuesArrayPosition() );
-			try {
-				currentRowJdbcValues[ sqlSelection.getValuesArrayPosition() ] = sqlSelection.getJdbcValueExtractor().extract(
-						resultSet,
-						sqlSelection.getJdbcResultSetIndex(),
-						session
-				);
-			}
-			catch ( SQLException e ) {
-				// do not want to wrap in ExecutionException here
-				throw executionContext.getSession().getJdbcServices().getSqlExceptionHelper().convert(
-						e,
-						"Could not extract column [" + sqlSelection.getJdbcResultSetIndex() + "] from JDBC ResultSet"
-				);
-			}
-		}
 	}
 
 	@Override

@@ -22,8 +22,6 @@ import jakarta.persistence.LockModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.TemporalType;
 
-import jakarta.persistence.criteria.Order;
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -35,8 +33,11 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.spi.AppliedGraph;
 import org.hibernate.internal.util.collections.IdentitySet;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.Order;
+import org.hibernate.query.Page;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.QueryParameter;
+import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.internal.NamedCriteriaQueryMementoImpl;
 import org.hibernate.query.hql.internal.NamedHqlQueryMementoImpl;
 import org.hibernate.query.hql.internal.QuerySplitter;
@@ -54,23 +55,18 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
-import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
-import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
-import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHEABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_CACHE_REGION;
@@ -83,6 +79,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_RETRIEVE_MODE;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_CACHE_STORE_MODE;
 import static org.hibernate.query.spi.SqlOmittingQueryOptions.omitSqlQueryOptions;
 import static org.hibernate.query.sqm.internal.SqmInterpretationsKey.createInterpretationsKey;
+import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
 
 /**
  * @author Steve Ebersole
@@ -276,6 +273,36 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 		return hql;
 	}
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// convenience methods
+
+//	@Override
+//	public SelectionQuery<R> setPage(int pageSize, int pageNumber) {
+//		setFirstResult( pageNumber * pageSize );
+//		setMaxResults( pageSize );
+//		return this;
+//	}
+
+	@Override
+	public SelectionQuery<R> setPage(Page page) {
+		setMaxResults( page.getMaxResults() );
+		setFirstResult( page.getFirstResult() );
+		return this;
+	}
+
+	@Override
+	public final SelectionQuery<R> setOrder(List<Order<? super R>> orderList) {
+		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
+		sqm.orderBy( orderList.stream().map( order -> sortSpecification( sqm, order ) ).collect( toList() ) );
+		return this;
+	}
+
+	@Override
+	public final SelectionQuery<R> setOrder(Order<? super R> order) {
+		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
+		sqm.orderBy( sortSpecification( sqm, order ) );
+		return this;
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// execution
@@ -558,74 +585,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public SqmSelectionQuery<R> ascending(SingularAttribute<? super R, ?> attribute) {
-		addOrdering( attribute, SortOrder.ASCENDING );
-		return this;
-	}
-
-	@Override
-	public SqmSelectionQuery<R> descending(SingularAttribute<? super R, ?> attribute) {
-		addOrdering( attribute, SortOrder.DESCENDING );
-		return this;
-	}
-
-	@Override
-	public SqmSelectionQuery<R> ascending(int element) {
-		addOrdering( element, SortOrder.ASCENDING );
-		return this;
-	}
-
-	@Override
-	public SqmSelectionQuery<R> descending(int element) {
-		addOrdering( element, SortOrder.DESCENDING );
-		return this;
-	}
-
-	private void addOrdering(SingularAttribute<? super R, ?> attribute, SortOrder order) {
-		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
-		NodeBuilder nodeBuilder = sqm.nodeBuilder();
-		List<Order> orders = new ArrayList<>( sqm.getOrderList() );
-		sqm.getQuerySpec().getRoots().forEach( root -> {
-			@SuppressWarnings("unchecked")
-			SqmRoot<R> singleRoot = (SqmRoot<R>) root;
-			SqmPath<?> ref = singleRoot.get( attribute );
-			orders.add( nodeBuilder.sort( ref, order ) );
-
-		} );
-		sqm.orderBy( orders );
-	}
-
-	private void addOrdering(int element, SortOrder order) {
-		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
-		int size = sqm.getSelection().getSelectionItems().size();
-		if ( element < 1) {
-			throw new IllegalArgumentException("Cannot order by element " + element + " (the first select item is element 1)");
-		}
-		if ( element > size) {
-			throw new IllegalArgumentException("Cannot order by element " + element + " (there are " + size + " select items)");
-		}
-		NodeBuilder nodeBuilder = sqm.nodeBuilder();
-		List<Order> orders = new ArrayList<>( sqm.getOrderList() );
-		orders.add( new SqmSortSpecification(
-				new SqmAliasedNodeRef(
-						element,
-						nodeBuilder.getTypeConfiguration().standardBasicTypeForJavaType( Integer.class ),
-						nodeBuilder
-				),
-				order
-		) );
-		sqm.orderBy( orders );
-	}
-
-	@Override
-	public SqmSelectionQuery<R> unordered() {
-		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
-		sqm.getQueryPart().setOrderByClause( null );
-		return this;
-	}
-
-	@Override
-	public List<Order> getOrder() {
+	public List<jakarta.persistence.criteria.Order> getOrder() {
 		return sqm.getOrderList();
 	}
 

@@ -15,7 +15,7 @@ import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.query.sqm.SqmPathSource;
 
 /**
- * Extension to the JPA {@link IdentifiableType} contract
+ * Extension to the JPA {@link IdentifiableType} contract.
  *
  * @author Steve Ebersole
  */
@@ -45,7 +45,7 @@ public interface IdentifiableDomainType<J> extends ManagedDomainType<J>, Identif
 
 	boolean hasIdClass();
 
-	SingularPersistentAttribute<J,?> findIdAttribute();
+	SingularPersistentAttribute<? super J,?> findIdAttribute();
 
 	void visitIdClassAttributes(Consumer<SingularPersistentAttribute<? super J,?>> action);
 

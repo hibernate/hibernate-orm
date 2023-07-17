@@ -30,8 +30,8 @@ class PluralAttributeMetadataImpl<X, Y, E>
 	private final CollectionClassification collectionClassification;
 	private final AttributeClassification elementClassification;
 	private final AttributeClassification listIndexOrMapKeyClassification;
-	private final Class elementJavaType;
-	private final Class keyJavaType;
+	private final Class<?> elementJavaType;
+	private final Class<?> keyJavaType;
 	private final ValueContext elementValueContext;
 	private final ValueContext keyValueContext;
 
@@ -53,11 +53,11 @@ class PluralAttributeMetadataImpl<X, Y, E>
 			case MAP:
 			case SORTED_MAP:
 			case ORDERED_MAP: {
-				this.keyJavaType = signatureType != null
+				keyJavaType = signatureType != null
 						? getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] )
 						: Object.class;
 
-				this.elementJavaType = signatureType != null
+				elementJavaType = signatureType != null
 						? getClassFromGenericArgument( signatureType.getActualTypeArguments()[1] )
 						: Object.class;
 
@@ -65,76 +65,64 @@ class PluralAttributeMetadataImpl<X, Y, E>
 			}
 			case ARRAY:
 			case LIST: {
-				this.keyJavaType = Integer.class;
+				keyJavaType = Integer.class;
 
-				this.elementJavaType = signatureType != null
+				elementJavaType = signatureType != null
 						? getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] )
 						: Object.class;
 
 				break;
 			}
 			default: {
-				this.elementJavaType = signatureType != null
+				elementJavaType = signatureType != null
 						? getClassFromGenericArgument( signatureType.getActualTypeArguments()[0] )
 						: Object.class;
-				this.keyJavaType = null;
+				keyJavaType = null;
 			}
 		}
 
-		this.elementValueContext = new ValueContext() {
+		elementValueContext = new ValueContext() {
+			@Override
 			public Value getHibernateValue() {
 				return ( (Collection) getPropertyMapping().getValue() ).getElement();
 			}
 
-			public Class getJpaBindableType() {
+			@Override
+			public Class<?> getJpaBindableType() {
 				return elementJavaType;
 			}
 
+			@Override
 			public ValueClassification getValueClassification() {
-				switch ( PluralAttributeMetadataImpl.this.elementClassification ) {
-					case EMBEDDED: {
-						return ValueClassification.EMBEDDABLE;
-					}
-					case BASIC: {
-						return ValueClassification.BASIC;
-					}
-					default: {
-						return ValueClassification.ENTITY;
-					}
-				}
+				return toValueClassification(PluralAttributeMetadataImpl.this.elementClassification);
 			}
 
-			public AttributeMetadata getAttributeMetadata() {
+			@Override
+			public AttributeMetadata<X,Y> getAttributeMetadata() {
 				return PluralAttributeMetadataImpl.this;
 			}
 		};
 
 		// interpret the key, if one
-		if ( this.listIndexOrMapKeyClassification != null ) {
-			this.keyValueContext = new ValueContext() {
+		if ( listIndexOrMapKeyClassification != null ) {
+			keyValueContext = new ValueContext() {
+				@Override
 				public Value getHibernateValue() {
 					return ( (Map) getPropertyMapping().getValue() ).getIndex();
 				}
 
-				public Class getJpaBindableType() {
+				@Override
+				public Class<?> getJpaBindableType() {
 					return keyJavaType;
 				}
 
+				@Override
 				public ValueClassification getValueClassification() {
-					switch ( PluralAttributeMetadataImpl.this.listIndexOrMapKeyClassification ) {
-						case EMBEDDED: {
-							return ValueClassification.EMBEDDABLE;
-						}
-						case BASIC: {
-							return ValueClassification.BASIC;
-						}
-						default: {
-							return ValueClassification.ENTITY;
-						}
-					}
+					return toValueClassification(PluralAttributeMetadataImpl.this.listIndexOrMapKeyClassification);
 				}
 
-				public AttributeMetadata getAttributeMetadata() {
+				@Override
+				public AttributeMetadata<X,Y> getAttributeMetadata() {
 					return PluralAttributeMetadataImpl.this;
 				}
 			};
@@ -144,12 +132,23 @@ class PluralAttributeMetadataImpl<X, Y, E>
 		}
 	}
 
+	private static ValueClassification toValueClassification(AttributeClassification classification) {
+		switch ( classification ) {
+			case EMBEDDED:
+				return ValueClassification.EMBEDDABLE;
+			case BASIC:
+				return ValueClassification.BASIC;
+			default:
+				return ValueClassification.ENTITY;
+		}
+	}
+
 	private Class<?> getClassFromGenericArgument(java.lang.reflect.Type type) {
 		if ( type instanceof Class ) {
-			return (Class) type;
+			return (Class<?>) type;
 		}
 		else if ( type instanceof TypeVariable ) {
-			final java.lang.reflect.Type upperBound = ( (TypeVariable) type ).getBounds()[0];
+			final java.lang.reflect.Type upperBound = ( (TypeVariable<?>) type ).getBounds()[0];
 			return getClassFromGenericArgument( upperBound );
 		}
 		else if ( type instanceof ParameterizedType ) {
@@ -168,7 +167,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 		}
 	}
 
-	public static CollectionClassification determineCollectionType(Class javaType, Property property) {
+	public static CollectionClassification determineCollectionType(Class<?> javaType, Property property) {
 		final Collection collection = (Collection) property.getValue();
 
 		if ( java.util.List.class.isAssignableFrom( javaType ) ) {
@@ -211,6 +210,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 		}
 	}
 
+	@Override
 	public ValueContext getElementValueContext() {
 		return elementValueContext;
 	}
@@ -220,6 +220,7 @@ class PluralAttributeMetadataImpl<X, Y, E>
 		return collectionClassification;
 	}
 
+	@Override
 	public ValueContext getMapKeyValueContext() {
 		return keyValueContext;
 	}

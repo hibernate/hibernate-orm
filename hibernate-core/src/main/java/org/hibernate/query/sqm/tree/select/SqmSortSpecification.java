@@ -6,8 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -20,13 +20,13 @@ import java.util.Objects;
  */
 public class SqmSortSpecification implements JpaOrder {
 	private final SqmExpression sortExpression;
-	private final SortOrder sortOrder;
+	private final SortDirection sortOrder;
 
 	private NullPrecedence nullPrecedence;
 
 	public SqmSortSpecification(
 			SqmExpression sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		assert sortExpression != null;
 		assert sortOrder != null;
@@ -37,10 +37,10 @@ public class SqmSortSpecification implements JpaOrder {
 	}
 
 	public SqmSortSpecification(SqmExpression sortExpression) {
-		this( sortExpression, SortOrder.ASCENDING, NullPrecedence.NONE );
+		this( sortExpression, SortDirection.ASCENDING, NullPrecedence.NONE );
 	}
 
-	public SqmSortSpecification(SqmExpression sortExpression, SortOrder sortOrder) {
+	public SqmSortSpecification(SqmExpression sortExpression, SortDirection sortOrder) {
 		this( sortExpression, sortOrder, NullPrecedence.NONE );
 	}
 
@@ -48,11 +48,12 @@ public class SqmSortSpecification implements JpaOrder {
 		return new SqmSortSpecification( sortExpression.copy( context ), sortOrder, nullPrecedence );
 	}
 
-	public SqmExpression getSortExpression() {
+	public SqmExpression<?> getSortExpression() {
 		return sortExpression;
 	}
 
-	public SortOrder getSortOrder() {
+	@Override
+	public SortDirection getSortDirection() {
 		return sortOrder;
 	}
 
@@ -73,7 +74,7 @@ public class SqmSortSpecification implements JpaOrder {
 
 	@Override
 	public JpaOrder reverse() {
-		SortOrder newSortOrder = this.sortOrder == null ? SortOrder.DESCENDING : sortOrder.reverse();
+		SortDirection newSortOrder = this.sortOrder == null ? SortDirection.DESCENDING : sortOrder.reverse();
 		return new SqmSortSpecification( sortExpression, newSortOrder, nullPrecedence );
 	}
 
@@ -84,12 +85,12 @@ public class SqmSortSpecification implements JpaOrder {
 
 	@Override
 	public boolean isAscending() {
-		return sortOrder == SortOrder.ASCENDING;
+		return sortOrder == SortDirection.ASCENDING;
 	}
 
 	public void appendHqlString(StringBuilder sb) {
 		sortExpression.appendHqlString( sb );
-		if ( sortOrder == SortOrder.DESCENDING ) {
+		if ( sortOrder == SortDirection.DESCENDING ) {
 			sb.append( " desc" );
 			if ( nullPrecedence != null ) {
 				if ( nullPrecedence == NullPrecedence.FIRST ) {

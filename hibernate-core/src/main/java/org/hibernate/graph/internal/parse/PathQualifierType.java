@@ -8,8 +8,10 @@ package org.hibernate.graph.internal.parse;
 
 import org.hibernate.graph.CannotContainSubGraphException;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+
+import static org.hibernate.metamodel.model.domain.internal.DomainModelHelper.resolveSubType;
 
 /**
  * @author Steve Ebersole
@@ -21,7 +23,8 @@ public enum PathQualifierType {
 					attributeNode.makeKeySubGraph(
 							resolveSubTypeManagedType(
 									attributeNode.getAttributeDescriptor().getKeyGraphType(),
-									subTypeName
+									subTypeName,
+									sessionFactory.getJpaMetamodel()
 							)
 					)
 	),
@@ -30,14 +33,16 @@ public enum PathQualifierType {
 					attributeNode.makeSubGraph(
 							resolveSubTypeManagedType(
 									attributeNode.getAttributeDescriptor().getValueGraphType(),
-									subTypeName
+									subTypeName,
+									sessionFactory.getJpaMetamodel()
 							)
 					)
 	);
 
 	private static ManagedDomainType resolveSubTypeManagedType(
 			DomainType<?> graphType,
-			String subTypeName) {
+			String subTypeName,
+			JpaMetamodelImplementor metamodel) {
 		if ( !( graphType instanceof ManagedDomainType ) ) {
 			throw new CannotContainSubGraphException( "The given type [" + graphType + "] is not a ManagedType" );
 		}
@@ -45,7 +50,7 @@ public enum PathQualifierType {
 		ManagedDomainType managedType = (ManagedDomainType) graphType;
 
 		if ( subTypeName != null ) {
-			managedType = managedType.findSubType( subTypeName );
+			managedType = resolveSubType( managedType, subTypeName, metamodel );
 		}
 		return managedType;
 	}

@@ -9,7 +9,7 @@ package org.hibernate.graph.spi;
 import org.hibernate.graph.GraphNode;
 
 /**
- * Integration version of the GraphNode contract
+ * Integration version of the {@link GraphNode} contract
  *
  * @author Steve Ebersole
  * @author Strong Liu

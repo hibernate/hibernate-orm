@@ -13,9 +13,9 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import static org.hibernate.query.sqm.NullPrecedence.FIRST;
-import static org.hibernate.query.sqm.SortOrder.ASCENDING;
-import static org.hibernate.query.sqm.SortOrder.DESCENDING;
+import static org.hibernate.query.NullPrecedence.FIRST;
+import static org.hibernate.query.SortDirection.ASCENDING;
+import static org.hibernate.query.SortDirection.DESCENDING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotSame;
 import static org.mockito.Mockito.mock;
@@ -33,12 +33,12 @@ public class SortSpecificationReversalTests {
 		SqmSortSpecification order = new SqmSortSpecification( sortExpression, ASCENDING, FIRST );
 
 		assertEquals( sortExpression, order.getSortExpression() );
-		assertEquals( ASCENDING, order.getSortOrder() );
+		assertEquals( ASCENDING, order.getSortDirection() );
 		assertEquals( FIRST, order.getNullPrecedence() );
 
 		JpaOrder reversed = order.reverse();
 
-		assertEquals( DESCENDING, reversed.getSortOrder() );
+		assertEquals( DESCENDING, reversed.getSortDirection() );
 		assertEquals( FIRST, reversed.getNullPrecedence() );
 
 		assertNotSame( "Order.reverse() should create new instance", order, reversed );

@@ -9,6 +9,7 @@ package org.hibernate.jpamodelgen.annotation;
 import javax.lang.model.element.Element;
 
 import org.hibernate.jpamodelgen.model.MetaSingleAttribute;
+import org.hibernate.jpamodelgen.util.Constants;
 
 /**
  * @author Max Andersen
@@ -23,6 +24,6 @@ public class AnnotationMetaSingleAttribute extends AnnotationMetaAttribute imple
 
 	@Override
 	public final String getMetaType() {
-		return "jakarta.persistence.metamodel.SingularAttribute";
+		return Constants.SINGULAR_ATTRIBUTE;
 	}
 }

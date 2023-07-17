@@ -15,6 +15,6 @@ package org.hibernate.metamodel.model.domain;
  * @author Steve Ebersole
  */
 public interface AnyMappingDomainType<J> extends SimpleDomainType<J> {
-	SimpleDomainType getDiscriminatorType();
-	SimpleDomainType getKeyType();
+	SimpleDomainType<?> getDiscriminatorType();
+	SimpleDomainType<?> getKeyType();
 }

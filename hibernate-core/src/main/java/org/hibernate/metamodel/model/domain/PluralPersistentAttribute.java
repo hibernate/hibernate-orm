@@ -14,10 +14,7 @@ import org.hibernate.query.sqm.SqmJoinable;
 import org.hibernate.query.sqm.SqmPathSource;
 
 /**
- * Hibernate extension to the JPA {@link PluralAttribute} descriptor
- *
- * todo (6.0) : Create an form of plural attribute (and singular) in the API package (org.hibernate.metamodel.model.domain)
- * 		and have this extend it
+ * Extension of the JPA-defined {@link PluralAttribute} interface.
  *
  * @author Steve Ebersole
  */

@@ -7,6 +7,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfileOverride;
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -60,7 +61,7 @@ public class NewFetchTest {
 			s.persist(e);
 		});
 
-		F f = scope.fromSession( s -> s.find(F.class, 1));
+		F f = scope.fromSession( s -> s.find(F.class, 1) );
 		assertFalse( isInitialized( f.g ) );
 		assertFalse( isInitialized( f.es ) );
 		F ff = scope.fromSession( s -> {
@@ -70,12 +71,125 @@ public class NewFetchTest {
 		assertTrue( isInitialized( ff.g ) );
 		assertTrue( isInitialized( ff.es ) );
 
-		E e = scope.fromSession( s -> s.find(E.class, 1));
+		E e = scope.fromSession( s -> s.find(E.class, 1) );
 		assertFalse( isInitialized( e.f ) );
 		E ee = scope.fromSession( s -> {
 			s.enableFetchProfile(OLD_PROFILE);
 			return s.find(E.class, 1);
 		} );
+		assertTrue( isInitialized( ee.f ) );
+	}
+
+	@Test void testById(SessionFactoryScope scope) {
+		scope.inTransaction( s-> {
+			G g = new G();
+			F f = new F();
+			E e = new E();
+			f.g = g;
+			e.f = f;
+			s.persist(g);
+			s.persist(f);
+			s.persist(e);
+		});
+
+		F f = scope.fromSession( s -> s.byId(F.class).load(1) );
+		assertFalse( isInitialized( f.g ) );
+		assertFalse( isInitialized( f.es ) );
+		F ff = scope.fromSession( s -> s.byId(F.class).enableFetchProfile(NEW_PROFILE).load(1) );
+		assertTrue( isInitialized( ff.g ) );
+		assertTrue( isInitialized( ff.es ) );
+
+		E e = scope.fromSession( s -> s.byId(E.class).load(1) );
+		assertFalse( isInitialized( e.f ) );
+		E ee = scope.fromSession( s -> s.byId(E.class).enableFetchProfile(OLD_PROFILE).load(1) );
+		assertTrue( isInitialized( ee.f ) );
+	}
+
+	@Test void testBySimpleNaturalId(SessionFactoryScope scope) {
+		scope.inTransaction( s-> {
+			G g = new G();
+			F f = new F();
+			E e = new E();
+			f.g = g;
+			e.f = f;
+			e.s = "1";
+			f.s = "1";
+			s.persist(g);
+			s.persist(f);
+			s.persist(e);
+		});
+
+		F f = scope.fromSession( s -> s.bySimpleNaturalId(F.class).load("1") );
+		assertFalse( isInitialized( f.g ) );
+		assertFalse( isInitialized( f.es ) );
+		F ff = scope.fromSession( s -> s.bySimpleNaturalId(F.class).enableFetchProfile(NEW_PROFILE).load("1") );
+		assertTrue( isInitialized( ff.g ) );
+		assertTrue( isInitialized( ff.es ) );
+
+		E e = scope.fromSession( s -> s.bySimpleNaturalId(E.class).load("1") );
+		assertFalse( isInitialized( e.f ) );
+		E ee = scope.fromSession( s -> s.bySimpleNaturalId(E.class).enableFetchProfile(OLD_PROFILE).load("1") );
+		assertTrue( isInitialized( ee.f ) );
+	}
+
+	@Test void testByNaturalId(SessionFactoryScope scope) {
+		scope.inTransaction( s-> {
+			G g = new G();
+			F f = new F();
+			E e = new E();
+			f.g = g;
+			e.f = f;
+			e.s = "2";
+			f.s = "2";
+			s.persist(g);
+			s.persist(f);
+			s.persist(e);
+		});
+
+		F f = scope.fromSession( s -> s.byNaturalId(F.class).using("s", "2").load() );
+		assertFalse( isInitialized( f.g ) );
+		assertFalse( isInitialized( f.es ) );
+		F ff = scope.fromSession( s -> s.byNaturalId(F.class).using("s", "2").enableFetchProfile(NEW_PROFILE).load() );
+		assertTrue( isInitialized( ff.g ) );
+		assertTrue( isInitialized( ff.es ) );
+
+		E e = scope.fromSession( s -> s.byNaturalId(E.class).using("s", "2").load() );
+		assertFalse( isInitialized( e.f ) );
+		E ee = scope.fromSession( s -> s.byNaturalId(E.class).using("s", "2").enableFetchProfile(OLD_PROFILE).load() );
+		assertTrue( isInitialized( ee.f ) );
+	}
+
+	@Test void testQuery(SessionFactoryScope scope) {
+		scope.inTransaction( s-> {
+			G g = new G();
+			F f = new F();
+			E e = new E();
+			f.g = g;
+			e.f = f;
+			s.persist(g);
+			s.persist(f);
+			s.persist(e);
+		});
+
+		F f = scope.fromSession( s ->
+				s.createSelectionQuery("from F where id = 1", F.class)
+						.getSingleResult());
+		assertFalse( isInitialized( f.g ) );
+		assertFalse( isInitialized( f.es ) );
+		F ff = scope.fromSession( s ->
+				s.createSelectionQuery("from F where id = 1", F.class)
+						.enableFetchProfile(NEW_PROFILE).getSingleResult());
+		assertTrue( isInitialized( ff.g ) );
+		assertTrue( isInitialized( ff.es ) );
+
+		E e = scope.fromSession( s ->
+				s.createSelectionQuery("from E where id = 1", E.class)
+						.getSingleResult());
+		assertFalse( isInitialized( e.f ) );
+		E ee = scope.fromSession( s ->
+				s.createSelectionQuery("from E where id = 1", E.class)
+						.enableFetchProfile(OLD_PROFILE)
+						.getSingleResult());
 		assertTrue( isInitialized( ee.f ) );
 	}
 
@@ -234,6 +348,7 @@ public class NewFetchTest {
 		Long id;
 		@ManyToOne(fetch = LAZY)
 		F f;
+		@NaturalId String s;
 	}
 	@Entity(name = "F")
 	static class F {
@@ -250,6 +365,7 @@ public class NewFetchTest {
 		@FetchProfileOverride(mode = SELECT, fetch = EAGER, profile = EAGER_SELECT_PROFILE)
 		@FetchProfileOverride(mode = JOIN, profile = JOIN_PROFILE)
 		Set<E> es;
+		@NaturalId String s;
 	}
 	@Entity(name = "G")
 	static class G {

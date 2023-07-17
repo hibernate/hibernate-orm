@@ -18,7 +18,6 @@ import java.util.stream.Stream;
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -30,6 +29,7 @@ import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.UnknownProfileException;
 import org.hibernate.dialect.Dialect;
 
 import jakarta.persistence.FlushModeType;
@@ -215,6 +215,37 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 */
 	SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
 
+	/**
+	 * Enable the {@link org.hibernate.annotations.FetchProfile fetch profile}
+	 * for this query. If the requested fetch profile is already enabled,
+	 * the call has no effect.
+	 * <p>
+	 * This is an alternative way to specify the associations which
+	 * should be fetched as part of the initial query.
+	 *
+	 * @param profileName the name of the fetch profile to be enabled
+	 *
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 *                                 match any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 */
+	SelectionQuery<R> enableFetchProfile(String profileName);
+
+	/**
+	 * Disable the {@link org.hibernate.annotations.FetchProfile fetch profile}
+	 * with the given name in this session. If the requested fetch profile
+	 * is not currently enabled, the call has no effect.
+	 *
+	 * @param profileName the name of the fetch profile to be disabled
+	 *
+	 * @throws UnknownProfileException Indicates that the given name does not
+	 *                                 match any known fetch profile names
+	 *
+	 * @see org.hibernate.annotations.FetchProfile
+	 */
+	SelectionQuery<R> disableFetchProfile(String profileName);
+
 	@Override
 	SelectionQuery<R> setFlushMode(FlushModeType flushMode);
 
@@ -316,15 +347,36 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 
 	/**
 	 * The first row position to return from the query results. Applied
-	 * to the SQL query
+	 * to the SQL query.
 	 */
 	int getFirstResult();
 
 	/**
 	 * Set the first row position to return from the query results. Applied
-	 * to the SQL query
+	 * to the SQL query.
 	 */
 	SelectionQuery<R> setFirstResult(int startPosition);
+
+//	/**
+//	 * Set the page of results to return.
+//	 *
+//	 * @param pageNumber the page to return, where pages are numbered from zero
+//	 * @param pageSize the number of results per page
+//	 *
+//	 * @since 6.3
+//	 */
+//	@Incubating
+//	SelectionQuery<R> setPage(int pageSize, int pageNumber);
+
+	/**
+	 * Set the {@linkplain Page page} of results to return.
+	 *
+	 * @see Page
+	 *
+	 * @since 6.3
+	 */
+	@Incubating
+	SelectionQuery<R> setPage(Page page);
 
 	/**
 	 * Obtain the {@link CacheMode} in effect for this query. By default,
@@ -472,59 +524,30 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	SelectionQuery<R> setLockMode(String alias, LockMode lockMode);
 
 	/**
-	 * If the result type of this query is an entity class, add an attribute
-	 * of the entity to be used to order the query results in ascending order.
+	 * If the result type of this query is an entity class, add one or more
+	 * {@linkplain Order rules} for ordering the query results.
 	 *
-	 * @param attribute an attribute of the entity class returned by this query
+	 * @param orderList one or more instances of {@link Order}
+	 *
+	 * @see Order
 	 *
 	 * @since 6.3
 	 */
 	@Incubating
-	SelectionQuery<R> ascending(SingularAttribute<? super R, ?> attribute);
+	SelectionQuery<R> setOrder(List<Order<? super R>> orderList);
 
 	/**
-	 * If the result type of this query is an entity class, add an attribute
-	 * of the entity to be used to order the query results in descending order.
+	 * If the result type of this query is an entity class, add a
+	 * {@linkplain Order rule} for ordering the query results.
 	 *
-	 * @param attribute an attribute of the entity class returned by this query
+	 * @param order an instance of {@link Order}
 	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> descending(SingularAttribute<? super R, ?> attribute);
-
-	/**
-	 * Add an element of the select list to be used to order the query results
-	 * in ascending order.
-	 *
-	 * @param element an integer identifying an element of the select list
+	 * @see Order
 	 *
 	 * @since 6.3
 	 */
 	@Incubating
-	SelectionQuery<R> ascending(int element);
-
-	/**
-	 * Add an element of the select list to be used to order the query results
-	 * in descending order.
-	 *
-	 * @param element an integer identifying an element of the select list
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> descending(int element);
-
-	/**
-	 * Clear the ordering conditions for this query.
-	 *
-	 * @see #ascending(SingularAttribute)
-	 * @see #descending(SingularAttribute)
-	 *
-	 * @since 6.3
-	 */
-	@Incubating
-	SelectionQuery<R> unordered();
+	SelectionQuery<R> setOrder(Order<? super R> order);
 
 	/**
 	 * Specify a {@link LockMode} to apply to a specific alias defined in the query

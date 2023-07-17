@@ -8,12 +8,15 @@ package org.hibernate.jpamodelgen;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -22,9 +25,11 @@ import javax.tools.Diagnostic;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.AccessType;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
-import org.hibernate.jpamodelgen.util.Constants;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import static java.lang.Boolean.parseBoolean;
+import static java.util.Collections.emptyList;
 
 /**
  * @author Max Andersen
@@ -35,7 +40,7 @@ public final class Context {
 	private static final String DEFAULT_PERSISTENCE_XML_LOCATION = "/META-INF/persistence.xml";
 
 	/**
-	 * Used for keeping track of parsed entities and mapped super classes (xml + annotations).
+	 * Used for keeping track of parsed entities and mapped super classes (XML + annotations).
 	 */
 	private final Map<String, Metamodel> metaEntities = new HashMap<>();
 
@@ -49,7 +54,9 @@ public final class Context {
 
 	private final Map<String, AccessTypeInformation> accessTypeInformation = new HashMap<>();
 
-	private final ProcessingEnvironment pe;
+	private final Set<CharSequence> elementsToRedo = new HashSet<>();
+
+	private final ProcessingEnvironment processingEnvironment;
 	private final boolean logDebug;
 	private final boolean lazyXmlParsing;
 	private final String persistenceXmlLocation;
@@ -60,21 +67,29 @@ public final class Context {
 	 * place.
 	 */
 	private Boolean fullyXmlConfigured;
+	private boolean addInjectAnnotation = false;
+	private boolean addDependentAnnotation = false;
+	private boolean addNonnullAnnotation = false;
 	private boolean addGeneratedAnnotation = true;
 	private boolean addGenerationDate;
 	private boolean addSuppressWarningsAnnotation;
 	private AccessType persistenceUnitDefaultAccessType;
 
 	// keep track of all classes for which model have been generated
-	private final Collection<String> generatedModelClasses = new HashSet<String>();
+	private final Collection<String> generatedModelClasses = new HashSet<>();
 
-	public Context(ProcessingEnvironment pe) {
-		this.pe = pe;
+	// keep track of which named queries have been checked
+	private final Set<String> checkedNamedQueries = new HashSet<>();
 
-		String persistenceXmlOption = pe.getOptions().get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
+	public Context(ProcessingEnvironment processingEnvironment) {
+		this.processingEnvironment = processingEnvironment;
+
+		final Map<String, String> options = processingEnvironment.getOptions();
+
+		String persistenceXmlOption = options.get( JPAMetaModelEntityProcessor.PERSISTENCE_XML_OPTION );
 		if ( persistenceXmlOption != null ) {
-			if ( !persistenceXmlOption.startsWith( Constants.PATH_SEPARATOR ) ) {
-				persistenceXmlOption = Constants.PATH_SEPARATOR + persistenceXmlOption;
+			if ( !persistenceXmlOption.startsWith("/") ) {
+				persistenceXmlOption = "/" + persistenceXmlOption;
 			}
 			persistenceXmlLocation = persistenceXmlOption;
 		}
@@ -82,26 +97,50 @@ public final class Context {
 			persistenceXmlLocation = DEFAULT_PERSISTENCE_XML_LOCATION;
 		}
 
-		String ormXmlOption = pe.getOptions().get( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
+		String ormXmlOption = options.get( JPAMetaModelEntityProcessor.ORM_XML_OPTION );
 		if ( ormXmlOption != null ) {
 			ormXmlFiles = new ArrayList<>();
 			for ( String ormFile : ormXmlOption.split( "," ) ) {
-				if ( !ormFile.startsWith( Constants.PATH_SEPARATOR ) ) {
-					ormFile = Constants.PATH_SEPARATOR + ormFile;
+				if ( !ormFile.startsWith("/") ) {
+					ormFile = "/" + ormFile;
 				}
 				ormXmlFiles.add( ormFile );
 			}
 		}
 		else {
-			ormXmlFiles = Collections.emptyList();
+			ormXmlFiles = emptyList();
 		}
 
-		lazyXmlParsing = Boolean.parseBoolean( pe.getOptions().get( JPAMetaModelEntityProcessor.LAZY_XML_PARSING ) );
-		logDebug = Boolean.parseBoolean( pe.getOptions().get( JPAMetaModelEntityProcessor.DEBUG_OPTION ) );
+		lazyXmlParsing = parseBoolean( options.get( JPAMetaModelEntityProcessor.LAZY_XML_PARSING ) );
+		logDebug = parseBoolean( options.get( JPAMetaModelEntityProcessor.DEBUG_OPTION ) );
 	}
 
 	public ProcessingEnvironment getProcessingEnvironment() {
-		return pe;
+		return processingEnvironment;
+	}
+
+	public boolean addInjectAnnotation() {
+		return addInjectAnnotation;
+	}
+
+	public void setAddInjectAnnotation(boolean addInjectAnnotation) {
+		this.addInjectAnnotation = addInjectAnnotation;
+	}
+
+	public boolean addDependentAnnotation() {
+		return addDependentAnnotation;
+	}
+
+	public void setAddDependentAnnotation(boolean addDependentAnnotation) {
+		this.addDependentAnnotation = addDependentAnnotation;
+	}
+
+	public boolean addNonnullAnnotation() {
+		return addNonnullAnnotation;
+	}
+
+	public void setAddNonnullAnnotation(boolean addNonnullAnnotation) {
+		this.addNonnullAnnotation = addNonnullAnnotation;
 	}
 
 	public boolean addGeneratedAnnotation() {
@@ -129,11 +168,11 @@ public final class Context {
 	}
 
 	public Elements getElementUtils() {
-		return pe.getElementUtils();
+		return processingEnvironment.getElementUtils();
 	}
 
 	public Types getTypeUtils() {
-		return pe.getTypeUtils();
+		return processingEnvironment.getTypeUtils();
 	}
 
 	public String getPersistenceXmlLocation() {
@@ -197,7 +236,7 @@ public final class Context {
 	}
 
 	public TypeElement getTypeElementForFullyQualifiedName(String fqcn) {
-		Elements elementUtils = pe.getElementUtils();
+		Elements elementUtils = processingEnvironment.getElementUtils();
 		return elementUtils.getTypeElement( fqcn );
 	}
 
@@ -209,24 +248,32 @@ public final class Context {
 		return generatedModelClasses.contains( name );
 	}
 
+	public Set<CharSequence> getElementsToRedo() {
+		return elementsToRedo;
+	}
+
+	public void addElementToRedo(CharSequence qualifiedName) {
+		elementsToRedo.add( qualifiedName );
+	}
+
+	public void removeElementToRedo(CharSequence qualifiedName) {
+		elementsToRedo.remove( qualifiedName );
+	}
+
 	public void logMessage(Diagnostic.Kind type, String message) {
-		if ( !logDebug && type.equals( Diagnostic.Kind.OTHER ) ) {
-			return;
+		if ( logDebug || type != Diagnostic.Kind.OTHER ) {
+			processingEnvironment.getMessager().printMessage( type, message );
 		}
-		pe.getMessager().printMessage( type, message );
 	}
 
 	public boolean isFullyXmlConfigured() {
-		return fullyXmlConfigured != null && fullyXmlConfigured.booleanValue();
+		return fullyXmlConfigured != null && fullyXmlConfigured;
 	}
 
 	public void mappingDocumentFullyXmlConfigured(boolean fullyXmlConfigured) {
-		if ( this.fullyXmlConfigured == null ) {
-			this.fullyXmlConfigured = fullyXmlConfigured;
-		}
-		else {
-			this.fullyXmlConfigured = this.fullyXmlConfigured && fullyXmlConfigured;
-		}
+		this.fullyXmlConfigured = this.fullyXmlConfigured == null
+				? fullyXmlConfigured
+				: this.fullyXmlConfigured && fullyXmlConfigured;
 	}
 
 	public AccessType getPersistenceUnitDefaultAccessType() {
@@ -241,6 +288,21 @@ public final class Context {
 		return lazyXmlParsing;
 	}
 
+	public void message(Element method, String message, Diagnostic.Kind severity) {
+		getProcessingEnvironment().getMessager()
+				.printMessage( severity, message, method );
+	}
+
+	public void message(Element method, AnnotationMirror mirror, AnnotationValue value, String message, Diagnostic.Kind severity) {
+		getProcessingEnvironment().getMessager()
+				.printMessage( severity, message, method, mirror, value );
+	}
+
+	public void message(Element method, AnnotationMirror mirror, String message, Diagnostic.Kind severity) {
+		getProcessingEnvironment().getMessager()
+				.printMessage( severity, message, method, mirror );
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder sb = new StringBuilder();
@@ -253,5 +315,9 @@ public final class Context {
 		sb.append( ", persistenceXmlLocation='" ).append( persistenceXmlLocation ).append( '\'' );
 		sb.append( '}' );
 		return sb.toString();
+	}
+
+	public boolean checkNamedQuery(String name) {
+		return checkedNamedQueries.add(name);
 	}
 }

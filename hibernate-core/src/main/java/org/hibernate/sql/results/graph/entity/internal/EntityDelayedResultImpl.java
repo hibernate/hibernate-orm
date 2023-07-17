@@ -8,7 +8,6 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -39,7 +38,7 @@ public class EntityDelayedResultImpl implements DomainResult {
 		this.navigablePath = navigablePath;
 		this.entityValuedModelPart = entityValuedModelPart;
 		this.identifierResult = entityValuedModelPart.getForeignKeyDescriptor().createKeyDomainResult(
-				navigablePath.append( EntityIdentifierMapping.ROLE_LOCAL_NAME ),
+				navigablePath.append( EntityIdentifierMapping.ID_ROLE_NAME ),
 				targetTableGroup,
 				entityValuedModelPart.getSideNature(),
 				null,

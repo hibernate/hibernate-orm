@@ -10,6 +10,10 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.service.Service;
 import org.hibernate.stat.Statistics;
 
+import java.util.Map;
+
+import static java.util.Collections.emptyMap;
+
 /**
  * A service SPI for collecting statistics about various events that occur at runtime.
  *
@@ -273,5 +277,18 @@ public interface StatisticsImplementor extends Statistics, Service {
 	 */
 	default void queryCompiled(String hql, long microseconds) {
 		//For backward compatibility
+	}
+
+	/**
+	 * Register the execution of a slow SQL query.
+	 */
+	default void slowQuery(String sql, long executionTime) {
+		//For backward compatibility
+	}
+
+	@Override
+	default Map<String, Long> getSlowQueries() {
+		//For backward compatibility
+		return emptyMap();
 	}
 }

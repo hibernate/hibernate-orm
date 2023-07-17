@@ -7,7 +7,6 @@
 package org.hibernate.query.criteria;
 
 import org.hibernate.Incubating;
-import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;

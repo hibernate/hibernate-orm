@@ -50,10 +50,12 @@ import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_DROP_T
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
 /**
- * Responsible for coordinating SchemaManagementTool execution(s) for auto-tooling whether
- * from JPA or hbm2ddl.auto.
+ * Responsible for coordinating {@link SchemaManagementTool} execution
+ * whether from {@value AvailableSettings#HBM2DDL_AUTO}, JPA-standard
+ * {@value AvailableSettings#JAKARTA_HBM2DDL_DATABASE_ACTION}, or
+ * {@link org.hibernate.relational.SchemaManager}.
  * <p>
- * The main entry point is {@link #process}
+ * The main entry point is {@link #process}.
  *
  * @author Steve Ebersole
  */

@@ -100,7 +100,7 @@ public class AnonymousTupleEntityValuedModelPart
 		final EntityPersister persister = ((EntityMappingType) delegate.getPartMappingType())
 				.getEntityPersister();
 		final Set<String> targetKeyPropertyNames = new HashSet<>();
-		targetKeyPropertyNames.add( EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		targetKeyPropertyNames.add( EntityIdentifierMapping.ID_ROLE_NAME );
 		ToOneAttributeMapping.addPrefixedPropertyNames(
 				targetKeyPropertyNames,
 				persister.getIdentifierPropertyName(),

@@ -422,7 +422,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitWhereClause(SqmWhereClause whereClause) {
-		if ( whereClause == null ) {
+		if ( whereClause == null || whereClause.getPredicate() == null ) {
 			return null;
 		}
 

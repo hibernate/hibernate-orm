@@ -61,6 +61,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -69,9 +70,8 @@ import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.FrameExclusion;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.FrameMode;
-import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.SetOperator;
-import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.MultipatternSqmFunctionDescriptor;
@@ -1935,7 +1935,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			for ( SearchClauseSpecification searchBySpecification : cte.getSearchBySpecifications() ) {
 				appendSql( separator );
 				appendSql( searchBySpecification.getCteColumn().getColumnExpression() );
-				final SortOrder sortOrder = searchBySpecification.getSortOrder();
+				final SortDirection sortOrder = searchBySpecification.getSortOrder();
 				if ( sortOrder != null ) {
 					NullPrecedence nullPrecedence = searchBySpecification.getNullPrecedence();
 					if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
@@ -1943,7 +1943,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					}
 					final boolean renderNullPrecedence = nullPrecedence != null &&
 							!nullPrecedence.isDefaultOrdering( sortOrder, dialect.getNullOrdering() );
-					if ( sortOrder == SortOrder.DESCENDING ) {
+					if ( sortOrder == SortDirection.DESCENDING ) {
 						appendSql( " desc" );
 					}
 					else if ( renderNullPrecedence ) {
@@ -2071,7 +2071,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				visitColumnReference( depthColumnReference );
 
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
-					if ( searchBySpecification.getSortOrder() == SortOrder.DESCENDING ) {
+					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
@@ -2103,7 +2103,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				String separator = NO_SEPARATOR;
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
-					if ( searchBySpecification.getSortOrder() == SortOrder.DESCENDING ) {
+					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
@@ -2130,7 +2130,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( "row(0" );
 
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
-					if ( searchBySpecification.getSortOrder() == SortOrder.DESCENDING ) {
+					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
@@ -2152,7 +2152,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				String separator = NO_SEPARATOR;
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
-					if ( searchBySpecification.getSortOrder() == SortOrder.DESCENDING ) {
+					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
@@ -2213,7 +2213,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				arguments.add( lpad( castToString( depthColumnReference ), 10, "0" ) );
 				arguments.add( nullSeparator );
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
-					if ( searchBySpecification.getSortOrder() == SortOrder.DESCENDING ) {
+					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
@@ -2251,7 +2251,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						)
 				);
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
-					if ( searchBySpecification.getSortOrder() == SortOrder.DESCENDING ) {
+					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
@@ -2290,7 +2290,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				arguments.add( nullSeparator );
 				columnSizeEstimate += 11;
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
-					if ( searchBySpecification.getSortOrder() == SortOrder.DESCENDING ) {
+					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
@@ -2329,7 +2329,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			else {
 				for ( SearchClauseSpecification searchBySpecification : currentCteStatement.getSearchBySpecifications() ) {
-					if ( searchBySpecification.getSortOrder() == SortOrder.DESCENDING ) {
+					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
 					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
@@ -3709,7 +3709,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	public void visitSortSpecification(SortSpecification sortSpecification) {
 		final Expression sortExpression = sortSpecification.getSortExpression();
 		final NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
-		final SortOrder sortOrder = sortSpecification.getSortOrder();
+		final SortDirection sortOrder = sortSpecification.getSortOrder();
 		final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( sortExpression );
 		if ( sqlTuple != null ) {
 			String separator = NO_SEPARATOR;
@@ -3724,7 +3724,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected void visitSortSpecification(Expression sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	protected void visitSortSpecification(Expression sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
 			nullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
 		}
@@ -3742,10 +3742,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			sortExpression.accept( this );
 		}
 
-		if ( sortOrder == SortOrder.DESCENDING ) {
+		if ( sortOrder == SortDirection.DESCENDING ) {
 			appendSql( " desc" );
 		}
-		else if ( sortOrder == SortOrder.ASCENDING && renderNullPrecedence && supportsNullPrecedence ) {
+		else if ( sortOrder == SortDirection.ASCENDING && renderNullPrecedence && supportsNullPrecedence ) {
 			appendSql( " asc" );
 		}
 
@@ -4975,7 +4975,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					sortSpecificationsRowNumbering.add(
 							new SortSpecification(
 									new SqlSelectionExpression( sqlSelections.get( i ) ),
-									SortOrder.ASCENDING,
+									SortDirection.ASCENDING,
 									NullPrecedence.NONE
 							)
 					);
@@ -5878,7 +5878,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					);
 				}
 				final ComparisonOperator comparisonOperator;
-				if ( sortSpecification.getSortOrder() == SortOrder.DESCENDING ) {
+				if ( sortSpecification.getSortOrder() == SortDirection.DESCENDING ) {
 					comparisonOperator = ComparisonOperator.GREATER_THAN_OR_EQUAL;
 				}
 				else {
@@ -5957,12 +5957,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					nullPrecedence = NullPrecedence.LAST;
 					break;
 				case SMALLEST:
-					nullPrecedence = sortSpecification.getSortOrder() == SortOrder.ASCENDING
+					nullPrecedence = sortSpecification.getSortOrder() == SortDirection.ASCENDING
 							? NullPrecedence.FIRST
 							: NullPrecedence.LAST;
 					break;
 				case GREATEST:
-					nullPrecedence = sortSpecification.getSortOrder() == SortOrder.DESCENDING
+					nullPrecedence = sortSpecification.getSortOrder() == SortDirection.DESCENDING
 							? NullPrecedence.FIRST
 							: NullPrecedence.LAST;
 					break;
@@ -6848,6 +6848,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				else {
 					String separator = NO_SEPARATOR;
+					appendSql( OPEN_PARENTHESIS );
 					for ( Expression expression : listExpressions ) {
 						appendSql( separator );
 						emulateTupleComparison(
@@ -6858,6 +6859,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						);
 						separator = " or ";
 					}
+					appendSql( CLOSE_PARENTHESIS );
 				}
 				return;
 			}

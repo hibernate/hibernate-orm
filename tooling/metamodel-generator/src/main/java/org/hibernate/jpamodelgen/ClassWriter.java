@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.List;
 import javax.annotation.processing.FilerException;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -25,12 +26,13 @@ import javax.tools.FileObject;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
-import org.hibernate.jpamodelgen.util.TypeUtils;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
+
 /**
- * Helper class to write the actual meta model class using the  {@link javax.annotation.processing.Filer} API.
+ * Helper class to write the actual metamodel class using the  {@link javax.annotation.processing.Filer} API.
  *
  * @author Emmanuel Bernard
  * @author Hardy Ferentschik
@@ -95,34 +97,38 @@ public final class ClassWriter {
 	 * @return body content
 	 */
 	private static StringBuffer generateBody(Metamodel entity, Context context) {
-		StringWriter sw = new StringWriter();
+		final StringWriter sw = new StringWriter();
 		try ( PrintWriter pw = new PrintWriter(sw) ) {
 
+			if ( context.addDependentAnnotation() && entity.isInjectable() ) {
+				pw.println( writeDependentAnnotation( entity ) );
+			}
 			if ( entity.getElement() instanceof TypeElement ) {
-				pw.println(writeStaticMetaModelAnnotation(entity));
+				pw.println( writeStaticMetaModelAnnotation( entity ) );
+			}
+			if ( context.addGeneratedAnnotation() ) {
+				pw.println( writeGeneratedAnnotation( entity, context ) );
+			}
+			if ( context.isAddSuppressWarningsAnnotation() ) {
+				pw.println( writeSuppressWarnings() );
 			}
 
-			if (context.addGeneratedAnnotation()) {
-				pw.println(writeGeneratedAnnotation(entity, context));
-			}
-			if (context.isAddSuppressWarningsAnnotation()) {
-				pw.println(writeSuppressWarnings());
-			}
-
-			printClassDeclaration(entity, pw, context);
+			printClassDeclaration( entity, pw, context );
 
 			pw.println();
 
-			List<MetaAttribute> members = entity.getMembers();
-			for (MetaAttribute metaMember : members) {
-				if (metaMember.hasTypedAttribute()) {
+			final List<MetaAttribute> members = entity.getMembers();
+			for ( MetaAttribute metaMember : members ) {
+				if ( metaMember.hasTypedAttribute() ) {
 					metaMember.getAttributeDeclarationString().lines()
-							.forEach(line -> pw.println("	" + line));
+							.forEach(line -> pw.println('\t' + line));
 				}
 			}
 			pw.println();
-			for (MetaAttribute metaMember : members) {
-				pw.println("	" + metaMember.getAttributeNameDeclarationString());
+			for ( MetaAttribute metaMember : members ) {
+				if ( metaMember.hasStringAttribute() ) {
+					pw.println( '\t' + metaMember.getAttributeNameDeclarationString() );
+				}
 			}
 
 			pw.println();
@@ -132,11 +138,16 @@ public final class ClassWriter {
 	}
 
 	private static void printClassDeclaration(Metamodel entity, PrintWriter pw, Context context) {
-		pw.print( "public abstract class " + entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX );
+		pw.print( entity.isImplementation() ? "public class " : "public abstract class " );
+		pw.print( entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX );
 
 		String superClassName = findMappedSuperClass( entity, context );
 		if ( superClassName != null ) {
 			pw.print( " extends " + superClassName + META_MODEL_CLASS_NAME_SUFFIX );
+		}
+		if ( entity.isImplementation() ) {
+			pw.print( entity.getElement().getKind() == ElementKind.CLASS ? " extends " : " implements " );
+			pw.print( entity.getSimpleName() );
 		}
 
 		pw.println( " {" );
@@ -184,8 +195,8 @@ public final class ClassWriter {
 		// to allow for the case that the metamodel class for the super entity is for example contained in another
 		// jar file we use reflection. However, we need to consider the fact that there is xml configuration
 		// and annotations should be ignored
-		if ( !entityMetaComplete && ( TypeUtils.containsAnnotation( superClassElement, Constants.ENTITY )
-				|| TypeUtils.containsAnnotation( superClassElement, Constants.MAPPED_SUPERCLASS ) ) ) {
+		if ( !entityMetaComplete
+				&& containsAnnotation( superClassElement, Constants.ENTITY, Constants.MAPPED_SUPERCLASS ) ) {
 			return true;
 		}
 
@@ -230,7 +241,12 @@ public final class ClassWriter {
 		return "@SuppressWarnings({ \"deprecation\", \"rawtypes\" })";
 	}
 
+	private static String writeDependentAnnotation(Metamodel entity) {
+		return "@" + entity.importType( "jakarta.enterprise.context.Dependent" );
+	}
+
 	private static String writeStaticMetaModelAnnotation(Metamodel entity) {
-		return "@" + entity.importType( "jakarta.persistence.metamodel.StaticMetamodel" ) + "(" + entity.getSimpleName() + ".class)";
+		return "@" + entity.importType( "jakarta.persistence.metamodel.StaticMetamodel" )
+				+ "(" + entity.getSimpleName() + ".class)";
 	}
 }

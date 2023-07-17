@@ -20,12 +20,12 @@ public class EntityIdentifierNavigablePath extends NavigablePath {
 	private final String identifierAttributeName;
 
 	public EntityIdentifierNavigablePath(NavigablePath parent, String identifierAttributeName) {
-		super( parent, EntityIdentifierMapping.ROLE_LOCAL_NAME );
+		super( parent, EntityIdentifierMapping.ID_ROLE_NAME );
 		this.identifierAttributeName = identifierAttributeName;
 	}
 
 	public EntityIdentifierNavigablePath(NavigablePath parent, String alias, String identifierAttributeName) {
-		super( parent, EntityIdentifierMapping.ROLE_LOCAL_NAME, alias );
+		super( parent, EntityIdentifierMapping.ID_ROLE_NAME, alias );
 		this.identifierAttributeName = identifierAttributeName;
 	}
 
@@ -35,7 +35,7 @@ public class EntityIdentifierNavigablePath extends NavigablePath {
 
 	@Override
 	public String getLocalName() {
-		return EntityIdentifierMapping.ROLE_LOCAL_NAME;
+		return EntityIdentifierMapping.ID_ROLE_NAME;
 	}
 
 	@Override

@@ -7,44 +7,32 @@
 package org.hibernate.graph.internal;
 
 import org.hibernate.graph.SubGraph;
+import org.hibernate.graph.spi.GraphHelper;
 import org.hibernate.graph.spi.GraphImplementor;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.IdentifiableDomainType;
-import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.ManagedDomainType;
-
-import jakarta.persistence.EntityGraph;
 
 /**
- * The Hibernate implementation of the JPA EntityGraph contract.
+ * Implementation of the JPA-defined {@link jakarta.persistence.EntityGraph} interface.
  *
  * @author Steve Ebersole
  */
-public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>, RootGraphImplementor<J> {
+public class RootGraphImpl<J> extends AbstractGraph<J> implements RootGraphImplementor<J> {
+
 	private final String name;
 
-	public RootGraphImpl(
-			String name,
-			EntityDomainType<J> entityType,
-			boolean mutable,
-			JpaMetamodel jpaMetamodel) {
-		super( entityType, mutable, jpaMetamodel );
+	public RootGraphImpl(String name, EntityDomainType<J> entityType, boolean mutable) {
+		super( entityType, mutable );
 		this.name = name;
 	}
 
-	public RootGraphImpl(String name, EntityDomainType<J> entityType, JpaMetamodel jpaMetamodel) {
-		this(
-				name,
-				entityType,
-				true,
-				jpaMetamodel
-		);
+	public RootGraphImpl(String name, EntityDomainType<J> entityType) {
+		this( name, entityType, true );
 	}
 
-	public RootGraphImpl(String name, boolean mutable, GraphImplementor<J> original) {
-		super( mutable, original );
+	public RootGraphImpl(String name, GraphImplementor<J> original, boolean mutable) {
+		super(original, mutable);
 		this.name = name;
 	}
 
@@ -55,21 +43,17 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 
 	@Override
 	public RootGraphImplementor<J> makeCopy(boolean mutable) {
-		return new RootGraphImpl<>( null, mutable, this );
+		return new RootGraphImpl<>( null, this, mutable);
 	}
 
 	@Override
 	public SubGraphImplementor<J> makeSubGraph(boolean mutable) {
-		return new SubGraphImpl<>( mutable, this );
+		return new SubGraphImpl<>(this, mutable);
 	}
 
 	@Override
 	public RootGraphImplementor<J> makeRootGraph(String name, boolean mutable) {
-		if ( ! mutable && ! isMutable() ) {
-			return this;
-		}
-
-		return super.makeRootGraph( name, mutable );
+		return !mutable && !isMutable() ? this : super.makeRootGraph( name, mutable );
 	}
 
 	@Override
@@ -78,30 +62,7 @@ public class RootGraphImpl<J> extends AbstractGraph<J> implements EntityGraph<J>
 	}
 
 	@Override
-	public boolean appliesTo(EntityDomainType<? super J> entityType) {
-		final ManagedDomainType<J> managedTypeDescriptor = getGraphedType();
-		if ( managedTypeDescriptor.equals( entityType ) ) {
-			return true;
-		}
-
-		IdentifiableDomainType<? super J> superType = entityType.getSupertype();
-		while ( superType != null ) {
-			if ( managedTypeDescriptor.equals( superType ) ) {
-				return true;
-			}
-			superType = superType.getSupertype();
-		}
-
-		return false;
-	}
-
-	@Override
-	public boolean appliesTo(String entityName) {
-		return appliesTo( jpaMetamodel().entity( entityName ) );
-	}
-
-	@Override
-	public boolean appliesTo(Class type) {
-		return appliesTo( jpaMetamodel().entity( type ) );
+	public boolean appliesTo(EntityDomainType<?> entityType) {
+		return GraphHelper.appliesTo( this, entityType );
 	}
 }

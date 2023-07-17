@@ -9,8 +9,7 @@ package org.hibernate.orm.test.annotations.generics;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.hibernate.query.criteria.JpaPath;
-
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -85,7 +84,7 @@ public class GenericMapAssociationTest {
 			// generic attributes are always reported as Object java type
 			assertThat( join.getJavaType() ).isEqualTo( Object.class );
 			assertThat( join.getModel() ).isSameAs( root.getModel().getAttribute( "map" ) );
-			assertThat( ( (JpaPath<?>) join ).getResolvedModel()
+			assertThat( ( (SqmPath<?>) join ).getResolvedModel()
 								.getBindableJavaType() ).isEqualTo( MapValueEntity.class );
 			query.select( join.get( "id" ) );
 			final Long result = session.createQuery( query ).getSingleResult();

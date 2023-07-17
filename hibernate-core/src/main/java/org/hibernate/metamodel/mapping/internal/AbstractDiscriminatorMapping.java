@@ -53,7 +53,7 @@ public abstract class AbstractDiscriminatorMapping implements EntityDiscriminato
 		this.underlyingJdbcMapping = underlyingJdbcMapping;
 		this.entityDescriptor = entityDescriptor;
 
-		this.role = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME );
+		this.role = entityDescriptor.getNavigableRole().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME );
 
 		this.discriminatorType = discriminatorType;
 	}

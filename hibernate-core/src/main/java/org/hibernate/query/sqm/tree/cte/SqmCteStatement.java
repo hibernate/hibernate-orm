@@ -15,8 +15,7 @@ import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
 import org.hibernate.query.criteria.JpaSearchOrder;
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
@@ -28,11 +27,9 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.AbstractSqmNode;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 
 import jakarta.persistence.criteria.AbstractQuery;
-import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Subquery;
 
 /**
@@ -366,7 +363,7 @@ public class SqmCteStatement<T> extends AbstractSqmNode implements SqmVisitableN
 				sb.append( separator );
 				sb.append( searchBySpecification.getAttribute().getName() );
 				if ( searchBySpecification.getSortOrder() != null ) {
-					if ( searchBySpecification.getSortOrder() == SortOrder.ASCENDING ) {
+					if ( searchBySpecification.getSortOrder() == SortDirection.ASCENDING ) {
 						sb.append( " asc" );
 					}
 					else {

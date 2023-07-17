@@ -29,16 +29,18 @@ import org.hibernate.sql.results.graph.basic.BasicFetch;
  * @author Steve Ebersole
  */
 public interface EntityDiscriminatorMapping extends DiscriminatorMapping, FetchOptions {
-	String ROLE_NAME = "{discriminator}";
-	String LEGACY_HQL_ROLE_NAME = "class";
+
+	String DISCRIMINATOR_ROLE_NAME = "{discriminator}";
+	String LEGACY_DISCRIMINATOR_NAME = "class";
 
 	static boolean matchesRoleName(String name) {
-		return ROLE_NAME.equals( name ) || LEGACY_HQL_ROLE_NAME.equals( name );
+		return DISCRIMINATOR_ROLE_NAME.equals( name )
+			|| LEGACY_DISCRIMINATOR_NAME.equalsIgnoreCase( name );
 	}
 
 	@Override
 	default String getPartName() {
-		return ROLE_NAME;
+		return DISCRIMINATOR_ROLE_NAME;
 	}
 
 	@Override

@@ -27,7 +27,7 @@ public class InstantiationException extends HibernateException {
 	}
 
 	/**
-	 * Constructs a InstantiationException.
+	 * Constructs an {@code InstantiationException}.
 	 *
 	 * @param message A message explaining the exception condition
 	 * @param clazz The Class we are attempting to instantiate
@@ -37,7 +37,7 @@ public class InstantiationException extends HibernateException {
 	}
 
 	/**
-	 * Constructs a InstantiationException.
+	 * Constructs an {@code InstantiationException}.
 	 *
 	 * @param message A message explaining the exception condition
 	 * @param clazz The Class we are attempting to instantiate
@@ -49,7 +49,7 @@ public class InstantiationException extends HibernateException {
 	}
 
 	/**
-	 * Returns the Class we were attempting to instantiate.
+	 * Returns the {@link Class} we were attempting to instantiate.
 	 *
 	 * @return The class we are unable to instantiate
 	 */
@@ -59,7 +59,9 @@ public class InstantiationException extends HibernateException {
 
 	@Override
 	public String getMessage() {
-		return super.getMessage() + " '" + clazz.getName() + "'";
+		final String message = super.getMessage() + " '" + clazz.getName() + "'";
+		final Throwable cause = getCause();
+		return cause != null ? message + " due to: " + cause.getMessage() : message;
 	}
 
 }

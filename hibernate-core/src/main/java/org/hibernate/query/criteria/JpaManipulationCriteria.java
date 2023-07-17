@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.criteria;
 
-import org.hibernate.query.sqm.tree.from.SqmRoot;
-
 /**
  * @author Steve Ebersole
  */
@@ -20,5 +18,5 @@ public interface JpaManipulationCriteria<E> extends JpaQueryableCriteria<E> {
 	/**
 	 * Set the root path
 	 */
-	void setTarget(SqmRoot<E> root);
+	void setTarget(JpaRoot<E> root);
 }

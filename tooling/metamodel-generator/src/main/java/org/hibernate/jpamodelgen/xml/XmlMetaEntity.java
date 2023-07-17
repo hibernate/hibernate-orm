@@ -7,9 +7,7 @@
 package org.hibernate.jpamodelgen.xml;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -26,6 +24,7 @@ import org.hibernate.jpamodelgen.model.ImportContext;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
+import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.util.NullnessUtil;
 import org.hibernate.jpamodelgen.util.StringUtil;
 import org.hibernate.jpamodelgen.util.TypeUtils;
@@ -47,21 +46,16 @@ import org.hibernate.jpamodelgen.xml.jaxb.OneToOne;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.jpamodelgen.util.StringUtil.determineFullyQualifiedClassName;
+import static org.hibernate.jpamodelgen.util.TypeUtils.getElementKindForAccessType;
+import static org.hibernate.jpamodelgen.xml.jaxb.AccessType.*;
+
 /**
  * Collects XML-based meta information about an annotated type (entity, embeddable or mapped superclass).
  *
  * @author Hardy Ferentschik
  */
 public class XmlMetaEntity implements Metamodel {
-
-	static final Map<String, String> COLLECTIONS = new HashMap<String, String>();
-
-	static {
-		COLLECTIONS.put( "java.util.Collection", "jakarta.persistence.metamodel.CollectionAttribute" );
-		COLLECTIONS.put( "java.util.Set", "jakarta.persistence.metamodel.SetAttribute" );
-		COLLECTIONS.put( "java.util.List", "jakarta.persistence.metamodel.ListAttribute" );
-		COLLECTIONS.put( "java.util.Map", "jakarta.persistence.metamodel.MapAttribute" );
-	}
 
 	private final String clazzName;
 	private final String packageName;
@@ -225,11 +219,9 @@ public class XmlMetaEntity implements Metamodel {
 			}
 
 			DeclaredType type = determineDeclaredType( elem );
-			if ( type == null ) {
-				continue;
+			if ( type != null ) {
+				return determineTypes( propertyName, explicitTargetEntity, explicitMapKeyClass, type );
 			}
-
-			return determineTypes( propertyName, explicitTargetEntity, explicitMapKeyClass, type );
 		}
 		return null;
 	}
@@ -251,7 +243,7 @@ public class XmlMetaEntity implements Metamodel {
 	private @Nullable String[] determineTypes(String propertyName, String explicitTargetEntity, @Nullable String explicitMapKeyClass, DeclaredType type) {
 		@Nullable String[] types = new String[3];
 		determineTargetType( type, propertyName, explicitTargetEntity, types );
-		if ( determineCollectionType( type, types ).equals( "jakarta.persistence.metamodel.MapAttribute" ) ) {
+		if ( determineCollectionType( type, types ).equals( Constants.MAP_ATTRIBUTE ) ) {
 			determineMapType( type, explicitMapKeyClass, types );
 		}
 		return types;
@@ -267,7 +259,7 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	private String determineCollectionType(DeclaredType type, @Nullable String[] types) {
-		return NullnessUtil.castNonNull( types[1] = COLLECTIONS.get( type.asElement().toString() ) );
+		return NullnessUtil.castNonNull( types[1] = Constants.COLLECTIONS.get( type.asElement().toString() ) );
 	}
 
 	private void determineTargetType(DeclaredType type, String propertyName, String explicitTargetEntity, @Nullable String[] types) {
@@ -301,8 +293,8 @@ public class XmlMetaEntity implements Metamodel {
 				continue;
 			}
 
-			TypeMirror mirror;
 			String name = elem.getSimpleName().toString();
+			final TypeMirror mirror;
 			if ( ElementKind.METHOD.equals( elem.getKind() ) ) {
 				name = StringUtil.getPropertyName( name );
 				mirror = ( (ExecutableElement) elem ).getReturnType();
@@ -346,7 +338,7 @@ public class XmlMetaEntity implements Metamodel {
 					return "java.lang.Double";
 				}
 				case DECLARED: {
-					return ((DeclaredType)mirror).asElement().asType().toString();
+					return ((DeclaredType) mirror).asElement().asType().toString();
 				}
 				case TYPEVAR: {
 					return mirror.toString();
@@ -498,9 +490,7 @@ public class XmlMetaEntity implements Metamodel {
 	private String determineExplicitTargetEntity(String targetClass) {
 		String explicitTargetClass = targetClass;
 		if ( explicitTargetClass != null ) {
-			explicitTargetClass = StringUtil.determineFullyQualifiedClassName(
-					defaultPackageName, targetClass
-			);
+			explicitTargetClass = determineFullyQualifiedClassName( defaultPackageName, targetClass );
 		}
 		return explicitTargetClass;
 	}
@@ -508,7 +498,7 @@ public class XmlMetaEntity implements Metamodel {
 	private @Nullable String determineExplicitMapKeyClass(MapKeyClass mapKeyClass) {
 		String explicitMapKey = null;
 		if ( mapKeyClass != null ) {
-			explicitMapKey = StringUtil.determineFullyQualifiedClassName( defaultPackageName, mapKeyClass.getClazz() );
+			explicitMapKey = determineFullyQualifiedClassName( defaultPackageName, mapKeyClass.getClazz() );
 		}
 		return explicitMapKey;
 	}
@@ -618,18 +608,23 @@ public class XmlMetaEntity implements Metamodel {
 	private ElementKind getElementKind(org.hibernate.jpamodelgen.xml.jaxb.AccessType accessType) {
 		// if no explicit access type was specified in xml we use the entity access type
 		if ( accessType == null ) {
-			return TypeUtils.getElementKindForAccessType( accessTypeInfo.getAccessType() );
+			return getElementKindForAccessType( accessTypeInfo.getAccessType() );
 		}
-		if ( org.hibernate.jpamodelgen.xml.jaxb.AccessType.FIELD.equals( accessType ) ) {
-			return ElementKind.FIELD;
-		}
-		else {
-			return ElementKind.METHOD;
-		}
+		return FIELD.equals( accessType ) ? ElementKind.FIELD : ElementKind.METHOD;
 	}
 
 	@Override
 	public Context getContext() {
 		return context;
+	}
+
+	@Override
+	public boolean isImplementation() {
+		return false;
+	}
+
+	@Override
+	public boolean isInjectable() {
+		return false;
 	}
 }

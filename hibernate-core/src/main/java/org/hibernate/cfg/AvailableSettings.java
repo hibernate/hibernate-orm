@@ -23,7 +23,7 @@ import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
 import org.hibernate.query.spi.QueryPlan;
-import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
@@ -2268,6 +2268,17 @@ public interface AvailableSettings {
 	String GENERATE_STATISTICS = "hibernate.generate_statistics";
 
 	/**
+	 * Specifies a duration in milliseconds defining the minimum query execution time that
+	 * characterizes a "slow" query. Any SQL query which takes longer than this amount of
+	 * time to execute will be logged.
+	 * <p>
+	 * A value of {@code 0}, the default, disables logging of "slow" queries.
+	 *
+	 * @see org.hibernate.stat.Statistics#getSlowQueries()
+	 */
+	String LOG_SLOW_QUERY = "hibernate.log_slow_query";
+
+	/**
 	 * Controls whether {@linkplain org.hibernate.stat.SessionStatistics session metrics}
 	 * should be {@linkplain org.hibernate.engine.internal.StatisticalLoggingSessionEventListener
 	 * logged} for any session in which statistics are being collected.
@@ -2276,15 +2287,6 @@ public interface AvailableSettings {
 	 * is enabled.
 	 */
 	String LOG_SESSION_METRICS = "hibernate.session.events.log";
-
-	/**
-	 * Specifies a duration in milliseconds defining the minimum query execution time that
-	 * characterizes a "slow" query. Any SQL query which takes longer than this amount of
-	 * time to execute will be logged.
-	 * <p>
-	 * A value of {@code 0}, the default, disables logging of "slow" queries.
-	 */
-	String LOG_SLOW_QUERY = "hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS";
 
 	/**
 	 * Defines a default {@link org.hibernate.SessionEventListener} to be applied to
@@ -2686,6 +2688,8 @@ public interface AvailableSettings {
 	 * The default value is {@value org.hibernate.stat.Statistics#DEFAULT_QUERY_STATISTICS_MAX_SIZE}.
 	 *
 	 * @since 5.4
+	 *
+	 * @see org.hibernate.stat.Statistics#getQueries()
 	 */
 	String QUERY_STATISTICS_MAX_SIZE = "hibernate.statistics.query_max_size";
 

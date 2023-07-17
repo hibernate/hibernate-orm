@@ -52,4 +52,8 @@ public interface JpaExpression<T> extends JpaSelection<T>, Expression<T> {
 
 	@Override
 	JpaPredicate in(Expression<Collection<?>> values);
+
+	JpaPredicate equalTo(Expression<T> that);
+
+	JpaPredicate equalTo(T that);
 }

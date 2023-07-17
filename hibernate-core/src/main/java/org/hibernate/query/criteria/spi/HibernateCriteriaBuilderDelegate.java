@@ -21,7 +21,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.Incubating;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCollectionJoin;
@@ -51,10 +53,8 @@ import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CollectionJoin;
@@ -77,6 +77,10 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		this.criteriaBuilder = criteriaBuilder;
 	}
 
+	public HibernateCriteriaBuilderDelegate(CriteriaBuilder criteriaBuilder) {
+		this.criteriaBuilder = (HibernateCriteriaBuilder) criteriaBuilder;
+	}
+
 	protected HibernateCriteriaBuilder getCriteriaBuilder() {
 		return criteriaBuilder;
 	}
@@ -91,8 +95,8 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.wrap( expression );
 	}
 
-	@Override
-	public JpaPredicate wrap(Expression<Boolean>... expressions) {
+	@Override @SafeVarargs
+	public final JpaPredicate wrap(Expression<Boolean>... expressions) {
 		return criteriaBuilder.wrap( expressions );
 	}
 
@@ -335,7 +339,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>[] selections) {
+	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, Selection<?>... selections) {
 		return criteriaBuilder.construct( resultClass, selections );
 	}
 
@@ -345,7 +349,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public JpaCompoundSelection<Tuple> tuple(Selection<?>[] selections) {
+	public JpaCompoundSelection<Tuple> tuple(Selection<?>... selections) {
 		return criteriaBuilder.tuple( selections );
 	}
 
@@ -355,7 +359,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public JpaCompoundSelection<Object[]> array(Selection<?>[] selections) {
+	public JpaCompoundSelection<Object[]> array(Selection<?>... selections) {
 		return criteriaBuilder.array( selections );
 	}
 
@@ -365,7 +369,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>[] selections) {
+	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>... selections) {
 		return criteriaBuilder.array( resultClass, selections );
 	}
 
@@ -554,13 +558,8 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.literal( value );
 	}
 
-	@Override
-	public <T> SqmExpression<T> literal(T value, SqmExpression<? extends T> typeInferenceSource) {
-		return criteriaBuilder.literal( value, typeInferenceSource );
-	}
-
-	@Override
-	public <T> List<? extends JpaExpression<T>> literals(T[] values) {
+	@Override @SafeVarargs
+	public final <T> List<? extends JpaExpression<T>> literals(T... values) {
 		return criteriaBuilder.literals( values );
 	}
 
@@ -740,13 +739,8 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <T> SqmExpression<T> value(T value) {
+	public <T> JpaExpression<T> value(T value) {
 		return criteriaBuilder.value( value );
-	}
-
-	@Override
-	public <T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource) {
-		return criteriaBuilder.value( value, typeInferenceSource );
 	}
 
 	@Override
@@ -1155,13 +1149,13 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.in( expression );
 	}
 
-	@Override
-	public <T> JpaInPredicate<T> in(Expression<? extends T> expression, Expression<? extends T>... values) {
+	@Override @SafeVarargs
+	public final <T> JpaInPredicate<T> in(Expression<? extends T> expression, Expression<? extends T>... values) {
 		return criteriaBuilder.in( expression, values );
 	}
 
-	@Override
-	public <T> JpaInPredicate<T> in(Expression<? extends T> expression, T... values) {
+	@Override @SafeVarargs
+	public final <T> JpaInPredicate<T> in(Expression<? extends T> expression, T... values) {
 		return criteriaBuilder.in( expression, values );
 	}
 
@@ -1196,12 +1190,12 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public JpaOrder sort(JpaExpression<?> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	public JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		return criteriaBuilder.sort( sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
-	public JpaOrder sort(JpaExpression<?> sortExpression, SortOrder sortOrder) {
+	public JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder) {
 		return criteriaBuilder.sort( sortExpression, sortOrder );
 	}
 
@@ -1234,14 +1228,14 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Incubating
 	public JpaSearchOrder search(
 			JpaCteCriteriaAttribute cteAttribute,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return criteriaBuilder.search( cteAttribute, sortOrder, nullPrecedence );
 	}
 
 	@Override
 	@Incubating
-	public JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortOrder sortOrder) {
+	public JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortDirection sortOrder) {
 		return criteriaBuilder.search( cteAttribute, sortOrder );
 	}
 
@@ -1890,7 +1884,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <T> JpaExpression<T> mode(Expression<T> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	public <T> JpaExpression<T> mode(Expression<T> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		return criteriaBuilder.mode( sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -1898,7 +1892,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public <T> JpaExpression<T> mode(
 			JpaPredicate filter,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return criteriaBuilder.mode( filter, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -1907,7 +1901,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public <T> JpaExpression<T> mode(
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return criteriaBuilder.mode( window, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -1917,7 +1911,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return criteriaBuilder.mode( filter, window, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -1926,7 +1920,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public <T> JpaExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return criteriaBuilder.percentileCont( argument, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -1936,7 +1930,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return criteriaBuilder.percentileCont( argument, filter, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -1946,7 +1940,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			Expression<? extends Number> argument,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return criteriaBuilder.percentileCont( argument, window, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -1957,7 +1951,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return criteriaBuilder.percentileCont( argument, filter, window, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -1966,7 +1960,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	public <T> JpaExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return criteriaBuilder.percentileDisc( argument, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -1976,7 +1970,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return criteriaBuilder.percentileDisc( argument, filter, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -1986,7 +1980,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			Expression<? extends Number> argument,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return criteriaBuilder.percentileDisc( argument, window, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -1997,7 +1991,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return criteriaBuilder.percentileDisc( argument, filter, window, sortExpression, sortOrder, nullPrecedence );
 	}

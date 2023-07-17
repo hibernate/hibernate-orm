@@ -168,23 +168,24 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@SuppressWarnings("unchecked")
 	public SqmExpression<Class<? extends T>> type() {
 		final SqmPathSource<T> referencedPathSource = getReferencedPathSource();
-		final SqmPathSource<?> subPathSource = referencedPathSource.findSubPathSource( EntityDiscriminatorMapping.ROLE_NAME );
+		final SqmPathSource<?> subPathSource = referencedPathSource.findSubPathSource( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME );
 
 		if ( subPathSource == null ) {
 			return new SqmLiteral<>(
 					referencedPathSource.getBindableJavaType(),
-					(SqmExpressible<? extends Class<? extends T>>) (SqmExpressible<?>) nodeBuilder().getTypeConfiguration()
-							.getBasicTypeForJavaType( Class.class ),
+					(SqmExpressible<? extends Class<? extends T>>) (SqmExpressible<?>)
+							nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Class.class ),
 					nodeBuilder()
 			);
 		}
-		return (SqmExpression<Class<? extends T>>) resolvePath( EntityDiscriminatorMapping.ROLE_NAME, subPathSource );
+		return (SqmExpression<Class<? extends T>>) resolvePath( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME, subPathSource );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmPath<?> get(String attributeName) {
-		final SqmPathSource<?> subNavigable = getResolvedModel().getSubPathSource( attributeName );
+		final SqmPathSource<?> subNavigable =
+				getResolvedModel().getSubPathSource( attributeName, nodeBuilder().getSessionFactory().getJpaMetamodel() );
 		return resolvePath( attributeName, subNavigable );
 	}
 

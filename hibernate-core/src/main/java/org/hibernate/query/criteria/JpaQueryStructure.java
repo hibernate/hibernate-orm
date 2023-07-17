@@ -34,11 +34,11 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 
 	boolean isDistinct();
 
-	JpaQueryStructure setDistinct(boolean distinct);
+	JpaQueryStructure<T> setDistinct(boolean distinct);
 
 	JpaSelection<T> getSelection();
 
-	JpaQueryStructure setSelection(JpaSelection<T> selection);
+	JpaQueryStructure<T> setSelection(JpaSelection<T> selection);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -48,7 +48,7 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 
 	List<? extends JpaRoot<?>> getRootList();
 
-	JpaQueryStructure addRoot(JpaRoot<?> root);
+	JpaQueryStructure<T> addRoot(JpaRoot<?> root);
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -66,7 +66,7 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Grouping (group-by / having) clause
 
-	List<? extends JpaExpression> getGroupingExpressions();
+	List<? extends JpaExpression<?>> getGroupingExpressions();
 
 	JpaQueryStructure<T> setGroupingExpressions(List<? extends JpaExpression<?>> grouping);
 
@@ -83,11 +83,15 @@ public interface JpaQueryStructure<T> extends JpaQueryPart<T> {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides
 
+	@Override
 	JpaQueryStructure<T> setSortSpecifications(List<? extends JpaOrder> sortSpecifications);
 
-	JpaQueryStructure<T> setOffset(JpaExpression<?> offset);
+	@Override
+	JpaQueryStructure<T> setOffset(JpaExpression<? extends Number> offset);
 
-	JpaQueryStructure<T> setFetch(JpaExpression<?> fetch);
+	@Override
+	JpaQueryStructure<T> setFetch(JpaExpression<? extends Number> fetch);
 
-	JpaQueryStructure<T> setFetch(JpaExpression<?> fetch, FetchClauseType fetchClauseType);
+	@Override
+	JpaQueryStructure<T> setFetch(JpaExpression<? extends Number> fetch, FetchClauseType fetchClauseType);
 }

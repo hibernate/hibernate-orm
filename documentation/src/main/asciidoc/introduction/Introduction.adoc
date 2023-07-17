@@ -100,9 +100,9 @@ But it's something to watch out for.
 
 If you're completely new to Hibernate and JPA, you might already be wondering how the persistence-related code is structured.
 
-Well, typically, your persistence-related code comes in two layers:
+Well, typically, our persistence-related code comes in two layers:
 
-. a representation of your data model in Java, which takes the form of a set of annotated entity classes, and
+. a representation of our data model in Java, which takes the form of a set of annotated entity classes, and
 . a larger number of functions which interact with Hibernate's APIs to perform the persistence operations associated with your various transactions.
 
 The first part, the data or "domain" model, is usually easier to write, but doing a great and very clean job of it will strongly affect your success in the second part.
@@ -137,6 +137,7 @@ Before we get deeper into the weeds, we'll quickly present a basic example progr
 
 We begin with a simple gradle build file:
 
+[[build-gradle]]
 [source,groovy]
 .`build.gradle`
 ----
@@ -166,7 +167,7 @@ dependencies {
     // logging via Log4j
     implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
 
-    // JPA metamodel generator (for criteria queries)
+    // JPA Metamodel Generator
     annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.2.2.Final'
 
     // Compile-time checking for HQL
@@ -468,8 +469,7 @@ public class BookResource {
         var books = sessionFactory.fromTransaction(session -> {
             return entityManager.createQuery("from Book where title like ?1 order by title", Book.class)
                     .setParameter(1, titlePattern)
-                    .setMaxResults(RESULTS_PER_PAGE)          // return at most 20 results
-                    .setFirstResult(page*RESULTS_PER_PAGE)    // start from the given page of results
+                    .setPage(Page.page(RESULTS_PER_PAGE, page))
                     .getResultList();
         });
         return books.isEmpty() ? Response.status(404).build() : books;
@@ -481,18 +481,15 @@ public class BookResource {
 This is fine, and we won't complain if you prefer to leave the code exactly as it appears above.
 But there's one thing we could perhaps improve.
 We love super-short methods with single responsibilities, and there looks to be an opportunity to introduce one here.
-Let's hit the code with our favorite thing, the Extract Method refactoring.
-
-Out pops:
+Let's hit the code with our favorite thing, the Extract Method refactoring. We obtain:
 
 [source,java]
 ----
 static List<Book> findBooksByTitleWithPagination(EntityManager entityManager,
-                                                 String titlePattern, int max, int start) {
+                                                 String titlePattern, Page page) {
     return entityManager.createQuery("from Book where title like ?1 order by title", Book.class)
             .setParameter(1, titlePattern)
-            .setMaxResults(max)
-            .setFirstResult(start)
+            .setPage(page)
             .getResultList();
 }
 ----
@@ -501,20 +498,22 @@ This is an example of a _query method_, a function which accepts arguments to th
 And that's all it does; it doesn't orchestrate additional program logic, and it doesn't perform transaction or session management.
 
 It's even better to specify the query string using the `@NamedQuery` annotation, so that Hibernate can validate the query it at startup time, that is, when the `SessionFactory` is created, instead of when the query is first executed.
+Indeed, since we included the <<metamodel-generator,Metamodel Generator>> in our <<build-gradle,Gradle build>>, the query can even be validated at _compile time_.
+
 We need a place to put the annotation, so lets move our query method to a new class:
 
 [source,java]
 ----
+@CheckHQL // validate named queries at compile time
 @NamedQuery(name="findBooksByTitle",
             query="from Book where title like :title order by title")
 class Queries {
 
     static List<Book> findBooksByTitleWithPagination(EntityManager entityManager,
-                                                     String titlePattern, int max, int start) {
+                                                     String titlePattern, Page page) {
         return entityManager.createNamedQuery("findBooksByTitle", Book.class)
                 .setParameter("title", titlePattern)
-                .setMaxResults(max)
-                .setFirstResult(start)
+                .setPage(page)
                 .getResultList();
     }
 }
@@ -538,7 +537,7 @@ Whatever the case, the code which orchestrates a unit of work usually just calls
 public List<Book> findBooks(String titlePattern) {
     var books = sessionFactory.fromTransaction(session ->
             Queries.findBooksByTitleWithPagination(session, titlePattern,
-                                                   RESULTS_PER_PAGE, RESULTS_PER_PAGE*page));
+                    Page.page(RESULTS_PER_PAGE, page));
     return books.isEmpty() ? Response.status(404).build() : books;
 }
 ----
@@ -547,94 +546,50 @@ You might be thinking that our query method looks a bit boilerplatey.
 That's true, perhaps, but we're much more concerned that it's not very typesafe.
 Indeed, for many years, the lack of compile-time checking for HQL queries and code which binds arguments to query parameters was our number one source of discomfort with Hibernate.
 
-Fortunately, there's now a solution to both problems: as an incubating feature of Hibernate 6.3, we now offer the possibility to have the <<metamodel-generator,Metamodel Generator>> fill in the implementation of such query methods for you.
+Fortunately, there's now a solution to both problems: as an incubating feature of Hibernate 6.3, we now offer the possibility to have the Metamodel Generator fill in the implementation of such query methods for you.
+This facility is the topic of <<generator,a whole chapter of this introduction>>, so for now we'll just leave you with one simple example.
 
-[[generated-query-methods]]
-=== Generated query methods
-
-The Metamodel Generator is a standard part of JPA.
-// It's an annotation processor that produces a statically-typed metamodel of the entity classes in a Java program.
-We've actually already seen its handiwork in the code examples <<main-jpa,above>>: it's the author of the class `Book_` which contains the static metamodel of the <<book,entity class>> `Book`.
-
-[[metamodel-generator]]
-.The Metamodel Generator
-****
-
-:generator: https://hibernate.org/orm/tooling/
-:generator-guide: {userGuideBase}#tooling-modelgen
-
-Hibernate's {generator}[Metamodel Generator] is an annotation processor that produces what JPA calls a _static metamodel_.
-That is, it produces a typed model of the persistent classes in our program, giving us a type-safe way to refer to their attributes in Java code.
-In particular, it lets us specify <<entity-graph,entity graphs>> and <<criteria-queries,criteria queries>> in a completely type-safe way.
-
-We've already seen how to set up the annotation processor in the <<hello-hibernate,gradle build>> we saw earlier.
-
-Now, you don't have to use the Metamodel Generator with Hibernate—the APIs we just mentioned also accept plain strings—but we find that it works well with gradle and integrates well with our IDE, and the advantage in typesafety is compelling.
-//
-// You can find more information in the {generator-guide}[User Guide].
-****
-
-_Query method generation_ is a new feature of Hibernate's implementation of the Metamodel Generator, an extension to the functionality defined by the JPA specification.
-Let's see how it works.
-
-In an interface or abstract class, write down the "signature" of the query as a function, and specify the HQL or SQL query string itself using a `@HQL` or `@SQL` annotation:
+Suppose we simplify `Queries` to just the following:
 
 [source,java]
 ----
 interface Queries {
-    @HQL("from Book where title like :title order by title offset :start fetch first :max rows only")
-    List<Book> findBooksByTitleWithPagination(String title, int max, int start);
+    @HQL("from Book where title like :title order by title")
+    List<Book> findBooksByTitleWithPagination(String title, Page page);
 }
 ----
 
-The Metamodel Generator checks that the parameters of this method match the parameters of the HQL or SQL query, and that the query is syntactically legal, and generates a query method with a similar signature and return type in the corresponding static metamodel class `Queries_`.
-You can call the generated query method like this:
+Then the Metamodel Generator automatically produces an implementation of the method annotated `@HQL` in a class named `Queries_`.
+We can call it just like we called our handwritten version:
 
 [source,java]
 ----
-List<Book> books =
-        Queries_.findBooksByTitleWithPagination(entityManager, titlePattern,
-                                                RESULTS_PER_PAGE, page*RESULTS_PER_PAGE);
-----
-
-A query method doesn't need to return `List`.
-It might return a single `Book`.
-
-[source,java]
-----
-interface Queries {
-    @HQL("from Book where isbn = :isbn")
-    Book findBookByIsbn(String isbn);
+@GET
+@Path("books/{titlePattern}")
+public List<Book> findBooks(String titlePattern) {
+    var books = sessionFactory.fromTransaction(session ->
+            Queries_.findBooksByTitleWithPagination(session, titlePattern,
+                    Page.page(RESULTS_PER_PAGE, page));
+    return books.isEmpty() ? Response.status(404).build() : books;
 }
 ----
 
-It might even return `TypedQuery` or `SelectionQuery`:
+In this case, the quantity of code eliminated is pretty trivial.
+The real value is in improved type safety.
+We now find out about errors in assignments of arguments to query parameters at compile time.
 
-[source,java]
-----
-interface Queries {
-    @HQL("from Book where title like :title")
-    SelectionQuery<Book> findBooksByTitle(String title);
-}
-----
+[NOTE]
+====
+At this point, we're certain you're full of doubts about this idea.
+And quite rightly so.
+We would love to answer your objections right here, but that will take us much too far off track.
+So we ask you to file away these thoughts for now.
+We promise to make it make sense when we <<generator,properly address this topic later>>.
+And, after that, if you still don't like this approach, please understand that it's completely optional.
+Nobody's going to come around to your house to force it down your throat.
+====
 
-This is extremely useful at times, since it allows the client to further manipulate the query:
-
-[source,java]
-----
-List<Book> books =
-        Queries_.findBooksByTitle(entityManager, titlePattern)
-            .ascending(Book_.title)                   // order the results
-            .setMaxResults(RESULTS_PER_PAGE)          // return at most 20 results
-            .setFirstResult(page*RESULTS_PER_PAGE)    // start from the given page of results
-            .getResultList();
-----
-
-:query-validator: https://github.com/hibernate/query-validator/
-
-If we also set up the {query-validator}[Query Validator], our HQL query will even be completely _type-checked_ at compile time.
-
-Now that we have a rough picture of what our persistence logic might look like, it's natural to ask how we should test this code.
+Now that we have a rough picture of what our persistence logic might look like, it's natural to ask how we should test our code.
 
 [[testing]]
 === Testing persistence logic
@@ -658,11 +613,19 @@ So, since most persistence logic written using Hibernate 6 is _extremely_ portab
 We do need to be careful here if our persistence code uses native SQL, or if it uses concurrency-management features like pessimistic locks.
 ====
 
-Whether we're testing against your real database, or against an in-memory Java database, we'll need to export the schema at the beginning of a test suite.
+Whether we're testing against our real database, or against an in-memory Java database, we'll need to export the schema at the beginning of a test suite.
 We _usually_ do this when we create the Hibernate `SessionFactory` or JPA `EntityManager`, and so traditionally we've used a <<automatic-schema-export,configuration property>> for this.
-The JPA-standard property is `jakarta.persistence.schema-generation.database.action`.
 
-Alternatively, in Hibernate 6, we may use the new `SchemaManager` API, just as we did <<main-hibernate,above>>.
+The JPA-standard property is `jakarta.persistence.schema-generation.database.action`.
+For example, if we're using `Configuration` to configure Hibernate, we could write:
+
+[source,java]
+----
+configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
+                          Action.SPEC_ACTION_DROP_AND_CREATE);
+----
+
+Alternatively, in Hibernate 6, we may use the new `SchemaManager` API to export the schema, just as we did <<main-hibernate,above>>.
 
 [source,java]
 ----
@@ -694,9 +657,57 @@ insert into Books (isbn, title) values ('9781617290459', 'Java Persistence with 
 ----
 
 If we name this file `import.sql`, and place it in the root classpath, that's all we need to do.
-Otherwise, we need to specify the file in the <<automatic-schema-export,configuration property>> `jakarta.persistence.schema-generation.create-script-source`.
 
-This SQL script will be executed every time `exportMappedObjects()` or `truncateMappedObjects()` is called.
+Otherwise, we need to specify the file in the <<automatic-schema-export,configuration property>> `jakarta.persistence.schema-generation.create-script-source`.
+If we're using `Configuration` to configure Hibernate, we could write:
+
+[source,java]
+----
+configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE,
+                          "/org/example/test-data.sql");
+----
+
+The SQL script will be executed every time `exportMappedObjects()` or `truncateMappedObjects()` is called.
+
+[TIP]
+====
+There's another sort of mess a test can leave behind: cached data in the <<second-level-cache,second-level cache>>.
+We recommend _disabling_ Hibernate's second-level cache for most sorts of testing.
+Alternatively, if the second-level cache is not disabled, then before each test we should call:
+[source,java]
+----
+sessionFactory.getCache().evictAllRegions();
+----
+====
+
+Now, suppose you've followed our advice, and written your entities and query methods to minimize dependencies on "infrastructure", that is, on libraries other than JPA and Hibernate, on frameworks,  on container-managed objects, and even on bits of your own system which are hard to instantiate from scratch.
+Then testing persistence logic is now straightforward!
+
+You'll need to:
+
+- bootstrap Hibernate and create a `SessionFactory` or `EntityManagerFactory` and the beginning of your test suite (we've already seen how to do that), and
+- create a new `Session` or `EntityManager` inside each `@Test` method, using `inTransaction()`, for example.
+
+Actually, some tests might require multiple sessions.
+But be careful not to leak a session between different tests.
+
+[TIP]
+=====
+Another important test we'll need is one which validates our <<object-relational-mapping,O/R mapping annotations>> against the actual database schema.
+This is again the job of the schema management tooling, either:
+[source,java]
+----
+configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
+                          Action.ACTION_VALIDATE);
+
+----
+Or:
+[source,java]
+----
+sessionFactory.getSchemaManager().validateMappedObjects();
+----
+This "test" is one which many people like to run even in production, when the system starts up.
+=====
 
 [[architecture]]
 === Architecture and the persistence layer
@@ -712,9 +723,11 @@ If you're only interested in facts, or if you prefer not to read things that mig
 Hibernate is an architecture-agnostic library, not a framework, and therefore integrates comfortably with a wide range of Java frameworks and containers.
 Consistent with our place within the ecosystem, we've historically avoided giving out much advice on architecture.
 This is a practice we're now perhaps inclined to regret, since the resulting vacuum has come to be filled with advice from people advocating architectures, design patterns, and extra frameworks which we suspect make Hibernate a bit less pleasant to use than it should be.
-In particular, frameworks which wrap JPA seem to add bloat while subtracting some of the fine-grained control over interaction with the database that Hibernate works hard to provide.
 
-The stodgy, dogmatic, _conventional_ wisdom, which we hesitate to challenge for simple fear of pricking ourselves on the erect hackles that inevitably accompany such dogma-questioning is:
+In particular, frameworks which wrap JPA seem to add bloat while subtracting some of the fine-grained control over data access that Hibernate works so hard to provide.
+These frameworks don't expose the full feature set of Hibernate, and so the program is forced to work with a less powerful abstraction.
+
+The stodgy, dogmatic, _conventional_ wisdom, which we hesitate to challenge for simple fear of pricking ourselves on the erect hackles that inevitably accompany such dogma-baiting is:
 
 > Code which interacts with the database belongs in a separate _persistence layer_.
 
@@ -723,6 +736,7 @@ But we do ask you to consider the cost in boilerplate of any architectural layer
 
 To add a little background texture to this discussion, and at the risk of our Introduction degenerating into a rant at such an early stage, we're going ask you to humor us while talk a little more about ancient history.
 
+[%unbreakable]
 .An epic tale of DAOs and Repositories
 ****
 Back in the dark days of Java EE 4, before the standardization of Hibernate, and subsequent ascendance of JPA in Java enterprise development, it was common to hand-code the messy JDBC interactions that Hibernate takes care of today.
@@ -759,13 +773,14 @@ If these repository frameworks offered anything actually _useful_—and not obvi
 Ultimately, we're not sure you need a separate persistence layer at all.
 At least _consider_ the possibility that it might be OK to call the `EntityManager` directly from your business logic.
 
-> Sssssssss. Heresy!
+image::images/architecture.png[API overview,pdfwidth="100%",width=1100,align="center"]
 
-OK, look, if it makes you feel better, one way to view `EntityManager` is to think of it as a single _generic_ "repository" that works for every entity in your system.
+We can already hear you hissing at our heresy.
+But before slamming shut the lid of your laptop and heading off to fetch garlic and a pitchfork, take a couple of hours to weigh what we're proposing.
+
+OK, so, look, if it makes you feel better, one way to view `EntityManager` is to think of it as a single _generic_ "repository" that works for every entity in your system.
 From this point of view, JPA _is_ your persistence layer.
 And there's few good reasons to wrap this abstraction in a second abstraction that's _less_ generic.
-
-image::images/architecture.png[API overview,pdfwidth="100%",width=1100,align="center"]
 
 // We might even analogize `EntityManager` to `List`.
 // Then DAO-style repositories would be like having separate `StringList`, `IntList`, `PersonList`, and `BookList` classes.
@@ -782,13 +797,13 @@ Even where a distinct persistence layer _is_ appropriate, DAO-style repositories
 Indeed, repositories, by nature, exhibit very low _cohesion_.
 A layer of repository objects might make sense if you have multiple implementations of each repository, but in practice almost nobody ever does.
 That's because they're also extremely highly _coupled_ to their clients, with a very large API surface.
-A layer is only easily replaceable if it has a narrow API.
+And, on the contrary, a layer is only easily replaceable if it has a very _narrow_ API.
 
 [%unbreakable]
 [TIP]
 ====
 Some people do indeed use mock repositories for testing, but we really struggle to see any value in this.
-If you don't want to run your tests against your real database, it's usually very easy to "mock" the database itself by running tests against an in-memory Java database like H2.
+If you don't want to run your tests against our real database, it's usually very easy to "mock" the database itself by running tests against an in-memory Java database like H2.
 This works even better in Hibernate 6 than in older versions of Hibernate, since HQL is now _much_ more portable between platforms.
 ====
 
@@ -814,7 +829,7 @@ This works even better in Hibernate 6 than in older versions of Hibernate, since
 // This is a much worse query language than HQL.
 // I think you can see why we didn't implement this idea in Hibernate.
 //
-OK, _phew_, let's move on.
+_Phew_, let's move on.
 
 [[overview]]
 === Overview
@@ -827,7 +842,8 @@ This introduction will guide you through the basic tasks involved in developing 
 2. writing a _domain model_, that is, a set of _entity classes_ which represent the persistent types in your program, and which map to tables of your database,
 3. customizing these mappings when the model maps to a pre-existing relational schema,
 4. using the `Session` or `EntityManager` to perform operations which query the database and return entity instances, or which update the data held in the database,
-5. writing complex queries using the Hibernate Query Language (HQL) or native SQL, and, finally
-6. tuning performance of the data access logic.
+5. using the Hibernate Metamodel Generator to improve compile-time type-safety,
+6. writing complex queries using the Hibernate Query Language (HQL) or native SQL, and, finally
+7. tuning performance of the data access logic.
 
 Naturally, we'll start at the top of this list, with the least-interesting topic: _configuration_.

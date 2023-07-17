@@ -111,7 +111,7 @@ public class SqlOmittingQueryOptions extends DelegatingQueryOptions {
 
 	@Override
 	public boolean hasLimit() {
-		return omitLimit ? false : super.hasLimit();
+		return !omitLimit && super.hasLimit();
 	}
 
 	@Override

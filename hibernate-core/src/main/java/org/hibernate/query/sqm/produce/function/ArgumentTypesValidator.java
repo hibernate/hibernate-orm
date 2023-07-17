@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
@@ -42,6 +43,7 @@ import static org.hibernate.type.SqlTypes.isIntegral;
 import static org.hibernate.type.SqlTypes.isNumericType;
 import static org.hibernate.type.SqlTypes.isSpatialType;
 import static org.hibernate.type.SqlTypes.isTemporalType;
+import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
 
 
 /**
@@ -132,25 +134,27 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			JdbcTypeIndicators indicators,
 			FunctionParameterType type,
 			JavaType<?> javaType) {
-		DomainType<?> domainType = argument.getExpressible().getSqmType();
-		if ( domainType instanceof JdbcMapping ) {
-			checkArgumentType(
-					count, functionName, type,
-					((JdbcMapping) domainType).getJdbcType().getDefaultSqlTypeCode(),
-					javaType.getJavaTypeClass()
-			);
-		}
-		else {
-			//TODO: this branch is now probably obsolete and can be deleted!
-			try {
+		if ( !isUnknown( javaType ) ) {
+			DomainType<?> domainType = argument.getExpressible().getSqmType();
+			if ( domainType instanceof JdbcMapping ) {
 				checkArgumentType(
 						count, functionName, type,
-						getJdbcType( indicators, javaType ),
+						((JdbcMapping) domainType).getJdbcType().getDefaultSqlTypeCode(),
 						javaType.getJavaTypeClass()
 				);
 			}
-			catch (JdbcTypeRecommendationException e) {
-				// it's a converter or something like that, and we will check it later
+			else {
+				//TODO: this branch is now probably obsolete and can be deleted!
+				try {
+					checkArgumentType(
+							count, functionName, type,
+							getJdbcType( indicators, javaType ),
+							javaType.getJavaTypeClass()
+					);
+				}
+				catch (JdbcTypeRecommendationException e) {
+					// it's a converter or something like that, and we will check it later
+				}
 			}
 		}
 	}
@@ -177,19 +181,29 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	@Override
 	public void validateSqlTypes(List<? extends SqlAstNode> arguments, String functionName) {
 		int count = 0;
-		for (SqlAstNode argument : arguments) {
-			if (argument instanceof Expression) {
-				JdbcMappingContainer expressionType = ((Expression) argument).getExpressionType();
+		for ( SqlAstNode argument : arguments ) {
+			if ( argument instanceof Expression ) {
+				final Expression expression = (Expression) argument;
+				final JdbcMappingContainer expressionType = expression.getExpressionType();
 				if (expressionType != null) {
-					if (expressionType instanceof JavaObjectType) {
+					if ( isUnknownExpressionType( expressionType ) ) {
 						count += expressionType.getJdbcTypeCount();
 					}
 					else {
-						count = validateArgument(count, expressionType, functionName);
+						count = validateArgument( count, expressionType, functionName );
 					}
 				}
 			}
 		}
+	}
+
+	/**
+	 * We can't validate some expressions involving parameters / unknown functions.
+	 */
+	private static boolean isUnknownExpressionType(JdbcMappingContainer expressionType) {
+		return expressionType instanceof JavaObjectType
+			|| expressionType instanceof BasicType
+				&& isUnknown( ((BasicType<?>) expressionType).getJavaTypeDescriptor() );
 	}
 
 	private int validateArgument(int count, JdbcMappingContainer expressionType, String functionName) {
@@ -275,7 +289,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	private void throwError(FunctionParameterType type, Type javaType, String functionName, int count) {
 		throw new FunctionArgumentException(
 				String.format(
-						"Parameter %d of function %s() has type %s, but argument is of type %s",
+						"Parameter %d of function '%s()' has type '%s', but argument is of type '%s'",
 						count,
 						functionName,
 						type,

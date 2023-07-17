@@ -7,19 +7,23 @@
 package org.hibernate.graph;
 
 import java.util.List;
+
+import jakarta.persistence.Subgraph;
 import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
 /**
- * Hibernate extension to the JPA entity-graph Subgraph contract.
+ * Extends the JPA-defined {@link Subgraph} with additional operations.
  *
  * @author Steve Ebersole
  * @author Andrea Boriero
+ *
+ * @see RootGraph
  */
-public interface SubGraph<J> extends Graph<J>, jakarta.persistence.Subgraph<J> {
+public interface SubGraph<J> extends Graph<J>, Subgraph<J> {
 	@Override
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	default List<jakarta.persistence.AttributeNode<?>> getAttributeNodes() {
 		return (List) getAttributeNodeList();
 	}

@@ -40,19 +40,17 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.SessionFactoryRegistry;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
-import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
-import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPathSource;
-import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
@@ -73,9 +71,7 @@ import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.NullPrecedence;
 import org.hibernate.query.sqm.SetOperator;
-import org.hibernate.query.sqm.SortOrder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -174,12 +170,11 @@ import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.Bindable;
-import jakarta.persistence.metamodel.EntityType;
 
 import static java.util.Arrays.asList;
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType;
 import static org.hibernate.query.sqm.TrimSpec.fromCriteriaTrimSpec;
-import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
+import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
 /**
  * Acts as a JPA {@link jakarta.persistence.criteria.CriteriaBuilder} by
@@ -242,81 +237,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return sessionFactory.get();
 	}
 
-	/**
-	 * @see QuerySqmImpl#isAssignable(SqmPath, SqmExpression)
-	 */
-	public static boolean areTypesComparable(SqmExpressible<?> lhsType, SqmExpressible<?> rhsType) {
-		if ( lhsType == null || rhsType == null
-				|| lhsType == rhsType
-				|| isDiscriminatorComparison( lhsType, rhsType )
-				// Allow comparing an embeddable against a tuple literal
-				|| lhsType instanceof EmbeddedSqmPathSource<?> && rhsType instanceof TupleType
-				|| rhsType instanceof EmbeddedSqmPathSource<?> && lhsType instanceof TupleType
-				// Since we don't know any better, we just allow any comparison with multivalued parameters
-				|| lhsType instanceof MultiValueParameterType<?>
-				|| rhsType instanceof MultiValueParameterType<?>) {
-			return true;
-		}
 
-		DomainType<?> lhsDomainType = lhsType.getSqmType();
-		DomainType<?> rhsDomainType = rhsType.getSqmType();
-		if ( lhsDomainType instanceof JdbcMapping && rhsDomainType instanceof JdbcMapping ) {
-			JdbcType lhsJdbcType = ((JdbcMapping) lhsDomainType).getJdbcType();
-			JdbcType rhsJdbcType = ((JdbcMapping) rhsDomainType).getJdbcType();
-			if ( lhsJdbcType.getJdbcTypeCode() == rhsJdbcType.getJdbcTypeCode()
-					|| lhsJdbcType.isStringLike() && rhsJdbcType.isStringLike()
-					|| lhsJdbcType.isTemporal() && rhsJdbcType.isTemporal()
-					|| lhsJdbcType.isNumber() && rhsJdbcType.isNumber() ) {
-				return true;
-			}
-		}
-
-		final JavaType<?> lhsJavaType = lhsType.getExpressibleJavaType();
-		final JavaType<?> rhsJavaType = rhsType.getExpressibleJavaType();
-		return lhsJavaType == rhsJavaType
-			// If we don't know the java types, let's just be lenient
-			|| isUnknown( lhsJavaType )
-			|| isUnknown( rhsJavaType )
-			// Allow comparing two temporal expressions regardless of their concrete java types
-			|| lhsJavaType.isTemporalType() && rhsJavaType.isTemporalType()
-			// Assume we can coerce one to another
-			|| lhsJavaType.isWider( rhsJavaType )
-			|| rhsJavaType.isWider( lhsJavaType )
-			// Enum comparison, other strange user type mappings,
-			// Polymorphic entity comparison
-			|| lhsJavaType.getJavaTypeClass().isAssignableFrom( rhsJavaType.getJavaTypeClass() )
-			|| rhsJavaType.getJavaTypeClass().isAssignableFrom( lhsJavaType.getJavaTypeClass() );
-	}
-
-	private static boolean isDiscriminatorComparison(SqmExpressible<?> lhsType, SqmExpressible<?> rhsType) {
-		final SqmExpressible<?> nonDiscriminator;
-		if ( lhsType instanceof DiscriminatorSqmPathSource<?> ) {
-			nonDiscriminator = rhsType;
-		}
-		else if ( rhsType instanceof DiscriminatorSqmPathSource<?> ) {
-			nonDiscriminator = lhsType;
-		}
-		else {
-			return false;
-		}
-
-		// Comparing the discriminator against an entity type is fine
-		if ( nonDiscriminator instanceof EntityType<?> ) {
-			return true;
-		}
-		final JavaType<?> nonDiscriminatorJavaType = nonDiscriminator.getExpressibleJavaType();
-		// Comparing the discriminator against the discriminator value is fine
-		switch ( nonDiscriminatorJavaType.getJavaTypeClass().getTypeName() ) {
-			case "java.lang.String":
-			case "char":
-			case "java.lang.Character":
-			case "int":
-			case "java.lang.Integer":
-				return true;
-			default:
-				return false;
-		}
-	}
 
 	@Override
 	public BasicType<Boolean> getBooleanType() {
@@ -376,7 +297,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				sessionFactory.get().getQueryEngine().getHqlTranslator()
 						.translate( hql, resultClass );
 		if ( statement instanceof SqmSelectStatement ) {
-			return (SqmSelectStatement<T>) statement;
+			return new SqmSelectStatement<>((SqmSelectStatement<T>) statement);
 		}
 		else {
 			throw new IllegalArgumentException("Not a 'select' statement");
@@ -540,7 +461,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return new SqmJunctionPredicate( Predicate.BooleanOperator.AND, predicates, this );
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	public <T extends HibernateCriteriaBuilder> T unwrap(Class<T> clazz) {
 		return (T) extensions.get( clazz );
 	}
@@ -587,16 +508,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <X, K, T, V extends T> SqmMapJoin<X, K, V> treat(MapJoin<X, K, T> join, Class<V> type) {
-		return ( (SqmMapJoin<X, K, V>) join ).treatAs( type );
+		return ( (SqmMapJoin<X, K, T>) join ).treatAs( type );
 	}
 
 	@Override
-	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		return new SqmSortSpecification( (SqmExpression<?>) sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
-	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortOrder sortOrder) {
+	public SqmSortSpecification sort(JpaExpression<?> sortExpression, SortDirection sortOrder) {
 		return new SqmSortSpecification( (SqmExpression<?>) sortExpression, sortOrder );
 	}
 
@@ -607,19 +528,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmSortSpecification asc(Expression<?> x) {
-		return new SqmSortSpecification( (SqmExpression<?>) x, SortOrder.ASCENDING );
+		return new SqmSortSpecification( (SqmExpression<?>) x, SortDirection.ASCENDING );
 	}
 
 	@Override
 	public SqmSortSpecification desc(Expression<?> x) {
-		return new SqmSortSpecification( (SqmExpression<?>) x, SortOrder.DESCENDING );
+		return new SqmSortSpecification( (SqmExpression<?>) x, SortDirection.DESCENDING );
 	}
 
 	@Override
 	public JpaOrder asc(Expression<?> x, boolean nullsFirst) {
 		return new SqmSortSpecification(
 				(SqmExpression<?>) x,
-				SortOrder.ASCENDING,
+				SortDirection.ASCENDING,
 				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
 		);
 	}
@@ -628,41 +549,41 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public JpaOrder desc(Expression<?> x, boolean nullsFirst) {
 		return new SqmSortSpecification(
 				(SqmExpression<?>) x,
-				SortOrder.DESCENDING,
+				SortDirection.DESCENDING,
 				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
 		);
 	}
 
 	@Override
-	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, sortOrder, nullPrecedence );
 	}
 
 	@Override
-	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression, SortOrder sortOrder) {
+	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression, SortDirection sortOrder) {
 		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, sortOrder, NullPrecedence.NONE );
 	}
 
 	@Override
 	public JpaSearchOrder search(JpaCteCriteriaAttribute sortExpression) {
-		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, SortOrder.ASCENDING, NullPrecedence.NONE );
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) sortExpression, SortDirection.ASCENDING, NullPrecedence.NONE );
 	}
 
 	@Override
 	public JpaSearchOrder asc(JpaCteCriteriaAttribute x) {
-		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortOrder.ASCENDING, NullPrecedence.NONE );
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortDirection.ASCENDING, NullPrecedence.NONE );
 	}
 
 	@Override
 	public JpaSearchOrder desc(JpaCteCriteriaAttribute x) {
-		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortOrder.DESCENDING, NullPrecedence.NONE );
+		return new SqmSearchClauseSpecification( (SqmCteTableColumn) x, SortDirection.DESCENDING, NullPrecedence.NONE );
 	}
 
 	@Override
 	public JpaSearchOrder asc(JpaCteCriteriaAttribute x, boolean nullsFirst) {
 		return new SqmSearchClauseSpecification(
 				(SqmCteTableColumn)  x,
-				SortOrder.ASCENDING,
+				SortDirection.ASCENDING,
 				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
 		);
 	}
@@ -671,7 +592,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public JpaSearchOrder desc(JpaCteCriteriaAttribute x, boolean nullsFirst) {
 		return new SqmSearchClauseSpecification(
 				(SqmCteTableColumn) x,
-				SortOrder.DESCENDING,
+				SortDirection.DESCENDING,
 				nullsFirst ? NullPrecedence.FIRST : NullPrecedence.LAST
 		);
 	}
@@ -1209,7 +1130,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return ( (SqmExpression<?>) character ).asString();
 	}
 
-	@Override
 	public <T> SqmLiteral<T> literal(T value, SqmExpression<? extends T> typeInferenceSource) {
 		if ( value == null ) {
 			return new SqmLiteralNull<>( this );
@@ -1246,10 +1166,13 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return null;
 		}
 		else {
-			Class type = value.getClass();
-			BasicType<T> result = typeConfiguration.getBasicTypeForJavaType( type );
+			final Class type = value.getClass();
+			final BasicType<T> result = typeConfiguration.getBasicTypeForJavaType( type );
 			if ( result == null && value instanceof Enum ) {
-				return new BasicTypeImpl<>( new EnumJavaType<>( type ) );
+				final EnumJavaType javaType = new EnumJavaType<>( type );
+				final JdbcType jdbcType =
+						javaType.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
+				return new BasicTypeImpl<>( javaType, jdbcType );
 			}
 			else {
 				return result;
@@ -1306,12 +1229,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T> nullLiteral(Class<T> resultClass) {
-		final TypeConfiguration typeConfiguration = getTypeConfiguration();
-		final BasicType<T> basicTypeForJavaType = typeConfiguration.getBasicTypeForJavaType( resultClass );
+		final BasicType<T> basicTypeForJavaType = getTypeConfiguration().getBasicTypeForJavaType( resultClass );
+		// if there's no basic type, it might be an entity type
 		final SqmExpressible<T> sqmExpressible = basicTypeForJavaType == null
 				? getDomainModel().managedType( resultClass )
 				: basicTypeForJavaType;
-		return new SqmLiteralNull<>(sqmExpressible, this );
+		return new SqmLiteralNull<>( sqmExpressible, this );
 	}
 
 	class MultiValueParameterType<T> implements SqmExpressible<T> {
@@ -1344,7 +1267,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass, String name) {
-
 		final BasicType<T> basicType = getTypeConfiguration().getBasicTypeForJavaType( paramClass );
 		if ( basicType == null ) {
 			final BindableType<T> parameterType;
@@ -1355,12 +1277,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			else {
 				parameterType = null;
 			}
-			return new JpaCriteriaParameter<>(
-					name,
-					parameterType,
-					true,
-					this
-			);
+			return new JpaCriteriaParameter<>( name, parameterType, true, this );
 		}
 		else {
 			return new JpaCriteriaParameter<>( name, basicType, false, this );
@@ -1674,7 +1591,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <T> SqmFunction<T> function(String name, Class<T> type, Expression<?>[] args) {
 		SqmFunctionDescriptor functionTemplate = getFunctionDescriptor( name );
-		final BasicType<T> resultType = getTypeConfiguration().getBasicTypeForJavaType( type );
+		final BasicType<T> resultType = getTypeConfiguration().standardBasicTypeForJavaType( type );
 		if ( functionTemplate == null ) {
 			functionTemplate = new NamedSqmFunctionDescriptor(
 					name,
@@ -1744,7 +1661,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	/**
 	 * Creates an expression for the value with the given "type inference" information
 	 */
-	@Override
 	public <T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource) {
 		if ( value instanceof SqmExpression ) {
 			return (SqmExpression<T>) value;
@@ -2043,8 +1959,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate between(Expression<? extends Y> value, Expression<? extends Y> lower, Expression<? extends Y> upper) {
-		assertComparable( value, lower );
-		assertComparable( value, upper );
+		assertComparable( value, lower, getNodeBuilder().getSessionFactory() );
+		assertComparable( value, upper, getNodeBuilder().getSessionFactory() );
 		return new SqmBetweenPredicate(
 				(SqmExpression<? extends Y>) value,
 				(SqmExpression<? extends Y>) lower,
@@ -2059,8 +1975,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final SqmExpression<? extends Y> valueExpression = (SqmExpression<? extends Y>) value;
 		final SqmExpression<?> lowerExpr = value( lower, valueExpression );
 		final SqmExpression<?> upperExpr = value( upper, valueExpression );
-		assertComparable( valueExpression, lowerExpr );
-		assertComparable( valueExpression, upperExpr );
+		assertComparable( valueExpression, lowerExpr, getNodeBuilder().getSessionFactory() );
+		assertComparable( valueExpression, upperExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmBetweenPredicate(
 				valueExpression,
 				lowerExpr,
@@ -2068,26 +1984,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 				false,
 				this
 		);
-	}
-
-	public static void assertComparable(Expression<?> x, Expression<?> y) {
-		SqmExpression<?> left = (SqmExpression<?>) x;
-		SqmExpression<?> right = (SqmExpression<?>) y;
-		if (  left.getTupleLength() != null && right.getTupleLength() != null
-				&& left.getTupleLength().intValue() != right.getTupleLength().intValue() ) {
-			throw new SemanticException( "Cannot compare tuples of different lengths" );
-		}
-		final SqmExpressible<?> leftType = left.getNodeType();
-		final SqmExpressible<?> rightType = right.getNodeType();
-		if ( !areTypesComparable( leftType, rightType ) ) {
-			throw new SemanticException(
-					String.format(
-							"Cannot compare left expression of type '%s' with right expression of type '%s'",
-							leftType.getTypeName(),
-							rightType.getTypeName()
-					)
-			);
-		}
 	}
 
 	public static void assertNumeric(SqmExpression<?> expression, BinaryArithmeticOperator op) {
@@ -2130,7 +2026,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate equal(Expression<?> x, Expression<?> y) {
-		assertComparable( x, y );
+		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.EQUAL,
@@ -2142,7 +2038,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate equal(Expression<?> x, Object y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr );
+		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.EQUAL,
@@ -2153,7 +2049,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate notEqual(Expression<?> x, Expression<?> y) {
-		assertComparable( x, y );
+		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_EQUAL,
@@ -2165,7 +2061,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate notEqual(Expression<?> x, Object y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr );
+		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_EQUAL,
@@ -2176,7 +2072,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate distinctFrom(Expression<?> x, Expression<?> y) {
-		assertComparable( x, y );
+		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.DISTINCT_FROM,
@@ -2188,7 +2084,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate distinctFrom(Expression<?> x, Object y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr );
+		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.DISTINCT_FROM,
@@ -2199,7 +2095,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate notDistinctFrom(Expression<?> x, Expression<?> y) {
-		assertComparable( x, y );
+		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_DISTINCT_FROM,
@@ -2211,7 +2107,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate notDistinctFrom(Expression<?> x, Object y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr );
+		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_DISTINCT_FROM,
@@ -2222,7 +2118,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThan(Expression<? extends Y> x, Expression<? extends Y> y) {
-		assertComparable( x, y );
+		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
@@ -2234,7 +2130,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThan(Expression<? extends Y> x, Y y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr );
+		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
@@ -2245,7 +2141,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThanOrEqualTo(Expression<? extends Y> x, Expression<? extends Y> y) {
-		assertComparable( x, y );
+		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
@@ -2257,7 +2153,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThanOrEqualTo(Expression<? extends Y> x, Y y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr );
+		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
@@ -2268,7 +2164,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate lessThan(Expression<? extends Y> x, Expression<? extends Y> y) {
-		assertComparable( x, y );
+		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
@@ -2280,7 +2176,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate lessThan(Expression<? extends Y> x, Y y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr );
+		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
@@ -2302,7 +2198,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate lessThanOrEqualTo(Expression<? extends Y> x, Y y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr );
+		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN_OR_EQUAL,
@@ -2313,7 +2209,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate gt(Expression<? extends Number> x, Expression<? extends Number> y) {
-		assertComparable( x, y );
+		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
@@ -2325,7 +2221,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate gt(Expression<? extends Number> x, Number y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr );
+		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
@@ -2336,7 +2232,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate ge(Expression<? extends Number> x, Expression<? extends Number> y) {
-		assertComparable( x, y );
+		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
@@ -2348,7 +2244,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate ge(Expression<? extends Number> x, Number y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr );
+		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
@@ -2359,7 +2255,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate lt(Expression<? extends Number> x, Expression<? extends Number> y) {
-		assertComparable( x, y );
+		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
@@ -2371,7 +2267,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate lt(Expression<? extends Number> x, Number y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr );
+		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
@@ -2382,7 +2278,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate le(Expression<? extends Number> x, Expression<? extends Number> y) {
-		assertComparable( x, y );
+		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN_OR_EQUAL,
@@ -2394,7 +2290,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate le(Expression<? extends Number> x, Number y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr );
+		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN_OR_EQUAL,
@@ -2726,7 +2622,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		sqmArguments.add( 0, literal( pattern ) );
 		return getFunctionDescriptor( "sql" ).generateSqmExpression(
 				sqmArguments,
-				getTypeConfiguration().getBasicTypeForJavaType( type ),
+				getTypeConfiguration().standardBasicTypeForJavaType( type ),
 				queryEngine
 		);
 	}
@@ -3530,7 +3426,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmExpression<T> mode(Expression<T> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	public <T> SqmExpression<T> mode(Expression<T> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		return mode( null, null, sortExpression, sortOrder, nullPrecedence );
 	}
 
@@ -3538,7 +3434,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <T> SqmExpression<T> mode(
 			JpaPredicate filter,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return mode( filter, null, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3547,7 +3443,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <T> SqmExpression<T> mode(
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return mode( null, window, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3558,7 +3454,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return (SqmExpression<T>) functionWithinGroup(
 				"mode",
@@ -3573,7 +3469,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <T> SqmExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return percentileCont( argument, null, null, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3583,7 +3479,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return percentileCont( argument, filter, null, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3593,7 +3489,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			Expression<? extends Number> argument,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return percentileCont( argument, null, window, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3605,7 +3501,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return (SqmExpression<T>) functionWithinGroup(
 				"percentile_cont",
@@ -3621,7 +3517,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <T> SqmExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return percentileDisc( argument, null, null, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3631,7 +3527,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return percentileDisc( argument, filter, null, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3641,7 +3537,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			Expression<? extends Number> argument,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return percentileDisc( argument, null, window, sortExpression, sortOrder, nullPrecedence );
 	}
@@ -3653,7 +3549,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		return (SqmExpression<T>) functionWithinGroup(
 				"percentile_disc",

@@ -33,6 +33,7 @@ public interface JpaMapJoin<O,K,V> extends JpaPluralJoin<O, Map<K, V>, V>, MapJo
 	@Override
 	JpaMapJoin<O, K, V> on(Predicate... restrictions);
 
+	@Override
 	<S extends V> JpaMapJoin<O, K, S> treatAs(Class<S> treatAsType);
 
 	@Override

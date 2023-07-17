@@ -11,6 +11,7 @@ import java.util.Iterator;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.EntityEntry;
@@ -19,8 +20,9 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -34,13 +36,19 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 	private final RowMutationOperations rowMutationOperations;
 
 	private final SubclassEntry[] subclassEntries;
+	private final MutationExecutorService mutationExecutorService;
 
 	public InsertRowsCoordinatorTablePerSubclass(
 			OneToManyPersister mutationTarget,
-			RowMutationOperations rowMutationOperations) {
+			RowMutationOperations rowMutationOperations,
+			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.rowMutationOperations = rowMutationOperations;
-		this.subclassEntries = new SubclassEntry[mutationTarget.getElementPersister().getRootEntityDescriptor().getSubclassEntityNames().size()];
+		this.subclassEntries = new SubclassEntry[mutationTarget.getElementPersister()
+				.getRootEntityDescriptor()
+				.getSubclassEntityNames()
+				.size()];
+		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -69,11 +77,6 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 
 		final PluralAttributeMapping pluralAttribute = mutationTarget.getTargetPart();
 		final CollectionPersister collectionDescriptor = pluralAttribute.getCollectionDescriptor();
-
-		final MutationExecutorService mutationExecutorService = session
-				.getFactory()
-				.getFastSessionServices()
-				.getMutationExecutorService();
 
 		final Iterator<?> entries = collection.entries( collectionDescriptor );
 		collection.preInsert( collectionDescriptor );
@@ -121,7 +124,11 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 				entryCount++;
 			}
 
-			MODEL_MUTATION_LOGGER.debugf( "Done inserting `%s` collection rows : %s", entryCount, mutationTarget.getRolePath() );
+			MODEL_MUTATION_LOGGER.debugf(
+					"Done inserting `%s` collection rows : %s",
+					entryCount,
+					mutationTarget.getRolePath()
+			);
 
 		}
 		finally {
@@ -146,7 +153,7 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 		);
 	}
 
-	private MutationOperationGroupSingle createOperationGroup(EntityPersister elementPersister) {
+	private MutationOperationGroup createOperationGroup(EntityPersister elementPersister) {
 		assert mutationTarget.getTargetPart() != null;
 		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
@@ -164,16 +171,16 @@ public class InsertRowsCoordinatorTablePerSubclass implements InsertRowsCoordina
 						collectionTableMapping.getDeleteRowDetails()
 				)
 		);
-		return new MutationOperationGroupSingle( MutationType.INSERT, mutationTarget, operation );
+		return MutationOperationGroupFactory.singleOperation( MutationType.INSERT, mutationTarget, operation );
 	}
 
 	private static class SubclassEntry {
 
 		private final BatchKeyAccess batchKeySupplier;
 
-		private final MutationOperationGroupSingle operationGroup;
+		private final MutationOperationGroup operationGroup;
 
-		public SubclassEntry(BatchKeyAccess batchKeySupplier, MutationOperationGroupSingle operationGroup) {
+		public SubclassEntry(BatchKeyAccess batchKeySupplier, MutationOperationGroup operationGroup) {
 			this.batchKeySupplier = batchKeySupplier;
 			this.operationGroup = operationGroup;
 		}

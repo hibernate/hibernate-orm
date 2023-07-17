@@ -123,7 +123,7 @@ public class TestHelper {
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 
 		if ( H2Dialect.class.equals( DialectContext.getDialect().getClass() ) ) {
-			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc" );
+			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE" );
 		}
 		return ssrb;
 	}

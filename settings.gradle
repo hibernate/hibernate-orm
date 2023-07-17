@@ -157,7 +157,7 @@ dependencyResolutionManagement {
             alias( "shrinkwrapDescriptors" ).to( "org.jboss.shrinkwrap.descriptors", "shrinkwrap-descriptors-impl-javaee" ).versionRef( "shrinkwrapDescriptors" )
             alias( "shrinkwrapDescriptorsApi" ).to( "org.jboss.shrinkwrap.descriptors", "shrinkwrap-descriptors-api-javaee" ).versionRef( "shrinkwrapDescriptors" )
 
-            alias( "jbossJta" ).to( "org.jboss.narayana.jta", "narayana-jta" ).version( "6.0.0.Final" )
+            alias( "jbossJta" ).to( "org.jboss.narayana.jta", "narayana-jta" ).version( "7.0.0.Final" )
             alias( "jbossTxSpi" ).to( "org.jboss", "jboss-transaction-spi" ).version( "8.0.0.Final" )
             alias( "wildFlyTxnClient" ).to( "org.wildfly.transaction", "wildfly-transaction-client-jakarta" ).version( "2.0.0.Final" )
             alias( "weld" ).to( "org.jboss.weld.se", "weld-se-shaded" ).version( "4.0.1.SP1" )

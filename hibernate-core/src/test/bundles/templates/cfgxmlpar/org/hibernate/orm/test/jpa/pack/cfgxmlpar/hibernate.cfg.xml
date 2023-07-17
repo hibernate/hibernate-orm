@@ -15,7 +15,7 @@
         <property name="hibernate.connection.username">sa</property>
         <property name="hibernate.connection.password"></property>
         <property name="hibernate.connection.init_sql"></property>
-        <property name="hibernate.connection.url">jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1</property>
+        <property name="hibernate.connection.url">jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE</property>
         <property name="hibernate.cache.use_query_cache">true</property>
         <property name="hibernate.cache.region_prefix">hibernate.test</property>
         <property name="hibernate.jdbc.batch_size">0</property>

@@ -18,7 +18,7 @@ ext {
                         'jdbc.driver': 'org.h2.Driver',
                         'jdbc.user'  : 'sa',
                         'jdbc.pass'  : '',
-                        'jdbc.url'   : 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000',
+                        'jdbc.url'   : 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE',
                         'connection.init_sql' : '',
                         'hibernate.dialect.native_param_markers' : 'true'
                 ],

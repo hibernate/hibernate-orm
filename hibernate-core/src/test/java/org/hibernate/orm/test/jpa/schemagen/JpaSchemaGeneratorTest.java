@@ -150,7 +150,7 @@ public class JpaSchemaGeneratorTest extends EntityManagerFactoryBasedFunctionalT
 		// We want a fresh db after emf close
 		// Unfortunately we have to use this dirty hack because the db seems not to be closed otherwise
 		settings.put( "hibernate.connection.url", "jdbc:h2:mem:db-schemagen" + schemagenNumber++
-				+ ";LOCK_TIMEOUT=10000" );
+				+ ";DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE" );
 		EntityManagerFactoryBuilder emfb = Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
 				settings

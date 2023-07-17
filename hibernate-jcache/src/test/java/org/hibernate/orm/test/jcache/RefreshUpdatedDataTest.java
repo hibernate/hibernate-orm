@@ -58,7 +58,7 @@ public class RefreshUpdatedDataTest {
 				.configure( "hibernate-config/hibernate.cfg.xml" );
 
 		if ( H2Dialect.class.equals( DialectContext.getDialect().getClass() ) ) {
-			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc" );
+			ssrb.applySetting( AvailableSettings.URL, "jdbc:h2:mem:db-mvcc;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE" );
 		}
 		ssrb.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" );
 

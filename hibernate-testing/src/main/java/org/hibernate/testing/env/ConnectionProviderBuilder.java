@@ -34,7 +34,7 @@ public class ConnectionProviderBuilder implements DialectCheck {
 	public static final String DRIVER = "org.h2.Driver";
 	public static final String DATA_SOURCE = "org.h2.jdbcx.JdbcDataSource";
 //	public static final String URL = "jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1";
-	public static final String URL_FORMAT = "jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1";
+	public static final String URL_FORMAT = "jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE";
 	public static final String URL = URL_FORMAT;
 	public static final String USER = "sa";
 	public static final String PASS = "";

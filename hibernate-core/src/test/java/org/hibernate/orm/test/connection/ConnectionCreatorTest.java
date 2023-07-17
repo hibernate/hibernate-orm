@@ -11,7 +11,6 @@ import java.sql.Driver;
 import java.util.Collections;
 import java.util.Properties;
 
-import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.engine.jdbc.connections.internal.DriverConnectionCreator;
@@ -19,7 +18,6 @@ import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.exception.JDBCConnectionException;
 import org.hibernate.service.Service;
-import org.hibernate.service.internal.ProvidedService;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -53,7 +51,7 @@ public class ConnectionCreatorTest extends BaseUnitTestCase {
 						return super.getService( serviceRole );
 					}
 				},
-				"jdbc:h2:mem:test-bad-urls;nosuchparam=saywhat",
+				"jdbc:h2:mem:test-bad-urls;nosuchparam=saywhat;DB_CLOSE_ON_EXIT=FALSE",
 				new Properties(),
 				false,
 				null,

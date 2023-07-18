@@ -146,7 +146,7 @@ public class DefaultLoadEventListener implements LoadEventListener {
 						return false;
 					}
 					else {
-						return true;
+						return !idClass.isInstance( event.getEntityId() );
 					}
 				}
 				else {

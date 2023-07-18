@@ -293,7 +293,11 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 	@Override
 	public final SelectionQuery<R> setOrder(List<Order<? super R>> orderList) {
 		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
-		sqm.orderBy( orderList.stream().map( order -> sortSpecification( sqm, order ) ).collect( toList() ) );
+		sqm.orderBy( orderList.stream().map( order -> sortSpecification( sqm, order ) )
+				.collect( toList() ) );
+		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
+		//       simply cache the new SQM as if it were a criteria query, and remove this:
+		getQueryOptions().setQueryPlanCachingEnabled( false );
 		return this;
 	}
 
@@ -301,6 +305,9 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 	public final SelectionQuery<R> setOrder(Order<? super R> order) {
 		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
 		sqm.orderBy( sortSpecification( sqm, order ) );
+		// TODO: when the QueryInterpretationCache can handle caching criteria queries,
+		//       simply cache the new SQM as if it were a criteria query, and remove this:
+		getQueryOptions().setQueryPlanCachingEnabled( false );
 		return this;
 	}
 
@@ -582,11 +589,6 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 				// For criteria queries, query plan caching requires an explicit opt-in
 				? getQueryOptions().getQueryPlanCachingEnabled() == Boolean.TRUE
 				: super.isQueryPlanCacheable();
-	}
-
-	@Override
-	public List<jakarta.persistence.criteria.Order> getOrder() {
-		return sqm.getOrderList();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

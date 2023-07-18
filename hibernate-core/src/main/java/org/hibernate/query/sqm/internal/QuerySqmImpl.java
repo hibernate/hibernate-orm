@@ -950,8 +950,12 @@ public class QuerySqmImpl<R>
 	public Query<R> setOrder(List<Order<? super R>> orderList) {
 		if ( sqm instanceof SqmSelectStatement ) {
 			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
-			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
-			select.orderBy( orderList.stream().map( order -> sortSpecification( select, order ) ).collect( toList() ) );
+			final SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
+			select.orderBy( orderList.stream().map( order -> sortSpecification( select, order ) )
+					.collect( toList() ) );
+			// TODO: when the QueryInterpretationCache can handle caching criteria queries,
+			//       simply cache the new SQM as if it were a criteria query, and remove this:
+			getQueryOptions().setQueryPlanCachingEnabled( false );
 			return this;
 		}
 		else {
@@ -965,18 +969,14 @@ public class QuerySqmImpl<R>
 			sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
 			SqmSelectStatement<R> select = (SqmSelectStatement<R>) sqm;
 			select.orderBy( sortSpecification( select, order ) );
+			// TODO: when the QueryInterpretationCache can handle caching criteria queries,
+			//       simply cache the new SQM as if it were a criteria query, and remove this:
+			getQueryOptions().setQueryPlanCachingEnabled( false );
 			return this;
 		}
 		else {
 			throw new IllegalSelectQueryException( "Not a select query" );
 		}
-	}
-
-	@Override
-	public List<jakarta.persistence.criteria.Order> getOrder() {
-		return sqm instanceof SqmSelectStatement
-				? ((SqmSelectStatement<R>) sqm).getOrderList()
-				: null;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -28,18 +28,18 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @SessionFactory
 @JiraKey("HHH-16878")
 public class MutationQueriesAndNotFoundActionTest {
-	private static final User user1 = new User( 1l, "test 1" );
 
 	@BeforeEach
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					User user2 = new User( 2l, "test 2" );
+					final User user1 = new User( 1L, "test 1" );
+					final User user2 = new User( 2L, "test 2" );
 					session.persist( user1 );
 					session.persist( user2 );
-					session.persist( new Comment( 1l, "example 1", user1 ) );
-					session.persist( new Comment( 2l, "example 2", user2 ) );
-					session.persist( new Comment( 3l, "example 3", user1 ) );
+					session.persist( new Comment( 1L, "example 1", user1 ) );
+					session.persist( new Comment( 2L, "example 2", user2 ) );
+					session.persist( new Comment( 3L, "example 3", user1 ) );
 				}
 		);
 	}
@@ -59,12 +59,40 @@ public class MutationQueriesAndNotFoundActionTest {
 		scope.inTransaction(
 				session -> {
 					int affectedComments = session.createMutationQuery(
-									"UPDATE Comment c SET c.text = :text WHERE c.user = :user" )
+									"update Comment c set c.text = :text where c.user = :user" )
 							.setParameter( "text", "updated" )
-							.setParameter( "user", user1 )
+							.setParameter( "user", session.getReference( User.class, 1L ) )
 							.executeUpdate();
 
 					assertThat( affectedComments ).isEqualTo( 2 );
+				}
+		);
+	}
+
+	@Test
+	public void testUpdateWithImplicitJoin(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					int affectedComments = session.createMutationQuery( "update Comment c set c.text = :text where c.user.name = :userName" )
+							.setParameter( "text", "updated" )
+							.setParameter( "userName", "test 1" )
+							.executeUpdate();
+
+					assertThat( affectedComments ).isEqualTo( 2 );
+				}
+		);
+	}
+
+	@Test
+	public void testUpdateSet(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					int affectedComments = session.createMutationQuery(
+									"update Comment c set c.user = :user" )
+							.setParameter( "user", session.getReference( User.class, 2L ) )
+							.executeUpdate();
+
+					assertThat( affectedComments ).isEqualTo( 3 );
 				}
 		);
 	}
@@ -74,7 +102,20 @@ public class MutationQueriesAndNotFoundActionTest {
 		scope.inTransaction(
 				session -> {
 					int affectedComments = session.createMutationQuery( "delete from Comment c where c.user = :user" )
-							.setParameter( "user", user1 )
+							.setParameter( "user", session.getReference( User.class, 1L ) )
+							.executeUpdate();
+
+					assertThat( affectedComments ).isEqualTo( 2 );
+				}
+		);
+	}
+
+	@Test
+	public void testDeleteWithImplicitJoin(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					int affectedComments = session.createMutationQuery( "delete from Comment c where c.user.name = :userName" )
+							.setParameter( "userName", "test 1" )
 							.executeUpdate();
 
 					assertThat( affectedComments ).isEqualTo( 2 );

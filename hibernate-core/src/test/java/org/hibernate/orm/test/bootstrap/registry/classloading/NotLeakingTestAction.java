@@ -14,7 +14,11 @@ public class NotLeakingTestAction implements Runnable {
 
 	@Override
 	public void run() {
-		final ClassLoader owningClassloader = getClass().getClassLoader();
+		checkExpectedClassLoader( getClass() );
+	}
+
+	protected void checkExpectedClassLoader(Class aClass) {
+		final ClassLoader owningClassloader = aClass.getClassLoader();
 		if ( !owningClassloader.getName().equals( "TestIsolatedIsolatedClassLoader" ) ) {
 			throw new IllegalStateException( "Not being loaded by the expected classloader" );
 		}

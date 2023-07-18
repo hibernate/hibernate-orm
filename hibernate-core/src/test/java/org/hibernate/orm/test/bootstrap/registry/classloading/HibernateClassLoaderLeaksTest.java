@@ -58,6 +58,11 @@ public class HibernateClassLoaderLeaksTest {
 		ClassLoaderLeakDetector.assertNotLeakingAction( HibernateLoadingTestAction.class.getName() );
 	}
 
+	@Test
+	public void hibernateDoesNotLeakClassloaderWithCallbacks() {
+		ClassLoaderLeakDetector.assertNotLeakingAction( HibernateCallbacksTestAction.class.getName() );
+	}
+
 	private static void cleanup(Driver driver) {
 		System.out.println( "Attempting de-registration of driver: " + driver );
 		try {

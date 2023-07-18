@@ -61,6 +61,7 @@ import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -87,6 +88,7 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
@@ -385,7 +387,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	/**
 	 * A lazy session implementation that is needed for rendering literals.
 	 * Usually, only the {@link WrapperOptions} interface is needed,
-	 * but for creating LOBs, it might be to have a full blown session.
+	 * but for creating LOBs, it might be to have a full-blown session.
 	 */
 	private static class LazySessionWrapperOptions extends AbstractDelegatingWrapperOptions {
 
@@ -1047,7 +1049,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			clauseStack.pop();
 		}
 
-		visitWhereClause( statement.getRestriction() );
+		if ( statement.getFromClause().hasJoins() ) {
+			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement ) );
+		}
+		else {
+			visitWhereClause( statement.getRestriction() );
+		}
 		visitReturningColumns( statement.getReturningColumns() );
 	}
 
@@ -1064,8 +1071,51 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		renderSetClause( statement, clauseStack );
-		visitWhereClause( statement.getRestriction() );
+		if ( statement.getFromClause().hasJoins() ) {
+			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement ) );
+		}
+		else {
+			visitWhereClause( statement.getRestriction() );
+		}
 		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected Predicate determineWhereClauseRestrictionWithJoinEmulation(AbstractUpdateOrDeleteStatement statement) {
+		final QuerySpec querySpec = new QuerySpec( false );
+		querySpec.getSelectClause().addSqlSelection(
+				new SqlSelectionImpl( new QueryLiteral<>( 1, getIntegerType() ) )
+		);
+		for ( TableGroup root : statement.getFromClause().getRoots() ) {
+			if ( root.getPrimaryTableReference() == statement.getTargetTable() ) {
+				for ( TableReferenceJoin tableReferenceJoin : root.getTableReferenceJoins() ) {
+					assert tableReferenceJoin.getJoinType() == SqlAstJoinType.INNER;
+					querySpec.getFromClause().addRoot(
+							new TableGroupImpl(
+									root.getNavigablePath(),
+									null,
+									tableReferenceJoin.getJoinedTableReference(),
+									root.getModelPart()
+							)
+					);
+					querySpec.applyPredicate( tableReferenceJoin.getPredicate() );
+				}
+				for ( TableGroupJoin tableGroupJoin : root.getTableGroupJoins() ) {
+					assert tableGroupJoin.getJoinType() == SqlAstJoinType.INNER;
+					querySpec.getFromClause().addRoot( tableGroupJoin.getJoinedGroup() );
+					querySpec.applyPredicate( tableGroupJoin.getPredicate() );
+				}
+				for ( TableGroupJoin tableGroupJoin : root.getNestedTableGroupJoins() ) {
+					assert tableGroupJoin.getJoinType() == SqlAstJoinType.INNER;
+					querySpec.getFromClause().addRoot( tableGroupJoin.getJoinedGroup() );
+					querySpec.applyPredicate( tableGroupJoin.getPredicate() );
+				}
+			}
+			else {
+				querySpec.getFromClause().addRoot( root );
+			}
+		}
+		querySpec.applyPredicate( statement.getRestriction() );
+		return new ExistsPredicate( querySpec, false, getBooleanType() );
 	}
 
 	protected void renderSetClause(UpdateStatement statement, Stack<Clause> clauseStack) {

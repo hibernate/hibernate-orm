@@ -340,6 +340,7 @@ import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
 import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
 import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
+import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
@@ -853,9 +854,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				suppliedPredicate = visitWhereClause( whereClause.getPredicate() );
 			}
 
+			final FromClause fromClause = new FromClause();
+			fromClause.addRoot( rootTableGroup );
 			return new UpdateStatement(
 					cteContainer,
 					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
+					fromClause,
 					assignments,
 					combinePredicates( suppliedPredicate, additionalRestrictions ),
 					Collections.emptyList()
@@ -875,7 +879,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		else {
 			// otherwise...
-			throw new SemanticException( "Mutation query may only contain embeddable joins" );
+			throw new SemanticException( "Mutation query may not contain joins in the SET clause" );
 		}
 	}
 
@@ -1124,9 +1128,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				suppliedPredicate = visitWhereClause( whereClause.getPredicate() );
 			}
 
+			final FromClause fromClause = new FromClause();
+			fromClause.addRoot( rootTableGroup );
 			return new DeleteStatement(
 					cteContainer,
 					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
+					fromClause,
 					combinePredicates( suppliedPredicate, additionalRestrictions ),
 					Collections.emptyList()
 			);
@@ -3554,7 +3561,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private <X> X prepareReusablePath(SqmPath<?> sqmPath, FromClauseIndex fromClauseIndex, Supplier<X> supplier) {
 		final Consumer<TableGroup> implicitJoinChecker;
-		if ( getCurrentProcessingState() instanceof SqlAstQueryPartProcessingState ) {
+		if ( getCurrentClauseStack().getCurrent() != Clause.SET_EXPRESSION ) {
 			implicitJoinChecker = tg -> {};
 		}
 		else {

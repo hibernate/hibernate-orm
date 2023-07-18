@@ -26,6 +26,8 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -218,6 +220,10 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	@Override
 	public Object getIdentifier(Object entity) {
 		if ( hasContainingClass() ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( entity );
+			if ( lazyInitializer != null ) {
+				return lazyInitializer.getIdentifier();
+			}
 			final Object id = identifierValueMapper.getRepresentationStrategy().getInstantiator().instantiate(
 					null,
 					sessionFactory

@@ -13,6 +13,7 @@ import jakarta.persistence.PersistenceException;
 
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.MapBackedClassValue;
+import org.hibernate.internal.util.collections.ReadOnlyMap;
 import org.hibernate.jpa.event.spi.Callback;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackType;
@@ -26,13 +27,13 @@ import org.hibernate.jpa.event.spi.CallbackType;
  */
 final class CallbackRegistryImpl implements CallbackRegistry {
 
-	private final MapBackedClassValue<Callback[]> preCreates;
-	private final MapBackedClassValue<Callback[]> postCreates;
-	private final MapBackedClassValue<Callback[]> preRemoves;
-	private final MapBackedClassValue<Callback[]> postRemoves;
-	private final MapBackedClassValue<Callback[]> preUpdates;
-	private final MapBackedClassValue<Callback[]> postUpdates;
-	private final MapBackedClassValue<Callback[]> postLoads;
+	private final ReadOnlyMap<Class,Callback[]> preCreates;
+	private final ReadOnlyMap<Class,Callback[]> postCreates;
+	private final ReadOnlyMap<Class,Callback[]> preRemoves;
+	private final ReadOnlyMap<Class,Callback[]> postRemoves;
+	private final ReadOnlyMap<Class,Callback[]> preUpdates;
+	private final ReadOnlyMap<Class,Callback[]> postUpdates;
+	private final ReadOnlyMap<Class,Callback[]> postLoads;
 
 	public CallbackRegistryImpl(
 			Map<Class<?>, Callback[]> preCreates,
@@ -42,18 +43,27 @@ final class CallbackRegistryImpl implements CallbackRegistry {
 			Map<Class<?>, Callback[]> preUpdates,
 			Map<Class<?>, Callback[]> postUpdates,
 			Map<Class<?>, Callback[]> postLoads) {
-		this.preCreates = new MapBackedClassValue<>( preCreates );
-		this.postCreates = new MapBackedClassValue<>( postCreates );
-		this.preRemoves = new MapBackedClassValue<>( preRemoves );
-		this.postRemoves = new MapBackedClassValue<>( postRemoves );
-		this.preUpdates = new MapBackedClassValue<>( preUpdates );
-		this.postUpdates = new MapBackedClassValue<>( postUpdates );
-		this.postLoads = new MapBackedClassValue<>( postLoads );
+		this.preCreates = createBackingMap( preCreates );
+		this.postCreates = createBackingMap( postCreates );
+		this.preRemoves = createBackingMap( preRemoves );
+		this.postRemoves = createBackingMap( postRemoves );
+		this.preUpdates = createBackingMap( preUpdates );
+		this.postUpdates = createBackingMap( postUpdates );
+		this.postLoads = createBackingMap( postLoads );
+	}
+
+	private static ReadOnlyMap<Class, Callback[]> createBackingMap(final Map<Class<?>, Callback[]> src) {
+		if ( src == null || src.isEmpty() ) {
+			return ReadOnlyMap.EMPTY;
+		}
+		else {
+			return new MapBackedClassValue<>( src );
+		}
 	}
 
 	@Override
 	public boolean hasRegisteredCallbacks(Class<?> entityClass, CallbackType callbackType) {
-		final MapBackedClassValue<Callback[]> map = determineAppropriateCallbackMap( callbackType );
+		final ReadOnlyMap<Class,Callback[]> map = determineAppropriateCallbackMap( callbackType );
 		return notEmpty( map.get( entityClass ) );
 	}
 
@@ -119,7 +129,7 @@ final class CallbackRegistryImpl implements CallbackRegistry {
 		}
 	}
 
-	private MapBackedClassValue<Callback[]> determineAppropriateCallbackMap(CallbackType callbackType) {
+	private ReadOnlyMap<Class,Callback[]> determineAppropriateCallbackMap(CallbackType callbackType) {
 		if ( callbackType == CallbackType.PRE_PERSIST ) {
 			return preCreates;
 		}

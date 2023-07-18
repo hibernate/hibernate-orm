@@ -20,7 +20,7 @@ import java.util.Map;
  * @author Sanne Grinovero
  * @since 6.2
  */
-public final class MapBackedClassValue<V> {
+public final class MapBackedClassValue<V> implements ReadOnlyMap<Class,V> {
 
 	private volatile Map<Class<?>, V> map;
 
@@ -45,7 +45,8 @@ public final class MapBackedClassValue<V> {
 		this.map = Map.copyOf( map );
 	}
 
-	public V get(Class<?> key) {
+	@Override
+	public V get(Class key) {
 		return classValue.get( key );
 	}
 
@@ -53,6 +54,7 @@ public final class MapBackedClassValue<V> {
 	 * Use this to wipe the backing map, important
 	 * to avoid classloader leaks.
 	 */
+	@Override
 	public void dispose() {
 		Map<Class<?>, V> existing = this.map;
 		this.map = null;

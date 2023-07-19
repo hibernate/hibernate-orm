@@ -14,6 +14,7 @@ import java.util.Map;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
@@ -22,6 +23,7 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -34,9 +36,11 @@ import jakarta.persistence.UniqueConstraint;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @JiraKey("HHH-16943")
+@RequiresDialect( H2Dialect.class )
 class UniqueConstraintColumnOrderTest {
 
 	@Test
+	// see https://jakarta.ee/specifications/persistence/3.1/jakarta-persistence-spec-3.1.html#uniqueconstraint
 	public void testUniqueConstraintColumnOrder(@TempDir Path tempDir) throws Exception {
 		PersistenceUnitDescriptor puDescriptor = new PersistenceUnitDescriptorAdapter() {
 			@Override

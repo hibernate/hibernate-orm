@@ -78,13 +78,13 @@ public class PersistentListTest {
 										.addColumn( "NAME" )
 										.addColumn( "LIST_INDEX" )
 										.addRestriction( "NAME", ComparisonRestriction.Operator.NE, "?" );
-								PreparedStatement preparedStatement = ( (SessionImplementor) session2 ).getJdbcCoordinator()
-										.getStatementPreparer()
-										.prepareStatement( select.toStatementString() );
+								final String sql = select.toStatementString();
+								PreparedStatement preparedStatement = session2.getJdbcCoordinator()										.getStatementPreparer()
+										.prepareStatement( sql );
 								preparedStatement.setString( 1, "root" );
-								ResultSet resultSet = ( (SessionImplementor) session2 ).getJdbcCoordinator()
+								ResultSet resultSet = session2.getJdbcCoordinator()
 										.getResultSetReturn()
-										.extract( preparedStatement );
+										.extract( preparedStatement, sql );
 								Map<String, Integer> valueMap = new HashMap<String, Integer>();
 								while ( resultSet.next() ) {
 									final String name = resultSet.getString( 1 );
@@ -139,13 +139,14 @@ public class PersistentListTest {
 										.addColumn( "order_id" )
 										.addColumn( "INDX" )
 										.addColumn( "PRD_CODE" );
+								final String sql = select.toStatementString();
 								PreparedStatement preparedStatement = ( (SessionImplementor) session2 ).getJdbcCoordinator()
 										.getStatementPreparer()
-										.prepareStatement( select.toStatementString() );
-								ResultSet resultSet = ( (SessionImplementor) session2 ).getJdbcCoordinator()
+										.prepareStatement( sql );
+								ResultSet resultSet = session2.getJdbcCoordinator()
 										.getResultSetReturn()
-										.extract( preparedStatement );
-								Map<String, Integer> valueMap = new HashMap<String, Integer>();
+										.extract( preparedStatement, sql );
+								Map<String, Integer> valueMap = new HashMap<>();
 								while ( resultSet.next() ) {
 									final int fk = resultSet.getInt( 1 );
 									assertFalse( "Collection key (FK) column was null", resultSet.wasNull() );

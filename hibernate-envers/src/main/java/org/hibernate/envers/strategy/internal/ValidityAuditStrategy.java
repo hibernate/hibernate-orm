@@ -477,7 +477,7 @@ public class ValidityAuditStrategy implements AuditStrategy {
 						for ( QueryParameterBinding binding : context.getBindings() ) {
 							index += binding.bind( index, statement, session );
 						}
-						int result = jdbcCoordinator.getResultSetReturn().executeUpdate( statement );
+						int result = jdbcCoordinator.getResultSetReturn().executeUpdate( statement, sql );
 						return result;
 					}
 					finally {

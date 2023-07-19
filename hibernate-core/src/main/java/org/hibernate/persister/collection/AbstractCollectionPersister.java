@@ -1430,7 +1430,7 @@ public abstract class AbstractCollectionPersister
 					.prepareStatement( sqlSelectSizeString );
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
-				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st );
+				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, sqlSelectSizeString );
 				try {
 					final int baseIndex = Math.max( attributeMapping.getIndexMetadata().getListIndexBase(), 0 );
 					return rs.next() ? rs.getInt( 1 ) - baseIndex : 0;
@@ -1473,7 +1473,7 @@ public abstract class AbstractCollectionPersister
 			try {
 				getKeyType().nullSafeSet( st, key, 1, session );
 				indexOrElementType.nullSafeSet( st, indexOrElement, keyColumnNames.length + 1, session );
-				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st );
+				ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, sql );
 				try {
 					return rs.next();
 				}

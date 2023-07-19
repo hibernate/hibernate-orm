@@ -152,7 +152,7 @@ public class IncrementGenerator implements IdentifierGenerator, StandardGenerato
 		try {
 			PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
-				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
+				ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st, sql );
 				try {
 					if ( rs.next() ) {
 						previousValueHolder.initialize( rs, 0L ).increment();

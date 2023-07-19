@@ -2075,15 +2075,13 @@ public abstract class AbstractEntityPersister
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Getting version: {0}", infoString( this, id, getFactory() ) );
 		}
-
+		final String versionSelectString = getVersionSelectString();
 		try {
 			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-			final PreparedStatement st =
-					jdbcCoordinator.getStatementPreparer()
-							.prepareStatement( getVersionSelectString() );
+			final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( versionSelectString );
 			try {
 				getIdentifierType().nullSafeSet( st, id, 1, session );
-				final ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st );
+				final ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, versionSelectString );
 				try {
 					if ( !rs.next() ) {
 						return null;
@@ -2106,7 +2104,7 @@ public abstract class AbstractEntityPersister
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					e,
 					"could not retrieve version: " + infoString( this, id, getFactory() ),
-					getVersionSelectString()
+					versionSelectString
 			);
 		}
 	}

@@ -177,16 +177,16 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 						assertEquals( 1, connectionProvider.getReleasedConnections().size() );
 
 						// open a result set and hold it open...
-						ps = jdbcCoord.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
-						jdbcCoord.getResultSetReturn().extract( ps );
+						final String sql = "select * from SANDBOX_JDBC_TST";
+						ps = jdbcCoord.getStatementPreparer().prepareStatement( sql );
+						jdbcCoord.getResultSetReturn().extract( ps, sql );
 						assertTrue( resourceRegistry.hasRegisteredResources() );
 						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
 						assertEquals( 1, connectionProvider.getReleasedConnections().size() );
 
 						// open a second result set
-						PreparedStatement ps2 = jdbcCoord.getStatementPreparer()
-								.prepareStatement( "select * from SANDBOX_JDBC_TST" );
-						jdbcCoord.getResultSetReturn().execute( ps );
+						PreparedStatement ps2 = jdbcCoord.getStatementPreparer().prepareStatement( sql );
+						jdbcCoord.getResultSetReturn().execute( ps, sql );
 						assertTrue( resourceRegistry.hasRegisteredResources() );
 						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
 						assertEquals( 1, connectionProvider.getReleasedConnections().size() );
@@ -243,8 +243,9 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 						jdbcCoord.disableReleases();
 
 						// open a result set...
-						ps = jdbcCoord.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
-						jdbcCoord.getResultSetReturn().extract( ps );
+						final String sql = "select * from SANDBOX_JDBC_TST";
+						ps = jdbcCoord.getStatementPreparer().prepareStatement( sql );
+						jdbcCoord.getResultSetReturn().extract( ps, sql );
 						assertTrue( resourceRegistry.hasRegisteredResources() );
 						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
 						assertEquals( 1, connectionProvider.getReleasedConnections().size() );

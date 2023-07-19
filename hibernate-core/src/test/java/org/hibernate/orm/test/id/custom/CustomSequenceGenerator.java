@@ -75,7 +75,7 @@ public class CustomSequenceGenerator implements IdentifierGenerator {
 		try {
 			final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sqlSelectFrag );
 			try {
-				final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
+				final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st, sqlSelectFrag );
 				try {
 					rs.next();
 					return rs.getInt( 1 );

@@ -15,7 +15,15 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
  * @author Steve Ebersole
  */
 public interface SqmJoin<O,T> extends SqmFrom<O,T> {
+	/**
+	 * The type of join - inner, cross, etc
+	 */
 	SqmJoinType getSqmJoinType();
+
+	/**
+	 * When applicable, whether this join should be included in an implicit select clause
+	 */
+	boolean isImplicitlySelectable();
 
 	@Override
 	<X, Y> SqmAttributeJoin<X, Y> join(String attributeName);

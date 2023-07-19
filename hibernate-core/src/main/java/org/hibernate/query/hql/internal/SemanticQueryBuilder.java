@@ -1209,8 +1209,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private void applyJoinsToInferredSelectClause(SqmFrom<?,?> sqm, SqmSelectClause selectClause) {
 		sqm.visitSqmJoins( (sqmJoin) -> {
-			selectClause.addSelection( new SqmSelection<>( sqmJoin, sqmJoin.getAlias(), creationContext.getNodeBuilder() ) );
-			applyJoinsToInferredSelectClause( sqmJoin, selectClause );
+			if ( sqmJoin.isImplicitlySelectable() ) {
+				selectClause.addSelection( new SqmSelection<>( sqmJoin, sqmJoin.getAlias(), creationContext.getNodeBuilder() ) );
+				applyJoinsToInferredSelectClause( sqmJoin, selectClause );
+			}
 		} );
 	}
 

@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
@@ -248,7 +249,8 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	private boolean definesAttribute(SqmPathSource<?> containerType, String name) {
-		return containerType.findSubPathSource( name, getJpaMetamodel() ) != null;
+		return !( containerType.getSqmType() instanceof BasicDomainType )
+				&& containerType.findSubPathSource( name, getJpaMetamodel() ) != null;
 	}
 
 	private JpaMetamodelImplementor getJpaMetamodel() {

@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.query.Query;
-import org.hibernate.sql.ast.SqlTreeCreationException;
+import org.hibernate.query.SemanticException;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -28,9 +28,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.hamcrest.Matchers.startsWith;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -90,11 +88,7 @@ public class QueryLiteralTest {
 			fail( "Should throw Exception!" );
 		}
 		catch (Exception e) {
-			final Throwable rootCause = ExceptionHelper.getRootCause( e );
-			assertThat( rootCause, instanceOf( SqlTreeCreationException.class ) );
-			assertThat( rootCause.getMessage(), startsWith( "QueryLiteral type [" ) );
-			assertThat( rootCause.getMessage(), containsString( "] did not match domain Java-type [" ) );
-			assertThat( rootCause.getMessage(), containsString( "] nor JDBC Java-type [" ) );
+			assertThat( ExceptionHelper.getRootCause( e ), instanceOf( SemanticException.class ) );
 		}
 	}
 

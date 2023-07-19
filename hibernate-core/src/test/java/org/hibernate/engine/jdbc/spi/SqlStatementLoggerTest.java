@@ -25,7 +25,7 @@ class SqlStatementLoggerTest {
 		AtomicInteger callCounterToString = new AtomicInteger();
 		Statement statement = mockStatementForCountingToString( callCounterToString );
 
-		sqlStatementLogger.logSlowQuery( statement, System.nanoTime() );
+		sqlStatementLogger.logSlowQuery( statement, System.nanoTime(), null );
 		assertEquals( 0, callCounterToString.get() );
 	}
 
@@ -42,7 +42,7 @@ class SqlStatementLoggerTest {
 		Statement statement = mockStatementForCountingToString( callCounterToString );
 
 		long startTimeNanos = System.nanoTime() - TimeUnit.MILLISECONDS.toNanos( logSlowQueryThresholdMillis + 1 );
-		sqlStatementLogger.logSlowQuery( statement, startTimeNanos );
+		sqlStatementLogger.logSlowQuery( statement, startTimeNanos, null );
 		assertEquals( 1, callCounterToString.get() );
 	}
 

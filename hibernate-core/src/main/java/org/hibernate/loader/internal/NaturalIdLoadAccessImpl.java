@@ -13,6 +13,8 @@ import java.util.Optional;
 import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.LockOptions;
 import org.hibernate.NaturalIdLoadAccess;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
@@ -74,5 +76,23 @@ public class NaturalIdLoadAccessImpl<T> extends BaseNaturalIdLoadAccessImpl<T> i
 	@Override
 	public Optional<T> loadOptional() {
 		return Optional.ofNullable( load() );
+	}
+
+	@Override
+	public NaturalIdLoadAccess<T> with(RootGraph<T> graph, GraphSemantic semantic) {
+		super.with( graph, semantic );
+		return this;
+	}
+
+	@Override
+	public NaturalIdLoadAccess<T> enableFetchProfile(String profileName) {
+		super.enableFetchProfile( profileName );
+		return this;
+	}
+
+	@Override
+	public NaturalIdLoadAccess<T> disableFetchProfile(String profileName) {
+		super.enableFetchProfile( profileName );
+		return this;
 	}
 }

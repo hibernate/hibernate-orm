@@ -79,14 +79,15 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 			ddlTxn.commit();
 
 			Transaction dmlTxn = session.beginTransaction();
-			PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement(
-					"insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
+			final String insertSql = "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )";
+			PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement( insertSql );
 			ps.setLong( 1, 1 );
 			ps.setString( 2, "name" );
-			jdbcCoord.getResultSetReturn().execute( ps );
+			jdbcCoord.getResultSetReturn().execute( ps, insertSql );
 
-			ps = jdbcCoord.getStatementPreparer().prepareStatement( "select * from SANDBOX_JDBC_TST" );
-			jdbcCoord.getResultSetReturn().extract( ps );
+			final String selectSql = "select * from SANDBOX_JDBC_TST";
+			ps = jdbcCoord.getStatementPreparer().prepareStatement( selectSql );
+			jdbcCoord.getResultSetReturn().extract( ps, selectSql );
 			assertTrue( getResourceRegistry( jdbcCoord ).hasRegisteredResources() );
 			dmlTxn.commit();
 		}

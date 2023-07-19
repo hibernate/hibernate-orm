@@ -91,16 +91,17 @@ public class SqmDerivedJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements
 		if ( existing != null ) {
 			return existing;
 		}
+		final SqmRoot<?> rootCopy = findRoot().copy( context );
 		final SqmDerivedJoin<T> path = context.registerCopy(
 				this,
 				new SqmDerivedJoin<>(
-						getNavigablePath(),
+						getNavigablePathCopy( rootCopy ),
 						subQuery,
 						lateral,
 						getReferencedPathSource(),
 						getExplicitAlias(),
 						getSqmJoinType(),
-						findRoot().copy( context )
+						rootCopy
 				)
 		);
 		copyTo( path, context );

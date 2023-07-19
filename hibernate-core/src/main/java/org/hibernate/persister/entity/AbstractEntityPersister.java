@@ -39,6 +39,7 @@ import org.hibernate.LazyInitializationException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.MappingException;
+import org.hibernate.PropertyValueException;
 import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.StaleObjectStateException;
@@ -77,6 +78,8 @@ import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CollectionKey;
@@ -115,11 +118,11 @@ import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.LazyValue;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.LockModeEnumMap;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.jdbc.TooManyRowsAffectedException;
 import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
-import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.loader.ast.internal.LoaderSelectBuilder;
 import org.hibernate.loader.ast.internal.LoaderSqlAstCreationState;
 import org.hibernate.loader.ast.internal.MultiIdEntityLoaderArrayParam;
@@ -196,6 +199,7 @@ import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityInstantiator;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
@@ -223,6 +227,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.Alias;
 import org.hibernate.sql.Delete;
+import org.hibernate.sql.InFragment;
 import org.hibernate.sql.SimpleSelect;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.spi.SimpleFromClauseAccessImpl;
@@ -254,6 +259,7 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
+import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -270,6 +276,7 @@ import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.tuple.NonIdentifierAttribute;
 import org.hibernate.tuple.entity.EntityMetamodel;
 import org.hibernate.type.AnyType;
+import org.hibernate.type.AssociationType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
@@ -292,6 +299,7 @@ import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.generator.EventType.UPDATE;
 import static org.hibernate.internal.util.ReflectHelper.isAbstractClass;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
+import static org.hibernate.internal.util.StringHelper.qualifyConditionally;
 import static org.hibernate.internal.util.collections.ArrayHelper.contains;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toBooleanArray;
@@ -455,6 +463,8 @@ public abstract class AbstractEntityPersister
 	protected final BasicEntityPropertyMapping propertyMapping;
 
 	private final boolean implementsLifecycle;
+
+	private List<UniqueKeyEntry> uniqueKeyEntries = null; //lazily initialized
 
 	@Deprecated(since = "6.0")
 	public AbstractEntityPersister(
@@ -1157,6 +1167,30 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean canUseReferenceCacheEntries() {
 		return useReferenceCacheEntries;
+	}
+
+	@Override
+	public Iterable<UniqueKeyEntry> uniqueKeyEntries() {
+		if ( this.uniqueKeyEntries == null ) {
+			this.uniqueKeyEntries = initUniqueKeyEntries( this );
+		}
+		return this.uniqueKeyEntries;
+	}
+
+	private static List<UniqueKeyEntry> initUniqueKeyEntries(final AbstractEntityPersister aep) {
+		ArrayList<UniqueKeyEntry> uniqueKeys = new ArrayList();
+		for ( Type propertyType : aep.getPropertyTypes() ) {
+			if ( propertyType instanceof AssociationType ) {
+				final AssociationType associationType = (AssociationType) propertyType;
+				final String ukName = associationType.getLHSPropertyName();
+				if ( ukName != null ) {
+					final int index = aep.findAttributeMapping( ukName ).getStateArrayPosition();
+					final Type type = aep.getPropertyTypes()[index];
+					uniqueKeys.add( new UniqueKeyEntry( ukName, index, type ) );
+				}
+			}
+		}
+		return CollectionHelper.toSmallList( uniqueKeys );
 	}
 
 	protected Map<String, SingleIdArrayLoadPlan> getLazyLoadPlanByFetchGroup() {
@@ -2041,15 +2075,13 @@ public abstract class AbstractEntityPersister
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Getting version: {0}", infoString( this, id, getFactory() ) );
 		}
-
+		final String versionSelectString = getVersionSelectString();
 		try {
 			final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-			final PreparedStatement st =
-					jdbcCoordinator.getStatementPreparer()
-							.prepareStatement( getVersionSelectString() );
+			final PreparedStatement st = jdbcCoordinator.getStatementPreparer().prepareStatement( versionSelectString );
 			try {
 				getIdentifierType().nullSafeSet( st, id, 1, session );
-				final ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st );
+				final ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, versionSelectString );
 				try {
 					if ( !rs.next() ) {
 						return null;
@@ -2072,7 +2104,7 @@ public abstract class AbstractEntityPersister
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					e,
 					"could not retrieve version: " + infoString( this, id, getFactory() ),
-					getVersionSelectString()
+					versionSelectString
 			);
 		}
 	}
@@ -2276,7 +2308,7 @@ public abstract class AbstractEntityPersister
 
 		//noinspection rawtypes
 		final DiscriminatorConverter converter = MappedDiscriminatorConverter.fromValueMappings(
-				getNavigableRole().append( EntityDiscriminatorMapping.ROLE_NAME ),
+				getNavigableRole().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 				domainJavaType,
 				underlingJdbcMapping,
 				getSubclassByDiscriminatorValue(),
@@ -2918,25 +2950,41 @@ public abstract class AbstractEntityPersister
 				LOG.debugf( " Version select: %s", sqlVersionSelectString );
 			}
 
-			if ( insertCoordinator.getStaticInsertGroup() != null ) {
-				insertCoordinator.getStaticInsertGroup().forEachOperation( (tablePosition, mutation) -> {
-					if ( mutation instanceof JdbcOperation ) {
-						LOG.debugf( " Insert (%s): %s", tablePosition, ( (JdbcOperation) mutation ).getSqlString() );
+			{
+				final MutationOperationGroup staticInsertGroup = insertCoordinator.getStaticInsertGroup();
+				if ( staticInsertGroup != null ) {
+					for ( int i = 0; i < staticInsertGroup.getNumberOfOperations(); i++ ) {
+						final MutationOperation mutation = staticInsertGroup.getOperation( i );
+						if ( mutation instanceof JdbcOperation ) {
+							LOG.debugf( " Insert (%s): %s", i, ( (JdbcOperation) mutation ).getSqlString() );
+						}
 					}
-				} );
+				}
 			}
 
-			updateCoordinator.getStaticUpdateGroup().forEachOperation( (tablePosition, mutation) -> {
-				if ( mutation instanceof JdbcOperation ) {
-					LOG.debugf( " Update (%s): %s", tablePosition, ( (JdbcOperation) mutation ).getSqlString() );
+			{
+				final MutationOperationGroup staticUpdateGroup = updateCoordinator.getStaticUpdateGroup();
+				if ( staticUpdateGroup != null ) {
+					for ( int i = 0; i < staticUpdateGroup.getNumberOfOperations(); i++ ) {
+						final MutationOperation mutation = staticUpdateGroup.getOperation( i );
+						if ( mutation instanceof JdbcOperation ) {
+							LOG.debugf( " Update (%s): %s", i, ( (JdbcOperation) mutation ).getSqlString() );
+						}
+					}
 				}
-			} );
+			}
 
-			deleteCoordinator.getStaticDeleteGroup().forEachOperation( (tablePosition, mutation) -> {
-				if ( mutation instanceof JdbcOperation ) {
-					LOG.debugf( " Delete (%s): %s", tablePosition, ( (JdbcOperation) mutation ).getSqlString() );
+			{
+				final MutationOperationGroup staticDeleteGroup = deleteCoordinator.getStaticDeleteGroup();
+				if ( staticDeleteGroup != null ) {
+					for ( int i = 0; i < staticDeleteGroup.getNumberOfOperations(); i++ ) {
+						final MutationOperation mutation = staticDeleteGroup.getOperation( i );
+						if ( mutation instanceof JdbcOperation ) {
+							LOG.debugf( " Delete (%s): %s", i, ( (JdbcOperation) mutation ).getSqlString() );
+						}
+					}
 				}
-			} );
+			}
 		}
 	}
 
@@ -3113,6 +3161,63 @@ public abstract class AbstractEntityPersister
 			return junction;
 		}
 		return predicate;
+	}
+
+	protected String getPrunedDiscriminatorPredicate(
+			Map<String, EntityNameUse> entityNameUses,
+			MappingMetamodelImplementor mappingMetamodel,
+			String alias) {
+		final InFragment frag = new InFragment();
+		if ( isDiscriminatorFormula() ) {
+			frag.setFormula( alias, getDiscriminatorFormulaTemplate() );
+		}
+		else {
+			frag.setColumn( alias, getDiscriminatorColumnName() );
+		}
+		boolean containsNotNull = false;
+		for ( Map.Entry<String, EntityNameUse> entry : entityNameUses.entrySet() ) {
+			final EntityNameUse.UseKind useKind = entry.getValue().getKind();
+			if ( useKind == EntityNameUse.UseKind.PROJECTION || useKind == EntityNameUse.UseKind.EXPRESSION ) {
+				// We only care about treat and filter uses which allow to reduce the amount of rows to select
+				continue;
+			}
+			final EntityPersister persister = mappingMetamodel.getEntityDescriptor( entry.getKey() );
+			// Filtering for abstract entities makes no sense, so ignore that
+			// Also, it makes no sense to filter for any of the super types,
+			// as the query will contain a filter for that already anyway
+			if ( !persister.isAbstract() && ( this == persister || !isTypeOrSuperType( persister ) ) ) {
+				containsNotNull = containsNotNull || InFragment.NOT_NULL.equals( persister.getDiscriminatorSQLValue() );
+				frag.addValue( persister.getDiscriminatorSQLValue() );
+			}
+		}
+		final List<String> discriminatorSQLValues = Arrays.asList( ( (AbstractEntityPersister) getRootEntityDescriptor() ).fullDiscriminatorSQLValues );
+		if ( frag.getValues().size() == discriminatorSQLValues.size() ) {
+			// Nothing to prune if we filter for all subtypes
+			return null;
+		}
+
+		if ( containsNotNull ) {
+			final StringBuilder sb = new StringBuilder();
+			String lhs;
+			if ( isDiscriminatorFormula() ) {
+				lhs = StringHelper.replace( getDiscriminatorFormulaTemplate(), Template.TEMPLATE, alias );
+			}
+			else {
+				lhs = qualifyConditionally( alias, getDiscriminatorColumnName() );
+			}
+			sb.append( " or " ).append( lhs ).append( " is not in (" );
+			for ( Object discriminatorSQLValue : discriminatorSQLValues ) {
+				if ( !frag.getValues().contains( discriminatorSQLValue ) ) {
+					sb.append( lhs ).append( discriminatorSQLValue );
+				}
+			}
+			sb.append( ") and " ).append( lhs ).append( " is not null" );
+			frag.getValues().remove( InFragment.NOT_NULL );
+			return frag.toFragmentString() + sb;
+		}
+		else {
+			return frag.toFragmentString();
+		}
 	}
 
 	@Override
@@ -3617,7 +3722,8 @@ public abstract class AbstractEntityPersister
 	@Override
 	public boolean isAffectedByEntityGraph(LoadQueryInfluencers loadQueryInfluencers) {
 		final RootGraphImplementor<?> graph = loadQueryInfluencers.getEffectiveEntityGraph().getGraph();
-		return graph != null && graph.appliesTo( getEntityName() );
+		return graph != null
+			&& graph.appliesTo( getFactory().getJpaMetamodel().entity( getEntityName() ) );
 	}
 
 	@Override
@@ -3925,20 +4031,29 @@ public abstract class AbstractEntityPersister
 			// let this take precedence if defined, since it works for
 			// assigned identifiers
 			final Object version = getVersion( entity );
-			final Boolean result = versionMapping.getUnsavedStrategy().isUnsaved( version );
-			if ( result != null ) {
-				if ( result && version == null && session.getPersistenceContext().hasLoadContext() ) {
-					// check if we're currently loading this entity instance, the version
-					// will be null but the entity cannot be considered transient
-					final EntityKey entityKey = new EntityKey( id, this );
-					final LoadingEntityEntry loadingEntityEntry = session.getPersistenceContext()
-							.getLoadContexts()
-							.findLoadingEntityEntry( entityKey );
-					if ( loadingEntityEntry != null && loadingEntityEntry.getEntityInstance() == entity ) {
-						return false;
+			final Boolean isUnsaved = versionMapping.getUnsavedStrategy().isUnsaved( version );
+			if ( isUnsaved != null ) {
+				if ( isUnsaved  ) {
+					if ( version == null && session.getPersistenceContext().hasLoadContext() ) {
+						// check if we're currently loading this entity instance, the version
+						// will be null but the entity cannot be considered transient
+						final LoadingEntityEntry loadingEntityEntry = session.getPersistenceContext()
+								.getLoadContexts()
+								.findLoadingEntityEntry( new EntityKey( id, this ) );
+						if ( loadingEntityEntry != null && loadingEntityEntry.getEntityInstance() == entity ) {
+							return false;
+						}
+					}
+					final Boolean unsaved = identifierMapping.getUnsavedStrategy().isUnsaved( id );
+					if ( unsaved != null && !unsaved ) {
+						throw new PropertyValueException(
+								"Detached entity with generated id '" + id + "' has an uninitialized version value '" + version + "'",
+								getEntityName(),
+								getVersionColumnName()
+						);
 					}
 				}
-				return result;
+				return isUnsaved;
 			}
 		}
 
@@ -4900,7 +5015,7 @@ public abstract class AbstractEntityPersister
 		}
 
 		identifierMapping = creationProcess.processSubPart(
-				EntityIdentifierMapping.ROLE_LOCAL_NAME,
+				EntityIdentifierMapping.ID_ROLE_NAME,
 				(role, process) -> generateIdentifierMapping( templateInstanceCreator, bootEntityDescriptor, process )
 		);
 
@@ -5811,7 +5926,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private boolean isIdentifierReference(String name) {
-		return EntityIdentifierMapping.ROLE_LOCAL_NAME.equals( name )
+		return EntityIdentifierMapping.ID_ROLE_NAME.equals( name )
 			|| hasIdentifierProperty() && getIdentifierPropertyName().equals( name )
 			|| !entityMetamodel.hasNonIdentifierPropertyNamedId() && "id".equals( name );
 	}
@@ -6076,12 +6191,14 @@ public abstract class AbstractEntityPersister
 	}
 
 	private String[] extractSqlStrings(MutationOperationGroup operationGroup) {
-		final String[] strings = new String[operationGroup.getNumberOfOperations()];
-		operationGroup.forEachOperation( (tableIndex, mutation) -> {
-			if ( mutation instanceof JdbcOperation ) {
-				strings[tableIndex] = ( (JdbcOperation) mutation ).getSqlString();
+		final int numberOfOperations = operationGroup.getNumberOfOperations();
+		final String[] strings = new String[numberOfOperations];
+		for ( int i = 0; i < numberOfOperations; i++ ) {
+			final MutationOperation operation = operationGroup.getOperation( i );
+			if ( operation instanceof JdbcOperation ) {
+				strings[i] = ( (JdbcOperation) operation ).getSqlString();
 			}
-		} );
+		}
 		return strings;
 	}
 

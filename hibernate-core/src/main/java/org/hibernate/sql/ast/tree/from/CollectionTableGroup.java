@@ -107,9 +107,7 @@ public class CollectionTableGroup extends StandardTableGroup implements PluralTa
 					tableExpression,
 					resolve
 			);
-			if ( elementTableReference != null ) {
-				return elementTableReference;
-			}
+			return elementTableReference;
 		}
 		return null;
 	}

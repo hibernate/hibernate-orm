@@ -41,7 +41,7 @@ public class CompositeIdFkUpdateTest {
                     }
                     catch (IllegalArgumentException ex) {
                         assertThat( ex.getCause() ).isInstanceOf( SemanticException.class );
-                        assertThat( ex.getCause() ).hasMessageContaining( "did not match" );
+                        assertThat( ex.getCause() ).hasMessageContaining( "Cannot assign expression of type" );
                     }
                 }
         );

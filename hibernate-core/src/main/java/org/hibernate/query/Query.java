@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import jakarta.persistence.EntityGraph;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.Incubating;
@@ -289,7 +290,6 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 * @apiNote This method calls {@link #applyGraph(RootGraph, GraphSemantic)}
 	 *          using {@link GraphSemantic#LOAD} as the semantic.
 	 */
-	@SuppressWarnings("UnusedDeclaration")
 	default Query<R> applyLoadGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		return applyGraph( graph, GraphSemantic.LOAD );
 	}
@@ -889,8 +889,31 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	@Override
 	Query<R> setFirstResult(int startPosition);
 
+//	@Override @Incubating
+//	default Query<R> setPage(int pageSize, int pageNumber) {
+//		setFirstResult( pageNumber * pageSize );
+//		setMaxResults( pageSize );
+//		return this;
+//	}
+
+	@Override @Incubating
+	default Query<R> setPage(Page page) {
+		setMaxResults( page.getMaxResults() );
+		setFirstResult( page.getFirstResult() );
+		return this;
+	}
+
 	@Override
 	Query<R> setHint(String hintName, Object value);
+
+	@Override
+	Query<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic);
+
+	@Override
+	Query<R> enableFetchProfile(String profileName);
+
+	@Override
+	Query<R> disableFetchProfile(String profileName);
 
 	@Override
 	Query<R> setFlushMode(FlushModeType flushMode);
@@ -898,6 +921,11 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	@Override
 	Query<R> setLockMode(LockModeType lockMode);
 
+	@Override @Incubating
+	Query<R> setOrder(List<Order<? super R>> orderList);
+
+	@Override @Incubating
+	Query<R> setOrder(Order<? super R> order);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// deprecated methods

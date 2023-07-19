@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -25,11 +26,14 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
+
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 
 /**
  * @author Steve Ebersole
@@ -56,6 +60,8 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	protected void copyTo(AbstractSqmPath<T> target, SqmCopyContext context) {
+		assert lhs == null || lhs.getNavigablePath() == target.getLhs().getNavigablePath()
+				|| getRoot( lhs ).getNodeType() instanceof SqmPolymorphicRootDescriptor;
 		super.copyTo( target, context );
 		if ( reusablePaths != null ) {
 			target.reusablePaths = new HashMap<>( reusablePaths.size() );
@@ -63,6 +69,10 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 				target.reusablePaths.put( entry.getKey(), entry.getValue().copy( context ) );
 			}
 		}
+	}
+
+	private SqmPath<?> getRoot(SqmPath<?> lhs) {
+		return lhs.getLhs() == null ? lhs : getRoot( lhs.getLhs() );
 	}
 
 	@Override
@@ -160,23 +170,24 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	@SuppressWarnings("unchecked")
 	public SqmExpression<Class<? extends T>> type() {
 		final SqmPathSource<T> referencedPathSource = getReferencedPathSource();
-		final SqmPathSource<?> subPathSource = referencedPathSource.findSubPathSource( EntityDiscriminatorMapping.ROLE_NAME );
+		final SqmPathSource<?> subPathSource = referencedPathSource.findSubPathSource( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME );
 
 		if ( subPathSource == null ) {
 			return new SqmLiteral<>(
 					referencedPathSource.getBindableJavaType(),
-					(SqmExpressible<? extends Class<? extends T>>) (SqmExpressible<?>) nodeBuilder().getTypeConfiguration()
-							.getBasicTypeForJavaType( Class.class ),
+					(SqmExpressible<? extends Class<? extends T>>) (SqmExpressible<?>)
+							nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Class.class ),
 					nodeBuilder()
 			);
 		}
-		return (SqmExpression<Class<? extends T>>) resolvePath( EntityDiscriminatorMapping.ROLE_NAME, subPathSource );
+		return (SqmExpression<Class<? extends T>>) resolvePath( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME, subPathSource );
 	}
 
 	@Override
 	@SuppressWarnings("unchecked")
 	public SqmPath<?> get(String attributeName) {
-		final SqmPathSource<?> subNavigable = getResolvedModel().getSubPathSource( attributeName );
+		final SqmPathSource<?> subNavigable =
+				getResolvedModel().getSubPathSource( attributeName, nodeBuilder().getSessionFactory().getJpaMetamodel() );
 		return resolvePath( attributeName, subNavigable );
 	}
 
@@ -210,6 +221,44 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 			getLhs().registerReusablePath( path );
 		}
 		return path;
+	}
+
+	/**
+	 * Utility that checks if this path's parent navigable path is compatible with the specified SQM parent,
+	 * and if not creates a copy of the navigable path with the correct parent.
+	 */
+	protected NavigablePath getNavigablePathCopy(SqmPath<?> parent) {
+		return getNavigablePathCopy( castNonNull( navigablePath.getRealParent() ), parent.getNavigablePath(), false, null );
+	}
+
+	private NavigablePath getNavigablePathCopy(
+			NavigablePath realParent,
+			NavigablePath parent,
+			boolean isId,
+			String identifierAttributeName) {
+		if ( parent == realParent ) {
+			return navigablePath;
+		}
+		else if ( !isId && realParent instanceof EntityIdentifierNavigablePath ) {
+			return getNavigablePathCopy(
+					castNonNull( realParent.getRealParent() ),
+					parent,
+					true,
+					( (EntityIdentifierNavigablePath) realParent ).getIdentifierAttributeName()
+			);
+		}
+		else if ( CollectionPart.Nature.fromNameExact( realParent.getLocalName() ) != null ) {
+			if ( parent == realParent.getRealParent() ) {
+				return navigablePath;
+			}
+			else {
+				parent = parent.append( realParent.getLocalName() );
+			}
+		}
+		if ( isId ) {
+			parent = new EntityIdentifierNavigablePath( parent, identifierAttributeName );
+		}
+		return parent.append( navigablePath.getLocalName(), navigablePath.getAlias() );
 	}
 
 	@Override

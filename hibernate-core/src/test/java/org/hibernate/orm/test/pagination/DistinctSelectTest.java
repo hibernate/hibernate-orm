@@ -47,13 +47,13 @@ public class DistinctSelectTest extends BaseCoreFunctionalTestCase {
 		Transaction t = s.beginTransaction();
 
 		for (int i = 0; i < 5; i++) {
-			Tag tag = new Tag("Tag: " + UUID.randomUUID().toString());
+			Tag tag = new Tag("Tag: " + UUID.randomUUID());
 			tags.add(tag);
 			s.save(tag);
 		}
 
 		for (int i = 0; i < NUM_OF_USERS; i++) {
-			Entry e = new Entry("Entry: " + UUID.randomUUID().toString());
+			Entry e = new Entry("Entry: " + UUID.randomUUID());
 			e.getTags().addAll(tags);
 			s.save(e);
 		}
@@ -68,7 +68,7 @@ public class DistinctSelectTest extends BaseCoreFunctionalTestCase {
 
 		Session s = openSession();
 
-		List<Entry> entries = s.createQuery("select distinct e from Entry e join e.tags t where t.surrogate != null order by e.name").setFirstResult(10).setMaxResults(5).list();
+		List<Entry> entries = s.createQuery("select distinct e from Entry e join e.tags t where t.surrogate is not null order by e.name").setFirstResult(10).setMaxResults(5).list();
 
 		// System.out.println(entries);
 		Entry firstEntry = entries.remove(0);

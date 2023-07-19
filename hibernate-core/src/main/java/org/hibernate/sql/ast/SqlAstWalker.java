@@ -62,6 +62,7 @@ import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.predicate.NegatedPredicate;
 import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.predicate.ThruthnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -201,6 +202,8 @@ public interface SqlAstWalker {
 	void visitNegatedPredicate(NegatedPredicate negatedPredicate);
 
 	void visitNullnessPredicate(NullnessPredicate nullnessPredicate);
+
+	void visitThruthnessPredicate(ThruthnessPredicate predicate);
 
 	void visitRelationalPredicate(ComparisonPredicate comparisonPredicate);
 

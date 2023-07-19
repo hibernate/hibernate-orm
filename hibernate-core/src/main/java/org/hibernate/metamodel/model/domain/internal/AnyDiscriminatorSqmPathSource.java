@@ -16,7 +16,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
- * SqmPathSource implementation for {@link org.hibernate.annotations.AnyDiscriminator}
+ * {@link SqmPathSource} implementation for {@link org.hibernate.annotations.AnyDiscriminator}
  *
  */
 public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
@@ -39,7 +39,7 @@ public class AnyDiscriminatorSqmPathSource<D> extends AbstractSqmPathSource<D>
 		else {
 			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() );
 		}
-		return new AnyDiscriminatorSqmPath( navigablePath, pathModel, lhs, lhs.nodeBuilder() );
+		return new AnyDiscriminatorSqmPath<>( navigablePath, pathModel, lhs, lhs.nodeBuilder() );
 	}
 
 	@Override

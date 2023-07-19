@@ -13,6 +13,8 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyMapImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyMixedImpl;
 import org.hibernate.property.access.internal.PropertyAccessStrategyNoopImpl;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Describes the built-in externally-nameable {@link PropertyAccessStrategy} implementations.
  *
@@ -42,7 +44,7 @@ public enum BuiltInPropertyAccessStrategies {
 		return strategy;
 	}
 
-	public static BuiltInPropertyAccessStrategies interpret(String name) {
+	public static @Nullable BuiltInPropertyAccessStrategies interpret(String name) {
 		for ( BuiltInPropertyAccessStrategies strategy : values() ) {
 			if ( strategy.externalName.equals( name ) ) {
 				return strategy;

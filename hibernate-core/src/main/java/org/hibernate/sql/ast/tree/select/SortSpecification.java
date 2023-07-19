@@ -6,8 +6,8 @@
  */
 package org.hibernate.sql.ast.tree.select;
 
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortDirection;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -17,14 +17,14 @@ import org.hibernate.sql.ast.tree.expression.Expression;
  */
 public class SortSpecification implements SqlAstNode {
 	private final Expression sortExpression;
-	private final SortOrder sortOrder;
+	private final SortDirection sortOrder;
 	private final NullPrecedence nullPrecedence;
 
-	public SortSpecification(Expression sortExpression, SortOrder sortOrder) {
+	public SortSpecification(Expression sortExpression, SortDirection sortOrder) {
 		this( sortExpression, sortOrder, NullPrecedence.NONE );
 	}
 
-	public SortSpecification(Expression sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	public SortSpecification(Expression sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		assert sortExpression != null;
 		assert sortOrder != null;
 		assert nullPrecedence != null;
@@ -37,7 +37,7 @@ public class SortSpecification implements SqlAstNode {
 		return sortExpression;
 	}
 
-	public SortOrder getSortOrder() {
+	public SortDirection getSortOrder() {
 		return sortOrder;
 	}
 

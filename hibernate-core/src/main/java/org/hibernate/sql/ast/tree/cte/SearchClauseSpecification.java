@@ -6,18 +6,18 @@
  */
 package org.hibernate.sql.ast.tree.cte;
 
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortDirection;
 
 /**
  * @author Christian Beikov
  */
 public class SearchClauseSpecification {
 	private final CteColumn cteColumn;
-	private final SortOrder sortOrder;
+	private final SortDirection sortOrder;
 	private final NullPrecedence nullPrecedence;
 
-	public SearchClauseSpecification(CteColumn cteColumn, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	public SearchClauseSpecification(CteColumn cteColumn, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		this.cteColumn = cteColumn;
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;
@@ -27,7 +27,7 @@ public class SearchClauseSpecification {
 		return cteColumn;
 	}
 
-	public SortOrder getSortOrder() {
+	public SortDirection getSortOrder() {
 		return sortOrder;
 	}
 

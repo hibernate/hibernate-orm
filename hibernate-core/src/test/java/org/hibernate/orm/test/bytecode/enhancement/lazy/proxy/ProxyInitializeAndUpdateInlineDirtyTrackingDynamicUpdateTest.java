@@ -10,14 +10,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.spi.LoadState;
-import jakarta.persistence.spi.PersistenceProvider;
 
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.internal.util.PersistenceUtilHelper;
 
 import org.hibernate.testing.TestForIssue;

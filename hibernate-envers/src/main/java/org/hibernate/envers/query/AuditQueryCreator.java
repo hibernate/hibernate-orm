@@ -57,7 +57,7 @@ public class AuditQueryCreator {
 	 * at a given revision and a given entityName. Deleted entities are not included.
 	 *
 	 * @param c Class of the entities for which to query.
-	 * @param entityName Name of the entity (if can't be guessed basing on the {@code c}).
+	 * @param entityName Name of the entity (if it can't be guessed basing on the {@code c}).
 	 * @param revision Revision number at which to execute the query.
 	 *
 	 * @return A query for entities at a given revision, to which conditions can be added and which
@@ -74,7 +74,7 @@ public class AuditQueryCreator {
 	 * included.
 	 *
 	 * @param c Class of the entities for which to query.
-	 * @param entityName Name of the entity (if can't be guessed basing on the {@code c}).
+	 * @param entityName Name of the entity (if it can't be guessed basing on the {@code c}).
 	 * @param revision Revision number at which to execute the query.
 	 * @param includeDeletions Whether to include deleted entities in the search.
 	 *
@@ -104,7 +104,7 @@ public class AuditQueryCreator {
 	 * which were present at a given revision, even if they were not modified.
 	 *
 	 * @param c Class of the entities for which to query.
-	 * @param entityName Name of the entity (if can't be guessed basing on the {@code c}).
+	 * @param entityName Name of the entity (if it can't be guessed basing on the {@code c}).
 	 * @param revision Revision number at which to execute the query.
 	 *
 	 * @return A query for entities changed at a given revision, to which conditions can be added and which
@@ -190,7 +190,7 @@ public class AuditQueryCreator {
 	 * Additional conditions that the results must satisfy may be specified.
 	 *
 	 * @param c Class of the entities for which to query.
-	 * @param entityName Name of the entity (if can't be guessed basing on the {@code c}).
+	 * @param entityName Name of the entity (if it can't be guessed basing on the {@code c}).
 	 * @param selectEntitiesOnly If true, instead of a list of three-element arrays, a list of entities will be
 	 * returned as a result of executing this query.
 	 * @param selectDeletedEntities If true, also revisions where entities were deleted will be returned. The additional

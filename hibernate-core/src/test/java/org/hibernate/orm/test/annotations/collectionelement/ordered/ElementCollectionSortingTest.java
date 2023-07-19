@@ -12,7 +12,7 @@ import java.util.List;
 
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentImpl;
 import org.hibernate.metamodel.mapping.ordering.ast.OrderingSpecification;
@@ -121,19 +121,19 @@ public class ElementCollectionSortingTest {
 							session,
 							Person.class.getName(),
 							"nickNamesAscendingNaturalSort",
-							SortOrder.ASCENDING
+							SortDirection.ASCENDING
 					);
 					checkSQLOrderBy(
 							session,
 							Person.class.getName(),
 							"nickNamesDescendingNaturalSort",
-							SortOrder.DESCENDING
+							SortDirection.DESCENDING
 					);
 				}
 		);
 	}
 
-	private void checkSQLOrderBy(Session session, String entityName, String propertyName, SortOrder order) {
+	private void checkSQLOrderBy(Session session, String entityName, String propertyName, SortDirection order) {
 		String roleName = entityName + "." + propertyName;
 		String alias = "alias1";
 		BasicCollectionPersister collectionPersister = (BasicCollectionPersister) session

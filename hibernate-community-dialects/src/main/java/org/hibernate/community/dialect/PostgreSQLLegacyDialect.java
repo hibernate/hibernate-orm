@@ -26,20 +26,7 @@ import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.community.dialect.sequence.PostgreSQLLegacySequenceSupport;
-import org.hibernate.dialect.DatabaseVersion;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.NationalizationSupport;
-import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.PgJdbcHelper;
-import org.hibernate.dialect.PostgreSQLCastingInetJdbcType;
-import org.hibernate.dialect.PostgreSQLCastingIntervalSecondJdbcType;
-import org.hibernate.dialect.PostgreSQLCastingJsonJdbcType;
-import org.hibernate.dialect.PostgreSQLDriverKind;
-import org.hibernate.dialect.PostgreSQLStructCastingJdbcType;
-import org.hibernate.dialect.Replacer;
-import org.hibernate.dialect.RowLockStrategy;
-import org.hibernate.dialect.SelectItemReferenceStrategy;
-import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.dialect.*;
 import org.hibernate.dialect.aggregate.AggregateSupport;
 import org.hibernate.dialect.aggregate.PostgreSQLAggregateSupport;
 import org.hibernate.dialect.function.CommonFunctionFactory;
@@ -1285,6 +1272,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 				return getVersion().isSameOrAfter( 13 );
 		}
 		return false;
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
 	}
 
 	@Override

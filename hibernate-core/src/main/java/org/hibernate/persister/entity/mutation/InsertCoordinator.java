@@ -17,7 +17,6 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.TableInclusionChecker;
-import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
@@ -29,6 +28,7 @@ import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
@@ -114,7 +114,8 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	}
 
 	protected void preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
-		final EntityMetamodel entityMetamodel = entityPersister().getEntityMetamodel();
+		final AbstractEntityPersister persister = entityPersister();
+		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
 		if ( entityMetamodel.hasPreInsertGeneratedValues() ) {
 			final Generator[] generators = entityMetamodel.getGenerators();
 			for ( int i = 0; i < generators.length; i++ ) {
@@ -123,7 +124,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 						&& !generator.generatedOnExecution()
 						&& generator.generatesOnInsert() ) {
 					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], INSERT );
-					entityPersister().setPropertyValue( entity, i, values[i] );
+					persister.setPropertyValue( entity, i, values[i] );
 				}
 			}
 		}
@@ -197,30 +198,33 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			TableInclusionChecker tableInclusionChecker,
 			SharedSessionContractImplementor session) {
 		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
+		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
 
-		mutationGroup.forEachOperation( (position, operation) -> {
+		for ( int position = 0; position < mutationGroup.getNumberOfOperations(); position++ ) {
+			final MutationOperation operation = mutationGroup.getOperation( position );
 			final EntityTableMapping tableDetails = (EntityTableMapping) operation.getTableDetails();
 			if ( tableInclusionChecker.include( tableDetails ) ) {
 				final int[] attributeIndexes = tableDetails.getAttributeIndexes();
 				for ( int i = 0; i < attributeIndexes.length; i++ ) {
 					final int attributeIndex = attributeIndexes[ i ];
 					if ( propertyInclusions[attributeIndex] ) {
-						final AttributeMapping mapping = entityPersister().getAttributeMappings().get( attributeIndex );
+						final AttributeMapping mapping = attributeMappings.get( attributeIndex );
 						decomposeAttribute( values[attributeIndex], session, jdbcValueBindings, mapping );
 					}
 				}
 			}
-		} );
+		}
 
-		mutationGroup.forEachOperation( (position, jdbcOperation) -> {
-			if ( id == null )  {
-				assert entityPersister().getIdentityInsertDelegate() != null;
-			}
-			else {
+		if ( id == null ) {
+			assert entityPersister().getIdentityInsertDelegate() != null;
+		}
+		else {
+			for ( int position = 0; position < mutationGroup.getNumberOfOperations(); position++ ) {
+				final MutationOperation jdbcOperation = mutationGroup.getOperation( position );
 				final EntityTableMapping tableDetails = (EntityTableMapping) jdbcOperation.getTableDetails();
 				breakDownJdbcValue( id, session, jdbcValueBindings, tableDetails );
 			}
-		} );
+		}
 	}
 
 	protected void breakDownJdbcValue(
@@ -304,9 +308,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 	}
 
 	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
-		return session.getFactory()
-				.getServiceRegistry()
-				.getService( MutationExecutorService.class )
+		return mutationExecutorService
 				.createExecutor( resolveBatchKeyAccess( dynamicUpdate, session ), group, session );
 	}
 

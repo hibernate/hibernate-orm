@@ -61,10 +61,6 @@ public interface ExecutionContext {
 	}
 
 	/**
-	 *
-	 * @param entityKey
-	 * @param entry
-	 *
 	 * @deprecated use {@link #registerSubselect(EntityKey, LoadingEntityEntry)} instead.
 	 */
 	@Deprecated
@@ -80,10 +76,10 @@ public interface ExecutionContext {
 	 * Hook to allow delaying calls to {@link LogicalConnectionImplementor#afterStatement()}.
 	 * Mainly used in the case of batching and multi-table mutations
 	 *
-	 * todo (6.0) : come back and make sure we are calling this at appropriate times.  despite the name, it should be
-	 * 		called after a logical group of statements - e.g., after all of the delete statements against all of the
-	 * 		tables for a particular entity
 	 */
+	// todo (6.0) : come back and make sure we are calling this at appropriate times.
+	// Despite the name, it should be called after a logical group of statements - e.g.,
+	// after all of the delete statements against all of the tables for a particular entity
 	default void afterStatement(LogicalConnectionImplementor logicalConnection) {
 		logicalConnection.afterStatement();
 	}
@@ -94,6 +90,14 @@ public interface ExecutionContext {
 	 * @return true if the query execution has to be added to the {@link org.hibernate.stat.Statistics}, false otherwise.
 	 */
 	default boolean hasQueryExecutionToBeAddedToStatistics() {
+		return false;
+	}
+
+	/**
+	 * Does this query return objects that might be already cached
+	 * by the session, whose lock mode may need upgrading
+	 */
+	default boolean upgradeLocks(){
 		return false;
 	}
 

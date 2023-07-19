@@ -159,9 +159,4 @@ public interface BasicType<T> extends Type, BasicDomainType<T>, MappingType, Bas
 	default int compare(Object x, Object y, SessionFactoryImplementor sessionFactory) {
 		return compare( x, y );
 	}
-
-//	@Incubating
-//	default String getSpecializedTypeDeclaration(Dialect dialect) {
-//		return getMappedJavaType().getSpecializedTypeDeclaration( getJdbcType(), getValueConverter(), dialect );
-//	}
 }

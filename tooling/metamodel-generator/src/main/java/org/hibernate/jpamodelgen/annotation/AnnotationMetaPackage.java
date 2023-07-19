@@ -6,6 +6,7 @@
  */
 package org.hibernate.jpamodelgen.annotation;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.ImportContextImpl;
 import org.hibernate.jpamodelgen.model.ImportContext;
@@ -46,8 +47,14 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 		return new AnnotationMetaPackage( element, context );
 	}
 
+	@Override
 	public final Context getContext() {
 		return context;
+	}
+
+	@Override
+	public boolean isImplementation() {
+		return false;
 	}
 
 	@Override
@@ -105,11 +112,12 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "AnnotationMetaPackage" );
-		sb.append( "{element=" ).append( element );
-		sb.append( '}' );
-		return sb.toString();
+		return new StringBuilder()
+				.append( "AnnotationMetaPackage" )
+				.append( "{element=" )
+				.append( element )
+				.append( '}' )
+				.toString();
 	}
 
 	protected final void init() {
@@ -117,11 +125,28 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 
 		addAuxiliaryMembers();
 
+		checkNamedQueries();
+
 		initialized = true;
 	}
 
 	@Override
-	void putMember(String name, NameMetaAttribute nameMetaAttribute) {
+	void putMember(String name, MetaAttribute nameMetaAttribute) {
 		members.put( name, nameMetaAttribute );
+	}
+
+	@Override
+	boolean belongsToDao() {
+		return false;
+	}
+
+	@Override
+	@Nullable String getSessionType() {
+		return null;
+	}
+
+	@Override
+	public boolean isInjectable() {
+		return false;
 	}
 }

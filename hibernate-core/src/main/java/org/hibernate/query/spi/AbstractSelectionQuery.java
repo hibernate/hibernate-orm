@@ -11,6 +11,7 @@ import java.time.Instant;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,6 +40,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.NonUniqueResultException;
 import org.hibernate.ScrollMode;
 import org.hibernate.TypeMismatchException;
+import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.graph.GraphSemantic;
@@ -71,6 +73,7 @@ import org.hibernate.sql.exec.internal.CallbackImpl;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.PrimitiveJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -138,51 +141,51 @@ public abstract class AbstractSelectionQuery<R>
 	}
 
 	private static TupleElement<?>[] buildTupleElementArray(List<SqmSelection<?>> selections) {
-		final TupleElement<?>[] elements;
 		if ( selections.size() == 1 ) {
 			final SqmSelectableNode<?> selectableNode = selections.get(0).getSelectableNode();
 			if ( selectableNode instanceof CompoundSelection<?> ) {
 				final List<? extends JpaSelection<?>> selectionItems = selectableNode.getSelectionItems();
-				elements  = new TupleElement<?>[ selectionItems.size() ];
+				final TupleElement<?>[] elements = new TupleElement<?>[ selectionItems.size() ];
 				for ( int i = 0; i < selectionItems.size(); i++ ) {
 					elements[i] = selectionItems.get( i );
 				}
+				return elements;
 			}
 			else {
-				elements = new TupleElement<?>[] { selectableNode };
+				return new TupleElement<?>[] { selectableNode };
 			}
 		}
 		else {
-			elements = new TupleElement<?>[ selections.size() ];
+			final TupleElement<?>[] elements = new TupleElement<?>[ selections.size() ];
 			for ( int i = 0; i < selections.size(); i++ ) {
-				elements[i] = selections.get(i).getSelectableNode();
+				elements[i] = selections.get( i ).getSelectableNode();
 			}
+			return elements;
 		}
-		return elements;
 	}
 
 	private static String[] buildTupleAliasArray(List<SqmSelection<?>> selections) {
-		final String[] elements;
 		if ( selections.size() == 1 ) {
 			final SqmSelectableNode<?> selectableNode = selections.get(0).getSelectableNode();
 			if ( selectableNode instanceof CompoundSelection<?> ) {
 				final List<? extends JpaSelection<?>> selectionItems = selectableNode.getSelectionItems();
-				elements  = new String[ selectionItems.size() ];
+				final String[] elements  = new String[ selectionItems.size() ];
 				for ( int i = 0; i < selectionItems.size(); i++ ) {
 					elements[i] = selectionItems.get( i ).getAlias();
 				}
+				return elements;
 			}
 			else {
-				elements = new String[] { selectableNode.getAlias() };
+				return new String[] { selectableNode.getAlias() };
 			}
 		}
 		else {
-			elements = new String[ selections.size() ];
+			final String[] elements = new String[ selections.size() ];
 			for ( int i = 0; i < selections.size(); i++ ) {
-				elements[i] = selections.get(i).getAlias();
+				elements[i] = selections.get( i ).getAlias();
 			}
+			return elements;
 		}
-		return elements;
 	}
 
 	protected void applyOptions(NamedSqmQueryMemento memento) {
@@ -197,14 +200,13 @@ public abstract class AbstractSelectionQuery<R>
 		}
 
 		if ( memento.getParameterTypes() != null ) {
+			final BasicTypeRegistry basicTypeRegistry =
+					getSessionFactory().getTypeConfiguration().getBasicTypeRegistry();
 			for ( Map.Entry<String, String> entry : memento.getParameterTypes().entrySet() ) {
-				final QueryParameterImplementor<?> parameter =
-						getParameterMetadata().getQueryParameter( entry.getKey() );
 				final BasicType<?> type =
-						getSessionFactory().getTypeConfiguration()
-								.getBasicTypeRegistry()
-								.getRegisteredType( entry.getValue() );
-				parameter.applyAnticipatedType( type );
+						basicTypeRegistry.getRegisteredType( entry.getValue() );
+				getParameterMetadata()
+						.getQueryParameter( entry.getKey() ).applyAnticipatedType( type );
 			}
 		}
 	}
@@ -270,11 +272,10 @@ public abstract class AbstractSelectionQuery<R>
 				}
 				// if there is a single root, use that as the selection
 				if ( sqmRoots.size() == 1 ) {
-					final SqmRoot<?> sqmRoot = sqmRoots.get( 0 );
-					sqmQuerySpec.getSelectClause().add( sqmRoot, null );
+					sqmQuerySpec.getSelectClause().add( sqmRoots.get( 0 ), null );
 				}
 				else {
-					throw new IllegalArgumentException(  );
+					throw new IllegalArgumentException( "Criteria has multiple query roots" );
 				}
 			}
 
@@ -313,11 +314,7 @@ public abstract class AbstractSelectionQuery<R>
 					}
 				}
 
-				final boolean jpaQueryComplianceEnabled =
-						sessionFactory.getSessionFactoryOptions()
-								.getJpaCompliance()
-								.isJpaQueryComplianceEnabled();
-				if ( !jpaQueryComplianceEnabled ) {
+				if ( !sessionFactory.getSessionFactoryOptions().getJpaCompliance().isJpaQueryComplianceEnabled() ) {
 					verifyResultType( expectedResultClass, sqmSelection.getNodeType() );
 				}
 			}
@@ -347,16 +344,15 @@ public abstract class AbstractSelectionQuery<R>
 		final Class<?> javaTypeClass = expressibleJavaType.getJavaTypeClass();
 		if ( !resultClass.isAssignableFrom( javaTypeClass ) ) {
 			if ( expressibleJavaType instanceof PrimitiveJavaType ) {
-				if ( ( (PrimitiveJavaType<?>) expressibleJavaType ).getPrimitiveClass() != resultClass ) {
+				final PrimitiveJavaType<?> javaType = (PrimitiveJavaType<?>) expressibleJavaType;
+				if ( javaType.getPrimitiveClass() != resultClass ) {
 					throwQueryTypeMismatchException( resultClass, sqmExpressible );
 				}
 			}
-			else if ( isMatchingDateType( javaTypeClass, resultClass, sqmExpressible ) ) {
-				// special case, we are good
-			}
-			else {
+			else if ( !isMatchingDateType( javaTypeClass, resultClass, sqmExpressible ) ) {
 				throwQueryTypeMismatchException( resultClass, sqmExpressible );
 			}
+			// else special case, we are good
 		}
 	}
 
@@ -375,7 +371,8 @@ public abstract class AbstractSelectionQuery<R>
 			return ( (BasicDomainType<?>) sqmExpressible).getJdbcType();
 		}
 		else if ( sqmExpressible instanceof SqmPathSource<?> ) {
-			final DomainType<?> domainType = ( (SqmPathSource<?>) sqmExpressible).getSqmPathType();
+			final SqmPathSource<?> pathSource = (SqmPathSource<?>) sqmExpressible;
+			final DomainType<?> domainType = pathSource.getSqmPathType();
 			if ( domainType instanceof BasicDomainType<?> ) {
 				return ( (BasicDomainType<?>) domainType ).getJdbcType();
 			}
@@ -424,7 +421,7 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public List<R> list() {
-		beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
 		boolean success = false;
 		try {
 			final List<R> result = doList();
@@ -441,16 +438,26 @@ public abstract class AbstractSelectionQuery<R>
 			throw getSession().getExceptionConverter().convert( he, getQueryOptions().getLockOptions() );
 		}
 		finally {
-			afterQuery( success );
+			afterQueryHandlingFetchProfiles( success, fetchProfiles );
 		}
+	}
+
+	protected HashSet<String> beforeQueryHandlingFetchProfiles() {
+		beforeQuery();
+
+		final MutableQueryOptions options = getQueryOptions();
+
+		return getSession().getLoadQueryInfluencers()
+				.adjustFetchProfiles( options.getDisabledFetchProfiles(), options.getEnabledFetchProfiles() );
 	}
 
 	protected void beforeQuery() {
 		getQueryParameterBindings().validate();
 
-		getSession().prepareForQueryExecution(
-				requiresTxn( getQueryOptions().getLockOptions().findGreatestLockMode() )
-		);
+		final SharedSessionContractImplementor session = getSession();
+		final MutableQueryOptions options = getQueryOptions();
+
+		session.prepareForQueryExecution( requiresTxn( options.getLockOptions().findGreatestLockMode() ) );
 		prepareForExecution();
 
 		assert sessionFlushMode == null;
@@ -458,25 +465,41 @@ public abstract class AbstractSelectionQuery<R>
 
 		final FlushMode effectiveFlushMode = getHibernateFlushMode();
 		if ( effectiveFlushMode != null ) {
-			sessionFlushMode = getSession().getHibernateFlushMode();
-			getSession().setHibernateFlushMode( effectiveFlushMode );
+			sessionFlushMode = session.getHibernateFlushMode();
+			session.setHibernateFlushMode( effectiveFlushMode );
 		}
 
 		final CacheMode effectiveCacheMode = getCacheMode();
 		if ( effectiveCacheMode != null ) {
-			sessionCacheMode = getSession().getCacheMode();
-			getSession().setCacheMode( effectiveCacheMode );
+			sessionCacheMode = session.getCacheMode();
+			session.setCacheMode( effectiveCacheMode );
 		}
 	}
 
 	protected abstract void prepareForExecution();
 
+	protected void afterQueryHandlingFetchProfiles(boolean success, HashSet<String> fetchProfiles) {
+		resetFetchProfiles( fetchProfiles );
+		afterQuery( success );
+	}
+
+	private void afterQueryHandlingFetchProfiles(HashSet<String> fetchProfiles) {
+		resetFetchProfiles( fetchProfiles );
+		afterQuery();
+	}
+
+	private void resetFetchProfiles(HashSet<String> fetchProfiles) {
+		getSession().getLoadQueryInfluencers().setEnabledFetchProfileNames( fetchProfiles );
+	}
+
 	protected void afterQuery(boolean success) {
 		afterQuery();
-		if ( !getSession().isTransactionInProgress() ) {
-			getSession().getJdbcCoordinator().getLogicalConnection().afterTransaction();
+
+		final SharedSessionContractImplementor session = getSession();
+		if ( !session.isTransactionInProgress() ) {
+			session.getJdbcCoordinator().getLogicalConnection().afterTransaction();
 		}
-		getSession().afterOperation( success );
+		session.afterOperation( success );
 	}
 
 	protected void afterQuery() {
@@ -503,12 +526,12 @@ public abstract class AbstractSelectionQuery<R>
 
 	@Override
 	public ScrollableResultsImplementor<R> scroll(ScrollMode scrollMode) {
-		beforeQuery();
+		final HashSet<String> fetchProfiles = beforeQueryHandlingFetchProfiles();
 		try {
 			return doScroll( scrollMode );
 		}
 		finally {
-			afterQuery();
+			afterQueryHandlingFetchProfiles( fetchProfiles );
 		}
 	}
 
@@ -623,13 +646,10 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public SelectionQuery<R> setFirstResult(int startPosition) {
 		getSession().checkOpen();
-
 		if ( startPosition < 0 ) {
 			throw new IllegalArgumentException( "first-result value cannot be negative : " + startPosition );
 		}
-
 		getQueryOptions().getLimit().setFirstRow( startPosition );
-
 		return this;
 	}
 
@@ -642,6 +662,21 @@ public abstract class AbstractSelectionQuery<R>
 	@Override
 	public SelectionQuery<R> setEntityGraph(EntityGraph<R> graph, GraphSemantic semantic) {
 		applyGraph( (RootGraphImplementor<R>) graph, semantic );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> enableFetchProfile(String profileName) {
+		if ( !getSession().getFactory().containsFetchProfileDefinition( profileName ) ) {
+			throw new UnknownProfileException( profileName );
+		}
+		getQueryOptions().enableFetchProfile( profileName );
+		return this;
+	}
+
+	@Override
+	public SelectionQuery<R> disableFetchProfile(String profileName) {
+		getQueryOptions().disableFetchProfile( profileName );
 		return this;
 	}
 

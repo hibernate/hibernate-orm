@@ -208,18 +208,4 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		}
 		return null;
 	}
-
-//	@Override @Deprecated
-//	public String getSpecializedTypeDeclaration(JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
-//		if ( converter != null && jdbcType.isString() ) {
-//			@SuppressWarnings("unchecked")
-//			BasicValueConverter<Boolean, ?> stringConverter = (BasicValueConverter<Boolean, ?>) converter;
-//			String[] values = new String[] {
-//					stringConverter.toRelationalValue(false).toString(),
-//					stringConverter.toRelationalValue(true).toString()
-//			};
-//			return dialect.getEnumTypeDeclaration( null, values );
-//		}
-//		return null;
-//	}
 }

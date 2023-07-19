@@ -9,8 +9,7 @@ package org.hibernate.orm.test.annotations.generics;
 import java.io.Serializable;
 import java.util.Random;
 
-import org.hibernate.query.criteria.JpaPath;
-
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -84,7 +83,7 @@ public class EmbeddedIdGenericsSuperclassTest {
 			final Path<DomainEntityId> id = root.get( "id" );
 			assertThat( id.getJavaType() ).isEqualTo( DomainEntityId.class );
 			assertThat( id.getModel() ).isSameAs( root.getModel().getAttribute( "id" ) );
-			assertThat( ( (JpaPath<?>) id ).getResolvedModel().getBindableJavaType() ).isEqualTo( CustomerId.class );
+			assertThat( ( (SqmPath<?>) id ).getResolvedModel().getBindableJavaType() ).isEqualTo( CustomerId.class );
 			query.select( root ).where( cb.equal( id.get( "someDomainField" ), 1 ) );
 			final Customer customer = session.createQuery( query ).getSingleResult();
 			assertThat( customer ).isNotNull();
@@ -114,7 +113,7 @@ public class EmbeddedIdGenericsSuperclassTest {
 			final Path<DomainEntityId> id = root.get( "id" );
 			assertThat( id.getJavaType() ).isEqualTo( DomainEntityId.class );
 			assertThat( id.getModel() ).isSameAs( root.getModel().getAttribute( "id" ) );
-			assertThat( ( (JpaPath<?>) id ).getResolvedModel().getBindableJavaType() ).isEqualTo( InvoiceId.class );
+			assertThat( ( (SqmPath<?>) id ).getResolvedModel().getBindableJavaType() ).isEqualTo( InvoiceId.class );
 			query.select( root ).where( cb.equal( id.get( "someOtherDomainField" ), 1 ) );
 			final Invoice invoice = session.createQuery( query ).getSingleResult();
 			assertThat( invoice ).isNotNull();

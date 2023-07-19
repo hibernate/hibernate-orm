@@ -45,7 +45,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	private final Supplier<StatisticsImplementor> statisticsSupplier;
 
 	public QueryInterpretationCacheStandardImpl(int maxQueryPlanCount, Supplier<StatisticsImplementor> statisticsSupplier) {
-		log.debugf( "Starting QueryPlanCache(%s)", maxQueryPlanCount );
+		log.debugf( "Starting QueryInterpretationCache(%s)", maxQueryPlanCount );
 
 		this.queryPlanCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );
 		this.hqlInterpretationCache = new BoundedConcurrentHashMap<>( maxQueryPlanCount, 20, BoundedConcurrentHashMap.Eviction.LIRS );

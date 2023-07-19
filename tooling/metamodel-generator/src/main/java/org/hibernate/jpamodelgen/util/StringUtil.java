@@ -50,7 +50,8 @@ public final class StringUtil {
 			return true;
 		}
 
-		if ( isValidPropertyName( methodName, PROPERTY_PREFIX_IS ) || isValidPropertyName( methodName, PROPERTY_PREFIX_HAS ) ) {
+		if ( isValidPropertyName( methodName, PROPERTY_PREFIX_IS )
+				|| isValidPropertyName( methodName, PROPERTY_PREFIX_HAS ) ) {
 			return isBooleanGetter( returnTypeAsString );
 		}
 
@@ -102,7 +103,7 @@ public final class StringUtil {
 	}
 
 	public static String getUpperUnderscoreCaseFromLowerCamelCase(String lowerCamelCaseString){
-		return lowerCamelCaseString.replaceAll("(.)(\\p{Upper})", "$1_$2").toUpperCase();
+		return lowerCamelCaseString.replaceAll("(.)(\\p{Upper})", "$1_$2").toUpperCase(Locale.ROOT);
 	}
 
 	private static boolean startsWithSeveralUpperCaseLetters(String string) {

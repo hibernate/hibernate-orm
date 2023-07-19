@@ -9,12 +9,14 @@ package org.hibernate.persister.collection.mutation;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutatingTableReference;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -30,8 +32,9 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	private final CollectionMutationTarget mutationTarget;
 	private final OperationProducer operationProducer;
 	private final BasicBatchKey batchKey;
+	private final MutationExecutorService mutationExecutorService;
 
-	private MutationOperationGroupSingle operationGroup;
+	private MutationOperationGroup operationGroup;
 
 	/**
 	 * Creates the coordinator.
@@ -41,11 +44,13 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 	 */
 	public RemoveCoordinatorStandard(
 			CollectionMutationTarget mutationTarget,
-			OperationProducer operationProducer) {
+			OperationProducer operationProducer,
+			ServiceRegistry serviceRegistry) {
 		this.mutationTarget = mutationTarget;
 		this.operationProducer = operationProducer;
 
 		this.batchKey = new BasicBatchKey( mutationTarget.getRolePath() + "#REMOVE" );
+		this.mutationExecutorService = serviceRegistry.getService( MutationExecutorService.class );
 	}
 
 	@Override
@@ -65,7 +70,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 			operationGroup = buildOperationGroup();
 		}
 
-		final JdbcMutationOperation operation = operationGroup.getSingleOperation();
+		final JdbcMutationOperation operation = (JdbcMutationOperation) operationGroup.getSingleOperation();
 		return operation.getSqlString();
 	}
 
@@ -84,10 +89,6 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 			operationGroup = buildOperationGroup();
 		}
 
-		final MutationExecutorService mutationExecutorService = session
-				.getFactory()
-				.getFastSessionServices()
-				.getMutationExecutorService();
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> batchKey,
 				operationGroup,
@@ -119,7 +120,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 		}
 	}
 
-	private MutationOperationGroupSingle buildOperationGroup() {
+	private MutationOperationGroup buildOperationGroup() {
 		assert mutationTarget.getTargetPart() != null;
 		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
@@ -130,7 +131,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 		final CollectionTableMapping tableMapping = mutationTarget.getCollectionTableMapping();
 		final MutatingTableReference tableReference = new MutatingTableReference( tableMapping );
 
-		return new MutationOperationGroupSingle(
+		return MutationOperationGroupFactory.singleOperation(
 				MutationType.DELETE,
 				mutationTarget,
 				operationProducer.createOperation( tableReference )

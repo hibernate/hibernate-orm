@@ -82,7 +82,10 @@ import static org.hibernate.annotations.FetchMode.JOIN;
 @Repeatable(FetchProfiles.class)
 public @interface FetchProfile {
 	/**
-	 * The name of the fetch profile.
+	 * The name of the fetch profile. Must be unique within a persistence
+	 * unit.
+	 *
+	 * @see org.hibernate.SessionFactory#getDefinedFetchProfileNames()
 	 */
 	String name();
 

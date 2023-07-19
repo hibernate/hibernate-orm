@@ -102,26 +102,24 @@ public class SqmUpdateStatement<T>
 
 	@Override
 	public <Y, X extends Y> SqmUpdateStatement<T> set(SingularAttribute<? super T, Y> attribute, X value) {
-		applyAssignment( getTarget().get( attribute ), nodeBuilder().value( value ) );
+		applyAssignment( getTarget().get( attribute ), (SqmExpression<? extends Y>) nodeBuilder().value( value ) );
 		return this;
 	}
 
 	@Override
 	public <Y> SqmUpdateStatement<T> set(SingularAttribute<? super T, Y> attribute, Expression<? extends Y> value) {
-		//noinspection unchecked
 		applyAssignment( getTarget().get( attribute ), (SqmExpression<? extends Y>) value );
 		return this;
 	}
 
 	@Override
 	public <Y, X extends Y> SqmUpdateStatement<T> set(Path<Y> attribute, X value) {
-		applyAssignment( (SqmPath<Y>) attribute, nodeBuilder().value( value ) );
+		applyAssignment( (SqmPath<Y>) attribute, (SqmExpression<? extends Y>) nodeBuilder().value( value ) );
 		return this;
 	}
 
 	@Override
 	public <Y> SqmUpdateStatement<T> set(Path<Y> attribute, Expression<? extends Y> value) {
-		//noinspection unchecked
 		applyAssignment( (SqmPath<Y>) attribute, (SqmExpression<? extends Y>) value );
 		return this;
 	}
@@ -130,7 +128,7 @@ public class SqmUpdateStatement<T>
 	public SqmUpdateStatement<T> set(String attributeName, Object value) {
 		//noinspection unchecked
 		final SqmPath<Object> sqmPath = (SqmPath<Object>) getTarget().get( attributeName );
-		applyAssignment( sqmPath, nodeBuilder().value( value ) );
+		applyAssignment( sqmPath, (SqmExpression<?>) nodeBuilder().value( value ) );
 		return this;
 	}
 

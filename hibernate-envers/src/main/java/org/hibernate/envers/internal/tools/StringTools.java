@@ -32,7 +32,7 @@ public abstract class StringTools {
 		if ( s == null ) {
 			return null;
 		}
-		final int lastDot = s.lastIndexOf( "." );
+		final int lastDot = s.lastIndexOf( '.' );
 		if ( lastDot == -1 ) {
 			return s;
 		}

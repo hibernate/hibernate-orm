@@ -13,7 +13,8 @@ import javax.lang.model.util.Elements;
 
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
-import org.hibernate.jpamodelgen.util.StringUtil;
+
+import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
  * Captures all information about an annotated persistent attribute.
@@ -24,8 +25,8 @@ import org.hibernate.jpamodelgen.util.StringUtil;
  */
 public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
-	private final Element element;
-	private final AnnotationMetaEntity parent;
+	final Element element;
+	final AnnotationMetaEntity parent;
 	private final String type;
 
 	public AnnotationMetaAttribute(AnnotationMetaEntity parent, Element element, String type) {
@@ -40,8 +41,19 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 	}
 
 	@Override
+	public boolean hasStringAttribute() {
+		return true;
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
-		return new StringBuilder().append( "public static volatile " )
+		return new StringBuilder()
+				.append("\n/**\n * @see ")
+				.append( parent.getQualifiedName() )
+				.append( "#")
+				.append( element.getSimpleName() )
+				.append( "\n **/\n" )
+				.append( "public static volatile " )
 				.append( parent.importType( getMetaType() ) )
 				.append( "<" )
 				.append( parent.importType( parent.getQualifiedName() ) )
@@ -55,10 +67,11 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String getAttributeNameDeclarationString(){
-		return new StringBuilder().append("public static final ")
+		return new StringBuilder()
+				.append("public static final ")
 				.append(parent.importType(String.class.getName()))
 				.append(" ")
-				.append(StringUtil.getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName()))
+				.append(getUpperUnderscoreCaseFromLowerCamelCase(getPropertyName()))
 				.append(" = ")
 				.append("\"")
 				.append(getPropertyName())
@@ -103,11 +116,10 @@ public abstract class AnnotationMetaAttribute implements MetaAttribute {
 
 	@Override
 	public String toString() {
-		final StringBuilder sb = new StringBuilder();
-		sb.append( "AnnotationMetaAttribute" );
-		sb.append( "{element=" ).append( element );
-		sb.append( ", type='" ).append( type ).append( '\'' );
-		sb.append( '}' );
-		return sb.toString();
+		return new StringBuilder()
+				.append( "AnnotationMetaAttribute" )
+				.append( "{element=" ).append( element )
+				.append( ", type='" ).append( type ).append( '\'' )
+				.append( '}' ).toString();
 	}
 }

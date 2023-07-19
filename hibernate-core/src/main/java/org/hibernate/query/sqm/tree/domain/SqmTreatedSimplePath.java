@@ -12,6 +12,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Steve Ebersole
@@ -57,6 +58,22 @@ public class SqmTreatedSimplePath<T, S extends T>
 		this.wrappedPath = wrappedPath;
 	}
 
+	private SqmTreatedSimplePath(
+			NavigablePath navigablePath,
+			SqmPath<T> wrappedPath,
+			EntityDomainType<S> treatTarget,
+			NodeBuilder nodeBuilder) {
+		//noinspection unchecked
+		super(
+				navigablePath,
+				(SqmPathSource<S>) wrappedPath.getReferencedPathSource(),
+				wrappedPath.getLhs(),
+				nodeBuilder
+		);
+		this.treatTarget = treatTarget;
+		this.wrappedPath = wrappedPath;
+	}
+
 	@Override
 	public SqmTreatedSimplePath<T, S> copy(SqmCopyContext context) {
 		final SqmTreatedSimplePath<T, S> existing = context.getCopy( this );
@@ -67,6 +84,7 @@ public class SqmTreatedSimplePath<T, S extends T>
 		final SqmTreatedSimplePath<T, S> path = context.registerCopy(
 				this,
 				new SqmTreatedSimplePath<>(
+						getNavigablePath(),
 						wrappedPath.copy( context ),
 						getTreatTarget(),
 						nodeBuilder()

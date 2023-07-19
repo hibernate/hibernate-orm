@@ -24,7 +24,6 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
-import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaDerivedJoin;
@@ -406,7 +405,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmAttributeJoin<X, Y> join(String attributeName, JoinType jt) {
-		final SqmPathSource<?> subPathSource = getReferencedPathSource().getSubPathSource( attributeName );
+		final SqmPathSource<?> subPathSource =
+				getReferencedPathSource().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
 		return (SqmAttributeJoin<X, Y>) buildJoin( subPathSource, SqmJoinType.from( jt ), false );
 	}
 
@@ -418,7 +418,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmBagJoin<X, Y> joinCollection(String attributeName, JoinType jt) {
-		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().getSubPathSource( attributeName );
+		final SqmPathSource<?> joinedPathSource =
+				getReferencedPathSource().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
 
 		if ( joinedPathSource instanceof BagPersistentAttribute ) {
 			final SqmBagJoin<T, Y> join = buildBagJoin(
@@ -449,7 +450,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmSetJoin<X, Y> joinSet(String attributeName, JoinType jt) {
-		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().getSubPathSource( attributeName );
+		final SqmPathSource<?> joinedPathSource =
+				getReferencedPathSource().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
 
 		if ( joinedPathSource instanceof SetPersistentAttribute ) {
 			final SqmSetJoin<T, Y> join = buildSetJoin(
@@ -480,7 +482,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, Y> SqmListJoin<X, Y> joinList(String attributeName, JoinType jt) {
-		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().getSubPathSource( attributeName );
+		final SqmPathSource<?> joinedPathSource =
+				getReferencedPathSource().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
 
 		if ( joinedPathSource instanceof ListPersistentAttribute ) {
 			final SqmListJoin<T, Y> join = buildListJoin(
@@ -511,7 +514,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	@Override
 	@SuppressWarnings("unchecked")
 	public <X, K, V> SqmMapJoin<X, K, V> joinMap(String attributeName, JoinType jt) {
-		final SqmPathSource<?> joinedPathSource = getReferencedPathSource().getSubPathSource( attributeName );
+		final SqmPathSource<?> joinedPathSource =
+				getReferencedPathSource().getSubPathSource( attributeName, nodeBuilder().getJpaMetamodel() );
 
 		if ( joinedPathSource instanceof MapPersistentAttribute<?, ?, ?> ) {
 			final SqmMapJoin<T, K, V> join = buildMapJoin(

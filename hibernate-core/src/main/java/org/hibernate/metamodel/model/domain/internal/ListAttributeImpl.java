@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
@@ -61,21 +62,34 @@ public class ListAttributeImpl<X, E> extends AbstractPluralAttribute<X, List<E>,
 	}
 
 	@Override
-	public SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
-		final String pathName = pathSource.getPathName();
-		return pathName.equals( getElementPathSource().getPathName() )
-				|| pathName.equals( indexPathSource.getPathName() ) ? null : getElementPathSource();
+	public SqmPathSource<?> findSubPathSource(String name, JpaMetamodelImplementor metamodel) {
+		final CollectionPart.Nature nature = CollectionPart.Nature.fromNameExact( name );
+		if ( nature != null ) {
+			switch ( nature ) {
+				case INDEX:
+					return indexPathSource;
+				case ELEMENT:
+					return getElementPathSource();
+			}
+		}
+		return getElementPathSource().findSubPathSource( name, metamodel );
 	}
 
 	@Override
-	public SqmAttributeJoin createSqmJoin(
-			SqmFrom lhs,
+	public SqmPathSource<?> getIntermediatePathSource(SqmPathSource<?> pathSource) {
+		final String pathName = pathSource.getPathName();
+		return pathName.equals( getElementPathSource().getPathName() )
+			|| pathName.equals( indexPathSource.getPathName() ) ? null : getElementPathSource();
+	}
+
+	@Override
+	public SqmAttributeJoin<X,E> createSqmJoin(
+			SqmFrom<?,X> lhs,
 			SqmJoinType joinType,
 			String alias,
 			boolean fetched,
 			SqmCreationState creationState) {
-		//noinspection unchecked
-		return new SqmListJoin(
+		return new SqmListJoin<>(
 				lhs,
 				this,
 				alias,

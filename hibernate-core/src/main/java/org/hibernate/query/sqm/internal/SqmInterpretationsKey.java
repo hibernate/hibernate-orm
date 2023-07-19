@@ -7,7 +7,9 @@
 package org.hibernate.query.sqm.internal;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.LockOptions;
@@ -24,7 +26,7 @@ import static org.hibernate.query.spi.AbstractSelectionQuery.CRITERIA_HQL_STRING
 /**
  * @author Steve Ebersole
  */
-public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
+public final class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	public interface CacheabilityInfluencers {
 		boolean isQueryPlanCacheable();
 		String getQueryString();
@@ -40,19 +42,40 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 
 	public static SqmInterpretationsKey createInterpretationsKey(InterpretationsKeySource keySource) {
 		if ( isCacheable ( keySource ) ) {
+			final Object query = CRITERIA_HQL_STRING.equals( keySource.getQueryString() )
+					? keySource.getSqmStatement()
+					: keySource.getQueryString();
 			return new SqmInterpretationsKey(
-					CRITERIA_HQL_STRING.equals( keySource.getQueryString() )
-							? keySource.getSqmStatement()
-							: keySource.getQueryString(),
+					query,
+					query.hashCode(),
 					keySource.getResultType(),
 					keySource.getQueryOptions().getLockOptions(),
 					keySource.getQueryOptions().getTupleTransformer(),
 					keySource.getQueryOptions().getResultListTransformer(),
-					new HashSet<>( keySource.getLoadQueryInfluencers().getEnabledFetchProfileNames() )
+					memoryEfficientDefensiveSetCopy( keySource.getLoadQueryInfluencers().getEnabledFetchProfileNames() )
 			);
 		}
 		else {
 			return null;
+		}
+	}
+
+	private static Collection<String> memoryEfficientDefensiveSetCopy(final Set<String> set) {
+		if ( set == null ) {
+			return null;
+		}
+		else {
+			switch ( set.size() ) {
+				case 0:
+					return null;
+				case 1:
+					return Set.of( set.iterator().next() );
+				case 2:
+					final Iterator<String> iterator = set.iterator();
+					return Set.of( iterator.next(), iterator.next() );
+				default:
+					return Set.copyOf( set );
+			}
 		}
 	}
 
@@ -90,15 +113,18 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	private final TupleTransformer<?> tupleTransformer;
 	private final ResultListTransformer<?> resultListTransformer;
 	private final Collection<String> enabledFetchProfiles;
+	private final int hashcode;
 
 	private SqmInterpretationsKey(
 			Object query,
+			int hash,
 			Class<?> resultType,
 			LockOptions lockOptions,
 			TupleTransformer<?> tupleTransformer,
 			ResultListTransformer<?> resultListTransformer,
 			Collection<String> enabledFetchProfiles) {
 		this.query = query;
+		this.hashcode = hash;
 		this.resultType = resultType;
 		this.lockOptions = lockOptions;
 		this.tupleTransformer = tupleTransformer;
@@ -110,9 +136,10 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 	public QueryInterpretationCache.Key prepareForStore() {
 		return new SqmInterpretationsKey(
 				query,
+				hashcode,
 				resultType,
-				// Since lock options are mutable, we need a copy for the cache key
-				lockOptions.makeCopy(),
+				// Since lock options might be mutable, we need a copy for the cache key
+				lockOptions.makeDefensiveCopy(),
 				tupleTransformer,
 				resultListTransformer,
 				enabledFetchProfiles
@@ -129,25 +156,22 @@ public class SqmInterpretationsKey implements QueryInterpretationCache.Key {
 		if ( this == o ) {
 			return true;
 		}
-		if ( o == null || getClass() != o.getClass() ) {
+		if ( o == null || SqmInterpretationsKey.class != o.getClass() ) {
 			return false;
 		}
 
 		final SqmInterpretationsKey that = (SqmInterpretationsKey) o;
-		return query.equals( that.query )
-				&& areEqual( resultType, that.resultType )
-				&& areEqual( lockOptions, that.lockOptions )
-				&& areEqual( tupleTransformer, that.tupleTransformer )
-				&& areEqual( resultListTransformer, that.resultListTransformer )
-				&& areEqual( enabledFetchProfiles, that.enabledFetchProfiles );
-	}
-
-	private <T> boolean areEqual(T o1, T o2) {
-		return o1 == null ? o2 == null : o1.equals(o2);
+		return this.hashcode == o.hashCode() //check this first as some other checks are expensive
+			&& query.equals( that.query )
+			&& Objects.equals( resultType, that.resultType )
+			&& Objects.equals( lockOptions, that.lockOptions )
+			&& Objects.equals( tupleTransformer, that.tupleTransformer )
+			&& Objects.equals( resultListTransformer, that.resultListTransformer )
+			&& Objects.equals( enabledFetchProfiles, that.enabledFetchProfiles );
 	}
 
 	@Override
 	public int hashCode() {
-		return query.hashCode();
+		return hashcode;
 	}
 }

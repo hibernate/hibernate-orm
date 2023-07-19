@@ -23,7 +23,7 @@ import org.hibernate.id.enhanced.ImplicitDatabaseObjectNamingStrategy;
 import org.hibernate.jpa.LegacySpecHints;
 import org.hibernate.jpa.SpecHints;
 import org.hibernate.query.spi.QueryPlan;
-import org.hibernate.query.sqm.NullPrecedence;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
@@ -1344,7 +1344,7 @@ public interface AvailableSettings {
 	 * Controls whether Hibernate can try to create beans other than converters
 	 * and listeners using CDI.  Only meaningful when a CDI {@link #BEAN_CONTAINER container}
 	 * is used.
-	 *
+	 * <p>
 	 * By default, Hibernate will only attempt to create converter and listener beans using CDI.
 	 *
 	 * @since 6.2
@@ -1593,7 +1593,7 @@ public interface AvailableSettings {
 
 	/**
 	 * When enabled, specifies that {@linkplain QueryPlan query plans} should be
-	 * {@linkplain org.hibernate.query.spi.QueryPlanCache cached}.
+	 * {@linkplain org.hibernate.query.spi.QueryInterpretationCache cached}.
 	 * <p>
 	 * By default, the query plan cache is disabled, unless one of the configuration
 	 * properties {@value #QUERY_PLAN_CACHE_MAX_SIZE} or
@@ -1603,14 +1603,13 @@ public interface AvailableSettings {
 
 	/**
 	 * The maximum number of entries in the
-	 * {@linkplain org.hibernate.query.spi.QueryPlanCache query plan cache} or
 	 * {@linkplain org.hibernate.query.spi.QueryInterpretationCache
 	 * query interpretation cache}.
 	 * <p>
 	 * The default maximum is
 	 * {@value org.hibernate.query.spi.QueryEngine#DEFAULT_QUERY_PLAN_MAX_COUNT}.
 	 *
-	 * @see org.hibernate.query.spi.QueryPlanCache
+	 * @see org.hibernate.query.spi.QueryInterpretationCache
 	 */
 	String QUERY_PLAN_CACHE_MAX_SIZE = "hibernate.query.plan_cache_max_size";
 
@@ -1654,12 +1653,14 @@ public interface AvailableSettings {
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_DATABASE_ACTION} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_DATABASE_ACTION = "javax.persistence.schema-generation.database.action";
 
 	/**
 	 * @deprecated Use {@link #JAKARTA_HBM2DDL_SCRIPTS_ACTION} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_SCRIPTS_ACTION = "javax.persistence.schema-generation.scripts.action";
 
 	/**
@@ -1674,6 +1675,7 @@ public interface AvailableSettings {
 	 * @see org.hibernate.tool.schema.SourceType
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_CREATE_SOURCE = "javax.persistence.schema-generation.create-source";
 
 	/**
@@ -1681,24 +1683,28 @@ public interface AvailableSettings {
 	 * @see org.hibernate.tool.schema.SourceType
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_DROP_SOURCE = "javax.persistence.schema-generation.drop-source";
 
 	/**
 	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_CREATE_SCRIPT_SOURCE = "javax.persistence.schema-generation.create-script-source";
 
 	/**
 	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_DROP_SCRIPT_SOURCE = "javax.persistence.schema-generation.drop-script-source";
 
 	/**
 	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_SCRIPTS_CREATE_TARGET = "javax.persistence.schema-generation.scripts.create-target";
 
 	/**
@@ -1717,6 +1723,7 @@ public interface AvailableSettings {
 	 * @deprecated Migrate to {@link #JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET}
 	 */
 	@Deprecated
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String HBM2DDL_SCRIPTS_DROP_TARGET = "javax.persistence.schema-generation.scripts.drop-target";
 
 	/**
@@ -1897,7 +1904,7 @@ public interface AvailableSettings {
 	 * <p>
 	 * If no value is specified, a default is inferred as follows:
 	 * <ul>
-	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_CREATE_SOURCE},
+	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE},
 	 *     then {@link org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
 	 *     <li>otherwise, {@link org.hibernate.tool.schema.SourceType#SCRIPT "metadata"} is
 	 *     assumed.
@@ -1914,8 +1921,8 @@ public interface AvailableSettings {
 	 * <p>
 	 * If no value is specified, a default is inferred as follows:
 	 * <ul>
-	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE}, then
-	 *     {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
+	 *     <li>if source scripts are specified via {@value #JAKARTA_HBM2DDL_DROP_SCRIPT_SOURCE},
+	 *     then {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "script"} is assumed, or
 	 *     <li>otherwise, {@linkplain org.hibernate.tool.schema.SourceType#SCRIPT "metadata"}
 	 *     is assumed.
 	 * </ul>
@@ -2261,6 +2268,17 @@ public interface AvailableSettings {
 	String GENERATE_STATISTICS = "hibernate.generate_statistics";
 
 	/**
+	 * Specifies a duration in milliseconds defining the minimum query execution time that
+	 * characterizes a "slow" query. Any SQL query which takes longer than this amount of
+	 * time to execute will be logged.
+	 * <p>
+	 * A value of {@code 0}, the default, disables logging of "slow" queries.
+	 *
+	 * @see org.hibernate.stat.Statistics#getSlowQueries()
+	 */
+	String LOG_SLOW_QUERY = "hibernate.log_slow_query";
+
+	/**
 	 * Controls whether {@linkplain org.hibernate.stat.SessionStatistics session metrics}
 	 * should be {@linkplain org.hibernate.engine.internal.StatisticalLoggingSessionEventListener
 	 * logged} for any session in which statistics are being collected.
@@ -2269,15 +2287,6 @@ public interface AvailableSettings {
 	 * is enabled.
 	 */
 	String LOG_SESSION_METRICS = "hibernate.session.events.log";
-
-	/**
-	 * Specifies a duration in milliseconds defining the minimum query execution time that
-	 * characterizes a "slow" query. Any SQL query which takes longer than this amount of
-	 * time to execute will be logged.
-	 * <p>
-	 * A value of {@code 0}, the default, disables logging of "slow" queries.
-	 */
-	String LOG_SLOW_QUERY = "hibernate.session.events.log.LOG_QUERIES_SLOWER_THAN_MS";
 
 	/**
 	 * Defines a default {@link org.hibernate.SessionEventListener} to be applied to
@@ -2679,6 +2688,8 @@ public interface AvailableSettings {
 	 * The default value is {@value org.hibernate.stat.Statistics#DEFAULT_QUERY_STATISTICS_MAX_SIZE}.
 	 *
 	 * @since 5.4
+	 *
+	 * @see org.hibernate.stat.Statistics#getQueries()
 	 */
 	String QUERY_STATISTICS_MAX_SIZE = "hibernate.statistics.query_max_size";
 
@@ -3120,6 +3131,7 @@ public interface AvailableSettings {
 	 * @see org.hibernate.jpa.HibernateHints#HINT_FLUSH_MODE
 	 */
 	@Deprecated(since = "6.2", forRemoval = true)
+	@SuppressWarnings("DeprecatedIsStillUsed")
 	String FLUSH_MODE = "org.hibernate.flushMode";
 
 	String CFG_XML_FILE = "hibernate.cfg_xml_file";

@@ -18,6 +18,8 @@ import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Field-based implementation of Setter
  *
@@ -28,7 +30,7 @@ public class SetterFieldImpl implements Setter {
 	private final Class<?> containerClass;
 	private final String propertyName;
 	private final Field field;
-	private final Method setterMethod;
+	private final @Nullable Method setterMethod;
 
 	public SetterFieldImpl(Class<?> containerClass, String propertyName, Field field) {
 		this.containerClass = containerClass;
@@ -50,7 +52,7 @@ public class SetterFieldImpl implements Setter {
 	}
 
 	@Override
-	public void set(Object target, Object value) {
+	public void set(Object target, @Nullable Object value) {
 		try {
 			field.set( target, value );
 		}
@@ -97,12 +99,12 @@ public class SetterFieldImpl implements Setter {
 	}
 
 	@Override
-	public String getMethodName() {
+	public @Nullable String getMethodName() {
 		return setterMethod != null ? setterMethod.getName() : null;
 	}
 
 	@Override
-	public Method getMethod() {
+	public @Nullable Method getMethod() {
 		return setterMethod;
 	}
 

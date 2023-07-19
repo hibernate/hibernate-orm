@@ -512,7 +512,7 @@ public class LockOptions implements Serializable {
 	}
 
 	/**
-	 * Make a copy.
+	 * Make a copy. The new copy will be mutable even if the original wasn't.
 	 *
 	 * @return The copy
 	 */
@@ -520,6 +520,22 @@ public class LockOptions implements Serializable {
 		final LockOptions copy = new LockOptions();
 		copy( this, copy );
 		return copy;
+	}
+
+	/**
+	 * Make a copy, unless this is an immutable instance.
+	 *
+	 * @return The copy, or this if it was immutable.
+	 */
+	public LockOptions makeDefensiveCopy() {
+		if ( immutable ) {
+			return this;
+		}
+		else {
+			final LockOptions copy = new LockOptions();
+			copy( this, copy );
+			return copy;
+		}
 	}
 
 	/**

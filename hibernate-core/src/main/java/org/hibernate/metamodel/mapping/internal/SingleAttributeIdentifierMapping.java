@@ -30,7 +30,7 @@ public interface SingleAttributeIdentifierMapping extends EntityIdentifierMappin
 
 	@Override
 	default String getPartName() {
-		return ROLE_LOCAL_NAME;
+		return ID_ROLE_NAME;
 	}
 
 	@Override

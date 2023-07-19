@@ -271,14 +271,17 @@ The operator precedence is given by this table, from highest to lowest precedenc
 | Binary multiplicative | Binary infix | `*`, `/`, `%`
 | Binary additive | Binary infix | `+`, `-`
 | Concatenation | Binary infix | `\|\|`
-| Nullness | Unary postfix | `is null`, `is empty`
+| Nullness, emptiness, truth | Unary postfix | `is null`, `is empty`, `is true`, `is false`
 | Containment | Binary infix | `in`, `not in`
 | Between | Ternary infix | `between`, `not between`
 | Pattern matching | Binary infix | `like`, `ilike`, `not like`, `not ilike`
+| Comparison operators | Binary infix | `=`, `<>`, `<`, `>`, `\<=`, `>=`
+| Nullsafe comparison | Binary infix | `is distinct from`, `is not distinct from`
 | Existence | Unary prefix | `exists`
 | Membership | Binary infix | `member of`, `not member of`
-| Unary logical | Unary prefix | `not`
-| Binary logical | Binary infix | `and`, `or`
+| Logical negation | Unary prefix | `not`
+| Logical conjunction | Binary infix | `and`
+| Logical disjunction | Binary infix | `or`
 |===
 
 [[concatenation]]
@@ -1133,19 +1136,47 @@ from Book where price between 1.0 and 100.0
 ==== Operators for dealing with null
 
 The following operators make it easier to deal with null values.
+These predicates never evaluate to `null`.
 
 [cols="20,20,15,~"]
 |===
 | Operator | Negation | Type | Semantics
 
-| `is null` | `is not null` | Unary postfix | `true` if the value to the left is null
-| `is distinct from` | `is not distinct from` | Binary | `true` if the value on the left is equal to the value on the right, or if both are null
+| `is null` | `is not null` | Unary postfix | `true` if the value to the left is null, or false if it is not null
+| `is distinct from` | `is not distinct from` | Binary | `true` if the value on the left is equal to the value on the right, or if both values are null, and false otherwise
 |===
 
 [[null-predicate-example]]
 [source, hql]
 ----
 from Author where nomDePlume is not null
+----
+
+[[boolean-predicate]]
+==== Operators for dealing with boolean values
+
+These operators perform comparisons on values of type `boolean`.
+These predicates never evaluate to `null`.
+
+[NOTE]
+====
+The values `true` and `false` of the `boolean` basic type are different to the logical `true` or `false` produced by a predicate.
+====
+
+For _logical_ operations on <<conditional-expressions,predicates>>, see <<logical-operators>> below.
+
+[cols="20,20,15,~"]
+|===
+| Operator | Negation | Type | Semantics
+
+| `is true` | `is not true` | Unary postfix | `true` if the value to the left is `true`, or `false` otherwise
+| `is false` | `is not false` | Binary | `true` if the value to the left is `false`, or `false` otherwise
+|===
+
+[[null-predicate-example]]
+[source, hql]
+----
+from Book where discontinued is not true
 ----
 
 [[collection-operators]]

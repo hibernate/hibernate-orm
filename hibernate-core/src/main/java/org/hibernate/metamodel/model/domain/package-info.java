@@ -16,4 +16,7 @@
  *
  * @see jakarta.persistence.metamodel
  */
+@Incubating
 package org.hibernate.metamodel.model.domain;
+
+import org.hibernate.Incubating;

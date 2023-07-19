@@ -10,10 +10,10 @@ import java.lang.reflect.Type;
 import java.sql.Types;
 import java.util.List;
 
-import org.hibernate.QueryException;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
@@ -22,6 +22,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
@@ -42,6 +43,7 @@ import static org.hibernate.type.SqlTypes.isIntegral;
 import static org.hibernate.type.SqlTypes.isNumericType;
 import static org.hibernate.type.SqlTypes.isSpatialType;
 import static org.hibernate.type.SqlTypes.isTemporalType;
+import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
 
 
 /**
@@ -95,16 +97,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			if ( nodeType != null ) {
 				JavaType<?> javaType = nodeType.getRelationalJavaType();
 				if (javaType != null) {
-					try {
-						checkType(
-								count, functionName, type,
-								getJdbcType( indicators, javaType ),
-								javaType.getJavaTypeClass()
-						);
-					}
-					catch (JdbcTypeRecommendationException e) {
-						// it's a converter or something like that, and we will check it later
-					}
+					checkArgumentType( functionName, count, argument, indicators, type, javaType );
 				}
 				switch (type) {
 					case TEMPORAL_UNIT:
@@ -134,9 +127,41 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		}
 	}
 
+	private void checkArgumentType(
+			String functionName,
+			int count,
+			SqmTypedNode<?> argument,
+			JdbcTypeIndicators indicators,
+			FunctionParameterType type,
+			JavaType<?> javaType) {
+		if ( !isUnknown( javaType ) ) {
+			DomainType<?> domainType = argument.getExpressible().getSqmType();
+			if ( domainType instanceof JdbcMapping ) {
+				checkArgumentType(
+						count, functionName, type,
+						((JdbcMapping) domainType).getJdbcType().getDefaultSqlTypeCode(),
+						javaType.getJavaTypeClass()
+				);
+			}
+			else {
+				//TODO: this branch is now probably obsolete and can be deleted!
+				try {
+					checkArgumentType(
+							count, functionName, type,
+							getJdbcType( indicators, javaType ),
+							javaType.getJavaTypeClass()
+					);
+				}
+				catch (JdbcTypeRecommendationException e) {
+					// it's a converter or something like that, and we will check it later
+				}
+			}
+		}
+	}
+
 	private int getJdbcType(JdbcTypeIndicators indicators, JavaType<?> javaType) {
 		if ( javaType.getJavaTypeClass().isEnum() ) {
-			// magic value indicates it can be coerced STRING or ORDINAL
+			// we can't tell if the enum is mapped STRING or ORDINAL
 			return ENUM_UNKNOWN_JDBC_TYPE;
 		}
 		else {
@@ -156,19 +181,29 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	@Override
 	public void validateSqlTypes(List<? extends SqlAstNode> arguments, String functionName) {
 		int count = 0;
-		for (SqlAstNode argument : arguments) {
-			if (argument instanceof Expression) {
-				JdbcMappingContainer expressionType = ((Expression) argument).getExpressionType();
+		for ( SqlAstNode argument : arguments ) {
+			if ( argument instanceof Expression ) {
+				final Expression expression = (Expression) argument;
+				final JdbcMappingContainer expressionType = expression.getExpressionType();
 				if (expressionType != null) {
-					if (expressionType instanceof JavaObjectType) {
+					if ( isUnknownExpressionType( expressionType ) ) {
 						count += expressionType.getJdbcTypeCount();
 					}
 					else {
-						count = validateArgument(count, expressionType, functionName);
+						count = validateArgument( count, expressionType, functionName );
 					}
 				}
 			}
 		}
+	}
+
+	/**
+	 * We can't validate some expressions involving parameters / unknown functions.
+	 */
+	private static boolean isUnknownExpressionType(JdbcMappingContainer expressionType) {
+		return expressionType instanceof JavaObjectType
+			|| expressionType instanceof BasicType
+				&& isUnknown( ((BasicType<?>) expressionType).getJavaTypeDescriptor() );
 	}
 
 	private int validateArgument(int count, JdbcMappingContainer expressionType, String functionName) {
@@ -177,7 +212,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			final JdbcMapping mapping = expressionType.getJdbcMapping( i );
 			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
 			if (type != null) {
-				checkType(
+				checkArgumentType(
 						count,
 						functionName,
 						type,
@@ -189,19 +224,21 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 		return count;
 	}
 
-	private void checkType(int count, String functionName, FunctionParameterType type, int code, Type javaType) {
+	private void checkArgumentType(int count, String functionName, FunctionParameterType type, int code, Type javaType) {
 		switch (type) {
 			case COMPARABLE:
-				if ( !isCharacterType(code) && !isTemporalType(code) && !isNumericType(code) && code != UUID ) {
-					if ( javaType == java.util.UUID.class && ( code == Types.BINARY || isCharacterType( code ) ) ) {
-						// We also consider UUID to be comparable when it's a character or binary type
-						return;
-					}
+				if ( !isCharacterType(code) && !isTemporalType(code) && !isNumericType(code) && !isEnumType( code )
+						// both Java and the database consider UUIDs
+						// comparable, so go ahead and accept them
+						&& code != UUID
+						// as a special case, we consider a binary column
+						// comparable when it is mapped by a Java UUID
+						&& !( javaType == java.util.UUID.class && code == Types.BINARY ) ) {
 					throwError(type, javaType, functionName, count);
 				}
 				break;
 			case STRING:
-				if ( !isCharacterType(code) && !isEnumType(code) && code != ENUM_UNKNOWN_JDBC_TYPE) {
+				if ( !isCharacterType(code) && !isEnumType(code) ) {
 					throwError(type, javaType, functionName, count);
 				}
 				break;
@@ -216,7 +253,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 				}
 				break;
 			case INTEGER:
-				if ( !isIntegral(code) && code != ENUM_UNKNOWN_JDBC_TYPE ) {
+				if ( !isIntegral(code) ) {
 					throwError(type, javaType, functionName, count);
 				}
 				break;
@@ -252,7 +289,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 	private void throwError(FunctionParameterType type, Type javaType, String functionName, int count) {
 		throw new FunctionArgumentException(
 				String.format(
-						"Parameter %d of function %s() has type %s, but argument is of type %s",
+						"Parameter %d of function '%s()' has type '%s', but argument is of type '%s'",
 						count,
 						functionName,
 						type,

@@ -79,7 +79,7 @@ ext {
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         // Disable prepared statement caching to avoid issues with changing schemas
-                        'jdbc.url'   : 'jdbc:jtds:sybase://' + dbHost + ':5000/hibernate_orm_test;maxStatements=0;cacheMetaData=false',
+                        'jdbc.url'   : 'jdbc:jtds:sybase://' + dbHost + ':9000/hibernate_orm_test;maxStatements=0;cacheMetaData=false',
                         'connection.init_sql' : 'set ansinull on'
                 ],
                 sybase_jconn_ci : [
@@ -257,7 +257,7 @@ if ( processTestResourcesTask != null ) {
         processTestResourcesTask.inputs.property( 'dbHost', dbHost )
 //        processTestResourcesTask.inputs.property( "gradle.libs.versions.h2", project.getProperty( "gradle.libs.versions.h2", "2.1.214" ) )
 //        processTestResourcesTask.inputs.property( "gradle.libs.versions.h2gis", project.getProperty( "gradle.libs.versions.h2gis", "2.1.0" ) )
-//        processTestResourcesTask.inputs.property( "gradle.libs.versions.hsqldb", project.getProperty( "gradle.libs.versions.hsqldb", "2.7.1" ) )
+//        processTestResourcesTask.inputs.property( "gradle.libs.versions.hsqldb", project.getProperty( "gradle.libs.versions.hsqldb", "2.7.2" ) )
 //        processTestResourcesTask.inputs.property( "gradle.libs.versions.derby", project.getProperty( "gradle.libs.versions.derby", "10.15.2.0" ) )
         processTestResourcesTask.filter( ReplaceTokens, tokens: dbBundle[db] )
 }

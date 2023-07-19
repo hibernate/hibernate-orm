@@ -19,7 +19,7 @@ pluginManagement {
 
 plugins {
     id 'org.hibernate.orm.build.env-settings'
-    id 'com.gradle.enterprise' version '3.13.3'
+    id 'com.gradle.enterprise' version '3.13.4'
     id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.11'
 }
 
@@ -79,7 +79,7 @@ dependencyResolutionManagement {
             alias( "loggingProcessor" ).to ( "org.jboss.logging", "jboss-logging-processor" ).version( "2.2.1.Final" )
 
             alias( "hcann" ).to( "org.hibernate.common", "hibernate-commons-annotations" ).versionRef( "hcann" )
-            alias( "jandex" ).to("io.smallrye", "jandex" ).version( "3.1.1" )
+            alias( "jandex" ).to("io.smallrye", "jandex" ).version( "3.1.2" )
             alias( "classmate" ).to( "com.fasterxml", "classmate" ).version( "1.5.1" )
 
             alias( "jackson" ).to ( "com.fasterxml.jackson.core", "jackson-databind" ).version( "2.14.1" )
@@ -157,7 +157,7 @@ dependencyResolutionManagement {
             alias( "shrinkwrapDescriptors" ).to( "org.jboss.shrinkwrap.descriptors", "shrinkwrap-descriptors-impl-javaee" ).versionRef( "shrinkwrapDescriptors" )
             alias( "shrinkwrapDescriptorsApi" ).to( "org.jboss.shrinkwrap.descriptors", "shrinkwrap-descriptors-api-javaee" ).versionRef( "shrinkwrapDescriptors" )
 
-            alias( "jbossJta" ).to( "org.jboss.narayana.jta", "narayana-jta" ).version( "6.0.0.Final" )
+            alias( "jbossJta" ).to( "org.jboss.narayana.jta", "narayana-jta" ).version( "7.0.0.Final" )
             alias( "jbossTxSpi" ).to( "org.jboss", "jboss-transaction-spi" ).version( "8.0.0.Final" )
             alias( "wildFlyTxnClient" ).to( "org.wildfly.transaction", "wildfly-transaction-client-jakarta" ).version( "2.0.0.Final" )
             alias( "weld" ).to( "org.jboss.weld.se", "weld-se-shaded" ).version( "4.0.1.SP1" )
@@ -173,7 +173,7 @@ dependencyResolutionManagement {
             }
             String hsqldbVersion = settings.ext.find( "gradle.libs.versions.hsqldb" )
             if ( hsqldbVersion == null ) {
-                hsqldbVersion = "2.7.1"
+                hsqldbVersion = "2.7.2"
             }
             String derbyVersion = settings.ext.find( "gradle.libs.versions.derby" )
             if ( derbyVersion == null ) {

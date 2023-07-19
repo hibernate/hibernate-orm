@@ -707,7 +707,7 @@ public abstract class CollectionType extends AbstractType implements Association
 	 * @throws MappingException Indicates the underlying persister could not be located.
 	 */
 	public final Type getElementType(SessionFactoryImplementor factory) throws MappingException {
-		return factory.getRuntimeMetamodels().getMappingMetamodel().getCollectionDescriptor( role ).getElementType();
+		return factory.getMappingMetamodel().getCollectionDescriptor( role ).getElementType();
 	}
 
 	@Override

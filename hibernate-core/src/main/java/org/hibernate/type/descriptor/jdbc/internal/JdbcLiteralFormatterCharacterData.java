@@ -19,7 +19,7 @@ import org.hibernate.type.descriptor.jdbc.spi.BasicJdbcLiteralFormatter;
  * @author Steve Ebersole
  */
 public class JdbcLiteralFormatterCharacterData<T> extends BasicJdbcLiteralFormatter<T> {
-	public static final String NATIONALIZED_PREFIX = "n";
+	public static final String NATIONALIZED_PREFIX = "N";
 
 	private final boolean isNationalized;
 

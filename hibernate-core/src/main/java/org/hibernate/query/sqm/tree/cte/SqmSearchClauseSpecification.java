@@ -6,10 +6,10 @@
  */
 package org.hibernate.query.sqm.tree.cte;
 
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaSearchOrder;
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
@@ -17,10 +17,10 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
  */
 public class SqmSearchClauseSpecification implements JpaSearchOrder {
 	private final SqmCteTableColumn cteColumn;
-	private final SortOrder sortOrder;
+	private final SortDirection sortOrder;
 	private NullPrecedence nullPrecedence;
 
-	public SqmSearchClauseSpecification(SqmCteTableColumn cteColumn, SortOrder sortOrder, NullPrecedence nullPrecedence) {
+	public SqmSearchClauseSpecification(SqmCteTableColumn cteColumn, SortDirection sortOrder, NullPrecedence nullPrecedence) {
 		if ( cteColumn == null ) {
 			throw new IllegalArgumentException( "Null cte column" );
 		}
@@ -49,12 +49,12 @@ public class SqmSearchClauseSpecification implements JpaSearchOrder {
 
 	@Override
 	public boolean isAscending() {
-		return sortOrder == SortOrder.ASCENDING;
+		return sortOrder == SortDirection.ASCENDING;
 	}
 
 	@Override
 	public JpaSearchOrder reverse() {
-		SortOrder newSortOrder = this.sortOrder == null ? SortOrder.DESCENDING : sortOrder.reverse();
+		SortDirection newSortOrder = this.sortOrder == null ? SortDirection.DESCENDING : sortOrder.reverse();
 		return new SqmSearchClauseSpecification( cteColumn, newSortOrder, nullPrecedence );
 	}
 
@@ -64,7 +64,7 @@ public class SqmSearchClauseSpecification implements JpaSearchOrder {
 	}
 
 	@Override
-	public SortOrder getSortOrder() {
+	public SortDirection getSortOrder() {
 		return sortOrder;
 	}
 

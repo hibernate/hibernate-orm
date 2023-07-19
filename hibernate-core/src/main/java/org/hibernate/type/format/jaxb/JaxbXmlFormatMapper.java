@@ -24,7 +24,6 @@ import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
-import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;

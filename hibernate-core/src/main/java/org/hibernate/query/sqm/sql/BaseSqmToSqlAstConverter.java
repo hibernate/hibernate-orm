@@ -50,7 +50,7 @@ import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.internal.util.MutableObject;
+import org.hibernate.internal.util.MutableBoolean;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -134,7 +134,7 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.InterpretationException;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -261,6 +261,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmAliasedNode;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
@@ -365,6 +366,7 @@ import org.hibernate.sql.ast.tree.predicate.NullnessPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
 import org.hibernate.sql.ast.tree.predicate.SelfRenderingPredicate;
+import org.hibernate.sql.ast.tree.predicate.ThruthnessPredicate;
 import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
@@ -560,7 +562,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final AppliedGraph appliedGraph = queryOptions.getAppliedGraph();
 			if ( appliedGraph != null && appliedGraph.getSemantic() != null && appliedGraph.getGraph() != null ) {
 				this.entityGraphTraversalState = new StandardEntityGraphTraversalStateImpl(
-						appliedGraph.getSemantic(), appliedGraph.getGraph() );
+						appliedGraph.getSemantic(), appliedGraph.getGraph(),
+						creationContext.getSessionFactory().getJpaMetamodel()
+				);
 			}
 			else {
 				this.entityGraphTraversalState = null;
@@ -756,11 +760,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	@Override
 	public SqmQueryPart<?> getCurrentSqmQueryPart() {
 		return currentSqmQueryPart;
-	}
-
-	@Override
-	public SqmStatement<?> getCurrentSqmStatement() {
-		return currentSqmStatement;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1017,7 +1016,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							.getJdbcTypeCount();
 
 					if ( valueExprJdbcCount != assignedPathJdbcCount ) {
-						SqlTreeCreationLogger.LOGGER.debugf(
+						SqlTreeCreationLogger.LOGGER.debug(
 								"JDBC type count does not match in UPDATE assignment between the assigned-path and the assigned-value; " +
 										"this will likely lead to problems executing the query"
 						);
@@ -2514,7 +2513,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 		return new SortSpecification(
 				expression,
-				sortSpecification.getSortOrder(),
+				sortSpecification.getSortDirection(),
 				sortSpecification.getNullPrecedence()
 		);
 	}
@@ -2988,7 +2987,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					entityNameUse = EntityNameUse.OPTIONAL_TREAT;
 				}
 				else {
-					entityNameUse = EntityNameUse.TREAT;
+					entityNameUse = EntityNameUse.BASE_TREAT;
 				}
 				registerEntityNameUsage(
 						tableGroup,
@@ -3112,10 +3111,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						subType.getEntityName(),
 						(s, existingUse) -> finalEntityNameUse.stronger( existingUse )
 				);
-				actualTableGroup.resolveTableReference(
-						null,
-						subType.getEntityPersister().getMappedTableDetails().getTableName()
-				);
+				if ( useKind == EntityNameUse.UseKind.PROJECTION ) {
+					actualTableGroup.resolveTableReference(
+							null,
+							subType.getEntityPersister().getMappedTableDetails().getTableName()
+					);
+				}
 			}
 		}
 	}
@@ -3334,11 +3335,28 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			registerEntityNameProjectionUsage( sqmJoin, getActualTableGroup( joinedTableGroup, sqmJoin ) );
 		}
 		registerPathAttributeEntityNameUsage( sqmJoin, ownerTableGroup );
+		if ( !sqmJoin.hasTreats() && sqmJoin.getNodeType().getSqmPathType() instanceof EntityDomainType ) {
+			final EntityDomainType<?> entityDomainType = (EntityDomainType<?>) sqmJoin.getNodeType().getSqmPathType();
+			final TableGroup elementTableGroup = joinedTableGroup instanceof PluralTableGroup ?
+					( (PluralTableGroup) joinedTableGroup ).getElementTableGroup() :
+					joinedTableGroup;
+			final EntityValuedModelPart entityModelPart = (EntityValuedModelPart) elementTableGroup.getModelPart();
+			final EntityPersister entityDescriptor = entityModelPart.getEntityMappingType().getEntityPersister();
+			if ( entityDescriptor.getSuperMappingType() != null ) {
+				// This is a non-treated join with an entity which is an inheritance subtype,
+				// register a TREAT entity name use to filter only the entities of the correct type.
+				registerEntityNameUsage(
+						getActualTableGroup( joinedTableGroup, sqmJoin ),
+						EntityNameUse.TREAT,
+						entityDomainType.getHibernateEntityName()
+				);
+			}
+		}
 
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			if ( sqmJoin.isFetched() ) {
-				QueryLogging.QUERY_MESSAGE_LOGGER.debugf( "Join fetch [" + sqmJoinNavigablePath + "] is restricted" );
+				QueryLogging.QUERY_MESSAGE_LOGGER.debugf( "Join fetch [%s] is restricted", sqmJoinNavigablePath );
 			}
 
 			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
@@ -3392,7 +3410,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private TableGroup consumeEntityJoin(SqmEntityJoin<?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
-		final MutableObject<Predicate> predicate = new MutableObject<>();
+		final MutableBoolean needsTreat = new MutableBoolean( false );
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
 
 		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
@@ -3401,16 +3419,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
 				null,
-				() -> p -> predicate.set( combinePredicates( predicate.get(), p ) ),
+				() -> p -> needsTreat.setValue( true ),
 				this
 		);
 		registerSqmFromTableGroup( sqmJoin, tableGroup );
+
+		if ( needsTreat.getValue() ) {
+			// Register new treat to apply the discriminator condition to the table reference itself, see #pruneTableGroupJoins
+			registerEntityNameUsage( tableGroup, EntityNameUse.TREAT, entityDescriptor.getEntityName() );
+		}
 
 		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				sqmJoin.getNavigablePath(),
 				correspondingSqlJoinType,
 				tableGroup,
-				predicate.get()
+				null
 		);
 
 		if ( sqmJoin.getJoinPredicate() != null ) {
@@ -4122,8 +4145,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					tableGroup
 			);
 		}
-		else {
-			assert actualModelPart instanceof BasicValuedModelPart;
+		else if ( actualModelPart instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart mapping = (BasicValuedModelPart) actualModelPart;
 			final TableReference tableReference = tableGroup.resolveTableReference(
 					navigablePath.append( actualModelPart.getPartName() ),
@@ -4152,6 +4174,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					navigablePath,
 					mapping,
 					tableGroup
+			);
+		}
+		else if ( actualModelPart instanceof AnonymousTupleTableGroupProducer ) {
+			throw new SemanticException(
+					"The derived SqmFrom" + ( (AnonymousTupleType<?>) path.getReferencedPathSource() ).getComponentNames() + " can not be used in a context where the expression needs to " +
+							"be expanded to identifying parts, because a derived model part does not have identifying parts. " +
+							"Replace uses of the root with paths instead e.g. `derivedRoot.get(\"alias1\")` or `derivedRoot.alias1`"
+			);
+		}
+		else {
+			throw new SemanticException(
+					"The SqmFrom node [" + path + "] can not be used in a context where the expression needs to " +
+							"be expanded to identifying parts, because the model part [" + actualModelPart +
+							"] does not have identifying parts."
 			);
 		}
 
@@ -4537,6 +4573,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				null,
 				this
 		);
+		registerProjectionUsageFromDescriptor( tableGroup, indexDescriptor );
 
 		final CollectionPart valueDescriptor = mapDescriptor.getElementDescriptor();
 		final NavigablePath valueNavigablePath = mapNavigablePath.append( valueDescriptor.getPartName() );
@@ -4546,6 +4583,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				null,
 				this
 		);
+		registerProjectionUsageFromDescriptor( tableGroup, valueDescriptor );
 
 		return new DomainResultProducer<Map.Entry<Object, Object>>() {
 			@Override
@@ -4563,6 +4601,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				throw new UnsupportedOperationException();
 			}
 		};
+	}
+
+	private void registerProjectionUsageFromDescriptor(TableGroup tableGroup, CollectionPart descriptor) {
+		if ( descriptor instanceof EntityCollectionPart ) {
+			final EntityCollectionPart entityCollectionPart = (EntityCollectionPart) descriptor;
+			final EntityMappingType entityMappingType = entityCollectionPart.getEntityMappingType();
+			registerEntityNameUsage( tableGroup, EntityNameUse.PROJECTION, entityMappingType.getEntityName(), true );
+		}
 	}
 
 	protected Expression createCorrelatedAggregateSubQuery(
@@ -4784,7 +4830,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 								subQuerySpec.addSortSpecification(
 										new SortSpecification(
 												columnReference,
-												max ? SortOrder.DESCENDING : SortOrder.ASCENDING
+												max ? SortDirection.DESCENDING : SortDirection.ASCENDING
 										)
 								);
 							}
@@ -4990,12 +5036,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			if ( !( expression.getExpressionType() instanceof BasicValuedMapping ) ) {
 				// A case wrapper for non-basic paths is not possible,
-				// because a case expression must return a scalar value,
-				// so we instead add the type restriction predicate as conjunct
-				// by registering the treat into tableGroupEntityNameUses
-				final String treatedName = treatedPath.getTreatTarget().getHibernateEntityName();
-				final TableGroup tableGroup = getFromClauseIndex().findTableGroup( wrappedPath.getNavigablePath() );
-				registerEntityNameUsage( tableGroup, EntityNameUse.TREAT, treatedName );
+				// because a case expression must return a scalar value.
+				if ( lhs instanceof SqmRoot ) {
+					// For treated roots we need to add the type restriction predicate as conjunct
+					// by registering the treat into tableGroupEntityNameUses.
+					// Joins don't need the restriction as it will be embedded into
+					// the joined table group itself by #pruneTableGroupJoins
+					final String treatedName = treatedPath.getTreatTarget().getHibernateEntityName();
+					final TableGroup tableGroup = getFromClauseIndex().findTableGroup( wrappedPath.getNavigablePath() );
+					registerEntityNameUsage( tableGroup, EntityNameUse.TREAT, treatedName );
+				}
 				return expression;
 			}
 			final BasicValuedPathInterpretation<?> basicPath = (BasicValuedPathInterpretation<?>) expression;
@@ -5058,7 +5108,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 
 			final DiscriminatorPathInterpretation<?> typeExpression = new DiscriminatorPathInterpretation<>(
-					tableGroup.getNavigablePath().append( EntityDiscriminatorMapping.ROLE_NAME ),
+					tableGroup.getNavigablePath().append( EntityDiscriminatorMapping.DISCRIMINATOR_ROLE_NAME ),
 					entityMapping,
 					tableGroup,
 					this
@@ -5328,10 +5378,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					);
 				}
 				else {
-					throw new SqlTreeCreationException(
+					throw new SemanticException(
 							String.format(
 									Locale.ROOT,
-									"QueryLiteral type [`%s`] did not match domain Java-type [`%s`] nor JDBC Java-type [`%s`]",
+									"Literal type '%s' did not match domain type '%s' nor converted type '%s'",
 									value.getClass(),
 									valueConverter.getDomainJavaType().getJavaTypeClass().getName(),
 									valueConverter.getRelationalJavaType().getJavaTypeClass().getName()
@@ -7527,6 +7577,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	public Object visitIsTruePredicate(SqmTruthnessPredicate predicate) {
+		return new ThruthnessPredicate(
+				(Expression) visitWithInferredType( predicate.getExpression(), () -> basicType( Boolean.class )),
+				predicate.getBooleanValue(),
+				predicate.isNegated(),
+				getBooleanType()
+		);
+	}
+
+	@Override
 	public Predicate visitInListPredicate(SqmInListPredicate<?> predicate) {
 		// special case: if there is just a single "value" element and it is a parameter
 		//		and the binding for that parameter is multi-valued we need special
@@ -7853,8 +7913,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 //					if ( fetchTiming != FetchTiming.IMMEDIATE || fetchable.incrementFetchDepth() ) {
 						final String fetchableRole = fetchable.getNavigableRole().getFullPath();
 
-						for ( String enabledFetchProfileName : getLoadQueryInfluencers()
-								.getEnabledFetchProfileNames() ) {
+						for ( String enabledFetchProfileName :
+								getLoadQueryInfluencers().getEnabledFetchProfileNames() ) {
 							final FetchProfile enabledFetchProfile = getCreationContext()
 									.getSessionFactory()
 									.getFetchProfile( enabledFetchProfileName );
@@ -8227,7 +8287,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					offset = countIndividualSelections( ( (SqmDynamicInstantiation<?>) selectableNode ).getArguments() ) - 1;
 				}
 				else if ( selectableNode instanceof SqmJpaCompoundSelection<?> ) {
-					offset += ( (SqmJpaCompoundSelection<?>) selectableNode ).getSelectionItems().size() - 1;
+					for ( SqmSelectableNode<?> node : ( (SqmJpaCompoundSelection<?>) selectableNode ).getSelectionItems() ) {
+						if ( node instanceof SqmDynamicInstantiation<?> ) {
+							offset += countIndividualSelections( ( (SqmDynamicInstantiation<?>) node ).getArguments() ) ;
+						}
+						else {
+							offset += 1;
+						}
+					}
+					offset -= 1;
 				}
 			}
 			return offset + selections.size();

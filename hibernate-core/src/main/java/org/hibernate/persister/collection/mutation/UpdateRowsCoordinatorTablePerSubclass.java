@@ -11,8 +11,8 @@ import java.util.Iterator;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
-import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -20,8 +20,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.collection.OneToManyPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 /**
@@ -63,11 +63,6 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 		if ( !entries.hasNext() ) {
 			return;
 		}
-
-		final MutationExecutorService mutationExecutorService = session
-				.getFactory()
-				.getFastSessionServices()
-				.getMutationExecutorService();
 
 		final MutationExecutor[] executors = new MutationExecutor[deleteSubclassEntries.length];
 		try {
@@ -130,7 +125,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 		);
 	}
 
-	private MutationOperationGroupSingle resolveDeleteGroup(EntityPersister elementPersister) {
+	private MutationOperationGroup resolveDeleteGroup(EntityPersister elementPersister) {
 		final CollectionTableMapping collectionTableMapping = getMutationTarget().getCollectionTableMapping();
 		final JdbcMutationOperation operation = rowMutationOperations.getDeleteRowOperation(
 				new CollectionTableMapping(
@@ -146,7 +141,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 				)
 		);
 
-		return new MutationOperationGroupSingle( MutationType.DELETE, getMutationTarget(), operation );
+		return MutationOperationGroupFactory.singleOperation( MutationType.DELETE, getMutationTarget(), operation );
 	}
 
 	private int insertRows(Object key, PersistentCollection<?> collection, SharedSessionContractImplementor session) {
@@ -156,11 +151,6 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 		if ( !entries.hasNext() ) {
 			return -1;
 		}
-
-		final MutationExecutorService mutationExecutorService = session
-				.getFactory()
-				.getFastSessionServices()
-				.getMutationExecutorService();
 
 		final MutationExecutor[] executors = new MutationExecutor[insertSubclassEntries.length];
 		try {
@@ -224,7 +214,7 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 		);
 	}
 
-	private MutationOperationGroupSingle resolveInsertGroup(EntityPersister elementPersister) {
+	private MutationOperationGroup resolveInsertGroup(EntityPersister elementPersister) {
 		final CollectionTableMapping collectionTableMapping = getMutationTarget().getCollectionTableMapping();
 		final JdbcMutationOperation operation = rowMutationOperations.getInsertRowOperation(
 				new CollectionTableMapping(
@@ -240,16 +230,16 @@ public class UpdateRowsCoordinatorTablePerSubclass extends AbstractUpdateRowsCoo
 				)
 		);
 
-		return new MutationOperationGroupSingle( MutationType.INSERT, getMutationTarget(), operation );
+		return MutationOperationGroupFactory.singleOperation( MutationType.INSERT, getMutationTarget(), operation );
 	}
 
 	private static class SubclassEntry {
 
 		private final BatchKeyAccess batchKeySupplier;
 
-		private final MutationOperationGroupSingle operationGroup;
+		private final MutationOperationGroup operationGroup;
 
-		public SubclassEntry(BatchKeyAccess batchKeySupplier, MutationOperationGroupSingle operationGroup) {
+		public SubclassEntry(BatchKeyAccess batchKeySupplier, MutationOperationGroup operationGroup) {
 			this.batchKeySupplier = batchKeySupplier;
 			this.operationGroup = operationGroup;
 		}

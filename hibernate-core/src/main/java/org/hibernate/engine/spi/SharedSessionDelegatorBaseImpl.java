@@ -6,6 +6,7 @@
  */
 package org.hibernate.engine.spi;
 
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -22,6 +23,7 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.ReturningWork;
 import org.hibernate.jdbc.Work;
 import org.hibernate.persister.entity.EntityPersister;
@@ -36,6 +38,7 @@ import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
+import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
@@ -592,5 +595,30 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public TimeZone getJdbcTimeZone() {
 		return delegate.getJdbcTimeZone();
+	}
+
+	@Override
+	public <T> RootGraph<T> createEntityGraph(Class<T> rootType) {
+		return delegate.createEntityGraph( rootType );
+	}
+
+	@Override
+	public RootGraph<?> createEntityGraph(String graphName) {
+		return delegate.createEntityGraph( graphName );
+	}
+
+	@Override
+	public <T> RootGraph<T> createEntityGraph(Class<T> rootType, String graphName) {
+		return delegate.createEntityGraph( rootType, graphName );
+	}
+
+	@Override
+	public RootGraph<?> getEntityGraph(String graphName) {
+		return delegate.getEntityGraph( graphName );
+	}
+
+	@Override
+	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
+		return delegate.getEntityGraphs( entityClass );
 	}
 }

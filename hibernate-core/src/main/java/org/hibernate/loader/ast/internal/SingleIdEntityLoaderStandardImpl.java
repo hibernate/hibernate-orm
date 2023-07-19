@@ -37,13 +37,13 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 		// see org.hibernate.persister.entity.AbstractEntityPersister#createLoaders
 		// we should preload a few - maybe LockMode.NONE and LockMode.READ
 		final LockOptions lockOptions = LockOptions.NONE;
-		final LoadQueryInfluencers queryInfluencers = new LoadQueryInfluencers( sessionFactory );
+		final LoadQueryInfluencers influencers = new LoadQueryInfluencers( sessionFactory );
 		final SingleIdLoadPlan<T> plan = createLoadPlan(
 				lockOptions,
-				queryInfluencers,
+				influencers,
 				sessionFactory
 		);
-		if ( isLoadPlanReusable( lockOptions, queryInfluencers ) ) {
+		if ( isLoadPlanReusable( lockOptions, influencers ) ) {
 			selectByLockMode.put( lockOptions.getLockMode(), plan );
 		}
 	}
@@ -125,7 +125,7 @@ public class SingleIdEntityLoaderStandardImpl<T> extends SingleIdEntityLoaderSup
 			}
 		}
 		else {
-			return createLoadPlan(lockOptions, loadQueryInfluencers, sessionFactory);
+			return createLoadPlan( lockOptions, loadQueryInfluencers, sessionFactory );
 		}
 	}
 

@@ -65,7 +65,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private String customWrite;
 	private String customRead;
 	private Size columnSize;
-//	private String specializedTypeDeclaration;
+	private String collation;
 	private java.util.List<CheckConstraint> checkConstraints = new ArrayList<>();
 
 	public Column() {
@@ -492,21 +492,6 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		return getClass().getSimpleName() + '(' + getName() + ')';
 	}
 
-//	@Incubating
-//	public void setSpecializedTypeDeclaration(String specializedTypeDeclaration) {
-//		this.specializedTypeDeclaration = specializedTypeDeclaration;
-//	}
-//
-//	@Incubating
-//	public String getSpecializedTypeDeclaration() {
-//		return specializedTypeDeclaration;
-//	}
-//
-//	@Incubating
-//	public boolean hasSpecializedTypeDeclaration() {
-//		return specializedTypeDeclaration != null;
-//	}
-
 	public void addCheckConstraint(CheckConstraint checkConstraint) {
 		if ( !checkConstraints.contains( checkConstraint) ) {
 			checkConstraints.add( checkConstraint );
@@ -629,6 +614,14 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		this.comment = comment;
 	}
 
+	public String getCollation() {
+		return collation;
+	}
+
+	public void setCollation(String collation) {
+		this.collation = collation;
+	}
+	
 	public String getDefaultValue() {
 		return defaultValue;
 	}

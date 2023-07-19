@@ -65,14 +65,15 @@ public class SqmEntityJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements 
 		if ( existing != null ) {
 			return existing;
 		}
+		final SqmRoot<?> rootCopy = getRoot().copy( context );
 		final SqmEntityJoin<T> path = context.registerCopy(
 				this,
 				new SqmEntityJoin<>(
-						getNavigablePath(),
+						getNavigablePathCopy( rootCopy ),
 						getReferencedPathSource(),
 						getExplicitAlias(),
 						getSqmJoinType(),
-						getRoot().copy( context )
+						rootCopy
 				)
 		);
 		copyTo( path, context );

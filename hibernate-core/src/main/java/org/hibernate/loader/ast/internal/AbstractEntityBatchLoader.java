@@ -7,6 +7,7 @@
 package org.hibernate.loader.ast.internal;
 
 import org.hibernate.Hibernate;
+import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -89,7 +90,8 @@ public abstract class AbstractEntityBatchLoader<T>
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		if ( hasSingleId ) {
+		// We disable batching if lockMode != NONE
+		if ( hasSingleId || lockOptions.getLockMode() != LockMode.NONE ) {
 			return singleIdLoader.load( id, entityInstance, lockOptions, readOnly, session );
 		}
 

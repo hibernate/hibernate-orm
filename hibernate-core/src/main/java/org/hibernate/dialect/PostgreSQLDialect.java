@@ -78,7 +78,6 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
-import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -99,7 +98,34 @@ import jakarta.persistence.TemporalType;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
-import static org.hibernate.type.SqlTypes.*;
+import static org.hibernate.type.SqlTypes.ARRAY;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.BLOB;
+import static org.hibernate.type.SqlTypes.CHAR;
+import static org.hibernate.type.SqlTypes.CLOB;
+import static org.hibernate.type.SqlTypes.FLOAT;
+import static org.hibernate.type.SqlTypes.GEOGRAPHY;
+import static org.hibernate.type.SqlTypes.GEOMETRY;
+import static org.hibernate.type.SqlTypes.INET;
+import static org.hibernate.type.SqlTypes.JSON;
+import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
+import static org.hibernate.type.SqlTypes.NCHAR;
+import static org.hibernate.type.SqlTypes.NCLOB;
+import static org.hibernate.type.SqlTypes.NVARCHAR;
+import static org.hibernate.type.SqlTypes.OTHER;
+import static org.hibernate.type.SqlTypes.SQLXML;
+import static org.hibernate.type.SqlTypes.STRUCT;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIME_UTC;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.UUID;
+import static org.hibernate.type.SqlTypes.VARBINARY;
+import static org.hibernate.type.SqlTypes.VARCHAR;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsDate;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsLocalTime;
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTime;
@@ -379,15 +405,13 @@ public class PostgreSQLDialect extends Dialect {
 			separator = ",";
 		}
 		type.append( ')' );
-		StringBuilder cast1 = new StringBuilder();
-		cast1.append("create cast (varchar as " )
-				.append( name )
-				.append( ") with inout as implicit" );
-		StringBuilder cast2 = new StringBuilder();
-		cast2.append("create cast (" )
-				.append( name )
-				.append( " as varchar) with inout as implicit" );
-		return new String[] { type.toString(), cast1.toString(), cast2.toString() };
+		String cast1 = "create cast (varchar as " +
+				name +
+				") with inout as implicit";
+		String cast2 = "create cast (" +
+				name +
+				" as varchar) with inout as implicit";
+		return new String[] { type.toString(), cast1, cast2 };
 	}
 
 	@Override
@@ -836,6 +860,11 @@ public class PostgreSQLDialect extends Dialect {
 	}
 
 	@Override
+	public String quoteCollation(String collation) {
+		return '\"' + collation + '\"';
+	}
+
+	@Override
 	public boolean supportsCommentOn() {
 		return true;
 	}
@@ -857,6 +886,11 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsTupleCounts() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsIsTrue() {
 		return true;
 	}
 
@@ -1306,6 +1340,11 @@ public class PostgreSQLDialect extends Dialect {
 				return getVersion().isSameOrAfter( 13 );
 		}
 		return false;
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
 	}
 
 	@Override

@@ -11,17 +11,12 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
-import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
-import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
+import org.hibernate.metamodel.model.domain.internal.PathHelper;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -51,8 +46,7 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 
 	@Override
 	public DomainType<J> getSqmPathType() {
-		//noinspection unchecked
-		return (DomainType<J>) path.getNodeType().getSqmPathType();
+		return path.getNodeType().getSqmPathType();
 	}
 
 	@Override
@@ -72,17 +66,10 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
-		final NavigablePath navigablePath;
-		if ( intermediatePathSource == null ) {
-			navigablePath = lhs.getNavigablePath().append( getPathName() );
-		}
-		else {
-			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
-		}
 		final DomainType<?> domainType = path.getNodeType().getSqmPathType();
 		if ( domainType instanceof BasicDomainType<?> ) {
 			return new SqmBasicValuedSimplePath<>(
-					navigablePath,
+					PathHelper.append( lhs, this, intermediatePathSource ),
 					this,
 					lhs,
 					lhs.nodeBuilder()
@@ -90,7 +77,7 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 		}
 		else if ( domainType instanceof EmbeddableDomainType<?> ) {
 			return new SqmEmbeddedValuedSimplePath<>(
-					navigablePath,
+					PathHelper.append( lhs, this, intermediatePathSource ),
 					this,
 					lhs,
 					lhs.nodeBuilder()
@@ -98,7 +85,7 @@ public class AnonymousTupleSqmPathSource<J> implements SqmPathSource<J> {
 		}
 		else if ( domainType instanceof EntityDomainType<?> ) {
 			return new SqmEntityValuedSimplePath<>(
-					navigablePath,
+					PathHelper.append( lhs, this, intermediatePathSource ),
 					this,
 					lhs,
 					lhs.nodeBuilder()

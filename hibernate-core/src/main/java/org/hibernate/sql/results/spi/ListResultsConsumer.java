@@ -97,9 +97,9 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 	private static class Results<R> {
 		private final List<R> results = new ArrayList<>();
-		private final JavaType resultJavaType;
+		private final JavaType<R> resultJavaType;
 
-		public Results(JavaType resultJavaType) {
+		public Results(JavaType<R> resultJavaType) {
 			this.resultJavaType = resultJavaType;
 		}
 
@@ -127,7 +127,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 
 		private final IdentityHashMap<R, Object> added = new IdentityHashMap<>();
 
-		public EntityResult(JavaType resultJavaType) {
+		public EntityResult(JavaType<R> resultJavaType) {
 			super( resultJavaType );
 		}
 
@@ -162,25 +162,27 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 					typeConfiguration
 			);
 
-			final boolean isEnityResultType = domainResultJavaType instanceof EntityJavaType;
+			final boolean isEntityResultType = domainResultJavaType instanceof EntityJavaType;
 
 			final Results<R> results;
-			if ( ( uniqueSemantic == UniqueSemantic.ALLOW || uniqueSemantic == UniqueSemantic.FILTER ) && isEnityResultType ) {
+			if ( isEntityResultType
+					&& ( uniqueSemantic == UniqueSemantic.ALLOW
+						|| uniqueSemantic == UniqueSemantic.FILTER ) ) {
 				results = new EntityResult<>( domainResultJavaType );
 			}
 			else {
 				results = new Results<>( domainResultJavaType );
 			}
 
-			if ( this.uniqueSemantic == UniqueSemantic.FILTER
-					|| this.uniqueSemantic == UniqueSemantic.ASSERT && rowProcessingState.hasCollectionInitializers()
-					|| this.uniqueSemantic == UniqueSemantic.ALLOW && isEnityResultType ) {
+			if ( uniqueSemantic == UniqueSemantic.FILTER
+					|| uniqueSemantic == UniqueSemantic.ASSERT && rowProcessingState.hasCollectionInitializers()
+					|| uniqueSemantic == UniqueSemantic.ALLOW && isEntityResultType ) {
 				while ( rowProcessingState.next() ) {
 					results.addUnique( rowReader.readRow( rowProcessingState, processingOptions ) );
 					rowProcessingState.finishRowProcessing();
 				}
 			}
-			else if ( this.uniqueSemantic == UniqueSemantic.ASSERT ) {
+			else if ( uniqueSemantic == UniqueSemantic.ASSERT ) {
 				while ( rowProcessingState.next() ) {
 					if ( !results.addUnique( rowReader.readRow( rowProcessingState, processingOptions ) ) ) {
 						throw new HibernateException(
@@ -210,7 +212,8 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			}
 
 			//noinspection unchecked
-			final ResultListTransformer<R> resultListTransformer = (ResultListTransformer<R>) queryOptions.getResultListTransformer();
+			final ResultListTransformer<R> resultListTransformer =
+					(ResultListTransformer<R>) queryOptions.getResultListTransformer();
 			if ( resultListTransformer != null ) {
 				return resultListTransformer.transformList( results.getResults() );
 			}

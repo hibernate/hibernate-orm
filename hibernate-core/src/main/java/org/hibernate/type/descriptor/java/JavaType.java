@@ -87,6 +87,13 @@ public interface JavaType<T> extends Serializable {
 	}
 
 	/**
+	 * Get the name of the Java type.
+	 */
+	default String getTypeName() {
+		return getJavaType().getTypeName();
+	}
+
+	/**
 	 * Is the given value an instance of the described type?
 	 * <p>
 	 * Usually just {@link #getJavaTypeClass() getJavaTypeClass().}{@link Class#isInstance isInstance(value)},
@@ -348,12 +355,4 @@ public interface JavaType<T> extends Serializable {
 	default String getCheckCondition(String columnName, JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
 		return null;
 	}
-
-//	/**
-//	 * @deprecated this was an experimental approach that we have moved away from
-//	 */
-//	@Incubating @Deprecated
-//	default String getSpecializedTypeDeclaration(JdbcType jdbcType, BasicValueConverter<?, ?> converter, Dialect dialect) {
-//		return null;
-//	}
 }

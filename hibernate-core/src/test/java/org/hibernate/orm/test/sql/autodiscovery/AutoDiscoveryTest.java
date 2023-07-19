@@ -122,7 +122,7 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 					@Override
 					public void execute(Connection connection) throws SQLException {
 						PreparedStatement ps = sessionImplementor.getJdbcCoordinator().getStatementPreparer().prepareStatement( QUERY_STRING );
-						ResultSet rs = sessionImplementor.getJdbcCoordinator().getResultSetReturn().extract( ps );
+						ResultSet rs = sessionImplementor.getJdbcCoordinator().getResultSetReturn().extract( ps, QUERY_STRING );
 						try {
 							ResultSetMetaData metadata = rs.getMetaData();
 							String column1Alias = getDialect().getColumnAliasExtractor().extractColumnAlias( metadata, 1 );

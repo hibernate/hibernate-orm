@@ -183,7 +183,7 @@ include::{example-dir-emeddable}/TargetTest.java[tags=embeddable-Target-example]
 ====
 
 The `coordinates` embeddable type is mapped as the `Coordinates` interface.
-However, Hibernate needs to know the actual implementation tye, which is `GPS` in this case,
+However, Hibernate needs to know the actual implementation type, which is `GPS` in this case,
 hence the `@Target` annotation is used to provide this information.
 
 Assuming we have persisted the following `City` entity:

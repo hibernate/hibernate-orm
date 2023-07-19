@@ -55,7 +55,7 @@ public abstract class AbstractSqmSelectQuery<T>
 		super( builder );
 		this.cteStatements = new LinkedHashMap<>();
 		this.resultType = resultType;
-		setQueryPart( queryPart );
+		this.sqmQueryPart = queryPart;
 	}
 
 	protected AbstractSqmSelectQuery(
@@ -65,6 +65,17 @@ public abstract class AbstractSqmSelectQuery<T>
 		super( builder );
 		this.cteStatements = cteStatements;
 		this.resultType = resultType;
+	}
+
+	public AbstractSqmSelectQuery(
+			SqmQueryPart<T> queryPart,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			Class<T> resultType,
+			NodeBuilder builder) {
+		super( builder );
+		this.cteStatements = cteStatements;
+		this.resultType = resultType;
+		this.sqmQueryPart = queryPart;
 	}
 
 	protected Map<String, SqmCteStatement<?>> copyCteStatements(SqmCopyContext context) {
@@ -78,6 +89,10 @@ public abstract class AbstractSqmSelectQuery<T>
 	@Override
 	public Collection<SqmCteStatement<?>> getCteStatements() {
 		return cteStatements.values();
+	}
+
+	Map<String, SqmCteStatement<?>> getCteStatementMap() {
+		return new LinkedHashMap<>( cteStatements );
 	}
 
 	@Override
@@ -209,6 +224,10 @@ public abstract class AbstractSqmSelectQuery<T>
 	@SuppressWarnings("unchecked")
 	public Set<Root<?>> getRoots() {
 		return (Set) getQuerySpec().getRoots();
+	}
+
+	public List<Root<?>> getRootList() {
+		return (List) getQuerySpec().getRootList();
 	}
 
 	@Override

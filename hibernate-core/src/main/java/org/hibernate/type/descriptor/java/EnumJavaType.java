@@ -230,33 +230,13 @@ public class EnumJavaType<T extends Enum<T>> extends AbstractClassJavaType<T> {
 	}
 
 	/**
-	 * Interpret a String value as the named value of the enum type
+	 * Interpret a string value as the named value of the enum type
 	 */
 	public T fromName(String relationalForm) {
 		if ( relationalForm == null ) {
 			return null;
 		}
 		return Enum.valueOf( getJavaTypeClass(), relationalForm.trim() );
-	}
-
-	@Override
-	public boolean isWider(JavaType<?> javaType) {
-		// This is necessary to allow comparing/assigning an enum attribute against a literal of the JdbcType
-		switch ( javaType.getJavaType().getTypeName() ) {
-			case "byte":
-			case "java.lang.Byte":
-			case "short":
-			case "java.lang.Short":
-			case "int":
-			case "java.lang.Integer":
-			case "long":
-			case "java.lang.Long":
-			case "java.lang.String":
-			case "java.lang.Character":
-				return true;
-			default:
-				return false;
-		}
 	}
 
 	@Override

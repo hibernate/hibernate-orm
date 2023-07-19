@@ -6,6 +6,8 @@
  */
 package org.hibernate.jpamodelgen.model;
 
+import org.hibernate.jpamodelgen.Context;
+
 import java.util.List;
 import javax.lang.model.element.Element;
 
@@ -30,4 +32,10 @@ public interface Metamodel extends ImportContext {
 	Element getElement();
 
 	boolean isMetaComplete();
+
+	Context getContext();
+
+	boolean isImplementation();
+
+	boolean isInjectable();
 }

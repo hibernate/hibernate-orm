@@ -11,14 +11,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.Filter;
+import org.hibernate.Internal;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.engine.profile.Fetch;
 import org.hibernate.engine.profile.FetchProfile;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.SessionCreationOptions;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
@@ -81,6 +83,17 @@ public class LoadQueryInfluencers implements Serializable {
 		this.sessionFactory = sessionFactory;
 		batchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
+	}
+
+	public EffectiveEntityGraph applyEntityGraph(RootGraphImplementor<?> rootGraph, GraphSemantic graphSemantic) {
+		final EffectiveEntityGraph effectiveEntityGraph = getEffectiveEntityGraph();
+		if ( graphSemantic != null ) {
+			if ( rootGraph == null ) {
+				throw new IllegalArgumentException( "Graph semantic specified, but no RootGraph was supplied" );
+			}
+			effectiveEntityGraph.applyGraph( rootGraph, graphSemantic );
+		}
+		return effectiveEntityGraph;
 	}
 
 	public SessionFactoryImplementor getSessionFactory() {
@@ -230,7 +243,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Set<String> getEnabledFetchProfileNames() {
-		return Objects.requireNonNullElse( enabledFetchProfileNames, emptySet() );
+		return enabledFetchProfileNames == null ? emptySet() : enabledFetchProfileNames;
 	}
 
 	private void checkFetchProfileName(String name) {
@@ -258,6 +271,27 @@ public class LoadQueryInfluencers implements Serializable {
 		if ( enabledFetchProfileNames != null ) {
 			enabledFetchProfileNames.remove( name );
 		}
+	}
+
+	@Internal
+	public HashSet<String> adjustFetchProfiles(Set<String> disabledFetchProfiles, Set<String> enabledFetchProfiles) {
+		final HashSet<String> oldFetchProfiles =
+				hasEnabledFetchProfiles() ? new HashSet<>( enabledFetchProfileNames ) : null;
+		if ( disabledFetchProfiles != null && enabledFetchProfileNames != null ) {
+			enabledFetchProfileNames.removeAll( disabledFetchProfiles );
+		}
+		if ( enabledFetchProfiles != null ) {
+			if ( enabledFetchProfileNames == null ) {
+				enabledFetchProfileNames = new HashSet<>();
+			}
+			enabledFetchProfileNames.addAll( enabledFetchProfiles );
+		}
+		return oldFetchProfiles;
+	}
+
+	@Internal
+	public void setEnabledFetchProfileNames(HashSet<String> enabledFetchProfileNames) {
+		this.enabledFetchProfileNames = enabledFetchProfileNames;
 	}
 
 	public EffectiveEntityGraph getEffectiveEntityGraph() {

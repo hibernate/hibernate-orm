@@ -12,6 +12,7 @@ import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.event.service.spi.EventListenerRegistry;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.service.Service;
 import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.ServiceBinding;
@@ -22,6 +23,8 @@ import org.hibernate.service.spi.SessionFactoryServiceInitiatorContext;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
 import org.jboss.logging.Logger;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
@@ -35,17 +38,28 @@ public class SessionFactoryServiceRegistryImpl
 	private final SessionFactoryOptions sessionFactoryOptions;
 	private final SessionFactoryImplementor sessionFactory;
 
-	public SessionFactoryServiceRegistryImpl(
+	private SessionFactoryServiceRegistryImpl(
+			ServiceRegistryImplementor parent,
+			SessionFactoryImplementor sessionFactory,
+			SessionFactoryOptions sessionFactoryOptions) {
+		super( parent );
+		this.sessionFactory = sessionFactory;
+		this.sessionFactoryOptions = sessionFactoryOptions;
+	}
+
+	public static SessionFactoryServiceRegistryImpl create(
 			ServiceRegistryImplementor parent,
 			List<SessionFactoryServiceInitiator<?>> initiators,
 			List<ProvidedService<?>> providedServices,
 			SessionFactoryImplementor sessionFactory,
 			SessionFactoryOptions sessionFactoryOptions) {
-		super( parent );
+		SessionFactoryServiceRegistryImpl instance = new SessionFactoryServiceRegistryImpl( parent, sessionFactory, sessionFactoryOptions);
+		instance.initialize( initiators, providedServices );
+		return instance;
+	}
 
-		this.sessionFactory = sessionFactory;
-		this.sessionFactoryOptions = sessionFactoryOptions;
-
+	protected void initialize(List<SessionFactoryServiceInitiator<?>> initiators, List<ProvidedService<?>> providedServices) {
+		super.initialize();
 		// for now, just use the standard initiator list
 		for ( SessionFactoryServiceInitiator<?> initiator : initiators ) {
 			// create the bindings up front to help identify to which registry services belong
@@ -66,7 +80,7 @@ public class SessionFactoryServiceRegistryImpl
 	@Override
 	public <R extends Service> void configureService(ServiceBinding<R> serviceBinding) {
 		if ( serviceBinding.getService() instanceof Configurable ) {
-			( (Configurable) serviceBinding.getService() ).configure( getService( ConfigurationService.class ).getSettings() );
+			( (Configurable) serviceBinding.getService() ).configure( NullnessUtil.castNonNull( getService( ConfigurationService.class ) ).getSettings() );
 		}
 	}
 
@@ -86,7 +100,7 @@ public class SessionFactoryServiceRegistryImpl
 	}
 
 	@Override
-	public <R extends Service> R getService(Class<R> serviceRole) {
+	public <R extends Service> @Nullable R getService(Class<R> serviceRole) {
 		if ( serviceRole.equals( EventListenerRegistry.class ) ) {
 			log.debug(
 					"EventListenerRegistry access via ServiceRegistry is deprecated.  " +

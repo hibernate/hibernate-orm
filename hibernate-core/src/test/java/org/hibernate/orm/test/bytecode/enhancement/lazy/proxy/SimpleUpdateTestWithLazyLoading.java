@@ -19,10 +19,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.EntityEntry;
@@ -48,7 +45,6 @@ import static org.hamcrest.core.Is.is;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 /**

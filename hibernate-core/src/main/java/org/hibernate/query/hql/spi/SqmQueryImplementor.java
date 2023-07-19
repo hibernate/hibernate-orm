@@ -66,16 +66,16 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	SqmQueryImplementor<R> setReadOnly(boolean readOnly);
 
 	@Override
-	SqmQueryImplementor<R> applyGraph(RootGraph graph, GraphSemantic semantic);
+	SqmQueryImplementor<R> applyGraph(@SuppressWarnings("rawtypes") RootGraph graph, GraphSemantic semantic);
 
 	@Override
-	default SqmQueryImplementor<R> applyFetchGraph(RootGraph graph) {
+	default SqmQueryImplementor<R> applyFetchGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		QueryImplementor.super.applyFetchGraph( graph );
 		return this;
 	}
 
 	@Override
-	default SqmQueryImplementor<R> applyLoadGraph(RootGraph graph) {
+	default SqmQueryImplementor<R> applyLoadGraph(@SuppressWarnings("rawtypes") RootGraph graph) {
 		QueryImplementor.super.applyLoadGraph( graph );
 		return this;
 	}
@@ -96,7 +96,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	<T> SqmQueryImplementor<T> setTupleTransformer(TupleTransformer<T> transformer);
 
 	@Override
-	SqmQueryImplementor<R> setResultListTransformer(ResultListTransformer transformer);
+	SqmQueryImplementor<R> setResultListTransformer(ResultListTransformer<R> transformer);
 
 	@Override
 	@Deprecated(since = "5.2")
@@ -177,7 +177,7 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	SqmQueryImplementor<R> setParameter(Parameter<Date> param, Date value, TemporalType temporalType);
 
 	@Override
-	SqmQueryImplementor<R> setParameterList(String name, Collection values);
+	SqmQueryImplementor<R> setParameterList(String name, @SuppressWarnings("rawtypes") Collection values);
 
 	@Override
 	<P> SqmQueryImplementor<R> setParameterList(String name, Collection<? extends P> values, Class<P> javaType);
@@ -234,5 +234,5 @@ public interface SqmQueryImplementor<R> extends QueryImplementor<R>, SqmQuery, N
 	SqmQueryImplementor<R> setProperties(Object bean);
 
 	@Override
-	SqmQueryImplementor<R> setProperties(Map bean);
+	SqmQueryImplementor<R> setProperties(@SuppressWarnings("rawtypes") Map bean);
 }

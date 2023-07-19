@@ -11,7 +11,6 @@ import org.hibernate.metamodel.mapping.internal.AnyDiscriminatorPart;
 import org.hibernate.metamodel.mapping.internal.AnyKeyPart;
 import org.hibernate.metamodel.model.domain.AnyMappingDomainType;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.domain.SqmAnyValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
@@ -23,7 +22,7 @@ import static jakarta.persistence.metamodel.Bindable.BindableType.SINGULAR_ATTRI
  */
 public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 	private final SqmPathSource<?> keyPathSource;
-	private final AnyDiscriminatorSqmPathSource discriminatorPathSource;
+	private final AnyDiscriminatorSqmPathSource<?> discriminatorPathSource;
 
 	public AnyMappingSqmPathSource(
 			String localPathName,
@@ -47,7 +46,7 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 		);
 	}
 
-	@Override @SuppressWarnings("unchecked")
+	@Override
 	public AnyMappingDomainType<J> getSqmPathType() {
 		return (AnyMappingDomainType<J>) super.getSqmPathType();
 	}
@@ -68,13 +67,11 @@ public class AnyMappingSqmPathSource<J> extends AbstractSqmPathSource<J> {
 
 	@Override
 	public SqmPath<J> createSqmPath(SqmPath<?> lhs, SqmPathSource<?> intermediatePathSource) {
-		final NavigablePath navigablePath;
-		if ( intermediatePathSource == null ) {
-			navigablePath = lhs.getNavigablePath().append( getPathName() );
-		}
-		else {
-			navigablePath = lhs.getNavigablePath().append( intermediatePathSource.getPathName() ).append( getPathName() );
-		}
-		return new SqmAnyValuedSimplePath<>( navigablePath, pathModel, lhs, lhs.nodeBuilder() );
+		return new SqmAnyValuedSimplePath<>(
+				PathHelper.append( lhs, this, intermediatePathSource ),
+				pathModel,
+				lhs,
+				lhs.nodeBuilder()
+		);
 	}
 }

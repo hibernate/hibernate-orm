@@ -1087,8 +1087,9 @@ In particular, the `List` may not contain duplicate elements, and its order will
 Collection<Book> books;
 ----
 
-(We'll see how to map a collection with a persistent order later.)
+We'll see how to map a collection with a persistent order <<ordered-sorted,much later>>.
 
+[[set-vs-list]]
 .`Set`, `List`, or `Collection`?
 ****
 A one-to-many association mapped to a foreign key can never contain duplicate elements, so `Set` seems like the most semantically correct Java collection type to use here, and so that's the conventional practice in the Hibernate community.
@@ -1221,6 +1222,24 @@ If the association is bidirectional, we annotate the unowned side `@OneToOne(map
 A unidirectional many-to-many association is represented as a collection-valued attribute.
 It always maps to a separate _association table_ in the database.
 
+It tends to happen that a many-to-many association eventually turns out to be an entity in disguise.
+
+[TIP]
+====
+Suppose we start with a nice clean many-to-many association between `Author` and `Book`.
+Later on, it's quite likely that we'll discover some additional information which comes attached to the association, so that the association table needs some extra columns.
+
+For example, imagine that we needed to report the percentage contribution of each author to a book.
+That information naturally belongs to the association table.
+We can't easily store it as an attribute of `Book`, nor as an attribute of `Author`.
+
+When this happens, we need to change our Java model, usually introducing a new entity class which maps the association table directly.
+In our example, we might call this entity something like `BookAuthorship`, and it would have `@OneToMany` associations to both `Author` and `Book`, along with the `contribution` attribute.
+
+We can evade the disruption occasioned by such "discoveries" by simply avoiding the use of `@ManyToMany` right from the start.
+There's little downside to representing every—or at least _almost_ every—logical many-to-many association using an intermediate entity.
+====
+
 A many-to-many association must be annotated `@ManyToMany`:
 
 [source,java]
@@ -1237,7 +1256,7 @@ class Book {
 }
 ----
 
-If the association is bidirectional, we add a very similar-looking attribute to `Book`, but this time we must specify `mappedBy` to indicate that this is unowned side of the association:
+If the association is bidirectional, we add a very similar-looking attribute to `Book`, but this time we must specify `mappedBy` to indicate that this is the unowned side of the association:
 
 [source,java]
 ----
@@ -1253,8 +1272,11 @@ class Book {
 }
 ----
 
+Remember, if we wish to the modify the collection we must <<bidirectional-problem,change the owning side>>.
+
 We've again used ``Set``s to represent the association.
-As before, we have the option to `Collection` or `List`, but in this case it _does_ make a difference to the semantics of the association.
+As before, we have the option to use `Collection` or `List`.
+But in this case it _does_ make a difference to the semantics of the association.
 
 [NOTE]
 // .Sets and bags
@@ -1314,6 +1336,7 @@ So we may expand our taxonomy with:
 
 There's actually two new kinds of mapping here: `@Array` mappings, and `@ElementCollection` mappings.
 
+[%unbreakable]
 [CAUTION]
 // .These sorts of mappings are overused
 ====
@@ -1338,6 +1361,7 @@ We might represent this in our `Event` entity as an attribute of type `DayOfWeek
 Since the number of elements of this array or list is upper bounded by 7, this is a reasonable case for the use of an `ARRAY`-typed column.
 It's hard to see much value in storing this collection in a separate table.
 
+[%unbreakable]
 .Learning to not hate SQL arrays
 ****
 For a long time, we thought arrays were a kind of weird and warty thing to add to the relational model, but recently we've come to realize that this view was overly closed-minded.
@@ -1380,7 +1404,7 @@ Alternatively, we could store this array or list in a separate table.
 [[element-collections]]
 === Collections mapped to a separate table
 
-JPA _does_ define a standard way to map a collection to an auxiliary table:
+JPA _does_ define a standard way to map a collection to an auxiliary table: the `@ElementCollection` annotation.
 
 [source, java]
 ----
@@ -1395,7 +1419,23 @@ class Event {
 }
 ----
 
-Here, each collection elements are stored as separate row of the auxiliary table.
+Actually, we shouldn't use an array here, since array types can't be <<proxies-and-lazy-fetching,proxied>>, and so the JPA specification doesn't even say they're supported.
+Instead, we should use `Set`, `List`, or `Map`.
+
+[source, java]
+----
+@Entity
+class Event {
+    @Id @GeneratedValue
+    Long id;
+    ...
+    @ElementCollection
+    List<DayOfWeek> daysOfWeek;  // stored in a dedicated table
+    ...
+}
+----
+
+Here, each collection elements are stored as separate rows of the auxiliary table.
 By default, this table has the following definition:
 
 [source,sql]
@@ -1410,6 +1450,7 @@ create table Event_daysOfWeek (
 
 Which is fine, but it's still a mapping we prefer to avoid.
 
+[%unbreakable]
 [WARNING]
 // .This is not what we would do
 ====
@@ -1506,9 +1547,14 @@ That's already a lot of annotations, and we have not even started with the annot
 [[equals-and-hash]]
 === `equals()` and `hashCode()`
 
-Entity classes should override `equals()` and `hashCode()`. People new to Hibernate or JPA are often confused by exactly which fields should be included in the `hashCode()`, so please keep the following principles in mind:
+Entity classes should override `equals()` and `hashCode()`, especially when associations are <<set-vs-list,represented as sets>>.
 
-- You should not include mutable fields in the hashcode, since that would require rehashing any collection containing the entity whenever the field is mutated.
+People new to Hibernate or JPA are often confused by exactly which fields should be included in the `hashCode()`.
+Even people with plenty of experience often argue quite religiously that one or another approach is the only right way.
+The truth is, there's no unique right way to do it, but there are some constraints.
+So please keep the following principles in mind:
+
+- You should not include a mutable field in the hashcode, since that would require rehashing every collection containing the entity whenever the field is mutated.
 - It's not completely wrong to include a generated identifier (surrogate key) in the hashcode, but since the identifier is not generated until the entity instance is made persistent, you must take great care to not add it to any hashed collection before the identifier is generated. We therefore advise against including any database-generated field in the hashcode.
 
 It's OK to include any immutable, non-generated field in the hashcode.

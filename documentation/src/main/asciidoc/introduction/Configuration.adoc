@@ -117,27 +117,11 @@ and `com.github.ben-manes.caffeine:jcache`
 `com.fasterxml.jackson.core:jackson-databind` +
 or `org.eclipse:yasson`
 | <<spatial,Hibernate Spatial>> | `org.hibernate.orm:hibernate-spatial`
+| <<envers,Envers>>, for auditing historical data | `org.hibernate.orm:hibernate-envers`
 |===
 
 You might also add the Hibernate {enhancer}[bytecode enhancer] to your
 Gradle build if you want to use <<bytecode-enhancer,field-level lazy fetching>>.
-
-[[metamodel-generator]]
-.The Metamodel Generator
-****
-
-:generator-guide: {userGuideBase}#tooling-modelgen
-
-Hibernate's {generator}[Metamodel Generator] is an annotation processor that produces what JPA calls a _static metamodel_.
-That is, it produces a typed model of the persistent classes in our program, giving us a type-safe way to refer to their attributes in Java code.
-In particular, it lets us specify <<entity-graph,entity graphs>> and <<criteria-queries,criteria queries>> in a completely type-safe way.
-
-We've already seen how to set up the annotation processor in the <<hello-hibernate,gradle build>> we saw earlier.
-
-Now, you don't have to use the Metamodel Generator with Hibernate—the APIs we just mentioned also accept plain strings—but we find that it works well with gradle and integrates well with our IDE, and the advantage in typesafety is compelling.
-
-You can find more information in the {generator-guide}[User Guide].
-****
 
 [[configuration-jpa]]
 === Configuration using JPA XML
@@ -235,7 +219,7 @@ SessionFactory sessionFactory =
             .setProperty(AvailableSettings.JAKARTA_JDBC_PASSWORD, password)
             // Automatic schema export
             .setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
-                         Action.CREATE.getExternalJpaName())
+                         Action.SPEC_ACTION_DROP_AND_CREATE)
             // SQL statement logging
             .setProperty(AvailableSettings.SHOW_SQL, TRUE.toString())
             .setProperty(AvailableSettings.FORMAT_SQL, TRUE.toString())
@@ -256,6 +240,25 @@ Actually, the `Configuration` class is just a very simple facade for the more mo
 This API is useful if you have very advanced requirements, for example, if you're writing a framework or implementing a container.
 You'll find more information in the {native-bootstrap}[User Guide], and in the {boot}[package-level documentation] of `org.hibernate.boot`.
 ****
+
+[[configuration-properties]]
+=== Configuration using Hibernate properties file
+
+If we're using the Hibernate `Configuration` API, but we don't want to put certain configuration properties directly in the Java code, we can specify them in a file named `hibernate.properties`, and place the file in the root classpath.
+
+[source,properties]
+----
+# PostgreSQL
+jakarta.persistence.jdbc.url=jdbc:postgresql://localhost/example
+# Credentials
+jakarta.persistence.jdbc.user=hibernate
+jakarta.persistence.jdbc.password=zAh7mY$2MNshzAQ5
+
+# SQL statement logging
+hibernate.show_sql=true
+hibernate.format_sql=true
+hibernate.highlight_sql=true
+----
 
 [[basic-configuration-settings]]
 === Basic configuration settings

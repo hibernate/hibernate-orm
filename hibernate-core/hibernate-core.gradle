@@ -300,7 +300,7 @@ if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolch
         classpath = sourceSets.testJava17.runtimeClasspath
 
         if ( gradle.ext.javaVersions.test.launcher.asInt() >= 19 ) {
-            logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
+            logger.warn( "The version of Java bytecode that will be tested is not supported by Byte Buddy by default. " +
                                  " Setting 'net.bytebuddy.experimental=true'." )
             systemProperty 'net.bytebuddy.experimental', true
         }

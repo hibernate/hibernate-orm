@@ -48,7 +48,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -986,6 +985,11 @@ public class CockroachDialect extends Dialect {
 	public boolean supportsSkipLocked() {
 		// See https://www.cockroachlabs.com/docs/stable/select-for-update.html#wait-policies
 		return false;
+	}
+
+	@Override
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.TABLE_REFERENCE;
 	}
 
 	@Override

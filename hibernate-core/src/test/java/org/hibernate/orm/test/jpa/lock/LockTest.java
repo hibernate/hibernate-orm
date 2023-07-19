@@ -1167,7 +1167,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
-	@Test(timeout = 5 * 1000) //5 seconds
+	@Test(timeout = 70 * 1000) //70 seconds
 	@TestForIssue( jiraKey = "HHH-13135" )
 	@SkipForDialect(value = {
 			MySQLDialect.class,
@@ -1191,7 +1191,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals( "lock mode should be PESSIMISTIC_WRITE ", LockModeType.PESSIMISTIC_WRITE, _entityManager.getLockMode( lock2 ) );
 
 			doInJPA( this::entityManagerFactory, entityManager -> {
-				TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
+				TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ), 60 * 1000L ); // wait up to a minute
 				LockReference ref = new LockReference( 1, "name" );
 				ref.setLock( entityManager.getReference( Lock.class, lock.getId() ) );
 
@@ -1205,7 +1205,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		} );
 	}
 
-	@Test(timeout = 5 * 1000) //5 seconds
+	@Test(timeout = 70 * 1000) //70 seconds
 	@TestForIssue( jiraKey = "HHH-13135" )
 	@SkipForDialect(value = {
 			MySQLDialect.class,
@@ -1237,7 +1237,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			assertEquals( "lock mode should be PESSIMISTIC_WRITE ", LockModeType.PESSIMISTIC_WRITE, _entityManager.getLockMode( l2 ) );
 
 			doInJPA( this::entityManagerFactory, entityManager -> {
-				TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ) );
+				TransactionUtil.setJdbcTimeout( entityManager.unwrap( Session.class ), 60 * 1000L ); // wait up to a minute );
 				LockReference lockReference = entityManager.find( LockReference.class, ref.getId() );
 
 				// Check that we can update a LockReference, referring to a Lock that is PESSIMISTIC_WRITE locked

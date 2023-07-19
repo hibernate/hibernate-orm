@@ -22,6 +22,7 @@ import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.internal.NoBatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
@@ -52,7 +53,6 @@ import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
@@ -107,6 +107,21 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					null
 			);
 		}
+	}
+
+	//Used by Hibernate Reactive to efficiently create new instances of this same class
+	protected UpdateCoordinatorStandard(
+			AbstractEntityPersister entityPersister,
+			SessionFactoryImplementor factory,
+			MutationOperationGroup staticUpdateGroup,
+			BatchKey batchKey,
+			MutationOperationGroup versionUpdateGroup,
+			BatchKey versionUpdateBatchkey) {
+		super( entityPersister, factory );
+		this.staticUpdateGroup = staticUpdateGroup;
+		this.batchKey = batchKey;
+		this.versionUpdateGroup = versionUpdateGroup;
+		this.versionUpdateBatchkey = versionUpdateBatchkey;
 	}
 
 	@Override
@@ -760,7 +775,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		final JdbcValueBindings jdbcValueBindings = mutationExecutor.getJdbcValueBindings();
 
 		// apply values
-		jdbcOperationGroup.forEachOperation( (position, operation) -> {
+		for ( int position = 0; position < jdbcOperationGroup.getNumberOfOperations(); position++ ) {
+			final MutationOperation operation = jdbcOperationGroup.getOperation( position );
 			final EntityTableMapping tableMapping = (EntityTableMapping) operation.getTableDetails();
 			if ( valuesAnalysis.tablesNeedingUpdate.contains( tableMapping ) ) {
 				final int[] attributeIndexes = tableMapping.getAttributeIndexes();
@@ -776,13 +792,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					);
 				}
 			}
-		} );
+		}
 
 		// apply keys
-		jdbcOperationGroup.forEachOperation( (position, operation) -> {
+		for ( int position = 0; position < jdbcOperationGroup.getNumberOfOperations(); position++ ) {
+			final MutationOperation operation = jdbcOperationGroup.getOperation( position );
 			final EntityTableMapping tableMapping = (EntityTableMapping) operation.getTableDetails();
 			breakDownKeyJdbcValues( id, rowId, session, jdbcValueBindings, tableMapping );
-		} );
+		}
 	}
 
 	private void decomposeAttributeForUpdate(
@@ -975,16 +992,12 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private MutationExecutor executor(SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
-		return session.getSessionFactory()
-				.getFastSessionServices()
-				.getMutationExecutorService()
+		return mutationExecutorService
 				.createExecutor( resolveBatchKeyAccess( dynamicUpdate, session ), group, session );
 	}
 
 	private MutationExecutor updateVersionExecutor(SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
-		return session.getSessionFactory()
-				.getFastSessionServices()
-				.getMutationExecutorService()
+		return mutationExecutorService
 				.createExecutor( resolveUpdateVersionBatchKeyAccess( dynamicUpdate, session ), group, session );
 	}
 
@@ -998,7 +1011,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		return NoBatchKeyAccess.INSTANCE;
 	}
 
-	private BatchKey getVersionUpdateBatchkey(){
+	//Used by Hibernate Reactive
+	protected BatchKey getVersionUpdateBatchkey(){
 		return versionUpdateBatchkey;
 	}
 
@@ -1077,6 +1091,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 				if ( attributeAnalysis.includeInLocking() ) {
 					final boolean includeRestriction = includeInRestriction(
+							oldValues,
 							dirtinessChecker,
 							versionMapping,
 							versionability,
@@ -1156,6 +1171,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	private static boolean includeInRestriction(
+			Object[] oldValues,
 			DirtinessChecker dirtinessChecker,
 			EntityVersionMapping versionMapping,
 			boolean[] versionability,
@@ -1163,10 +1179,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			int attributeIndex,
 			AttributeMapping attributeMapping,
 			AttributeAnalysis attributeAnalysis) {
+
 		if ( optimisticLockStyle == OptimisticLockStyle.VERSION
 				&& versionMapping != null
 				&& attributeMapping == versionMapping.getVersionAttribute() ) {
 			return true;
+		}
+		else if ( oldValues == null ) {
+			return false;
 		}
 		else if ( optimisticLockStyle == OptimisticLockStyle.ALL ) {
 			return versionability[attributeIndex];
@@ -1222,10 +1242,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		private final int[] dirtyAttributeIndexes;
 		private final InclusionChecker dirtinessChecker;
 
-		private final Set<EntityTableMapping> tablesNeedingUpdate = new HashSet<>();
-		private final Set<EntityTableMapping> tablesNeedingDynamicUpdate = new HashSet<>();
-		private final Set<EntityTableMapping> tablesWithNonNullValues = new HashSet<>();
-		private final Set<EntityTableMapping> tablesWithPreviousNonNullValues = new HashSet<>();
+		private final TableSet tablesNeedingUpdate = new TableSet();
+		private final TableSet tablesNeedingDynamicUpdate = new TableSet();
+		private final TableSet tablesWithNonNullValues = new TableSet();
+		private final TableSet tablesWithPreviousNonNullValues = new TableSet();
 
 		private final List<AttributeAnalysis> attributeAnalyses = new ArrayList<>();
 
@@ -1296,17 +1316,17 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 
 		@Override
-		public Set<EntityTableMapping> getTablesNeedingUpdate() {
+		public TableSet getTablesNeedingUpdate() {
 			return tablesNeedingUpdate;
 		}
 
 		@Override
-		public Set<EntityTableMapping> getTablesWithNonNullValues() {
+		public TableSet getTablesWithNonNullValues() {
 			return tablesWithNonNullValues;
 		}
 
 		@Override
-		public Set<EntityTableMapping> getTablesWithPreviousNonNullValues() {
+		public TableSet getTablesWithPreviousNonNullValues() {
 			return tablesWithPreviousNonNullValues;
 		}
 
@@ -1599,14 +1619,15 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			return null;
 		}
 		else {
+			final EntityTableMapping identifierTableMapping = entityPersister().getIdentifierTableMapping();
 			final AbstractTableUpdateBuilder<JdbcMutationOperation> updateBuilder =
-					newTableUpdateBuilder( entityPersister().getIdentifierTableMapping() );
+					newTableUpdateBuilder( identifierTableMapping );
 
 			updateBuilder.setSqlComment( "forced version increment for " + entityPersister().getRolePath() );
 
 			updateBuilder.addValueColumn( versionMapping );
 
-			updateBuilder.addKeyRestrictionsLeniently( entityPersister().getIdentifierMapping() );
+			updateBuilder.addKeyRestrictionsLeniently( identifierTableMapping.getKeyMapping() );
 
 			updateBuilder.addOptimisticLockRestriction( versionMapping );
 			addPartitionRestriction( updateBuilder );
@@ -1619,7 +1640,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					.buildModelMutationTranslator( updateBuilder.buildMutation(), factory() )
 					.translate( null, MutationQueryOptions.INSTANCE );
 
-			return new MutationOperationGroupSingle( MutationType.UPDATE, entityPersister(), jdbcMutation );
+			return MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, entityPersister(), jdbcMutation );
 		}
 	}
 

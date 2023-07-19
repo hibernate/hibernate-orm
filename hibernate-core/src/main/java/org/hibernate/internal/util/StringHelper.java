@@ -76,17 +76,17 @@ public final class StringHelper {
 		return buf.toString();
 	}
 
-	public static String join(String separator, Iterable objects) {
+	public static String join(String separator, Iterable<?> objects) {
 		return join( separator, objects.iterator() );
 	}
 
-	public static String join(String seperator, Iterator<?> objects) {
+	public static String join(String separator, Iterator<?> objects) {
 		StringBuilder buf = new StringBuilder();
 		if ( objects.hasNext() ) {
 			buf.append( objects.next() );
 		}
 		while ( objects.hasNext() ) {
-			buf.append( seperator ).append( objects.next() );
+			buf.append( separator ).append( objects.next() );
 		}
 		return buf.toString();
 	}
@@ -395,7 +395,7 @@ public final class StringHelper {
 	public static String collapseQualifier(String qualifier, boolean includeDots) {
 		StringTokenizer tokenizer = new StringTokenizer( qualifier, "." );
 		StringBuilder sb = new StringBuilder();
-		sb.append( Character.toString( tokenizer.nextToken().charAt( 0 ) ) );
+		sb.append( tokenizer.nextToken().charAt( 0 ) );
 		while ( tokenizer.hasMoreTokens() ) {
 			if ( includeDots ) {
 				sb.append( '.' );

@@ -15,12 +15,12 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessBuildingException;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
-import org.hibernate.property.access.spi.SetterMethodImpl;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import jakarta.persistence.AccessType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.util.ReflectHelper.findSetterMethod;
 import static org.hibernate.internal.util.ReflectHelper.getterMethodOrNull;
@@ -43,7 +43,7 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 			PropertyAccessStrategy strategy,
 			Class<?> containerJavaType,
 			String propertyName,
-			AccessType getterAccessType) {
+			@Nullable AccessType getterAccessType) {
 		this.strategy = strategy;
 
 		final AccessType propertyAccessType = resolveAccessType( getterAccessType, containerJavaType, propertyName );
@@ -81,15 +81,12 @@ public class PropertyAccessEnhancedImpl implements PropertyAccess {
 		}
 	}
 
-	private AccessType resolveAccessType(AccessType getterAccessType, Class<?> containerJavaType, String propertyName) {
+	private static AccessType resolveAccessType(@Nullable AccessType getterAccessType, Class<?> containerJavaType, String propertyName) {
 		if ( getterAccessType != null ) {
 			// this should indicate FIELD access
 			return getterAccessType;
 		}
-
-		// prefer using the field for getting if we can
-		final Field field = AccessStrategyHelper.fieldOrNull( containerJavaType, propertyName );
-		return field != null ? AccessType.FIELD : AccessType.PROPERTY;
+		return AccessStrategyHelper.getAccessType( containerJavaType, propertyName );
 	}
 
 	@Override

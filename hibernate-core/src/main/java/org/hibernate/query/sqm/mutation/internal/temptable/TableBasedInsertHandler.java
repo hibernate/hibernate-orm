@@ -255,7 +255,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 				final Optimizer optimizer = ( (OptimizableGenerator) generator ).getOptimizer();
 				if ( optimizer != null && optimizer.getIncrementSize() > 1 ) {
 					final TemporaryTableColumn rowNumberColumn = entityTable.getColumns()
-							.get( entityTable.getColumns().size() - 1 );
+							.get( entityTable.getColumns().size() - ( sessionUidColumn == null ? 1 : 2 ) );
 					rowNumberType = (BasicType<?>) rowNumberColumn.getJdbcMapping();
 					final ColumnReference columnReference = new ColumnReference(
 							(String) null,
@@ -293,7 +293,8 @@ public class TableBasedInsertHandler implements InsertHandler {
 				if ( rowNumberType != null ) {
 					values.getExpressions().add(
 							new QueryLiteral<>(
-									i + 1,
+									rowNumberType.getJavaTypeDescriptor()
+											.wrap( i + 1, sessionFactory.getWrapperOptions() ),
 									rowNumberType
 							)
 					);

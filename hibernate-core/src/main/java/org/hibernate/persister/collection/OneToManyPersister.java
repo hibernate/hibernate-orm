@@ -20,6 +20,7 @@ import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -74,7 +75,6 @@ import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableUpdate;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
@@ -106,6 +106,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	private final boolean cascadeDeleteEnabled;
 	private final boolean keyIsNullable;
 	private final boolean keyIsUpdateable;
+	private final MutationExecutorService mutationExecutorService;
 
 	@Deprecated(since = "6.0")
 	public OneToManyPersister(
@@ -131,6 +132,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		this.updateRowsCoordinator = buildUpdateCoordinator();
 		this.deleteRowsCoordinator = buildDeleteCoordinator();
 		this.removeCoordinator = buildDeleteAllCoordinator();
+		this.mutationExecutorService = creationContext.getServiceRegistry().getService(	MutationExecutorService.class );
 	}
 
 	@Override
@@ -225,12 +227,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		final RowMutationOperations.Restrictions updateRowRestrictions = rowMutationOperations.getUpdateRowRestrictions();
 		assert NullnessHelper.areAllNonNull( updateRowOperation, updateRowValues, updateRowRestrictions );
 
-		final MutationExecutorService mutationExecutorService = getFactory()
-				.getFastSessionServices()
-				.getMutationExecutorService();
 		final MutationExecutor mutationExecutor = mutationExecutorService.createExecutor(
 				() -> new BasicBatchKey( getNavigableRole() + "#INDEX" ),
-				new MutationOperationGroupSingle( MutationType.UPDATE, this, updateRowOperation ),
+				MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, this, updateRowOperation ),
 				session
 		);
 
@@ -453,9 +452,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 		if ( getElementPersisterInternal() != null && getElementPersisterInternal().hasSubclasses()
 				&& getElementPersisterInternal() instanceof UnionSubclassEntityPersister ) {
-			return new InsertRowsCoordinatorTablePerSubclass( this, rowMutationOperations );
+			return new InsertRowsCoordinatorTablePerSubclass( this, rowMutationOperations, getFactory().getServiceRegistry() );
 		}
-		return new InsertRowsCoordinatorStandard( this, rowMutationOperations );
+		return new InsertRowsCoordinatorStandard( this, rowMutationOperations, getFactory().getServiceRegistry() );
 	}
 
 	private UpdateRowsCoordinator buildUpdateCoordinator() {
@@ -490,13 +489,14 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 		if ( getElementPersisterInternal() != null && getElementPersisterInternal().hasSubclasses()
 				&& getElementPersisterInternal() instanceof UnionSubclassEntityPersister ) {
-			return new DeleteRowsCoordinatorTablePerSubclass( this, rowMutationOperations, false );
+			return new DeleteRowsCoordinatorTablePerSubclass( this, rowMutationOperations, false, getFactory().getServiceRegistry() );
 		}
 		return new DeleteRowsCoordinatorStandard(
 				this,
 				rowMutationOperations,
 				// never delete by index for one-to-many
-				false
+				false,
+				getFactory().getServiceRegistry()
 		);
 	}
 
@@ -513,9 +513,9 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 		if ( getElementPersisterInternal() != null && getElementPersisterInternal().hasSubclasses()
 				&& getElementPersisterInternal() instanceof UnionSubclassEntityPersister ) {
-			return new RemoveCoordinatorTablePerSubclass( this, this::buildDeleteAllOperation );
+			return new RemoveCoordinatorTablePerSubclass( this, this::buildDeleteAllOperation, getFactory().getServiceRegistry() );
 		}
-		return new RemoveCoordinatorStandard( this, this::buildDeleteAllOperation );
+		return new RemoveCoordinatorStandard( this, this::buildDeleteAllOperation, getFactory().getServiceRegistry() );
 	}
 
 	private JdbcMutationOperation generateDeleteRowOperation(MutatingTableReference tableReference) {

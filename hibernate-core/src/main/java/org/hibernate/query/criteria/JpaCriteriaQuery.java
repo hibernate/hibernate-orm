@@ -13,6 +13,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.metamodel.EntityType;
 
@@ -48,6 +49,11 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Accessors
+
+	/**
+	 * Return the {@linkplain #getRoots() roots} as a list.
+	 */
+	List<Root<?>> getRootList();
 
 	@Override
 	@SuppressWarnings("unchecked")

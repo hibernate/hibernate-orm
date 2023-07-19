@@ -99,7 +99,7 @@ public class SequenceStructure implements DatabaseStructure {
 				try {
 					final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 					try {
-						final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
+						final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st, sql );
 						try {
 							rs.next();
 							final IntegralDataTypeHolder value = IdentifierGeneratorHelper.getIntegralDataTypeHolder( numberType );

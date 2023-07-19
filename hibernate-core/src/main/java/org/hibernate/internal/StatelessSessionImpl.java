@@ -8,6 +8,7 @@ package org.hibernate.internal;
 
 import java.util.Set;
 
+import jakarta.persistence.EntityGraph;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -21,6 +22,7 @@ import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
+import org.hibernate.engine.spi.EffectiveEntityGraph;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -28,6 +30,9 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.graph.GraphSemantic;
+import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
@@ -63,24 +68,15 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 public class StatelessSessionImpl extends AbstractSharedSessionContract implements StatelessSession {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( StatelessSessionImpl.class );
 
-	private static final LoadQueryInfluencers NO_INFLUENCERS = new LoadQueryInfluencers() {
-		@Override @Deprecated
-		public String getInternalFetchProfile() {
-			return null;
-		}
-
-		@Override @Deprecated
-		public void setInternalFetchProfile(String internalFetchProfile) {
-		}
-	};
-
-	private final PersistenceContext temporaryPersistenceContext = new StatefulPersistenceContext( this );
-
+	private final LoadQueryInfluencers influencers;
+	private final PersistenceContext temporaryPersistenceContext;
 	private final boolean connectionProvided;
 
 	public StatelessSessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 		connectionProvided = options.getConnection() != null;
+		temporaryPersistenceContext = new StatefulPersistenceContext( this );
+		influencers = new LoadQueryInfluencers( getFactory() );
 	}
 
 	@Override
@@ -238,6 +234,30 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		return result;
 	}
 
+	@Override
+	public <T> T get(EntityGraph<T> graph, GraphSemantic graphSemantic, Object id) {
+		return get( graph, graphSemantic, id, LockMode.NONE );
+	}
+
+	@Override @SuppressWarnings("unchecked")
+	public  <T> T get(
+			EntityGraph<T> graph, GraphSemantic graphSemantic,
+			Object id, LockMode lockMode) {
+		final RootGraphImplementor<T> rootGraph = (RootGraphImplementor<T>) graph;
+		checkOpen();
+
+		final EffectiveEntityGraph effectiveEntityGraph =
+				getLoadQueryInfluencers().getEffectiveEntityGraph();
+		effectiveEntityGraph.applyGraph( rootGraph, graphSemantic );
+
+		try {
+			return (T) get( rootGraph.getGraphedType().getTypeName(), id, lockMode );
+		}
+		finally {
+			effectiveEntityGraph.clear();
+		}
+	}
+
 	private EntityPersister getEntityPersister(String entityName) {
 		return getFactory().getMappingMetamodel().getEntityDescriptor( entityName );
 	}
@@ -278,15 +298,10 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 		}
 
-		final String previousFetchProfile = getLoadQueryInfluencers().getInternalFetchProfile();
-		Object result;
-		try {
-			getLoadQueryInfluencers().setInternalFetchProfile( "refresh" );
-			result = persister.load( id, entity, getNullSafeLockMode( lockMode ), this );
-		}
-		finally {
-			getLoadQueryInfluencers().setInternalFetchProfile( previousFetchProfile );
-		}
+		final Object result = getLoadQueryInfluencers().fromInternalFetchProfile(
+				CascadingFetchProfile.REFRESH,
+				() -> persister.load( id, entity, getNullSafeLockMode( lockMode ), this )
+		);
 		UnresolvableObjectException.throwIfNull( result, id, persister.getEntityName() );
 		if ( temporaryPersistenceContext.isLoadFinished() ) {
 			temporaryPersistenceContext.clear();
@@ -619,7 +634,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 	@Override
 	public LoadQueryInfluencers getLoadQueryInfluencers() {
-		return NO_INFLUENCERS;
+		return influencers;
 	}
 
 	@Override

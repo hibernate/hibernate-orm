@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @DomainModel(annotatedClasses = CustomSqlOverrideTest.Custom.class)
 @RequiresDialect(H2Dialect.class)
 @RequiresDialect(MySQLDialect.class)
-@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 13)
 @RequiresDialect(SQLServerDialect.class)
 public class CustomSqlOverrideTest {
     @Test

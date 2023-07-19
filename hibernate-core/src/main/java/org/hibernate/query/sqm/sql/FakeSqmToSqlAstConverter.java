@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.sqm.spi.BaseSemanticQueryWalker;
-import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
@@ -89,11 +88,6 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 
 	@Override
 	public SqmQueryPart<?> getCurrentSqmQueryPart() {
-		return null;
-	}
-
-	@Override
-	public SqmStatement<?> getCurrentSqmStatement() {
 		return null;
 	}
 

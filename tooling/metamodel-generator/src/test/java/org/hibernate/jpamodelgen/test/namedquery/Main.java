@@ -9,8 +9,8 @@ import jakarta.persistence.SqlResultSetMappings;
 import org.hibernate.annotations.FetchProfile;
 import org.hibernate.annotations.FetchProfiles;
 
-@NamedQueries(@NamedQuery(name = "bookByIsbn", query = "from Book where isbn = :isbn"))
-@NamedQuery(name = "bookByTitle", query = "from Book where title = :title")
+@NamedQueries(@NamedQuery(name = "#bookByIsbn", query = "from Book where isbn = :isbn"))
+@NamedQuery(name = "#bookByTitle", query = "from Book where title = :title")
 @FetchProfile(name = "dummy-fetch")
 @FetchProfiles({@FetchProfile(name = "fetch.one"), @FetchProfile(name = "fetch#two")})
 @NamedNativeQuery(name = "bookNativeQuery", query = "select * from Book")

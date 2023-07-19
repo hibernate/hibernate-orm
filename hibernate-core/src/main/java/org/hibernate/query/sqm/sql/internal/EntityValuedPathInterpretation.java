@@ -11,6 +11,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.FunctionalDependencyAnalysisSupport;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
@@ -23,6 +25,7 @@ import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 import org.hibernate.query.derived.AnonymousTupleEntityValuedModelPart;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
@@ -49,6 +52,7 @@ import org.hibernate.sql.results.graph.Fetchable;
 
 public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T>
 		implements SqlTupleContainer, Assignable {
+	private final Expression sqlExpression;
 
 	public static <T> EntityValuedPathInterpretation<T> from(
 			SqmEntityValuedSimplePath<T> sqmPath,
@@ -266,7 +270,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			}
 			else {
 				// When the table group is selected and the navigablePath is selected we need to expand
-				// to all columns, as we also expand this to all columns in the select clause
+				// to all columns, as we must make sure we include all columns present in the select clause
 				expandToAllColumns = isSelected( tableGroup, navigablePath, querySpec );
 			}
 		}
@@ -277,33 +281,38 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		final SqlExpressionResolver sqlExprResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final Expression sqlExpression;
 		if ( expandToAllColumns ) {
-			// Expand to all columns of the entity mapping type, as we already did for the selection
+			// Expand to all columns of the entity mapping type to ensure a correct group / order by expression,
+			// or use only the primary key if the dialect supports functional dependency
+			final Dialect dialect = sqlAstCreationState.getCreationContext()
+					.getSessionFactory()
+					.getJdbcServices()
+					.getDialect();
 			final EntityMappingType entityMappingType = mapping.getEntityMappingType();
 			final EntityIdentifierMapping identifierMapping = entityMappingType.getIdentifierMapping();
-			final EntityDiscriminatorMapping discriminatorMapping = entityMappingType.getDiscriminatorMapping();
-			final int numberOfFetchables = entityMappingType.getNumberOfFetchables();
-			final List<Expression> expressions = new ArrayList<>(
-					numberOfFetchables + identifierMapping.getJdbcTypeCount()
-							+ ( discriminatorMapping == null ? 0 : 1 )
-			);
-			final TableGroup parentTableGroup = tableGroup;
+			final List<Expression> expressions = new ArrayList<>( identifierMapping.getJdbcTypeCount() );
 			final SelectableConsumer selectableConsumer = (selectionIndex, selectableMapping) -> {
-				final TableReference tableReference = parentTableGroup.resolveTableReference(
+				final TableReference tableReference = tableGroup.resolveTableReference(
 						navigablePath,
 						selectableMapping.getContainingTableExpression()
 				);
-				expressions.add(
-						sqlExprResolver.resolveSqlExpression( tableReference, selectableMapping )
-				);
+				expressions.add( sqlExprResolver.resolveSqlExpression( tableReference, selectableMapping ) );
 			};
 			identifierMapping.forEachSelectable( selectableConsumer );
-			if ( discriminatorMapping != null ) {
-				discriminatorMapping.forEachSelectable( selectableConsumer );
-			}
-			for ( int i = 0; i < numberOfFetchables; i++ ) {
-				final Fetchable fetchable = entityMappingType.getFetchable( i );
-				if ( fetchable.isSelectable() ) {
-					fetchable.forEachSelectable( selectableConsumer );
+			if ( !supportsFunctionalDependency( dialect, entityMappingType ) ) {
+				final EntityDiscriminatorMapping discriminatorMapping = entityMappingType.getDiscriminatorMapping();
+				if ( discriminatorMapping != null ) {
+					expressions.add( discriminatorMapping.resolveSqlExpression(
+							navigablePath,
+							discriminatorMapping.getUnderlyingJdbcMapping(),
+							tableGroup,
+							sqlAstCreationState
+					) );
+				}
+				for ( int i = 0; i < entityMappingType.getNumberOfFetchables(); i++ ) {
+					final Fetchable fetchable = entityMappingType.getFetchable( i );
+					if ( fetchable.isSelectable() ) {
+						fetchable.forEachSelectable( selectableConsumer );
+					}
 				}
 			}
 			sqlExpression = new SqlTuple( expressions, entityMappingType );
@@ -373,7 +382,21 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 		return false;
 	}
 
-	private final Expression sqlExpression;
+	private static boolean supportsFunctionalDependency(Dialect dialect, EntityMappingType entityMappingType) {
+		final FunctionalDependencyAnalysisSupport analysisSupport = dialect.getFunctionalDependencyAnalysisSupport();
+		if ( analysisSupport.supportsAnalysis() ) {
+			if ( entityMappingType.getSqmMultiTableMutationStrategy() == null ) {
+				return true;
+			}
+			else {
+				return analysisSupport.supportsTableGroups() && ( analysisSupport.supportsConstants() ||
+						// Union entity persisters use a literal 'clazz_' column as a discriminator
+						// that breaks functional dependency for dialects that don't support constants
+						!( entityMappingType.getEntityPersister() instanceof UnionSubclassEntityPersister ) );
+			}
+		}
+		return false;
+	}
 
 	public EntityValuedPathInterpretation(
 			Expression sqlExpression,

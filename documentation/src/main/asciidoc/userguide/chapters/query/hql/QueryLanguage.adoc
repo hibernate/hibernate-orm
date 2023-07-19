@@ -1226,6 +1226,27 @@ include::{example-dir-hql}/HQLTest.java[tags=hql-null-predicate-example]
 ----
 ====
 
+[[boolean-predicate]]
+==== Operators for dealing with boolean values
+
+These operators perform comparisons on values of type `boolean`.
+These predicates never evaluate to `null`.
+
+[NOTE]
+====
+The values `true` and `false` of the `boolean` basic type are different to the logical `true` or `false` produced by a predicate.
+====
+
+For _logical_ operations on <<conditional-expressions,predicates>>, see <<logical-operators>> below.
+
+[cols="20,20,15,~"]
+|===
+| Operator | Negation | Type | Semantics
+
+| `is true` | `is not true` | Unary postfix | `true` if the value to the left is `true`, or `false` otherwise
+| `is false` | `is not false` | Binary | `true` if the value to the left is `false`, or `false` otherwise
+|===
+
 [[hql-like-predicate]]
 ==== String pattern matching
 

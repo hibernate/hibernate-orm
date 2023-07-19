@@ -12,7 +12,6 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.function.CastingConcatFunction;
 import org.hibernate.dialect.function.TransactSQLStrFunction;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
-import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
 import org.hibernate.dialect.identity.AbstractTransactSQLIdentityColumnSupport;

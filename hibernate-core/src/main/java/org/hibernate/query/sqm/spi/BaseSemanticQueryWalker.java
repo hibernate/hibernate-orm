@@ -93,6 +93,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNegatedPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmJpaCompoundSelection;
@@ -421,7 +422,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitWhereClause(SqmWhereClause whereClause) {
-		if ( whereClause == null ) {
+		if ( whereClause == null || whereClause.getPredicate() == null ) {
 			return null;
 		}
 
@@ -458,6 +459,12 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitIsNullPredicate(SqmNullnessPredicate predicate) {
+		predicate.getExpression().accept( this );
+		return predicate;
+	}
+
+	@Override
+	public Object visitIsTruePredicate(SqmTruthnessPredicate predicate) {
 		predicate.getExpression().accept( this );
 		return predicate;
 	}

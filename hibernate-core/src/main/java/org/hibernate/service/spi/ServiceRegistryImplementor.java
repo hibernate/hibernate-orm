@@ -9,6 +9,8 @@ package org.hibernate.service.spi;
 import org.hibernate.service.Service;
 import org.hibernate.service.ServiceRegistry;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Additional integration contracts for a service registry.
  *
@@ -23,7 +25,7 @@ public interface ServiceRegistryImplementor extends ServiceRegistry {
 	 *
 	 * @return The located binding; may be {@code null}
 	 */
-	<R extends Service> ServiceBinding<R> locateServiceBinding(Class<R> serviceRole);
+	<R extends Service> @Nullable ServiceBinding<R> locateServiceBinding(Class<R> serviceRole);
 
 	@Override
 	default void close() {
@@ -47,5 +49,5 @@ public interface ServiceRegistryImplementor extends ServiceRegistry {
 	 */
 	void deRegisterChild(ServiceRegistryImplementor child);
 
-	<T extends Service> T fromRegistryOrChildren(Class<T> serviceRole);
+	<T extends Service> @Nullable T fromRegistryOrChildren(Class<T> serviceRole);
 }

@@ -32,6 +32,11 @@ public class MapLazyInitializer extends AbstractLazyInitializer implements Seria
 		throw new UnsupportedOperationException("dynamic-map entity representation");
 	}
 
+	@Override
+	public Class<?> getImplementationClass() {
+		throw new UnsupportedOperationException("dynamic-map entity representation");
+	}
+
 	// Expose the following methods to MapProxy by overriding them (so that classes in this package see them)
 
 	@Override

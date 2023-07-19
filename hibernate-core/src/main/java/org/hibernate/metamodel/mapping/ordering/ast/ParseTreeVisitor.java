@@ -12,8 +12,8 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.internal.util.QuotingHelper;
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortDirection;
 import org.hibernate.grammars.ordering.OrderingParser;
 import org.hibernate.grammars.ordering.OrderingParserBaseVisitor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -94,10 +94,10 @@ public class ParseTreeVisitor extends OrderingParserBaseVisitor<Object> {
 			if ( parseTree instanceof OrderingParser.DirectionContext ) {
 				final OrderingParser.DirectionContext directionCtx = (OrderingParser.DirectionContext) parseTree;
 				if ( ( (TerminalNode) directionCtx.getChild( 0 ) ).getSymbol().getType() == OrderingParser.ASC ) {
-					result.setSortOrder( SortOrder.ASCENDING );
+					result.setSortOrder( SortDirection.ASCENDING );
 				}
 				else {
-					result.setSortOrder( SortOrder.DESCENDING );
+					result.setSortOrder( SortDirection.DESCENDING );
 				}
 				i++;
 			}

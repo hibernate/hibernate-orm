@@ -34,6 +34,7 @@ import org.hibernate.query.sqm.tree.predicate.SqmInSubQueryPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmLikePredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmMemberOfPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 /**
@@ -257,6 +258,12 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	@Override
 	public Object visitIsNullPredicate(SqmNullnessPredicate predicate) {
 		withTypeInference( null, () -> super.visitIsNullPredicate( predicate ) );
+		return predicate;
+	}
+
+	@Override
+	public Object visitIsTruePredicate(SqmTruthnessPredicate predicate) {
+		withTypeInference( null, () -> super.visitIsTruePredicate( predicate ) );
 		return predicate;
 	}
 

@@ -265,24 +265,19 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	public <T> List<RootGraphImplementor<? super T>> findEntityGraphsByJavaType(Class<T> entityClass) {
 		final EntityDomainType<T> entityType = entity( entityClass );
 		if ( entityType == null ) {
-			throw new IllegalArgumentException( "Given class is not an entity : " + entityClass.getName() );
+			throw new IllegalArgumentException( "Given class is not an entity: " + entityClass.getName() );
 		}
-
-		final List<RootGraphImplementor<? super T>> results = new ArrayList<>();
-
-		for ( EntityGraph<?> entityGraph : entityGraphMap.values() ) {
-			if ( !( entityGraph instanceof RootGraphImplementor ) ) {
-				continue;
+		else {
+			final List<RootGraphImplementor<? super T>> results = new ArrayList<>();
+			for ( RootGraphImplementor<?> entityGraph : entityGraphMap.values() ) {
+				if ( entityGraph.appliesTo( entityType ) ) {
+					@SuppressWarnings("unchecked")
+					final RootGraphImplementor<? super T> result = (RootGraphImplementor<? super T>) entityGraph;
+					results.add( result );
+				}
 			}
-
-			//noinspection unchecked
-			final RootGraphImplementor<T> egi = (RootGraphImplementor<T>) entityGraph;
-			if ( egi.appliesTo( entityType ) ) {
-				results.add( egi );
-			}
+			return results;
 		}
-
-		return results;
 	}
 
 	@Override
@@ -351,11 +346,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 				);
 			}
 
-			final RootGraphImpl<Object> entityGraph = new RootGraphImpl<>(
-					definition.getRegisteredName(),
-					entityType,
-					this
-			);
+			final RootGraphImpl<Object> entityGraph = new RootGraphImpl<>( definition.getRegisteredName(), entityType );
 
 			final NamedEntityGraph namedEntityGraph = definition.getAnnotation();
 
@@ -451,7 +442,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			}
 
 			// create a set of descriptors that should be used to build the polymorphic EntityDomainType
-			final Set<EntityDomainType<?>> matchingDescriptors = new HashSet<>();
+			final Set<EntityDomainType<? extends T>> matchingDescriptors = new HashSet<>();
 			for ( EntityDomainType<?> entityDomainType : jpaEntityTypeMap.values() ) {
 				// see if we should add `entityDomainType` as one of the matching-descriptors.
 				if ( javaType.isAssignableFrom( entityDomainType.getJavaType() ) ) {
@@ -481,7 +472,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 					}
 
 					// aside from these special cases, add it
-					matchingDescriptors.add( entityDomainType );
+					matchingDescriptors.add( (EntityDomainType<? extends T>) entityDomainType );
 				}
 			}
 

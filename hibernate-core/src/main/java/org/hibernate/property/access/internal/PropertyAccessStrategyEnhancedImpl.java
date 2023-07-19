@@ -6,11 +6,11 @@
  */
 package org.hibernate.property.access.internal;
 
-import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 
 import jakarta.persistence.AccessType;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Defines a strategy for accessing property values via a get/set pair, which may be nonpublic.  This
@@ -27,12 +27,12 @@ public class PropertyAccessStrategyEnhancedImpl implements PropertyAccessStrateg
 		return STANDARD;
 	}
 
-	private final AccessType getterAccessType;
+	private final @Nullable AccessType getterAccessType;
 
 	public static PropertyAccessStrategyEnhancedImpl STANDARD = new PropertyAccessStrategyEnhancedImpl( null );
 	public static PropertyAccessStrategyEnhancedImpl FIELD = new PropertyAccessStrategyEnhancedImpl( AccessType.FIELD );
 
-	public PropertyAccessStrategyEnhancedImpl(AccessType getterAccessType) {
+	public PropertyAccessStrategyEnhancedImpl(@Nullable AccessType getterAccessType) {
 		this.getterAccessType = getterAccessType;
 	}
 

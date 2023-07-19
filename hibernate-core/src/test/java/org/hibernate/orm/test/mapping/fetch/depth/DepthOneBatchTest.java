@@ -92,7 +92,7 @@ public class DepthOneBatchTest {
 							"select a1_0.agency_id,a1_0.agency_txt from agency_table a1_0 where a1_0.agency_id=?"
 					);
 					assertThat( executedQueries.get( 1 ).toLowerCase() ).isEqualTo(
-							"select a1_0.agency_id,a1_0.agency_detail from agency_detail_table a1_0 where a1_0.agency_id=?"
+							"select ad1_0.agency_id,ad1_0.agency_detail from agency_detail_table ad1_0 where ad1_0.agency_id=?"
 					);
 
 					assertThat( executedQueries.get( 2 ).toLowerCase() ).isEqualTo(

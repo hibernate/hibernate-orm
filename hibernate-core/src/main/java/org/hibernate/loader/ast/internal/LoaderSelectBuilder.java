@@ -130,7 +130,7 @@ public class LoaderSelectBuilder {
 				1,
 				loadQueryInfluencers,
 				lockOptions,
-				determineGraphTraversalState( loadQueryInfluencers ),
+				determineGraphTraversalState( loadQueryInfluencers, sessionFactory ),
 				true,
 				jdbcParameterConsumer
 		);
@@ -157,7 +157,7 @@ public class LoaderSelectBuilder {
 				-1,
 				influencers,
 				lockOptions,
-				determineGraphTraversalState( influencers ),
+				determineGraphTraversalState( influencers, sessionFactory ),
 				true,
 				null
 		);
@@ -282,6 +282,36 @@ public class LoaderSelectBuilder {
 		return process.generateSelect();
 	}
 
+	// TODO: this method is probably unnecessary if we make
+	// determineWhetherToForceIdSelection() a bit smarter
+	static SelectStatement createSelect(
+			Loadable loadable,
+			List<ModelPart> partsToSelect,
+			boolean forceIdentifierSelection,
+			List<ModelPart> restrictedParts,
+			DomainResult<?> cachedDomainResult,
+			int numberOfKeysToLoad,
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions,
+			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SessionFactoryImplementor sessionFactory) {
+		final LoaderSelectBuilder process = new LoaderSelectBuilder(
+				sessionFactory,
+				loadable,
+				partsToSelect,
+				restrictedParts,
+				cachedDomainResult,
+				numberOfKeysToLoad,
+				loadQueryInfluencers,
+				lockOptions,
+				determineGraphTraversalState( loadQueryInfluencers, sessionFactory ),
+				forceIdentifierSelection,
+				jdbcParameterConsumer
+		);
+
+		return process.generateSelect();
+	}
+
 	/**
 	 * Create an SQL AST select-statement used for subselect-based CollectionLoader
 	 *
@@ -385,7 +415,7 @@ public class LoaderSelectBuilder {
 				numberOfKeysToLoad,
 				loadQueryInfluencers,
 				lockOptions != null ? lockOptions : LockOptions.NONE,
-				determineGraphTraversalState( loadQueryInfluencers ),
+				determineGraphTraversalState( loadQueryInfluencers, creationContext.getSessionFactory() ),
 				determineWhetherToForceIdSelection( numberOfKeysToLoad, restrictedParts ),
 				jdbcParameterConsumer
 		);
@@ -435,14 +465,20 @@ public class LoaderSelectBuilder {
 		return false;
 	}
 
-	private static EntityGraphTraversalState determineGraphTraversalState(LoadQueryInfluencers loadQueryInfluencers) {
+	private static EntityGraphTraversalState determineGraphTraversalState(
+			LoadQueryInfluencers loadQueryInfluencers,
+			SessionFactoryImplementor sessionFactory) {
 		if ( loadQueryInfluencers != null ) {
 			final EffectiveEntityGraph effectiveEntityGraph = loadQueryInfluencers.getEffectiveEntityGraph();
 			if ( effectiveEntityGraph != null ) {
 				final GraphSemantic graphSemantic = effectiveEntityGraph.getSemantic();
 				final RootGraphImplementor<?> rootGraphImplementor = effectiveEntityGraph.getGraph();
 				if ( graphSemantic != null && rootGraphImplementor != null ) {
-					return new StandardEntityGraphTraversalStateImpl( graphSemantic, rootGraphImplementor );
+					return new StandardEntityGraphTraversalStateImpl(
+							graphSemantic,
+							rootGraphImplementor,
+							sessionFactory.getJpaMetamodel()
+					);
 				}
 			}
 		}
@@ -936,8 +972,9 @@ public class LoaderSelectBuilder {
 						joined = false;
 					}
 					else if ( fetchDepth > maximumFetchDepth + 1 ) {
+						// We can preserve the existing value of joined for basic and embedded values
 						if ( !( fetchable instanceof BasicValuedModelPart ) && !( fetchable instanceof EmbeddedAttributeMapping ) ) {
-							return;
+							joined = false;
 						}
 					}
 				}

@@ -575,15 +575,25 @@ limitClause
  * An 'offset' of the first query result to return
  */
 offsetClause
-	: OFFSET parameterOrIntegerLiteral (ROW | ROWS)?
+	: OFFSET parameterOrIntegerLiteral
+	  (ROW | ROWS)?   // no semantics
 	;
 
 /**
  * A much more complex syntax for limits
  */
 fetchClause
-	: FETCH (FIRST | NEXT) (parameterOrIntegerLiteral | parameterOrNumberLiteral PERCENT) (ROW | ROWS) (ONLY | WITH TIES)
+	: FETCH
+	  (FIRST | NEXT)  // no semantics
+      fetchCountOrPercent
+	  (ROW | ROWS)    // no semantics
+	  (ONLY | WITH TIES)
 	;
+
+fetchCountOrPercent
+    : parameterOrIntegerLiteral
+    | parameterOrNumberLiteral PERCENT
+    ;
 
 /**
  * An parameterizable integer literal
@@ -622,13 +632,16 @@ predicate
 	: LEFT_PAREN predicate RIGHT_PAREN											# GroupedPredicate
 	| expression IS NOT? NULL													# IsNullPredicate
 	| expression IS NOT? EMPTY													# IsEmptyPredicate
+	| expression IS NOT? TRUE													# IsTruePredicate
+	| expression IS NOT? FALSE													# IsFalsePredicate
+	| expression IS NOT? DISTINCT FROM expression								# IsDistinctFromPredicate
+	| expression NOT? MEMBER OF? path											# MemberOfPredicate
 	| expression NOT? IN inList													# InPredicate
 	| expression NOT? BETWEEN expression AND expression							# BetweenPredicate
 	| expression NOT? (LIKE | ILIKE) expression likeEscape?						# LikePredicate
 	| expression comparisonOperator expression									# ComparisonPredicate
 	| EXISTS collectionQuantifier LEFT_PAREN simplePath RIGHT_PAREN				# ExistsCollectionPartPredicate
 	| EXISTS expression															# ExistsPredicate
-	| expression NOT? MEMBER OF? path											# MemberOfPredicate
 	| NOT predicate																# NegatedPredicate
 	| predicate AND predicate													# AndPredicate
 	| predicate OR predicate													# OrPredicate
@@ -645,8 +658,6 @@ comparisonOperator
 	| GREATER_EQUAL
 	| LESS
 	| LESS_EQUAL
-	| IS DISTINCT FROM
-	| IS NOT DISTINCT FROM
 	;
 
 /**

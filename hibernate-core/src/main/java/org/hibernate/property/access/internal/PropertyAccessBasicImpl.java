@@ -18,6 +18,8 @@ import org.hibernate.property.access.spi.SetterMethodImpl;
 
 import org.jboss.logging.Logger;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * {@link PropertyAccess} for accessing the wrapped property via get/set pair, which may be nonpublic.
  *
@@ -30,7 +32,7 @@ public class PropertyAccessBasicImpl implements PropertyAccess {
 
 	private final PropertyAccessStrategyBasicImpl strategy;
 	private final GetterMethodImpl getter;
-	private final SetterMethodImpl setter;
+	private final @Nullable SetterMethodImpl setter;
 
 	public PropertyAccessBasicImpl(
 			PropertyAccessStrategyBasicImpl strategy,
@@ -65,7 +67,7 @@ public class PropertyAccessBasicImpl implements PropertyAccess {
 	}
 
 	@Override
-	public Setter getSetter() {
+	public @Nullable Setter getSetter() {
 		return setter;
 	}
 }

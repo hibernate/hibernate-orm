@@ -19,10 +19,13 @@ import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInter
 import org.hibernate.engine.spi.CompositeOwner;
 import org.hibernate.engine.spi.CompositeTracker;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
+import org.hibernate.internal.util.NullnessHelper;
+import org.hibernate.internal.util.NullnessUtil;
 
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Transient;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asCompositeOwner;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asCompositeTracker;
@@ -41,7 +44,7 @@ public class AccessStrategyHelper {
 	public static final int COMPOSITE_OWNER = 2;
 	public static final int PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK = 4;
 
-	public static Field fieldOrNull(Class<?> containerJavaType, String propertyName) {
+	public static @Nullable Field fieldOrNull(Class<?> containerJavaType, String propertyName) {
 		try {
 			return findField( containerJavaType, propertyName );
 		}
@@ -67,7 +70,7 @@ public class AccessStrategyHelper {
 		return field != null ? AccessType.FIELD : AccessType.PROPERTY;
 	}
 
-	public static AccessType getExplicitAccessType(Class<?> containerClass, String propertyName, Field field) {
+	public static @Nullable AccessType getExplicitAccessType(Class<?> containerClass, String propertyName, @Nullable Field field) {
 		if ( isRecord( containerClass ) ) {
 			try {
 				containerClass.getMethod( propertyName, NO_PARAM_SIGNATURE );
@@ -160,7 +163,7 @@ public class AccessStrategyHelper {
 		}
 	}
 
-	public static Method findIsMethodVariant(Class<?> containerClass, String stemName) {
+	public static @Nullable Method findIsMethodVariant(Class<?> containerClass, String stemName) {
 		// verify that the Class does not also define a method with the same stem name with 'is'
 		try {
 			final Method isMethod = containerClass.getDeclaredMethod( "is" + stemName );
@@ -174,7 +177,7 @@ public class AccessStrategyHelper {
 		return null;
 	}
 
-	protected static AccessType getAccessTypeOrNull(AnnotatedElement element) {
+	protected static @Nullable AccessType getAccessTypeOrNull(@Nullable AnnotatedElement element) {
 		if ( element == null ) {
 			return null;
 		}
@@ -188,13 +191,13 @@ public class AccessStrategyHelper {
 				| ( isPersistentAttributeInterceptableType( containerClass ) ? AccessStrategyHelper.PERSISTENT_ATTRIBUTE_INTERCEPTABLE_MASK : 0 );
 	}
 
-	public static void handleEnhancedInjection(Object target, Object value, int enhancementState, String propertyName) {
+	public static void handleEnhancedInjection(Object target, @Nullable Object value, int enhancementState, String propertyName) {
 		// This sets the component relation for dirty tracking purposes
 		if ( ( enhancementState & COMPOSITE_OWNER ) != 0
 				&& ( ( enhancementState & COMPOSITE_TRACKER_MASK ) != 0
 				&& value != null
 				|| isCompositeTracker( value ) ) ) {
-			asCompositeTracker( value ).$$_hibernate_setOwner( propertyName, asCompositeOwner( target ) );
+			asCompositeTracker( NullnessUtil.castNonNull(value) ).$$_hibernate_setOwner( propertyName, asCompositeOwner( target ) );
 		}
 
 		// This marks the attribute as initialized, so it doesn't get lazily loaded afterward

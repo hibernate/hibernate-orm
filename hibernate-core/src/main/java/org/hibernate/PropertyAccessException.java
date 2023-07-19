@@ -6,7 +6,9 @@
  */
 package org.hibernate;
 
-import org.hibernate.internal.util.StringHelper;
+import static org.hibernate.internal.util.StringHelper.qualify;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A problem occurred accessing a property of an instance of a
@@ -38,7 +40,7 @@ public class PropertyAccessException extends HibernateException {
 	 * @param propertyName The name of the property.
 	 */
 	public PropertyAccessException(
-			Throwable cause,
+			@Nullable Throwable cause,
 			String message,
 			boolean wasSetter,
 			Class<?> persistentClass,
@@ -64,7 +66,7 @@ public class PropertyAccessException extends HibernateException {
 	@Override
 	public String getMessage() {
 		return originalMessage()
-				+ " : `" + StringHelper.qualify( persistentClass.getName(), propertyName )
-				+ ( wasSetter ? "` (setter)" : "` (getter)" );
+				+ ": '" + qualify( persistentClass.getName(), propertyName ) + "'"
+				+ ( wasSetter ? " (setter)" : " (getter)" );
 	}
 }

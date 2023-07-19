@@ -62,7 +62,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 
 	@Override
 	public <R> SqmStatement<R> translate(String query, Class<R> expectedResultType) {
-		HqlLogging.QUERY_LOGGER.debugf( "HQL : " + query );
+		HqlLogging.QUERY_LOGGER.debugf( "HQL : %s", query );
 
 		final HqlParser.StatementContext hqlParseTree = parseHql( query );
 
@@ -172,7 +172,7 @@ public class StandardHqlTranslator implements HqlTranslator {
 			errorText += ", ";
 		}
 		if ( e instanceof NoViableAltException ) {
-			errorText +=  message.substring( 0, message.indexOf("'") );
+			errorText +=  message.substring( 0, message.indexOf( '\'' ) );
 			if ( hql.isEmpty() ) {
 				errorText += "'*' (empty query string)";
 			}

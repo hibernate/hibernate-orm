@@ -852,7 +852,8 @@ A stateless session:
 - doesn't have a first-level cache (persistence context), nor does it interact with any second-level caches, and
 - doesn't implement transactional write-behind or automatic dirty checking, so all operations are executed immediately when they're explicitly called.
 
-For a stateless session, you're always working with detached objects. Thus, the programming model is a bit different:
+For a stateless session, we're always working with detached objects.
+Thus, the programming model is a bit different:
 
 .Important methods of the `StatelessSession`
 [%autowidth.stretch]
@@ -866,6 +867,7 @@ a `select`
 | `insert(Object)`     | Immediately `insert` the state of the given transient object into the database
 | `update(Object)`     | Immediately `update` the state of the given detached object in the database
 | `delete(Object)`     | Immediately `delete` the state of the given detached object from the database
+| `upsert(Object)1     | Immediately `insert` or `update` the state of the given detached object using a SQL `merge into` statement
 |===
 
 NOTE: There's no `flush()` operation, and so `update()` is always explicit.
@@ -875,10 +877,10 @@ In certain circumstances, this makes stateless sessions easier to work with, but
 [%unbreakable]
 [CAUTION]
 ====
-If you use `fetch()` in a stateless session, you can very easily obtain two objects representing the same database row!
+If we use `fetch()` in a stateless session, we can very easily obtain two objects representing the same database row!
 ====
 
-In particular, the absence of a persistence context means that you can safely perform bulk-processing tasks without allocating huge quantities of memory.
+In particular, the absence of a persistence context means that we can safely perform bulk-processing tasks without allocating huge quantities of memory.
 Use of a `StatelessSession` alleviates the need to call:
 
 - `clear()` or `detach()` to perform first-level cache management, and
@@ -887,8 +889,7 @@ Use of a `StatelessSession` alleviates the need to call:
 [%unbreakable]
 [TIP]
 ====
-Stateless sessions can be useful, but for bulk operations on huge datasets,
-Hibernate can't possibly compete with stored procedures!
+Stateless sessions can be useful, but for bulk operations on huge datasets, Hibernate can't possibly compete with stored procedures!
 ====
 
 When using a stateless session, you should be aware of the following additional limitations:
@@ -900,18 +901,15 @@ When using a stateless session, you should be aware of the following additional 
 [[optimistic-and-pessimistic-locking]]
 === Optimistic and pessimistic locking
 
-Finally, an aspect of behavior under load that we didn't mention above is row-level
-data contention. When many transactions try to read and update the same data, the
-program might become unresponsive with lock escalation, deadlocks, and lock
-acquisition timeout errors.
+Finally, an aspect of behavior under load that we didn't mention above is row-level data contention.
+When many transactions try to read and update the same data, the program might become unresponsive with lock escalation, deadlocks, and lock acquisition timeout errors.
 
 There's two basic approaches to data concurrency in Hibernate:
 
 - optimistic locking using `@Version` columns, and
 - database-level pessimistic locking using the SQL `for update` syntax (or equivalent).
 
-In the Hibernate community it's _much_ more common to use optimistic locking, and
-Hibernate makes that incredibly easy.
+In the Hibernate community it's _much_ more common to use optimistic locking, and Hibernate makes that incredibly easy.
 
 [%unbreakable]
 [TIP]
@@ -920,13 +918,11 @@ Where possible, in a multiuser system, avoid holding a pessimistic lock across a
 Indeed, the usual practice is to avoid having transactions that span user interactions. For multiuser systems, optimistic locking is king.
 ====
 
-That said, there _is_ also a place for pessimistic locks, which can sometimes reduce
-the probability of transaction rollbacks.
+That said, there _is_ also a place for pessimistic locks, which can sometimes reduce the probability of transaction rollbacks.
 
-Therefore, the `find()`, `lock()`, and `refresh()` methods of the reactive session
-accept an optional `LockMode`. You can also specify a `LockMode` for a query. The
-lock mode can be used to request a pessimistic lock, or to customize the behavior
-of optimistic locking:
+Therefore, the `find()`, `lock()`, and `refresh()` methods of the reactive session accept an optional `LockMode`.
+We can also specify a `LockMode` for a query.
+The lock mode can be used to request a pessimistic lock, or to customize the behavior of optimistic locking:
 
 .Optimistic and pessimistic lock modes
 [%breakable,cols="26,~"]
@@ -983,6 +979,28 @@ long publisherCacheMissCount =
 
 Hibernate's statistics enable observability.
 Both {micrometer}[Micrometer] and {smallrye-metrics}[SmallRye Metrics] are capable of exposing these metrics.
+
+[[slow-queries]]
+=== Tracking down slow queries
+
+When a poorly-performing SQL query is discovered in production, it can sometimes be hard to track down exactly where in the Java code the query originates.
+Hibernate offers two configuration properties that can make it easier to identify a slow query and find its source.
+
+.Settings for tracking slow queries
+[%breakable,cols="25,~,~"]
+|===
+| Configuration property name | Purpose | Property value
+
+| `hibernate.log_slow_query` | Log slow queries at the `INFO` level | The minimum execution time, in milliseconds, which characterizes a "slow" query
+| `hibernate.use_sql_comments` | Prepend comments to the executed SQL | `true` or `false`
+|===
+
+When `hibernate.use_sql_comments` is enabled, the text of the HQL query is prepended as a comment to the generated SQL, which usually makes it easy to find the HQL in the Java code.
+
+The comment text may be customized:
+
+- by calling `Query.setComment(comment)` or `Query.setHint(AvailableHints.HINT_COMMENT,comment)`, or
+- via the `@NamedQuery` annotation.
 
 [[hibernate-reactive]]
 === Reactive programming with Hibernate

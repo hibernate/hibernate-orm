@@ -16,6 +16,8 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.BagType;
 import org.hibernate.type.Type;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.engine.FetchStyle.JOIN;
 import static org.hibernate.engine.FetchStyle.SUBSELECT;
 
@@ -47,7 +49,7 @@ public class FetchProfile {
 
 	private boolean containsJoinFetchedCollection;
 	private boolean containsJoinFetchedBag;
-	private Fetch bagJoinFetch;
+	private @Nullable Fetch bagJoinFetch;
 
 	/**
 	 * Constructs a {@link FetchProfile} with the given unique name.
@@ -117,7 +119,7 @@ public class FetchProfile {
 				// we need to go back and ignore that previous bag join fetch.
 				if ( containsJoinFetchedBag ) {
 					// just for safety...
-					if ( fetches.remove( bagJoinFetch.getAssociation().getRole() ) != bagJoinFetch ) {
+					if ( bagJoinFetch != null && fetches.remove( bagJoinFetch.getAssociation().getRole() ) != bagJoinFetch ) {
 						LOG.unableToRemoveBagJoinFetch();
 					}
 					bagJoinFetch = null;
@@ -153,7 +155,7 @@ public class FetchProfile {
 	 * @return The {@code Fetch}, or {@code null} if there was
 	 *         no {@code Fetch} for the given association
 	 */
-	public Fetch getFetchByRole(String role) {
+	public @Nullable Fetch getFetchByRole(String role) {
 		return fetches.get( role );
 	}
 

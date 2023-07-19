@@ -19,6 +19,23 @@ import org.hibernate.envers.exception.RevisionDoesNotExistException;
 import org.hibernate.envers.query.AuditQueryCreator;
 
 /**
+ * Provides access to past versions of {@linkplain Audited audited} entities based on
+ * a global <em>revision</em>. A new revision is created every time any audited entity
+ * is created, updated, or deleted.
+ * <p>
+ * By default, each revision is defined by:
+ * <ul>
+ * <li>a strictly-increasing global <em>revision number</em>, and
+ * <li>the Unix epoch at which the revision was made.
+ * </ul>
+ * The method {@link #getRevisionNumberForDate(LocalDateTime)} obtains the revision
+ * number which was current at the given instant.
+ * <p>
+ * Given a revision number, we may obtain historical versions of any entity. For example,
+ * {@link #find(Class, Object, Number)} retrieves the version of an entity with the given
+ * id which was current in the given revision. Much more complex queries are possible via
+ * {@link #createQuery()}.
+ *
  * @author Adam Warski (adam at warski dot org)
  * @author Hern&aacute;n Chanfreau
  * @author Lukasz Antoniak (lukasz dot antoniak at gmail dot com)
@@ -53,7 +70,7 @@ public interface AuditReader {
 	 * @param date Date for which to get entity revision.
 	 * 
 	 * @return The found entity instance at created on or before the specified date with the highest
-	 *         revision number or null, if an entity with the id had not be created on or before the
+	 *         revision number or null, if an entity with the id had not been created on or before the
 	 *         specified date.
 	 *         
 	 * @throws IllegalArgumentException if cls, primaryKey, or date is null.
@@ -63,12 +80,33 @@ public interface AuditReader {
 	 */
 	<T> T find(Class<T> cls, Object primaryKey, Date date) throws
 			IllegalArgumentException, NotAuditedException, RevisionDoesNotExistException, IllegalStateException;
-	
+
+	/**
+	 * Find an entity by primary key on the given datetime.  The datetime specifies
+	 * restricting the result to any entity created on or before the date with the highest
+	 * revision number.
+	 *
+	 * @param cls Class of the entity.
+	 * @param primaryKey Primary key of the entity.
+	 * @param datetime Datetime for which to get entity revision.
+	 *
+	 * @return The found entity instance at created on or before the specified date with the highest
+	 *         revision number or null, if an entity with the id had not been created on or before the
+	 *         specified date.
+	 *
+	 * @throws IllegalArgumentException if cls, primaryKey, or date is null.
+	 * @throws NotAuditedException When entities of the given class are not audited.
+	 * @throws RevisionDoesNotExistException If the given date is before the first revision.
+	 * @throws IllegalStateException If the associated entity manager is closed.
+	 */
+	<T> T find(Class<T> cls, Object primaryKey, LocalDateTime datetime) throws
+			IllegalArgumentException, NotAuditedException, RevisionDoesNotExistException, IllegalStateException;
+
 	/**
 	 * Find an entity by primary key at the given revision with the specified entityName.
 	 *
 	 * @param cls Class of the entity.
-	 * @param entityName Name of the entity (if can't be guessed basing on the {@code cls}).
+	 * @param entityName Name of the entity (if it can't be guessed basing on the {@code cls}).
 	 * @param primaryKey Primary key of the entity.
 	 * @param revision Revision in which to get the entity.
 	 * @param <T> The type of the entity to find
@@ -91,7 +129,7 @@ public interface AuditReader {
 	 * possibly including deleted entities in the search.
 	 *
 	 * @param cls Class of the entity.
-	 * @param entityName Name of the entity (if can't be guessed basing on the {@code cls}).
+	 * @param entityName Name of the entity (if it can't be guessed basing on the {@code cls}).
 	 * @param primaryKey Primary key of the entity.
 	 * @param revision Revision in which to get the entity.
 	 * @param includeDeletions Whether to include deleted entities in the search.
@@ -130,7 +168,7 @@ public interface AuditReader {
 	 * Get a list of revision numbers, at which an entity was modified, looking by entityName.
 	 *
 	 * @param cls Class of the entity.
-	 * @param entityName Name of the entity (if can't be guessed basing on the {@code cls}).
+	 * @param entityName Name of the entity (if it can't be guessed basing on the {@code cls}).
 	 * @param primaryKey Primary key of the entity.
 	 *
 	 * @return A list of revision numbers, at which the entity was modified, sorted in ascending order (so older
@@ -280,7 +318,7 @@ public interface AuditReader {
 
 	/**
 	 * Get the entity name of an instance of an entity returned by this AuditReader.
-	 *
+	 * <p>
 	 * Each AuditReader maintains its own internal cache of objects which it has provided the caller, much like
 	 * the {@link org.hibernate.Session} maintains a first-level cache.  It is this specific cache which this
 	 * call uses to find and return the entity-name.  This means if the supplied three values do not correlate

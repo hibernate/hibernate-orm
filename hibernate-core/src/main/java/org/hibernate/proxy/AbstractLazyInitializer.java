@@ -323,6 +323,20 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		return entityKey == null ? null : s.getPersistenceContext().getEntity( entityKey );
 	}
 
+	@Override
+	public String getImplementationEntityName() {
+		if ( session == null ) {
+			throw new LazyInitializationException( "could not retrieve real entity name [" + entityName + "#" + id + "] - no Session" );
+		}
+		final SessionFactoryImplementor factory = session.getFactory();
+		final EntityPersister entityDescriptor = factory.getMappingMetamodel().getEntityDescriptor( entityName );
+		if ( entityDescriptor.getEntityMetamodel().hasSubclasses() ) {
+			initialize();
+			return factory.bestGuessEntityName( target );
+		}
+		return entityName;
+	}
+
 	/**
 	 * Getter for property 'target'.
 	 * <p>

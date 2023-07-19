@@ -17,6 +17,9 @@ import jakarta.transaction.SystemException;
 import jakarta.transaction.Transaction;
 import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import javax.transaction.xa.XAResource;
 
 import org.hibernate.HibernateException;
@@ -147,7 +150,7 @@ public class WebSphereExtendedJtaPlatform extends AbstractJtaPlatform {
 				final InvocationHandler ih = new InvocationHandler() {
 
 					@Override
-					public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+					public @Nullable Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
 						if ( "afterCompletion".equals( method.getName() ) ) {
 							int status = args[2].equals(Boolean.TRUE) ?
 									Status.STATUS_COMMITTED :
@@ -186,7 +189,7 @@ public class WebSphereExtendedJtaPlatform extends AbstractJtaPlatform {
 			}
 
 			@Override
-			public boolean equals(Object other) {
+			public boolean equals(@Nullable Object other) {
 				if ( !(other instanceof TransactionAdapter) ) {
 					return false;
 				}

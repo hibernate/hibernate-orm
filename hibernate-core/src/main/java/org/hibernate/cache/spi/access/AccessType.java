@@ -8,6 +8,8 @@ package org.hibernate.cache.spi.access;
 
 import java.util.Locale;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Enumerates the policies for managing concurrent access to the shared
  * second-level cache.
@@ -70,7 +72,7 @@ public enum AccessType {
 	 *
 	 * @see #getExternalName()
 	 */
-	public static AccessType fromExternalName(String externalName) {
+	public static AccessType fromExternalName(@Nullable String externalName) {
 		if ( externalName == null ) {
 			return null;
 		}

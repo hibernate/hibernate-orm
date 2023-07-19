@@ -127,7 +127,6 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.IntervalType;
-import org.hibernate.query.sqm.NullOrdering;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.mutation.internal.temptable.AfterUseAction;
@@ -2925,6 +2924,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect support the {@code is true} and {@code is false}
+	 * operators?
+	 *
+	 * @return {@code true} if the database supports {@code is true} and
+	 *         {@code is false}, or {@code false} if it does not. The
+	 *         default is {@code is false}.
+	 */
+	public boolean supportsIsTrue() {
+		return false;
+	}
+
+	/**
 	 * Meant as a means for end users to affect the select strings being sent
 	 * to the database and perhaps manipulate them in some fashion.
 	 *
@@ -3411,6 +3422,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public String getNullColumnString(String columnType) {
 		return getNullColumnString();
+	}
+
+	/**
+	 * Quote the given collation name if necessary.
+	 */
+	public String quoteCollation(String collation) {
+		return collation;
 	}
 
 	/**
@@ -5298,5 +5316,13 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.NONE;
+	}
+
+	/**
+	 * Get this dialect's level of support for primary key functional dependency analysis
+	 * within {@code GROUP BY} and {@code ORDER BY} clauses.
+	 */
+	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
+		return FunctionalDependencyAnalysisSupportImpl.NONE;
 	}
 }

@@ -31,6 +31,11 @@ public abstract class XmlMetaAttribute implements MetaAttribute {
 	}
 
 	@Override
+	public boolean hasStringAttribute() {
+		return true;
+	}
+
+	@Override
 	public String getAttributeDeclarationString() {
 		return "public static volatile " + hostingEntity.importType( getMetaType() )
 				+ "<" + hostingEntity.importType( hostingEntity.getQualifiedName() )

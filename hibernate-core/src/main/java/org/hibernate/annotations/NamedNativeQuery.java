@@ -38,7 +38,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Repeatable(NamedNativeQueries.class)
 public @interface NamedNativeQuery {
 	/**
-	 * The name of this query.
+	 * The name of this query. Must be unique within a persistence unit.
 	 *
 	 * @see org.hibernate.SessionFactory#addNamedQuery
 	 * @see org.hibernate.Session#createNamedQuery

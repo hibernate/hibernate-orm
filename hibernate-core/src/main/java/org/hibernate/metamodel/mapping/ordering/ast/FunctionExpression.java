@@ -12,8 +12,8 @@ import java.util.List;
 
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.internal.AbstractDomainPath;
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -95,7 +95,7 @@ public class FunctionExpression implements OrderingExpression, FunctionRendering
 			TableGroup tableGroup,
 			String collation,
 			String modelPartName,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
 		final SelfRenderingFunctionSqlAstExpression expression = resolve( ast, tableGroup, modelPartName, creationState );

@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.hibernate.engine.jdbc.batch.spi.Batch;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
@@ -23,7 +22,6 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.PreparableMutationOperation;
@@ -79,12 +77,10 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 		List<PreparableMutationOperation> nonBatchedJdbcMutations = null;
 		List<SelfExecutingUpdateOperation> selfExecutingMutations = null;
 
-		final List<MutationOperation> operations = mutationOperationGroup.getOperations();
-
 		boolean hasAnyNonBatchedJdbcOperations = false;
 
-		for ( int i = operations.size() - 1; i >= 0; i-- ) {
-			final MutationOperation operation = operations.get( i );
+		for ( int i = mutationOperationGroup.getNumberOfOperations() - 1; i >= 0; i-- ) {
+			final MutationOperation operation = mutationOperationGroup.getOperation( i );
 			if ( operation instanceof SelfExecutingUpdateOperation ) {
 				final SelfExecutingUpdateOperation selfExecutingMutation = (SelfExecutingUpdateOperation) operation;
 				if ( selfExecutingMutations == null ) {
@@ -165,6 +161,7 @@ public class MutationExecutorStandard extends AbstractMutationExecutor implement
 		}
 	}
 
+	//Used by Hibernate Reactive
 	protected PreparedStatementGroup getNonBatchedStatementGroup() {
 		return nonBatchedStatementGroup;
 	}

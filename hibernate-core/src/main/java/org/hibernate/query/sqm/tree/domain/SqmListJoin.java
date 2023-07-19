@@ -59,11 +59,12 @@ public class SqmListJoin<O,E>
 		if ( existing != null ) {
 			return existing;
 		}
+		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
 		final SqmListJoin<O, E> path = context.registerCopy(
 				this,
 				new SqmListJoin<>(
-						getLhs().copy( context ),
-						getNavigablePath(),
+						lhsCopy,
+						getNavigablePathCopy( lhsCopy ),
 						getAttribute(),
 						getExplicitAlias(),
 						getSqmJoinType(),

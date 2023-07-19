@@ -227,8 +227,7 @@ public class TypeDefinition implements Serializable {
 			return createBasicTypeResolution( legacyType, typeImplementorClass, indicators, typeConfiguration );
 		}
 
-		if ( indicators.getEnumeratedType() != null ) {
-			assert typeImplementorClass.isInterface();
+		if ( typeImplementorClass.isInterface() ) {
 			return createBasicTypeResolution( new JavaObjectType(), typeImplementorClass, indicators, typeConfiguration );
 		}
 

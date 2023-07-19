@@ -187,7 +187,7 @@ public class BootstrapServiceRegistryBuilder {
 			classLoaderService = providedClassLoaderService;
 		}
 
-		final IntegratorServiceImpl integratorService = new IntegratorServiceImpl(
+		final IntegratorServiceImpl integratorService = IntegratorServiceImpl.create(
 				providedIntegrators,
 				classLoaderService
 		);

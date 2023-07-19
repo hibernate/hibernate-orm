@@ -6,8 +6,6 @@
  */
 package org.hibernate.persister.entity.mutation;
 
-import java.util.List;
-
 import org.hibernate.Internal;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.batch.spi.BatchKey;
@@ -15,6 +13,7 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.engine.jdbc.mutation.internal.NoBatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
+import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.OnExecutionGenerator;
@@ -26,13 +25,10 @@ import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.ast.MutationGroup;
+import org.hibernate.sql.model.ast.TableMutation;
 import org.hibernate.sql.model.ast.builder.ColumnValuesTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
-import org.hibernate.sql.model.internal.MutationOperationGroupNone;
-import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
-import org.hibernate.sql.model.internal.MutationOperationGroupStandard;
-
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 
 /**
  * Base support for coordinating mutations against an entity
@@ -43,12 +39,16 @@ import static org.hibernate.internal.util.collections.CollectionHelper.arrayList
  */
 @Internal
 public abstract class AbstractMutationCoordinator {
-	private final AbstractEntityPersister entityPersister;
-	private final SessionFactoryImplementor factory;
+	protected final AbstractEntityPersister entityPersister;
+	protected final SessionFactoryImplementor factory;
+	protected final MutationExecutorService mutationExecutorService;
+	protected final Dialect dialect;
 
 	public AbstractMutationCoordinator(AbstractEntityPersister entityPersister, SessionFactoryImplementor factory) {
 		this.entityPersister = entityPersister;
 		this.factory = factory;
+		dialect = factory.getJdbcServices().getDialect();
+		this.mutationExecutorService = factory.getServiceRegistry().getService( MutationExecutorService.class );
 	}
 
 	protected AbstractEntityPersister entityPersister() {
@@ -60,7 +60,7 @@ public abstract class AbstractMutationCoordinator {
 	}
 
 	protected Dialect dialect() {
-		return factory().getJdbcServices().getDialect();
+		return dialect;
 	}
 
 	protected BatchKeyAccess resolveBatchKeyAccess(boolean dynamicUpdate, SharedSessionContractImplementor session) {
@@ -79,29 +79,38 @@ public abstract class AbstractMutationCoordinator {
 		final int numberOfTableMutations = mutationGroup.getNumberOfTableMutations();
 		switch ( numberOfTableMutations ) {
 			case 0:
-				return new MutationOperationGroupNone( mutationGroup );
+				return MutationOperationGroupFactory.noOperations( mutationGroup );
 			case 1: {
 				final MutationOperation operation = mutationGroup.getSingleTableMutation()
 						.createMutationOperation( valuesAnalysis, factory() );
 				return operation == null
-						? new MutationOperationGroupNone( mutationGroup )
-						: new MutationOperationGroupSingle( mutationGroup, operation );
+						? MutationOperationGroupFactory.noOperations( mutationGroup )
+						: MutationOperationGroupFactory.singleOperation( mutationGroup, operation );
 			}
 			default: {
-				final List<MutationOperation> operations = arrayList( numberOfTableMutations );
-				mutationGroup.forEachTableMutation( (integer, tableMutation) -> {
+				MutationOperation[] operations = new MutationOperation[numberOfTableMutations];
+				int outputIndex = 0;
+				int skipped = 0;
+				for ( int i = 0; i < mutationGroup.getNumberOfTableMutations(); i++ ) {
+					final TableMutation tableMutation = mutationGroup.getTableMutation( i );
 					final MutationOperation operation = tableMutation.createMutationOperation( valuesAnalysis, factory );
 					if ( operation != null ) {
-						operations.add( operation );
+						operations[outputIndex++] = operation;
 					}
 					else {
+						skipped++;
 						ModelMutationLogging.MODEL_MUTATION_LOGGER.debugf(
 								"Skipping table update - %s",
 								tableMutation.getTableName()
 						);
 					}
-				} );
-				return new MutationOperationGroupStandard( mutationGroup.getMutationType(), entityPersister, operations );
+				}
+				if ( skipped != 0 ) {
+					final MutationOperation[] trimmed = new MutationOperation[outputIndex];
+					System.arraycopy( operations, 0, trimmed, 0, outputIndex );
+					operations = trimmed;
+				}
+				return MutationOperationGroupFactory.manyOperations( mutationGroup.getMutationType(), entityPersister, operations );
 			}
 		}
 	}

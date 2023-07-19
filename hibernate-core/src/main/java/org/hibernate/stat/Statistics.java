@@ -7,6 +7,7 @@
 package org.hibernate.stat;
 
 import java.time.Instant;
+import java.util.Map;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -326,8 +327,21 @@ public interface Statistics {
 	 * The maximum number of queries tracked by the Hibernate statistics
 	 * is determined by the configuration property
 	 * {@value org.hibernate.cfg.AvailableSettings#QUERY_STATISTICS_MAX_SIZE}.
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#QUERY_STATISTICS_MAX_SIZE
 	 */
 	String[] getQueries();
+
+	/**
+	 * If {@value org.hibernate.cfg.AvailableSettings#LOG_SLOW_QUERY}
+	 * is enabled, a map from the SQL query to the maximum execution time
+	 * in milliseconds.
+	 *
+	 * @since 6.3
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#LOG_SLOW_QUERY
+	 */
+	Map<String,Long> getSlowQueries();
 
 	/**
 	 * The names of all entities.

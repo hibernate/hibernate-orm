@@ -8,8 +8,11 @@ package org.hibernate.proxy.pojo;
 
 import java.lang.reflect.Method;
 
+import org.hibernate.LazyInitializationException;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.MarkerObject;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.AbstractLazyInitializer;
 import org.hibernate.type.CompositeType;
 
@@ -108,7 +111,25 @@ public abstract class BasicLazyInitializer extends AbstractLazyInitializer {
 
 	}
 
+	@Override
 	public final Class<?> getPersistentClass() {
+		return persistentClass;
+	}
+
+	@Override
+	public Class<?> getImplementationClass() {
+		if ( !isUninitialized() ) {
+			return getImplementation().getClass();
+		}
+		final SharedSessionContractImplementor session = getSession();
+		if ( session == null ) {
+			throw new LazyInitializationException( "could not retrieve real entity class [" + getEntityName() + "#" + getIdentifier() + "] - no Session" );
+		}
+		final SessionFactoryImplementor factory = session.getFactory();
+		final EntityPersister entityDescriptor = factory.getMappingMetamodel().getEntityDescriptor( getEntityName() );
+		if ( entityDescriptor.getEntityMetamodel().hasSubclasses() ) {
+			return getImplementation().getClass();
+		}
 		return persistentClass;
 	}
 

@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -33,18 +34,58 @@ import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.FrameKind;
-import org.hibernate.query.sqm.NullPrecedence;
-import org.hibernate.query.sqm.SortOrder;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 /**
- * Hibernate extensions to the JPA {@link CriteriaBuilder}.
+ * A JPA {@link CriteriaBuilder} is a source of objects which may be composed
+ * to express a criteria query. The JPA-standard API defines all the operations
+ * needed express any query written in standard JPQL. This interface extends
+ * {@code CriteriaBuilder}, adding operations needed to express features of
+ * HQL which are not available in standard JPQL. For example:
+ * <ul>
+ * <li>JPQL does not have a {@code format()} function, so
+ *     {@link #format(Expression, String)} is declared here, and
+ * <li>since JPQL does not have {@code insert} statements, this interface
+ *     defines the operations {@link #createCriteriaInsertSelect(Class)} and
+ *     {@link #createCriteriaInsertValues(Class)}.
+ * </ul>
+ * <p>
+ * Furthermore, the operations of this interface return types defined in the
+ * package {@link org.hibernate.query.criteria}, which extend the equivalent
+ * types in {@link jakarta.persistence.criteria} with additional operations.
+ * For example {@link JpaCriteriaQuery} adds the methods:
+ * <ul>
+ * <li>{@link JpaCriteriaQuery#from(Subquery)}, which allows the use of a
+ *     subquery in the {@code from} clause of the query, and
+ * <li>{@link JpaCriteriaQuery#with(AbstractQuery)}, which allows the creation
+ *     of {@link JpaCteCriteria common table expressions}.
+ * </ul>
+ * <p>
+ * Finally, the method {@link #createQuery(String, Class)} allows a query
+ * written in HQL to be translated to a tree of criteria objects for further
+ * manipulation and execution.
+ * <p>
+ * An instance of this interface may be obtained by calling
+ * {@link org.hibernate.SessionFactory#getCriteriaBuilder()}.
+ *
+ * @see org.hibernate.SessionFactory#getCriteriaBuilder()
+ * @see JpaCriteriaQuery
+ * @see JpaCriteriaUpdate
+ * @see JpaCriteriaDelete
+ * @see JpaCriteriaInsertValues
+ * @see JpaCriteriaInsertSelect
+ * @see JpaCteCriteria
+ * @see JpaSubQuery
+ * @see JpaExpression
+ *
+ * @since 6.0
  *
  * @author Steve Ebersole
  */
-
+@Incubating
 public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<X, T> JpaExpression<X> cast(JpaExpression<T> expression, Class<X> castTargetJavaType);
@@ -75,7 +116,21 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	<T> JpaCriteriaDelete<T> createCriteriaDelete(Class<T> targetEntity);
 
+	<T> JpaCriteriaInsertValues<T> createCriteriaInsertValues(Class<T> targetEntity);
+
 	<T> JpaCriteriaInsertSelect<T> createCriteriaInsertSelect(Class<T> targetEntity);
+
+	/**
+	 * Transform the given HQL {@code select} query to an equivalent criteria query.
+	 *
+	 * @param hql The HQL {@code select} query
+	 * @param resultClass The result type of the query
+	 *
+	 * @return The equivalent criteria query
+	 *
+	 * @since 6.3
+	 */
+	<T> JpaCriteriaQuery<T> createQuery(String hql, Class<T> resultClass);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Set operation
@@ -403,7 +458,6 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	<T> JpaExpression<T> literal(T value);
-	<T> SqmExpression<T> literal(T value, SqmExpression<? extends T> typeInferenceSource);
 
 	<T> List<? extends JpaExpression<T>> literals(T... values);
 
@@ -514,9 +568,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<K, L extends List<?>> JpaExpression<Set<K>> indexes(L list);
 
-	<T> SqmExpression<T> value(T value);
-
-	<T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource);
+	<T> JpaExpression<T> value(T value);
 
 	<V, C extends Collection<V>> JpaExpression<Collection<V>> values(C collection);
 
@@ -817,8 +869,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Ordering
 
-	JpaOrder sort(JpaExpression<?> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence);
-	JpaOrder sort(JpaExpression<?> sortExpression, SortOrder sortOrder);
+	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence);
+	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder);
 	JpaOrder sort(JpaExpression<?> sortExpression);
 
 	@Override
@@ -851,7 +903,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @return ordering corresponding to the CTE attribute
 	 */
 	@Incubating
-	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortOrder sortOrder, NullPrecedence nullPrecedence);
+	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortDirection sortOrder, NullPrecedence nullPrecedence);
 
 	/**
 	 * Create a search ordering based on the sort order of the value of the CTE attribute.
@@ -860,7 +912,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 * @return ordering corresponding to the CTE attribute
 	 */
 	@Incubating
-	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortOrder sortOrder);
+	JpaSearchOrder search(JpaCteCriteriaAttribute cteAttribute, SortDirection sortOrder);
 
 	/**
 	 * Create a search ordering based on the ascending value of the CTE attribute.
@@ -1908,29 +1960,29 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			Expression<String> separator);
 
 	/**
-	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
 	 */
 	@Incubating
-	<T> JpaExpression<T> mode(Expression<T> sortExpression, SortOrder sortOrder, NullPrecedence nullPrecedence);
+	<T> JpaExpression<T> mode(Expression<T> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence);
 
 	/**
-	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
 	 */
 	@Incubating
 	<T> JpaExpression<T> mode(
 			JpaPredicate filter,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence);
 
 	/**
-	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 * @see #mode(JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
 	 */
 	@Incubating
 	<T> JpaExpression<T> mode(
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence);
 
 	/**
@@ -1952,39 +2004,39 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence);
 
 	/**
-	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
 	 */
 	@Incubating
 	<T> JpaExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence);
 
 	/**
-	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
 	 */
 	@Incubating
 	<T> JpaExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence);
 
 	/**
-	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 * @see #percentileCont(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
 	 */
 	@Incubating
 	<T> JpaExpression<T> percentileCont(
 			Expression<? extends Number> argument,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence);
 
 	/**
@@ -2007,39 +2059,39 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence);
 
 	/**
-	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
 	 */
 	@Incubating
 	<T> JpaExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence);
 
 	/**
-	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
 	 */
 	@Incubating
 	<T> JpaExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			JpaPredicate filter,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence);
 
 	/**
-	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortOrder, NullPrecedence)
+	 * @see #percentileDisc(Expression, JpaPredicate, JpaWindow, Expression, SortDirection, NullPrecedence)
 	 */
 	@Incubating
 	<T> JpaExpression<T> percentileDisc(
 			Expression<? extends Number> argument,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence);
 
 	/**
@@ -2062,7 +2114,7 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<T> sortExpression,
-			SortOrder sortOrder,
+			SortDirection sortOrder,
 			NullPrecedence nullPrecedence);
 
 	/**

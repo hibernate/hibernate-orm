@@ -9,6 +9,8 @@ package org.hibernate.jpamodelgen.test.elementcollection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 
 /**
@@ -19,6 +21,7 @@ public class Homework {
 
     private List<String> paths;
 
+    @ElementCollection
     public List<String> getPaths() {
         return paths;
     }

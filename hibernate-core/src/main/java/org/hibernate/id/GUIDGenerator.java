@@ -43,7 +43,7 @@ public class GUIDGenerator implements IdentifierGenerator, StandardGenerator {
 		try {
 			final PreparedStatement st = session.getJdbcCoordinator().getStatementPreparer().prepareStatement( sql );
 			try {
-				final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st );
+				final ResultSet rs = session.getJdbcCoordinator().getResultSetReturn().extract( st, sql );
 				try {
 					if ( !rs.next() ) {
 						throw new HibernateException( "The database returned no GUID identity value" );

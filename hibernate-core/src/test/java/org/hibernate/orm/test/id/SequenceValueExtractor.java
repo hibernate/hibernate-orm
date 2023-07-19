@@ -32,7 +32,7 @@ public class SequenceValueExtractor {
 		final PreparedStatement query = sessionImpl.getJdbcCoordinator()
 				.getStatementPreparer()
 				.prepareStatement( queryString );
-		try ( final ResultSet resultSet = sessionImpl.getJdbcCoordinator().getResultSetReturn().extract( query ) ) {
+		try ( final ResultSet resultSet = sessionImpl.getJdbcCoordinator().getResultSetReturn().extract( query, queryString ) ) {
 			resultSet.next();
 			long value = resultSet.getLong( 1 );
 			if ( dialect instanceof DerbyDialect ) {

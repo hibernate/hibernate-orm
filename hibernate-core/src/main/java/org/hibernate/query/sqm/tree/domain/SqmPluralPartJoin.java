@@ -59,6 +59,11 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> implements SqmQ
 	}
 
 	@Override
+	public boolean isImplicitlySelectable() {
+		return false;
+	}
+
+	@Override
 	public SqmPluralPartJoin<O, T> copy(SqmCopyContext context) {
 		final SqmPluralPartJoin<O, T> existing = context.getCopy( this );
 		if ( existing != null ) {

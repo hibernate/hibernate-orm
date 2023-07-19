@@ -8,14 +8,16 @@ package org.hibernate.type.format.jackson;
 
 import org.hibernate.type.format.FormatMapper;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 public final class JacksonIntegration {
 
 	// Implementation note: we rely on the following fields to be folded as constants
 	// when GraalVM native image is initializing them.
 	private static final boolean JACKSON_XML_AVAILABLE = ableToLoadJacksonXMLMapper();
 	private static final boolean JACKSON_JSON_AVAILABLE = ableToLoadJacksonJSONMapper();
-	private static final JacksonXmlFormatMapper XML_FORMAT_MAPPER = JACKSON_XML_AVAILABLE ? new JacksonXmlFormatMapper() : null;
-	private static final JacksonJsonFormatMapper JSON_FORMAT_MAPPER = JACKSON_JSON_AVAILABLE ? new JacksonJsonFormatMapper() : null;
+	private static final @Nullable JacksonXmlFormatMapper XML_FORMAT_MAPPER = JACKSON_XML_AVAILABLE ? new JacksonXmlFormatMapper() : null;
+	private static final @Nullable JacksonJsonFormatMapper JSON_FORMAT_MAPPER = JACKSON_JSON_AVAILABLE ? new JacksonJsonFormatMapper() : null;
 
 	private JacksonIntegration() {
 		//To not be instantiated: static helpers only

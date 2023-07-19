@@ -20,6 +20,8 @@ import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * This interface should be implemented by user-defined custom types
  * that extend the set of {@linkplain org.hibernate.type.Type types}
@@ -289,7 +291,7 @@ public interface UserType<J> {
 	 *
 	 * @param owner in Hibernate 6, this is always null
 	 */
-	J nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, @Deprecated Object owner)
+	J nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session, @Deprecated @Nullable Object owner)
 			throws SQLException;
 
 	/**
@@ -298,7 +300,7 @@ public interface UserType<J> {
 	 * handle null values of the Java class. A multi-column type should
 	 * be written to parameters starting from {@code index}.
 	 */
-	void nullSafeSet(PreparedStatement st, J value, int index, SharedSessionContractImplementor session)
+	void nullSafeSet(PreparedStatement st, @Nullable J value, int index, SharedSessionContractImplementor session)
 			throws SQLException;
 
 	/**
@@ -370,7 +372,7 @@ public interface UserType<J> {
 	 *
 	 * @see org.hibernate.Cache
 	 */
-	J assemble(Serializable cached, Object owner);
+	J assemble(Serializable cached, @Nullable Object owner);
 
 	/**
 	 * During merge, replace the existing (target) value in the

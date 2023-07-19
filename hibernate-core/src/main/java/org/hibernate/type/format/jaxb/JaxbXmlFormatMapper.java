@@ -37,6 +37,9 @@ import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
 import jakarta.xml.bind.annotation.XmlAnyElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -443,7 +446,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			StringBuilderSqlAppender appender,
 			Class<?> elementClass,
 			String tagName,
-			Object exampleElement,
+			@Nullable Object exampleElement,
 			JAXBIntrospector introspector,
 			WrapperOptions wrapperOptions) {
 		final JavaType<Object> elementJavaType = wrapperOptions.getSessionFactory()
@@ -477,7 +480,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 			StringBuilderSqlAppender appender,
 			JavaType<?> elementJavaType,
 			String tagName,
-			Object exampleElement,
+			@Nullable Object exampleElement,
 			JAXBIntrospector introspector,
 			WrapperOptions wrapperOptions) {
 		if ( exampleElement == null && JavaTypeHelper.isUnknown( elementJavaType ) ) {
@@ -532,7 +535,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 
 	private static interface JAXBElementTransformer {
 		JAXBElement<?> toJAXBElement(Object o);
-		Object fromJAXBElement(Object element, Unmarshaller unmarshaller) throws JAXBException;
+		@Nullable Object fromJAXBElement(Object element, Unmarshaller unmarshaller) throws JAXBException;
 	}
 
 	private static class SimpleJAXBElementTransformer implements JAXBElementTransformer {
@@ -580,7 +583,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 		}
 
 		@Override
-		public JAXBElement<?> toJAXBElement(Object o) {
+		public JAXBElement<?> toJAXBElement(@Nullable Object o) {
 			final String value;
 			if ( o == null ) {
 				value = null;
@@ -594,7 +597,7 @@ public final class JaxbXmlFormatMapper implements FormatMapper {
 		}
 
 		@Override
-		public Object fromJAXBElement(Object element, Unmarshaller unmarshaller) throws JAXBException {
+		public @Nullable Object fromJAXBElement(Object element, Unmarshaller unmarshaller) throws JAXBException {
 			final String value = unmarshaller.unmarshal( (Node) element, String.class ).getValue();
 			return value == null ? null : elementJavaType.fromEncodedString( value, 0, value.length() );
 		}

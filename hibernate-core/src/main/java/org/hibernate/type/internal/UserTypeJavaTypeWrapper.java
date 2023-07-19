@@ -23,6 +23,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.UserType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Adaptor between {@link UserType} and {@link org.hibernate.type.descriptor.java.JavaType}.
  *
@@ -124,7 +126,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	}
 
 	@Override
-	public String toString(J value) {
+	public String toString(@Nullable J value) {
 		if ( userType.returnedClass().isInstance( value ) && userType instanceof EnhancedUserType<?> ) {
 			return ( (EnhancedUserType<J>) userType ).toString( value );
 		}
@@ -132,7 +134,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	}
 
 	@Override
-	public <X> X unwrap(J value, Class<X> type, WrapperOptions options) {
+	public <X> @Nullable X unwrap(@Nullable J value, Class<X> type, WrapperOptions options) {
 		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
 		if ( value != null && !type.isInstance( value ) && valueConverter != null ) {
 			final Object relationalValue = valueConverter.toRelationalValue( value );
@@ -143,7 +145,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 	}
 
 	@Override
-	public <X> J wrap(X value, WrapperOptions options) {
+	public <X> @Nullable J wrap(@Nullable X value, WrapperOptions options) {
 		final BasicValueConverter<J, Object> valueConverter = userType.getValueConverter();
 		if ( value != null && !userType.returnedClass().isInstance( value ) && valueConverter != null ) {
 			final J domainValue = valueConverter.toDomainValue( value );
@@ -176,7 +178,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 		}
 
 		@Override
-		public Serializable disassemble(J value, SharedSessionContract session) {
+		public @Nullable Serializable disassemble(@Nullable J value, SharedSessionContract session) {
 			final Serializable disassembled = userType.disassemble( value );
 			// Since UserType#disassemble is an optional operation,
 			// we have to handle the fact that it could produce a null value,
@@ -198,7 +200,7 @@ public class UserTypeJavaTypeWrapper<J> implements BasicJavaType<J> {
 		}
 
 		@Override
-		public J assemble(Serializable cached, SharedSessionContract session) {
+		public J assemble(@Nullable Serializable cached, SharedSessionContract session) {
 			final J assembled = userType.assemble( cached, null );
 			// Since UserType#assemble is an optional operation,
 			// we have to handle the fact that it could produce a null value,

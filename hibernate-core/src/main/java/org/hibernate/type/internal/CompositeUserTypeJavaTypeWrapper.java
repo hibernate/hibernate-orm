@@ -20,6 +20,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.usertype.CompositeUserType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  *
  * @author Christian Beikov
@@ -77,7 +79,7 @@ public class CompositeUserTypeJavaTypeWrapper<J> implements JavaType<J> {
 	}
 
 	@Override
-	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
+	public @Nullable JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
 		return null;
 	}
 
@@ -102,7 +104,7 @@ public class CompositeUserTypeJavaTypeWrapper<J> implements JavaType<J> {
 	}
 
 	@Override
-	public <X> X unwrap(J value, Class<X> type, WrapperOptions options) {
+	public <X> @Nullable X unwrap(@Nullable J value, Class<X> type, WrapperOptions options) {
 		assert value == null || userType.returnedClass().isInstance( value );
 
 		//noinspection unchecked

@@ -109,6 +109,7 @@ import static org.hibernate.internal.CoreLogging.messageLogger;
  * @see org.hibernate.boot.model.TypeContributions
  */
 @Incubating
+@SuppressWarnings( "nullness" )
 public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	private static final CoreMessageLogger log = messageLogger( Scope.class );
 

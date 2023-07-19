@@ -20,6 +20,8 @@ import java.util.TreeSet;
 import java.util.function.Supplier;
 
 import jakarta.persistence.metamodel.Attribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentBag;
@@ -152,7 +154,7 @@ public final class Hibernate {
 	 * @param proxy a persistable object, proxy, persistent collection or {@code null}
 	 * @return true if the argument is already initialized, or is not a proxy or collection
 	 */
-	public static boolean isInitialized(Object proxy) {
+	public static boolean isInitialized(@Nullable Object proxy) {
 		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
 		if ( lazyInitializer != null ) {
 			return !lazyInitializer.isUninitialized();

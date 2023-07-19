@@ -441,9 +441,9 @@ public interface Type extends Serializable {
 	 *
 	 * @throws HibernateException An error from Hibernate
 	 */
-	Object replace(
-			Object original,
-			Object target,
+	@Nullable Object replace(
+			@Nullable Object original,
+			@Nullable Object target,
 			SharedSessionContractImplementor session,
 			Object owner,
 			Map<Object, Object> copyCache) throws HibernateException;

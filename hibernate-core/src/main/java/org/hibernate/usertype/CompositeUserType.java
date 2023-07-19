@@ -14,6 +14,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.metamodel.spi.ValueAccess;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * This interface should be implemented by user-defined custom types
  * that have persistent attributes and can be thought of as something
@@ -217,7 +219,7 @@ public interface CompositeUserType<J> extends EmbeddableInstantiator {
 	 * @param owner the owner of the cached object
 	 * @return a reconstructed object from the cacheable representation
 	 */
-	J assemble(Serializable cached, Object owner);
+	J assemble(Serializable cached, @Nullable Object owner);
 
 	/**
 	 * During merge, replace the existing (target) value in the entity we are merging to

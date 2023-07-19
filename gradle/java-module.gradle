@@ -545,14 +545,13 @@ checkerFramework {
 	extraJavacArgs = [
             '-AsuppressWarnings=initialization',
             // stubs is passed directly through options.compilerArgumentProviders
-            '-AonlyDefs=^org\\.hibernate\\.(' +
-					'	jdbc|exception|integrator|jpamodelgen|service|spi|pretty|property\\.access|stat|' +
-					'	engine\\.(config|jndi|profile|transaction) | ' +
-					'	(action|context|bytecode|type)\\.spi' +
-					')\\.'
+            '-AonlyDefs=^org\\.hibernate\\.(jdbc|exception|integrator|jpamodelgen|service|spi|pretty|property\\.access|stat|' +
+					'type\\.(spi|internal)|' +
+					'engine\\.(config|jndi|profile|transaction)|' +
+					'(action|context|bytecode)\\.spi)\\.'
 	]
 }
-
+//(spi|internal|format)
 
 task forbiddenApisSystemOut(type: CheckForbiddenApis, dependsOn: compileJava) {
 	bundledSignatures += 'jdk-system-out'

@@ -7,9 +7,9 @@
 package org.hibernate.type.descriptor.converter.spi;
 
 import org.hibernate.Incubating;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.type.descriptor.java.JavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Support for {@linkplain org.hibernate.type basic-typed} value conversions.
@@ -36,7 +36,7 @@ public interface BasicValueConverter<D,R> {
 	 * Convert the domain form into the relational form in preparation for
 	 * storage into JDBC
 	 */
-	R toRelationalValue(D domainForm);
+	@NonNull R toRelationalValue(D domainForm);
 
 	/**
 	 * Descriptor for the Java type for the domain portion of this converter

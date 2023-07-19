@@ -25,6 +25,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.EnhancedUserType;
 import org.hibernate.usertype.UserType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Adapts UserType to the JdbcType contract
  *
@@ -135,7 +137,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 			throw new UnsupportedOperationException( "UserType does not support reading CallableStatement parameter values: " + userType );
 		}
 
-		private void logExtracted(int paramIndex, J extracted) {
+		private void logExtracted(int paramIndex, @Nullable J extracted) {
 			if ( ! JdbcExtractingLogging.TRACE_ENABLED ) {
 				return;
 			}
@@ -148,7 +150,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 			}
 		}
 
-		private void logExtracted(String paramName, J extracted) {
+		private void logExtracted(String paramName, @Nullable J extracted) {
 			if ( ! JdbcExtractingLogging.TRACE_ENABLED ) {
 				return;
 			}
@@ -170,7 +172,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		}
 
 		@Override
-		public void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
+		public void bind(PreparedStatement st, @Nullable J value, int index, WrapperOptions options) throws SQLException {
 			if ( JdbcBindingLogging.TRACE_ENABLED ) {
 				if ( value == null ) {
 					JdbcBindingLogging.logNullBinding( index, userType.getSqlType() );

@@ -39,6 +39,9 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Christian Beikov
  */
@@ -136,7 +139,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 	}
 
 	@Override
-	public boolean[] toColumnNullness(Object value, Mapping mapping) {
+	public boolean[] toColumnNullness(@Nullable Object value, Mapping mapping) {
 		return value == null ? ArrayHelper.FALSE : ArrayHelper.TRUE;
 	}
 	public final JavaType<J> getJavaTypeDescriptor() {
@@ -274,7 +277,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public final String toLoggableString(Object value, SessionFactoryImplementor factory) {
+	public final String toLoggableString(@Nullable Object value, SessionFactoryImplementor factory) {
 		if ( value == LazyPropertyInitializer.UNFETCHED_PROPERTY || !Hibernate.isInitialized( value ) ) {
 			return  "<uninitialized>";
 		}
@@ -319,7 +322,7 @@ public class ConvertedBasicTypeImpl<J> implements ConvertedBasicType<J>,
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public final Object replace(Object original, Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
+	public final @Nullable Object replace(@Nullable Object original, @Nullable Object target, SharedSessionContractImplementor session, Object owner, Map<Object, Object> copyCache) {
 		if ( original == null && target == null ) {
 			return null;
 		}

@@ -10,6 +10,9 @@ import java.io.Serializable;
 
 import org.hibernate.SharedSessionContract;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Describes the mutability aspects of a given Java type.
  * <p>
@@ -87,5 +90,5 @@ public interface MutabilityPlan<T> extends Serializable {
 	 *
 	 * @see #disassemble
 	 */
-	T assemble(Serializable cached, SharedSessionContract session);
+	T assemble(@Nullable Serializable cached, SharedSessionContract session);
 }

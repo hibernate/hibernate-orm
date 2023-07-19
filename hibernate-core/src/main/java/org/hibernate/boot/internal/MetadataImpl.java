@@ -417,18 +417,6 @@ public class MetadataImpl implements MetadataImplementor, Serializable {
 							primaryKey.reorderColumns( primaryKeyColumns );
 						}
 					}
-					for ( UniqueKey uniqueKey : table.getUniqueKeys().values() ) {
-						if ( uniqueKey.getColumns().size() > 1 ) {
-							final List<Column> uniqueKeyColumns = columnOrderingStrategy.orderConstraintColumns(
-									uniqueKey,
-									this
-							);
-							if ( uniqueKeyColumns != null ) {
-								uniqueKey.getColumns().clear();
-								uniqueKey.getColumns().addAll( uniqueKeyColumns );
-							}
-						}
-					}
 					for ( ForeignKey foreignKey : table.getForeignKeys().values() ) {
 						final List<Column> columns = foreignKey.getColumns();
 						if ( columns.size() > 1 ) {

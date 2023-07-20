@@ -44,4 +44,7 @@ public interface Dao {
 
     @Find
     List<Book> publishedBooks(String publisher$name);
+
+    @HQL("from Book book join fetch book.publisher where book.title like :titlePattern")
+    List<Book> booksWithPublisherByTitle(String titlePattern, Page page, Order<? super Book> order);
 }

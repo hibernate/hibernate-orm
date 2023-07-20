@@ -1,4 +1,4 @@
-= Hibernate ORM {fullVersion} User Guide
+= Hibernate ORM User Guide
 :toc2:
 :toclevels: 3
 :sectanchors:

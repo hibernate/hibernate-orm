@@ -7,8 +7,8 @@
 :versionDocBase: {docsBase}/6.3
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 
-= An introduction to Hibernate 6
-Gavin King and the Hibernate team
+= A guide to Hibernate 6
+
 :title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :toclevels: 3
@@ -35,3 +35,4 @@ include::Tuning.adoc[]
 
 include::Advanced.adoc[]
 
+include::Credits.adoc[]

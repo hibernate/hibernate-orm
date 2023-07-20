@@ -3,6 +3,42 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.7.Final (July 20, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32170
+
+** Bug
+    * [HHH-16943] - Column ordering leads to wrong column order in unique constraints
+    * [HHH-16926] - AssertionError when sorting by fields of joined entity
+    * [HHH-16923] - Deleting all entities of a given type fails when using a composite primary key and order_updates
+    * [HHH-16912] - Hibernate 6.2 breaks backward compatibility
+    * [HHH-16905] - Since 6.2.6 criteria query with nested fetches do not fetch some entities any more
+    * [HHH-16892] - LocalXmlResourceResolver does not resolve dtd URLs that use https scheme
+    * [HHH-16890] - StackOverflowError when loading entities with @Proxy(lazy = false)
+    * [HHH-16886] - Incorrect SQL alternative for tuple-in-lists on DBMS not supporting tuple-in-lists
+    * [HHH-16872] - JDBC fetch size seems to be ignored post migration to hibernate6
+    * [HHH-16871] - Queries returning null values for related entities depending on 'max_fetch_depth'
+    * [HHH-16845] - Cached entity with @EmbeddedId cannot use @ElementCollection
+    * [HHH-16837] - UnknownTableReferenceException with @ManyToMany and @OrderBy and InheritenceType.JOINED
+    * [HHH-16833] - Assertion Error when inserting two entities linked with a OneToOne relation
+    * [HHH-16812] - StackOverflowError an embeddable's @Parent is a subclass in an inheritance tree
+    * [HHH-16811] - Dirty property lost and not detected with Batch Fetch, Embedded and FetchMode SELECT
+    * [HHH-16810] - Fail to delete entity with a composite id using an @IdClass with one of its fields mapped from the id of a @ManyToOne association
+    * [HHH-16803] - Setting value of enum type to null using nullLiteral: "Not a managed type"
+    * [HHH-16792] - Incorrect generated SQL query when using CriteriaUpdate on an entity with inheritance
+    * [HHH-16765] - Cannot parse quoted table name
+    * [HHH-16754] - unionAll with subquery orderby using path expression throws an error
+    * [HHH-16709] - @EmbeddedId Foreign key comparator throws NPE with order_updates enabled
+    * [HHH-16667] - Hibernate 6 PrimaryKeyJoinColumn causes implicit version update to fail
+    * [HHH-16586] - When merging a persisted entity with a null Version, Hibernate treats entity as transient instead of throwing an Exception
+    * [HHH-15917] - Unrelated Entity Join throws IllegalStateException
+    * [HHH-15720] - Using multiple select in a multiselect generates java.lang.ArrayIndexOutOfBoundsException
+
+** Task
+    * [HHH-16877] - Improved efficiency of lookup for MutationExecutorService
+
+
 Changes in 6.2.6.Final (June 30, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

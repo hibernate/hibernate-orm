@@ -7,8 +7,7 @@
 :versionDocBase: {docsBase}/6.3
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 
-= A guide to Hibernate 6
-
+= A Guide to Hibernate 6
 :title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :toclevels: 3

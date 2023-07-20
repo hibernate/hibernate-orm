@@ -14,7 +14,7 @@
 :example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
 :extrasdir: extras
 
-= A guide to Hibernate Query Language 6
+= A Guide to Hibernate Query Language
 :title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :toclevels: 3

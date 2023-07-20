@@ -66,6 +66,7 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.determineAnnotationSpecif
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationMirror;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValue;
 import static org.hibernate.jpamodelgen.util.TypeUtils.getAnnotationValueRef;
+import static org.hibernate.jpamodelgen.util.TypeUtils.hasAnnotation;
 
 /**
  * Class used to collect meta information about an annotated type (entity, embeddable or mapped superclass).
@@ -115,22 +116,29 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private boolean dao = false;
 
 	/**
+	 * True if this "metamodel class" should extend the original class.
+	 */
+	private final boolean extension;
+
+	/**
 	 * The type of the "session getter" method of a DAO-style repository.
 	 */
 	private String sessionType = Constants.ENTITY_MANAGER;
 
 	private final Map<String,String> memberTypes = new HashMap<>();
 
-	public AnnotationMetaEntity(TypeElement element, Context context, boolean managed) {
+	public AnnotationMetaEntity(TypeElement element, Context context, boolean managed, boolean extension) {
 		this.element = element;
 		this.context = context;
 		this.managed = managed;
+		this.extension = extension;
 		this.members = new HashMap<>();
 		this.importContext = new ImportContextImpl( getPackageName( context, element ) );
 	}
 
 	public static AnnotationMetaEntity create(TypeElement element, Context context, boolean lazilyInitialised, boolean managed) {
-		final AnnotationMetaEntity annotationMetaEntity = new AnnotationMetaEntity( element, context, managed );
+		boolean extension = !managed && element.getKind() == ElementKind.CLASS;
+		final AnnotationMetaEntity annotationMetaEntity = new AnnotationMetaEntity( element, context, managed, extension );
 		if ( !lazilyInitialised ) {
 			annotationMetaEntity.init();
 		}
@@ -152,6 +160,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	@Override
 	public boolean isImplementation() {
+		return extension || dao;
+	}
+
+	@Override
+	public boolean isConcrete() {
 		return dao;
 	}
 

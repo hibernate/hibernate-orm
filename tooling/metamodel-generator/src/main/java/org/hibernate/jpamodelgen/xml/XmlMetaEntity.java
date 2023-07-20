@@ -624,6 +624,11 @@ public class XmlMetaEntity implements Metamodel {
 	}
 
 	@Override
+	public boolean isConcrete() {
+		return false;
+	}
+
+	@Override
 	public boolean isInjectable() {
 		return false;
 	}

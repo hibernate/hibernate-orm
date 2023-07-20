@@ -58,6 +58,11 @@ public class AnnotationMetaPackage extends AnnotationMeta {
 	}
 
 	@Override
+	public boolean isConcrete() {
+		return false;
+	}
+
+	@Override
 	public final String getSimpleName() {
 		return element.getSimpleName().toString();
 	}

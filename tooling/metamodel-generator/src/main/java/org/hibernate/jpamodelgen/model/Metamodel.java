@@ -37,5 +37,7 @@ public interface Metamodel extends ImportContext {
 
 	boolean isImplementation();
 
+	boolean isConcrete();
+
 	boolean isInjectable();
 }

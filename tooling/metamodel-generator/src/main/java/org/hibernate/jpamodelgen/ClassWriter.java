@@ -10,8 +10,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.text.SimpleDateFormat;
-import java.util.Date;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import javax.annotation.processing.FilerException;
 import javax.lang.model.element.Element;
@@ -39,14 +39,6 @@ import static org.hibernate.jpamodelgen.util.TypeUtils.containsAnnotation;
  */
 public final class ClassWriter {
 	private static final String META_MODEL_CLASS_NAME_SUFFIX = "_";
-	// See https://github.com/typetools/checker-framework/issues/979
-	@SuppressWarnings( "type.argument" )
-	private static final ThreadLocal<SimpleDateFormat> SIMPLE_DATE_FORMAT = new ThreadLocal<SimpleDateFormat>() {
-		@Override
-		public SimpleDateFormat initialValue() {
-			return new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss.SSSZ" );
-		}
-	};
 
 	private ClassWriter() {
 	}
@@ -138,7 +130,7 @@ public final class ClassWriter {
 	}
 
 	private static void printClassDeclaration(Metamodel entity, PrintWriter pw, Context context) {
-		pw.print( entity.isImplementation() ? "public class " : "public abstract class " );
+		pw.print( entity.isConcrete() ? "public class " : "public abstract class " );
 		pw.print( entity.getSimpleName() + META_MODEL_CLASS_NAME_SUFFIX );
 
 		String superClassName = findMappedSuperClass( entity, context );
@@ -173,16 +165,16 @@ public final class ClassWriter {
 
 	/**
 	 * Checks whether this metamodel class needs to extend another metamodel class.
-	 * This methods checks whether the processor has generated a metamodel class for the super class, but it also
-	 * allows for the possibility that the metamodel class was generated in a previous compilation (eg it could be
-	 * part of a separate jar. See also METAGEN-35).
+	 * This method checks whether the processor has generated a metamodel class for the super class, but it also
+	 * allows for the possibility that the metamodel class was generated in a previous compilation. (It could be
+	 * part of a separate jar. See also METAGEN-35.)
 	 *
 	 * @param superClassElement the super class element
-	 * @param entityMetaComplete flag indicating if the entity for which the metamodel should be generarted is metamodel
-	 * complete. If so we cannot use reflection to decide whether we have to add the extend clause
+	 * @param entityMetaComplete flag indicating if the entity for which the metamodel should be generated is
+	 * metamodel complete. If so we cannot use reflection to decide whether we have to add the extends clause
 	 * @param context the execution context
 	 *
-	 * @return {@code true} in case there is super class meta model to extend from {@code false} otherwise.
+	 * @return {@code true} in case there is super class metamodel to extend from {@code false} otherwise.
 	 */
 	private static boolean extendsSuperMetaModel(Element superClassElement, boolean entityMetaComplete, Context context) {
 		// if we processed the superclass in the same run we definitely need to extend
@@ -230,7 +222,7 @@ public final class ClassWriter {
 			generatedAnnotation
 					.append( ", date = " )
 					.append( "\"" )
-					.append( SIMPLE_DATE_FORMAT.get().format( new Date() ) )
+					.append( DateTimeFormatter.ISO_OFFSET_DATE_TIME.format( OffsetDateTime.now() ) )
 					.append( "\"" );
 		}
 		generatedAnnotation.append( ")" );

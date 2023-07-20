@@ -15,7 +15,6 @@
 :extrasdir: extras
 
 = A guide to Hibernate Query Language 6
-Gavin King and the Hibernate team
 :title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :toclevels: 3
@@ -41,4 +40,8 @@ include::From.adoc[]
 <<<
 
 include::Relational.adoc[]
+
+<<<
+
+include::Credits.adoc[]
 

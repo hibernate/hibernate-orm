@@ -1173,7 +1173,7 @@ For _logical_ operations on <<conditional-expressions,predicates>>, see <<logica
 | `is false` | `is not false` | Binary | `true` if the value to the left is `false`, or `false` otherwise
 |===
 
-[[null-predicate-example]]
+[[boolean-predicate-example]]
 [source, hql]
 ----
 from Book where discontinued is not true

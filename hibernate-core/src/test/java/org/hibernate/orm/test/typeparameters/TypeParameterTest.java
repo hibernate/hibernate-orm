@@ -68,13 +68,14 @@ public class TypeParameterTest {
 				new Work() {
 					@Override
 					public void execute(Connection connection) throws SQLException {
+						final String sql = "SELECT * FROM STRANGE_TYPED_OBJECT WHERE ID=?";
 						PreparedStatement statement = ( (SessionImplementor) s ).getJdbcCoordinator()
 								.getStatementPreparer()
-								.prepareStatement( "SELECT * FROM STRANGE_TYPED_OBJECT WHERE ID=?" );
+								.prepareStatement( sql );
 						statement.setInt( 1, id.intValue() );
 						ResultSet resultSet = ( (SessionImplementor) s ).getJdbcCoordinator()
 								.getResultSetReturn()
-								.extract( statement );
+								.extract( statement, sql );
 
 						assertTrue( "A row should have been returned", resultSet.next() );
 						assertTrue(

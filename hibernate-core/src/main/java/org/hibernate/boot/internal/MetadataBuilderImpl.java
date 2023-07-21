@@ -659,10 +659,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 			this.sharedCacheMode = configService.getSetting(
 					AvailableSettings.JAKARTA_SHARED_CACHE_MODE,
 					value -> {
-						if ( value == null ) {
-							return null;
-						}
-
 						if ( value instanceof SharedCacheMode ) {
 							return (SharedCacheMode) value;
 						}

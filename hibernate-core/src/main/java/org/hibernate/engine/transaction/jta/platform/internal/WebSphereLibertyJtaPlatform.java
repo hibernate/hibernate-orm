@@ -34,8 +34,8 @@ public class WebSphereLibertyJtaPlatform extends AbstractJtaPlatform {
 	@Override
 	protected TransactionManager locateTransactionManager() {
 		try {
-			final Class<?> TransactionManagerFactory = serviceRegistry()
-					.getService( ClassLoaderService.class )
+			final Class<?> TransactionManagerFactory = NullnessUtil.castNonNull( serviceRegistry()
+					.getService( ClassLoaderService.class ) )
 					.classForName( TMF_CLASS_NAME );
 			return (TransactionManager) TransactionManagerFactory.getMethod("getTransactionManager").invoke(null);
 		}

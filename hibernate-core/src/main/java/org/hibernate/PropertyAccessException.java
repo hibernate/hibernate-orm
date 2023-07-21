@@ -8,6 +8,8 @@ package org.hibernate;
 
 import static org.hibernate.internal.util.StringHelper.qualify;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * A problem occurred accessing a property of an instance of a
  * persistent class by reflection, or via enhanced entities.
@@ -38,7 +40,7 @@ public class PropertyAccessException extends HibernateException {
 	 * @param propertyName The name of the property.
 	 */
 	public PropertyAccessException(
-			Throwable cause,
+			@Nullable Throwable cause,
 			String message,
 			boolean wasSetter,
 			Class<?> persistentClass,

@@ -353,6 +353,7 @@ task assembleDocumentation {
     dependsOn tasks.stageTopicalGuide
     dependsOn tasks.stageQuickstart
     dependsOn tasks.stageIntroduction
+    dependsOn tasks.stageQL
     dependsOn tasks.stageUserGuide
     dependsOn tasks.stageMigrationGuide
     dependsOn tasks.stageOrmReports

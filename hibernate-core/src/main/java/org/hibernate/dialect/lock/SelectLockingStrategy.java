@@ -69,7 +69,7 @@ public class SelectLockingStrategy extends AbstractSelectLockingStrategy {
 					);
 				}
 
-				final ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st );
+				final ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, sql );
 				try {
 					if ( !rs.next() ) {
 						final StatisticsImplementor statistics = factory.getStatistics();

@@ -20,6 +20,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.property.access.internal.AbstractFieldSerialForm;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Field-based implementation of Getter
  *
@@ -30,7 +32,7 @@ public class GetterFieldImpl implements Getter {
 	private final Class<?> containerClass;
 	private final String propertyName;
 	private final Field field;
-	private final Method getterMethod;
+	private final @Nullable Method getterMethod;
 
 	public GetterFieldImpl(Class<?> containerClass, String propertyName, Field field) {
 		this.containerClass = containerClass;
@@ -41,7 +43,7 @@ public class GetterFieldImpl implements Getter {
 	}
 
 	@Override
-	public Object get(Object owner) {
+	public @Nullable Object get(Object owner) {
 		try {
 			return field.get( owner );
 		}
@@ -62,7 +64,7 @@ public class GetterFieldImpl implements Getter {
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+	public @Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 		return get( owner );
 	}
 
@@ -82,12 +84,12 @@ public class GetterFieldImpl implements Getter {
 	}
 
 	@Override
-	public String getMethodName() {
+	public @Nullable String getMethodName() {
 		return getterMethod != null ? getterMethod.getName() : null;
 	}
 
 	@Override
-	public Method getMethod() {
+	public @Nullable Method getMethod() {
 		return getterMethod;
 	}
 

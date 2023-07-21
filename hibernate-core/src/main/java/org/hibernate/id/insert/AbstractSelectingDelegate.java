@@ -82,7 +82,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 		try {
 			bindParameters( entity, idSelect, session );
 
-			final ResultSet resultSet = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect );
+			final ResultSet resultSet = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect, idSelectSql );
 			try {
 				return extractGeneratedValue( resultSet, session );
 			}
@@ -138,7 +138,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 			PreparedStatement idSelect = statementPreparer.prepareStatement( selectSQL, false );
 			try {
 				bindParameters( binder.getEntity(), idSelect, session );
-				ResultSet resultSet = jdbcCoordinator.getResultSetReturn().extract( idSelect );
+				ResultSet resultSet = jdbcCoordinator.getResultSetReturn().extract( idSelect, selectSQL );
 				try {
 					return extractGeneratedValue( resultSet, session );
 				}

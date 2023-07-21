@@ -60,6 +60,11 @@ public class SqmEntityJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements 
 	}
 
 	@Override
+	public boolean isImplicitlySelectable() {
+		return true;
+	}
+
+	@Override
 	public SqmEntityJoin<T> copy(SqmCopyContext context) {
 		final SqmEntityJoin<T> existing = context.getCopy( this );
 		if ( existing != null ) {

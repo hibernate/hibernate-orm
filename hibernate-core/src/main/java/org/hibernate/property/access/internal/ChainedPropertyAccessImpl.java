@@ -12,10 +12,13 @@ import java.lang.reflect.Type;
 import java.util.Map;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Christian Beikov
@@ -44,24 +47,26 @@ public class ChainedPropertyAccessImpl implements PropertyAccess, Getter, Setter
 	}
 
 	@Override
-	public Object get(Object owner) {
+	public @Nullable Object get(Object owner) {
+		@Nullable Object result = owner;
 		for ( int i = 0; i < propertyAccesses.length; i++ ) {
-			owner = propertyAccesses[i].getGetter().get( owner );
+			result = propertyAccesses[i].getGetter().get( NullnessUtil.castNonNull( result ) );
 		}
-		return owner;
+		return result;
 	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+	public @Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+		@Nullable Object result = owner;
 		for ( int i = 0; i < propertyAccesses.length; i++ ) {
-			owner = propertyAccesses[i].getGetter().getForInsert( owner, mergeMap, session );
+			result = propertyAccesses[i].getGetter().getForInsert( NullnessUtil.castNonNull( result ), mergeMap, session );
 		}
-		return owner;
+		return result;
 	}
 
 	@Override
-	public void set(Object target, Object value) {
+	public void set(Object target, @Nullable Object value) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -76,17 +81,17 @@ public class ChainedPropertyAccessImpl implements PropertyAccess, Getter, Setter
 	}
 
 	@Override
-	public Member getMember() {
+	public @Nullable Member getMember() {
 		return null;
 	}
 
 	@Override
-	public String getMethodName() {
+	public @Nullable String getMethodName() {
 		return null;
 	}
 
 	@Override
-	public Method getMethod() {
+	public @Nullable Method getMethod() {
 		return null;
 	}
 }

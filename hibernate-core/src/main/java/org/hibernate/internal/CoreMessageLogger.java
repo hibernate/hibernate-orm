@@ -44,6 +44,7 @@ import org.jboss.logging.annotations.ValidIdRange;
 
 import jakarta.transaction.Synchronization;
 import jakarta.transaction.SystemException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.ERROR;
@@ -278,7 +279,7 @@ public interface CoreMessageLogger extends BasicLogger {
 	@LogMessage(level = ERROR)
 	@Message(value = "Expected type: %s, actual value: %s", id = 91)
 	void expectedType(String name,
-			String string);
+			@Nullable String string);
 
 	@LogMessage(level = WARN)
 	@Message(value = "An item was expired by the cache while it was locked (increase your cache timeout): %s", id = 92)

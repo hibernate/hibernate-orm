@@ -14,8 +14,7 @@
 :example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
 :extrasdir: extras
 
-= A guide to Hibernate Query Language 6
-Gavin King and the Hibernate team
+= A Guide to Hibernate Query Language
 :title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :toclevels: 3
@@ -41,4 +40,8 @@ include::From.adoc[]
 <<<
 
 include::Relational.adoc[]
+
+<<<
+
+include::Credits.adoc[]
 

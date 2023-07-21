@@ -18,6 +18,8 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.Setter;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * {@link PropertyAccess} for accessing the wrapped property via get/set pair, which may be nonpublic.
  *
@@ -46,18 +48,18 @@ public class PropertyAccessCompositeUserTypeImpl implements PropertyAccess, Gett
 	}
 
 	@Override
-	public Setter getSetter() {
+	public @Nullable Setter getSetter() {
 		return null;
 	}
 
 	@Override
-	public Object get(Object owner) {
+	public @Nullable Object get(Object owner) {
 		return strategy.compositeUserType.getPropertyValue( owner, propertyIndex );
 	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
-	public Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
+	public @Nullable Object getForInsert(Object owner, Map mergeMap, SharedSessionContractImplementor session) {
 		return get( owner );
 	}
 
@@ -72,17 +74,17 @@ public class PropertyAccessCompositeUserTypeImpl implements PropertyAccess, Gett
 	}
 
 	@Override
-	public Member getMember() {
+	public @Nullable Member getMember() {
 		return null;
 	}
 
 	@Override
-	public String getMethodName() {
+	public @Nullable String getMethodName() {
 		return null;
 	}
 
 	@Override
-	public Method getMethod() {
+	public @Nullable Method getMethod() {
 		return null;
 	}
 }

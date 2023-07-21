@@ -16,6 +16,8 @@ import org.hibernate.PropertySetterAccessException;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.property.access.internal.AbstractSetterMethodSerialForm;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.internal.CoreLogging.messageLogger;
 
 /**
@@ -40,7 +42,7 @@ public class SetterMethodImpl implements Setter {
 	}
 
 	@Override
-	public void set(Object target, Object value) {
+	public void set(Object target, @Nullable Object value) {
 		try {
 			setterMethod.invoke( target, value );
 		}

@@ -90,8 +90,15 @@ public class ToOneBinder {
 		if ( property.isAnnotationPresent( Column.class )
 				|| property.isAnnotationPresent( Columns.class ) ) {
 			throw new AnnotationException(
-					"Property '"+ getPath( propertyHolder, inferredData )
+					"Property '" + getPath( propertyHolder, inferredData )
 							+ "' is a '@ManyToOne' association and may not use '@Column' to specify column mappings (use '@JoinColumn' instead)"
+			);
+		}
+
+		if ( joinColumns.hasMappedBy() && isIdentifier( propertyHolder, propertyBinder, isIdentifierMapper ) ) {
+			throw new AnnotationException(
+					"Property '" + getPath( propertyHolder, inferredData )
+							+ "' is the inverse side of a '@ManyToOne' association and cannot be used as identifier"
 			);
 		}
 
@@ -122,6 +129,13 @@ public class ToOneBinder {
 				propertyBinder,
 				context
 		);
+	}
+
+	private static boolean isIdentifier(
+			PropertyHolder propertyHolder,
+			PropertyBinder propertyBinder,
+			boolean isIdentifierMapper) {
+		return propertyBinder.isId() || propertyHolder.isOrWithinEmbeddedId() || propertyHolder.isInIdClass() || isIdentifierMapper;
 	}
 
 	private static boolean isMandatory(boolean optional, XProperty property, NotFoundAction notFoundAction) {
@@ -421,9 +435,16 @@ public class ToOneBinder {
 		if ( property.isAnnotationPresent( Column.class )
 				|| property.isAnnotationPresent( Columns.class ) ) {
 			throw new AnnotationException(
-					"Property '"+ getPath( propertyHolder, inferredData )
+					"Property '" + getPath( propertyHolder, inferredData )
 							+ "' is a '@OneToOne' association and may not use '@Column' to specify column mappings"
 							+ " (use '@PrimaryKeyJoinColumn' instead)"
+			);
+		}
+
+		if ( joinColumns.hasMappedBy() && isIdentifier( propertyHolder, propertyBinder, isIdentifierMapper ) ) {
+			throw new AnnotationException(
+					"Property '" + getPath( propertyHolder, inferredData )
+							+ "' is the inverse side of a '@OneToOne' association and cannot be used as identifier"
 			);
 		}
 

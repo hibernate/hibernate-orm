@@ -19,6 +19,8 @@ import org.hibernate.proxy.HibernateProxy;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * This is a helper to encapsulate an optimal strategy to execute type checks
  * for interfaces which attempts to avoid the performance issues tracked
@@ -158,7 +160,7 @@ public final class ManagedTypeHelper {
 	 * @param entity
 	 * @return true if and only if the entity implements {@see CompositeTracker}
 	 */
-	public static boolean isCompositeTracker(final Object entity) {
+	public static boolean isCompositeTracker(final @Nullable Object entity) {
 		if ( entity instanceof PrimeAmongSecondarySupertypes ) {
 			PrimeAmongSecondarySupertypes t = (PrimeAmongSecondarySupertypes) entity;
 			return t.asCompositeTracker() != null;
@@ -373,6 +375,17 @@ public final class ManagedTypeHelper {
 			}
 		}
 		throw new ClassCastException( "Object of type '" + entity.getClass() + "' can't be cast to SelfDirtinessTracker" );
+	}
+
+	/**
+	 * Cast the object to an HibernateProxy, or return null in case it is not an instance of HibernateProxy
+	 * @param entity the entity to cast
+	 * @return the same instance after casting or null if it is not an instance of HibernateProxy
+	 */
+	public static HibernateProxy asHibernateProxyOrNull(final Object entity) {
+		return entity instanceof PrimeAmongSecondarySupertypes ?
+				( (PrimeAmongSecondarySupertypes) entity ).asHibernateProxy() :
+				null;
 	}
 
 	private static final class TypeMeta {

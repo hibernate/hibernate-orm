@@ -33,8 +33,15 @@ public class ServiceRegistryTestingImpl
 		extends StandardServiceRegistryImpl
 		implements ServiceRegistryImplementor {
 
+	private ServiceRegistryTestingImpl(
+			boolean autoCloseRegistry,
+			BootstrapServiceRegistry bootstrapServiceRegistry,
+			Map<String, Object> configurationValues) {
+		super( autoCloseRegistry, bootstrapServiceRegistry, configurationValues );
+	}
+
 	public static ServiceRegistryTestingImpl forUnitTesting() {
-		return new ServiceRegistryTestingImpl(
+		return ServiceRegistryTestingImpl.create(
 				true,
 				new BootstrapServiceRegistryBuilder().build(),
 				StandardServiceInitiators.LIST,
@@ -47,7 +54,7 @@ public class ServiceRegistryTestingImpl
 	}
 
 	public static ServiceRegistryTestingImpl forUnitTesting(Map<String,Object> settings) {
-		return new ServiceRegistryTestingImpl(
+		return ServiceRegistryTestingImpl.create(
 				true,
 				new BootstrapServiceRegistryBuilder().build(),
 				StandardServiceInitiators.LIST,
@@ -70,12 +77,17 @@ public class ServiceRegistryTestingImpl
 		);
 	}
 
-	public ServiceRegistryTestingImpl(
+	public static ServiceRegistryTestingImpl create(
 			boolean autoCloseRegistry,
 			BootstrapServiceRegistry bootstrapServiceRegistry,
 			List<StandardServiceInitiator<?>> serviceInitiators,
 			List<ProvidedService<?>> providedServices,
 			Map<String,Object> configurationValues) {
-		super( autoCloseRegistry, bootstrapServiceRegistry, serviceInitiators, providedServices, configurationValues );
+
+		ServiceRegistryTestingImpl instance = new ServiceRegistryTestingImpl( autoCloseRegistry, bootstrapServiceRegistry, configurationValues );
+		instance.initialize();
+		instance.applyServiceRegistrations( serviceInitiators, providedServices );
+
+		return instance;
 	}
 }

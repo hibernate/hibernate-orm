@@ -15,6 +15,7 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.internal.AbstractCollectionInitializer;
+import org.hibernate.sql.results.graph.entity.internal.AbstractBatchEntitySelectFetchInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchInitializer;
 import org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -118,7 +119,8 @@ public final class InitializersList {
 		private static boolean initializeFirst(final Initializer initializer) {
 			return !( initializer instanceof EntityDelayedFetchInitializer )
 					&& !( initializer instanceof EntitySelectFetchInitializer )
-					&& !( initializer instanceof AbstractCollectionInitializer );
+					&& !( initializer instanceof AbstractCollectionInitializer )
+					&& !(initializer instanceof AbstractBatchEntitySelectFetchInitializer );
 		}
 
 		InitializersList build(final Map<NavigablePath, Initializer> initializerMap) {

@@ -3,10 +3,10 @@
 
 This document describes Hibernate Query Language (HQL), which is, I suppose we could say, a dialect of the Java (now Jakarta) Persistence Query Language (JPQL).
 
-Or is it the other way around?
-
 [NOTE]
 ====
+Or is it the other way around?
+
 JPQL was inspired by early versions of HQL, and is a proper subset of modern HQL.
 Here we focus on describing the complete, more powerful HQL language as it exists today.
 

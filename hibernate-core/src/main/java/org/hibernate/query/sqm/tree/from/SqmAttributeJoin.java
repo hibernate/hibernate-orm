@@ -25,6 +25,11 @@ public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O
 	SqmFrom<?,O> getLhs();
 
 	@Override
+	default boolean isImplicitlySelectable() {
+		return !isFetched();
+	}
+
+	@Override
 	SqmPathSource<T> getReferencedPathSource();
 
 	@Override

@@ -72,7 +72,7 @@ public class PessimisticReadSelectLockingStrategy extends AbstractSelectLockingS
 						);
 					}
 
-					final ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st );
+					final ResultSet rs = jdbcCoordinator.getResultSetReturn().extract( st, sql );
 					if ( !rs.next() ) {
 						final StatisticsImplementor statistics = factory.getStatistics();
 						if ( statistics.isStatisticsEnabled() ) {

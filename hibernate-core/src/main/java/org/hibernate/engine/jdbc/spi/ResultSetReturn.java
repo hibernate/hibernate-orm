@@ -22,7 +22,6 @@ import java.sql.Statement;
  *
  * @see JdbcCoordinator#getResultSetReturn()
  */
-//TODO: This could eventually utilize the new Return interface. It would be great to have a common API.
 public interface ResultSetReturn {
 
 	/**
@@ -34,7 +33,10 @@ public interface ResultSetReturn {
 	 * @param statement The {@link PreparedStatement} from which to extract the {@link ResultSet}
 	 *
 	 * @return The extracted ResultSet
+	 *
+	 * @deprecated Use {@link #extract(PreparedStatement, String)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	ResultSet extract(PreparedStatement statement);
 
 	/**
@@ -57,7 +59,10 @@ public interface ResultSetReturn {
 	 * @param callableStatement The {@link CallableStatement} from which to extract the {@link ResultSet}
 	 *
 	 * @return The extracted {@link ResultSet}
+	 *
+	 * @deprecated Use {@link #extract(PreparedStatement, String)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	ResultSet extract(CallableStatement callableStatement);
 	
 	/**
@@ -77,7 +82,10 @@ public interface ResultSetReturn {
 	 * @param statement The {@link PreparedStatement} to execute
 	 *
 	 * @return The extracted {@link ResultSet}, or {@code null}
+	 *
+	 * @deprecated Use {@link #execute(PreparedStatement, String)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	ResultSet execute(PreparedStatement statement);
 
 	/**
@@ -108,7 +116,10 @@ public interface ResultSetReturn {
 	 * @param statement The {@link PreparedStatement} to execute
 	 *
 	 * @return The {@link PreparedStatement#executeUpdate()} result
+	 *
+	 * @deprecated Use {@link #executeUpdate(PreparedStatement, String)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	int executeUpdate(PreparedStatement statement);
 
 	/**

@@ -8,6 +8,7 @@ package org.hibernate.property.access.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
+import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
@@ -79,7 +80,7 @@ public class PropertyAccessStrategyResolverStandardImpl implements PropertyAcces
 			if ( serviceRegistry == null ) {
 				throw new HibernateException( "ServiceRegistry not yet injected; PropertyAccessStrategyResolver not ready for use." );
 			}
-			strategySelectorService = serviceRegistry.getService( StrategySelector.class );
+			strategySelectorService = NullnessUtil.castNonNull( serviceRegistry.getService( StrategySelector.class ) );
 		}
 		return strategySelectorService;
 	}

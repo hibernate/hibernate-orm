@@ -5,5 +5,10 @@ package java.lang.reflect;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public final class Method extends Executable {
-    void invoke(@Nullable Object obj, Object @Nullable ... args);
+    void invoke(@Nullable Object obj, @Nullable Object @Nullable ... args);
+}
+
+public final
+class Field extends AccessibleObject implements Member {
+    public void set(Object obj, @Nullable Object value);
 }

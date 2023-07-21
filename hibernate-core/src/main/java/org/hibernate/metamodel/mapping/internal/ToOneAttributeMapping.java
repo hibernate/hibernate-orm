@@ -2270,7 +2270,10 @@ public class ToOneAttributeMapping
 
 	@Override
 	public int getJdbcTypeCount() {
-		return foreignKeyDescriptor.getJdbcTypeCount();
+		if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
+			return foreignKeyDescriptor.getJdbcTypeCount();
+		}
+		return 0;
 	}
 
 	@Override

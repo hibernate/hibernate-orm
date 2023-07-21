@@ -1118,11 +1118,11 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			final EntityTableMapping tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
 			final TableUpdateBuilder<?> tableUpdateBuilder = (TableUpdateBuilder<?>) builder;
 			applyKeyRestriction( rowId, rowIdMapping, tableUpdateBuilder, tableMapping );
-			applyPartictionKeyRestriction( tableUpdateBuilder );
+			applyPartitionKeyRestriction( tableUpdateBuilder );
 		} );
 	}
 
-	private void applyPartictionKeyRestriction(TableUpdateBuilder<?> tableUpdateBuilder) {
+	private void applyPartitionKeyRestriction(TableUpdateBuilder<?> tableUpdateBuilder) {
 		final AbstractEntityPersister persister = entityPersister();
 		if ( persister.hasPartitionedSelectionMapping() ) {
 			final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
@@ -1619,17 +1619,18 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			return null;
 		}
 		else {
+			final EntityTableMapping identifierTableMapping = entityPersister().getIdentifierTableMapping();
 			final AbstractTableUpdateBuilder<JdbcMutationOperation> updateBuilder =
-					newTableUpdateBuilder( entityPersister().getIdentifierTableMapping() );
+					newTableUpdateBuilder( identifierTableMapping );
 
 			updateBuilder.setSqlComment( "forced version increment for " + entityPersister().getRolePath() );
 
 			updateBuilder.addValueColumn( versionMapping );
 
-			updateBuilder.addKeyRestrictionsLeniently( entityPersister().getIdentifierMapping() );
+			updateBuilder.addKeyRestrictionsLeniently( identifierTableMapping.getKeyMapping() );
 
 			updateBuilder.addOptimisticLockRestriction( versionMapping );
-			addPartitionRestriction( updateBuilder );
+			applyPartitionKeyRestriction( updateBuilder );
 
 			//noinspection resource
 			final JdbcMutationOperation jdbcMutation = factory()
@@ -1640,23 +1641,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					.translate( null, MutationQueryOptions.INSTANCE );
 
 			return MutationOperationGroupFactory.singleOperation( MutationType.UPDATE, entityPersister(), jdbcMutation );
-		}
-	}
-
-	private void addPartitionRestriction(AbstractTableUpdateBuilder<JdbcMutationOperation> updateBuilder) {
-		final AbstractEntityPersister persister = entityPersister();
-		if ( persister.hasPartitionedSelectionMapping() ) {
-			final AttributeMappingsList attributeMappings = persister.getAttributeMappings();
-			for ( int m = 0; m < attributeMappings.size(); m++ ) {
-				final AttributeMapping attributeMapping = attributeMappings.get( m );
-				final int jdbcTypeCount = attributeMapping.getJdbcTypeCount();
-				for ( int i = 0; i < jdbcTypeCount; i++ ) {
-					final SelectableMapping selectableMapping = attributeMapping.getSelectable( i );
-					if ( selectableMapping.isPartitioned() ) {
-						updateBuilder.addKeyRestrictionLeniently( selectableMapping );
-					}
-				}
-			}
 		}
 	}
 

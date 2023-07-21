@@ -220,6 +220,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 
 	/**
 	 * Open a {@link StatelessSession} and use it to perform an action.
+	 *
+	 * @since 6.3
 	 */
 	default void inStatelessSession(Consumer<StatelessSession> action) {
 		try ( StatelessSession session = openStatelessSession() ) {
@@ -238,6 +240,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Open a {@link StatelessSession} and use it to perform an action
 	 * within the bounds of a transaction.
+	 *
+	 * @since 6.3
 	 */
 	default void inStatelessTransaction(Consumer<StatelessSession> action) {
 		inStatelessSession( session -> manageTransaction( session, session.beginTransaction(), action ) );
@@ -254,6 +258,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 
 	/**
 	 * Open a {@link StatelessSession} and use it to obtain a value.
+	 *
+	 * @since 6.3
 	 */
 	default <R> R fromStatelessSession(Function<StatelessSession,R> action) {
 		try ( StatelessSession session = openStatelessSession() ) {
@@ -272,6 +278,8 @@ public interface SessionFactory extends EntityManagerFactory, Referenceable, Ser
 	/**
 	 * Open a {@link StatelessSession} and use it to obtain a value
 	 * within the bounds of a transaction.
+	 *
+	 * @since 6.3
 	 */
 	default <R> R fromStatelessTransaction(Function<StatelessSession,R> action) {
 		return fromStatelessSession( session -> manageTransaction( session, session.beginTransaction(), action ) );

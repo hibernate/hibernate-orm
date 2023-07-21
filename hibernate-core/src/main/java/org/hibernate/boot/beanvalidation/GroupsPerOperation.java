@@ -92,7 +92,7 @@ public class GroupsPerOperation {
 		}
 
 		//null is bad and excluded by instanceof => exception is raised
-		throw new HibernateException( JAKARTA_JPA_GROUP_PREFIX + operation.getGroupPropertyName() + " is of unknown type: String or Class<?>[] only");
+		throw new HibernateException( JAKARTA_JPA_GROUP_PREFIX + operation.getJakartaGroupPropertyName() + " is of unknown type: String or Class<?>[] only");
 	}
 
 	public Class<?>[] get(Operation operation) {

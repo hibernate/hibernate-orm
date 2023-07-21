@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.test.integration.manytoone.lazy;
 
+import jakarta.persistence.Column;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.AuditTable;
 import org.hibernate.envers.Audited;
@@ -85,6 +86,7 @@ public class ManyToOneLazyProxyTest {
 		@Id
 		private Long id;
 
+		@Column(name = "description")
 		private String desc;
 
 		public Long getId() {

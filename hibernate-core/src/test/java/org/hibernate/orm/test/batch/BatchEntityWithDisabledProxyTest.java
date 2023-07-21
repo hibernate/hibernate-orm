@@ -56,9 +56,11 @@ public class BatchEntityWithDisabledProxyTest {
 
 		cheese1.setBestCheese( cheese1 );
 		cheese2.setBestCheese( cheese1 );
+		cheese3.setBestCheese( cheese1 );
 
 		cheese1.setReplacement( cheese2 );
 		cheese2.setReplacement( cheese1 );
+		cheese3.setReplacement( cheese1 );
 
 		scope.inTransaction( s -> {
 			s.persist( cheese1 );
@@ -92,6 +94,17 @@ public class BatchEntityWithDisabledProxyTest {
 			List<Product> products = s.createQuery( query ).getResultList();
 
 			assertEquals( 3, products.size() );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-16966")
+	public void testGetReference(SessionFactoryScope scope) {
+		scope.inSession( s -> {
+			s.getSessionFactory().getCache().evictAllRegions();
+
+			Product product = s.getReference( Product.class, 3 );
+			assertTrue( Hibernate.isInitialized(product) );
 		} );
 	}
 

@@ -20,25 +20,13 @@ Gavin King and the Hibernate team
 :toc:
 :toclevels: 3
 
-<<<
-
 include::Preface.adoc[]
-
-<<<
 
 :numbered:
 
 include::Concepts.adoc[]
-
-<<<
-
 include::Expressions.adoc[]
-
-<<<
-
 include::From.adoc[]
-
-<<<
-
 include::Relational.adoc[]
+include::Credits.adoc[]
 

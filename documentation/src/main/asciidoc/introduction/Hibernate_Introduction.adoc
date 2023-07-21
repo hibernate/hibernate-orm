@@ -22,30 +22,9 @@ include::Preface.adoc[]
 :numbered:
 
 include::Introduction.adoc[]
-
-<<<
-
 include::Configuration.adoc[]
-
-<<<
-
 include::Entities.adoc[]
-
-<<<
-
 include::Mapping.adoc[]
-
-<<<
-
 include::Interacting.adoc[]
-
-// include::../userguide/chapters/query/hql/Hibernate_Query_Language.adoc[]
-
-<<<
-
 include::Tuning.adoc[]
-
-<<<
-
 include::Advanced.adoc[]
-

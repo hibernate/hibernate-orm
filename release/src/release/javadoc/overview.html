@@ -19,11 +19,14 @@
     <li>
         an implementation of the <em>Java (or Jakarta) Persistence API</em> (JPA),
         where the equivalent central interfaces are {@link jakarta.persistence.EntityManagerFactory}
-        and {@link jakarta.persistence.EntityManager}, and
+        and {@link jakarta.persistence.EntityManager},
     </li>
     <li>
         a set of <em>mapping annotations</em> which augment the O/R mapping annotations defined
-        by JPA, and which may be used with either API.
+        by JPA, and which may be used with either API, and
+    </li>
+    <li>
+        <em>compile-time tooling</em> for writing more type-safe code.
     </li>
 </ul>
 
@@ -69,7 +72,13 @@
     {@linkplain org.hibernate.jpa.HibernateHints Hibernate-defined} hint, at the cost of a
     loss of type-safety.
 </p>
-
+<p>
+    These packages define additional extensions to the JPA APIs:
+</p>
+<ul>
+    <li>{@link org.hibernate.query.criteria} packages extensions to {@link jakarta.persistence.criteria}, and</li>
+    <li>{@link org.hibernate.metamodel.model.domain} packages extensions to {@link jakarta.persistence.metamodel}.</li>
+</ul>
 
 <h3>Mapping annotations</h3>
 
@@ -142,6 +151,16 @@ mappings as an alternative.
     the class {@link org.hibernate.cfg.AvailableSettings}. Most sensible programs will only ever need
     to use a tiny handful of them.
 </p>
+
+<h3>Annotations driving compile-time tooling</h3>
+
+<p>
+    The annotations defined by {@link org.hibernate.annotations.processing} instruct the Metamodel
+    Generator to {@linkplain org.hibernate.annotations.processing.CheckHQL validate HQL at compile
+    time}, and to automatically generate the implementation of
+    {@linkplain org.hibernate.annotations.processing.Find finder methods} and
+    {@linkplain org.hibernate.annotations.processing.HQL query methods}.
+<p>
 
 <h3>Popular extension points</h3>
 

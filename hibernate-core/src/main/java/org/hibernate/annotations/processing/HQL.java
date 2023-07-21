@@ -49,8 +49,9 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * Alternatively, the type to which the annotated method belongs may
  * also declare an abstract method with no parameters which returns
  * one of the types {@link jakarta.persistence.EntityManager},
- * {@link org.hibernate.StatelessSession},
- * or {@link org.hibernate.Session}, for example:
+ * {@link org.hibernate.Session},
+ * {@link org.hibernate.StatelessSession}, or {@code Mutiny.Session},
+ * for example:
  * <pre>
  * EntityManager entityManager();
  * </pre>
@@ -74,7 +75,8 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <p>
  * This is reminiscent of traditional DAO-style repositories.
  * <p>
- * The return type of an annotated method must be:
+ * For a {@code select} query, the return type of an annotated method
+ * must be:
  * <ul>
  * <li>an entity type,
  * <li>{@link java.util.List},
@@ -83,6 +85,10 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <li>{@link jakarta.persistence.Query}, or
  * <li>{@link jakarta.persistence.TypedQuery}.
  * </ul>
+ * <p>
+ * For an {@code insert}, {@code update}, or {@code delete} query,
+ * the return type of the annotated method must be {@code int} or
+ * {@code void}.
  * <p>
  * The method parameters must match the parameters of the HQL query,
  * either by name or by position:
@@ -95,6 +101,8 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <p>
  * As an exception, the method may have:
  * <ul>
+ * <li>a parameter of type {@code EntityManager}, {@code Session},
+ *     {@code StatelessSession}, or {@code Mutiny.Session},
  * <li>a parameter with type {@code Page}, and/or
  * <li>a parameter with type {@code Order<? super E>},
  *     {@code List<Order<? super E>>}, or {@code Order<? super E>...}

@@ -113,6 +113,10 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  *     {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria
  *     query}.
  * </ul>
+ * <p>
+ * As an exception, the method may have at most one parameter of
+ * type {@code EntityManager}, {@code Session},
+ * {@code StatelessSession}, or {@code Mutiny.Session}.
  *
  * @see HQL
  * @see SQL

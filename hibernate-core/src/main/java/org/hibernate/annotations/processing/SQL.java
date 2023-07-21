@@ -49,8 +49,9 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * Alternatively, the type to which the annotated method belongs may
  * also declare an abstract method with no parameters which returns
  * one of the types {@link jakarta.persistence.EntityManager},
- * {@link org.hibernate.StatelessSession},
- * or {@link org.hibernate.Session}, for example:
+ * {@link org.hibernate.Session},
+ * {@link org.hibernate.StatelessSession}, or {@code Mutiny.Session},
+ * for example:
  * <pre>
  * EntityManager entityManager();
  * </pre>
@@ -91,6 +92,10 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <li>a named query parameter of form {@code :name} is matched to
  *     the method parameter {@code name}.
  * </ul>
+ * <p>
+ * As an exception, the method may have at most one parameter of
+ * type {@code EntityManager}, {@code Session},
+ * {@code StatelessSession}, or {@code Mutiny.Session}.
  *
  * @see HQL
  * @see Find

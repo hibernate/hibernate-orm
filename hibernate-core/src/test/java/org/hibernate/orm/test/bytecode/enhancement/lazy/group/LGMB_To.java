@@ -23,7 +23,7 @@ public class LGMB_To {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	@Column(nullable = false)
-	@Access(AccessType.PROPERTY)
+	@Access(AccessType.FIELD)
 	private Long id;
 
 	@OneToOne

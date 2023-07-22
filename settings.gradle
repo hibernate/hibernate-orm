@@ -61,6 +61,7 @@ dependencyResolutionManagement {
             version( "hcann", "6.0.6.Final" )
             version( "geolatte", "1.8.2" )
             version( "byteBuddy", "1.12.18" )
+            version( "asm", "9.4" )
             version( "agroal", "2.0" )
             version( "c3po", "0.9.5.5" )
             version( "hikaricp", "3.2.0" )
@@ -73,6 +74,7 @@ dependencyResolutionManagement {
 
             alias( "byteBuddy" ).to( "net.bytebuddy", "byte-buddy" ).versionRef( "byteBuddy" )
             alias( "byteBuddyAgent" ).to( "net.bytebuddy", "byte-buddy-agent" ).versionRef( "byteBuddy" )
+            alias( "asmAnalysis" ).to( "org.ow2.asm", "asm-analysis" ).versionRef( "asm" )
 
             alias( "logging" ).to ( "org.jboss.logging", "jboss-logging" ).version( "3.5.0.Final" )
             alias( "loggingAnnotations" ).to ( "org.jboss.logging", "jboss-logging-annotations" ).version( "2.2.1.Final" )

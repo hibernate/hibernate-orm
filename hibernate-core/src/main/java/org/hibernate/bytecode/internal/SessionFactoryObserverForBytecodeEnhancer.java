@@ -8,6 +8,7 @@ package org.hibernate.bytecode.internal;
 
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 
 public final class SessionFactoryObserverForBytecodeEnhancer implements SessionFactoryObserver {
@@ -16,6 +17,10 @@ public final class SessionFactoryObserverForBytecodeEnhancer implements SessionF
 
 	public SessionFactoryObserverForBytecodeEnhancer(BytecodeProvider bytecodeProvider) {
 		this.bytecodeProvider = bytecodeProvider;
+	}
+
+	public SessionFactoryObserverForBytecodeEnhancer(MetadataImplementor metadata) {
+		this( metadata.getMetadataBuildingOptions().getServiceRegistry().getService( BytecodeProvider.class ) );
 	}
 
 	@Override

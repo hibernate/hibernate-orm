@@ -1272,20 +1272,13 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <T> JpaCriteriaParameter<T> parameter(Class<T> paramClass, String name) {
 		final BasicType<T> basicType = getTypeConfiguration().getBasicTypeForJavaType( paramClass );
-		if ( basicType == null ) {
-			final BindableType<T> parameterType;
-			if ( Collection.class.isAssignableFrom( paramClass ) ) {
-				// a Collection-valued, multi-valued parameter
-				parameterType = new MultiValueParameterType<>( (Class<T>) Collection.class );
-			}
-			else {
-				parameterType = null;
-			}
-			return new JpaCriteriaParameter<>( name, parameterType, true, this );
-		}
-		else {
-			return new JpaCriteriaParameter<>( name, basicType, false, this );
-		}
+		boolean notBasic = basicType == null;
+		final BindableType<T> parameterType =
+				notBasic && Collection.class.isAssignableFrom( paramClass )
+						// a Collection-valued, multi-valued parameter
+						? new MultiValueParameterType<>( (Class<T>) Collection.class )
+						: basicType;
+		return new JpaCriteriaParameter<>( name, parameterType, notBasic, this );
 	}
 
 	@Override

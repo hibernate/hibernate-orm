@@ -18,8 +18,14 @@ import org.hibernate.property.access.spi.Getter;
  * @author Gavin King
  */
 public class EmbeddedComponentType extends ComponentType {
+
+	@Deprecated(forRemoval = true)
 	public EmbeddedComponentType(Component component, int[] originalPropertyOrder, MetadataBuildingContext buildingContext) {
 		super( component, originalPropertyOrder, buildingContext );
+	}
+
+	public EmbeddedComponentType(Component component, int[] originalPropertyOrder) {
+		super( component, originalPropertyOrder );
 	}
 
 	@Override

@@ -191,7 +191,10 @@ public class TypeHelper {
 			}
 			else {
 				final Type type = types[i];
-				if ( type.isComponentType() ) {
+				if ( type.isComponentType() && !type.isMutable() ) {
+					copied[i] = target[i];
+				}
+				else if ( type.isComponentType() ) {
 					final CompositeType compositeType = (CompositeType) type;
 					// need to extract the component values and check for subtype replacements...
 					final Object[] objects =

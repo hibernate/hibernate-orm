@@ -26,6 +26,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
@@ -42,9 +43,13 @@ import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
+import org.hibernate.type.UserComponentType;
+import org.hibernate.usertype.CompositeUserType;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.generator.EventType.INSERT;
@@ -327,15 +332,20 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	public Class<?> getComponentClass() throws MappingException {
-		final ClassLoaderService classLoaderService = getMetadata()
-				.getMetadataBuildingOptions()
-				.getServiceRegistry()
-				.getService( ClassLoaderService.class );
-		try {
-			return classLoaderService.classForName( componentClassName );
+		if ( componentClassName == null ) {
+			return null;
 		}
-		catch (ClassLoadingException e) {
-			throw new MappingException("component class not found: " + componentClassName, e);
+		else {
+			final ClassLoaderService classLoaderService = getMetadata()
+					.getMetadataBuildingOptions()
+					.getServiceRegistry()
+					.getService( ClassLoaderService.class );
+			try {
+				return classLoaderService.classForName( componentClassName );
+			}
+			catch (ClassLoadingException e) {
+				throw new MappingException("component class not found: " + componentClassName, e);
+			}
 		}
 	}
 
@@ -371,12 +381,22 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.dynamic = dynamic;
 	}
 
+	private CompositeUserType<?> createCompositeUserType(Component component) {
+		final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
+		final Class<CompositeUserType<?>> customTypeClass =
+				bootstrapContext.getClassLoaderAccess().classForName( component.getTypeName() );
+		return getBuildingContext().getBuildingOptions().disallowExtensionsInCdi()
+				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( customTypeClass )
+				: bootstrapContext.getServiceRegistry().requireService( ManagedBeanRegistry.class )
+				.getBean( customTypeClass ).getBeanInstance();
+	}
+
 	@Override
 	public CompositeType getType() throws MappingException {
 		// Resolve the type of the value once and for all as this operation generates a proxy class
 		// for each invocation.
-		// Unfortunately, there's no better way of doing that as none of the classes are immutable and
-		// we can't know for sure the current state of the property or the value.
+		// Unfortunately, there's no better way of doing that as none of the classes are immutable,
+		// and we can't know for sure the current state of the property or the value.
 		CompositeType localType = type;
 
 		if ( localType == null ) {
@@ -387,11 +407,18 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 					// Other components should be sorted already
 					sortProperties( true );
 
-					localType = isEmbedded()
-							? new EmbeddedComponentType( this, originalPropertyOrder, getBuildingContext() )
-							: new ComponentType( this, originalPropertyOrder, getBuildingContext() );
+					final String typeName = getTypeName();
+					if ( typeName == null ) {
+						localType = isEmbedded()
+								? new EmbeddedComponentType( this, originalPropertyOrder )
+								: new ComponentType( this, originalPropertyOrder );
+					}
+					else {
+						final CompositeUserType<?> compositeUserType = createCompositeUserType( this );
+						localType = new UserComponentType<>( this, originalPropertyOrder, compositeUserType );
+					}
 
-					this.type = localType;
+					type = localType;
 				}
 			}
 		}

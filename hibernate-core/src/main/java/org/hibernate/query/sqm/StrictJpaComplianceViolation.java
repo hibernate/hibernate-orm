@@ -16,6 +16,7 @@ import org.hibernate.query.SemanticException;
 public class StrictJpaComplianceViolation extends SemanticException {
 	public enum Type {
 		IMPLICIT_SELECT( "implicit select clause" ),
+		IMPLICIT_FROM( "implicit from clause" ),
 		ALIASED_FETCH_JOIN( "aliased fetch join" ),
 		UNMAPPED_POLYMORPHISM( "unmapped polymorphic reference" ),
 		FUNCTION_CALL( "improper non-standard function call" ),

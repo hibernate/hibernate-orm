@@ -152,6 +152,7 @@ queryExpression
 orderedQuery
 	: query queryOrder?										# QuerySpecExpression
 	| LEFT_PAREN queryExpression RIGHT_PAREN queryOrder?	# NestedQueryExpression
+	| queryOrder											# QueryOrderExpression
 	;
 
 /**
@@ -180,6 +181,7 @@ query
 // TODO: add with clause
 	: selectClause fromClause? whereClause? (groupByClause havingClause?)?
 	| fromClause whereClause? (groupByClause havingClause?)? selectClause?
+	| whereClause
 	;
 
 

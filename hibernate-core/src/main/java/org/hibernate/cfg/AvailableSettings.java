@@ -872,6 +872,10 @@ public interface AvailableSettings {
 	 *     <li>{@value org.hibernate.id.enhanced.LegacyNamingStrategy#STRATEGY_NAME}</li>
 	 *     <li>{@value org.hibernate.id.enhanced.StandardNamingStrategy#STRATEGY_NAME}</li>
 	 * </ul>
+	 * <p>
+	 * By default, {@link org.hibernate.id.enhanced.StandardNamingStrategy} is used.
+	 *
+	 * @since 6
 	 *
 	 * @see ImplicitDatabaseObjectNamingStrategy
 	 */

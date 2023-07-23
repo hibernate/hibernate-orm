@@ -965,6 +965,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final SqmStatement<?> statement =
 				Validation.validate(
 						hql,
+						returnType,
 						true,
 						new ErrorHandler( context, method, mirror, value, hql),
 						ProcessorSessionFactory.create( context.getProcessingEnvironment() )

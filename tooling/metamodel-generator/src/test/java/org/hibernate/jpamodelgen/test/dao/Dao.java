@@ -42,6 +42,9 @@ public interface Dao {
     @Find
     SelectionQuery<Book> createBooksSelectionQuery(String title);
 
+    @HQL("where title like ?1")
+    List<Book> findBooksByTitle(String title);
+
     @HQL("from Book where title like ?1")
     TypedQuery<Book> findByTitle(String title);
 

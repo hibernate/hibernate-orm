@@ -25,6 +25,14 @@ import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.type.descriptor.java.spi.JdbcTypeRecommendationException;
 
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+
+import static org.hibernate.jpamodelgen.validation.ProcessorSessionFactory.getEntityName;
+import static org.hibernate.jpamodelgen.validation.ProcessorSessionFactory.isEntity;
+
 
 /**
  * The entry point for HQL validation.
@@ -42,14 +50,16 @@ public class Validation {
 
 	public static @Nullable SqmStatement<?> validate(
 			String hql,
+			@Nullable TypeMirror returnType,
 			boolean checkTyping,
 			Handler handler,
 			SessionFactoryImplementor factory) {
-		return validate( hql, checkTyping, handler, factory, 0 );
+		return validate( hql, returnType, checkTyping, handler, factory, 0 );
 	}
 
 	public static @Nullable SqmStatement<?> validate(
 			String hql,
+			@Nullable TypeMirror returnType,
 			boolean checkTyping,
 			Handler handler,
 			SessionFactoryImplementor factory,
@@ -57,7 +67,7 @@ public class Validation {
 		try {
 			final HqlParser.StatementContext statementContext = parseAndCheckSyntax( hql, handler );
 			if ( checkTyping && handler.getErrorCount() == 0 ) {
-				return checkTyping( hql, handler, factory, errorOffset, statementContext );
+				return checkTyping( hql, returnType, handler, factory, errorOffset, statementContext );
 			}
 		}
 		catch (Exception e) {
@@ -68,13 +78,13 @@ public class Validation {
 
 	private static @Nullable SqmStatement<?> checkTyping(
 			String hql,
+			@Nullable TypeMirror returnType,
 			Handler handler,
 			SessionFactoryImplementor factory,
 			int errorOffset,
 			HqlParser.StatementContext statementContext) {
 		try {
-			return new SemanticQueryBuilder<>( Object[].class, () -> false, factory )
-					.visitStatement( statementContext );
+			return createSemanticQueryBuilder( returnType, factory ).visitStatement( statementContext );
 		}
 		catch ( JdbcTypeRecommendationException ignored ) {
 			// just squash these for now
@@ -87,6 +97,18 @@ public class Validation {
 			}
 		}
 		return null;
+	}
+
+	private static SemanticQueryBuilder<?> createSemanticQueryBuilder(
+			@Nullable TypeMirror returnType, SessionFactoryImplementor factory) {
+		if ( returnType != null && returnType.getKind() == TypeKind.DECLARED ) {
+			final DeclaredType declaredType = (DeclaredType) returnType;
+			final TypeElement typeElement = (TypeElement) declaredType.asElement();
+			if ( isEntity( typeElement ) ) {
+				return new SemanticQueryBuilder<>( getEntityName( typeElement ), () -> false, factory );
+			}
+		}
+		return new SemanticQueryBuilder<>( Object[].class, () -> false, factory );
 	}
 
 	private static HqlParser.StatementContext parseAndCheckSyntax(String hql, Handler handler) {

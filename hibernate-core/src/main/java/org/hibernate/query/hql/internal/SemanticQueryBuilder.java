@@ -54,6 +54,7 @@ import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntitySqmPathSource;
+import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.ParameterLabelException;
 import org.hibernate.query.PathException;
@@ -310,6 +311,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private final Class<R> expectedResultType;
+	private final String expectedResultEntity;
 	private final SqmCreationOptions creationOptions;
 	private final SqmCreationContext creationContext;
 
@@ -336,7 +338,23 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			Class<R> expectedResultType,
 			SqmCreationOptions creationOptions,
 			SqmCreationContext creationContext) {
+		this( expectedResultType, null, creationOptions, creationContext );
+	}
+
+	public SemanticQueryBuilder(
+			String expectedResultEntity,
+			SqmCreationOptions creationOptions,
+			SqmCreationContext creationContext) {
+		this( null, expectedResultEntity, creationOptions, creationContext );
+	}
+
+	private SemanticQueryBuilder(
+			Class<R> expectedResultType,
+			String expectedResultEntity,
+			SqmCreationOptions creationOptions,
+			SqmCreationContext creationContext) {
 		this.expectedResultType = expectedResultType;
+		this.expectedResultEntity = expectedResultEntity;
 		this.creationOptions = creationOptions;
 		this.creationContext = creationContext;
 		this.dotIdentifierConsumerStack = new StandardStack<>(
@@ -1153,8 +1171,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmFromClause buildInferredFromClause(HqlParser.SelectClauseContext selectClauseContext) {
-		if ( selectClauseContext != null ) {
-			// when there's an explicit 'select', we never infer the 'from'
+		if ( selectClauseContext != null || processingStateStack.depth() > 1  ) {
+			// when there's an explicit 'select', or in a subquery, we never infer the 'from'
 			return new SqmFromClause();
 		}
 		else {
@@ -1166,19 +1184,37 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			}
 
 			final SqmFromClause fromClause = new SqmFromClause();
-			if ( expectedResultType != null && processingStateStack.depth() <= 1 ) {
-				final EntityDomainType<R> entityDescriptor =
-						creationContext.getJpaMetamodel().findEntityType( expectedResultType );
-				if ( entityDescriptor == null ) {
-					throw new SemanticException( "Query has no 'from' clause, and the result type '"
-							+ expectedResultType.getName() + "' is not an entity type" );
-				}
+			final EntityDomainType<R> entityDescriptor = getResultEntity();
+			if ( entityDescriptor != null ) {
 				final SqmRoot<R> sqmRoot =
 						new SqmRoot<>( entityDescriptor, null, false, creationContext.getNodeBuilder() );
 				processingStateStack.getCurrent().getPathRegistry().register( sqmRoot );
 				fromClause.addRoot( sqmRoot );
 			}
 			return fromClause;
+		}
+	}
+
+	private EntityDomainType<R> getResultEntity() {
+		final JpaMetamodelImplementor jpaMetamodel = creationContext.getJpaMetamodel();
+		if ( expectedResultEntity != null ) {
+			final EntityDomainType<R> entityDescriptor = jpaMetamodel.entity( expectedResultEntity );
+			if ( entityDescriptor == null ) {
+				throw new SemanticException("Query has no 'from' clause, and the result type '"
+						+ expectedResultEntity + "' is not an entity type");
+			}
+			return entityDescriptor;
+		}
+		else if ( expectedResultType != null ) {
+			final EntityDomainType<R> entityDescriptor = jpaMetamodel.findEntityType( expectedResultType );
+			if ( entityDescriptor == null ) {
+				throw new SemanticException("Query has no 'from' clause, and the result type '"
+						+ expectedResultType.getSimpleName() + "' is not an entity type");
+			}
+			return entityDescriptor;
+		}
+		else {
+			return null;
 		}
 	}
 

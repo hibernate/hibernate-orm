@@ -32,6 +32,8 @@ bin
 # NetBeans specific files/directories
 .nbattrs
 
+.vscode/
+
 # Miscellaneous
 *.log
 .clover

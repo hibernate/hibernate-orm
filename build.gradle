@@ -13,6 +13,7 @@ buildscript {
             name 'jboss-snapshots'
             url 'http://repository.jboss.org/nexus/content/repositories/snapshots/'
         }
+	mavenLocal()
     }
     dependencies {
         classpath 'org.hibernate.build.gradle:gradle-maven-publish-auth:2.0.1'
@@ -26,7 +27,6 @@ buildscript {
     }
 }
 
-
 plugins {
     id 'me.champeau.buildscan-recipes' version '0.2.3'
     id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
@@ -35,7 +35,6 @@ plugins {
     id 'org.hibernate.build.maven-repo-auth' version '3.0.3' apply false
     id 'biz.aQute.bnd' version '5.1.1' apply false
 }
-
 
 ext {
     sonatypeOssrhUser = project.findProperty( 'SONATYPE_OSSRH_USER' )
@@ -56,10 +55,14 @@ ext {
     jpaVersion = new JpaVersion('2.2')
     jakartaJpaVersion = new JpaVersion('3.0.0')
     
-
     nuodbHibernateVersion = new NuodbHibernateVersion();
     nuodbHibernateJarVersion = System.env['DIALECT_VERSION'] ?: nuodbHibernateVersion.latestVersion;
 }
+
+if (!nuodbHibernateJarVersion.endsWith('-hib5'))
+    nuodbHibernateJarVersion += '-hib5';
+
+println "    Expecting to use NuoDB Hibernate JAR nuodb-hibernate-${nuodbHibernateJarVersion}.jar"
 
 // The Gradle Nexus Publish Plugin must be applied to the root project and requires group and version
 
@@ -110,9 +113,9 @@ allprojects {
         // NuoDB: Default to adding our dialect explicitly
         else {
             flatDir {
-			    String mvnHome = "${System.properties.get('user.home').replace('\\', '/')}/.m2/repository";
-			    //println "Using default repository: ${mvnHome}"
-                dirs "${mvnHome}/com/nuodb/hibernate/nuodb-hibernate/${nuodbHibernateJarVersion}-hib5"
+		    String mvnHome = "${System.properties.get('user.home').replace('\\', '/')}/.m2/repository";
+		    //println "Using default repository: ${mvnHome}"
+                dirs "${mvnHome}/com/nuodb/hibernate/nuodb-hibernate/${nuodbHibernateJarVersion}"
             }
         }
     }
@@ -149,7 +152,7 @@ task release {
 
 task publish {
     description = "The task performed when we want to just publish maven artifacts.  Relies on " +
-            "the fact that subprojects will have a task named pubappropriately define a release task " +
+			"the fact that subprojects will appropriately define a release task " +
             "themselves if they have any release-related activities to perform"
 }
 
@@ -342,6 +345,3 @@ public class NuodbHibernateVersion {
 //        name = "hibernate-orm"
 //    }
 //}
-
-
-

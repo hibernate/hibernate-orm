@@ -17,7 +17,7 @@ public class Widget {
 	private int valueThree = -1;
 	private int valueFour = -5;
 	private Integer id;
-	private String str;  // String reserved in NuoDB
+	private String str;  // NuoDB: string is a reserved keyword
 
 	public int getValueOne() {
 		return valueOne;

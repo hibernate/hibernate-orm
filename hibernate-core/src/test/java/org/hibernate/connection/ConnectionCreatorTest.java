@@ -35,7 +35,7 @@ import static org.junit.Assert.fail;
  */
 public class ConnectionCreatorTest extends BaseUnitTestCase {
     @Test
-    @RequiresDialect(H2Dialect.class) // NuoDB 17-May-23
+    @RequiresDialect(H2Dialect.class) // TODO: NuoDB: 17-May-23 - Force use of H2
     @TestForIssue(jiraKey = "HHH-8621")
     public void testBadUrl() throws Exception {
         DriverConnectionCreator connectionCreator = new DriverConnectionCreator(

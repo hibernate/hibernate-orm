@@ -35,6 +35,7 @@ import static org.junit.Assert.fail;
  * @author Andrea Boriero
  */
 @RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+//TODO: NuoDB: 04-Mar-22 - Timeout issue.
 //@SkipForDialect(value = NuoDBDialect.class, comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
 public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerFunctionalTestCase {
 

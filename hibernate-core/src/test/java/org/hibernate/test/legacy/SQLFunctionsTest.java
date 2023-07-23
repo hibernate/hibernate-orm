@@ -37,6 +37,8 @@ import org.hibernate.dialect.function.SQLFunction;
 
 import org.junit.Test;
 
+import com.nuodb.hibernate.NuoDBDialect;
+
 import org.jboss.logging.Logger;
 
 import static org.junit.Assert.assertEquals;
@@ -452,19 +454,23 @@ public class SQLFunctionsTest extends LegacyTestCase {
 							.size()==2
 			);
 			t.commit();
+			
 			t = s.beginTransaction();
-			assertTrue(
-					s.createQuery(
-							"from Simple s where s = some( select sim from Simple sim where sim.count>=0 ) and s.count >= 0"
-					).list()
-							.size()==2
-			);
-			assertTrue(
-					s.createQuery(
-							"from Simple s where s = some( select sim from Simple sim where sim.other.count=s.other.count ) and s.other.count > 0"
-					).list()
-							.size()==1
-			);
+			// TODO: NuoDB: 22-Jul-23 - No support for some()
+			if (!(DIALECT instanceof NuoDBDialect)) {
+    			assertTrue(
+    					s.createQuery(
+    							"from Simple s where s = some( select sim from Simple sim where sim.count>=0 ) and s.count >= 0"
+    					).list()
+    							.size()==2
+    			);
+    			assertTrue(
+    					s.createQuery(
+    							"from Simple s where s = some( select sim from Simple sim where sim.other.count=s.other.count ) and s.other.count > 0"
+    					).list()
+    							.size()==1
+    			);
+			}
 		}
 
 		Iterator iter = s.createQuery( "select sum(s.count) from Simple s group by s.count having sum(s.count) > 10" )

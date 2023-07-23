@@ -1801,7 +1801,7 @@ public class CriteriaQueryTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-6766" )
-	@SkipForDialect(NuoDBDialect.class)  // NuoDB 19-May-23: multi-column subquery not supported
+	@SkipForDialect(NuoDBDialect.class)  // NuoDB: 19-May-23: multi-column subquery not supported
 	public void testMultiplePropertiesSubquery() {
 		Session session = openSession();
 		Transaction tx = session.beginTransaction();

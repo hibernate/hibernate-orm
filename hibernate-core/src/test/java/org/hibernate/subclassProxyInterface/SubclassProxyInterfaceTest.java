@@ -19,9 +19,10 @@ import org.hibernate.testing.junit4.BaseUnitTestCase;
 /**
  * @author Steve Ebersole
  */
+//TODO: NuoDB: 19-May-23 - Test hard-wired to use H2.
+@RequiresDialect(H2Dialect.class) // No point running for any other dialect
 public class SubclassProxyInterfaceTest extends BaseUnitTestCase {
 	@Test
-	@RequiresDialect(H2Dialect.class)  // NuoDB 18-May-23
 	public void testSubclassProxyInterfaces() {
         final Configuration cfg = new Configuration()
 				.setProperty( Environment.DIALECT, H2Dialect.class.getName() )

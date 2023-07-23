@@ -20,7 +20,10 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
+
+import com.nuodb.hibernate.NuoDBDialect;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -66,6 +69,8 @@ public class ManyToManyBidirectionalTest extends BaseEntityManagerFunctionalTest
 
 	@Test
 	@FailureExpected( jiraKey = "HHH-12239")
+	// TODO: NuoDB: 22-Jul-23 - Doesn't currently enforce foreign key constraints.
+	@SkipForDialect(value=NuoDBDialect.class)
 	public void testRemoveMappedBySide() {
 		Address _address1 = doInJPA( this::entityManagerFactory, entityManager -> {
 			Person person1 = new Person( "ABC-123" );

@@ -66,7 +66,9 @@ import static org.junit.Assert.assertTrue;
 //@RequiresDialectFeature(value = {DialectChecks.SupportsNoColumnInsert.class, DialectChecks.NotH2Version2.class}, comment = "See https://github.com/h2database/h2database/issues/3385")
 
 @RequiresDialectFeature(DialectChecks.SupportsNoColumnInsert.class)
-@SkipForDialect(value = NuoDBDialect.class, comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
+//TODO: NuoDB: 04-Mar-22 - Timeout issue.
+@SkipForDialect(value = NuoDBDialect.class,
+    comment = "Identified issues with long timeouts when running this test for NuoDB database. Skipping until we have a solution.")
 public class FumTest extends LegacyTestCase {
 	private static short fumKeyShort = 1;
 

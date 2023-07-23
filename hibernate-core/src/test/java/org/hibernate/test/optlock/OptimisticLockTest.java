@@ -83,7 +83,7 @@ public class OptimisticLockTest extends BaseCoreFunctionalTestCase {
 
 		mainSession = openSession();
 
-		// NuoDB 18-May-23: Set 30s lock-wait timeout and read-committed isolation
+		// TODO: NuoDB: 18-May-23 - Set 30s lock-wait timeout and read-committed isolation
 		if (getDialect() instanceof NuoDBDialect) {
 			mainSession.doWork(conn -> conn.createStatement().executeUpdate("SET LOCK_WAIT_TIMEOUT 30"));
 			mainSession.doWork( conn -> conn.createStatement().executeUpdate("SET ISOLATION LEVEL READ COMMITTED"));
@@ -94,7 +94,7 @@ public class OptimisticLockTest extends BaseCoreFunctionalTestCase {
 
 		Session otherSession = sessionFactory().openSession();
 
-		// NuoDB 18-May-23: Set 30s lock-wait timeout and read-committed isolation
+		// TODO: NuoDB: 18-May-23 - Set 30s lock-wait timeout and read-committed isolation
 		if (getDialect() instanceof NuoDBDialect) {
 			otherSession.doWork(conn -> conn.createStatement().executeUpdate("SET LOCK_WAIT_TIMEOUT 30"));
 			otherSession.doWork( conn -> conn.createStatement().executeUpdate("SET ISOLATION LEVEL READ COMMITTED"));
@@ -147,7 +147,7 @@ public class OptimisticLockTest extends BaseCoreFunctionalTestCase {
 
 		mainSession = openSession();
 
-		// NuoDB 18-May-23: Force a 30s lock wait so the test won't run forever
+		// TODO: NuoDB: 18-May-23 - Force a 30s lock wait so the test won't run forever
 		if (getDialect() instanceof NuoDBDialect)
 			mainSession.doWork( conn -> conn.createStatement().executeUpdate("SET LOCK_WAIT_TIMEOUT 30"));
 

@@ -253,7 +253,7 @@ public class FinalGetterSetterTest extends BaseNonConfigCoreFunctionalTestCase {
 		private int id;
 
 		@Version
-		@Column(name = "ver")
+		@Column(name = "_ver") // NuoDB: VER is reserved word
 		private int version;
 
 		private String name;
@@ -290,7 +290,7 @@ public class FinalGetterSetterTest extends BaseNonConfigCoreFunctionalTestCase {
 		private int id;
 
 		@Version
-		@Column(name = "ver")
+		@Column(name = "_ver") // NuoDB: VER is reserved word
 		private int version;
 
 		private String name;
@@ -326,7 +326,7 @@ public class FinalGetterSetterTest extends BaseNonConfigCoreFunctionalTestCase {
 		private int id;
 
 		@Version
-		@Column(name = "ver")
+		@Column(name = "_ver") // NuoDB: VER is reserved word
 		private int version;
 
 		private String name;
@@ -362,7 +362,7 @@ public class FinalGetterSetterTest extends BaseNonConfigCoreFunctionalTestCase {
 		private int id;
 
 		@Version
-		@Column(name = "ver")
+		@Column(name = "_ver") // NuoDB: VER is reserved word
 		private int version;
 
 		private String name;
@@ -398,7 +398,7 @@ public class FinalGetterSetterTest extends BaseNonConfigCoreFunctionalTestCase {
 		private int id;
 
 		@Version
-		@Column(name = "ver")
+		@Column(name = "_ver") // NuoDB: VER is reserved word
 		private int version;
 
 		private String name;
@@ -434,7 +434,7 @@ public class FinalGetterSetterTest extends BaseNonConfigCoreFunctionalTestCase {
 		private int id;
 
 		@Version
-		@Column(name = "ver")
+		@Column(name = "_ver") // NuoDB: VER is reserved word
 		private int version;
 
 		private String name;
@@ -470,7 +470,7 @@ public class FinalGetterSetterTest extends BaseNonConfigCoreFunctionalTestCase {
 		private int id;
 
 		@Version
-		@Column(name = "ver")
+		@Column(name = "_ver") // NuoDB: VER is reserved word
 		private int version;
 
 		private String name;

@@ -26,7 +26,6 @@ import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.service.spi.ServiceException;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
@@ -38,12 +37,14 @@ import org.junit.Test;
  */
 public class BootFailureTest extends BaseEntityManagerFunctionalTestCase {
 
+    // NuoDB 18-May-23: Start
 	private boolean isNuoDB = true;
 
 	@Before
 	public void checkDialect() {
 		isNuoDB = getDialect() instanceof NuoDBDialect;
 	}
+	// NuoDB: End
 
 	@Test(expected = ServiceException.class)
 	public void exceptionOnIllegalPUTest() {
@@ -51,7 +52,7 @@ public class BootFailureTest extends BaseEntityManagerFunctionalTestCase {
 			bootstrapPersistenceUnit("IntentionallyBroken");
 		}
 		catch (Exception e) {
-			// NuoDB 18-May-23: For some reason the wrong exception type is thrown.
+			// TODO: NuoDB: 18-May-23 - For some reason the wrong exception type is thrown.
 			// However, the point is that specifying an unknown persistent unit
 			// throws an exception, and it does.
 			if (isNuoDB && e instanceof PersistenceException)
@@ -67,7 +68,7 @@ public class BootFailureTest extends BaseEntityManagerFunctionalTestCase {
 			bootstrapPersistenceUnit( "IntentionallyBrokenWihoutExplicitProvider" );
 		}
 		catch (Exception e) {
-			// NuoDB 18-May-23: For some reason the wrong exception type is thrown.
+			// TODO: NuoDB: 18-May-23 - For some reason the wrong exception type is thrown.
 			// However, the point is that specifying an unknown persistent unit
 			// throws an exception, and it does.
 			if (isNuoDB && e instanceof PersistenceException) {

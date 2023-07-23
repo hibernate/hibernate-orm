@@ -274,6 +274,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
+	// TODO: NuoDB: 04-Mar-22 - NuoDB does not use read locks 
 	@SkipForDialect(value=NuoDBDialect.class, comment = "NuoDB does not use read locks")
 	@RequiresDialectFeature( value = DialectChecks.SupportSkipLocked.class )
 	public void testUpdateWithPessimisticReadLockSkipLocked() {

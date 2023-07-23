@@ -322,8 +322,9 @@ public class QueryBuilderTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	@TestForIssue(jiraKey = "HHH-12314")
-	// NuoDB 18-May-23
-	@SkipForDialect(value= NuoDBDialect.class, comment = "NuoDB expects SELECT in generated JOIN sub-select")
+	// TODO: NuoDB: 18-May-23 - Parentheses in JOIN statement
+	@SkipForDialect(value= NuoDBDialect.class,
+	    comment = "NuoDB expects SELECT in generated JOIN sub-select")
 	public void testJoinUsingNegatedPredicate() {
 		// Write test data
 		doInJPA( this::entityManagerFactory, entityManager -> {

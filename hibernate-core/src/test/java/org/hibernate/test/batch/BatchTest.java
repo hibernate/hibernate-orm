@@ -26,6 +26,9 @@ import org.junit.Test;
  * @author Gavin King
  */
 public class BatchTest extends BaseCoreFunctionalTestCase {
+    // TODO: NuoDB: 22-Jul-23 - sessionFactory().getSettings().getJdbcBatchSize() returns 0.
+    private static final int DEFAULT_BATCHSIZE = 20; // See below
+
 	@Override
 	public String[] getMappings() {
 		return new String[] { "batch/DataPoint.hbm.xml" };
@@ -33,7 +36,7 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 
 	@Override
 	public void configure(Configuration cfg) {
-		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "20" );
+		cfg.setProperty( Environment.STATEMENT_BATCH_SIZE, "20" ); // NuoDB: Ignored?
 	}
 
 	@Test
@@ -43,14 +46,14 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 		//final int N = 100000; //53 secs with batch flush, OOME without
 		//final int N = 250000; //137 secs with batch flush, OOME without
 		int batchSize = sessionFactory().getSettings().getJdbcBatchSize();
-		doBatchInsertUpdate( N, batchSize );
+		doBatchInsertUpdate( N, batchSize == 0 ? DEFAULT_BATCHSIZE : batchSize );
 		System.out.println( System.currentTimeMillis() - start );
 	}
 
 	@Test
 	public void testBatchInsertUpdateSizeEqJdbcBatchSize() {
 		int batchSize = sessionFactory().getSettings().getJdbcBatchSize();
-		doBatchInsertUpdate( 50, batchSize );
+		doBatchInsertUpdate( 50, batchSize == 0 ? DEFAULT_BATCHSIZE : batchSize );
 	}
 
 	@Test

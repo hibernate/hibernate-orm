@@ -93,8 +93,14 @@ public class BatchOptimisticLockingTest extends
 			} );
 		}
 		catch (Exception expected) {
+		    Throwable t = expected;
+		    while (t != null) {
+		        System.out.println(" >>> Expected: " + t.getClass() + " - " + expected.getMessage());
+		        t = t.getCause();
+		    }
+		        
+		    expected.printStackTrace(System.out);
 			assertEquals( OptimisticLockException.class, expected.getClass() );
-			//System.out.println("Expected: " + expected.getMessage());
 
 			if ( getDialect() instanceof CockroachDB192Dialect ) {
 				// CockroachDB always runs in SERIALIZABLE isolation, and uses SQL state 40001 to indicate
@@ -105,9 +111,9 @@ public class BatchOptimisticLockingTest extends
 				);
 			}
 			else if (getDialect() instanceof NuoDBDialect) {
-				// NuoDB 18-May-23
+				// TODO: NuoDB: 18-May-23 - Different exception msg. All the info the original SQL Exception had.
 				assertEquals(
-						"org.hibernate.exception.LockAcquisitionException: could not execute statement",
+						"update conflict in table \"DBO\".\"PERSON\"",
 						expected.getMessage()
 				);
 			}

@@ -70,7 +70,7 @@ public class UncorrelatedSubqueryTest extends AbstractMetamodelSpecificTest {
 	}
 
 	@Test
-	// NuoDB 18-May-23
+	// NuoDB: 18-May-23
 	@SkipForDialect(value=NuoDBDialect.class, comment="ALL not supported by NuoDB")
 	public void testEqualAll() {
 		CriteriaBuilder builder = entityManagerFactory().getCriteriaBuilder();

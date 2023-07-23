@@ -70,7 +70,7 @@ public class JtaWithStatementsBatchTest extends AbstractJtaBatchTest {
 
 			// NuoDB 18-May-23: testBatch is null, no idea why, so skip checks.
 			if (getDialect() instanceof NuoDBDialect && testBatch == null)
-				;  // Ski[ checks
+				;  // Skip checks
 			else {
 				assertStatementsListIsCleared();
 				assertAllStatementsAreClosed(testBatch.createtdStatements);

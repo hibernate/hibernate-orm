@@ -94,7 +94,7 @@ public class ExceptionTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	// NuoDB 18-May-2023
+	// TODO: NuoDB: 18-May-23 - Constraint violations not enforced
 	@SkipForDialect(value=NuoDBDialect.class, comment="Constraint violations not enforced")
 	public void testConstraintViolationException() throws Exception {
 		EntityManager em = getOrCreateEntityManager();

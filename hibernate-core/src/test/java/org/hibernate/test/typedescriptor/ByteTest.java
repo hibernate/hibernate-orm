@@ -9,8 +9,11 @@ package org.hibernate.test.typedescriptor;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.nuodb.hibernate.NuoDBDialect;
+
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 
@@ -29,6 +32,8 @@ public class ByteTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@TestForIssue( jiraKey = "HHH-6533" )
+	// TODO: NuoDB: 22-Jul-23 - Byte.MIN_VALUE stored as unsigned, breaks test.
+	@SkipForDialect(value=NuoDBDialect.class, comment="NuoDB stores bytes as unsigned, breaking test.")
 	public void testByteDataPersistenceAndRetrieval() {
 		Session session = openSession();
 		Transaction transaction = session.beginTransaction();

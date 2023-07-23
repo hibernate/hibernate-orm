@@ -65,6 +65,12 @@ public class JdbcTimestampCustomSessionLevelTimeZoneTest
 				AvailableSettings.CONNECTION_PROVIDER,
 				connectionProvider
 		);
+
+		settings.put(
+				AvailableSettings.JDBC_TIME_ZONE, TIME_ZONE
+		);
+
+		TimeZone.setDefault(TIME_ZONE); // TODO: NuoDB: 21-Jul-23 - Timezone not being set?
 	}
 
 	@Override
@@ -77,6 +83,7 @@ public class JdbcTimestampCustomSessionLevelTimeZoneTest
 	public void testTimeZone() {
 
 		connectionProvider.clear();
+
 		doInHibernateSessionBuilder( () -> {
 			return sessionFactory().withOptions().jdbcTimeZone( TIME_ZONE );
 		}, s -> {

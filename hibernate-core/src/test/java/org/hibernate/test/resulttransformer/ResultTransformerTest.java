@@ -11,6 +11,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.nuodb.hibernate.NuoDBDialect;
+
 import org.hibernate.Query;
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
@@ -77,7 +79,9 @@ public class ResultTransformerTest extends BaseCoreFunctionalTestCase {
 		ScrollableResults sr = q.scroll();
 		// HANA supports only ResultSet.TYPE_FORWARD_ONLY and
 		// does not support java.sql.ResultSet.first()
-		if (getDialect() instanceof AbstractHANADialect) {
+		// TODO: NuoDB: 22-Jul-23 - Forward only cursors
+		if (getDialect() instanceof AbstractHANADialect ||
+		        getDialect() instanceof NuoDBDialect) {
 			sr.next();
 		} else {
 			sr.first();

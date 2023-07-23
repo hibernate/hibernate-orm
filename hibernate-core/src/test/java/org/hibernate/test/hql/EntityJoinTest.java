@@ -6,8 +6,16 @@
  */
 package org.hibernate.test.hql;
 
+import static org.hamcrest.core.Is.is;
+import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
+
 import java.util.Collections;
 import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
@@ -19,7 +27,6 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.query.spi.HQLQueryPlan;
 import org.hibernate.hql.spi.QueryTranslator;
-
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
@@ -27,12 +34,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.hamcrest.core.Is.is;
-import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
+import com.nuodb.hibernate.NuoDBDialect;
 
 /**
  * @author Steve Ebersole, Jan Martiska
@@ -177,6 +179,8 @@ public class EntityJoinTest extends BaseNonConfigCoreFunctionalTestCase {
     }
 
     @Test
+    @SkipForDialect(value=NuoDBDialect.class,
+        comment="NuoDB: Does not yet support right outer joins") 
     public void testRightOuterEntityJoins() {
         doInHibernate( this::sessionFactory, session -> {
             // this should get all users even if they have no financial records

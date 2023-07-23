@@ -12,7 +12,9 @@ import java.util.Properties;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.service.ServiceRegistry;
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
@@ -26,6 +28,8 @@ import org.junit.Test;
  * @author Stefan Schulze
  */
 @TestForIssue(jiraKey = "HHH-7300")
+//TODO: NuoDB: 22-Jul-23 - Test hard-wired to use H2.
+@RequiresDialect(H2Dialect.class) // No point running for any other dialect
 public class UserTypeMappingTest extends BaseUnitTestCase{
 
 private Configuration cfg;

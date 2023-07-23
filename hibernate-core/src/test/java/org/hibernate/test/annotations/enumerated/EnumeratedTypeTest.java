@@ -128,7 +128,7 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( id, entityEnum.getId() );
 		assertEquals( Common.B1, entityEnum.getString() );
 		// delete
-		// NuoDB change string to str - string reserved word
+		// NuoDB: change string to str - string reserved word
 		assertEquals( 1, session.createSQLQuery( "DELETE FROM EntityEnum where str='B1'" ).executeUpdate() );
 		session.getTransaction().commit();
 		session.close();
@@ -273,7 +273,7 @@ public class EnumeratedTypeTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertEquals( id, entityEnum.getId() );
 		assertEquals( Common.B2, entityEnum.getString() );
 		// delete
-		// NuoDB change string to str - string reserved word
+		// NuoDB: change string to str - string reserved word
 		assertEquals( 1, session.createSQLQuery( "DELETE FROM EntityEnum where str='B2'" ).executeUpdate() );
 
 		session.getTransaction().commit();

@@ -13,6 +13,8 @@ import java.sql.Types;
 
 import org.junit.Test;
 
+import com.nuodb.hibernate.NuoDBDialect;
+
 import org.hibernate.Session;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.MySQLMyISAMDialect;
@@ -44,6 +46,8 @@ public class SQLExceptionConversionTest extends BaseCoreFunctionalTestCase {
 			value = { MySQLMyISAMDialect.class, AbstractHANADialect.class },
 			comment = "MySQL (MyISAM) / Hana do not support FK violation checking"
 	)
+	@SkipForDialect(value= NuoDBDialect.class,
+	    comment="NuoDB: does not yet support FK violation checking")
 	public void testIntegrityViolation() throws Exception {
 		final Session session = openSession();
 		session.beginTransaction();

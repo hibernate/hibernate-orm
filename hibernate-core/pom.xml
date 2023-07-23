@@ -1,0 +1,404 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<properties>
+		<maven.compiler.target>11</maven.compiler.target>
+		<maven.compiler.source>11</maven.compiler.source>
+		<additionalparam>-Xdoclint:none</additionalparam>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- NuoDB JARs -->
+        <nuodb-jar.version>24.0.0</nuodb-jar.version>
+        <nuodb-hibernate-jar.version>22.0.1-hib5</nuodb-hibernate-jar.version>
+
+        <ant.version>1.8.2</ant.version>
+        <byte-buddy.version>1.12.18</byte-buddy.version>
+        <cdi.version >2.0</cdi.version>
+        <datasource-proxy.version>1.8.1</datasource-proxy.version>
+        <derby.version>10.14.2.0</derby.version>
+		<el.version>3.0.1-b09</el.version>
+		<hibernate.version>5.6.15.Final</hibernate.version>
+		<hibernate-commons.version>5.1.2.Final</hibernate-commons.version>
+		<hibernate-jpamodelgen.version>5.6.5.Final</hibernate-jpamodelgen.version>
+		<hibernate-validator.version>6.1.6.Final</hibernate-validator.version>
+        <jakarta-weld.version>4.0.1.SP1</jakarta-weld.version>
+        <jandex.version>2.4.2.Final</jandex.version>
+		<javax-annotation-api.version>1.3.2</javax-annotation-api.version>
+		<javax.persistence-api>2.2</javax.persistence-api>
+		<javax.validation-api.version>2.0.1.Final</javax.validation-api.version>
+		<javax-ejb-api.version>3.0</javax-ejb-api.version>
+		<jboss-logging-annotations>2.2.1.Final</jboss-logging-annotations>
+		<jboss-jacc-api.version>1.0.2.Final</jboss-jacc-api.version>
+		<jboss-transaction-spi.version>7.6.1.Final</jboss-transaction-spi.version>
+		<joda-time.version>2.12.5</joda-time.version>
+		<junit.version>4.13.2</junit.version>
+		<shrinkwrap.version>1.2.6</shrinkwrap.version>
+		<shrinkwrap-descriptors.version>2.0.0</shrinkwrap-descriptors.version>
+        <weld.version>3.1.5.Final</weld.version>
+	</properties>
+
+	<groupId>com.nuodb.hibernate</groupId>
+	<artifactId>nuodb-hibernate-core-tests-v5.6-CURRENT</artifactId>
+	<version>1.0.0</version>
+	<packaging>jar</packaging>
+	<name>Tests for NuoDB Hibernate Dialect 5</name>
+	<description>Custom NuoDB driver and NuoDB Hibernate 5 dialect classes for use with JDK 1.8, and newer.
+See https://doc.nuodb.com/nuodb/latest/client-development/using-the-nuodb-java-hibernate-driver.
+    </description>
+	<url>http://www.nuodb.com</url>
+
+	<organization>
+		<name>NuoDB, Inc.</name>
+		<url>http://www.nuodb.com</url>
+	</organization>
+
+	<licenses>
+		<license>
+			<name>NuoDB Terms and Conditions</name>
+			<url>http://www.nuodb.com/download-nuodb/request/terms</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<scm>
+		<url>https://github.com/nuodb/HibernateDialect5</url>
+		<connection>scm:git@github.com:nuodb/HibernateDialect5.git</connection>
+	</scm>
+
+	<developers>
+		<developer>
+			<id>pchapman</id>
+			<name>Paul Chapman</name>
+			<email>pchapman@nuodb.com</email>
+		</developer>
+	</developers>
+
+	<distributionManagement>
+		<snapshotRepository>
+			<id>sonatype-nexus</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>sonatype-nexus</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.nuodb.jdbc</groupId>
+			<artifactId>nuodb-jdbc</artifactId>
+			<version>${nuodb-jar.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.nuodb.hibernate</groupId>
+			<artifactId>nuodb-hibernate</artifactId>
+			<version>${nuodb-hibernate-jar.version}</version>
+		</dependency>
+		
+		<dependency>
+            <groupId>javax.persistence</groupId>
+            <artifactId>javax.persistence-api</artifactId>
+            <version>${javax.persistence-api}</version>
+        </dependency>
+
+<!--		<dependency>-->
+<!--			<groupId>org.hibernate</groupId>-->
+<!--			<artifactId>hibernate-core</artifactId>-->
+<!--			<version>${hibernate.version}</version>-->
+<!--            <scope>test</scope>-->
+<!--       </dependency>-->
+
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-testing</artifactId>
+			<version>${hibernate.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-jpamodelgen</artifactId>
+			<version>${hibernate-jpamodelgen.version}</version>
+			<scope>test</scope>
+		</dependency>
+
+        <dependency>
+            <groupId>javax.transaction</groupId>
+            <artifactId>javax.transaction-api</artifactId>
+            <version>1.3</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>2.3.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hibernate.common</groupId>
+            <artifactId>hibernate-commons-annotations</artifactId>
+            <version>${hibernate-commons.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jboss</groupId>
+            <artifactId>jandex</artifactId>
+            <version>${jandex.version}</version>
+        </dependency>
+
+		<dependency>
+			<groupId>org.apache.derby</groupId>
+			<artifactId>derby</artifactId>
+			<version>${derby.version}</version>
+			<scope>test</scope>
+		</dependency>
+        <dependency>
+            <groupId>antlr</groupId>
+            <artifactId>antlr</artifactId>
+            <version>2.7.7</version>
+        </dependency>
+
+        <dependency>
+            <groupId>net.bytebuddy</groupId>
+            <artifactId>byte-buddy</artifactId>
+            <version>${byte-buddy.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>${javax-annotation-api.version}</version>
+       </dependency>
+
+<!--		<dependency>-->
+<!--            <groupId>com.github.stefanbirkner</groupId>-->
+<!--            <artifactId>system-rules</artifactId>-->
+<!--            <version>1.19.0</version>-->
+<!--            <scope>test</scope>-->
+<!--        </dependency>-->
+
+        <dependency>
+          <groupId>net.ttddyy</groupId>
+          <artifactId>datasource-proxy</artifactId>
+          <version>${datasource-proxy.version}</version>
+          <scope>test</scope>
+        </dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+            <version>2.19.1</version>
+            <scope>test</scope>
+        </dependency>
+
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>${joda-time.version}</version>  <!-- 2.3? -->
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.shrinkwrap</groupId>
+			<artifactId>shrinkwrap-api</artifactId>
+			<version>${shrinkwrap.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.shrinkwrap</groupId>
+			<artifactId>shrinkwrap-impl-base</artifactId>
+			<version>${shrinkwrap.version}</version>
+		</dependency>
+
+		<!--shrinkwrap_descriptors -->
+		<dependency>
+			<groupId>org.jboss.shrinkwrap.descriptors</groupId>
+			<artifactId>shrinkwrap-descriptors-api-javaee</artifactId>
+			<version>${shrinkwrap-descriptors.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.shrinkwrap.descriptors</groupId>
+			<artifactId>shrinkwrap-descriptors-impl-javaee</artifactId>
+			<version>${shrinkwrap-descriptors.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss</groupId>
+			<artifactId>jboss-transaction-spi</artifactId>
+			<version>${jboss-transaction-spi.version}</version>
+		</dependency>
+
+        <dependency>
+            <groupId>org.apache.ant</groupId>
+            <artifactId>ant</artifactId>
+            <version>${ant.version}</version>    
+        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>net.bytebuddy</groupId>-->
+<!--            <artifactId>byte-buddy</artifactId>-->
+<!--            <version>${byte-buddy.version}</version>    -->
+<!--            <scope>test</scope>  -->
+<!--        </dependency>-->
+
+        <dependency>
+            <groupId>org.jboss.logging</groupId>
+            <artifactId>jboss-logging-annotations</artifactId>
+            <version>${jboss-logging-annotations}</version>
+        </dependency>
+
+		<dependency>
+			<groupId>javax.ejb</groupId>
+			<artifactId>ejb-api</artifactId>
+			<version>${javax-ejb-api.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.validation</groupId>
+			<artifactId>validation-api</artifactId>
+			<version>${javax.validation-api.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>javax.enterprise</groupId>
+			<artifactId>cdi-api</artifactId>
+			<version>${cdi.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.jboss.weld.se</groupId>
+			<artifactId>weld-se-shaded</artifactId>
+			<version>${weld.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.jboss.spec.javax.security.jacc</groupId>
+			<artifactId>jboss-jacc-api_1.4_spec</artifactId>
+			<version>${jboss-jacc-api.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hibernate.validator</groupId>
+			<artifactId>hibernate-validator</artifactId>
+			<version>${hibernate-validator.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.glassfish</groupId>
+			<artifactId>javax.el</artifactId>
+			<version>${el.version}</version>
+		</dependency>
+	</dependencies>
+	
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.1</version>
+				<configuration>
+					<compilerArgs>
+						<arg>-Xlint</arg>
+					</compilerArgs>
+				</configuration>
+			</plugin>
+
+<!--
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>build-helper-maven-plugin</artifactId>
+				<version>3.2.0</version>
+				<executions>
+				<execution>
+					<id>add-source</id>
+					<phase>generate-sources</phase>
+					<goals>
+					<goal>add-source</goal>
+					</goals>
+					<configuration>
+					<sources>
+						<source>src/test/metadata-classes</source>
+					</sources>
+					</configuration>
+				</execution>
+				</executions>
+			</plugin>
+-->
+
+            <!-- Generate JPA Meta Data classes -->
+            <plugin>
+                <groupId>org.hibernate.orm.tooling</groupId>
+                <artifactId>hibernate-enhance-maven-plugin</artifactId>
+                <version>${hibernate.version}</version>
+                <executions>
+                    <execution>
+                        <configuration>
+                            <failOnError>true</failOnError>
+                            <enableLazyInitialization>true</enableLazyInitialization>
+                            <enableDirtyTracking>true</enableDirtyTracking>
+                            <enableAssociationManagement>true</enableAssociationManagement>
+                        </configuration>
+                        <goals>
+                            <goal>enhance</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+<!--
+			<plugin>
+				<groupId>org.bsc.maven</groupId>
+				<artifactId>maven-processor-plugin</artifactId>
+				<executions>
+					<execution>
+						<goals>
+							<goal>process</goal>
+						</goals>
+						<phase>generate-sources</phase>
+						<configuration>
+    						<compilerArguments>-AaddGeneratedAnnotation=false</compilerArguments>  suppress java.annotation 
+    						<processors>
+    							<processor>org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor</processor>
+    						</processors>
+						</configuration>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.hibernate</groupId>
+						<artifactId>hibernate-jpamodelgen</artifactId>
+						<version>${hibernate.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+-->
+
+<!-- 
+	       <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>target/generated-sources/apt</source>
+                                <source>target/generated-test-sources/test-annotations</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin> -->
+		</plugins>
+	</build>
+
+</project>

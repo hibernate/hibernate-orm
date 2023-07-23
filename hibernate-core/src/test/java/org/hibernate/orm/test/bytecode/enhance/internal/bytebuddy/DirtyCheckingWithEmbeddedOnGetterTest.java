@@ -94,7 +94,7 @@ public class DirtyCheckingWithEmbeddedOnGetterTest {
 		assertThat( entity.getFirstPlayerToken() )
 				.extracting( TRACKER_COMPOSITE_FIELD_NAME ).isInstanceOf( CompositeOwnerTracker.class );
 
-		// NuoDB 18-May-23
+		// TODO: NuoDB: 18-May-23 - use dirtiness tracker properties directly, reflection fails
 		SelfDirtinessTracker sdtEntity = (SelfDirtinessTracker)entity;
 		assert(sdtEntity.$$_hibernate_hasDirtyAttributes());
 		assertThat( sdtEntity.$$_hibernate_getDirtyAttributes() )
@@ -113,7 +113,7 @@ public class DirtyCheckingWithEmbeddedOnGetterTest {
 		Method trackerClearMethod = CardGame.class.getMethod( TRACKER_CLEAR_NAME );
 		trackerClearMethod.invoke( entity );
 
-		// NuoDB 18-May-23
+		// TODO: NuoDB: 18-May-23 - use dirtiness tracker properties directly, reflection fails
 		SelfDirtinessTracker sdtEntity = (SelfDirtinessTracker)entity;
 		assert(!sdtEntity.$$_hibernate_hasDirtyAttributes());
 		assertThat( sdtEntity.$$_hibernate_getDirtyAttributes() ).isEqualTo( new String[0] );
@@ -131,7 +131,7 @@ public class DirtyCheckingWithEmbeddedOnGetterTest {
 
 		entity.setName( "Splendor: Cities of Splendor" );
 
-		// NuoDB 18-May-23
+		// TODO: NuoDB: 18-May-23 - use dirtiness tracker properties directly, reflection fails
 		SelfDirtinessTracker sdtEntity = (SelfDirtinessTracker)entity;
 		assert(sdtEntity.$$_hibernate_hasDirtyAttributes());
 		//assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( true );

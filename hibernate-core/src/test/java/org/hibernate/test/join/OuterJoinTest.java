@@ -15,7 +15,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
-// NuoDB 19-May-2023: All tests generate right out joins that NuoDB does not yet support.
+// TODO: NuoDB: 19-May-23 - All tests generate right out joins that NuoDB does not yet support.
 @SkipForDialect(NuoDBDialect.class)
 public class OuterJoinTest extends BaseCoreFunctionalTestCase {
 

@@ -72,6 +72,8 @@ public class JdbcTimeCustomTimeZoneTest
 				AvailableSettings.JDBC_TIME_ZONE,
 				TIME_ZONE
 		);
+
+        TimeZone.setDefault(TIME_ZONE); // TODO: NuoDB: 21-Jul-23 - Timezone not being set?
 	}
 
 	@Override

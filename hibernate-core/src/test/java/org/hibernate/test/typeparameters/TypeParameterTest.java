@@ -31,6 +31,7 @@ public class TypeParameterTest extends BaseCoreFunctionalTestCase {
 		return new String[] {
 				"typeparameters/Typedef.hbm.xml",
 				"typeparameters/Widget.hbm.xml"
+        // NuoDB: 22-Jul-22 - Changed name of STRING column to STR, STRING reserved keyword
 		};
 	}
 

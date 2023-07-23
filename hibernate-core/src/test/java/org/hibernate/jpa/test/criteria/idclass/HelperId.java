@@ -25,10 +25,10 @@ public class HelperId implements Serializable {
 	public String getName( ) { return this.name; }
 	public void setName( String value ) { this.name = value; }
 
-	// NuoDB: rename column to XHELPER_TYPE or IdClassPredicateTest fails to create TOOL table:
+	// TODO: NuoDB: 04-Mar-22 - Rename column to XHELPER_TYPE or IdClassPredicateTest fails to create TOOL table:
 	//
 	//     create table TOOL (
-	//       HELPERTYPE VARCHAR (4) not null,
+	//        HELPERTYPE VARCHAR (4) not null,
 	//        NAME VARCHAR (12) not null,
 	//        COST DOUBLE,
 	//        primary key (HELPERTYPE, NAME)

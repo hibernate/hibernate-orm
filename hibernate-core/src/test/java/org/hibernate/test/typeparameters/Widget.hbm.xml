@@ -30,7 +30,7 @@
 				<param name="default">-5</param>
 			</type>
 		</property>
-		<property name="string"/>
+		<property name="string" column="STR" />  <!-- NuoDB: STRING is a reserved word -->
     </class>
     
 

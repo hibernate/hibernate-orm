@@ -64,6 +64,8 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.env.ConnectionProviderBuilder;
 import org.junit.Test;
 
+import com.nuodb.hibernate.NuoDBDialect;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -373,7 +375,10 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "https://github.com/cockroachdb/cockroach/issues/43007")
+	@SkipForDialect(value = CockroachDB192Dialect.class,
+	    comment = "https://github.com/cockroachdb/cockroach/issues/43007")
+    // TODO: NuoDB: 22-Jul-23 - Parentheses in SELECT ... JOIN not supported yet
+    @SkipForDialect(value=NuoDBDialect.class)
 	public void testQuery() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();
@@ -2458,6 +2463,8 @@ public class FooBarTest extends LegacyTestCase {
 	}
 
 	@Test
+    // TODO: NuoDB: 22-Jul-23 - Parentheses in SELECT ... JOIN not supported yet
+    @SkipForDialect(value=NuoDBDialect.class)
 	public void testPersistCollections() throws Exception {
 		Session s = openSession();
 		Transaction txn = s.beginTransaction();

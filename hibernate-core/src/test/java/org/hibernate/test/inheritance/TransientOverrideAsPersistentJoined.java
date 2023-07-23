@@ -34,6 +34,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.nuodb.hibernate.NuoDBDialect;
+
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -211,11 +213,22 @@ public class TransientOverrideAsPersistentJoined extends BaseNonConfigCoreFuncti
 
 	@After
 	public void cleanupData() {
-		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery( "delete from Job" ).executeUpdate();
-			session.createQuery( "delete from Employee" ).executeUpdate();
-			session.createQuery( "delete from Group" ).executeUpdate();
-		});
+	    doInHibernate( this::sessionFactory, session -> {
+            // TODO: NuoDB: 20-Jul-23 - For some reason DELETE Employee doesn't work for NuoDB
+    	    // ..... Using TRUNCATE explicitly works around it.
+            if (getDialect() instanceof NuoDBDialect) {
+                session.createQuery("delete from Job").executeUpdate();
+                session.createQuery("delete from Group").executeUpdate();
+                session.createNativeQuery("truncate table Employee").executeUpdate();
+                session.createNativeQuery("truncate table HT_Employee").executeUpdate();
+                session.createNativeQuery("truncate table Editor").executeUpdate();
+                session.createNativeQuery("truncate table Writer").executeUpdate();
+            } else {
+                session.createQuery("delete from Job").executeUpdate();
+                session.createQuery("delete from Employee").executeUpdate();
+                session.createQuery("delete from Group").executeUpdate();
+            }
+	    });
 	}
 
 	@Override

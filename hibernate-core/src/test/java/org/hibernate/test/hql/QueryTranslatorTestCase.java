@@ -248,7 +248,7 @@ public abstract class QueryTranslatorTestCase extends BaseCoreFunctionalTestCase
 		System.out.println( "OLD SQL: " + ASTPrinter.escapeMultibyteChars(oldsql) );
 		System.out.println( "NEW SQL: " + ASTPrinter.escapeMultibyteChars(newsql) );
 		if ( sql == null ) {
-			// Check the generated SQL.                                          ASTPrinter.escapeMultibyteChars(
+			// Check the generated SQL.
 			assertSQLEquals( "SQL is not the same as the old SQL (scalar=" + scalar + ")", oldsql, newsql );
 		}
 		else {

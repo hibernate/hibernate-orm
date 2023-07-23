@@ -108,7 +108,7 @@ public class NamedQueryCommentTest extends BaseEntityManagerFunctionalTestCase {
 
 			sqlStatementInterceptor.assertExecutedCount(1);
 
-			// NuoDB 18-May-23: NuoDB requires hint after select with no space before + sign
+			// TODO: NuoDB: 18-May-23 - NuoDB requires hint after select with no space before + sign
 			if (getDialect() instanceof NuoDBDialect)
 				sqlStatementInterceptor.assertExecuted(
 						" SELECT /*+ INDEX (game idx_game_title)  */ * from game g where title = ?"

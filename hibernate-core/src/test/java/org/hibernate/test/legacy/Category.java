@@ -20,6 +20,7 @@ public class Category {
 
 	private long id;
 
+	// TODO: NuoDB: 21-Jan-19 - Provide default for string properties
 	// NuoDB 3.2 or earlier requires actual default values
 	// From NuoDB 3.3 null is the default default-value
 	private String name = "";

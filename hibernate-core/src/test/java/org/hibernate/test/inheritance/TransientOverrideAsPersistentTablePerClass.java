@@ -33,6 +33,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.nuodb.hibernate.NuoDBDialect;
+
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -206,9 +208,21 @@ public class TransientOverrideAsPersistentTablePerClass extends BaseNonConfigCor
 	@After
 	public void cleanupData() {
 		doInHibernate( this::sessionFactory, session -> {
-			session.createQuery( "delete from Job" ).executeUpdate();
-			session.createQuery( "delete from Employee" ).executeUpdate();
-			session.createQuery( "delete from Group" ).executeUpdate();
+            // NuoDB: 20-Jul-2023 - DELETE FROM EMPLOYEE fails. Why?
+            // A Employee is abstract, there is no Employee table. Yet for some reason the
+            // code tries to delete from it. Instead we clean up the subclasses, Editor and
+            // Writer, explicitly using truncate.
+            if (getDialect() instanceof NuoDBDialect) {
+                session.createQuery("delete from Job").executeUpdate();
+                session.createQuery("delete from Group").executeUpdate();
+                session.createNativeQuery("truncate table Editor").executeUpdate();
+                session.createNativeQuery("truncate table Writer").executeUpdate();
+            } else {
+                // Original code
+                session.createQuery("delete from Job").executeUpdate();
+                session.createQuery("delete from Employee").executeUpdate();
+                session.createQuery("delete from Group").executeUpdate();
+            }
 		});
 	}
 

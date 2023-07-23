@@ -6,6 +6,12 @@
  */
 package org.hibernate.test.criteria;
 
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -13,20 +19,17 @@ import javax.persistence.Table;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Root;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.dialect.AbstractHANADialect;
-import org.junit.After;
-import org.junit.Test;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.junit.After;
+import org.junit.Test;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import com.nuodb.hibernate.NuoDBDialect;
 
 /**
  * @author Andrea Boriero
@@ -96,7 +99,8 @@ public class SessionCreateQueryFromCriteriaTest extends BaseCoreFunctionalTestCa
 	}
 
 	@Test
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA only supports forward-only cursors")
+    @SkipForDialect(value = AbstractHANADialect.class, comment = "HANA only supports forward-only cursors")
+	@SkipForDialect(value = NuoDBDialect.class, comment = "NuoDB: only supports forward-only cursors")
 	public void testScrollMethod() {
 		final String entityName = "expected";
 		insertTestEntity( entityName );

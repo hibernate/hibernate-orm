@@ -56,6 +56,8 @@ import org.hibernate.test.sql.hand.Speech;
 import org.hibernate.test.sql.hand.TextHolder;
 import org.junit.Test;
 
+import com.nuodb.hibernate.NuoDBDialect;
+
 import static org.hibernate.testing.junit4.ExtraAssertions.assertClassAssignability;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -853,8 +855,11 @@ public class NativeSQLQueriesTest extends BaseCoreFunctionalTestCase {
 		s.close();
 	}
 
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "On HANA, this returns a blob for the image column which doesn't get mapped to a byte[]")
 	@Test
+	@SkipForDialect(value = AbstractHANADialect.class,
+	        comment = "On HANA, this returns a blob for the image column which doesn't get mapped to a byte[]")
+	// TODO: NuoDB 22-Jul-23 - image returned as blob and cannot be cast to byte[]?
+	@SkipForDialect(value = NuoDBDialect.class)
 	public void testImageTypeInSQLQuery() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

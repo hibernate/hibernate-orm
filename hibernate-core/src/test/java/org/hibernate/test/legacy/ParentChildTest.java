@@ -23,6 +23,8 @@ import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.junit.Test;
 
+import com.nuodb.hibernate.NuoDBDialect;
+
 import org.hibernate.Criteria;
 import org.hibernate.FetchMode;
 import org.hibernate.Hibernate;
@@ -1210,7 +1212,9 @@ public class ParentChildTest extends LegacyTestCase {
 	@SkipForDialect(value = CockroachDB192Dialect.class, comment = "Uses READ_COMMITTED isolation")
 	public void testLoadAfterNonExists() throws HibernateException, SQLException {
 		Session session = openSession();
-		if ( ( getDialect() instanceof MySQLDialect ) || ( getDialect() instanceof IngresDialect ) ) {
+		if ( ( getDialect() instanceof MySQLDialect ) || ( getDialect() instanceof IngresDialect )
+		        // TODO: NuoDB: 22-Jul-23 - MVCC is default, so won't see new objects
+		        || ( getDialect() instanceof NuoDBDialect )   ) {
 			session.doWork(
 					new AbstractWork() {
 						@Override

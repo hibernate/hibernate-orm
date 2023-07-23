@@ -32,6 +32,8 @@ import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.junit.runners.Parameterized;
 
+import com.nuodb.hibernate.NuoDBDialect;
+
 /**
  * Tests for storage of LocalDate properties.
  */
@@ -44,6 +46,8 @@ import org.junit.runners.Parameterized;
 				+ " https://bugs.mysql.com/bug.php?id=91112"
 )
 @SkipForDialect(value = H2Dialect.class, comment = "H2 1.4.200 DST bug. See org.hibernate.dialect.H2Dialect.hasDstBug")
+// TODO: NuoDB: 22-Jul-23 - Known issue with DST corner cases
+@SkipForDialect(value = NuoDBDialect.class, comment = "Known issue with DST corner cases")
 public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDateTest.EntityWithLocalDate> {
 
 	private static class ParametersBuilder extends AbstractParametersBuilder<ParametersBuilder> {

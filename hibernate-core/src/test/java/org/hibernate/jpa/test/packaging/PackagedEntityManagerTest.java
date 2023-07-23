@@ -100,7 +100,7 @@ public class PackagedEntityManagerTest extends PackagingTestCase {
 		}
 	}
 
-		@After
+	@After
 	public void tearDown(){
 		if(emf != null && emf.isOpen()) {
 			emf.close();

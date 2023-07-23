@@ -127,8 +127,7 @@ public class SequenceHiLoGeneratorTest extends BaseUnitTestCase {
 		Transaction transaction =  sessionImpl.beginTransaction();
 		try {
 			long value = (Long) generator.generate( sessionImpl, null );
-			// NuoDB 15-May-23
-			// NuoDB has no way to get back the last value from a sequence.
+			// TODO: NuoDB: 15-May-23 - NuoDB has no way to get back the last value from a sequence.
 			sequenceValueExtractor.save(value);
 			return value;
 		}

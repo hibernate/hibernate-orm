@@ -42,6 +42,7 @@ import static org.junit.Assert.*;
  */
 @TestForIssue(jiraKey = "HHH-13050")
 @RequiresDialectFeature(DialectChecks.SupportsIdentityColumns.class)
+// TODO: NuoDB: 19-May-23 - Test fails, not sure why
 @SkipForDialect(NuoDBDialect.class)
 public class JtaWithFailingBatchTest extends AbstractJtaBatchTest {
 

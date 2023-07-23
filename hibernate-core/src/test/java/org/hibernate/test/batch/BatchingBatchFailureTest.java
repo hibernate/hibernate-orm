@@ -72,7 +72,7 @@ public class BatchingBatchFailureTest extends BaseCoreFunctionalTestCase {
 			System.out.println( "Caught expected exception : " + expected );
 			expected.printStackTrace( System.out );
 
-			// NuoDB 18-May-2023  Batch is null after exception, nothing to check.
+			// TODO: NuoDB: 18-May-23 - Batch is null after exception, nothing to check.
 			if (getDialect() instanceof NuoDBDialect)
 				return;
 

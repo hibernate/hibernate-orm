@@ -6,6 +6,9 @@
  */
 package org.hibernate.test.schemaupdate;
 
+import static org.hamcrest.core.Is.is;
+import static org.junit.Assert.assertThat;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -16,6 +19,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -43,21 +47,20 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.testing.SkipForDialect;
+import org.hibernate.testing.SkipLog;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
 import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
-
-import org.hibernate.testing.SkipLog;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import static org.hamcrest.core.Is.is;
-import static org.junit.Assert.assertThat;
+import com.nuodb.hibernate.NuoDBDialect;
 
 /**
  * @author Andrea Boriero
@@ -83,13 +86,15 @@ public class SchemaUpdateTest {
 
 	@Before
 	public void setUp() throws IOException {
-		if(SQLServerDialect.class.isAssignableFrom( Dialect.getDialect().getClass() )
-				|| SybaseDialect.class.isAssignableFrom(Dialect.getDialect().getClass())) {
-			// SQLServerDialect and SybaseDialect stores case-insensitive quoted identifiers in mixed case,
-			// so the checks at the end of this method won't work.
-			skipTest = true;
-			return;
-		}
+        if (SQLServerDialect.class.isAssignableFrom(Dialect.getDialect().getClass())
+                || SybaseDialect.class.isAssignableFrom(Dialect.getDialect().getClass())
+                || NuoDBDialect.class.isAssignableFrom(Dialect.getDialect().getClass())) {
+            // SQLServerDialect and SybaseDialect stores case-insensitive quoted identifiers
+            // in mixed case, so the checks at the end of this method won't work.
+            // TODO: NuoDB: 22-Jul-23 - Can't have tables with same name differing only by case in same schema.
+            skipTest = true;
+            return;
+        }
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
 		ssr = new StandardServiceRegistryBuilder()

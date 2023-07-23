@@ -94,8 +94,8 @@ public class HHH13670Test extends BaseCoreFunctionalTestCase {
     }
 
     @Test
+    // TODO: NuoDB: 18-May-23 - Parentheses in JOIN
     @SkipForDialect(value = NuoDBDialect.class, comment = "NuoDB expects SELECT in generated OUTER JOIN clause")
-    // NuoDB 18-May-23
     public void testSubTypeJoinWithTableGroupJoins() {
         doInJPA(this::sessionFactory, em -> {
             List<Tuple> resultList = em.createQuery("SELECT subB_0.id, subA_0.id, subB_0.id, subA_0.id FROM SubB subB_0 LEFT JOIN SubA subA_0 ON subA_0.id = subB_0.parent.id ORDER BY subB_0.id ASC, subA_0.id ASC", Tuple.class)

@@ -72,7 +72,7 @@ public class DirtyCheckingWithMappedsuperclassTest {
 		assertThat( entity )
 				.extracting( TRACKER_FIELD_NAME ).isInstanceOf( SimpleFieldTracker.class );
 
-		// NuoDB 18-May-23
+		// TODO: NuoDB: 18-May-23 - use dirtiness tracker properties directly, reflection fails
 		SelfDirtinessTracker sdtEntity = (SelfDirtinessTracker)entity;
 		//assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( true );
 		assert(sdtEntity.$$_hibernate_hasDirtyAttributes());
@@ -89,7 +89,7 @@ public class DirtyCheckingWithMappedsuperclassTest {
 		Method trackerClearMethod = CardGame.class.getMethod( TRACKER_CLEAR_NAME );
 		trackerClearMethod.invoke( entity );
 
-		// NuoDB 18-May-23
+		// TODO: NuoDB: 18-May-23 - use dirtiness tracker properties directly, reflection fails
 		SelfDirtinessTracker sdtEntity = (SelfDirtinessTracker)entity;
 		//assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( false );
 		assert(!sdtEntity.$$_hibernate_hasDirtyAttributes());
@@ -111,7 +111,7 @@ public class DirtyCheckingWithMappedsuperclassTest {
 		assertThat( entity.getCode() )
 				.as( "Field 'code' should have not change" ).isEqualTo( "XsplX" );
 
-		// NuoDB 18-May-23
+		// TODO: NuoDB: 18-May-23 - use dirtiness tracker properties directly, reflection fails
 		SelfDirtinessTracker sdtEntity = (SelfDirtinessTracker)entity;
 		//assertThat( entity ).extracting( TRACKER_HAS_CHANGED_NAME ).isEqualTo( true );
 		assert(sdtEntity.$$_hibernate_hasDirtyAttributes());
@@ -121,7 +121,7 @@ public class DirtyCheckingWithMappedsuperclassTest {
 
 		entity.setName( "Cities of Splendor" );
 
-		// NuoDB 18-May-23
+		// TODO: NuoDB: 18-May-23 - use dirtiness tracker properties directly, reflection fails
 		assertThat( sdtEntity.$$_hibernate_getDirtyAttributes() )
 		//assertThat( entity ).extracting( TRACKER_GET_NAME )
 				.isEqualTo( new String[] { "name", "code" } );

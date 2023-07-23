@@ -89,6 +89,7 @@ public class ScannerTest extends PackagingTestCase {
 		CustomScanner.resetUsed();
 		final HashMap integration = new HashMap();
 
+		// TODO: NuoDB: 19-May-23 - Is this a problem?
 		try {
 			emf = Persistence.createEntityManagerFactory("defaultpar", integration);
 		}

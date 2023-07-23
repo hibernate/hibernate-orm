@@ -14,12 +14,13 @@ import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
-
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
+
+import com.nuodb.hibernate.NuoDBDialect;
 
 /**
  * @author <a href="mailto:stliu@hibernate.org">Strong Liu</a>
@@ -28,6 +29,7 @@ import org.junit.Test;
 @SkipForDialect(value = SQLServerDialect.class, comment = "mssql doesn't support multiple columns in the 'where' clause of a 'where in' query")
 @SkipForDialect(value = SybaseDialect.class, comment = "sybase doesn't support multiple columns in the 'where' clause of a 'where in' query")
 @SkipForDialect(value = DerbyDialect.class, comment = "derby doesn't support multiple columns in the 'where' clause of a 'where in' query")
+@SkipForDialect(value = NuoDBDialect.class, comment = "NuoDB: doesn't support multiple columns in the 'where' clause of a 'where in' query")
 @TestForIssue( jiraKey = "HHH-8312")
 public class CompositeIdTypeBindingTest extends BaseCoreFunctionalTestCase {
 	@Override

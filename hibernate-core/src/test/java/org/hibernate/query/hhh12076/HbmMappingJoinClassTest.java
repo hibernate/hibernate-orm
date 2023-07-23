@@ -82,8 +82,9 @@ public class HbmMappingJoinClassTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect(value = NuoDBDialect.class, comment = "NuoDB expects SELECT in generated OUTER JOIN clause")
-	// NuoDB 18-May-23
+	// TODO: NuoDB: 18-May-23 - Parentheses in JOIN
+	@SkipForDialect(value = NuoDBDialect.class,
+	    comment = "NuoDB expects SELECT in generated OUTER JOIN clause")
 	public void testClassExpressionInOnClause() {
 		doInHibernate( this::sessionFactory, session -> {
 			List<SettlementTask> results = session.createQuery(

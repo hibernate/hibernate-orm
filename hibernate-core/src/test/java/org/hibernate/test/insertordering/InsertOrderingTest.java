@@ -47,6 +47,7 @@ public class InsertOrderingTest extends BaseCoreFunctionalTestCase {
 	public void testBatchOrdering() {
 		Session s = openSession();
 		s.beginTransaction();
+		s.setJdbcBatchSize(10); // TODO: NuoDB: Setting properties in configure not working
 		int iterations = 12;
 		for ( int i = 0; i < iterations; i++ ) {
 			User user = new User( "user-" + i );

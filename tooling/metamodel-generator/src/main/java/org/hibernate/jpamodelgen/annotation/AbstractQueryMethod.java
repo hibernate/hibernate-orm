@@ -10,6 +10,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
 import org.hibernate.jpamodelgen.util.Constants;
+import org.hibernate.query.Order;
+import org.hibernate.query.Page;
 
 import java.util.List;
 
@@ -158,5 +160,60 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	boolean isReactive() {
 		return Constants.MUTINY_SESSION.equals(sessionType);
+	}
+
+	void setPage(StringBuilder declaration, String paramName) {
+		if ( isUsingEntityManager() ) {
+			declaration
+					.append("\n\t\t\t.setFirstResult(")
+					.append(paramName)
+					.append(".getFirstResult())")
+					.append("\n\t\t\t.setMaxResults(")
+					.append(paramName)
+					.append(".getMaxResults())");
+		}
+		else {
+			declaration
+					.append("\n\t\t\t.setPage(")
+					.append(paramName)
+					.append(")");
+		}
+	}
+
+	boolean setOrder(StringBuilder declaration, boolean unwrapped, String paramName, String paramType) {
+		unwrapQuery( declaration, unwrapped );
+		if ( paramType.endsWith("...") ) {
+			declaration
+					.append("\n\t\t\t.setOrder(")
+					.append(annotationMetaEntity.importType(Constants.LIST))
+					.append(".of(")
+					.append(paramName)
+					.append("))");
+		}
+		else {
+			declaration
+					.append("\n\t\t\t.setOrder(")
+					.append(paramName)
+					.append(")");
+		}
+		return true;
+	}
+
+	private void unwrapQuery(StringBuilder declaration, boolean unwrapped) {
+		if ( !unwrapped ) {
+			declaration
+					.append("\n\t\t\t.unwrap(")
+					.append(annotationMetaEntity.importType(Constants.HIB_SELECTION_QUERY))
+					.append(".class)");
+		}
+	}
+
+	static boolean isPageParam(String parameterType) {
+		return Page.class.getName().equals(parameterType);
+	}
+
+	static boolean isOrderParam(String parameterType) {
+		return parameterType.startsWith(Order.class.getName())
+			|| parameterType.startsWith(List.class.getName() + "<" + Order.class.getName());
 	}
 }

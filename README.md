@@ -24,7 +24,8 @@ To run the matrix tests for NuoDB:
 
    Otherwise you must tell gradle where this dependency can be found. For example
    suppose you use `m2` instead of `.m2`:
-   ```
+
+   ```sh
    export ADDITIONAL_REPO=~/m2/repository/com/nuodb/hibernate/nuodb-hibernate/22.x.x-hib5               (Linux/MacOS)
 
    set ADDITIONAL_REPO=c:\Users\yourname\m2\repository\com\nuodb\hibernate\nuodb-hibernate\22.x.x-hib5  (Windows)
@@ -76,7 +77,7 @@ Here are two options using Docker:
    * Expected output is something like:
 
      ```sh
-     10392 tests completed, 148 failed, 1942 skipped
+     10389 tests completed, 0 failed, 2133 skipped
      ```
 
    * **Warnings:**

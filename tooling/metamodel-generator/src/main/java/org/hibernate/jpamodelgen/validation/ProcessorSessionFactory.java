@@ -515,13 +515,13 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		return null;
 	}
 
-	private static boolean isMappedClass(TypeElement type) {
+	static boolean isMappedClass(TypeElement type) {
 		return hasAnnotation(type, "Entity")
 			|| hasAnnotation(type, "Embeddable")
 			|| hasAnnotation(type, "MappedSuperclass");
 	}
 
-	private static boolean isEntity(TypeElement member) {
+	static boolean isEntity(TypeElement member) {
 		return member.getKind() == ElementKind.CLASS
 //			&& member.getAnnotation(entityAnnotation)!=null;
 			&& hasAnnotation(member, "Entity");
@@ -668,7 +668,7 @@ public abstract class ProcessorSessionFactory extends MockSessionFactory {
 		}
 	}
 
-	private static String getEntityName(TypeElement type) {
+	static String getEntityName(TypeElement type) {
 		if ( type == null ) {
 			return null;
 		}

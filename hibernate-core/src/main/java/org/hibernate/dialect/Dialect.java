@@ -4152,6 +4152,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this database prefer to use array types for multi-valued parameters.
+	 *
+	 * @return boolean
+	 *
+	 * @since 6.2.8
+	 */
+	public boolean useArrayForMultiValuedParameters() {
+		return supportsStandardArrays() && getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY;
+	}
+
+	/**
 	 * The SQL type name for the array type with elements of the given type name.
 	 * <p>
 	 * The ANSI-standard syntax is {@code integer array}.

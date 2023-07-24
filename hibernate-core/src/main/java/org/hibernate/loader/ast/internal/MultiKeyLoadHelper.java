@@ -12,7 +12,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.BasicType;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
@@ -26,8 +25,7 @@ public class MultiKeyLoadHelper {
 	}
 
 	public static boolean supportsSqlArrayType(Dialect dialect) {
-		return dialect.supportsStandardArrays()
-				&& dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY;
+		return dialect.useArrayForMultiValuedParameters();
 	}
 
 	public static JdbcMapping resolveArrayJdbcMapping(

@@ -154,6 +154,19 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	@Override
+	public void forceVersionIncrement(
+			Object id,
+			Object currentVersion,
+			Object nextVersion,
+			boolean batching,
+			SharedSessionContractImplementor session) {
+		if ( versionUpdateGroup == null ) {
+			throw new HibernateException( "Cannot force version increment relative to sub-type; use the root type" );
+		}
+		doVersionUpdate( null, id, nextVersion, currentVersion, batching, session );
+	}
+
+	@Override
 	public void coordinateUpdate(
 			Object entity,
 			Object id,
@@ -466,11 +479,21 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			Object version,
 			Object oldVersion,
 			SharedSessionContractImplementor session) {
+		doVersionUpdate( entity, id, version, oldVersion, true, session );
+	}
+
+	protected void doVersionUpdate(
+			Object entity,
+			Object id,
+			Object version,
+			Object oldVersion,
+			boolean batching,
+			SharedSessionContractImplementor session) {
 		assert versionUpdateGroup != null;
 
 		final EntityTableMapping mutatingTableDetails = (EntityTableMapping) versionUpdateGroup.getSingleOperation().getTableDetails();
 
-		final MutationExecutor mutationExecutor = updateVersionExecutor( session, versionUpdateGroup, false );
+		final MutationExecutor mutationExecutor = updateVersionExecutor( session, versionUpdateGroup, false, batching );
 
 		final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
 
@@ -999,6 +1022,18 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	private MutationExecutor updateVersionExecutor(SharedSessionContractImplementor session, MutationOperationGroup group, boolean dynamicUpdate) {
 		return mutationExecutorService
 				.createExecutor( resolveUpdateVersionBatchKeyAccess( dynamicUpdate, session ), group, session );
+	}
+
+	private MutationExecutor updateVersionExecutor(
+			SharedSessionContractImplementor session,
+			MutationOperationGroup group,
+			boolean dynamicUpdate,
+			boolean batching) {
+		if ( batching ) {
+			return updateVersionExecutor(session, group,dynamicUpdate);
+		}
+		return mutationExecutorService.createExecutor( NoBatchKeyAccess.INSTANCE, group, session );
+
 	}
 
 	protected BatchKeyAccess resolveUpdateVersionBatchKeyAccess(boolean dynamicUpdate, SharedSessionContractImplementor session) {

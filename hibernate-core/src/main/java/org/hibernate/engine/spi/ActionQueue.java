@@ -542,6 +542,8 @@ public class ActionQueue {
 			// Execute completion actions only in transaction owner (aka parent session).
 			if ( beforeTransactionProcesses != null ) {
 				beforeTransactionProcesses.beforeTransactionCompletion();
+				// `beforeTransactionCompletion()` can have added batch operations (e.g. to increment entity version)
+				session.getJdbcCoordinator().executeBatch();
 			}
 		}
 	}

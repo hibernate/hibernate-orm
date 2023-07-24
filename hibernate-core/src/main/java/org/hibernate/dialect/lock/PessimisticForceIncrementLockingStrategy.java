@@ -48,7 +48,7 @@ public class PessimisticForceIncrementLockingStrategy implements LockingStrategy
 		}
 		final EntityEntry entry = session.getPersistenceContextInternal().getEntry( object );
 		final EntityPersister persister = entry.getPersister();
-		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), entry.getVersion(), session );
+		final Object nextVersion = persister.forceVersionIncrement( entry.getId(), entry.getVersion(), false, session );
 		entry.forceLocked( object, nextVersion );
 	}
 

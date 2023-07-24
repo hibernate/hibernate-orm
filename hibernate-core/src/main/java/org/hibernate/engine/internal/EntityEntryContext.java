@@ -370,7 +370,10 @@ public class EntityEntryContext {
 
 		ManagedEntity node = head;
 		while ( node != null ) {
-			node.$$_hibernate_getEntityEntry().setLockMode( LockMode.NONE );
+			EntityEntry entityEntry = node.$$_hibernate_getEntityEntry();
+			if (entityEntry != null) {
+				entityEntry.setLockMode( LockMode.NONE ); 
+			}
 
 			node = node.$$_hibernate_getNextManagedEntity();
 		}

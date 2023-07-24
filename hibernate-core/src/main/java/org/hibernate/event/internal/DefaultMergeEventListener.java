@@ -222,9 +222,7 @@ public class DefaultMergeEventListener
 		final EventSource session = event.getSession();
 		final String entityName = event.getEntityName();
 		final EntityPersister persister = session.getEntityPersister( entityName, entity );
-		final Object id = persister.hasIdentifierProperty()
-				? persister.getIdentifier( entity, session )
-				: null;
+		final Object id = persister.getIdentifier( entity, session );
 		final Object copy = copyEntity( copyCache, entity, session, persister, id );
 
 		// cascade first, so that all unsaved objects get their
@@ -234,10 +232,13 @@ public class DefaultMergeEventListener
 		copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.FROM_PARENT );
 
 		saveTransientEntity( copy, entityName, event.getRequestedId(), session, copyCache );
+		persister.setIdentifier( entity, persister.getIdentifier( copy, session ), session );
 
 		// cascade first, so that all unsaved objects get their
 		// copy created before we actually copy
 		super.cascadeAfterSave( session, persister, entity, copyCache );
+
+
 		copyValues( persister, entity, copy, session, copyCache, ForeignKeyDirection.TO_PARENT );
 
 		// saveTransientEntity has been called using a copy that contains empty collections

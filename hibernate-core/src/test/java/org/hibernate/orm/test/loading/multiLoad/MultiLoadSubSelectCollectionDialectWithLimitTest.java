@@ -109,6 +109,7 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 	@TestForIssue(jiraKey = "HHH-12740")
 	public void testSubselect(SessionFactoryScope scope) {
 		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+		final Dialect dialect = scope.getSessionFactory().getFastSessionServices().jdbcServices.getDialect();
 		statementInspector.clear();
 
 		scope.inTransaction(
@@ -117,7 +118,12 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 					assertEquals( 56, list.size() );
 
 					// None of the collections should be loaded yet
-					assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+					if ( dialect.useArrayForMultiValuedParameters() ) {
+						assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+					}
+					else {
+						assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
+					}
 					for ( Parent p : list ) {
 						assertFalse( Hibernate.isInitialized( p.children ) );
 					}
@@ -128,8 +134,7 @@ public class MultiLoadSubSelectCollectionDialectWithLimitTest {
 					Hibernate.initialize( list.get( 0 ).children );
 
 					// exactly how depends on whether the Dialect supports use of SQL ARRAY
-					final Dialect dialect = scope.getSessionFactory().getFastSessionServices().jdbcServices.getDialect();
-					if ( MultiKeyLoadHelper.supportsSqlArrayType( dialect ) ) {
+					if ( dialect.useArrayForMultiValuedParameters() ) {
 						assertThat( Hibernate.isInitialized( list.get( 0 ).children ) ).isTrue();
 						assertThat( Hibernate.isInitialized( list.get( 50 ).children ) ).isTrue();
 						assertThat( Hibernate.isInitialized( list.get( 52 ).children ) ).isTrue();

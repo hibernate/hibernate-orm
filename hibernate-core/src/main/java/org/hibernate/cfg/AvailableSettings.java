@@ -2414,19 +2414,24 @@ public interface AvailableSettings {
 
 	/**
 	 * When enabled, specifies that {@linkplain org.hibernate.query.Query queries}
-	 * created through {@link jakarta.persistence.EntityManager#createQuery(CriteriaQuery)},
+	 * created via {@link jakarta.persistence.EntityManager#createQuery(CriteriaQuery)},
 	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)} or
-	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaDelete)}
-	 * must create a copy of the passed object such that the resulting {@link jakarta.persistence.Query}
-	 * is not affected by any mutations to the original criteria query.
+	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaDelete)} must
+	 * create a copy of the passed criteria query object such that the resulting
+	 * {@link jakarta.persistence.Query} object is not affected by mutation of the
+	 * original {@linkplain CriteriaQuery criteria query}.
 	 * <p>
-	 * If disabled, it is assumed that users do not mutate the criteria query afterwards
-	 * and due to that, no copy will be created, which will improve performance.
+	 * If disabled, it's assumed that the client does not mutate the criteria query
+	 * after calling {@code createQuery()}. Thus, in the interest of performance, no
+	 * copy is created.
 	 * <p>
-	 * When bootstrapping Hibernate through the native bootstrap APIs this setting is disabled
-	 * i.e. no copies are created to not hurt performance.
-	 * When bootstrapping Hibernate through the JPA SPI this setting is enabled.
-	 * When enabled, criteria query objects are copied, as required by the Jakarta Persistence specification.
+	 * The default behavior depends on how Hibernate is bootstrapped:
+	 * <ul>
+	 * <li>When bootstrapping Hibernate through the native bootstrap APIs, this setting
+	 *     is disabled, that is, no copy of the criteria query object is made.
+	 * <li>When bootstrapping Hibernate through the JPA SPI, this setting is enabled so
+	 *     that criteria query objects are copied, as required by the JPA specification.
+	 * </ul>
 	 *
 	 * @since 6.0
 	 */

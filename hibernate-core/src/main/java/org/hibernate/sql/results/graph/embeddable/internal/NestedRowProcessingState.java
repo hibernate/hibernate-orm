@@ -105,6 +105,11 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	}
 
 	@Override
+	public boolean hasCallbackActions() {
+		return processingState.hasCallbackActions();
+	}
+
+	@Override
 	public CollectionKey getCollectionKey() {
 		return processingState.getCollectionKey();
 	}

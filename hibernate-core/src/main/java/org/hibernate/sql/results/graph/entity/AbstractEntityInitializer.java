@@ -716,7 +716,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	protected void registerReloadedEntity(RowProcessingState rowProcessingState, Object instance) {
-		if ( rowProcessingState.getCallback() != null ) {
+		if ( rowProcessingState.hasCallbackActions() ) {
 			// This is only needed for follow-on locking, so skip registering the entity if there is no callback
 			rowProcessingState.getJdbcValuesSourceProcessingState()
 					.registerReloadedEntity(

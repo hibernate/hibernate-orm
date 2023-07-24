@@ -2004,32 +2004,7 @@ public abstract class AbstractEntityPersister
 			return superMappingType.getEntityPersister().forceVersionIncrement( id, currentVersion, session );
 		}
 
-		if ( !isVersioned() ) {
-			throw new AssertionFailure( "cannot force version increment on non-versioned entity" );
-		}
-
-		if ( isVersionGeneratedOnExecution() ) {
-			// the difficulty here is exactly what we update in order to
-			// force the version to be incremented in the db...
-			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
-
-		}
-
-		final EntityVersionMapping versionMapping = getVersionMapping();
-		final Object nextVersion = getVersionJavaType().next(
-				currentVersion,
-				versionMapping.getLength(),
-				versionMapping.getPrecision(),
-				versionMapping.getScale(),
-				session
-		);
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace(
-					"Forcing version increment [" + infoString( this, id, getFactory() ) + "; "
-							+ getVersionType().toLoggableString( currentVersion, getFactory() ) + " -> "
-							+ getVersionType().toLoggableString( nextVersion, getFactory() ) + "]"
-			);
-		}
+		final Object nextVersion = calculateNextVersion( id, currentVersion, session );
 
 		updateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, session );
 
@@ -2067,7 +2042,53 @@ public abstract class AbstractEntityPersister
 		return nextVersion;
 	}
 
-//	private String generateVersionIncrementUpdateString() {
+	@Override
+	public Object forceVersionIncrement(
+			Object id,
+			Object currentVersion,
+			boolean batching,
+			SharedSessionContractImplementor session) throws HibernateException {
+		if ( superMappingType != null ) {
+			return superMappingType.getEntityPersister().forceVersionIncrement( id, currentVersion, session );
+		}
+
+		final Object nextVersion = calculateNextVersion( id, currentVersion, session );
+
+		updateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, batching, session );
+		return nextVersion;
+	}
+
+	private Object calculateNextVersion(Object id, Object currentVersion, SharedSessionContractImplementor session) {
+		if ( !isVersioned() ) {
+			throw new AssertionFailure( "cannot force version increment on non-versioned entity" );
+		}
+
+		if ( isVersionGeneratedOnExecution() ) {
+			// the difficulty here is exactly what we update in order to
+			// force the version to be incremented in the db...
+			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
+
+		}
+
+		final EntityVersionMapping versionMapping = getVersionMapping();
+		final Object nextVersion = getVersionJavaType().next(
+				currentVersion,
+				versionMapping.getLength(),
+				versionMapping.getPrecision(),
+				versionMapping.getScale(),
+				session
+		);
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace(
+					"Forcing version increment [" + infoString( this, id, getFactory() ) + "; "
+							+ getVersionType().toLoggableString( currentVersion, getFactory() ) + " -> "
+							+ getVersionType().toLoggableString( nextVersion, getFactory() ) + "]"
+			);
+		}
+		return nextVersion;
+	}
+
+	//	private String generateVersionIncrementUpdateString() {
 //		final Update update = new Update( getFactory().getJdbcServices().getDialect() ).setTableName( getTableName( 0 ) );
 //		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 //			update.setComment( "forced version increment" );

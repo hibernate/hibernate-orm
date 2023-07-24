@@ -807,6 +807,14 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 
 	Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) throws HibernateException;
 
+	default Object forceVersionIncrement(
+			Object id,
+			Object currentVersion,
+			boolean batching,
+			SharedSessionContractImplementor session) throws HibernateException {
+		return forceVersionIncrement( id, currentVersion, session );
+	}
+
 	/**
 	 * Has the class actually been bytecode instrumented?
 	 */

@@ -8,7 +8,6 @@ package org.hibernate.event.internal;
 
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.LockMode;
 import org.hibernate.action.internal.EntityIncrementVersionProcess;
 import org.hibernate.action.internal.EntityVerifyVersionProcess;
 import org.hibernate.classic.Lifecycle;
@@ -18,7 +17,6 @@ import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
-import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * We do 2 things here:<ul>
@@ -49,34 +47,26 @@ public class DefaultPostLoadEventListener implements PostLoadEventListener, Call
 			throw new AssertionFailure( "possible non-threadsafe access to the session" );
 		}
 
-		final LockMode lockMode = entry.getLockMode();
-		switch (lockMode) {
+		switch ( entry.getLockMode() ) {
 			case PESSIMISTIC_FORCE_INCREMENT:
-				final EntityPersister persister = entry.getPersister();
-				final Object nextVersion = persister.forceVersionIncrement(
-						entry.getId(),
-						entry.getVersion(),
-						session
-				);
-				entry.forceLocked(entity, nextVersion);
+				final Object nextVersion = entry.getPersister()
+						.forceVersionIncrement( entry.getId(), entry.getVersion(), false, session );
+				entry.forceLocked( entity, nextVersion );
 				break;
 			case OPTIMISTIC_FORCE_INCREMENT:
-				final EntityIncrementVersionProcess incrementVersion = new EntityIncrementVersionProcess(entity);
-				session.getActionQueue().registerProcess(incrementVersion);
+				session.getActionQueue().registerProcess( new EntityIncrementVersionProcess( entity ) );
 				break;
 			case OPTIMISTIC:
-				final EntityVerifyVersionProcess verifyVersion = new EntityVerifyVersionProcess(entity);
-				session.getActionQueue().registerProcess(verifyVersion);
+				session.getActionQueue().registerProcess( new EntityVerifyVersionProcess( entity ) );
 				break;
 		}
 
-		invokeLoadLifecycle(event, session);
+		invokeLoadLifecycle( event, session );
 
 	}
 
 	protected void invokeLoadLifecycle(PostLoadEvent event, EventSource session) {
 		if ( event.getPersister().implementsLifecycle() ) {
-			//log.debug( "calling onLoad()" );
 			( (Lifecycle) event.getEntity() ).onLoad( session, event.getId() );
 		}
 	}

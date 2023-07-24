@@ -208,6 +208,12 @@ public class H2LegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean useArrayForMultiValuedParameters() {
+		// Performance is worse than the in-predicate version
+		return false;
+	}
+
+	@Override
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
 			// prior to version 2.0, H2 reported NUMERIC columns as DECIMAL,

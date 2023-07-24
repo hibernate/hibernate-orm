@@ -55,6 +55,7 @@ public class EntityOfBasics {
 	private String theString;
 	private Integer theInteger;
 	private int theInt;
+	private short theShort;
 	private double theDouble;
 	private URL theUrl;
 	private Clob theClob;
@@ -114,6 +115,14 @@ public class EntityOfBasics {
 
 	public void setTheInt(int theInt) {
 		this.theInt = theInt;
+	}
+
+	public short getTheShort() {
+		return theShort;
+	}
+
+	public void setTheShort(short theShort) {
+		this.theShort = theShort;
 	}
 
 	public double getTheDouble() {

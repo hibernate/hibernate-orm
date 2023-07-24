@@ -41,6 +41,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 	private final int keyJdbcCount;
 
 	private final SelectStatement sqlAst;
+	private final JdbcOperationQuerySelect jdbcSelect;
 	private final JdbcParametersList jdbcParameters;
 
 	public CollectionLoaderSingleKey(
@@ -64,6 +65,11 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				sessionFactory
 		);
 		this.jdbcParameters = jdbcParametersBuilder.build();
+		this.jdbcSelect = sessionFactory.getJdbcServices()
+				.getJdbcEnvironment()
+				.getSqlAstTranslatorFactory()
+				.buildSelectTranslator( sessionFactory, sqlAst )
+				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 	}
 
 	@Override
@@ -87,10 +93,7 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
 		final CollectionKey collectionKey = new CollectionKey( attributeMapping.getCollectionDescriptor(), key );
 
-		final SessionFactoryImplementor sessionFactory = session.getFactory();
-		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcEnvironment jdbcEnvironment = jdbcServices.getJdbcEnvironment();
-		final SqlAstTranslatorFactory sqlAstTranslatorFactory = jdbcEnvironment.getSqlAstTranslatorFactory();
+		final JdbcServices jdbcServices = session.getFactory().getJdbcServices();
 
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( keyJdbcCount );
 		int offset = jdbcParameterBindings.registerParametersForEachJdbcValue(
@@ -100,10 +103,6 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				session
 		);
 		assert offset == jdbcParameters.size();
-
-		final JdbcOperationQuerySelect jdbcSelect = sqlAstTranslatorFactory
-				.buildSelectTranslator( sessionFactory, sqlAst )
-				.translate( jdbcParameterBindings, QueryOptions.NONE );
 
 		final SubselectFetch.RegistrationHandler subSelectFetchableKeysHandler = SubselectFetch.createRegistrationHandler(
 				session.getPersistenceContext().getBatchFetchQueue(),

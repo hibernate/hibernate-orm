@@ -402,7 +402,10 @@ public class EntityEntryContext {
 	}
 
 	private static void downgradeLockOnManagedEntity(final ManagedEntity node) {
-		node.$$_hibernate_getEntityEntry().setLockMode( LockMode.NONE );
+		final EntityEntry entityEntry = node.$$_hibernate_getEntityEntry();
+		if ( entityEntry != null ) {
+			entityEntry.setLockMode( LockMode.NONE );
+		}
 	}
 
 	/**

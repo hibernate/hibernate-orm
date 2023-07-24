@@ -201,7 +201,6 @@ import jakarta.persistence.TemporalType;
 
 import static java.lang.Math.ceil;
 import static java.lang.Math.log;
-import static java.util.Arrays.sort;
 import static org.hibernate.cfg.AvailableSettings.NON_CONTEXTUAL_LOB_CREATION;
 import static org.hibernate.cfg.AvailableSettings.STATEMENT_BATCH_SIZE;
 import static org.hibernate.cfg.AvailableSettings.USE_GET_GENERATED_KEYS;
@@ -761,9 +760,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	public String getEnumTypeDeclaration(Class<? extends Enum<?>> enumType) {
-		String[] values = getEnumeratedValues( enumType );
-		sort( values ); //sort alphabetically, to guarantee alphabetical ordering in queries with 'order by'
-		return getEnumTypeDeclaration( enumType.getSimpleName(), values );
+		return getEnumTypeDeclaration( enumType.getSimpleName(), getEnumeratedValues( enumType ) );
 	}
 
 	public String[] getCreateEnumTypeCommand(String name, String[] values) {
@@ -771,9 +768,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	public String[] getCreateEnumTypeCommand(Class<? extends Enum<?>> enumType) {
-		String[] values = getEnumeratedValues( enumType );
-		sort( values ); //sort alphabetically, to guarantee alphabetical ordering in queries with 'order by'
-		return getCreateEnumTypeCommand( enumType.getSimpleName(), values );
+		return getCreateEnumTypeCommand( enumType.getSimpleName(), getEnumeratedValues( enumType ) );
 	}
 
 	public String[] getDropEnumTypeCommand(String name) {

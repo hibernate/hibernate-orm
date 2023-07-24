@@ -120,6 +120,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			Class<?> expectedResultType,
 			HqlTranslator translator) {
 		log.tracef( "QueryPlan#resolveHqlInterpretation( `%s` )", queryString );
+		final StatisticsImplementor statistics = statisticsSupplier.get();
 
 		final Object cacheKey;
 		if ( expectedResultType != null ) {
@@ -130,30 +131,35 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		}
 		final HqlInterpretation existing = hqlInterpretationCache.get( cacheKey );
 		if ( existing != null ) {
-			final StatisticsImplementor statistics = statisticsSupplier.get();
 			if ( statistics.isStatisticsEnabled() ) {
 				statistics.queryPlanCacheHit( queryString );
 			}
 			return existing;
 		}
-		else {
-			final HqlInterpretation hqlInterpretation = createHqlInterpretation(
-					queryString,
-					expectedResultType,
-					translator,
-					statisticsSupplier
-			);
-			hqlInterpretationCache.put( cacheKey, hqlInterpretation );
-			return hqlInterpretation;
+		else if ( expectedResultType != null ) {
+			final HqlInterpretation existingQueryOnly = hqlInterpretationCache.get( queryString );
+			if ( existingQueryOnly != null ) {
+				if ( statistics.isStatisticsEnabled() ) {
+					statistics.queryPlanCacheHit( queryString );
+				}
+				return existingQueryOnly;
+			}
 		}
+		final HqlInterpretation hqlInterpretation = createHqlInterpretation(
+				queryString,
+				expectedResultType,
+				translator,
+				statistics
+		);
+		hqlInterpretationCache.put( cacheKey, hqlInterpretation );
+		return hqlInterpretation;
 	}
 
 	protected static HqlInterpretation createHqlInterpretation(
 			String queryString,
 			Class<?> expectedResultType,
 			HqlTranslator translator,
-			Supplier<StatisticsImplementor> statisticsSupplier) {
-		final StatisticsImplementor statistics = statisticsSupplier.get();
+			StatisticsImplementor statistics) {
 		final boolean stats = statistics.isStatisticsEnabled();
 		final long startTime = stats ? System.nanoTime() : 0L;
 

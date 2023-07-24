@@ -95,7 +95,7 @@ public class BatchAndClassIdTest {
 					statementInspector.clear();
 					List<Child> children = session.createQuery( "select c from Child c", Child.class ).getResultList();
 					statementInspector.assertExecutedCount( 3 );
-					if ( scope.getSessionFactory().getJdbcServices().getDialect().supportsStandardArrays() ) {
+					if ( scope.getSessionFactory().getJdbcServices().getDialect().useArrayForMultiValuedParameters() ) {
 						Assertions.assertThat( statementInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "?" );
 						Assertions.assertThat( statementInspector.getSqlQueries().get( 2 ) ).containsOnlyOnce( "?" );
 					}

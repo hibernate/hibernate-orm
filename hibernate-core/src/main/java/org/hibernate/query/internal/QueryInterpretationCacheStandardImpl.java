@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.internal.util.collections.BoundedConcurrentHashMap;
 import org.hibernate.query.QueryLogging;
+import org.hibernate.query.hql.HqlTranslator;
 import org.hibernate.query.spi.HqlInterpretation;
 import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.ParameterMetadataImplementor;
@@ -40,7 +41,7 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 	 */
 	private final BoundedConcurrentHashMap<Key, QueryPlan> queryPlanCache;
 
-	private final BoundedConcurrentHashMap<String, HqlInterpretation> hqlInterpretationCache;
+	private final BoundedConcurrentHashMap<Object, HqlInterpretation> hqlInterpretationCache;
 	private final BoundedConcurrentHashMap<String, ParameterInterpretation> nativeQueryParamCache;
 	private final Supplier<StatisticsImplementor> statisticsSupplier;
 
@@ -99,53 +100,35 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		log.tracef( "QueryPlan#cacheNonSelectQueryPlan(%s)", key );
 	}
 
-	private static String typedKey(String queryString, Class<?> expectedResultType) {
-		return expectedResultType.getName() + ":" + queryString;
-	}
-
-	private void putInCache(String queryString, Class<?> expectedResultType, HqlInterpretation hqlInterpretation) {
-		final SqmStatement<?> statement = hqlInterpretation.getSqmStatement();
-		if ( statement instanceof SqmSelectStatement && expectedResultType != null ) {
-			hqlInterpretationCache.put( typedKey( queryString, expectedResultType ), hqlInterpretation);
-		}
-		else {
-			hqlInterpretationCache.put( queryString, hqlInterpretation );
-		}
-	}
-
-	private HqlInterpretation getFromCache(String queryString, Class<?> expectedResultType) {
-		if ( expectedResultType != null ) {
-			final HqlInterpretation typedHqlInterpretation =
-					hqlInterpretationCache.get( typedKey( queryString, expectedResultType ) );
-			if ( typedHqlInterpretation != null ) {
-				return typedHqlInterpretation;
+	@Override
+	public HqlInterpretation resolveHqlInterpretation(
+			String queryString,
+			Class<?> expectedResultType,
+			Function<String, SqmStatement<?>> creator) {
+		return resolveHqlInterpretation( queryString, expectedResultType, new HqlTranslator() {
+			@Override
+			public <R> SqmStatement<R> translate(String hql, Class<R> expectedResultType) {
+				//noinspection unchecked
+				return (SqmStatement<R>) creator.apply( hql );
 			}
-		}
-
-		final HqlInterpretation hqlInterpretation = hqlInterpretationCache.get( queryString );
-		if ( hqlInterpretation != null ) {
-			final SqmStatement<?> statement = hqlInterpretation.getSqmStatement();
-			if ( statement instanceof SqmSelectStatement && expectedResultType != null ) {
-				final Class<?> resultType = ((SqmSelectStatement<?>) statement).getSelection().getJavaType();
-				return expectedResultType.equals( resultType ) ? hqlInterpretation : null;
-			}
-			else {
-				return hqlInterpretation;
-			}
-		}
-		else {
-			return null;
-		}
+		} );
 	}
 
 	@Override
 	public HqlInterpretation resolveHqlInterpretation(
 			String queryString,
 			Class<?> expectedResultType,
-			Function<String, SqmStatement<?>> creator) {
+			HqlTranslator translator) {
 		log.tracef( "QueryPlan#resolveHqlInterpretation( `%s` )", queryString );
 
-		final HqlInterpretation existing = getFromCache( queryString, expectedResultType );
+		final Object cacheKey;
+		if ( expectedResultType != null ) {
+			cacheKey = new HqlInterpretationCacheKey( queryString, expectedResultType );
+		}
+		else {
+			cacheKey = queryString;
+		}
+		final HqlInterpretation existing = hqlInterpretationCache.get( cacheKey );
 		if ( existing != null ) {
 			final StatisticsImplementor statistics = statisticsSupplier.get();
 			if ( statistics.isStatisticsEnabled() ) {
@@ -154,22 +137,27 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 			return existing;
 		}
 		else {
-			final HqlInterpretation hqlInterpretation =
-					createHqlInterpretation( queryString, creator, statisticsSupplier );
-			putInCache( queryString, expectedResultType, hqlInterpretation );
+			final HqlInterpretation hqlInterpretation = createHqlInterpretation(
+					queryString,
+					expectedResultType,
+					translator,
+					statisticsSupplier
+			);
+			hqlInterpretationCache.put( cacheKey, hqlInterpretation );
 			return hqlInterpretation;
 		}
 	}
 
 	protected static HqlInterpretation createHqlInterpretation(
 			String queryString,
-			Function<String, SqmStatement<?>> creator,
+			Class<?> expectedResultType,
+			HqlTranslator translator,
 			Supplier<StatisticsImplementor> statisticsSupplier) {
 		final StatisticsImplementor statistics = statisticsSupplier.get();
 		final boolean stats = statistics.isStatisticsEnabled();
 		final long startTime = stats ? System.nanoTime() : 0L;
 
-		final SqmStatement<?> sqmStatement = creator.apply( queryString );
+		final SqmStatement<?> sqmStatement = translator.translate( queryString, expectedResultType );
 		final ParameterMetadataImplementor parameterMetadata;
 		final DomainParameterXref domainParameterXref;
 
@@ -217,6 +205,34 @@ public class QueryInterpretationCacheStandardImpl implements QueryInterpretation
 		hqlInterpretationCache.clear();
 		nativeQueryParamCache.clear();
 		queryPlanCache.clear();
+	}
+
+	private static final class HqlInterpretationCacheKey {
+		private final String queryString;
+		private final Class<?> expectedResultType;
+
+		public HqlInterpretationCacheKey(String queryString, Class<?> expectedResultType) {
+			this.queryString = queryString;
+			this.expectedResultType = expectedResultType;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( o.getClass() != HqlInterpretationCacheKey.class ) {
+				return false;
+			}
+
+			final HqlInterpretationCacheKey that = (HqlInterpretationCacheKey) o;
+			return queryString.equals( that.queryString )
+					&& expectedResultType.equals( that.expectedResultType );
+		}
+
+		@Override
+		public int hashCode() {
+			int result = queryString.hashCode();
+			result = 31 * result + expectedResultType.hashCode();
+			return result;
+		}
 	}
 
 }

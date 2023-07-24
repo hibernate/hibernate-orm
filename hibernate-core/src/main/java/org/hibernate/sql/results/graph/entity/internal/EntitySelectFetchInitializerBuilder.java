@@ -147,12 +147,8 @@ public class EntitySelectFetchInitializerBuilder {
 	}
 
 	private static boolean canBatchInitializeBeUsed(EntityPersister entityPersister) {
-		if ( entityPersister.getRepresentationStrategy().getProxyFactory() == null
-				&& entityPersister.hasSubclasses() ) {
-			// We cannot neither create a proxy nor instantiate the entity because we don't know the concrete type
-			return false;
-		}
-		return true;
+		//  we need to create a Proxy in order to use batch initialize
+		return entityPersister.getRepresentationStrategy().getProxyFactory() != null;
 	}
 
 	enum BatchMode {

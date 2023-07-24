@@ -60,7 +60,6 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
@@ -717,7 +716,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	protected void registerReloadedEntity(RowProcessingState rowProcessingState, Object instance) {
-		if ( rowProcessingState.getCallback() != null ) {
+		if ( rowProcessingState.hasCallbackActions() ) {
 			// This is only needed for follow-on locking, so skip registering the entity if there is no callback
 			rowProcessingState.getJdbcValuesSourceProcessingState()
 					.registerReloadedEntity(

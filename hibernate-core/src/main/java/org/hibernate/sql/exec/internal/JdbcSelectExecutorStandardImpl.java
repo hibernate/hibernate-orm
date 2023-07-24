@@ -799,6 +799,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		}
 
 		@Override
+		public boolean hasCallbackActions() {
+			return context.hasCallbackActions();
+		}
+
+		@Override
 		public Set<String> getEnabledFetchProfiles() {
 			return null;
 		}

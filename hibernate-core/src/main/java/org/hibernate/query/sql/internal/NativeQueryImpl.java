@@ -434,6 +434,11 @@ public class NativeQueryImpl<R>
 	}
 
 	@Override
+	public boolean hasCallbackActions() {
+		return callback != null && callback.hasAfterLoadActions();
+	}
+
+	@Override
 	public QueryParameterBindings getQueryParameterBindings() {
 		return parameterBindings;
 	}

@@ -154,6 +154,11 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 	}
 
 	@Override
+	public boolean hasCallbackActions() {
+		return executionContext.hasCallbackActions();
+	}
+
+	@Override
 	public CollectionKey getCollectionKey() {
 		return executionContext.getCollectionKey();
 	}

@@ -535,6 +535,11 @@ public abstract class AbstractSelectionQuery<R>
 		return callback;
 	}
 
+	@Override
+	public boolean hasCallbackActions() {
+		return callback != null && callback.hasAfterLoadActions();
+	}
+
 	protected void resetCallback() {
 		callback = null;
 	}

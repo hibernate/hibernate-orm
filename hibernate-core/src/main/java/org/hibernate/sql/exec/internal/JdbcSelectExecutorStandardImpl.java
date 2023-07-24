@@ -793,5 +793,10 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 			return context.getCallback();
 		}
 
+		@Override
+		public boolean hasCallbackActions() {
+			return context.hasCallbackActions();
+		}
+
 	}
 }

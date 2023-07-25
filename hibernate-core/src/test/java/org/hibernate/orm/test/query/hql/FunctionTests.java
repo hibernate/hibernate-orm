@@ -1355,6 +1355,26 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testAddDurationWithParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select 2 * cast(?1 as BigDecimal)")
+							.setParameter(1, BigDecimal.valueOf(123.446))
+							.getSingleResult();
+					session.createQuery("select 2 * cast(?1 as BigDecimal(7,4))")
+							.setParameter(1, BigDecimal.valueOf(123.446))
+							.getSingleResult();
+					session.createQuery("select cast(2 as BigDecimal) * ?1")
+							.setParameter(1, BigDecimal.valueOf(123.446))
+							.getSingleResult();
+					session.createQuery("select cast(:dt as LocalDateTime) + 1 day")
+							.setParameter("dt", LocalDateTime.now())
+							.getSingleResult();
+				}
+		);
+	}
+
+	@Test
 	public void testInstantCast(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

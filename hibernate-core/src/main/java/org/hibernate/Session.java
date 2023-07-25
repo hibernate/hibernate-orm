@@ -183,13 +183,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void setFlushMode(FlushModeType flushMode);
 
 	/**
-	 * Set the current {@link FlushMode flush mode} for this session.
+	 * Set the current {@linkplain FlushMode flush mode} for this session.
 	 * <p>
 	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
 	 * store with persistable state held in memory. The current flush mode determines
 	 * when the session is automatically flushed.
 	 * <p>
-	 * The {@link FlushMode#AUTO default flush mode} is sometimes unnecessarily
+	 * The {@linkplain FlushMode#AUTO default flush mode} is sometimes unnecessarily
 	 * aggressive. For a logically "read only" session, it's reasonable to set the
 	 * session's flush mode to {@link FlushMode#MANUAL} at the start of the session
 	 * in order to avoid some unnecessary work.
@@ -201,7 +201,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void setHibernateFlushMode(FlushMode flushMode);
 
 	/**
-	 * Get the current {@link FlushModeType JPA flush mode} for this session.
+	 * Get the current {@linkplain FlushModeType JPA flush mode} for this session.
 	 *
 	 * @return the {@link FlushModeType} currently in effect
 	 */
@@ -209,14 +209,14 @@ public interface Session extends SharedSessionContract, EntityManager {
 	FlushModeType getFlushMode();
 
 	/**
-	 * Get the current {@link FlushMode flush mode} for this session.
+	 * Get the current {@linkplain FlushMode flush mode} for this session.
 	 *
 	 * @return the {@link FlushMode} currently in effect
 	 */
 	FlushMode getHibernateFlushMode();
 
 	/**
-	 * Set the current {@link CacheMode cache mode} for this session.
+	 * Set the current {@linkplain CacheMode cache mode} for this session.
 	 * <p>
 	 * The cache mode determines the manner in which this session can interact with
 	 * the second level cache.
@@ -226,7 +226,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void setCacheMode(CacheMode cacheMode);
 
 	/**
-	 * Get the current {@link CacheMode cache mode} for this session.
+	 * Get the current {@linkplain CacheMode cache mode} for this session.
 	 *
 	 * @return the current cache mode
 	 */

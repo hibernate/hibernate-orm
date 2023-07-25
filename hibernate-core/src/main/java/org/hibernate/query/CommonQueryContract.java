@@ -24,9 +24,30 @@ import jakarta.persistence.TemporalType;
  * forms of querying: HQL/JPQL queries, native SQL queries,
  * {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria queries}, and
  * {@linkplain org.hibernate.procedure.ProcedureCall stored procedure calls}.
+ * <p>
+ * Queries may have <em>parameters</em>, either ordinal or named, and the various
+ * {@code setParameter()} operations of this interface allow an argument to be
+ * bound to a parameter. It's not usually necessary to explicitly specify the type
+ * of an argument, but in rare cases where this is needed, {@link TypedParameterValue}
+ * may be used.
+ * <p>
+ * The operation {@link #setFlushMode(FlushModeType)} allows a temporary flush
+ * mode to be specified, which is in effect only during the execution of this query.
+ * Setting the {@linkplain FlushMode flush mode} at the query level does not affect
+ * the flush mode of other operations performed via the parent {@linkplain Session
+ * session}. This operation is usually used as follows:
+ * <p>
+ * <pre>query.setFlushMode(COMMIT).getResultList()</pre>
+ * <p>
+ * The call to {@code setFlushMode(COMMIT)} disables the usual automatic flush
+ * operation that occurs before query execution.
  *
  * @author Steve Ebersole
  * @author Gavin King
+ *
+ * @see jakarta.persistence.Query
+ * @see SelectionQuery
+ * @see MutationQuery
  */
 public interface CommonQueryContract {
 

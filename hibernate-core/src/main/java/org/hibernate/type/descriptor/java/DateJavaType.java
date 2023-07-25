@@ -60,21 +60,18 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 		return context.getJdbcType( Types.TIMESTAMP );
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) JdbcDateJavaType.INSTANCE;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) JdbcTimestampJavaType.INSTANCE;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) JdbcTimeJavaType.INSTANCE;
 	}
 

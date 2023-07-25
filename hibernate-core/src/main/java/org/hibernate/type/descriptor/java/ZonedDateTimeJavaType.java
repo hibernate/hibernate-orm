@@ -54,8 +54,7 @@ public class ZonedDateTimeJavaType extends AbstractTemporalJavaType<ZonedDateTim
 				.getDescriptor( stdIndicators.getDefaultZonedTimestampSqlType() );
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
 		return (TemporalJavaType<X>) this;
 	}

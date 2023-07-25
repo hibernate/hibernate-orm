@@ -29,10 +29,12 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 	public ShortJavaType() {
 		super( Short.class );
 	}
+
 	@Override
 	public String toString(Short value) {
 		return value == null ? null : value.toString();
 	}
+
 	@Override
 	public Short fromString(CharSequence string) {
 		return Short.valueOf( string.toString() );
@@ -78,6 +80,7 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Short wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
@@ -186,7 +189,9 @@ public class ShortJavaType extends AbstractClassJavaType<Short>
 	@Override
 	public Short seed(
 			Long length,
-			Integer precision, Integer scale, SharedSessionContractImplementor session) {
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
 		return ZERO;
 	}
 

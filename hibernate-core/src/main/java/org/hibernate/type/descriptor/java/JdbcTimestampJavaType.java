@@ -258,13 +258,12 @@ public class JdbcTimestampJavaType extends AbstractTemporalJavaType<Date> implem
 		return context.getJdbcType( Types.TIMESTAMP );
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
 		return (TemporalJavaType<X>) JdbcDateJavaType.INSTANCE;
 	}

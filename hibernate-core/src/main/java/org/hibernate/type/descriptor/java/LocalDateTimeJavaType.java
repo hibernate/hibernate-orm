@@ -51,9 +51,8 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 		return context.getJdbcType( Types.TIMESTAMP );
 	}
 
-	@Override
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
 	}
 

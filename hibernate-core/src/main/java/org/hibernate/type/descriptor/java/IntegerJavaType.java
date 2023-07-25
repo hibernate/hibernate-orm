@@ -30,10 +30,12 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 	public IntegerJavaType() {
 		super( Integer.class );
 	}
+
 	@Override
 	public String toString(Integer value) {
 		return value == null ? null : value.toString();
 	}
+
 	@Override
 	public Integer fromString(CharSequence string) {
 		return string == null ? null : Integer.valueOf( string.toString() );
@@ -87,7 +89,7 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 			return ( (Number) value ).intValue();
 		}
 		if (value instanceof String) {
-			return Integer.valueOf( ( (String) value ) );
+			return Integer.valueOf( (String) value );
 		}
 		throw unknownWrap( value.getClass() );
 	}
@@ -106,7 +108,7 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 	}
 
 	@Override
-	public Class getPrimitiveClass() {
+	public Class<?> getPrimitiveClass() {
 		return int.class;
 	}
 
@@ -195,8 +197,7 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 	}
 
 	@Override
-	public Integer seed(
-			Long length, Integer precision, Integer scale, SharedSessionContractImplementor session) {
+	public Integer seed(Long length, Integer precision, Integer scale, SharedSessionContractImplementor session) {
 		return ZERO;
 	}
 
@@ -205,7 +206,8 @@ public class IntegerJavaType extends AbstractClassJavaType<Integer>
 			Integer current,
 			Long length,
 			Integer precision,
-			Integer scale, SharedSessionContractImplementor session) {
+			Integer scale,
+			SharedSessionContractImplementor session) {
 		return current + 1;
 	}
 

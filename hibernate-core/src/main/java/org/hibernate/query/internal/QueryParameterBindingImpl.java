@@ -22,7 +22,6 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.type.descriptor.java.CoercionException;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
-import org.hibernate.type.descriptor.java.TemporalJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
@@ -118,7 +117,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			catch (CoercionException ce) {
 				throw new IllegalArgumentException(
 						String.format(
-								"Parameter value [%s] did not match expected type [%s ]",
+								"Parameter value [%s] did not match expected type [%s]",
 								value,
 								bindType
 						),

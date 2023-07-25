@@ -220,12 +220,12 @@ Clever, huh?
 Both batch fetching and subselect fetching are disabled by default, but we may enable one or the other globally using properties.
 
 .Configuration settings to enable batch and subselect fetching
-[%breakable,cols="35,~, 20"]
+[%breakable,cols="32,~,28"]
 |===
-| Configuration property name | Property value | Alternative
+| Configuration property name | Property value | Alternatives
 
-| `hibernate.default_batch_fetch_size` | A sensible batch size `>1` to enable batch fetching | `@BatchSize`, `setFetchBatchSize()`
-| `hibernate.use_subselect_fetch` | `true` to enable subselect fetching | `@Fetch(SUBSELECT)`
+| `hibernate.default_batch_fetch_size` | A sensible batch size `>1` to enable batch fetching | `@BatchSize()`, `setFetchBatchSize()`
+| `hibernate.use_subselect_fetch` | `true` to enable subselect fetching | `@Fetch(SUBSELECT)`, `setSubselectFetchingEnabled()`
 |===
 
 Alternatively, we can enable one or the other in a given session:
@@ -1011,3 +1011,10 @@ The comment text may be customized:
 Finally, many systems which require high scalability now make use of reactive programming and reactive streams.
 {hr}[Hibernate Reactive] brings O/R mapping to the world of reactive programming.
 You can learn much more about Hibernate Reactive from its {hr-guide}[Reference Documentation].
+
+[TIP]
+====
+Hibernate Reactive may be used alongside vanilla Hibernate in the same program, and can reuse the same entity classes.
+This means you can use the reactive programming model exactly where you need it—perhaps only in one or two places in your system.
+You don't need to rewrite your whole program using reactive streams.
+====

@@ -724,6 +724,7 @@ SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
 SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
 ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 600;
 ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 600;
+SET CLUSTER SETTING sql.defaults.serial_normalization=sql_sequence;
 
 quit
 EOF
@@ -764,6 +765,7 @@ SET CLUSTER SETTING sql.stats.automatic_collection.enabled = false;
 SET CLUSTER SETTING kv.range_split.by_load_merge_delay = '5s';
 ALTER RANGE default CONFIGURE ZONE USING "gc.ttlseconds" = 600;
 ALTER DATABASE system CONFIGURE ZONE USING "gc.ttlseconds" = 600;
+SET CLUSTER SETTING sql.defaults.serial_normalization=sql_sequence;
 
 quit
 EOF
@@ -809,6 +811,7 @@ SET CLUSTER SETTING timeseries.storage.resolution_30m.ttl = '0s';
 ALTER RANGE default CONFIGURE ZONE USING \"gc.ttlseconds\" = 10;
 ALTER DATABASE system CONFIGURE ZONE USING \"gc.ttlseconds\" = 10;
 ALTER DATABASE defaultdb CONFIGURE ZONE USING \"gc.ttlseconds\" = 10;
+SET CLUSTER SETTING sql.defaults.serial_normalization=sql_sequence;
 quit
 EOF
 "

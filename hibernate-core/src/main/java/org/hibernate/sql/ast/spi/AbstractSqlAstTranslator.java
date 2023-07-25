@@ -3625,17 +3625,25 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderComparisonEmulateDecode(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		renderComparisonEmulateDecode( lhs, operator, rhs, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	protected void renderComparisonEmulateDecode(
+			Expression lhs,
+			ComparisonOperator operator,
+			Expression rhs,
+			SqlAstNodeRenderingMode firstArgRenderingMode) {
 		switch ( operator ) {
 			case DISTINCT_FROM:
 				appendSql( "decode(" );
-				lhs.accept( this );
+				render( lhs, firstArgRenderingMode );
 				appendSql( ',' );
 				rhs.accept( this );
 				appendSql( ",0,1)=1" );
 				break;
 			case NOT_DISTINCT_FROM:
 				appendSql( "decode(" );
-				lhs.accept( this );
+				render( lhs, firstArgRenderingMode );
 				appendSql( ',' );
 				rhs.accept( this );
 				appendSql( ",0,1)=0" );

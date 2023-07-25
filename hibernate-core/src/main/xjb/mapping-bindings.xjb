@@ -423,6 +423,12 @@
 					printMethod="org.hibernate.boot.jaxb.mapping.marshall.CollectionClassificationMarshalling.toXml" />
         </bindings>
 
+        <bindings node="//xsd:simpleType[@name='uuid-generator-style']">
+        			<javaType name="org.hibernate.annotations.UuidGenerator.Style"
+        					parseMethod="org.hibernate.boot.jaxb.mapping.marshall.UuidGeneratorStyleMarshalling.fromXml"
+        					printMethod="org.hibernate.boot.jaxb.mapping.marshall.UuidGeneratorStyleMarshalling.toXml" />
+                </bindings>
+
     </bindings>
 
 

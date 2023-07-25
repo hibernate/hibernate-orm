@@ -8,6 +8,7 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -1304,7 +1305,7 @@ public class PropertyBinder {
 		final XProperty idProperty = inferredData.getProperty();
 		final List<Annotation> idGeneratorAnnotations = findContainingAnnotations( idProperty, IdGeneratorType.class );
 		final List<Annotation> generatorAnnotations = findContainingAnnotations( idProperty, ValueGenerationType.class );
-		generatorAnnotations.removeAll( idGeneratorAnnotations );
+		removeIdGenerators( generatorAnnotations, idGeneratorAnnotations );
 		if ( idGeneratorAnnotations.size() + generatorAnnotations.size() > 1 ) {
 			throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
 					+ "' has too many generator annotations " + combine( idGeneratorAnnotations, generatorAnnotations ) );
@@ -1327,6 +1328,22 @@ public class PropertyBinder {
 						isCompositeId( entityClass, idProperty ) ? "@EmbeddedId" : "@Id",
 						inferredData.getPropertyName()
 				);
+			}
+		}
+	}
+
+	// Since these collections may contain Proxies created by common-annotations module we cannot reliably use simple remove/removeAll
+	// collection methods as those proxies do not implement hashcode/equals and even a simple `a.equals(a)` will return `false`.
+	// Instead, we will check the annotation types, since generator annotations should not be "repeatable" we should have only
+	// at most one annotation for a generator:
+	private static void removeIdGenerators(List<Annotation> generatorAnnotations, List<Annotation> idGeneratorAnnotations) {
+		for ( Annotation id : idGeneratorAnnotations ) {
+			Iterator<Annotation> iterator = generatorAnnotations.iterator();
+			while ( iterator.hasNext() ) {
+				Annotation gen = iterator.next();
+				if ( gen.annotationType().equals( id.annotationType() ) ) {
+					iterator.remove();
+				}
 			}
 		}
 	}

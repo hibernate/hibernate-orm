@@ -15,10 +15,10 @@ import jakarta.persistence.InheritanceType;
  */
 public class InheritanceTypeMarshalling {
 	public static InheritanceType fromXml(String name) {
-		return InheritanceType.valueOf( name );
+		return name == null ? null : InheritanceType.valueOf( name );
 	}
 
-	public static String toXml(InheritanceType accessType) {
-		return accessType.name();
+	public static String toXml(InheritanceType inheritanceType) {
+		return inheritanceType == null ? null : inheritanceType.name();
 	}
 }

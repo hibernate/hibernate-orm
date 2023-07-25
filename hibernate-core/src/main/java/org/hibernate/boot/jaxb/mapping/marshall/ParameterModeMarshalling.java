@@ -15,10 +15,10 @@ import jakarta.persistence.ParameterMode;
  */
 public class ParameterModeMarshalling {
 	public static ParameterMode fromXml(String name) {
-		return ParameterMode.valueOf( name );
+		return name == null ? null : ParameterMode.valueOf( name );
 	}
 
 	public static String toXml(ParameterMode parameterMode) {
-		return parameterMode.name();
+		return parameterMode == null ? null : parameterMode.name();
 	}
 }

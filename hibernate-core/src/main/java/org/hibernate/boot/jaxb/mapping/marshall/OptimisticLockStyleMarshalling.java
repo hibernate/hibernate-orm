@@ -17,7 +17,7 @@ import org.hibernate.engine.OptimisticLockStyle;
  */
 public class OptimisticLockStyleMarshalling {
 	public static OptimisticLockStyle fromXml(String name) {
-		return OptimisticLockStyle.valueOf( name == null ? null : name.toUpperCase( Locale.ENGLISH ) );
+		return name == null ? null : OptimisticLockStyle.valueOf( name.toUpperCase( Locale.ENGLISH ) );
 	}
 
 	public static String toXml(OptimisticLockStyle lockMode) {

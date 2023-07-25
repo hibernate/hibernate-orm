@@ -15,10 +15,10 @@ import jakarta.persistence.GenerationType;
  */
 public class GenerationTypeMarshalling {
 	public static GenerationType fromXml(String name) {
-		return GenerationType.valueOf( name );
+		return name == null ? null : GenerationType.valueOf( name );
 	}
 
-	public static String toXml(GenerationType accessType) {
-		return accessType.name();
+	public static String toXml(GenerationType generationType) {
+		return generationType == null ? null : generationType.name();
 	}
 }

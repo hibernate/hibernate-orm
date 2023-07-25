@@ -2354,6 +2354,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		final Dialect dialect = getDatabase().getJdbcEnvironment().getDialect();
 
 		for ( PersistentClass entityBinding : entityBindingMap.values() ) {
+			entityBinding.assignCheckConstraintsToTable(
+					dialect,
+					bootstrapContext.getTypeConfiguration(),
+					bootstrapContext.getFunctionRegistry()
+			);
+
 			if ( entityBinding.isInherited() ) {
 				continue;
 			}
@@ -2363,6 +2369,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 					dialect,
 					(RootClass) entityBinding
 			);
+
 		}
 
 		for ( Collection collection : collectionBindingMap.values() ) {

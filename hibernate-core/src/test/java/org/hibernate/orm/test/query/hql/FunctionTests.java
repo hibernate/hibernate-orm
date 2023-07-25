@@ -889,8 +889,6 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select cast(e.id as BigInteger(10)), cast(e.theDouble as BigDecimal(10,5)) from EntityOfBasics e", Object[].class)
 							.list();
-					session.createQuery("select cast(e.theString as String(15)), cast(e.theDouble as String(17)) from EntityOfBasics e", Object[].class)
-							.list();
 
 					session.createQuery( "select cast('1002342345234523.452435245245243' as BigDecimal) from EntityOfBasics", BigDecimal.class)
 							.list();
@@ -1000,6 +998,7 @@ public class FunctionTests {
 
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTruncateThroughCast.class)
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "We need to fix this, see HHH-16989")
 	public void testCastFunction_withTruncation(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1018,6 +1017,18 @@ public class FunctionTests {
 		scope.inTransaction(
 				session -> {
 					session.createQuery("select cast(e.theString as Binary) from EntityOfBasics e", byte[].class)
+							.list();
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "We need to fix this, see HHH-16989")
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting to the binary types")
+	public void testCastFunctionWithLength(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select cast(e.theString as String(15)), cast(e.theDouble as String(17)) from EntityOfBasics e", Object[].class)
 							.list();
 					session.createQuery("select cast(e.theString as Binary(10)) from EntityOfBasics e", byte[].class)
 							.list();

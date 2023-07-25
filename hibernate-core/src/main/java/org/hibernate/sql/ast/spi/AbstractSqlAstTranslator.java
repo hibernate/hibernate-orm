@@ -6897,8 +6897,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		final Iterator<Expression> iterator = listExpressions.iterator();
 		Expression listExpression = null;
-		for ( int i = 0; i < bindValueCountWithPadding; i++ ) {
-			if ( inExprLimit > 0 && i % inExprLimit == 0 && i != 0 ) {
+		int clauseItemNumber = 0;
+		for ( int i = 0; i < bindValueCountWithPadding; i++, clauseItemNumber++ ) {
+			if ( inExprLimit > 0 && inExprLimit == clauseItemNumber ) {
+				clauseItemNumber = 0;
 				appendInClauseSeparator( inListPredicate );
 				separator = NO_SEPARATOR;
 			}

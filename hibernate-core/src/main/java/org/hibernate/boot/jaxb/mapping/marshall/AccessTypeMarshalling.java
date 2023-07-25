@@ -15,10 +15,10 @@ import jakarta.persistence.AccessType;
  */
 public class AccessTypeMarshalling {
 	public static AccessType fromXml(String name) {
-		return AccessType.valueOf( name );
+		return name == null ? null : AccessType.valueOf( name );
 	}
 
 	public static String toXml(AccessType accessType) {
-		return accessType.name();
+		return accessType == null ? null : accessType.name();
 	}
 }

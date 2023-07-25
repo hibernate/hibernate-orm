@@ -1258,22 +1258,21 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.superMappedSuperclass = superMappedSuperclass;
 	}
 
-	// End of @MappedSuperclass support
+	public void assignCheckConstraintsToTable(Dialect dialect, TypeConfiguration types, SqmFunctionRegistry functions) {
+		for ( CheckConstraint checkConstraint : checkConstraints ) {
+			container( collectColumnNames( checkConstraint.getConstraint(), dialect, types, functions ) )
+					.getTable().addCheck( checkConstraint );
+		}
+	}
 
+	// End of @MappedSuperclass support
 	public void prepareForMappingModel(RuntimeModelCreationContext context) {
 		if ( !joins.isEmpty() ) {
 			// we need to deal with references to secondary tables
-			// in SQL formulas and check constraints
-
+			// in SQL formulas
 			final Dialect dialect = context.getDialect();
 			final TypeConfiguration types = context.getTypeConfiguration();
 			final SqmFunctionRegistry functions = context.getFunctionRegistry();
-
-			// assign check constraints to the right table
-			for ( CheckConstraint checkConstraint : checkConstraints ) {
-				container( collectColumnNames( checkConstraint.getConstraint(), dialect, types, functions ) )
-						.getTable().addCheck( checkConstraint );
-			}
 
 			// now, move @Formulas to the correct AttributeContainers
 			//TODO: skip this step for hbm.xml

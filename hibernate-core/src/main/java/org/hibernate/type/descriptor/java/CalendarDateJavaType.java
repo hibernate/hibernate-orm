@@ -42,21 +42,18 @@ public class CalendarDateJavaType extends AbstractTemporalJavaType<Calendar> {
 		return context.getJdbcType( Types.DATE );
 	}
 
-	@Override
+	@Override  @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forDatePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) this;
 	}
 
-	@Override
+	@Override  @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) CalendarJavaType.INSTANCE;
 	}
 
-	@Override
+	@Override  @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimePrecision(TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
 		return (TemporalJavaType<X>) CalendarTimeJavaType.INSTANCE;
 	}
 

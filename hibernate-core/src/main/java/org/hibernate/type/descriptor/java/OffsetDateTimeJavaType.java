@@ -73,8 +73,7 @@ public class OffsetDateTimeJavaType extends AbstractTemporalJavaType<OffsetDateT
 				.getDescriptor( stdIndicators.getDefaultZonedTimestampSqlType() );
 	}
 
-	@Override
-	@SuppressWarnings("unchecked")
+	@Override @SuppressWarnings("unchecked")
 	protected <X> TemporalJavaType<X> forTimestampPrecision(TypeConfiguration typeConfiguration) {
 		return (TemporalJavaType<X>) this;
 	}

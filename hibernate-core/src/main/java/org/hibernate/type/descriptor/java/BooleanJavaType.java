@@ -44,10 +44,12 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		stringValueTrue = String.valueOf( characterValueTrue );
 		stringValueFalse = String.valueOf( characterValueFalse );
 	}
+
 	@Override
 	public String toString(Boolean value) {
 		return value == null ? null : value.toString();
 	}
+
 	@Override
 	public Boolean fromString(CharSequence string) {
 		return Boolean.valueOf( string.toString() );
@@ -95,6 +97,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Boolean wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
@@ -117,10 +120,7 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 	}
 
 	private boolean isTrue(String strValue) {
-		if (strValue != null && !strValue.isEmpty()) {
-			return isTrue(strValue.charAt(0));
-		}
-		return false;
+		return strValue != null && !strValue.isEmpty() && isTrue( strValue.charAt(0) );
 	}
 
 	private boolean isTrue(char charValue) {

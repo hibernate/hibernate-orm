@@ -26,6 +26,6 @@ public class CacheModeMarshalling {
 	}
 
 	public static String toXml(CacheMode cacheMode) {
-		return cacheMode.name().toLowerCase( Locale.ENGLISH );
+		return cacheMode == null ? null : cacheMode.name().toLowerCase( Locale.ENGLISH );
 	}
 }

@@ -13,10 +13,10 @@ import org.hibernate.annotations.PolymorphismType;
  */
 public class PolymorphismTypeMarshalling {
 	public static PolymorphismType fromXml(String value) {
-		return PolymorphismType.fromExternalValue( value );
+		return value == null ? null : PolymorphismType.fromExternalValue( value );
 	}
 
 	public static String toXml(PolymorphismType value) {
-		return value.getExternalForm();
+		return value == null ? null : value.getExternalForm();
 	}
 }

@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.model.ast;
 
-import java.util.Objects;
-
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 
 /**
@@ -39,22 +37,5 @@ public class ColumnValueBinding {
 	@Override
 	public String toString() {
 		return "ColumnValueBinding(" + valueExpression + ")";
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if ( this == o ) {
-			return true;
-		}
-		if ( o == null || getClass() != o.getClass() ) {
-			return false;
-		}
-		ColumnValueBinding that = (ColumnValueBinding) o;
-		return Objects.equals( columnReference, that.columnReference );
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash( columnReference );
 	}
 }

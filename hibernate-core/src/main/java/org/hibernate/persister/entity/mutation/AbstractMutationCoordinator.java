@@ -65,7 +65,6 @@ public abstract class AbstractMutationCoordinator {
 
 	protected BatchKeyAccess resolveBatchKeyAccess(boolean dynamicUpdate, SharedSessionContractImplementor session) {
 		if ( !dynamicUpdate
-				&& !entityPersister().optimisticLockStyle().isAllOrDirty()
 				&& session.getTransactionCoordinator() != null
 				&& session.getTransactionCoordinator().isTransactionActive() ) {
 			return this::getBatchKey;

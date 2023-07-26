@@ -136,7 +136,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		}
 
 		private void logExtracted(int paramIndex, J extracted) {
-			if ( ! JdbcExtractingLogging.TRACE_ENABLED ) {
+			if ( ! JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
 				return;
 			}
 
@@ -149,7 +149,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 		}
 
 		private void logExtracted(String paramName, J extracted) {
-			if ( ! JdbcExtractingLogging.TRACE_ENABLED ) {
+			if ( ! JdbcExtractingLogging.LOGGER.isTraceEnabled() ) {
 				return;
 			}
 

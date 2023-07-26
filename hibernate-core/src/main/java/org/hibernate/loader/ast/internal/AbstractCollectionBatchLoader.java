@@ -21,7 +21,6 @@ import java.lang.reflect.Array;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.trimIdBatch;
-import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
@@ -78,7 +77,7 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 	@Override
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching collection: %s.%s",
 					getLoadable().getNavigableRole().getFullPath(), key );
 		}
@@ -104,7 +103,7 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 			return;
 		}
 
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.debugf( "Finishing initializing batch-fetched collection: %s.%s",
 					attributeMapping.getNavigableRole().getFullPath(), key );
 		}

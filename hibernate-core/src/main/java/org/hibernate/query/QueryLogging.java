@@ -36,9 +36,6 @@ public interface QueryLogging extends BasicLogger {
 	Logger QUERY_LOGGER = Logger.getLogger( LOGGER_NAME );
 	QueryLogging QUERY_MESSAGE_LOGGER = Logger.getMessageLogger( QueryLogging.class, LOGGER_NAME );
 
-	boolean TRACE_ENABLED = QUERY_LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = QUERY_LOGGER.isDebugEnabled();
-
 	static String subLoggerName(String subName) {
 		return LOGGER_NAME + '.' + subName;
 	}

@@ -22,7 +22,6 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.countIds;
-import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
@@ -51,7 +50,7 @@ public class CollectionBatchLoaderInPredicate
 				.getDialect()
 				.getBatchLoadSizingStrategy()
 				.determineOptimalBatchLoadSize( keyColumnCount, domainBatchSize, false );
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.debugf(
 					"Using IN-predicate batch fetching strategy for collection `%s` : %s (%s)",
 					attributeMapping.getNavigableRole().getFullPath(),
@@ -84,7 +83,8 @@ public class CollectionBatchLoaderInPredicate
 
 	@Override
 	void initializeKeys(Object key, Object[] keysToInitialize, SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		final boolean loggerDebugEnabled = MULTI_KEY_LOAD_LOGGER.isDebugEnabled();
+		if ( loggerDebugEnabled ) {
 			MULTI_KEY_LOAD_LOGGER.debugf(
 					"Collection keys to batch-fetch initialize (`%s#%s`) %s",
 					getLoadable().getNavigableRole().getFullPath(),
@@ -120,7 +120,7 @@ public class CollectionBatchLoaderInPredicate
 				(key1, relativePosition, absolutePosition) -> {
 				},
 				(startIndex) -> {
-					if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+					if ( loggerDebugEnabled ) {
 						MULTI_KEY_LOAD_LOGGER.debugf(
 								"Processing collection batch-fetch chunk (`%s#%s`) %s - %s",
 								getLoadable().getNavigableRole().getFullPath(),
@@ -131,7 +131,7 @@ public class CollectionBatchLoaderInPredicate
 					}
 				},
 				(startIndex, nonNullElementCount) -> {
-					if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+					if ( loggerDebugEnabled ) {
 						MULTI_KEY_LOAD_LOGGER.debugf(
 								"Finishing collection batch-fetch chunk (`%s#%s`) %s - %s (%s)",
 								getLoadable().getNavigableRole().getFullPath(),

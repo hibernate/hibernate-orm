@@ -7,7 +7,6 @@
 package org.hibernate.loader.ast.internal;
 
 import java.lang.reflect.Array;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockMode;
@@ -64,7 +63,7 @@ public class LoaderHelper {
 
 			final EntityPersister persister = entry.getPersister();
 
-			if ( LoaderLogging.TRACE_ENABLED ) {
+			if ( LoaderLogging.LOADER_LOGGER.isTraceEnabled() ) {
 				LoaderLogging.LOADER_LOGGER.tracef(
 						"Locking `%s( %s )` in `%s` lock-mode",
 						persister.getEntityName(),

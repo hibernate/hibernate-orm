@@ -16,7 +16,6 @@ import org.hibernate.loader.ast.spi.EntityBatchLoader;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
-import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 public abstract class AbstractEntityBatchLoader<T>
@@ -47,7 +46,7 @@ public abstract class AbstractEntityBatchLoader<T>
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), id );
 		}
 
@@ -62,14 +61,14 @@ public abstract class AbstractEntityBatchLoader<T>
 			Object entityInstance,
 			LockOptions lockOptions,
 			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.debugf( "Batch fetching entity `%s#%s`", getLoadable().getEntityName(), id );
 		}
 
 		final Object[] ids = resolveIdsToInitialize( id, session );
 		final boolean hasSingleId = hasSingleId( ids );
 
-		final T entity = load( id, ids, hasSingleId, entityInstance, lockOptions, null, session );;
+		final T entity = load( id, ids, hasSingleId, entityInstance, lockOptions, null, session );
 
 		if ( hasSingleId ) {
 			return entity;

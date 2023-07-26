@@ -25,7 +25,6 @@ import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
 import static org.hibernate.engine.jdbc.mutation.internal.ModelMutationHelper.identityPreparation;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_TRACE_ENABLED;
 
 /**
  * Specialized form of {@link MutationExecutorPostInsert} for cases where there
@@ -100,7 +99,7 @@ public class MutationExecutorPostInsertSingleTable implements MutationExecutor, 
 		final InsertGeneratedIdentifierDelegate identityHandler = mutationTarget.getIdentityInsertDelegate();
 		final Object id = identityHandler.performInsert( identityInsertStatementDetails, valueBindings, modelReference, session );
 
-		if ( MODEL_MUTATION_LOGGER_TRACE_ENABLED ) {
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 			MODEL_MUTATION_LOGGER.tracef(
 					"Post-insert generated value : `%s` (%s)",
 					id,

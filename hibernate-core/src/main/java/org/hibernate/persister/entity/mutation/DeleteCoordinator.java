@@ -26,6 +26,8 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.MutationType;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.ColumnValueBindingList;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.TableDeleteBuilder;
@@ -439,17 +441,24 @@ public class DeleteCoordinator extends AbstractMutationCoordinator {
 			Object loadedValue) {
 		final RestrictedTableMutationBuilder<?, ?> tableMutationBuilder =
 				mutationGroupBuilder.findTableDetailsBuilder( attribute.getContainingTableExpression() );
-		if ( tableMutationBuilder != null && tableMutationBuilder.getOptimisticLockBindings() != null ) {
-			attribute.breakDownJdbcValues(
-					loadedValue,
-					(valueIndex, value, jdbcValueMapping) -> {
-						if ( value != null && !tableMutationBuilder.getKeyRestrictionBindings().contains( value ) ) {
-							tableMutationBuilder.getOptimisticLockBindings().consume( valueIndex, value, jdbcValueMapping );
+		if ( tableMutationBuilder != null ) {
+			final ColumnValueBindingList optimisticLockBindings = tableMutationBuilder.getOptimisticLockBindings();
+			if ( optimisticLockBindings != null ) {
+				attribute.breakDownJdbcValues(
+						loadedValue,
+						(valueIndex, value, jdbcValueMapping) -> {
+							if ( !tableMutationBuilder.getKeyRestrictionBindings()
+									.containsColumn(
+											jdbcValueMapping.getSelectableName(),
+											jdbcValueMapping.getJdbcMapping()
+									) ) {
+								optimisticLockBindings.consume( valueIndex, value, jdbcValueMapping );
+							}
 						}
-					}
-					,
-					session
-			);
+						,
+						session
+				);
+			}
 		}
 		// else there is no actual delete statement for that table,
 		// generally indicates we have an on-delete=cascade situation

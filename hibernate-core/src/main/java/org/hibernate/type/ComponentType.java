@@ -31,6 +31,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
@@ -39,6 +40,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
+import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 import org.hibernate.usertype.CompositeUserType;
@@ -507,10 +509,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			values[i] = propertyTypes[i].deepCopy( values[i], factory );
 		}
 
-		final EmbeddableInstantiator instantiator = mappingModelPart.getEmbeddableTypeDescriptor()
-				.getRepresentationStrategy()
-				.getInstantiator();
-		Object result = instantiator.instantiate( () -> values, factory );
+		Object result = instantiator().instantiate( () -> values, factory );
 
 		//not absolutely necessary, but helps for some
 		//equals()/hashCode() implementations
@@ -530,10 +529,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			Object owner,
 			Map<Object, Object> copyCache) {
 
-		if ( !isMutable() ) {
-			return original;
-		}
-		if ( original == null ) {
+		if ( original == null && target == null ) {
 			return null;
 		}
 		if ( compositeUserType != null ) {
@@ -542,15 +538,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		//if ( original == target ) return target;
 
 		final Object[] originalValues = getPropertyValues( original );
-		final Object[] resultValues;
-
-		if ( target == null ) {
-			resultValues = new Object[originalValues.length];
-		}
-		else {
-			resultValues = getPropertyValues( target );
-		}
-
+		final Object[] resultValues = getPropertyValues( target );
 		final Object[] replacedValues = TypeHelper.replace(
 				originalValues,
 				resultValues,
@@ -560,11 +548,8 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				copyCache
 		);
 
-		if ( target == null ) {
-			final EmbeddableInstantiator instantiator = mappingModelPart.getEmbeddableTypeDescriptor()
-					.getRepresentationStrategy()
-					.getInstantiator();
-			return instantiator.instantiate( () -> replacedValues, session.getSessionFactory() );
+		if ( target == null || !isMutable() ) {
+			return instantiator().instantiate( () -> replacedValues, session.getSessionFactory() );
 		}
 		else {
 			setPropertyValues( target, replacedValues );
@@ -581,10 +566,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			Map<Object, Object> copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
 
-		if ( !isMutable() ) {
-			return original;
-		}
-		if ( original == null ) {
+		if ( original == null && target == null ) {
 			return null;
 		}
 		if ( compositeUserType != null ) {
@@ -594,15 +576,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 
 
 		final Object[] originalValues = getPropertyValues( original );
-		final Object[] resultValues;
-
-		if ( target == null ) {
-			resultValues = new Object[originalValues.length];
-		}
-		else {
-			resultValues = getPropertyValues( target );
-		}
-
+		final Object[] resultValues = getPropertyValues( target );
 		final Object[] replacedValues = TypeHelper.replace(
 				originalValues,
 				resultValues,
@@ -613,11 +587,8 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				foreignKeyDirection
 		);
 
-		if ( target == null ) {
-			final EmbeddableInstantiator instantiator = mappingModelPart.getEmbeddableTypeDescriptor()
-					.getRepresentationStrategy()
-					.getInstantiator();
-			return instantiator.instantiate( () -> replacedValues, session.getSessionFactory() );
+		if ( target == null || !isMutable() ) {
+			return instantiator().instantiate( () -> replacedValues, session.getSessionFactory() );
 		}
 		else {
 			setPropertyValues( target, replacedValues );
@@ -688,10 +659,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				assembled[i] = propertyTypes[i].assemble( (Serializable) values[i], session, owner );
 			}
 
-			final EmbeddableInstantiator instantiator = mappingModelPart.getEmbeddableTypeDescriptor()
-					.getRepresentationStrategy()
-					.getInstantiator();
-			final Object instance = instantiator.instantiate( () -> assembled, session.getFactory() );
+			final Object instance = instantiator().instantiate( () -> assembled, session.getFactory() );
 
 			final PropertyAccess parentInjectionAccess = mappingModelPart.getParentInjectionAttributePropertyAccess();
 			if ( parentInjectionAccess != null ) {
@@ -830,10 +798,15 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	}
 
 	private Object resolve(Object[] value, SharedSessionContractImplementor session) throws HibernateException {
-		final EmbeddableInstantiator instantiator = mappingModelPart.getEmbeddableTypeDescriptor()
-				.getRepresentationStrategy()
-				.getInstantiator();
-		return instantiator.instantiate( () -> value, session.getFactory() );
+		return instantiator().instantiate( () -> value, session.getFactory() );
+	}
+
+	private EmbeddableMappingType embeddableTypeDescriptor() {
+		return mappingModelPart.getEmbeddableTypeDescriptor();
+	}
+
+	protected final EmbeddableInstantiator instantiator() {
+		return embeddableTypeDescriptor().getRepresentationStrategy().getInstantiator();
 	}
 
 	@Override

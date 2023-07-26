@@ -177,7 +177,7 @@ public class EntityWithBidirectionalAssociationsOneOfWhichIsAJoinTableTest {
 							.setParameter( "id", 1 )
 							.getSingleResult();
 					statementInspector.assertExecutedCount( 2 );
-					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 2 );
+					statementInspector.assertNumberOfOccurrenceInQuery( 0, "join", 1 );
 					statementInspector.assertNumberOfOccurrenceInQuery( 1, "join", 3 );
 					Male son = parent.getSon();
 					assertThat( son, CoreMatchers.notNullValue() );

@@ -13,6 +13,7 @@ import org.hibernate.engine.jdbc.mutation.ParameterUsage;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.ast.builder.ColumnValueBindingBuilder;
 
 @Internal
@@ -66,6 +67,16 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 				parameterUsage,
 				parameters::apply
 		);
+	}
+
+	public boolean containsColumn(String columnName, JdbcMapping jdbcMapping) {
+		final ColumnReference reference = new ColumnReference( mutatingTable, columnName, jdbcMapping );
+		for ( int i = 0; i < size(); i++ ) {
+			if ( get( i ).getColumnReference().equals( reference ) ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	@Override

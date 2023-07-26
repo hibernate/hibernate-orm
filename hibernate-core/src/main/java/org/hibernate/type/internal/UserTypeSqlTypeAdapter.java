@@ -171,7 +171,7 @@ public class UserTypeSqlTypeAdapter<J> implements JdbcType {
 
 		@Override
 		public void bind(PreparedStatement st, J value, int index, WrapperOptions options) throws SQLException {
-			if ( JdbcBindingLogging.TRACE_ENABLED ) {
+			if ( JdbcBindingLogging.LOGGER.isTraceEnabled() ) {
 				if ( value == null ) {
 					JdbcBindingLogging.logNullBinding( index, userType.getSqlType() );
 				}

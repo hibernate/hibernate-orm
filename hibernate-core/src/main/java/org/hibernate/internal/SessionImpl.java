@@ -1087,7 +1087,7 @@ public class SessionImpl
 		}
 	}
 
-	private static LoadType internalLoadType(boolean eager, boolean nullable) {
+	protected static LoadType internalLoadType(boolean eager, boolean nullable) {
 		if ( nullable ) {
 			return LoadEventListener.INTERNAL_LOAD_NULLABLE;
 		}

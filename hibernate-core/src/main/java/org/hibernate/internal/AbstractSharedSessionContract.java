@@ -735,7 +735,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return query;
 	}
 
-	private <R> HqlInterpretation interpretHql(String hql, Class<R> resultType) {
+	protected <R> HqlInterpretation interpretHql(String hql, Class<R> resultType) {
 		final QueryEngine queryEngine = getFactory().getQueryEngine();
 		return queryEngine.getInterpretationCache()
 				.resolveHqlInterpretation(
@@ -745,13 +745,13 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 				);
 	}
 
-	private static void checkSelectionQuery(String hql, HqlInterpretation hqlInterpretation) {
+	protected static void checkSelectionQuery(String hql, HqlInterpretation hqlInterpretation) {
 		if ( !( hqlInterpretation.getSqmStatement() instanceof SqmSelectStatement ) ) {
 			throw new IllegalSelectQueryException( "Expecting a selection query, but found `" + hql + "`", hql);
 		}
 	}
 
-	private static <R> void checkResultType(Class<R> expectedResultType, SqmSelectionQueryImpl<?> query) {
+	protected static <R> void checkResultType(Class<R> expectedResultType, SqmSelectionQueryImpl<?> query) {
 		final Class<?> resultType = query.getResultType();
 		if ( !expectedResultType.isAssignableFrom( resultType ) ) {
 			throw new QueryTypeMismatchException(
@@ -836,7 +836,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
-	private NamedResultSetMappingMemento getResultSetMappingMemento(String resultSetMappingName) {
+	protected NamedResultSetMappingMemento getResultSetMappingMemento(String resultSetMappingName) {
 		final NamedResultSetMappingMemento resultSetMappingMemento = getFactory().getQueryEngine()
 				.getNamedObjectRepository().getResultSetMappingMemento( resultSetMappingName );
 		if ( resultSetMappingMemento == null ) {
@@ -1088,7 +1088,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return query;
 	}
 
-	private static void checkMutationQuery(String hqlString, SqmStatement<?> sqmStatement) {
+	protected static void checkMutationQuery(String hqlString, SqmStatement<?> sqmStatement) {
 		if ( !( sqmStatement instanceof SqmDmlStatement ) ) {
 			throw new IllegalMutationQueryException( "Expecting a mutation query, but found `" + hqlString + "`" );
 		}
@@ -1112,7 +1112,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		);
 	}
 
-	private NativeQueryImplementor<?> createNativeQueryImplementor(String queryName, NamedNativeQueryMemento memento) {
+	protected NativeQueryImplementor<?> createNativeQueryImplementor(String queryName, NamedNativeQueryMemento memento) {
 		final NativeQueryImplementor<?> query = memento.toQuery( this );
 		final Boolean isUnequivocallySelect = query.isSelectQuery();
 		if ( isUnequivocallySelect == TRUE ) {
@@ -1128,7 +1128,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		return query;
 	}
 
-	private SqmQueryImplementor<?> createSqmQueryImplementor(String queryName, NamedSqmQueryMemento memento) {
+	protected SqmQueryImplementor<?> createSqmQueryImplementor(String queryName, NamedSqmQueryMemento memento) {
 		final SqmQueryImplementor<?> query = memento.toQuery( this );
 		final SqmStatement<?> sqmStatement = query.getSqmStatement();
 		if ( !( sqmStatement instanceof SqmDmlStatement ) ) {

@@ -118,6 +118,33 @@ public class AggregateColumn extends Column {
 		return aggregateSelectableExpression;
 	}
 
+	public String getAggregateReadExpressionForCheckConstraintTemplate(Dialect dialect) {
+		return getAggregateReadExpressionForCheckConstraintTemplate( dialect, component );
+	}
+
+	private static String getAggregateReadExpressionForCheckConstraintTemplate(Dialect dialect, Component component) {
+		final AggregateColumn aggregateColumn = component.getAggregateColumn();
+		final AggregateColumn parentAggregateColumn = component.getParentAggregateColumn();
+		final String simpleAggregateName = aggregateColumn.getQuotedName( dialect );
+		final String aggregateSelectableExpression;
+		if ( parentAggregateColumn == null ) {
+			aggregateSelectableExpression = Template.TEMPLATE + "." + simpleAggregateName;
+		}
+		else {
+			aggregateSelectableExpression = dialect.getAggregateSupport().aggregateComponentCustomReadExpressionForCheckConstraint(
+					"",
+					"",
+					getAggregateReadExpressionTemplate(
+							dialect,
+							parentAggregateColumn.getComponent()
+					),
+					simpleAggregateName,
+					parentAggregateColumn, aggregateColumn
+			);
+		}
+		return aggregateSelectableExpression;
+	}
+
 	/**
 	 * Shallow copy, the value is not copied
 	 */

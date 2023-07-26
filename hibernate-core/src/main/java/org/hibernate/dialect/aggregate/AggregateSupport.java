@@ -74,6 +74,35 @@ public interface AggregateSupport {
 	String aggregateCustomWriteExpression(ColumnTypeInformation aggregateColumnType, List<Column> aggregatedColumns);
 
 	/**
+	 * Returns the custom read expression to use for {@code column}.
+	 * Replaces the given {@code placeholder} in the given {@code template}
+	 * by the custom read expression to use for {@code column}.
+	 *
+	 * @param template The custom read expression template of the column
+	 * @param placeholder The placeholder to replace with the actual read expression
+	 * @param aggregateParentReadExpression The expression to the aggregate column, which contains the column
+	 * @param column The column within the aggregate type, for which to return the read expression
+	 * @param aggregateColumnType The type information for the aggregate column
+	 * @param columnType The type information for the column within the aggregate type
+	 */
+	default String aggregateComponentCustomReadExpressionForCheckConstraint(
+			String template,
+			String placeholder,
+			String aggregateParentReadExpression,
+			String column,
+			ColumnTypeInformation aggregateColumnType,
+			ColumnTypeInformation columnType) {
+		return aggregateComponentCustomReadExpression(
+				template,
+				placeholder,
+				aggregateParentReadExpression,
+				column,
+				aggregateColumnType,
+				columnType
+		);
+	}
+
+	/**
 	 * Whether {@link #aggregateCustomWriteExpressionRenderer(SelectableMapping, SelectableMapping[], TypeConfiguration)} is needed
 	 * when assigning an expression to individual aggregated columns in an update statement.
 	 */

@@ -92,6 +92,48 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			String column,
 			ColumnTypeInformation aggregateColumnType,
 			ColumnTypeInformation columnType) {
+		return aggregateComponentCustomReadExpression(
+				template,
+				placeholder,
+				aggregateParentReadExpression,
+				column,
+				aggregateColumnType,
+				columnType,
+				jsonSupport
+		);
+	}
+
+	@Override
+	public String aggregateComponentCustomReadExpressionForCheckConstraint(
+			String template,
+			String placeholder,
+			String aggregateParentReadExpression,
+			String column,
+			ColumnTypeInformation aggregateColumnType,
+			ColumnTypeInformation columnType) {
+		return aggregateComponentCustomReadExpression(
+				template,
+				placeholder,
+				aggregateParentReadExpression,
+				column,
+				aggregateColumnType,
+				columnType,
+				// Oracle doesn't support the shorthand property syntax in check constraints
+				aggregateColumnType.getTypeCode() == JSON
+						&& ( jsonSupport == JsonSupport.OSON || jsonSupport == JsonSupport.MERGEPATCH )
+						? JsonSupport.QUERY_AND_PATH
+						: jsonSupport
+		);
+	}
+
+	private String aggregateComponentCustomReadExpression(
+			String template,
+			String placeholder,
+			String aggregateParentReadExpression,
+			String column,
+			ColumnTypeInformation aggregateColumnType,
+			ColumnTypeInformation columnType,
+			JsonSupport jsonSupport) {
 		switch ( aggregateColumnType.getTypeCode() ) {
 			case JSON:
 				switch ( jsonSupport ) {
@@ -295,7 +337,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 
 	@Override
 	public boolean supportsComponentCheckConstraints() {
-		return checkConstraintSupport;
+		return jsonSupport != JsonSupport.NONE;
 	}
 
 	private String determineJsonTypeName(SelectableMapping aggregateColumn) {

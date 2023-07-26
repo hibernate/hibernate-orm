@@ -219,7 +219,7 @@ public class StandardTableExporter implements Exporter<Table> {
 			final Component component = (Component) value;
 			final AggregateColumn subAggregateColumn = component.getAggregateColumn();
 			if ( subAggregateColumn != null ) {
-				final String subAggregatePath = subAggregateColumn.getAggregateReadExpressionTemplate( dialect )
+				final String subAggregatePath = subAggregateColumn.getAggregateReadExpressionForCheckConstraintTemplate( dialect )
 						.replace( Template.TEMPLATE + ".", "" );
 				final int checkStart = buf.length();
 				if ( subAggregateColumn.isNullable() ) {
@@ -252,12 +252,13 @@ public class StandardTableExporter implements Exporter<Table> {
 				final String checkConstraint = getCheckConstraint( subColumn );
 				if ( !subColumn.isNullable() || checkConstraint != null ) {
 					final String subColumnName = subColumn.getQuotedName( dialect );
-					final String columnExpression = aggregateSupport.aggregateComponentCustomReadExpression(
+					final String columnExpression = aggregateSupport.aggregateComponentCustomReadExpressionForCheckConstraint(
 							subColumnName,
 							subColumnName,
 							aggregatePath,
 							subColumnName,
-							aggregateColumn, subColumn
+							aggregateColumn,
+							subColumn
 					);
 					if ( !subColumn.isNullable() ) {
 						buf.append( separator );

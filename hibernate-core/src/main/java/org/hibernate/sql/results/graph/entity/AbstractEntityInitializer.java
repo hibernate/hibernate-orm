@@ -272,7 +272,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		//			AbstractEntityPersister#getSequentialSelect in 5.2
 
 		if ( entityKey == null ) {
-			if ( EntityLoadingLogging.TRACE_ENABLED ) {
+			if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isTraceEnabled() ) {
 				EntityLoadingLogging.ENTITY_LOADING_LOGGER.tracef(
 						"(%s) Beginning Initializer#resolveKey process for entity : %s",
 						StringHelper.collapse( this.getClass().getName() ),
@@ -295,7 +295,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					assert missing;
 				}
 				else {
-					if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+					if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 						EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 								"(%s) Hydrated EntityKey (%s): %s",
 								getSimpleConcreteImplName(),
@@ -480,7 +480,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			LoadingEntityEntry existingLoadingEntry,
 			Object entityIdentifier) {
 
-		if ( EntityLoadingLogging.TRACE_ENABLED ) {
+		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isTraceEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.tracef(
 					"(%s) Beginning Initializer#resolveInstance process for entity (%s) : %s",
 					StringHelper.collapse( this.getClass().getName() ),
@@ -603,7 +603,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	private void setIsOwningInitializer(Object entityIdentifier,LoadingEntityEntry existingLoadingEntry) {
 		if ( existingLoadingEntry != null ) {
-			if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+			if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 						"(%s) Found existing loading entry [%s] - using loading instance",
 						getSimpleConcreteImplName(),
@@ -633,7 +633,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 		else {
 			// the entity is already being loaded elsewhere
-			if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+			if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 						"(%s) Entity [%s] being loaded by another initializer [%s] - skipping processing",
 						getSimpleConcreteImplName(),
@@ -671,7 +671,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	protected Object instantiateEntity(Object entityIdentifier, SharedSessionContractImplementor session) {
 		final Object instance = session.instantiate( concreteDescriptor, entityKey.getIdentifier() );
-		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%s) Created new entity instance [%s] : %s",
 					getSimpleConcreteImplName(),
@@ -815,7 +815,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final SharedSessionContractImplementor session = rowProcessingState.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 
-		if ( EntityLoadingLogging.TRACE_ENABLED ) {
+		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isTraceEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.tracef(
 					"(%s) Beginning Initializer#initializeInstance process for entity %s",
 					getSimpleConcreteImplName(),
@@ -871,7 +871,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		concreteDescriptor.afterInitialize( toInitialize, session );
 
-		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%s) Done materializing entityInstance : %s",
 					getSimpleConcreteImplName(),
@@ -957,7 +957,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			EntityDataAccess cacheAccess) {
 		final SessionFactoryImplementor factory = session.getFactory();
 
-		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%S) Adding entityInstance to second-level cache: %s",
 					getSimpleConcreteImplName(),

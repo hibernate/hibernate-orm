@@ -82,7 +82,6 @@ import org.hibernate.sql.model.jdbc.JdbcUpdateMutation;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED;
 import static org.hibernate.sql.model.ast.builder.TableUpdateBuilder.NULL;
 
 /**
@@ -441,7 +440,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private InsertRowsCoordinator buildInsertCoordinator() {
 		if ( isInverse() || !isRowInsertEnabled() ) {
-			if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 				MODEL_MUTATION_LOGGER.debugf(
 						"Skipping collection (re)creation - %s",
 						getRolePath()
@@ -459,7 +458,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private UpdateRowsCoordinator buildUpdateCoordinator() {
 		if ( !isRowDeleteEnabled() && !isRowInsertEnabled() ) {
-			if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 				MODEL_MUTATION_LOGGER.debugf(
 						"Skipping collection row updates - %s",
 						getRolePath()
@@ -477,7 +476,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private DeleteRowsCoordinator buildDeleteCoordinator() {
 		if ( !needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 				MODEL_MUTATION_LOGGER.debugf(
 						"Skipping collection row deletions - %s",
 						getRolePath()
@@ -502,7 +501,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private RemoveCoordinator buildDeleteAllCoordinator() {
 		if ( ! needsRemove() ) {
-			if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+			if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 				MODEL_MUTATION_LOGGER.debugf(
 						"Skipping collection removals - %s",
 						getRolePath()

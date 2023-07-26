@@ -24,7 +24,4 @@ public final class ModelMutationLogging {
 	public static final String NAME = SubSystemLogging.BASE + ".jdbc.mutation";
 
 	public static final Logger MODEL_MUTATION_LOGGER = Logger.getLogger( NAME );
-
-	public static final boolean MODEL_MUTATION_LOGGER_TRACE_ENABLED = MODEL_MUTATION_LOGGER.isTraceEnabled();
-	public static final boolean MODEL_MUTATION_LOGGER_DEBUG_ENABLED = MODEL_MUTATION_LOGGER.isDebugEnabled();
 }

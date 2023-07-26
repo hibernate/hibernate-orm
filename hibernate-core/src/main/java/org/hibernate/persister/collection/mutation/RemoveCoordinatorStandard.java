@@ -20,8 +20,6 @@ import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_TRACE_ENABLED;
 
 /**
  * Handles complete removal of a collection by its key
@@ -76,7 +74,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 
 	@Override
 	public void deleteAllRows(Object key, SharedSessionContractImplementor session) {
-		if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+		if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 			MODEL_MUTATION_LOGGER.debugf(
 					"Deleting collection - %s : %s",
 					mutationTarget.getRolePath(),
@@ -124,7 +122,7 @@ public class RemoveCoordinatorStandard implements RemoveCoordinator {
 		assert mutationTarget.getTargetPart() != null;
 		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
-		if ( MODEL_MUTATION_LOGGER_TRACE_ENABLED ) {
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 			MODEL_MUTATION_LOGGER.tracef( "Starting RemoveCoordinator#buildOperationGroup - %s", mutationTarget.getRolePath() );
 		}
 

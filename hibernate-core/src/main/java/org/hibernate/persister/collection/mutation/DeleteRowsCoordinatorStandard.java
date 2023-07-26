@@ -23,7 +23,6 @@ import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED;
 
 /**
  * @author Steve Ebersole
@@ -62,7 +61,7 @@ public class DeleteRowsCoordinatorStandard implements DeleteRowsCoordinator {
 			operationGroup = createOperationGroup();
 		}
 
-		if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+		if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 			MODEL_MUTATION_LOGGER.debugf(
 					"Deleting removed collection rows - %s : %s",
 					mutationTarget.getRolePath(),

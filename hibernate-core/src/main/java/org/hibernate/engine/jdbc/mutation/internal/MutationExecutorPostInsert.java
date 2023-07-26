@@ -32,7 +32,6 @@ import org.hibernate.sql.model.ValuesAnalysis;
 import org.hibernate.sql.model.jdbc.JdbcValueDescriptor;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_TRACE_ENABLED;
 
 /**
  * Specialized executor for the case of more than one table operation, with the
@@ -141,7 +140,7 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 		final InsertGeneratedIdentifierDelegate identityHandler = mutationTarget.getIdentityInsertDelegate();
 		final Object id = identityHandler.performInsert( identityInsertStatementDetails, valueBindings, modelReference, session );
 
-		if ( MODEL_MUTATION_LOGGER_TRACE_ENABLED ) {
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 			MODEL_MUTATION_LOGGER.tracef(
 					"Post-insert generated value : `%s` (%s)",
 					id,
@@ -178,7 +177,7 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 		assert !tableDetails.isIdentifierTable();
 
 		if ( inclusionChecker != null && !inclusionChecker.include( tableDetails ) ) {
-			if ( MODEL_MUTATION_LOGGER_TRACE_ENABLED ) {
+			if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 				MODEL_MUTATION_LOGGER.tracef(
 						"Skipping execution of secondary insert : %s",
 						tableDetails.getTableName()

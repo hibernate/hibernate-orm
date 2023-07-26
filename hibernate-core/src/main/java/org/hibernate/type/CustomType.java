@@ -68,7 +68,8 @@ public class CustomType<J>
 		this( userType, ArrayHelper.EMPTY_STRING_ARRAY, typeConfiguration );
 	}
 
-	public CustomType(UserType<J> userType, String[] registrationKeys, TypeConfiguration typeConfiguration) throws MappingException {
+	public CustomType(UserType<J> userType, String[] registrationKeys, TypeConfiguration typeConfiguration)
+			throws MappingException {
 		this.userType = userType;
 		name = userType.getClass().getName();
 

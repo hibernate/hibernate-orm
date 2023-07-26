@@ -20,9 +20,9 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 /**
  * @author Steve Ebersole
  */
-public class UserTypeResolution implements BasicValue.Resolution {
-	private final CustomType<?> userTypeAdapter;
-	private final MutabilityPlan<?> mutabilityPlan;
+public class UserTypeResolution<T> implements BasicValue.Resolution<T> {
+	private final CustomType<T> userTypeAdapter;
+	private final MutabilityPlan<T> mutabilityPlan;
 
 	/**
 	 * We need this for the way envers interprets the boot-model
@@ -31,8 +31,8 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	private final Properties combinedTypeParameters;
 
 	public UserTypeResolution(
-			CustomType<?> userTypeAdapter,
-			MutabilityPlan<?> explicitMutabilityPlan,
+			CustomType<T> userTypeAdapter,
+			MutabilityPlan<T> explicitMutabilityPlan,
 			Properties combinedTypeParameters) {
 		this.userTypeAdapter = userTypeAdapter;
 		this.combinedTypeParameters = combinedTypeParameters;
@@ -42,7 +42,7 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	}
 
 	@Override
-	public JavaType<?> getDomainJavaType() {
+	public JavaType<T> getDomainJavaType() {
 		return userTypeAdapter.getJavaTypeDescriptor();
 	}
 
@@ -57,7 +57,7 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	}
 
 	@Override
-	public BasicValueConverter getValueConverter() {
+	public BasicValueConverter<T,?> getValueConverter() {
 		// Even though we could expose the value converter of the user type here,
 		// we can not do it, as the conversion is done behind the scenes in the binder/extractor,
 		// whereas the converter returned here would, AFAIU, be used to construct a converted attribute mapping
@@ -65,12 +65,12 @@ public class UserTypeResolution implements BasicValue.Resolution {
 	}
 
 	@Override
-	public MutabilityPlan getMutabilityPlan() {
+	public MutabilityPlan<T> getMutabilityPlan() {
 		return mutabilityPlan;
 	}
 
 	@Override
-	public BasicType getLegacyResolvedBasicType() {
+	public BasicType<T> getLegacyResolvedBasicType() {
 		return userTypeAdapter;
 	}
 

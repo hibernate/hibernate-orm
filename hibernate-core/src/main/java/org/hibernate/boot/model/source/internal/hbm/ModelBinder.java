@@ -147,7 +147,6 @@ import org.hibernate.mapping.UnionSubclass;
 import org.hibernate.mapping.UniqueKey;
 import org.hibernate.mapping.Value;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
-import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.tuple.GenerationTiming;
@@ -156,6 +155,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.ParameterizedType;
 import org.hibernate.usertype.UserType;
@@ -2349,13 +2349,11 @@ public class ModelBinder {
 			Map<String,String> parameters,
 			Any.MetaValue discriminatorMapping) {
 		final BootstrapContext bootstrapContext = metadataBuildingContext.getBootstrapContext();
+		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 
 		if ( isEmpty( parameters ) ) {
 			// can use a standard one
-			final BasicType<?> basicTypeByName = bootstrapContext
-					.getTypeConfiguration()
-					.getBasicTypeRegistry()
-					.getRegisteredType( typeName );
+			final BasicType<?> basicTypeByName = typeConfiguration.getBasicTypeRegistry().getRegisteredType( typeName );
 			if ( basicTypeByName != null ) {
 				return basicTypeByName;
 			}
@@ -2368,7 +2366,7 @@ public class ModelBinder {
 					parameters,
 					null,
 					metadataBuildingContext,
-					bootstrapContext.getTypeConfiguration().getCurrentBaseSqlTypeIndicators()
+					typeConfiguration.getCurrentBaseSqlTypeIndicators()
 			);
 
 			if ( resolution.getCombinedTypeParameters() != null ) {
@@ -2377,56 +2375,50 @@ public class ModelBinder {
 
 			return resolution.getLegacyResolvedBasicType();
 		}
+		else {
+			final ClassLoaderService classLoaderService =
+					bootstrapContext.getServiceRegistry().requireService( ClassLoaderService.class );
+			try {
+				final Object typeInstance = typeInstance( typeName, classLoaderService.classForName( typeName ) );
 
-		final ClassLoaderService classLoaderService = bootstrapContext
-				.getServiceRegistry()
-				.getService( ClassLoaderService.class );
-
-		try {
-			final Class<?> typeJavaType = classLoaderService.classForName( typeName );
-			final Object typeInstance;
-			if ( metadataBuildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
-				typeInstance = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( typeJavaType );
-			}
-			else {
-				final ManagedBeanRegistry beanRegistry = bootstrapContext
-						.getServiceRegistry()
-						.getService( ManagedBeanRegistry.class );
-				final String beanName = typeName + ":" + TypeDefinition.NAME_COUNTER.getAndIncrement();
-				final ManagedBean<?> bean = beanRegistry.getBean( beanName, typeJavaType );
-				typeInstance = bean.getBeanInstance();
-			}
-
-			if ( typeInstance instanceof ParameterizedType ) {
-				if ( parameters != null ) {
-					Properties properties = new Properties();
-					properties.putAll( parameters );
-					( (ParameterizedType) typeInstance ).setParameterValues( properties );
+				if ( typeInstance instanceof ParameterizedType ) {
+					if ( parameters != null ) {
+						Properties properties = new Properties();
+						properties.putAll( parameters );
+						( (ParameterizedType) typeInstance ).setParameterValues( properties );
+					}
 				}
+
+				if ( typeInstance instanceof UserType ) {
+					return new CustomType<>( (UserType<?>) typeInstance, typeConfiguration);
+				}
+
+				return (BasicType<?>) typeInstance;
+			}
+			catch (ClassLoadingException e) {
+				log.debugf( "Unable to load explicit any-discriminator type name as Java Class - %s", typeName );
 			}
 
-			if ( typeInstance instanceof UserType ) {
-				//noinspection unchecked
-				return new CustomType<>(
-						(UserType<Object>) typeInstance,
-						bootstrapContext.getTypeConfiguration()
-				);
-			}
-
-			assert typeInstance instanceof BasicType;
-			return (BasicType<?>) typeInstance;
+			throw new org.hibernate.MappingException(
+					String.format(
+							Locale.ROOT,
+							"Unable to resolve explicit any-discriminator type name - %s",
+							typeName
+					)
+			);
 		}
-		catch (ClassLoadingException e) {
-			log.debugf( "Unable to load explicit any-discriminator type name as Java Class - %s", typeName );
-		}
+	}
 
-		throw new org.hibernate.MappingException(
-				String.format(
-						Locale.ROOT,
-						"Unable to resolve explicit any-discriminator type name - %s",
-						typeName
-				)
-		);
+	private Object typeInstance(String typeName, Class<?> typeJavaType) {
+		if ( metadataBuildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
+			return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( typeJavaType );
+		}
+		else {
+			final String beanName = typeName + ":" + TypeDefinition.NAME_COUNTER.getAndIncrement();
+			return metadataBuildingContext.getBootstrapContext()
+					.getServiceRegistry().requireService( ManagedBeanRegistry.class )
+					.getBean( beanName, typeJavaType ).getBeanInstance();
+		}
 	}
 
 	private void prepareValueTypeViaReflection(

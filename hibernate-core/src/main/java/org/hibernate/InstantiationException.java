@@ -15,7 +15,7 @@ public class InstantiationException extends HibernateException {
 	private final Class<?> clazz;
 
 	/**
-	 * Constructs a {@code InstantiationException}.
+	 * Constructs an {@code InstantiationException}.
 	 *
 	 * @param message A message explaining the exception condition
 	 * @param clazz The Class we are attempting to instantiate

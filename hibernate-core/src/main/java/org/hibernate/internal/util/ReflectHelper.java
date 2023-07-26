@@ -250,7 +250,7 @@ public final class ReflectHelper {
 			String name,
 			ClassLoaderService classLoaderService) throws MappingException {
 		try {
-			Class clazz = classLoaderService.classForName( className );
+			Class<?> clazz = classLoaderService.classForName( className );
 			return getter( clazz, name ).getReturnType();
 		}
 		catch ( ClassLoadingException e ) {
@@ -368,7 +368,7 @@ public final class ReflectHelper {
 		try {
 			constructor = clazz.getDeclaredConstructor( constructorArgs );
 			try {
-				ReflectHelper.ensureAccessibility( constructor );
+				ensureAccessibility( constructor );
 			}
 			catch ( SecurityException e ) {
 				constructor = null;
@@ -425,11 +425,9 @@ public final class ReflectHelper {
 	}
 
 	public static void ensureAccessibility(AccessibleObject accessibleObject) {
-		if ( accessibleObject.isAccessible() ) {
-			return;
+		if ( !accessibleObject.isAccessible() ) {
+			accessibleObject.setAccessible( true );
 		}
-
-		accessibleObject.setAccessible( true );
 	}
 
 	private static Field locateField(Class clazz, String propertyName) {

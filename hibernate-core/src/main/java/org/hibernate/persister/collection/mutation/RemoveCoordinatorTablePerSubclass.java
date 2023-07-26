@@ -21,8 +21,6 @@ import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_TRACE_ENABLED;
 
 /**
  * OneToMany remove coordinator if the element is a {@link org.hibernate.persister.entity.UnionSubclassEntityPersister}.
@@ -66,7 +64,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 
 	@Override
 	public void deleteAllRows(Object key, SharedSessionContractImplementor session) {
-		if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+		if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 			MODEL_MUTATION_LOGGER.debugf(
 					"Deleting collection - %s : %s",
 					mutationTarget.getRolePath(),
@@ -129,7 +127,7 @@ public class RemoveCoordinatorTablePerSubclass implements RemoveCoordinator {
 		assert mutationTarget.getTargetPart() != null;
 		assert mutationTarget.getTargetPart().getKeyDescriptor() != null;
 
-		if ( MODEL_MUTATION_LOGGER_TRACE_ENABLED ) {
+		if ( MODEL_MUTATION_LOGGER.isTraceEnabled() ) {
 			MODEL_MUTATION_LOGGER.tracef( "Starting RemoveCoordinator#buildOperationGroup - %s", mutationTarget.getRolePath() );
 		}
 

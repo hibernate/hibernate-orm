@@ -17,7 +17,6 @@ import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.sql.results.internal.ResultsHelper;
 
-import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
@@ -73,7 +72,7 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 			return;
 		}
 
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.debugf( "Finishing initializing batch-fetched collection : %s.%s", attributeMapping.getNavigableRole().getFullPath(), key );
 		}
 

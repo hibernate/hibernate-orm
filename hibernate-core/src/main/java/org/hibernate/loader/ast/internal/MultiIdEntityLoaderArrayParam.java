@@ -66,7 +66,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 	@Override
 	protected <K> List<E> performOrderedMultiLoad(K[] ids, MultiIdLoadOptions loadOptions, EventSource session) {
-		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_TRACE_ENABLED ) {
+		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.tracef(
 					"MultiIdEntityLoaderArrayParam#performOrderedMultiLoad - %s",
 					getLoadable().getEntityName()
@@ -222,7 +222,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 			K[] ids,
 			MultiIdLoadOptions loadOptions,
 			EventSource session) {
-		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_TRACE_ENABLED ) {
+		if ( MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.isTraceEnabled() ) {
 			MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER.tracef(
 					"MultiIdEntityLoaderArrayParam#performUnorderedMultiLoad - %s",
 					getLoadable().getEntityName()

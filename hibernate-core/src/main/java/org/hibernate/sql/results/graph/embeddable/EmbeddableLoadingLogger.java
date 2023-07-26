@@ -31,7 +31,4 @@ public interface EmbeddableLoadingLogger extends BasicLogger {
 	 */
 	Logger EMBEDDED_LOAD_LOGGER = LoadingLogger.subLogger( LOGGER_NAME );
 
-
-	boolean TRACE_ENABLED = EMBEDDED_LOAD_LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = EMBEDDED_LOAD_LOGGER.isDebugEnabled();
 }

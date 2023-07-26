@@ -33,9 +33,6 @@ public interface SecondLevelCacheLogger extends BasicLogger {
 
 	SecondLevelCacheLogger L2CACHE_LOGGER = Logger.getMessageLogger( SecondLevelCacheLogger.class, LOGGER_NAME );
 
-	boolean DEBUG_ENABLED = L2CACHE_LOGGER.isDebugEnabled();
-	boolean TRACE_ENABLED = L2CACHE_LOGGER.isTraceEnabled();
-
 	int NAMESPACE = 90001000;
 
 	@LogMessage(level = WARN)

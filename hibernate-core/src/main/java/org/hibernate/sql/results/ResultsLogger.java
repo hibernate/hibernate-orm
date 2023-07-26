@@ -38,9 +38,6 @@ public interface ResultsLogger extends BasicLogger {
 
 	// todo (6.0) : make sure sql result processing classes use this logger
 
-	boolean TRACE_ENABLED = RESULTS_LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = RESULTS_LOGGER.isDebugEnabled();
-
 	static String subLoggerName(String subName) {
 		return LOGGER_NAME + "." + subName;
 	}

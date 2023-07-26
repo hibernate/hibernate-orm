@@ -642,7 +642,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected void logStaticSQL() {
-		if ( !ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+		if ( !ModelMutationLogging.MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 			return;
 		}
 

@@ -34,9 +34,6 @@ public interface BytecodeInterceptorLogging extends BasicLogger {
 	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
 	BytecodeInterceptorLogging MESSAGE_LOGGER = Logger.getMessageLogger(BytecodeInterceptorLogging.class, LOGGER_NAME );
 
-	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
-	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
-
 	@LogMessage(level = WARN)
 	@Message(
 			id = 90005901,

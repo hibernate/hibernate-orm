@@ -22,7 +22,6 @@ import org.hibernate.sql.model.internal.MutationOperationGroupSingle;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
-import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED;
 
 /**
  * @author Steve Ebersole
@@ -67,7 +66,7 @@ public class InsertRowsCoordinatorStandard implements InsertRowsCoordinator {
 			operationGroup = createOperationGroup();
 		}
 
-		if ( MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+		if ( MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 			MODEL_MUTATION_LOGGER.debugf(
 					"Inserting collection rows - %s : %s",
 					mutationTarget.getRolePath(),

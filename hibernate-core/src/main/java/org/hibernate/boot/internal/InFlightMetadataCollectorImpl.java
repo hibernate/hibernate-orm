@@ -48,6 +48,7 @@ import org.hibernate.boot.model.internal.CreateKeySecondPass;
 import org.hibernate.boot.model.internal.FkSecondPass;
 import org.hibernate.boot.model.internal.IdGeneratorResolverSecondPass;
 import org.hibernate.boot.model.internal.JPAIndexHolder;
+import org.hibernate.boot.model.internal.OptionalDeterminationSecondPass;
 import org.hibernate.boot.model.internal.QuerySecondPass;
 import org.hibernate.boot.model.internal.SecondaryTableFromAnnotationSecondPass;
 import org.hibernate.boot.model.internal.SecondaryTableSecondPass;
@@ -1667,6 +1668,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private ArrayList<ImplicitColumnNamingSecondPass> implicitColumnNamingSecondPassList;
 
 	private ArrayList<SecondPass> generalSecondPassList;
+	private ArrayList<OptionalDeterminationSecondPass> optionalDeterminationSecondPassList;
 
 	@Override
 	public void addSecondPass(SecondPass secondPass) {
@@ -1704,6 +1706,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 		else if ( secondPass instanceof ImplicitColumnNamingSecondPass ) {
 			addImplicitColumnNamingSecondPass( (ImplicitColumnNamingSecondPass) secondPass );
+		}
+		else if ( secondPass instanceof OptionalDeterminationSecondPass ) {
+			addOptionalDeterminationSecondPass( (OptionalDeterminationSecondPass) secondPass );
 		}
 		else {
 			// add to the general SecondPass list
@@ -1786,6 +1791,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		implicitColumnNamingSecondPassList.add( secondPass );
 	}
 
+	private void addOptionalDeterminationSecondPass(OptionalDeterminationSecondPass secondPass) {
+		if ( optionalDeterminationSecondPassList == null ) {
+			optionalDeterminationSecondPassList = new ArrayList<>();
+		}
+		optionalDeterminationSecondPassList.add( secondPass );
+	}
+
 
 	private boolean inSecondPass = false;
 
@@ -1812,6 +1824,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 			processSecondPasses( querySecondPassList );
 			processSecondPasses( generalSecondPassList );
+			processSecondPasses( optionalDeterminationSecondPassList );
 
 			processPropertyReferences();
 

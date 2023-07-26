@@ -101,7 +101,6 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_DEBUG_ENABLED;
 import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
@@ -1707,7 +1706,7 @@ public class MappingModelCreationHelper {
 					|| value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
 				fetchTiming = FetchTiming.IMMEDIATE;
 				if ( lazy ) {
-					if ( MAPPING_MODEL_CREATION_DEBUG_ENABLED ) {
+					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isDebugEnabled() ) {
 						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 								"Forcing FetchTiming.IMMEDIATE for to-one association : %s.%s",
 								declaringType.getNavigableRole(),

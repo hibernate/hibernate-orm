@@ -80,7 +80,7 @@ public abstract class AbstractCollectionInitializer implements CollectionInitial
 					collectionKeyValue
 			);
 
-			if ( CollectionLoadingLogger.DEBUG_ENABLED ) {
+			if ( CollectionLoadingLogger.COLL_LOAD_LOGGER.isDebugEnabled() ) {
 				CollectionLoadingLogger.COLL_LOAD_LOGGER.debugf(
 						"(%s) Current row collection key : %s",
 						this.getClass().getSimpleName(),

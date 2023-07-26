@@ -20,7 +20,6 @@ import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.SimpleForeignKeyDescriptor;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -34,7 +33,6 @@ import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.type.BasicType;
 
-import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
@@ -58,7 +56,7 @@ public class CollectionBatchLoaderArrayParam
 			SessionFactoryImplementor sessionFactory) {
 		super( domainBatchSize, loadQueryInfluencers, attributeMapping, sessionFactory );
 
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.debugf(
 					"Using ARRAY batch fetching strategy for collection `%s` : %s",
 					attributeMapping.getNavigableRole().getFullPath(),
@@ -100,7 +98,7 @@ public class CollectionBatchLoaderArrayParam
 
 	@Override
 	public PersistentCollection<?> load(Object key, SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.debugf( "Batch loading entity `%s#%s`", getLoadable().getNavigableRole().getFullPath(), key );
 		}
 		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();

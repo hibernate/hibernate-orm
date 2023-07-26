@@ -22,7 +22,6 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 
 import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
-import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_TRACE_ENABLED;
 
 /**
  * @author Steve Ebersole
@@ -122,7 +121,7 @@ public class MappingModelCreationProcess {
 					exceptions.put( callbackEntry, e );
 
 					final String format = "Mapping-model creation encountered (possibly) transient error : %s";
-					if ( MAPPING_MODEL_CREATION_TRACE_ENABLED ) {
+					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isTraceEnabled() ) {
 						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.tracef( e, format, e );
 					}
 					else {

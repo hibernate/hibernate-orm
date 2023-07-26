@@ -21,7 +21,4 @@ public interface SqlTreeCreationLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".sql.ast.create";
 
 	Logger LOGGER = Logger.getLogger( LOGGER_NAME );
-
-	boolean DEBUG_ENABLED = LOGGER.isDebugEnabled();
-	boolean TRACE_ENABLED = LOGGER.isTraceEnabled();
 }

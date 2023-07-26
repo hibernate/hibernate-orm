@@ -34,9 +34,6 @@ public interface LobCreationLogging extends BasicLogger {
 	Logger LOB_LOGGER = Logger.getLogger( NAME );
 	LobCreationLogging LOB_MESSAGE_LOGGER = Logger.getMessageLogger( LobCreationLogging.class, NAME );
 
-	boolean LOB_TRACE_ENABLED = LOB_LOGGER.isTraceEnabled();
-	boolean LOB_DEBUG_ENABLED = LOB_LOGGER.isDebugEnabled();
-
 	@LogMessage(level = DEBUG)
 	@Message(value = "Disabling contextual LOB creation as %s is true", id = 10010001)
 	void disablingContextualLOBCreation(String settingName);

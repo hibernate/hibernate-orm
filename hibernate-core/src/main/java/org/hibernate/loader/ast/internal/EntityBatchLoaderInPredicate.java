@@ -32,7 +32,6 @@ import org.hibernate.sql.results.spi.ListResultsConsumer;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadHelper.hasSingleId;
-import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_DEBUG_ENABLED;
 import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LOAD_LOGGER;
 
 /**
@@ -68,7 +67,7 @@ public class EntityBatchLoaderInPredicate<T>
 		this.domainBatchSize = domainBatchSize;
 		this.sqlBatchSize = sqlBatchSize;
 
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 			MULTI_KEY_LOAD_LOGGER.debugf(
 					"Batch fetching `%s` entity using padded IN-list : %s (%s)",
 					entityDescriptor.getEntityName(),
@@ -99,7 +98,8 @@ public class EntityBatchLoaderInPredicate<T>
 			LockOptions lockOptions,
 			Boolean readOnly,
 			SharedSessionContractImplementor session) {
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		final boolean loggerDebugEnabled = MULTI_KEY_LOAD_LOGGER.isDebugEnabled();
+		if ( loggerDebugEnabled ) {
 			MULTI_KEY_LOAD_LOGGER.debugf( "Batch loading entity `%s#%s`", getLoadable().getEntityName(), pkValue );
 		}
 
@@ -107,7 +107,7 @@ public class EntityBatchLoaderInPredicate<T>
 		if ( hasSingleId( idsToInitialize ) || lockOptions.getLockMode() != LockMode.NONE ) {
 			return singleIdLoader.load( pkValue, entityInstance, lockOptions, readOnly, session );
 		}
-		if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+		if ( loggerDebugEnabled ) {
 			MULTI_KEY_LOAD_LOGGER.debugf( "Ids to batch-fetch initialize (`%s#%s`) %s", getLoadable().getEntityName(), pkValue, Arrays.toString(idsToInitialize) );
 		}
 
@@ -172,7 +172,7 @@ public class EntityBatchLoaderInPredicate<T>
 					}
 				},
 				(startIndex) -> {
-					if ( MULTI_KEY_LOAD_DEBUG_ENABLED ) {
+					if ( MULTI_KEY_LOAD_LOGGER.isDebugEnabled() ) {
 						MULTI_KEY_LOAD_LOGGER.debugf(
 								"Processing entity batch-fetch chunk (`%s#%s`) %s - %s",
 								getLoadable().getEntityName(),

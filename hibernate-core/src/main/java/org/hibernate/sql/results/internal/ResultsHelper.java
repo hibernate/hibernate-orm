@@ -141,7 +141,7 @@ public class ResultsHelper {
 	}
 
 	private static void logInitializers(Map<NavigablePath, Initializer> initializerMap) {
-		if ( ! ResultsLogger.DEBUG_ENABLED ) {
+		if ( ! ResultsLogger.RESULTS_MESSAGE_LOGGER.isDebugEnabled() ) {
 			return;
 		}
 
@@ -241,9 +241,7 @@ public class ResultsHelper {
 
 		if ( session.getLoadQueryInfluencers().hasEnabledFilters() && collectionDescriptor.isAffectedByEnabledFilters( session ) ) {
 			// some filters affecting the collection are enabled on the session, so do not do the put into the cache.
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug( "Refusing to add to cache due to enabled filters" );
-			}
+			LOG.debug( "Refusing to add to cache due to enabled filters" );
 			// todo : add the notion of enabled filters to the cache key to differentiate filtered collections from non-filtered;
 			//      DefaultInitializeCollectionEventHandler.initializeCollectionFromCache() (which makes sure to not read from
 			//      cache with enabled filters).
@@ -268,9 +266,7 @@ public class ResultsHelper {
 					}
 				}
 				if ( collectionOwner == null ) {
-					if ( LOG.isDebugEnabled() ) {
-						LOG.debugf( "Unable to resolve owner of loading collection for second level caching. Refusing to add to cache.");
-					}
+					LOG.debugf( "Unable to resolve owner of loading collection for second level caching. Refusing to add to cache.");
 					return;
 				}
 			}

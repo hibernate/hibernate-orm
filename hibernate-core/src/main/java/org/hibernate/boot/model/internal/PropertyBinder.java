@@ -48,13 +48,16 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.GeneratorCreator;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
@@ -448,13 +451,32 @@ public class PropertyBinder {
 
 	private void handleOptional(Property property) {
 		if ( this.property != null ) {
-			property.setOptional( !isId && isOptional( this.property ) && isNullable( property ) );
-		}
-	}
+			property.setOptional( !isId && isOptional( this.property ) );
+			if ( property.isOptional() ) {
+				final OptionalDeterminationSecondPass secondPass = persistentClasses -> {
+					// Defer determining whether a property and its columns are nullable,
+					// as handleOptional might be called when the value is not yet fully initialized
+					if ( property.getPersistentClass() != null ) {
+						for ( Join join : property.getPersistentClass().getJoins() ) {
+							if ( join.getProperties().contains( property ) ) {
+								// If this property is part of a join it is inherently optional
+								return;
+							}
+						}
+					}
 
-	private static boolean isNullable(Property property) {
-		final Value value = property.getValue();
-		return value instanceof org.hibernate.mapping.OneToMany || value.isNullable();
+					if ( !property.getValue().isNullable() ) {
+						property.setOptional( false );
+					}
+				};
+				// Always register this as second pass and never execute it directly,
+				// even if we are in a second pass already.
+				// If we are in a second pass, then we are currently processing the generalSecondPassList
+				// to which the following call will add the second pass to,
+				// so it will be executed within that second pass, just a bit later
+				buildingContext.getMetadataCollector().addSecondPass( secondPass );
+			}
+		}
 	}
 
 	private void handleNaturalId(Property property) {

@@ -119,6 +119,7 @@ public class AnyBinder {
 		}
 		binder.setAccessType( inferredData.getDefaultAccess() );
 		binder.setCascade( cascadeStrategy );
+		binder.setBuildingContext( context );
 		Property prop = binder.makeProperty();
 		//composite FK columns are in the same table, so it's OK
 		propertyHolder.addProperty( prop, columns, inferredData.getDeclaringClass() );

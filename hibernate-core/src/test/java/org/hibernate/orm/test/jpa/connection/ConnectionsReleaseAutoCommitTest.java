@@ -6,15 +6,11 @@
  */
 package org.hibernate.orm.test.jpa.connection;
 
-import java.sql.SQLException;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.orm.test.util.connections.ConnectionCheckingConnectionProvider;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -23,11 +19,12 @@ import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
-import org.mockito.Mockito;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * @author Vlad Mihalcea
@@ -36,30 +33,30 @@ import static org.mockito.Mockito.verify;
 @RequiresDialect(H2Dialect.class)
 @Jpa(
 		annotatedClasses = { ConnectionsReleaseAutoCommitTest.Thing.class },
-		integrationSettings = @Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = "org.hibernate.orm.test.jpa.connection.ConnectionProviderDecorator")
+		integrationSettings = @Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = "org.hibernate.orm.test.util.connections.ConnectionCheckingConnectionProvider")
 )
 public class ConnectionsReleaseAutoCommitTest {
 
 	@Test
-	public void testConnectionAcquisitionCount(EntityManagerFactoryScope scope) throws SQLException {
-		ConnectionProviderDecorator connectionProvider = getConnectionProvider( scope );
+	public void testConnectionAcquisitionCount(EntityManagerFactoryScope scope) {
+		ConnectionCheckingConnectionProvider connectionProvider = getConnectionProvider( scope );
+		assertTrue( connectionProvider.areAllConnectionClosed() );
 		connectionProvider.clear();
 
 		scope.inTransaction( entityManager -> {
-			assertEquals( 1, connectionProvider.getConnectionCount() );
+			assertEquals( 1, connectionProvider.getTotalOpenedConnectionCount() );
 			Thing thing = new Thing();
 			thing.setId( 1 );
 			entityManager.persist( thing );
-			assertEquals( 1, connectionProvider.getConnectionCount() );
+			assertEquals( 1, connectionProvider.getTotalOpenedConnectionCount() );
 		} );
 
-		assertEquals( 1, connectionProvider.getConnectionCount() );
-		verify( connectionProvider.connection, times( 1 ) ).close();
-		Mockito.reset( connectionProvider.connection );
+		assertEquals( 1, connectionProvider.getTotalOpenedConnectionCount() );
+		assertTrue( connectionProvider.areAllConnectionClosed() );
 	}
 
-	private ConnectionProviderDecorator getConnectionProvider(EntityManagerFactoryScope scope) {
-		return (ConnectionProviderDecorator) ( (SessionFactoryImplementor) ( scope
+	private ConnectionCheckingConnectionProvider getConnectionProvider(EntityManagerFactoryScope scope) {
+		return (ConnectionCheckingConnectionProvider) ( (SessionFactoryImplementor) ( scope
 				.getEntityManagerFactory() ) ).getServiceRegistry().getService( ConnectionProvider.class );
 	}
 

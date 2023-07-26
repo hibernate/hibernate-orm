@@ -193,7 +193,7 @@ public class EmbeddableBinder {
 					entityBinder,
 					isComponentEmbedded,
 					isIdentifierMapper,
-					false,
+					context.getMetadataCollector().isInSecondPass(),
 					customInstantiatorImpl,
 					compositeUserTypeClass,
 					annotatedColumns,

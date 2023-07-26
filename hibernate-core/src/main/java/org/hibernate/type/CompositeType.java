@@ -103,7 +103,7 @@ public interface CompositeType extends Type {
 	 *
 	 * @param component The component instance
 	 * @param values The values to inject
-	 * @return A new instance is necessary
+	 * @return A new instance as necessary
 	 *
 	 * @throws HibernateException Indicates an issue performing the injection
 	 *

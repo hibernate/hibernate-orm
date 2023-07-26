@@ -496,17 +496,12 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			Object owner,
 			Map<Object, Object> copyCache) {
 
-		if ( !isMutable() ) {
-			return original;
-		}
-		if ( original == null ) {
+		if ( original == null && target == null ) {
 			return null;
 		}
-		//if ( original == target ) return target;
 
 		final Object[] originalValues = getPropertyValues( original );
-		final Object[] resultValues = target == null ? new Object[originalValues.length] : getPropertyValues( target );
-
+		final Object[] resultValues = getPropertyValues( target );
 		final Object[] replacedValues = TypeHelper.replace(
 				originalValues,
 				resultValues,
@@ -516,7 +511,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				copyCache
 		);
 
-		if ( target == null ) {
+		if ( target == null || !isMutable() ) {
 			return instantiator().instantiate( () -> replacedValues, session.getSessionFactory() );
 		}
 		else {
@@ -534,24 +529,12 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			Map<Object, Object> copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
 
-		if ( !isMutable() ) {
-			return original;
-		}
-		if ( original == null ) {
+		if ( original == null && target == null ) {
 			return null;
 		}
-		//if ( original == target ) return target;
 
 		final Object[] originalValues = getPropertyValues( original );
-		final Object[] resultValues;
-
-		if ( target == null ) {
-			resultValues = new Object[originalValues.length];
-		}
-		else {
-			resultValues = getPropertyValues( target );
-		}
-
+		final Object[] resultValues = getPropertyValues( target );
 		final Object[] replacedValues = TypeHelper.replace(
 				originalValues,
 				resultValues,
@@ -562,7 +545,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				foreignKeyDirection
 		);
 
-		if ( target == null ) {
+		if ( target == null || !isMutable() ) {
 			return instantiator().instantiate( () -> replacedValues, session.getSessionFactory() );
 		}
 		else {
@@ -770,7 +753,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 		return embeddableTypeDescriptor().getAggregateMapping().getJdbcMapping().getJdbcValueExtractor();
 	}
 
-	private EmbeddableInstantiator instantiator() {
+	protected final EmbeddableInstantiator instantiator() {
 		return embeddableTypeDescriptor().getRepresentationStrategy().getInstantiator();
 	}
 
@@ -804,5 +787,14 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			throw new IllegalStateException( "Attempt to access EmbeddableValuedModelPart prior to its injection" );
 		}
 		return mappingModelPart;
+	}
+
+	@Override
+	public Object replacePropertyValues(Object component, Object[] values, SharedSessionContractImplementor session)
+			throws HibernateException {
+		if ( !isMutable() ) {
+			return instantiator().instantiate( () -> values, session.getSessionFactory() );
+		}
+		return CompositeTypeImplementor.super.replacePropertyValues( component, values, session );
 	}
 }

@@ -113,16 +113,19 @@ public class ResultMementoBasicStandard implements ResultMementoBasic {
 			else {
 				final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 				final JavaType<Object> registeredJtd = jtdRegistry.getDescriptor( definition.type() );
-				final ManagedBeanRegistry beanRegistry = sessionFactory.getServiceRegistry().getService( ManagedBeanRegistry.class );
+				final ManagedBeanRegistry beanRegistry =
+						sessionFactory.getServiceRegistry().requireService( ManagedBeanRegistry.class );
 				if ( BasicType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
-					final ManagedBean<BasicType<?>> typeBean = (ManagedBean) beanRegistry.getBean( registeredJtd.getJavaTypeClass() );
+					final ManagedBean<BasicType<?>> typeBean =
+							(ManagedBean) beanRegistry.getBean( registeredJtd.getJavaTypeClass() );
 					explicitType = typeBean.getBeanInstance();
 					explicitJavaType = explicitType.getJavaTypeDescriptor();
 				}
 				else if ( UserType.class.isAssignableFrom( registeredJtd.getJavaTypeClass() ) ) {
-					final ManagedBean<UserType<?>> userTypeBean = (ManagedBean) beanRegistry.getBean( registeredJtd.getJavaTypeClass() );
+					final ManagedBean<UserType<?>> userTypeBean =
+							(ManagedBean) beanRegistry.getBean( registeredJtd.getJavaTypeClass() );
 					// todo (6.0) : is this the best approach?  or should we keep a Class<? extends UserType> -> @Type mapping somewhere?
-					explicitType = new CustomType<>( (UserType<Object>) userTypeBean.getBeanInstance(), typeConfiguration );
+					explicitType = new CustomType<>( userTypeBean.getBeanInstance(), typeConfiguration );
 					explicitJavaType = explicitType.getJavaTypeDescriptor();
 				}
 				else {

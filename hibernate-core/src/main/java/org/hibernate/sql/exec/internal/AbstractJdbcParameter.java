@@ -67,13 +67,7 @@ public abstract class AbstractJdbcParameter
 		//		- anything that is the same for each row always - parameter, literal, etc;
 		//			the idea would be to write the value directly into the JdbcValues array
 		//			and not generating a SQL selection in the query sent to DB
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				javaType,
-				this,
-				false
-		);
+		return new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, javaType, this, false );
 	}
 
 	@Override
@@ -135,14 +129,12 @@ public abstract class AbstractJdbcParameter
 		if ( bindValue == null && jdbcMapping != null ) {
 			return jdbcMapping;
 		}
-
-		final BindableType<?> parameterType =
-				executionContext.getSession().getFactory().getMappingMetamodel()
-						.resolveParameterBindType( bindValue );
-		if ( parameterType instanceof JdbcMapping ) {
-			return (JdbcMapping) parameterType;
+		else {
+			final BindableType<?> parameterType =
+					executionContext.getSession().getFactory().getMappingMetamodel()
+							.resolveParameterBindType( bindValue );
+			return parameterType instanceof JdbcMapping ? (JdbcMapping) parameterType : null;
 		}
-		return null;
 	}
 
 	@Override

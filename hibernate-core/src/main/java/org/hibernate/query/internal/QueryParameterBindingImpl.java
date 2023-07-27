@@ -27,7 +27,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.TemporalType;
 
 /**
- * The standard Hibernate QueryParameterBinding implementation
+ * The standard implementation of {@link QueryParameterBinding}.
  *
  * @author Steve Ebersole
  */

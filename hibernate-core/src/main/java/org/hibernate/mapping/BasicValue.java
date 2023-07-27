@@ -843,7 +843,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	private UserType<?> getConfiguredUserTypeBean(Class<? extends UserType<?>> explicitCustomType, Properties properties) {
 		final UserType<?> typeInstance =
-				getBuildingContext().getBuildingOptions().disallowExtensionsInCdi()
+				!getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
 						? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( explicitCustomType )
 						: getUserTypeBean( explicitCustomType, properties ).getBeanInstance();
 

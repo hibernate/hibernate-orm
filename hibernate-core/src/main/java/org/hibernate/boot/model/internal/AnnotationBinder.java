@@ -505,7 +505,7 @@ public final class AnnotationBinder {
 			ManagedBeanRegistry managedBeanRegistry,
 			JdbcTypeRegistration annotation) {
 		final Class<? extends JdbcType> jdbcTypeClass = annotation.value();
-		final JdbcType jdbcType = context.getBuildingOptions().disallowExtensionsInCdi()
+		final JdbcType jdbcType = !context.getBuildingOptions().isAllowExtensionsInCdi()
 				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( jdbcTypeClass )
 				: managedBeanRegistry.getBean( jdbcTypeClass ).getBeanInstance();
 		final int typeCode = annotation.registrationCode() == Integer.MIN_VALUE
@@ -520,7 +520,7 @@ public final class AnnotationBinder {
 			JavaTypeRegistration annotation) {
 		final Class<? extends BasicJavaType<?>> javaTypeClass = annotation.descriptorClass();
 		final BasicJavaType<?> javaType =
-				context.getBuildingOptions().disallowExtensionsInCdi()
+				!context.getBuildingOptions().isAllowExtensionsInCdi()
 						? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass )
 						: managedBeanRegistry.getBean( javaTypeClass ).getBeanInstance();
 		context.getMetadataCollector().addJavaTypeRegistration( annotation.javaType(), javaType );
@@ -752,7 +752,7 @@ public final class AnnotationBinder {
 	}
 
 	private static JdbcMapping resolveUserType(Class<UserType<?>> userTypeClass, MetadataBuildingContext context) {
-		final UserType<?> userType = context.getBuildingOptions().disallowExtensionsInCdi()
+		final UserType<?> userType = !context.getBuildingOptions().isAllowExtensionsInCdi()
 				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass )
 				: context.getBootstrapContext().getServiceRegistry()
 						.requireService( ManagedBeanRegistry.class )
@@ -809,7 +809,7 @@ public final class AnnotationBinder {
 			return registeredJtd;
 		}
 
-		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
+		if ( !context.getBuildingOptions().isAllowExtensionsInCdi() ) {
 			return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
 		}
 

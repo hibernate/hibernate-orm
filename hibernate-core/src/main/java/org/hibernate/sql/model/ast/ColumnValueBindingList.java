@@ -54,7 +54,7 @@ public class ColumnValueBindingList extends ArrayList<ColumnValueBinding> implem
 		add( createValueBinding( columnName, columnWriteFragment, jdbcMapping ) );
 	}
 
-	public ColumnValueBinding createValueBinding(
+	protected ColumnValueBinding createValueBinding(
 			String columnName,
 			String customWriteExpression,
 			JdbcMapping jdbcMapping) {

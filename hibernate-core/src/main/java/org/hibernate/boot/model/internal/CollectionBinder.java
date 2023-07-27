@@ -881,7 +881,7 @@ public abstract class CollectionBinder {
 			Map<String,String> parameters,
 			MetadataBuildingContext buildingContext) {
 		final boolean hasParameters = CollectionHelper.isNotEmpty( parameters );
-		if ( buildingContext.getBuildingOptions().disallowExtensionsInCdi() ) {
+		if ( !buildingContext.getBuildingOptions().isAllowExtensionsInCdi() ) {
 			// if deferred container access is enabled, we locally create the user-type
 			return MappingHelper.createLocalUserCollectionTypeBean( role, implementation, hasParameters, parameters );
 		}

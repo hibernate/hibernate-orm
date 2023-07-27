@@ -971,7 +971,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		}
 
 		@Override
-		public boolean disallowExtensionsInCdi() {
+		public boolean isAllowExtensionsInCdi() {
 			return allowExtensionsInCdi;
 		}
 

@@ -341,7 +341,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
 		final Class<CompositeUserType<?>> customTypeClass =
 				bootstrapContext.getClassLoaderAccess().classForName( component.getTypeName() );
-		return getBuildingContext().getBuildingOptions().disallowExtensionsInCdi()
+		return !getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi()
 				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( customTypeClass )
 				: bootstrapContext.getServiceRegistry().requireService( ManagedBeanRegistry.class )
 				.getBean( customTypeClass ).getBeanInstance();

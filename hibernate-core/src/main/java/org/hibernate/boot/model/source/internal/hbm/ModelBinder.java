@@ -2632,7 +2632,7 @@ public class ModelBinder {
 					if ( CompositeUserType.class.isAssignableFrom( componentClass ) ) {
 						componentBinding.setTypeName( explicitComponentClassName );
 						CompositeUserType<?> compositeUserType;
-						if ( sourceDocument.getBuildingOptions().disallowExtensionsInCdi() ) {
+						if ( !sourceDocument.getBuildingOptions().isAllowExtensionsInCdi() ) {
 							compositeUserType = (CompositeUserType<?>) FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( componentClass );
 						}
 						else {

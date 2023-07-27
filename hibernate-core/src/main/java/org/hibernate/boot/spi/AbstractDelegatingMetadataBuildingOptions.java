@@ -178,7 +178,7 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	}
 
 	@Override
-	public boolean disallowExtensionsInCdi() {
-		return delegate.disallowExtensionsInCdi();
+	public boolean isAllowExtensionsInCdi() {
+		return delegate.isAllowExtensionsInCdi();
 	}
 }

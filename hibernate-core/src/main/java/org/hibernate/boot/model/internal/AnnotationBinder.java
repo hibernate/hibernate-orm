@@ -494,15 +494,9 @@ public final class AnnotationBinder {
 			ManagedBeanRegistry managedBeanRegistry,
 			JdbcTypeRegistration annotation) {
 		final Class<? extends JdbcType> jdbcTypeClass = annotation.value();
-
-		final JdbcType jdbcType;
-		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
-			jdbcType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( jdbcTypeClass );
-		}
-		else {
-			jdbcType = managedBeanRegistry.getBean( jdbcTypeClass ).getBeanInstance();
-		}
-
+		final JdbcType jdbcType = !context.getBuildingOptions().isAllowExtensionsInCdi()
+				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( jdbcTypeClass )
+				: managedBeanRegistry.getBean( jdbcTypeClass ).getBeanInstance();
 		final int typeCode = annotation.registrationCode() == Integer.MIN_VALUE
 				? jdbcType.getDefaultSqlTypeCode()
 				: annotation.registrationCode();
@@ -514,14 +508,10 @@ public final class AnnotationBinder {
 			ManagedBeanRegistry managedBeanRegistry,
 			JavaTypeRegistration annotation) {
 		final Class<? extends BasicJavaType<?>> javaTypeClass = annotation.descriptorClass();
-
-		final BasicJavaType<?> javaType;
-		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
-			javaType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
-		}
-		else {
-			javaType = managedBeanRegistry.getBean( javaTypeClass ).getBeanInstance();
-		}
+		final BasicJavaType<?> javaType =
+				!context.getBuildingOptions().isAllowExtensionsInCdi()
+						? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass )
+						: managedBeanRegistry.getBean( javaTypeClass ).getBeanInstance();
 		context.getMetadataCollector().addJavaTypeRegistration( annotation.javaType(), javaType );
 	}
 
@@ -751,16 +741,11 @@ public final class AnnotationBinder {
 	}
 
 	private static JdbcMapping resolveUserType(Class<UserType<?>> userTypeClass, MetadataBuildingContext context) {
-		final UserType<?> userType;
-		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
-			userType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
-		}
-		else {
-			final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-			final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
-			userType = beanRegistry.getBean( userTypeClass ).getBeanInstance();
-		}
-
+		final UserType<?> userType = !context.getBuildingOptions().isAllowExtensionsInCdi()
+				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass )
+				: context.getBootstrapContext().getServiceRegistry()
+						.requireService( ManagedBeanRegistry.class )
+						.getBean( userTypeClass ).getBeanInstance();
 		return new CustomType<>( userType, context.getBootstrapContext().getTypeConfiguration() );
 	}
 
@@ -812,7 +797,7 @@ public final class AnnotationBinder {
 			return registeredJtd;
 		}
 
-		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
+		if ( !context.getBuildingOptions().isAllowExtensionsInCdi() ) {
 			return FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
 		}
 

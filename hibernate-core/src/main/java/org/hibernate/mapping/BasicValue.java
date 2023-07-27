@@ -841,7 +841,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			}
 
 			final T typeInstance;
-			if ( getBuildingContext().getBuildingOptions().disallowExtensionsInCdi() ) {
+			if ( !getBuildingContext().getBuildingOptions().isAllowExtensionsInCdi() ) {
 				typeInstance = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( explicitCustomType );
 			}
 			else {

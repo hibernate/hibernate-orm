@@ -10,6 +10,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -508,11 +509,11 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 		@Id
 		@GeneratedValue
 		public long id;
-
+		@Column(name = "abstract_public_field")
 		public Long abstractEntityPublicField;
-
+		@Column(name = "abstract_protected_field")
 		protected Long abstractEntityProtectedField;
-
+		@Column(name = "abstract_default_field")
 		Long abstractEntityPackagePrivateField;
 	}
 
@@ -523,9 +524,13 @@ public class ExtendedEnhancementNonStandardAccessTest extends BaseCoreFunctional
 
 	@Entity(name = "concrete")
 	public static class MyConcreteEntity extends MyAbstractConfusingEntity {
+		@Column(name = "concrete_public_field")
 		public Long publicField;
+		@Column(name = "concrete_protected_field")
 		protected Long protectedField;
+		@Column(name = "concrete_default_field")
 		Long packagePrivateField;
+		@Column(name = "concrete_private_field")
 		private Long privateField;
 
 		public Long getAbstractEntityPublicField() {

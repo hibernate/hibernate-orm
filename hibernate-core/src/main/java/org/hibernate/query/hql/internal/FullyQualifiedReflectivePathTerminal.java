@@ -22,6 +22,7 @@ import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.spi.SqmCreationContext;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmEnumLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -32,6 +33,7 @@ import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 
 /**
  * @author Steve Ebersole
@@ -65,22 +67,24 @@ public class FullyQualifiedReflectivePathTerminal
 	@SuppressWarnings("unchecked")
 	private Function<SemanticQueryWalker, ?> resolveTerminalSemantic() {
 		return semanticQueryWalker -> {
-			final ClassLoaderService cls = creationState.getCreationContext().getServiceRegistry().getService( ClassLoaderService.class );
+			final SqmCreationContext creationContext = creationState.getCreationContext();
+			final ClassLoaderService cls =
+					creationContext.getServiceRegistry().requireService( ClassLoaderService.class );
 			final String fullPath = getFullPath();
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// See if it is an entity-type literal
 
-			final EntityDomainType<?> entityDescriptor = creationState.getCreationContext().getJpaMetamodel().entity( fullPath );
+			final EntityDomainType<?> entityDescriptor = creationContext.getJpaMetamodel().entity( fullPath );
 			if ( entityDescriptor != null ) {
-				return new SqmLiteralEntityType( entityDescriptor, creationState.getCreationContext().getNodeBuilder() );
+				return new SqmLiteralEntityType<>( entityDescriptor, creationContext.getNodeBuilder() );
 			}
 
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// See if it is a Class FQN
 
 			try {
-				final Class namedClass = cls.classForName( fullPath );
+				final Class<?> namedClass = cls.classForName( fullPath );
 				if ( namedClass != null ) {
 					return semanticQueryWalker.visitFullyQualifiedClass( namedClass );
 				}
@@ -88,46 +92,47 @@ public class FullyQualifiedReflectivePathTerminal
 			catch (ClassLoadingException ignore) {
 			}
 
-
 			// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 			// Check the parent path as a Class FQN, meaning the terminal is a field or
 			// 		enum-value
 
 			final String parentFullPath = getParent().getFullPath();
 			try {
-				final Class namedClass = cls.classForName( parentFullPath );
+				final Class<?> namedClass = cls.classForName( parentFullPath );
 				if ( namedClass != null ) {
-					if ( namedClass.isEnum() ) {
-						return new SqmEnumLiteral(
-								Enum.valueOf( namedClass, getLocalName() ),
-								(EnumJavaType) creationState.getCreationContext().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor(
-										namedClass,
-										() -> new EnumJavaType( namedClass )
-								),
-								getLocalName(),
-								nodeBuilder()
-						);
-					}
-					else {
-						final Field field = namedClass.getField( getLocalName() );
-						return new SqmFieldLiteral(
-								field,
-								creationState.getCreationContext().getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor(
-										namedClass,
-										() -> new EnumJavaType( namedClass )
-								),
-								nodeBuilder()
-						);
-					}
+					return createEnumOrFieldLiteral( namedClass );
 				}
 			}
 			catch (ClassLoadingException | NoSuchFieldException ignore) {
 			}
 
 			throw new HqlInterpretationException( "Unsure how to handle semantic path terminal - " + fullPath );
-
 		};
+	}
 
+	@SuppressWarnings({"rawtypes", "unchecked"})
+	private SqmExpression createEnumOrFieldLiteral(Class namedClass) throws NoSuchFieldException {
+		if ( namedClass.isEnum() ) {
+			return new SqmEnumLiteral(
+					Enum.valueOf( namedClass, getLocalName() ),
+					(EnumJavaType) javaTypeRegistry()
+							.resolveDescriptor( namedClass, () -> new EnumJavaType( namedClass ) ),
+					getLocalName(),
+					nodeBuilder()
+			);
+		}
+		else {
+			return new SqmFieldLiteral(
+					namedClass.getField( getLocalName() ),
+					javaTypeRegistry()
+							.resolveDescriptor( namedClass, () -> new EnumJavaType( namedClass ) ),
+					nodeBuilder()
+			);
+		}
+	}
+
+	private JavaTypeRegistry javaTypeRegistry() {
+		return creationState.getCreationContext().getTypeConfiguration().getJavaTypeRegistry();
 	}
 
 	@Override

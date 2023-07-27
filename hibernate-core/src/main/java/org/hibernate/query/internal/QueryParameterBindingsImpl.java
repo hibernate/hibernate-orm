@@ -237,7 +237,7 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 		if ( binding.isMultiValued() ) {
 			final Iterator<?> iterator = binding.getBindValues().iterator();
 			Object firstNonNullBindValue = null;
-			if ( iterator.hasNext() && firstNonNullBindValue == null ) {
+			if ( iterator.hasNext() ) {
 				firstNonNullBindValue = iterator.next();
 			}
 			if ( firstNonNullBindValue != null ) {

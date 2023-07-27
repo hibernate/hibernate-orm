@@ -67,13 +67,7 @@ public abstract class AbstractJdbcParameter
 		//		- anything that is the same for each row always - parameter, literal, etc;
 		//			the idea would be to write the value directly into the JdbcValues array
 		//			and not generating a SQL selection in the query sent to DB
-		return new SqlSelectionImpl(
-				jdbcPosition,
-				valuesArrayPosition,
-				javaType,
-				this,
-				false
-		);
+		return new SqlSelectionImpl( jdbcPosition, valuesArrayPosition, javaType, this, false );
 	}
 
 	@Override
@@ -93,7 +87,11 @@ public abstract class AbstractJdbcParameter
 			throw new ExecutionException( "JDBC parameter value not bound - " + this );
 		}
 
-		final Object bindValue = binding.getBindValue();
+		final JdbcMapping jdbcMapping = jdbcMapping( executionContext, binding );
+		bindParameterValue( jdbcMapping, statement, binding.getBindValue(), startPosition, executionContext );
+	}
+
+	private JdbcMapping jdbcMapping(ExecutionContext executionContext, JdbcParameterBinding binding) {
 		JdbcMapping jdbcMapping = binding.getBindType();
 
 		if ( jdbcMapping == null ) {
@@ -102,10 +100,14 @@ public abstract class AbstractJdbcParameter
 
 		// If the parameter type is not known from the context i.e. null or Object, infer it from the bind value
 		if ( jdbcMapping == null || jdbcMapping.getMappedJavaType().getJavaTypeClass() == Object.class ) {
-			jdbcMapping = guessBindType( executionContext, bindValue, jdbcMapping );
+			jdbcMapping = guessBindType( executionContext, binding.getBindValue(), jdbcMapping );
 		}
 
-		bindParameterValue( jdbcMapping, statement, bindValue, startPosition, executionContext );
+		if ( jdbcMapping == null ) {
+			throw new ExecutionException( "No JDBC mapping could be inferred for parameter - " + this );
+		}
+
+		return jdbcMapping;
 	}
 
 	protected void bindParameterValue(
@@ -127,14 +129,12 @@ public abstract class AbstractJdbcParameter
 		if ( bindValue == null && jdbcMapping != null ) {
 			return jdbcMapping;
 		}
-
-		final BindableType<?> parameterType =
-				executionContext.getSession().getFactory().getMappingMetamodel()
-						.resolveParameterBindType( bindValue );
-		if ( parameterType instanceof JdbcMapping ) {
-			return (JdbcMapping) parameterType;
+		else {
+			final BindableType<?> parameterType =
+					executionContext.getSession().getFactory().getMappingMetamodel()
+							.resolveParameterBindType( bindValue );
+			return parameterType instanceof JdbcMapping ? (JdbcMapping) parameterType : null;
 		}
-		return null;
 	}
 
 	@Override

@@ -19,7 +19,7 @@ public class ValueBindJpaCriteriaParameter<T> extends JpaCriteriaParameter<T>{
 	private final T value;
 
 	public ValueBindJpaCriteriaParameter(
-			BindableType<T> type,
+			BindableType<? super T> type,
 			T value,
 			NodeBuilder nodeBuilder) {
 		super( null, type, false, nodeBuilder );

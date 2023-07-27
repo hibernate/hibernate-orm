@@ -36,7 +36,7 @@ public class JpaCriteriaParameter<T>
 
 	public JpaCriteriaParameter(
 			String name,
-			BindableType<T> type,
+			BindableType<? super T> type,
 			boolean allowsMultiValuedBinding,
 			NodeBuilder nodeBuilder) {
 		super( toSqmType( type, nodeBuilder ), nodeBuilder );

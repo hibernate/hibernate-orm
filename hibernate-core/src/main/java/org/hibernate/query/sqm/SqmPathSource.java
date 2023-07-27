@@ -118,12 +118,12 @@ public interface SqmPathSource<J> extends SqmExpressible<J>, Bindable<J>, SqmExp
 
 	@Override
 	default SqmExpressible<J> getExpressible() {
-		return (SqmExpressible<J>) getSqmPathType();
+		return getSqmPathType();
 	}
 
 	@Override
 	default DomainType<J> getSqmType() {
-		return (DomainType<J>) getSqmPathType();
+		return getSqmPathType();
 	}
 
 	/**

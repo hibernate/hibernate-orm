@@ -30,7 +30,7 @@ import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
  */
 public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> implements SqmExpression<T> {
 
-	public AbstractSqmExpression(SqmExpressible<? extends T> type, NodeBuilder criteriaBuilder) {
+	public AbstractSqmExpression(SqmExpressible<? super T> type, NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 	}
 
@@ -41,16 +41,6 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Override
 	public void applyInferableType(SqmExpressible<?> type) {
-//		if ( type == null ) {
-//			return;
-//		}
-//
-//		final SqmExpressible<?> oldType = getNodeType();
-//
-//		final SqmExpressible<?> newType = highestPrecedenceType( oldType, type );
-//		if ( newType != null && newType != oldType ) {
-//			internalApplyInferableType( newType );
-//		}
 	}
 
 	protected void internalApplyInferableType(SqmExpressible<?> newType) {
@@ -64,44 +54,48 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 		setExpressibleType( highestPrecedenceType2( newType, getExpressible() ) );
 	}
 
+	private <B> SqmExpression<B> castToBasicType(Class<B> javaType) {
+		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( javaType ) );
+	}
+
 	@Override
 	public SqmExpression<Long> asLong() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Long.class ) );
+		return castToBasicType( Long.class );
 	}
 
 	@Override
 	public SqmExpression<Integer> asInteger() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Integer.class ) );
+		return castToBasicType( Integer.class );
 	}
 
 	@Override
 	public SqmExpression<Float> asFloat() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Float.class ) );
+		return castToBasicType( Float.class );
 	}
 
 	@Override
 	public SqmExpression<Double> asDouble() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Double.class ) );
+		return castToBasicType( Double.class );
 	}
 
 	@Override
 	public SqmExpression<BigDecimal> asBigDecimal() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( BigDecimal.class ) );
+		return castToBasicType( BigDecimal.class );
 	}
 
 	@Override
 	public SqmExpression<BigInteger> asBigInteger() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( BigInteger.class ) );
+		return castToBasicType( BigInteger.class );
 	}
 
 	@Override
 	public SqmExpression<String> asString() {
-		return castAs( nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( String.class ) );
+		return castToBasicType( String.class );
 	}
 
 	@Override
 	public <X> SqmExpression<X> as(Class<X> type) {
-		return nodeBuilder().cast(this, type);
+		return nodeBuilder().cast( this, type );
 	}
 
 	@Override

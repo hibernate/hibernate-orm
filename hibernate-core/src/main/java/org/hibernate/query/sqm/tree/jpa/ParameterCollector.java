@@ -38,10 +38,9 @@ import org.hibernate.query.sqm.tree.predicate.SqmTruthnessPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 /**
- * todo (6.0) : how is this different from {@link org.hibernate.query.sqm.internal.ParameterCollector}?
- *
  * @author Steve Ebersole
  */
+// todo (6.0) : how is this different from org.hibernate.query.sqm.internal.ParameterCollector?
 public class ParameterCollector extends BaseSemanticQueryWalker {
 
 	public static Set<SqmParameter<?>> collectParameters(SqmStatement<?> statement) {
@@ -76,12 +75,11 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	}
 
 	/**
-	 * This is called while performing an inflight parameter collection of parameters
-	 * for `CriteriaQuery#getParameters`.  That method can be called multiple times and
-	 * the parameters may have changed in between each call - therefore the parameters
-	 * must be collected dynamically each time.
-	 *
-	 * This form simply returns the JpaCriteriaParameter
+	 * This is called while performing an in-flight parameter collection of parameters
+	 * for {@link jakarta.persistence.criteria.CriteriaQuery#getParameters}. That method
+	 * can be called multiple times and the parameters may have changed in between each
+	 * call - therefore the parameters must be collected dynamically each time.
+	 * This form simply returns the {@link JpaCriteriaParameter}.
 	 *
 	 * @see SqmSelectStatement#resolveParameters()
 	 */
@@ -140,7 +138,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 	private SqmExpressibleAccessor<?> inferenceBasis;
 
-	private void withTypeInference(SqmExpressibleAccessor<?> inferenceBasis, Runnable action) {
+	private <T> void withTypeInference(SqmExpressibleAccessor<T> inferenceBasis, Runnable action) {
 		SqmExpressibleAccessor<?> original = this.inferenceBasis;
 		this.inferenceBasis = inferenceBasis;
 		try {
@@ -159,21 +157,21 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 					for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
 						final SqmExpressible<?> resolved = whenFragment.getCheckValue().getExpressible();
 						if ( resolved != null ) {
-							return (SqmExpressible<Object>) resolved;
+							return (SqmExpressible<?>) resolved;
 						}
 					}
 					return null;
 				},
 				() -> expression.getFixture().accept( this )
 		);
-		SqmExpressibleAccessor<?> resolved = determineCurrentExpressible( expression );
+		SqmExpressibleAccessor<?> resolved = toExpressibleAccessor( expression );
 		for ( SqmCaseSimple.WhenFragment<?, ?> whenFragment : expression.getWhenFragments() ) {
 			withTypeInference(
 					expression.getFixture(),
 					() -> whenFragment.getCheckValue().accept( this )
 			);
 			withTypeInference(
-					resolved == null && inferenceSupplier != null ? inferenceSupplier : resolved,
+					getInferenceBasis( inferenceSupplier, resolved ),
 					() -> whenFragment.getResult().accept( this )
 			);
 			resolved = highestPrecedence( resolved, whenFragment.getResult() );
@@ -181,7 +179,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 		if ( expression.getOtherwise() != null ) {
 			withTypeInference(
-					resolved == null && inferenceSupplier != null ? inferenceSupplier : resolved,
+					getInferenceBasis( inferenceSupplier, resolved ),
 					() -> expression.getOtherwise().accept( this )
 			);
 		}
@@ -192,7 +190,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 	@Override
 	public Object visitSearchedCaseExpression(SqmCaseSearched<?> expression) {
 		final SqmExpressibleAccessor<?> inferenceSupplier = this.inferenceBasis;
-		SqmExpressibleAccessor<?> resolved = determineCurrentExpressible( expression );
+		SqmExpressibleAccessor<?> resolved = toExpressibleAccessor( expression );
 
 		for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
 			withTypeInference(
@@ -200,7 +198,7 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 					() -> whenFragment.getPredicate().accept( this )
 			);
 			withTypeInference(
-					resolved == null && inferenceSupplier != null ? inferenceSupplier : resolved,
+					getInferenceBasis( inferenceSupplier, resolved ),
 					() -> whenFragment.getResult().accept( this )
 			);
 			resolved = highestPrecedence( resolved, whenFragment.getResult() );
@@ -208,12 +206,18 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 
 		if ( expression.getOtherwise() != null ) {
 			withTypeInference(
-					resolved == null && inferenceSupplier != null ? inferenceSupplier : resolved,
+					getInferenceBasis( inferenceSupplier, resolved ),
 					() -> expression.getOtherwise().accept( this )
 			);
 		}
 
 		return expression;
+	}
+
+	private static SqmExpressibleAccessor<?> getInferenceBasis(
+			SqmExpressibleAccessor<?> inferenceSupplier, SqmExpressibleAccessor<?> resolved) {
+//		return resolved == null && inferenceSupplier != null ? inferenceSupplier : resolved;
+		return inferenceSupplier == null ? resolved : inferenceSupplier;
 	}
 
 	private SqmExpressibleAccessor<?> highestPrecedence(SqmExpressibleAccessor<?> type1, SqmExpressibleAccessor<?> type2) {
@@ -235,11 +239,9 @@ public class ParameterCollector extends BaseSemanticQueryWalker {
 		return type1;
 	}
 
-	private SqmExpressibleAccessor<?> determineCurrentExpressible(SqmExpression<?> expression) {
-		if ( expression.getExpressible() != null ) {
-			return () -> (SqmExpressible<Object>) expression.getExpressible();
-		}
-		return null;
+	private <T> SqmExpressibleAccessor<T> toExpressibleAccessor(SqmExpression<T> expression) {
+		final SqmExpressible<T> expressible = expression.getExpressible();
+		return expressible == null ? null : () -> expressible;
 	}
 
 	@Override

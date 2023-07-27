@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.spi;
 
+import org.hibernate.Incubating;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.query.BindableType;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -20,8 +21,9 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
+@Incubating
 public interface QueryParameterBindingTypeResolver {
-	<T> BindableType<? extends T> resolveParameterBindType(T bindValue);
+	<T> BindableType<? super T> resolveParameterBindType(T bindValue);
 	<T> BindableType<T> resolveParameterBindType(Class<T> clazz);
 	TypeConfiguration getTypeConfiguration();
 	MappingMetamodel getMappingMetamodel();

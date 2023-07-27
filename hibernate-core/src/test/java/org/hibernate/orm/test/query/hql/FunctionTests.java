@@ -2031,6 +2031,17 @@ public class FunctionTests {
 		);
 	}
 
+	@Test
+	public void testEnumIsNull(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createSelectionQuery("from EntityOfBasics where gender is null").getResultList();
+					session.createSelectionQuery("from EntityOfBasics e where e.gender is null").getResultList();
+					session.createSelectionQuery("from EntityOfBasics where :gender is null").setParameter("gender", EntityOfBasics.Gender.MALE).getResultList();
+				}
+		);
+	}
+
 	static class Pair {
 		int integer; double floating;
 		Pair(int integer, double floating) {

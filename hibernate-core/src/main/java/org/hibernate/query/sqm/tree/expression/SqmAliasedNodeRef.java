@@ -32,7 +32,7 @@ public class SqmAliasedNodeRef extends AbstractSqmExpression<Integer> {
 	public SqmAliasedNodeRef(
 			int position,
 			NavigablePath navigablePath,
-			SqmExpressible<? extends Integer> type,
+			SqmExpressible<Integer> type,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );
 		this.position = position;

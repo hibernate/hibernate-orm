@@ -175,8 +175,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		if ( subPathSource == null ) {
 			return new SqmLiteral<>(
 					referencedPathSource.getBindableJavaType(),
-					(SqmExpressible<? extends Class<? extends T>>) (SqmExpressible<?>)
-							nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Class.class ),
+					nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Class.class ),
 					nodeBuilder()
 			);
 		}

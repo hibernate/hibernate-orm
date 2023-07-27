@@ -38,11 +38,11 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	private boolean isBound;
 	private boolean isMultiValued;
 
-	private BindableType<? extends T> bindType;
+	private BindableType<? super T> bindType;
 	private MappingModelExpressible<T> type;
 	private TemporalType explicitTemporalPrecision;
 
-	private T bindValue;
+	private Object bindValue;
 	private Collection<? extends T> bindValues;
 
 	/**
@@ -67,7 +67,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	@Override
-	public BindableType<? extends T> getBindType() {
+	public BindableType<? super T> getBindType() {
 		return bindType;
 	}
 
@@ -96,7 +96,8 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			throw new IllegalStateException( "Binding is multi-valued; illegal call to #getBindValue" );
 		}
 
-		return bindValue;
+		//TODO: I believe this cast is unsound due to coercion
+		return (T) bindValue;
 	}
 
 	@Override
@@ -105,13 +106,17 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			return;
 		}
 
+		final Object coerced;
 		if ( ! sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
 			try {
 				if ( bindType != null ) {
-					value = coerce( value, bindType );
+					coerced = coerce( value, bindType );
 				}
 				else if ( queryParameter.getHibernateType() != null ) {
-					value = coerce( value, queryParameter.getHibernateType() );
+					coerced = coerce( value, queryParameter.getHibernateType() );
+				}
+				else {
+					coerced = value;
 				}
 			}
 			catch (CoercionException ce) {
@@ -125,21 +130,24 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 				);
 			}
 		}
+		else {
+			coerced = value;
+		}
 
-		validate( value );
+		validate( coerced );
 
 		if ( resolveJdbcTypeIfNecessary && bindType == null && value == null ) {
 			bindType = getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( "null" );
 		}
-		bindValue( value );
+		bindValue( coerced );
 	}
 
-	private T coerce(T value, BindableType<? extends T> parameterType) {
+	private Object coerce(T value, BindableType<? super T> parameterType) {
 		if ( value == null ) {
 			return null;
 		}
 
-		final SqmExpressible<? extends T> sqmExpressible = parameterType.resolveExpressible( sessionFactory );
+		final SqmExpressible<? super T> sqmExpressible = parameterType.resolveExpressible( sessionFactory );
 		assert sqmExpressible != null;
 		return sqmExpressible.getExpressibleJavaType().coerce( value, this );
 	}
@@ -154,8 +162,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		}
 
 		if ( value instanceof Collection
-				&& ( bindableType != null && !bindableType.getBindableJavaType().isInstance( value )
-				|| ( bindableType == null && !isRegisteredAsBasicType( value.getClass() ) ) ) ) {
+				&& ( bindableType == null
+					? !isRegisteredAsBasicType( value.getClass() )
+					: !bindableType.getBindableJavaType().isInstance( value ) ) ) {
 			//noinspection unchecked
 			setBindValues( (Collection<T>) value );
 			return true;
@@ -168,7 +177,7 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		return getTypeConfiguration().getBasicTypeForJavaType( valueClass ) != null;
 	}
 
-	private void bindValue(T value) {
+	private void bindValue(Object value) {
 		this.isBound = true;
 		this.bindValue = value;
 
@@ -189,16 +198,20 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			this.bindType = clarifiedType;
 		}
 
+		final Object coerced;
 		if ( bindType != null ) {
-			value = coerce( value, bindType );
+			coerced = coerce( value, bindType );
 		}
 		else if ( queryParameter.getHibernateType() != null ) {
-			value = coerce( value, queryParameter.getHibernateType() );
+			coerced = coerce( value, queryParameter.getHibernateType() );
+		}
+		else {
+			coerced = value;
 		}
 
-		validate( value, clarifiedType );
+		validate( coerced, clarifiedType );
 
-		bindValue( value );
+		bindValue( coerced );
 	}
 
 	@Override
@@ -211,10 +224,11 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 			bindType = queryParameter.getHibernateType();
 		}
 
+		final Object coerced;
 		if ( ! sessionFactory.getSessionFactoryOptions().getJpaCompliance().isLoadByIdComplianceEnabled() ) {
 			if ( bindType != null ) {
 				try {
-					value = coerce( value, bindType );
+					coerced = coerce( value, bindType );
 				}
 				catch (CoercionException ex) {
 					throw new IllegalArgumentException(
@@ -229,13 +243,19 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 				}
 			}
 			else if ( queryParameter.getHibernateType() != null ) {
-				value = coerce( value, queryParameter.getHibernateType() );
+				coerced = coerce( value, queryParameter.getHibernateType() );
+			}
+			else {
+				coerced = value;
 			}
 		}
+		else {
+			coerced = value;
+		}
 
-		validate( value, temporalTypePrecision );
+		validate( coerced, temporalTypePrecision );
 
-		bindValue( value );
+		bindValue( coerced );
 		setExplicitTemporalPrecision( temporalTypePrecision );
 	}
 
@@ -301,10 +321,9 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		this.explicitTemporalPrecision = temporalTypePrecision;
 	}
 
-	private JavaType<? extends T> determineJavaType(BindableType<? extends T> bindType) {
-		final SqmExpressible<? extends T> sqmExpressible = bindType.resolveExpressible( sessionFactory );
+	private JavaType<? super T> determineJavaType(BindableType<? super T> bindType) {
+		final SqmExpressible<? super T> sqmExpressible = bindType.resolveExpressible( sessionFactory );
 		assert sqmExpressible != null;
-
 		return sqmExpressible.getExpressibleJavaType();
 	}
 
@@ -335,15 +354,15 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 		return false;
 	}
 
-	private void validate(T value) {
+	private void validate(Object value) {
 		QueryParameterBindingValidator.INSTANCE.validate( getBindType(), value, sessionFactory );
 	}
 
-	private void validate(T value, BindableType<?> clarifiedType) {
+	private void validate(Object value, BindableType<?> clarifiedType) {
 		QueryParameterBindingValidator.INSTANCE.validate( clarifiedType, value, sessionFactory );
 	}
 
-	private void validate(T value, TemporalType clarifiedTemporalType) {
+	private void validate(Object value, TemporalType clarifiedTemporalType) {
 		QueryParameterBindingValidator.INSTANCE.validate( getBindType(), value, clarifiedTemporalType, sessionFactory );
 	}
 

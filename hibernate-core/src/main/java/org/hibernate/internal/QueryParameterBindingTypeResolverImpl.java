@@ -9,6 +9,10 @@ package org.hibernate.internal;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.EnumJavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.internal.BasicTypeImpl;
 
 import java.io.Serializable;
 
@@ -32,32 +36,52 @@ public abstract class QueryParameterBindingTypeResolverImpl implements QueryPara
 		return getMappingMetamodel().resolveQueryParameterType( javaType );
 	}
 
-	@Override
-	public <T> BindableType<? extends T> resolveParameterBindType(T bindValue) {
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	public <T> BindableType<? super T> resolveParameterBindType(T bindValue) {
 		if ( bindValue == null ) {
 			// we can't guess
 			return null;
 		}
 
-		final LazyInitializer lazyInitializer = extractLazyInitializer( bindValue );
-		final Class<?> clazz = lazyInitializer != null ? lazyInitializer.getPersistentClass() : bindValue.getClass();
+		final Class<T> clazz = unproxiedClass( bindValue );
 
 		// Resolve superclass bindable type if necessary, as we don't register types for e.g. Inet4Address
-		Class<?> c = clazz;
+		Class<? super T> c = clazz;
 		do {
-			final BindableType<?> type = resolveParameterBindType( c );
+			final BindableType<? super T> type = resolveParameterBindType( c );
 			if ( type != null ) {
-				//noinspection unchecked
-				return (BindableType<? extends T>) type;
+				return type;
 			}
 			c = c.getSuperclass();
 		}
 		while ( c != Object.class );
-		if ( !clazz.isEnum() && Serializable.class.isAssignableFrom( clazz ) ) {
-			//noinspection unchecked
-			return (BindableType<? extends T>) resolveParameterBindType( Serializable.class );
+
+		if ( clazz.isEnum() ) {
+			return createEnumType( (Class) clazz );
 		}
-		return null;
+		else if ( Serializable.class.isAssignableFrom( clazz ) ) {
+			return (BindableType<? super T>) resolveParameterBindType( Serializable.class );
+		}
+		else {
+			return null;
+		}
+	}
+
+	private <E extends Enum<E>> BasicType<E> createEnumType(Class<E> enumClass) {
+		final EnumJavaType<E> enumJavaType = new EnumJavaType<>( enumClass );
+		final JdbcType jdbcType =
+				// we don't know whether to map the enum as ORDINAL or STRING,
+				// so just accept the default from the TypeConfiguration, which
+				// is usually ORDINAL (the default according to JPA)
+				enumJavaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
+		return new BasicTypeImpl<>( enumJavaType, jdbcType );
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> Class<T> unproxiedClass(T bindValue) {
+		final LazyInitializer lazyInitializer = extractLazyInitializer( bindValue );
+		final Class<?> result = lazyInitializer != null ? lazyInitializer.getPersistentClass() : bindValue.getClass();
+		return (Class<T>) result;
 	}
 
 }

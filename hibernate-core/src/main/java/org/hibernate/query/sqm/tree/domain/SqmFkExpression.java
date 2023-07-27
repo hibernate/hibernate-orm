@@ -23,10 +23,14 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 public class SqmFkExpression<T> extends AbstractSqmExpression<T> {
 	private final SqmEntityValuedSimplePath<?> toOnePath;
 
+	@SuppressWarnings("unchecked")
 	public SqmFkExpression(SqmEntityValuedSimplePath<?> toOnePath, NodeBuilder criteriaBuilder) {
-		//noinspection unchecked
-		super( (SqmExpressible<? extends T>) ( (IdentifiableDomainType<?>) toOnePath.getNodeType() ).getIdType(), criteriaBuilder );
+		super( (SqmExpressible<? super T>) pathDomainType( toOnePath ).getIdType(), criteriaBuilder );
 		this.toOnePath = toOnePath;
+	}
+
+	private static IdentifiableDomainType<?> pathDomainType(SqmEntityValuedSimplePath<?> toOnePath) {
+		return (IdentifiableDomainType<?>) toOnePath.getNodeType();
 	}
 
 	public SqmEntityValuedSimplePath<?> getToOnePath() {

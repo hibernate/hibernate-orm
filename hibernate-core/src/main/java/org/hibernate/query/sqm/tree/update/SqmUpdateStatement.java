@@ -29,6 +29,8 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.SingularAttribute;
 
+import static org.hibernate.query.sqm.internal.TypecheckUtil.assertAssignable;
+
 /**
  * @author Steve Ebersole
  */
@@ -124,11 +126,18 @@ public class SqmUpdateStatement<T>
 		return this;
 	}
 
-	@Override
+	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public SqmUpdateStatement<T> set(String attributeName, Object value) {
-		//noinspection unchecked
-		final SqmPath<Object> sqmPath = (SqmPath<Object>) getTarget().get( attributeName );
-		applyAssignment( sqmPath, (SqmExpression<?>) nodeBuilder().value( value ) );
+		final SqmPath sqmPath = getTarget().get(attributeName);
+		final SqmExpression expression;
+		if ( value instanceof SqmExpression ) {
+			expression = (SqmExpression) value;
+		}
+		else {
+			expression = (SqmExpression) nodeBuilder().value( value );
+		}
+		assertAssignable( null, sqmPath, expression, nodeBuilder().getSessionFactory() );
+		applyAssignment( sqmPath, expression );
 		return this;
 	}
 

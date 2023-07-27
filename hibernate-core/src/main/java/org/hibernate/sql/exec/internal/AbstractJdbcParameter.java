@@ -93,7 +93,11 @@ public abstract class AbstractJdbcParameter
 			throw new ExecutionException( "JDBC parameter value not bound - " + this );
 		}
 
-		final Object bindValue = binding.getBindValue();
+		final JdbcMapping jdbcMapping = jdbcMapping( executionContext, binding );
+		bindParameterValue( jdbcMapping, statement, binding.getBindValue(), startPosition, executionContext );
+	}
+
+	private JdbcMapping jdbcMapping(ExecutionContext executionContext, JdbcParameterBinding binding) {
 		JdbcMapping jdbcMapping = binding.getBindType();
 
 		if ( jdbcMapping == null ) {
@@ -102,10 +106,14 @@ public abstract class AbstractJdbcParameter
 
 		// If the parameter type is not known from the context i.e. null or Object, infer it from the bind value
 		if ( jdbcMapping == null || jdbcMapping.getMappedJavaType().getJavaTypeClass() == Object.class ) {
-			jdbcMapping = guessBindType( executionContext, bindValue, jdbcMapping );
+			jdbcMapping = guessBindType( executionContext, binding.getBindValue(), jdbcMapping );
 		}
 
-		bindParameterValue( jdbcMapping, statement, bindValue, startPosition, executionContext );
+		if ( jdbcMapping == null ) {
+			throw new ExecutionException( "No JDBC mapping could be inferred for parameter - " + this );
+		}
+
+		return jdbcMapping;
 	}
 
 	protected void bindParameterValue(

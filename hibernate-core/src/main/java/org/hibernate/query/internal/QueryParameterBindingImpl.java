@@ -136,9 +136,6 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 
 		validate( coerced );
 
-		if ( resolveJdbcTypeIfNecessary && bindType == null && value == null ) {
-			bindType = getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( "null" );
-		}
 		bindValue( coerced );
 	}
 
@@ -178,13 +175,12 @@ public class QueryParameterBindingImpl<T> implements QueryParameterBinding<T>, J
 	}
 
 	private void bindValue(Object value) {
-		this.isBound = true;
-		this.bindValue = value;
-
+		isBound = true;
+		bindValue = value;
 		if ( bindType == null ) {
-			if ( value != null ) {
-				this.bindType = sessionFactory.getMappingMetamodel().resolveParameterBindType( value );
-			}
+			bindType = value == null
+					? getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( "null" )
+					: sessionFactory.getMappingMetamodel().resolveParameterBindType( value );
 		}
 	}
 

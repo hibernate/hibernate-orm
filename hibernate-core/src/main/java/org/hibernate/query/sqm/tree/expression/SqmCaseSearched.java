@@ -25,8 +25,8 @@ import jakarta.persistence.criteria.Expression;
 public class SqmCaseSearched<R>
 		extends AbstractSqmExpression<R>
 		implements JpaSearchedCase<R> {
-	private final List<WhenFragment<R>> whenFragments;
-	private SqmExpression<R> otherwise;
+	private final List<WhenFragment<? extends R>> whenFragments;
+	private SqmExpression<? extends R> otherwise;
 
 	public SqmCaseSearched(NodeBuilder nodeBuilder) {
 		this( null, nodeBuilder );
@@ -56,7 +56,7 @@ public class SqmCaseSearched<R>
 						nodeBuilder()
 				)
 		);
-		for ( WhenFragment<R> whenFragment : whenFragments ) {
+		for ( WhenFragment<? extends R> whenFragment : whenFragments ) {
 			caseSearched.whenFragments.add(
 					new WhenFragment<>(
 							whenFragment.predicate.copy( context ),
@@ -71,21 +71,21 @@ public class SqmCaseSearched<R>
 		return caseSearched;
 	}
 
-	public List<WhenFragment<R>> getWhenFragments() {
+	public List<WhenFragment<? extends R>> getWhenFragments() {
 		return whenFragments;
 	}
 
-	public SqmExpression<R> getOtherwise() {
+	public SqmExpression<? extends R> getOtherwise() {
 		return otherwise;
 	}
 
-	public SqmCaseSearched<R> when(SqmPredicate predicate, SqmExpression<R> result) {
+	public SqmCaseSearched<R> when(SqmPredicate predicate, SqmExpression<? extends R> result) {
 		whenFragments.add( new WhenFragment<>( predicate, result ) );
 		applyInferableResultType( result.getNodeType() );
 		return this;
 	}
 
-	public SqmCaseSearched<R> otherwise(SqmExpression<R> otherwiseExpression) {
+	public SqmCaseSearched<R> otherwise(SqmExpression<? extends R> otherwiseExpression) {
 		this.otherwise = otherwiseExpression;
 		applyInferableResultType( otherwiseExpression.getNodeType() );
 		return this;
@@ -97,7 +97,6 @@ public class SqmCaseSearched<R>
 		}
 
 		final SqmExpressible<?> oldType = getExpressible();
-
 		final SqmExpressible<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
 		if ( newType != null && newType != oldType ) {
 			internalApplyInferableType( newType );
@@ -113,9 +112,7 @@ public class SqmCaseSearched<R>
 		}
 
 		if ( whenFragments != null ) {
-			whenFragments.forEach(
-					whenFragment -> whenFragment.getResult().applyInferableType( newType )
-			);
+			whenFragments.forEach( whenFragment -> whenFragment.getResult().applyInferableType( newType ) );
 		}
 	}
 
@@ -150,7 +147,7 @@ public class SqmCaseSearched<R>
 	@Override
 	public void appendHqlString(StringBuilder sb) {
 		sb.append( "case" );
-		for ( WhenFragment<R> whenFragment : whenFragments ) {
+		for ( WhenFragment<? extends R> whenFragment : whenFragments ) {
 			sb.append( " when " );
 			whenFragment.predicate.appendHqlString( sb );
 			sb.append( " then " );
@@ -176,8 +173,7 @@ public class SqmCaseSearched<R>
 
 	@Override
 	public SqmCaseSearched<R> when(Expression<Boolean> condition, Expression<? extends R> result) {
-		//noinspection unchecked
-		when( nodeBuilder().wrap( condition ), (SqmExpression) result );
+		when( nodeBuilder().wrap( condition ), (SqmExpression<? extends R>) result );
 		return this;
 	}
 
@@ -189,8 +185,7 @@ public class SqmCaseSearched<R>
 
 	@Override
 	public SqmExpression<R> otherwise(Expression<? extends R> result) {
-		//noinspection unchecked
-		otherwise( (SqmExpression) result );
+		otherwise( (SqmExpression<? extends R>) result );
 		return this;
 	}
 

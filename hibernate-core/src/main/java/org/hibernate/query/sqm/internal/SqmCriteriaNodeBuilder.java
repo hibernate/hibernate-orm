@@ -1171,7 +1171,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			return new SqmLiteralNull<>( this );
 		}
 		else {
-			final BindableType<? super T> valueParamType = getMappingMetamodel().resolveParameterBindType( value );
+			final BindableType<? super T> valueParamType = getParameterBindType( value );
 			final SqmExpressible<? super T> sqmExpressible =
 					valueParamType == null ? null : valueParamType.resolveExpressible( getSessionFactory() );
 			return new SqmLiteral<>( value, sqmExpressible, this );
@@ -1648,26 +1648,12 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	 * Creates an expression for the value with the given "type inference" information
 	 */
 	public <T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource) {
-		if ( inlineValue( value ) ) {
-			return literal( value, typeInferenceSource );
-		}
-		else {
-			final BindableType<T> bindableType =
-					resolveInferredParameterType( value, typeInferenceSource, getTypeConfiguration() );
-			if ( bindableType == null || isInstance( bindableType, value ) ) {
-				return new ValueBindJpaCriteriaParameter<>( bindableType, value, this );
-			}
-			final T coercedValue =
-					bindableType.resolveExpressible( getSessionFactory() ).getExpressibleJavaType()
-							.coerce( value, this::getTypeConfiguration );
-			if ( isInstance( bindableType, coercedValue ) ) {
-				return new ValueBindJpaCriteriaParameter<>( bindableType, coercedValue, this );
-			}
-			else {
-				// ignore typeInferenceSource and fall back the value type
-				return valueBindJpaCriteriaParameter( value );
-			}
-		}
+		return inlineValue( value ) ? literal( value, typeInferenceSource ) : valueParameter( value, typeInferenceSource );
+	}
+
+	@Override
+	public <T> SqmExpression<T> value(T value) {
+		return inlineValue( value ) ? literal( value ) : valueParameter( value );
 	}
 
 	private <T> boolean isInstance(BindableType<T> bindableType, T value) {
@@ -1699,17 +1685,30 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return value == null ? null : (BasicType<T>) typeConfiguration.getBasicTypeForJavaType( value.getClass() );
 	}
 
-	@Override
-	public <T> SqmExpression<T> value(T value) {
-		return inlineValue( value ) ? literal( value ) : valueBindJpaCriteriaParameter( value );
+	private <T> ValueBindJpaCriteriaParameter<T> valueParameter(T value, SqmExpression<? extends T> typeInferenceSource) {
+		final BindableType<T> bindableType =
+				resolveInferredParameterType( value, typeInferenceSource, getTypeConfiguration() );
+		if ( bindableType == null || isInstance( bindableType, value) ) {
+			return new ValueBindJpaCriteriaParameter<>( bindableType, value, this );
+		}
+		final T coercedValue =
+				bindableType.resolveExpressible( getSessionFactory() ).getExpressibleJavaType()
+						.coerce(value, this::getTypeConfiguration );
+		if ( isInstance( bindableType, coercedValue ) ) {
+			return new ValueBindJpaCriteriaParameter<>( bindableType, coercedValue, this );
+		}
+		else {
+			// ignore typeInferenceSource and fall back the value type
+			return new ValueBindJpaCriteriaParameter<>( getParameterBindType( value ), value, this );
+		}
 	}
 
-	private <T> ValueBindJpaCriteriaParameter<T> valueBindJpaCriteriaParameter(T value) {
-		final BindableType<? super T> type =
-				// don't yet assign a type to enum because we don't know whether it
-				// is mapped STRING or ORDINAL ... let the type be assigned later
-				value instanceof Enum ? null : getMappingMetamodel().resolveParameterBindType( value );
-		return new ValueBindJpaCriteriaParameter<>( type, value, this );
+	private <T> ValueBindJpaCriteriaParameter<T> valueParameter(T value) {
+		return new ValueBindJpaCriteriaParameter<>( getParameterBindType( value ), value, this );
+	}
+
+	private <T> BindableType<? super T> getParameterBindType(T value) {
+		return getMappingMetamodel().resolveParameterBindType( value );
 	}
 
 	private <T> boolean inlineValue(T value) {
@@ -1769,15 +1768,14 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	private <Y> SqmExpression<Y> createNullifFunctionNode(SqmExpression<Y> first, SqmExpression<Y> second) {
-		//noinspection unchecked
-		final ReturnableType<Y> type = (ReturnableType<Y>) highestPrecedenceType(
-				first.getExpressible(),
-				second.getExpressible()
-		).getSqmType();
-
+		final DomainType<? extends Y> type =
+				highestPrecedenceType( first.getExpressible(), second.getExpressible() )
+						.getSqmType();
+		@SuppressWarnings("unchecked")
+		final ReturnableType<Y> resultType = (ReturnableType<Y>) type;
 		return getFunctionDescriptor("nullif").generateSqmExpression(
 				asList( first, second ),
-				type,
+				resultType,
 				getQueryEngine()
 		);
 	}

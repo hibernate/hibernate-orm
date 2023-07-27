@@ -26,8 +26,8 @@ public class SqmCaseSimple<T, R>
 		extends AbstractSqmExpression<R>
 		implements JpaSimpleCase<T, R> {
 	private final SqmExpression<T> fixture;
-	private final List<WhenFragment<T, R>> whenFragments;
-	private SqmExpression<R> otherwise;
+	private final List<WhenFragment<? extends T, ? extends R>> whenFragments;
+	private SqmExpression<? extends R> otherwise;
 
 	public SqmCaseSimple(SqmExpression<T> fixture, NodeBuilder nodeBuilder) {
 		this( fixture, null, nodeBuilder );
@@ -60,7 +60,7 @@ public class SqmCaseSimple<T, R>
 						nodeBuilder()
 				)
 		);
-		for ( SqmCaseSimple.WhenFragment<T, R> whenFragment : whenFragments ) {
+		for ( SqmCaseSimple.WhenFragment<? extends T, ? extends R> whenFragment : whenFragments ) {
 			caseSearched.whenFragments.add(
 					new SqmCaseSimple.WhenFragment<>(
 							whenFragment.checkValue.copy( context ),
@@ -79,21 +79,21 @@ public class SqmCaseSimple<T, R>
 		return fixture;
 	}
 
-	public List<WhenFragment<T,R>> getWhenFragments() {
+	public List<WhenFragment<? extends T,? extends R>> getWhenFragments() {
 		return whenFragments;
 	}
 
-	public SqmExpression<R> getOtherwise() {
+	public SqmExpression<? extends R> getOtherwise() {
 		return otherwise;
 	}
 
-	public void otherwise(SqmExpression<R> otherwiseExpression) {
+	public void otherwise(SqmExpression<? extends R> otherwiseExpression) {
 		this.otherwise = otherwiseExpression;
 
 		applyInferableResultType( otherwiseExpression.getNodeType() );
 	}
 
-	public void when(SqmExpression<T> test, SqmExpression<R> result) {
+	public void when(SqmExpression<? extends T> test, SqmExpression<? extends R> result) {
 		whenFragments.add( new WhenFragment<>( test, result ) );
 
 		applyInferableResultType( result.getNodeType() );
@@ -105,7 +105,6 @@ public class SqmCaseSimple<T, R>
 		}
 
 		final SqmExpressible<?> oldType = getExpressible();
-
 		final SqmExpressible<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
 		if ( newType != null && newType != oldType ) {
 			internalApplyInferableType( newType );
@@ -113,7 +112,7 @@ public class SqmCaseSimple<T, R>
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmExpressible newType) {
+	protected void internalApplyInferableType(SqmExpressible<?> newType) {
 		super.internalApplyInferableType( newType );
 
 		if ( otherwise != null ) {
@@ -164,7 +163,7 @@ public class SqmCaseSimple<T, R>
 	public void appendHqlString(StringBuilder sb) {
 		sb.append( "case " );
 		fixture.appendHqlString( sb );
-		for ( WhenFragment<T, R> whenFragment : whenFragments ) {
+		for ( WhenFragment<? extends T, ? extends R> whenFragment : whenFragments ) {
 			sb.append( " when " );
 			whenFragment.checkValue.appendHqlString( sb );
 			sb.append( " then " );
@@ -208,8 +207,7 @@ public class SqmCaseSimple<T, R>
 
 	@Override
 	public JpaSimpleCase<T, R> when(Expression<? extends T> condition, Expression<? extends R> result) {
-		//noinspection unchecked
-		when( (SqmExpression<T>) condition, (SqmExpression<R>) result );
+		when( (SqmExpression<? extends T>) condition, (SqmExpression<? extends R>) result );
 		return this;
 	}
 
@@ -221,8 +219,7 @@ public class SqmCaseSimple<T, R>
 
 	@Override
 	public JpaSimpleCase<T, R> otherwise(Expression<? extends R> result) {
-		//noinspection unchecked
-		otherwise( (SqmExpression<R>) result );
+		otherwise( (SqmExpression<? extends R>) result );
 		return this;
 	}
 

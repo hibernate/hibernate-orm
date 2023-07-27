@@ -19,6 +19,8 @@ import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
@@ -39,18 +41,19 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 		return (SqmCriteriaNodeBuilder) super.nodeBuilder();
 	}
 
+	private static boolean isEnumType(SqmExpressible<?> newType) {
+		return newType instanceof BasicType
+			&& ((BasicType<?>) newType).getJavaTypeDescriptor() instanceof EnumJavaType;
+	}
+
 	@Override
 	public void applyInferableType(SqmExpressible<?> type) {
-//		if ( type == null ) {
-//			return;
-//		}
-//
-//		final SqmExpressible<?> oldType = getNodeType();
-//
-//		final SqmExpressible<?> newType = highestPrecedenceType( oldType, type );
-//		if ( newType != null && newType != oldType ) {
-//			internalApplyInferableType( newType );
-//		}
+		// we want inferred enum types to override the
+		// default ORDINAL types we assign to enum literals
+		// (this might not be the best place to do this!)
+		if ( isEnumType( type ) && isEnumType( getExpressible() ) ) {
+			setExpressibleType( type );
+		}
 	}
 
 	protected void internalApplyInferableType(SqmExpressible<?> newType) {

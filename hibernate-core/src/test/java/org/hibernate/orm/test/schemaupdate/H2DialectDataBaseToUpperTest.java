@@ -42,7 +42,7 @@ public class H2DialectDataBaseToUpperTest extends BaseUnitTestCase {
 		ssr = new StandardServiceRegistryBuilder()
 				.applySetting(
 						AvailableSettings.URL,
-						"jdbc:h2:mem:databaseToUpper;DATABASE_TO_UPPER=" + databaseToUpper
+						"jdbc:h2:mem:databaseToUpper;DATABASE_TO_UPPER=" + databaseToUpper + ";DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE"
 				)
 				.build();
 		final MetadataSources metadataSources = new MetadataSources( ssr );

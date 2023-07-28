@@ -16,8 +16,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 /**
  * Represents a <em>composite</em> type, a type which itself has typed attributes.
  * <p>
- * For example, a type representing an {@linkplain jakarta.persistence.Embeddable embeddable}
- * class is a composite type.
+ * For example, a type representing an {@linkplain jakarta.persistence.Embeddable embeddable} class
+ * is a composite type, as is a type backed by a {@link org.hibernate.usertype.CompositeUserType}.
  *
  * @author Steve Ebersole
  */
@@ -55,7 +55,8 @@ public interface CompositeType extends Type {
 	 *
 	 * @throws HibernateException Indicates a problem access the property values.
 	 */
-	Object[] getPropertyValues(Object component, SharedSessionContractImplementor session) throws HibernateException;
+	Object[] getPropertyValues(Object component, SharedSessionContractImplementor session)
+			throws HibernateException;
 
 	/**
 	 * Extract the values of the component properties from the given component instance without access to the
@@ -81,7 +82,8 @@ public interface CompositeType extends Type {
 	 *
 	 * @throws HibernateException Indicates a problem access the property value.
 	 */
-	Object getPropertyValue(Object component, int index, SharedSessionContractImplementor session) throws HibernateException;
+	Object getPropertyValue(Object component, int index, SharedSessionContractImplementor session)
+			throws HibernateException;
 
 	/**
 	 * Inject property values onto the given component instance
@@ -94,6 +96,24 @@ public interface CompositeType extends Type {
 	 * @throws HibernateException Indicates an issue performing the injection
 	 */
 	void setPropertyValues(Object component, Object[] values) throws HibernateException;
+
+	/**
+	 * Inject property values onto the given component instance, or return a new
+	 * instance with the given property values.
+	 *
+	 * @param component The component instance
+	 * @param values The values to inject
+	 * @return A new instance is necessary
+	 *
+	 * @throws HibernateException Indicates an issue performing the injection
+	 *
+	 * @since 6.3
+	 */
+	default Object replacePropertyValues(Object component, Object[] values, SharedSessionContractImplementor session)
+			throws HibernateException {
+		setPropertyValues( component, values );
+		return component;
+	}
 
 	/**
 	 * Retrieve the cascade style of the indicated component property.

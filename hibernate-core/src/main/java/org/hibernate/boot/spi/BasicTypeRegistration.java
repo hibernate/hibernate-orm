@@ -28,8 +28,7 @@ public class BasicTypeRegistration {
 	}
 
 	public BasicTypeRegistration(UserType<?> type, String[] keys, TypeConfiguration typeConfiguration) {
-		//noinspection unchecked
-		this( new CustomType<>( (UserType<Object>) type, keys, typeConfiguration ), keys );
+		this( new CustomType<>( type, keys, typeConfiguration ), keys );
 	}
 
 	public BasicType<?> getBasicType() {

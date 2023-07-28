@@ -957,6 +957,7 @@ public abstract class SimpleValue implements KeyValue {
 			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, e );
 		}
 	}
+
 	public DynamicParameterizedType.ParameterType makeParameterImpl() {
 		try {
 			final String[] columnNames = new String[ columns.size() ];

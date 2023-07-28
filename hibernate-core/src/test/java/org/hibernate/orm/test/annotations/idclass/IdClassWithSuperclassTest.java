@@ -61,7 +61,7 @@ public class IdClassWithSuperclassTest {
 		}
 	}
 
-	@Entity
+	@Entity(name = "MyEntity")
 	@IdClass(ChildPrimaryKey.class)
 	public static class MyEntity {
 

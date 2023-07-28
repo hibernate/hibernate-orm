@@ -30,10 +30,12 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 	public LongJavaType() {
 		super( Long.class );
 	}
+
 	@Override
 	public String toString(Long value) {
 		return value == null ? null : value.toString();
 	}
+
 	@Override
 	public Long fromString(CharSequence string) {
 		return Long.valueOf( string.toString() );
@@ -162,7 +164,7 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 	}
 
 	@Override
-	public Class getPrimitiveClass() {
+	public Class<?> getPrimitiveClass() {
 		return long.class;
 	}
 
@@ -209,7 +211,9 @@ public class LongJavaType extends AbstractClassJavaType<Long>
 	@Override
 	public Long seed(
 			Long length,
-			Integer precision, Integer scale, SharedSessionContractImplementor session) {
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
 		return ZERO;
 	}
 

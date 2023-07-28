@@ -573,7 +573,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean isFinderParameterMappingToAttribute(VariableElement param) {
-		return !isSessionParameter( param.asType().toString() );
+		final String type = param.asType().toString();
+		return !isSessionParameter( type )
+			&& !isPageParam( type )
+			&& !isOrderParam( type );
 	}
 
 	private String[] sessionTypeFromParameters(List<String> paramNames, List<String> paramTypes) {
@@ -962,6 +965,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final SqmStatement<?> statement =
 				Validation.validate(
 						hql,
+						returnType,
 						true,
 						new ErrorHandler( context, method, mirror, value, hql),
 						ProcessorSessionFactory.create( context.getProcessingEnvironment() )

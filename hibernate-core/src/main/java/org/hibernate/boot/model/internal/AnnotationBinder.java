@@ -48,6 +48,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
@@ -601,6 +602,8 @@ public final class AnnotationBinder {
 	private static void handleUserTypeRegistration(
 			MetadataBuildingContext context,
 			TypeRegistration compositeTypeRegistration) {
+		// TODO: check that the two classes agree, i.e. that
+		//       the user type knows how to handle the type
 		context.getMetadataCollector().registerUserType(
 				compositeTypeRegistration.basicClass(),
 				compositeTypeRegistration.userType()
@@ -610,6 +613,8 @@ public final class AnnotationBinder {
 	private static void handleCompositeUserTypeRegistration(
 			MetadataBuildingContext context,
 			CompositeTypeRegistration compositeTypeRegistration) {
+		// TODO: check that the two classes agree, i.e. that
+		//       the user type knows how to handle the type
 		context.getMetadataCollector().registerCompositeUserType(
 				compositeTypeRegistration.embeddableClass(),
 				compositeTypeRegistration.userType()
@@ -755,25 +760,21 @@ public final class AnnotationBinder {
 	}
 
 	private static JdbcMapping resolveUserType(Class<UserType<?>> userTypeClass, MetadataBuildingContext context) {
-		final UserType<?> userType;
-		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
-			userType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
-		}
-		else {
-			final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-			final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
-			userType = beanRegistry.getBean( userTypeClass ).getBeanInstance();
-		}
-
+		final UserType<?> userType = context.getBuildingOptions().disallowExtensionsInCdi()
+				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass )
+				: context.getBootstrapContext().getServiceRegistry()
+						.requireService( ManagedBeanRegistry.class )
+						.getBean( userTypeClass ).getBeanInstance();
 		return new CustomType<>( userType, context.getBootstrapContext().getTypeConfiguration() );
 	}
 
 	private static JdbcMapping resolveAttributeConverter(Class<AttributeConverter<?, ?>> type, MetadataBuildingContext context) {
-		final StandardServiceRegistry serviceRegistry = context.getBootstrapContext().getServiceRegistry();
-		final ManagedBeanRegistry beanRegistry = serviceRegistry.getService( ManagedBeanRegistry.class );
+		final BootstrapContext bootstrapContext = context.getBootstrapContext();
+		final ManagedBeanRegistry beanRegistry =
+				bootstrapContext.getServiceRegistry().requireService( ManagedBeanRegistry.class );
 		final ManagedBean<AttributeConverter<?, ?>> bean = beanRegistry.getBean( type );
 
-		final TypeConfiguration typeConfiguration = context.getBootstrapContext().getTypeConfiguration();
+		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
 		final JavaTypeRegistry jtdRegistry = typeConfiguration.getJavaTypeRegistry();
 		final JavaType<? extends AttributeConverter<?,?>> converterJtd = jtdRegistry.resolveDescriptor( bean.getBeanClass() );
 

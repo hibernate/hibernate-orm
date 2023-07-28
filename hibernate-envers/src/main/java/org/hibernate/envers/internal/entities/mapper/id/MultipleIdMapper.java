@@ -14,6 +14,8 @@ import java.util.Map;
 import org.hibernate.Session;
 import org.hibernate.envers.internal.entities.PropertyData;
 import org.hibernate.mapping.Component;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.service.ServiceRegistry;
 
 /**
@@ -25,12 +27,16 @@ import org.hibernate.service.ServiceRegistry;
  */
 public class MultipleIdMapper extends AbstractCompositeIdMapper implements SimpleIdMapperBuilder {
 
+	private final boolean embedded;
+
 	public MultipleIdMapper(Component component) {
 		super( component.getComponentClass(), component.getServiceRegistry() );
+		this.embedded = component.isEmbedded();
 	}
 
-	private MultipleIdMapper(Class<?> compositeIdClass, ServiceRegistry serviceRegistry) {
+	private MultipleIdMapper(boolean embedded, Class<?> compositeIdClass, ServiceRegistry serviceRegistry) {
 		super( compositeIdClass, serviceRegistry );
+		this.embedded = embedded;
 	}
 
 	@Override
@@ -41,6 +47,12 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 	@Override
 	public void mapToMapFromId(Session session, Map<String, Object> data, Object obj) {
 		if ( compositeIdClass.isInstance( obj ) ) {
+			if ( embedded ) {
+				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
+				if ( lazyInitializer != null ) {
+					obj = lazyInitializer.getInternalIdentifier();
+				}
+			}
 			for ( Map.Entry<PropertyData, AbstractIdMapper> entry : ids.entrySet() ) {
 				final PropertyData propertyData = entry.getKey();
 				final AbstractIdMapper idMapper = entry.getValue();
@@ -67,6 +79,12 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 
 	@Override
 	public void mapToMapFromEntity(Map<String, Object> data, Object obj) {
+		if ( embedded ) {
+			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( obj );
+			if ( lazyInitializer != null ) {
+				obj = lazyInitializer.getInternalIdentifier();
+			}
+		}
 		for ( IdMapper idMapper : ids.values() ) {
 			idMapper.mapToMapFromEntity( data, obj );
 		}
@@ -84,7 +102,7 @@ public class MultipleIdMapper extends AbstractCompositeIdMapper implements Simpl
 
 	@Override
 	public IdMapper prefixMappedProperties(String prefix) {
-		final MultipleIdMapper ret = new MultipleIdMapper( compositeIdClass, getServiceRegistry() );
+		final MultipleIdMapper ret = new MultipleIdMapper( embedded, compositeIdClass, getServiceRegistry() );
 
 		for ( PropertyData propertyData : ids.keySet() ) {
 			final String propertyName = propertyData.getName();

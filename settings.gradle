@@ -19,8 +19,8 @@ pluginManagement {
 
 plugins {
     id 'org.hibernate.orm.build.env-settings'
-    id 'com.gradle.enterprise' version '3.13.4'
-    id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.11'
+    id 'com.gradle.enterprise' version '3.14'
+    id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.11.1'
 }
 
 // version catalog support
@@ -60,7 +60,7 @@ dependencyResolutionManagement {
             version( "antlr", "4.10.1" )
             version( "hcann", "6.0.6.Final" )
             version( "geolatte", "1.8.2" )
-            version( "byteBuddy", "1.12.18" )
+            version( "byteBuddy", "1.12.23" )
             version( "agroal", "2.0" )
             version( "c3po", "0.9.5.5" )
             version( "hikaricp", "3.2.0" )

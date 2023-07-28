@@ -25,6 +25,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @DomainModel(
 		annotatedClasses = {
@@ -137,6 +138,7 @@ public class EntityWithLazyManyToOneTest {
 	}
 
 	@Entity(name = "LazyAbstractEntityReference")
+	@Table(name = "lazy_abstract_ent_ref")
 	@Cacheable
 	public static class LazyAbstractEntityReference {
 
@@ -172,6 +174,7 @@ public class EntityWithLazyManyToOneTest {
 	}
 
 	@Entity(name = "LazyConcreteEntityReference")
+	@Table(name = "lazy_concrete_ent_ref")
 	@Cacheable
 	public static class LazyConcreteEntityReference {
 

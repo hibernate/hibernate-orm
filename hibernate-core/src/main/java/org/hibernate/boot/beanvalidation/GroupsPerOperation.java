@@ -22,7 +22,7 @@ import jakarta.validation.groups.Default;
  */
 public class GroupsPerOperation {
 	private static final String JPA_GROUP_PREFIX = "javax.persistence.validation.group.";
-	private static final String JAKARTA_JPA_GROUP_PREFIX = "javax.persistence.validation.group.";
+	private static final String JAKARTA_JPA_GROUP_PREFIX = "jakarta.persistence.validation.group.";
 	private static final String HIBERNATE_GROUP_PREFIX = "org.hibernate.validator.group.";
 
 	private static final Class<?>[] DEFAULT_GROUPS = new Class<?>[] { Default.class };
@@ -92,7 +92,7 @@ public class GroupsPerOperation {
 		}
 
 		//null is bad and excluded by instanceof => exception is raised
-		throw new HibernateException( JAKARTA_JPA_GROUP_PREFIX + operation.getGroupPropertyName() + " is of unknown type: String or Class<?>[] only");
+		throw new HibernateException( JAKARTA_JPA_GROUP_PREFIX + operation.getJakartaGroupPropertyName() + " is of unknown type: String or Class<?>[] only");
 	}
 
 	public Class<?>[] get(Operation operation) {

@@ -245,6 +245,9 @@ tasks.withType( Test.class ).each { test ->
     test.jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
     test.jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
 
+    //Avoid Log4J2 classloader leaks:
+    test.jvmArgs( ['-Dlog4j2.disableJmx=true'] )
+
     test.beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }

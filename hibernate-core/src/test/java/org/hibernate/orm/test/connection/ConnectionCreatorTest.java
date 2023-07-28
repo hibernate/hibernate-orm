@@ -46,7 +46,7 @@ public class ConnectionCreatorTest extends BaseUnitTestCase {
 						Collections.emptyList(),
 						Collections.emptyMap()
 				),
-				"jdbc:h2:mem:test-bad-urls;nosuchparam=saywhat",
+				"jdbc:h2:mem:test-bad-urls;nosuchparam=saywhat;DB_CLOSE_ON_EXIT=FALSE",
 				new Properties(),
 				false,
 				null,

@@ -36,6 +36,11 @@ public interface ExecutionContext {
 
 	Callback getCallback();
 
+	default boolean hasCallbackActions() {
+		final Callback callback = getCallback();
+		return callback != null && callback.hasAfterLoadActions();
+	}
+
 	String getQueryIdentifier(String sql);
 
 	/**

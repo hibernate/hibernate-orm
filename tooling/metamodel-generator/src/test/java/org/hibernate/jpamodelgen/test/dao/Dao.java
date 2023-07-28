@@ -5,6 +5,8 @@ import jakarta.persistence.TypedQuery;
 import org.hibernate.annotations.processing.Find;
 import org.hibernate.annotations.processing.HQL;
 import org.hibernate.annotations.processing.SQL;
+import org.hibernate.query.Order;
+import org.hibernate.query.Page;
 import org.hibernate.query.SelectionQuery;
 
 import java.util.List;
@@ -35,7 +37,13 @@ public interface Dao {
     List<Book> getBooksFetching(String title);
 
     @Find
+    List<Book> getBooks(String title, Page page, Order<Book> order);
+
+    @Find
     SelectionQuery<Book> createBooksSelectionQuery(String title);
+
+    @HQL("where title like ?1")
+    List<Book> findBooksByTitle(String title);
 
     @HQL("from Book where title like ?1")
     TypedQuery<Book> findByTitle(String title);

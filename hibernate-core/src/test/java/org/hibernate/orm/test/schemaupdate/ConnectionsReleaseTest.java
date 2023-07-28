@@ -45,7 +45,7 @@ public class ConnectionsReleaseTest extends BaseUnitTestCase {
 	public static Properties getConnectionProviderProperties() {
 		Properties props = new Properties();
 		props.put( Environment.DRIVER, "org.h2.Driver" );
-		props.put( Environment.URL, String.format( "jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1", "db1" ) );
+		props.put( Environment.URL, String.format( "jdbc:h2:mem:%s;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE", "db1" ) );
 		props.put( Environment.USER, "sa" );
 		props.put( Environment.PASS, "" );
 		return props;

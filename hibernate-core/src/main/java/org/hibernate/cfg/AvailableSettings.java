@@ -872,6 +872,10 @@ public interface AvailableSettings {
 	 *     <li>{@value org.hibernate.id.enhanced.LegacyNamingStrategy#STRATEGY_NAME}</li>
 	 *     <li>{@value org.hibernate.id.enhanced.StandardNamingStrategy#STRATEGY_NAME}</li>
 	 * </ul>
+	 * <p>
+	 * By default, {@link org.hibernate.id.enhanced.StandardNamingStrategy} is used.
+	 *
+	 * @since 6
 	 *
 	 * @see ImplicitDatabaseObjectNamingStrategy
 	 */
@@ -2391,38 +2395,61 @@ public interface AvailableSettings {
 	String MERGE_ENTITY_COPY_OBSERVER = "hibernate.event.merge.entity_copy_observer";
 
 	/**
-	 * By default, {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria}
-	 * queries use bind parameters for any value passed via the JPA Criteria API.
+	 * By default, a {@linkplain jakarta.persistence.criteria.CriteriaBuilder criteria
+	 * query} produces SQL with a JDBC bind parameter for any value specified via the
+	 * criteria query API, except when the value is passed via
+	 * {@link jakarta.persistence.criteria.CriteriaBuilder#literal(Object)}, in which
+	 * case the value is "inlined" as a SQL literal.
+	 * <p>
+	 * This setting may be used to override this default behavior:
 	 * <ul>
-	 *     <li>The {@link org.hibernate.query.criteria.ValueHandlingMode#BIND "bind"}
-	 *     mode uses bind variables for any literal value.
-	 *     <li>The {@link org.hibernate.query.criteria.ValueHandlingMode#INLINE "inline"}
+	 *     <li>the {@link org.hibernate.query.criteria.ValueHandlingMode#BIND "bind"}
+	 *     mode uses bind parameters to pass such values to JDBC, but
+	 *     <li>the {@link org.hibernate.query.criteria.ValueHandlingMode#INLINE "inline"}
 	 *     mode inlines values as SQL literals.
 	 * </ul>
 	 * <p>
-	 * The default value is {@link org.hibernate.query.criteria.ValueHandlingMode#BIND}.
+	 * In both modes:
+	 * <ul>
+	 * <li>values specified using {@code literal()} are inlined, and
+	 * <li>values specified using
+	 *     {@link jakarta.persistence.criteria.CriteriaBuilder#parameter(Class)} to create a
+	 *     {@link jakarta.persistence.criteria.ParameterExpression criteria parameter} and
+	 *     {@link jakarta.persistence.Query#setParameter(jakarta.persistence.Parameter,Object)}
+	 *     to specify its argument are passed to JDBC using a bind parameter.
+	 * </ul>
+	 * <p>
+	 * The default mode is {@link org.hibernate.query.criteria.ValueHandlingMode#BIND}.
 	 *
 	 * @since 6.0.0
 	 *
 	 * @see org.hibernate.query.criteria.ValueHandlingMode
+	 * @see jakarta.persistence.criteria.CriteriaBuilder#literal(Object)
+	 * @see jakarta.persistence.criteria.CriteriaBuilder#parameter(Class)
+	 * @see org.hibernate.query.criteria.HibernateCriteriaBuilder#value(Object)
 	 */
 	String CRITERIA_VALUE_HANDLING_MODE = "hibernate.criteria.value_handling_mode";
 
 	/**
 	 * When enabled, specifies that {@linkplain org.hibernate.query.Query queries}
-	 * created through {@link jakarta.persistence.EntityManager#createQuery(CriteriaQuery)},
+	 * created via {@link jakarta.persistence.EntityManager#createQuery(CriteriaQuery)},
 	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaUpdate)} or
-	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaDelete)}
-	 * must create a copy of the passed object such that the resulting {@link jakarta.persistence.Query}
-	 * is not affected by any mutations to the original criteria query.
+	 * {@link jakarta.persistence.EntityManager#createQuery(CriteriaDelete)} must
+	 * create a copy of the passed criteria query object such that the resulting
+	 * {@link jakarta.persistence.Query} object is not affected by mutation of the
+	 * original {@linkplain CriteriaQuery criteria query}.
 	 * <p>
-	 * If disabled, it is assumed that users do not mutate the criteria query afterwards
-	 * and due to that, no copy will be created, which will improve performance.
+	 * If disabled, it's assumed that the client does not mutate the criteria query
+	 * after calling {@code createQuery()}. Thus, in the interest of performance, no
+	 * copy is created.
 	 * <p>
-	 * When bootstrapping Hibernate through the native bootstrap APIs this setting is disabled
-	 * i.e. no copies are created to not hurt performance.
-	 * When bootstrapping Hibernate through the JPA SPI this setting is enabled.
-	 * When enabled, criteria query objects are copied, as required by the Jakarta Persistence specification.
+	 * The default behavior depends on how Hibernate is bootstrapped:
+	 * <ul>
+	 * <li>When bootstrapping Hibernate through the native bootstrap APIs, this setting
+	 *     is disabled, that is, no copy of the criteria query object is made.
+	 * <li>When bootstrapping Hibernate through the JPA SPI, this setting is enabled so
+	 *     that criteria query objects are copied, as required by the JPA specification.
+	 * </ul>
 	 *
 	 * @since 6.0
 	 */

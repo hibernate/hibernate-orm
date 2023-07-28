@@ -36,4 +36,6 @@ public interface Callback {
 	default void invokeAfterLoadActions(SharedSessionContractImplementor session, Object entity, org.hibernate.persister.entity.Loadable persister) {
 		invokeAfterLoadActions( entity, persister, session );
 	}
+
+	boolean hasAfterLoadActions();
 }

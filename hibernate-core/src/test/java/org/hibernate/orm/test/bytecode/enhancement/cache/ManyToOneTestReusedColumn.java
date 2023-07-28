@@ -112,7 +112,7 @@ public class ManyToOneTestReusedColumn extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	@Entity
+	@Entity(name = "Fridge")
 	@Cacheable
 	@Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 	public static class Fridge {
@@ -145,7 +145,7 @@ public class ManyToOneTestReusedColumn extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Container")
 	@BatchSize(size = 500)
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	@Cacheable
@@ -177,7 +177,7 @@ public class ManyToOneTestReusedColumn extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "FruitContainer")
 	@DiscriminatorValue(value = "FRUIT_CONTAINER")
 	public static class FruitContainer extends Container {
 		@ManyToOne
@@ -194,7 +194,7 @@ public class ManyToOneTestReusedColumn extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "CheeseContainer")
 	@DiscriminatorValue(value = "CHEESE_CONTAINER")
 	public static class CheeseContainer extends Container {
 		@ManyToOne
@@ -211,7 +211,7 @@ public class ManyToOneTestReusedColumn extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Food")
 	@BatchSize(size = 500)
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	@Cacheable
@@ -232,7 +232,7 @@ public class ManyToOneTestReusedColumn extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Fruit")
 	@BatchSize(size = 500)
 	@DiscriminatorValue(value = "FRUIT")
 	public static class Fruit extends Food {
@@ -249,7 +249,7 @@ public class ManyToOneTestReusedColumn extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Cheese")
 	@BatchSize(size = 500)
 	@DiscriminatorValue(value = "CHEESE")
 	public static class Cheese extends Food {

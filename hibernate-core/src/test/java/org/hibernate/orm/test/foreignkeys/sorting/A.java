@@ -9,7 +9,6 @@ package org.hibernate.orm.test.foreignkeys.sorting;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToOne;
 
@@ -19,7 +18,7 @@ import jakarta.persistence.ManyToOne;
 @Entity
 public class A {
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@GeneratedValue
 	private int id;
 
 	@ManyToOne(cascade = CascadeType.PERSIST)

@@ -16,6 +16,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -88,7 +89,8 @@ public class LazyManyToOneNoProxyTest extends BaseCoreFunctionalTestCase {
 		);
 	}
 
-	@Entity
+	@Entity(name = "User")
+	@Table(name = "usr_tbl")
 	@Proxy(lazy = false)
 	public static class User {
 		@Id
@@ -122,7 +124,7 @@ public class LazyManyToOneNoProxyTest extends BaseCoreFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "UserGroup")
 	@Proxy(lazy = false)
 	public static class UserGroup {
 		@Id

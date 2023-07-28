@@ -110,7 +110,7 @@ public class RemoveEntityTest {
 	public static class EmployeeEntity {
 
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		@Column(name = "ID")
 		private Integer employeeId;
 

@@ -40,7 +40,7 @@ stage('Configure') {
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
 		// Long running databases
 		new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true ),
-		new BuildEnvironment( dbName: 'cockroachdb_21_2', node: 'cockroachdb', longRunning: true ),
+		new BuildEnvironment( dbName: 'cockroachdb_22_1', node: 'cockroachdb', longRunning: true ),
 		new BuildEnvironment( dbName: 'cockroachdb_23_1', node: 'cockroachdb', longRunning: true ),
 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true )
 	];

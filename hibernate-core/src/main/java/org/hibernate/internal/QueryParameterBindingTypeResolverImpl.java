@@ -9,10 +9,6 @@ package org.hibernate.internal;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.spi.QueryParameterBindingTypeResolver;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.EnumJavaType;
-import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.internal.BasicTypeImpl;
 
 import java.io.Serializable;
 
@@ -36,7 +32,7 @@ public abstract class QueryParameterBindingTypeResolverImpl implements QueryPara
 		return getMappingMetamodel().resolveQueryParameterType( javaType );
 	}
 
-	@Override @SuppressWarnings({"rawtypes", "unchecked"})
+	@Override @SuppressWarnings("unchecked")
 	public <T> BindableType<? super T> resolveParameterBindType(T bindValue) {
 		if ( bindValue == null ) {
 			// we can't guess
@@ -57,7 +53,7 @@ public abstract class QueryParameterBindingTypeResolverImpl implements QueryPara
 		while ( c != Object.class );
 
 		if ( clazz.isEnum() ) {
-			return null;//createEnumType( (Class) clazz );
+			return null; //createEnumType( (Class) clazz );
 		}
 		else if ( Serializable.class.isAssignableFrom( clazz ) ) {
 			return (BindableType<? super T>) resolveParameterBindType( Serializable.class );
@@ -65,16 +61,6 @@ public abstract class QueryParameterBindingTypeResolverImpl implements QueryPara
 		else {
 			return null;
 		}
-	}
-
-	private <E extends Enum<E>> BasicType<E> createEnumType(Class<E> enumClass) {
-		final EnumJavaType<E> enumJavaType = new EnumJavaType<>( enumClass );
-		final JdbcType jdbcType =
-				// we don't know whether to map the enum as ORDINAL or STRING,
-				// so just accept the default from the TypeConfiguration, which
-				// is usually ORDINAL (the default according to JPA)
-				enumJavaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
-		return new BasicTypeImpl<>( enumJavaType, jdbcType );
 	}
 
 	@SuppressWarnings("unchecked")

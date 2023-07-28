@@ -16,6 +16,7 @@ import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SqlExpressible;
+import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.query.BindableType;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -27,7 +28,10 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.java.EnumJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -133,8 +137,25 @@ public abstract class AbstractJdbcParameter
 			final BindableType<?> parameterType =
 					executionContext.getSession().getFactory().getMappingMetamodel()
 							.resolveParameterBindType( bindValue );
-			return parameterType instanceof JdbcMapping ? (JdbcMapping) parameterType : null;
+			if ( parameterType == null && bindValue instanceof Enum ) {
+				return createEnumType( executionContext, (Class) bindValue.getClass() );
+			}
+			else {
+				return parameterType instanceof JdbcMapping ? (JdbcMapping) parameterType : null;
+			}
 		}
+	}
+
+	private static <E extends Enum<E>> BasicTypeImpl<E> createEnumType(ExecutionContext executionContext, Class<E> enumClass) {
+		final EnumJavaType<E> enumJavaType = new EnumJavaType<>( enumClass );
+		final JdbcTypeIndicators indicators =
+				executionContext.getSession().getTypeConfiguration().getCurrentBaseSqlTypeIndicators();
+		final JdbcType jdbcType =
+				// we don't know whether to map the enum as ORDINAL or STRING,
+				// so just accept the default from the TypeConfiguration, which
+				// is usually ORDINAL (the default according to JPA)
+				enumJavaType.getRecommendedJdbcType(indicators);
+		return new BasicTypeImpl<>( enumJavaType, jdbcType );
 	}
 
 	@Override

@@ -2037,7 +2037,7 @@ public class FunctionTests {
 				session -> {
 					session.createSelectionQuery("from EntityOfBasics where gender is null").getResultList();
 					session.createSelectionQuery("from EntityOfBasics e where e.gender is null").getResultList();
-//					session.createSelectionQuery("from EntityOfBasics where :gender is null").setParameter("gender", EntityOfBasics.Gender.MALE).getResultList();
+					session.createSelectionQuery("from EntityOfBasics where :gender is null").setParameter("gender", EntityOfBasics.Gender.MALE).getResultList();
 				}
 		);
 	}

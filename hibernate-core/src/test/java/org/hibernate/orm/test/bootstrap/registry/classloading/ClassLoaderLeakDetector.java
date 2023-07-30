@@ -38,6 +38,11 @@ public final class ClassLoaderLeakDetector {
 		return PhantomReferenceLeakDetector.verifyActionNotLeaking( () -> actionInClassloader( fullClassnameOfRunnableAction ) );
 	}
 
+	static boolean verifyActionNotLeakingClassloader(String fullClassnameOfRunnableAction, final int gcAttempts, final int totalWaitSeconds) {
+		Objects.requireNonNull( fullClassnameOfRunnableAction );
+		return PhantomReferenceLeakDetector.verifyActionNotLeaking( () -> actionInClassloader( fullClassnameOfRunnableAction ), gcAttempts, totalWaitSeconds );
+	}
+
 	public static ClassLoader actionInClassloader(final String actionName) {
 		final Thread currentThread = Thread.currentThread();
 		final ClassLoader initialClassloader = currentThread.getContextClassLoader();

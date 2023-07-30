@@ -74,7 +74,7 @@ public final class PhantomReferenceLeakDetector {
 	/**
 	 * Exposed for self-testing w/o having to wait for the regular timeout
 	 */
-	static <T> boolean verifyActionNotLeaking(Supplier<T> action, final int gcAttempts, final int totalWaitSeconds ) {
+	static <T> boolean verifyActionNotLeaking(Supplier<T> action, final int gcAttempts, final int totalWaitSeconds) {
 		T criticalReference = action.get();
 		final ReferenceQueue<T> referenceQueue = new ReferenceQueue<>();
 		final PhantomReference<T> reference = new PhantomReference<>( criticalReference, referenceQueue );

@@ -1,9 +1,12 @@
+:bootstrap-native-url: {doc-user-guide-url}#bootstrap-native
+:entity-model-url: {doc-user-guide-url}#entity
+
 [[tutorial_annotations]]
 == Tutorial using native Hibernate APIs
 
 .Objectives
 - [*] Configure Hibernate using `hibernate.properties`
-- [*] Create a `SessionFactory` using `org.hibernate.boot`
+- [*] Create a `SessionFactory` using link:{bootstrap-native-url}[native bootstrapping]
 - [*] Use annotations to provide mapping information
 - [*] Use `Session` to persist and query data
 
@@ -73,6 +76,9 @@ Observe that:
 - The no-argument constructor, which is also a JavaBean convention, _is_ a requirement for all persistent classes.
   Hibernate needs to instantiate objects for you, using Java Reflection.
   The constructor should have package-private or `public` visibility, to allow Hibernate to generate proxies and optimized code for field access.
+
+[NOTE]
+The link:{entity-model-url}[Entity types] section of the User Guide covers the complete set of requirements for the entity class.
 
 We use annotations to identify the class as an entity, and to map it to the relational schema.
 
@@ -205,4 +211,5 @@ sessionFactory.inTransaction(session -> {
 - [ ] Actually run this example to see the SQL executed by Hibernate displayed in the console.
 - [ ] Reconfigure the examples to connect to your own persistent relational database.
 - [ ] Add an association to the `Event` entity to model a message thread.
-  See the _Introduction to Hibernate 6_ for details.
+
+// force the break

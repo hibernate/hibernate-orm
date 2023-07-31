@@ -1,22 +1,15 @@
-:pdf-theme: ../pdf/theme.yml
-:source-highlighter: rouge
-:icons: font
-:doctype: book
-:pdf-fontsdir: ../pdf/fonts
-:docsBase: https://docs.jboss.org/hibernate/orm
-:versionDocBase: {docsBase}/6.2
-:userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
+:shared-attributes-dir: ../shared/
 
-:root-project-dir: ../../../../..
-:testing-project-dir: {root-project-dir}/hibernate-testing
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
-:core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
 :extrasdir: extras
 
-= A guide to Hibernate Query Language 6
-Gavin King and the Hibernate team
-:title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
+= A Guide to Hibernate Query Language
 :toc:
 :toclevels: 3
 

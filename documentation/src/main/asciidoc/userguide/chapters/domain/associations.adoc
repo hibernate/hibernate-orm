@@ -540,7 +540,7 @@ Neither result includes a match for "John Doe" because the inner-join filters ou
 Hibernate does support a means to refer specifically to the key column (`Person.cityName`) in a query
 using the special `fk(..)` function.  E.g.
 
-[[associations-not-found-implicit-join-example]]
+[[associations-not-found-fk-function-example]]
 .Implicit join example
 ====
 [source,java]

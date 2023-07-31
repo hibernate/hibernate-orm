@@ -3,9 +3,10 @@
 :icons: font
 :doctype: book
 :pdf-fontsdir: ../../pdf/fonts
-:hibernate-version-family: 6.3
+// NOTE : majorMinorVersion is injected by the build and will override this value
+:majorMinorVersion: 6.3
 :doc-base-url: https://docs.jboss.org/hibernate/orm/
-:version-doc-base-url: {doc-base-url}/{hibernate-version-family}
+:version-doc-base-url: {doc-base-url}/{majorMinorVersion}
 :user-guide-url: {version-doc-base-url}/userguide/html_single/Hibernate_User_Guide.html
 :introduction-url: {version-doc-base-url}/introduction/html_single/Hibernate_Introduction.html
 

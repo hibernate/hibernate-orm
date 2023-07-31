@@ -1,11 +1,15 @@
-= Hibernate ORM {majorMinorVersion} Integration Guide
-Steve Ebersole, Vlad Mihalcea
+= Hibernate ORM Integration Guide
 :toc:
 :toclevels: 3
-
-include::Preface.adoc[]
-
 :numbered:
 
+This guide is for software developers and architects who will be
+
+- integrating Hibernate with Java EE application servers, Spring framework, caching solutions (e.g. Infinispan, Ehcache, Hazelcast).
+- supplying custom integrations
+
+
 include::chapters/services/Services.adoc[]
+
+include::credits.adoc[]
 

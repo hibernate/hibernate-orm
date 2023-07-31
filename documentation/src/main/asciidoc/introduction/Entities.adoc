@@ -75,7 +75,7 @@ We won't have much more to say about XML-based mappings in this Introduction, si
 
 ."Dynamic" models
 ****
-:maps: {userGuideBase}#dynamic-model
+:maps: {doc-user-guide-url}#dynamic-model
 :envers: https://hibernate.org/orm/envers/
 We love representing entities as classes because the classes give us a _type-safe_ model of our data.
 But Hibernate also has the ability to represent entities as detyped instances of `java.util.Map`.

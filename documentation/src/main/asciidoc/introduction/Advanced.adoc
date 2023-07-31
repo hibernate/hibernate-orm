@@ -119,7 +119,7 @@ This is completely by design and is not in any way a bug.
 More than one filter may be enabled in a given session.
 
 :envers: https://hibernate.org/orm/envers/
-:envers-doc: {userGuideBase}#envers
+:envers-doc: {doc-user-guide-url}#envers
 
 We've mentioned that a filter can be used to implement versioning, and to provide _historical_ views of the data.
 Being such a general-purpose construct, filters provide a lot of flexibility here.
@@ -592,7 +592,7 @@ Point event =
                 .getSingleResult();
 ----
 
-:matrix: {userGuideBase}#spatial-configuration-dialect-features
+:matrix: {doc-user-guide-url}#spatial-configuration-dialect-features
 
 Here, `within()` is one of the functions for testing spatial relations defined by the OpenGIS specification.
 Other such functions include `touches()`, `intersects()`, `distance()`, `boundary()`, etc.
@@ -806,7 +806,7 @@ Check constraints and foreign key constraints can help ensure that a row never c
 [[bytecode-enhancer]]
 === Using the bytecode enhancer
 
-:enhancer: {userGuideBase}#BytecodeEnhancement
+:enhancer: {doc-user-guide-url}#BytecodeEnhancement
 
 Hibernate's {enhancer}[bytecode enhancer] enables the following features:
 

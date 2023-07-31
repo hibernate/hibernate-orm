@@ -1,11 +1,14 @@
-= Hibernate ORM {fullVersion} User Guide
-Vlad Mihalcea, Steve Ebersole, Andrea Boriero, Gunnar Morling, Gail Badner, Chris Cranford, Emmanuel Bernard, Sanne Grinovero, Brett Meyer, Hardy Ferentschik, Gavin King, Christian Bauer, Max Rydahl Andersen, Karel Maesen, Radim Vansa, Louis Jacomet
+:shared-attributes-dir: ../shared/
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
+= Hibernate ORM User Guide
 :toc2:
 :toclevels: 3
 :sectanchors:
-:documentation-project-dir: ../../../..
-:root-project-dir: {documentation-project-dir}/..
-
 
 include::Preface.adoc[]
 
@@ -44,6 +47,8 @@ include::appendices/Legacy_Bootstrap.adoc[]
 include::appendices/Legacy_DomainModel.adoc[]
 include::appendices/LegacyBasicTypeResolution.adoc[]
 include::appendices/Legacy_Native_Queries.adoc[]
+
+include::Credits.adoc[]
 
 include::ConfigPropertyList.adoc[]
 include::Bibliography.adoc[]

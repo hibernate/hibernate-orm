@@ -512,7 +512,7 @@ It's not necessary to dirty-check on entity instance in read-only mode.
 [[queries]]
 === Queries
 
-:hql: {userGuideBase}#query-language
+:hql: {doc-user-guide-url}#query-language
 
 Hibernate features three complementary ways to write queries:
 
@@ -523,7 +523,7 @@ Hibernate features three complementary ways to write queries:
 [[hql-queries]]
 === HQL queries
 
-:hql: {userGuideBase}#query-language
+:hql: {doc-user-guide-url}#query-language
 
 A full discussion of the query language would require just as much text as the rest of this Introduction.
 Fortunately, HQL is already described in exhaustive (and exhausting) detail in _A guide to Hibernate Query Language 6_.

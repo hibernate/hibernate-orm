@@ -1,13 +1,12 @@
-:pdf-theme: ../pdf/theme.yml
-:source-highlighter: rouge
-:icons: font
-:doctype: book
-:pdf-fontsdir: ../pdf/fonts
-:docsBase: https://docs.jboss.org/hibernate/orm
-:versionDocBase: {docsBase}/6.3
-:userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
+:shared-attributes-dir: ../shared/
 
-= A Guide to Hibernate 6
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
+
+= An Introduction to Hibernate 6
 :title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :toclevels: 3

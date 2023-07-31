@@ -1,10 +1,14 @@
+:shared-attributes-dir: ../shared/
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
 = Hibernate ORM User Guide
 :toc2:
 :toclevels: 3
 :sectanchors:
-:documentation-project-dir: ../../../..
-:root-project-dir: {documentation-project-dir}/..
-
 
 include::Preface.adoc[]
 

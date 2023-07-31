@@ -10,7 +10,7 @@ We've actually already seen its handiwork in the code examples <<main-jpa,earlie
 ****
 
 :generator: https://hibernate.org/orm/tooling/
-:generator-guide: {userGuideBase}#tooling-modelgen
+:generator-guide: {doc-user-guide-url}#tooling-modelgen
 
 Hibernate's {generator}[Metamodel Generator] is an annotation processor that produces what JPA calls a _static metamodel_.
 That is, it produces a typed model of the persistent classes in our program, giving us a type-safe way to refer to their attributes in Java code.

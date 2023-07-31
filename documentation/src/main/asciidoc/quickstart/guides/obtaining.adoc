@@ -15,7 +15,7 @@ We can declare a dependency on this artifact using https://www.gradle.org[Gradle
 [source,groovy]
 ----
 dependencies {
-  implementation 'org.hibernate.orm:hibernate-core:6.3.0.Final'
+  implementation "org.hibernate.orm:hibernate-core:6.3.0.Final"
 }
 ----
 
@@ -65,3 +65,46 @@ transitive dependencies based on the features being used or not.
 |hibernate-testing| A series of JUnit extensions for testing Hibernate ORM functionality
 |===
 
+[[platform]]
+=== Platform / BOM
+
+Hibernate also provides a platform (BOM in Maven terminology) module which can be used to align versions of the Hibernate modules along with the versions of its libraries.  The platform artifact is named `hibernate-platform`.
+
+To apply the platform in Gradle
+
+[source,groovy]
+----
+dependencies {
+  implementation platform "org.hibernate.orm:hibernate-platform:6.3.0.Final"
+
+  // use the versions from the platform
+  implementation "org.hibernate.orm:hibernate-core"
+  implementation "jakarta.transaction:jakarta.transaction-api"
+}
+----
+
+See the https://docs.gradle.org/current/userguide/java_platform_plugin.html#sec:java_platform_consumption[Gradle documentation] for capabilities of applying a platform.
+
+To apply the platform (BOM) in Maven
+
+[source,xml]
+----
+<dependency>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-core</artifactId>
+</dependency>
+<dependency>
+    <groupId>jakarta.transaction</groupId>
+    <artifactId>jakarta.transaction-api</artifactId>
+</dependency>
+
+<dependencyManagement>
+  <dependency>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-platform</artifactId>
+    <version>6.3.0.Final</version>
+    <type>pom</type>
+    <scope>import</scope>
+  </dependency>
+</dependencyManagement>
+----

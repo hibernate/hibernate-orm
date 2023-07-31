@@ -441,7 +441,7 @@ public abstract class AbstractManagedType<J>
 			return attribute;
 		}
 		else if ( getSuperType() != null ) {
-			return getSuperType().findDeclaredPluralAttribute( name );
+			return getSuperType().findPluralAttribute( name );
 		}
 		else {
 			return null;

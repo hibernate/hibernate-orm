@@ -7,7 +7,6 @@
 package org.hibernate.community.dialect;
 
 import org.hibernate.dialect.DialectDelegateWrapper;
-import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
@@ -245,8 +244,8 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 	}
 
 	@Override
-	public MySQLDialect getDialect() {
-		return (MySQLDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
+	public MySQLLegacyDialect getDialect() {
+		return (MySQLLegacyDialect) DialectDelegateWrapper.extractRealDialect( super.getDialect() );
 	}
 
 	@Override

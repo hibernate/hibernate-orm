@@ -1,8 +1,10 @@
-:pdf-theme: ../../pdf/theme.yml
+:asciidoc-dir: ../..
+:style-dir: {asciidoc-dir}/../style
+:pdf-theme: {style-dir}/pdf/theme.yml
 :source-highlighter: rouge
 :icons: font
 :doctype: book
-:pdf-fontsdir: ../../pdf/fonts
+:pdf-fontsdir: {style-dir}/pdf/fonts
 // NOTE : majorMinorVersion is injected by the build and will override this value
 :majorMinorVersion: 6.3
 :doc-base-url: https://docs.jboss.org/hibernate/orm/
@@ -15,10 +17,12 @@
 :title-logo-image: image:../../../style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :toclevels: 3
-:numbered:
 :docinfo:
 
 include::preface.adoc[]
+
+:numbered:
+
 include::obtaining.adoc[]
 
 include::tutorial_annotations.adoc[]

@@ -123,3 +123,5 @@ If you use JPA in Java SE, you'll need to copy/paste this function into your pro
 .Practice Exercises
 - [ ] Learn how to use CDI to inject a container-managed `EntityManager` in Quarkus.
   See https://quarkus.io/guides/hibernate-orm[the Quarkus website] for instructions.
+
+// force the break

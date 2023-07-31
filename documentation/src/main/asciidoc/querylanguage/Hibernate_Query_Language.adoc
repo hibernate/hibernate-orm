@@ -1,12 +1,13 @@
-:pdf-theme: ../pdf/theme.yml
+:asciidoc-dir: ../..
+:style-dir: {asciidoc-dir}/../style
+:pdf-theme: {style-dir}/pdf/theme.yml
 :source-highlighter: rouge
 :icons: font
 :doctype: book
-:pdf-fontsdir: ../pdf/fonts
+:pdf-fontsdir: {style-dir}/pdf/fonts
 :docsBase: https://docs.jboss.org/hibernate/orm
 :versionDocBase: {docsBase}/6.3
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
-
 :root-project-dir: ../../../../..
 :testing-project-dir: {root-project-dir}/hibernate-testing
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide

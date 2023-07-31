@@ -1,3 +1,6 @@
+[[preface]]
+== Preface
+
 Hibernate is an _Object/Relational Mapping_ (ORM) solution for programs written in Java and other JVM
 languages.
 

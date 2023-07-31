@@ -211,3 +211,5 @@ sessionFactory.inTransaction(session -> {
 - [ ] Actually run this example to see the SQL executed by Hibernate displayed in the console.
 - [ ] Reconfigure the examples to connect to your own persistent relational database.
 - [ ] Add an association to the `Event` entity to model a message thread.
+
+// force the break

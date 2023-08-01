@@ -1,15 +1,9 @@
-:asciidoc-dir: ..
-:style-dir: {asciidoc-dir}/../style
-:pdf-theme: {style-dir}/pdf/theme.yml
-:source-highlighter: rouge
-:icons: font
-:doctype: book
-:pdf-fontsdir: {style-dir}/pdf/fonts
-:docsBase: https://docs.jboss.org/hibernate/orm
-// NOTE : majorMinorVersion is injected by the build and will override this value
-:majorMinorVersion: 6.3
-:versionDocBase: {docsBase}/{majorMinorVersion}
-:userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
+:shared-attributes-dir: ../shared/
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
 
 
 = An Introduction to Hibernate 6

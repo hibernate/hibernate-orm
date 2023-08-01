@@ -1,5 +1,5 @@
-:bootstrap-native-url: {user-guide-url}#bootstrap-native
-:entity-model-url: {user-guide-url}#entity
+:bootstrap-native-url: {doc-user-guide-url}#bootstrap-native
+:entity-model-url: {doc-user-guide-url}#entity
 
 [[tutorial_annotations]]
 == Tutorial using native Hibernate APIs

@@ -1,4 +1,6 @@
-:introductionUrl: {versionDocBase}/querylanguage/html_single/Hibernate_Query_Language.html
+:shared-attributes-dir: ../shared/
+
+include::{shared-attributes-dir}/url-attributes.adoc[]
 
 [[preface]]
 == Preface
@@ -13,4 +15,4 @@ At long last, HQL has a feature set to match that of modern dialects of SQL, and
 
 This document is a reference guide to the full feature set of the language, and is the only up-to-date source for those who wish to learn how to write HQL effectively in Hibernate 6.
 
-If you don't already know Hibernate, first read link:{introductionUrl}[A Guide to Hibernate 6].
+If you are unfamiliar with Hibernate, be sure to first read  link:{doc-introduction-url}[Introduction to Hibernate] or check out the link:{doc-quick-start-url}[Quick Start].

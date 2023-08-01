@@ -1,35 +1,12 @@
+:shared-attributes-dir: ../../shared/
+
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+
 [[preface]]
 == Preface
 
 Hibernate is an _Object/Relational Mapping_ (ORM) solution for programs written in Java and other JVM
 languages.
 
-While a strong background in SQL is not required to use Hibernate, at least not at first, a basic understanding
-of its concepts is useful - especially the principles of _data modeling_.
-
-[[data-modeling-resources]]
-.Data modeling resources
-****
-- https://www.agiledata.org/essays/dataModeling101.html[Data Modeling 101]
-- https://en.wikipedia.org/wiki/Data_modeling[Wikipedia].
-****
-
-If you're completely new to database access in Java, it is also useful to understand the various technologies
-and options and how they fit together.
-
-[[java-database-resources]]
-.Java and database resources
-****
-- https://www.marcobehler.com/guides/a-guide-to-accessing-databases-in-java[Java & Databases: An Overview of Libraries & APIs]
-****
-
-
-The purpose of this guide is to provide a very high-level look at getting started with Hibernate.  Be
-sure to check out the other Hibernate guides for more complete details.
-
-[[hibernate-resources]]
-.Detailed guides
-****
-- link:{introduction-url}[Introduction]
-- link:{user-guide-url}[User Guide]
-****
+include::{shared-attributes-dir}/background.adoc[]

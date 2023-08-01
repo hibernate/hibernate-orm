@@ -1,20 +1,12 @@
-:asciidoc-dir: ../..
-:style-dir: {asciidoc-dir}/../style
-:pdf-theme: {style-dir}/pdf/theme.yml
-:source-highlighter: rouge
-:icons: font
-:doctype: book
-:pdf-fontsdir: {style-dir}/pdf/fonts
-// NOTE : majorMinorVersion is injected by the build and will override this value
-:majorMinorVersion: 6.3
-:doc-base-url: https://docs.jboss.org/hibernate/orm/
-:version-doc-base-url: {doc-base-url}/{majorMinorVersion}
-:user-guide-url: {version-doc-base-url}/userguide/html_single/Hibernate_User_Guide.html
-:introduction-url: {version-doc-base-url}/introduction/html_single/Hibernate_Introduction.html
+:shared-attributes-dir: ../../shared/
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
 
 = Getting Started with Hibernate
 :description: Quick start guide for Hibernate ORM
-:title-logo-image: image:../../../style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :toclevels: 3
 :docinfo:

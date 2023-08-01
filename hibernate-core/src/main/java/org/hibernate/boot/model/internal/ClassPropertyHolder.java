@@ -6,8 +6,10 @@
  */
 package org.hibernate.boot.model.internal;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -302,7 +304,7 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 			// because the given XClass has a TypeEnvironment based on the type variable assignments of a subclass
 			// and that might result in a wrong property type being used for a property which uses a type variable
 			final XClass actualDeclaringClass = context.getBootstrapContext().getReflectionManager().toXClass( type );
-			for ( XProperty declaredProperty : actualDeclaringClass.getDeclaredProperties( prop.getPropertyAccessorName() ) ) {
+			for ( XProperty declaredProperty : getDeclaredProperties( actualDeclaringClass, prop.getPropertyAccessorName() ) ) {
 				if ( prop.getName().equals( declaredProperty.getName() ) ) {
 					final PropertyData inferredData = new PropertyInferredData(
 							actualDeclaringClass,
@@ -379,6 +381,16 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 				}
 			}
 		}
+	}
+
+	private static List<XProperty> getDeclaredProperties(XClass declaringClass, String accessType) {
+		final List<XProperty> properties = new ArrayList<>();
+		XClass superclass = declaringClass;
+		while ( superclass != null ) {
+			properties.addAll( superclass.getDeclaredProperties( accessType ) );
+			superclass = superclass.getSuperclass();
+		}
+		return properties;
 	}
 
 	private static String getTypeName(Property property) {

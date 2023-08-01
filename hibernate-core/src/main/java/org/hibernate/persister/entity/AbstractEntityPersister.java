@@ -28,6 +28,7 @@ import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.AssertionFailure;
@@ -3207,21 +3208,26 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( containsNotNull ) {
-			final StringBuilder sb = new StringBuilder();
-			String lhs;
+			final String lhs;
 			if ( isDiscriminatorFormula() ) {
 				lhs = StringHelper.replace( getDiscriminatorFormulaTemplate(), Template.TEMPLATE, alias );
 			}
 			else {
 				lhs = qualifyConditionally( alias, getDiscriminatorColumnName() );
 			}
-			sb.append( " or " ).append( lhs ).append( " is not in (" );
-			for ( Object discriminatorSQLValue : discriminatorSQLValues ) {
-				if ( !frag.getValues().contains( discriminatorSQLValue ) ) {
-					sb.append( lhs ).append( discriminatorSQLValue );
+			final List<String> actualDiscriminatorSQLValues = new ArrayList<>( discriminatorSQLValues.size() );
+			for ( String value : discriminatorSQLValues ) {
+				if ( !frag.getValues().contains( value ) && !InFragment.NULL.equals( value ) ) {
+					actualDiscriminatorSQLValues.add( value );
 				}
 			}
-			sb.append( ") and " ).append( lhs ).append( " is not null" );
+			final StringBuilder sb = new StringBuilder( 70 + actualDiscriminatorSQLValues.size() * 10 ).append( " or " );
+			if ( !actualDiscriminatorSQLValues.isEmpty() ) {
+				sb.append( lhs ).append( " is not in (" );
+				sb.append( String.join( ",", actualDiscriminatorSQLValues ) );
+				sb.append( ") and " );
+			}
+			sb.append( lhs ).append( " is not null" );
 			frag.getValues().remove( InFragment.NOT_NULL );
 			return frag.toFragmentString() + sb;
 		}

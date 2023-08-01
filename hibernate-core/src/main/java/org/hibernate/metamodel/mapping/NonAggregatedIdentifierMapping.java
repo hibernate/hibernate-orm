@@ -77,4 +77,9 @@ public interface NonAggregatedIdentifierMapping extends CompositeIdentifierMappi
 			getEmbeddedPart().getEmbeddableTypeDescriptor().forEachAttributeMapping( (IndexedConsumer) consumer );
 		}
 	}
+
+	@Override
+	default boolean isPartOfAKey() {
+		return true;
+	}
 }

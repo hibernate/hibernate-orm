@@ -333,4 +333,9 @@ public class EmbeddedCollectionPart implements CollectionPart, EmbeddableValuedF
 		return collectionDescriptor.getAttributeMapping().containsTableReference( tableExpression );
 	}
 
+	@Override
+	public boolean isPartOfAKey() {
+		return false;
+	}
+
 }

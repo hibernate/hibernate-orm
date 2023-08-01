@@ -408,4 +408,9 @@ public class EmbeddedAttributeMapping
 	public int compare(Object value1, Object value2) {
 		return embeddableMappingType.compare( value1, value2 );
 	}
+
+	@Override
+	public boolean isPartOfAKey() {
+		return getAttributeMetadata() instanceof EmbeddedIdentifierMappingImpl;
+	}
 }

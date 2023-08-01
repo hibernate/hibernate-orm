@@ -40,4 +40,9 @@ public interface CompositeIdentifierMapping extends EntityIdentifierMapping, Emb
 	 * otherwise the one of the virtual embeddable mapping type.
 	 */
 	EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor();
+
+	@Override
+	default boolean isPartOfAKey() {
+		return true;
+	}
 }

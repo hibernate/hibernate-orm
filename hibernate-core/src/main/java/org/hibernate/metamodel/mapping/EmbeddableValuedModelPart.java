@@ -11,6 +11,8 @@ import java.util.function.Consumer;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedIdentifierMappingImpl;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.sql.ast.Clause;
@@ -185,4 +187,9 @@ public interface EmbeddableValuedModelPart extends ValuedModelPart, Fetchable, F
 			Clause clause,
 			SqmToSqlAstConverter walker,
 			SqlAstCreationState sqlAstCreationState);
+
+	default boolean isPartOfAKey(){
+		return this instanceof EmbeddedIdentifierMappingImpl
+				|| (this instanceof EmbeddedAttributeMapping && ((EmbeddedAttributeMapping)this).getAttributeMetadata() instanceof EmbeddedIdentifierMappingImpl);
+	}
 }

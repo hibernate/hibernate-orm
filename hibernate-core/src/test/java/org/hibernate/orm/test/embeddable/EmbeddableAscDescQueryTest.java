@@ -74,6 +74,7 @@ public class EmbeddableAscDescQueryTest {
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					session.createMutationQuery( "update EntityA a set a.componentA.entityA = null" ).executeUpdate();
 					session.createMutationQuery( "delete from EntityB" ).executeUpdate();
 					session.createMutationQuery( "delete from EntityC" ).executeUpdate();
 					session.createMutationQuery( "delete from EntityA" ).executeUpdate();

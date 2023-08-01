@@ -103,6 +103,11 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 	}
 
 	@Override
+	public SqmPathSource<?> getResolvedModel() {
+		return treatTarget;
+	}
+
+	@Override
 	public SqmPath<?> resolveIndexedAccess(
 			SqmExpression<?> selector,
 			boolean isTerminal,

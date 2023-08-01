@@ -8,18 +8,17 @@ package org.hibernate.sql.results.graph.embeddable;
 
 import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
-import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
-import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EmbeddedIdentifierMappingImpl;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -68,31 +67,23 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
 		this.rowState = new Object[ size ];
 
-		this.isPartOfKey = isPartOfKey( embedded, navigablePath );
+		this.isPartOfKey = isPartOfKey( embedded, fetchParentAccess );
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
 		this.createEmptyCompositesEnabled = !isPartOfKey && embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
-
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
 		this.assemblers = createAssemblers( resultDescriptor, creationState, embeddableTypeDescriptor );
 	}
 
-	private static boolean isPartOfKey(EmbeddableValuedModelPart modelPart, NavigablePath navigablePath) {
+	private static boolean isPartOfKey(EmbeddableValuedModelPart modelPart, FetchParentAccess fetchParentAccess) {
 		return modelPart.isEntityIdentifierMapping()
-				|| isPartOfKey( navigablePath )
-				|| modelPart.getNavigableRole() != null && isPartOfKey( modelPart.getNavigableRole() );
+				|| ( modelPart instanceof EmbeddedAttributeMapping && ( (EmbeddedAttributeMapping) modelPart ).getAttributeMetadata() instanceof EmbeddedIdentifierMappingImpl )
+				|| isPartOfKey( fetchParentAccess );
 	}
 
-	private static boolean isPartOfKey(NavigablePath navigablePath) {
-		return ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
-				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() )
-				|| navigablePath instanceof EntityIdentifierNavigablePath
-				|| navigablePath.getParent().getParent() != null && isPartOfKey( navigablePath.getParent() );
-	}
-
-	private static boolean isPartOfKey(NavigableRole navigableRole) {
-		final NavigableRole parent = navigableRole.getParent();
-		return parent != null
-				&& ( parent.getLocalName().equals( EntityIdentifierMapping.ID_ROLE_NAME ) || isPartOfKey( parent ) );
+	private static boolean isPartOfKey(FetchParentAccess fetchParentAccess) {
+		return fetchParentAccess != null
+				&& fetchParentAccess.isEmbeddableInitializer()
+				&& ( ( (AbstractEmbeddableInitializer) fetchParentAccess ).isPartOfKey || isPartOfKey( fetchParentAccess.getFetchParentAccess() ) );
 	}
 
 	protected DomainResultAssembler<?>[] createAssemblers(

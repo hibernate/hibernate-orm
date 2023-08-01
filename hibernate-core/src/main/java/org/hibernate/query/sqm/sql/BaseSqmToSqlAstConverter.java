@@ -5001,7 +5001,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				return expression;
 			}
 			final BasicValuedPathInterpretation<?> basicPath = (BasicValuedPathInterpretation<?>) expression;
-			final AbstractEntityPersister persister = (AbstractEntityPersister) basicPath.getTableGroup().getModelPart().getPartMappingType();
+			final TableGroup tableGroup = basicPath.getTableGroup();
+			final TableGroup elementTableGroup = tableGroup instanceof PluralTableGroup
+					? ( (PluralTableGroup) tableGroup ).getElementTableGroup()
+					: tableGroup;
+			final AbstractEntityPersister persister = (AbstractEntityPersister) elementTableGroup.getModelPart().getPartMappingType();
 			// Only need a case expression around the basic valued path for the parent treat expression
 			// if the column of the basic valued path is shared between subclasses
 			if ( persister.isSharedColumn( basicPath.getColumnReference().getColumnExpression() ) ) {

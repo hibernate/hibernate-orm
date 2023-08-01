@@ -110,6 +110,16 @@ public class SqmTreatedSimplePath<T, S extends T>
 	}
 
 	@Override
+	public SqmPathSource<S> getReferencedPathSource() {
+		return treatTarget;
+	}
+
+	@Override
+	public SqmPathSource<?> getResolvedModel() {
+		return treatTarget;
+	}
+
+	@Override
 	public <S1 extends S> SqmTreatedSimplePath<S,S1> treatAs(Class<S1> treatJavaType) throws PathException {
 		return super.treatAs( treatJavaType );
 	}

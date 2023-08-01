@@ -101,6 +101,11 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 	}
 
 	@Override
+	public SqmPathSource<?> getResolvedModel() {
+		return treatTarget;
+	}
+
+	@Override
 	public SqmAttributeJoin<O, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmTreatedSetJoin<>( wrappedPath, treatTarget, getAlias() );
 	}

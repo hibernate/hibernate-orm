@@ -97,7 +97,12 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 
 	@Override
 	public EntityDomainType<S> getReferencedPathSource() {
-		return getTreatTarget();
+		return treatTarget;
+	}
+
+	@Override
+	public SqmPathSource<?> getResolvedModel() {
+		return treatTarget;
 	}
 
 	@Override

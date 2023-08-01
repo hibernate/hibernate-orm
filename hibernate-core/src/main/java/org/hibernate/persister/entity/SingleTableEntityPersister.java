@@ -681,7 +681,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			// Filtering for abstract entities makes no sense, so ignore that
 			// Also, it makes no sense to filter for any of the super types,
 			// as the query will contain a filter for that already anyway
-			if ( !persister.isAbstract() && !isTypeOrSuperType( persister ) && useKind == EntityNameUse.UseKind.TREAT ) {
+			if ( useKind == EntityNameUse.UseKind.TREAT && !persister.isAbstract()
+					&& ( getSuperMappingType() == null || !getSuperMappingType().isTypeOrSuperType( persister ) ) ) {
 				containsTreatUse = true;
 				break;
 			}
@@ -723,21 +724,26 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 
 		final NamedTableReference tableReference = (NamedTableReference) tableGroup.getPrimaryTableReference();
 		if ( containsNotNull ) {
-			StringBuilder sb = new StringBuilder();
-			String lhs;
+			final String lhs;
 			if ( isDiscriminatorFormula() ) {
 				lhs = StringHelper.replace( getDiscriminatorFormulaTemplate(), Template.TEMPLATE, "t" );
 			}
 			else {
 				lhs = "t." + getDiscriminatorColumnName();
 			}
-			sb.append( " or " ).append( lhs ).append( " is not in (" );
-			for ( Object discriminatorSQLValue : discriminatorSQLValues ) {
-				if ( !frag.getValues().contains( discriminatorSQLValue ) ) {
-					sb.append( lhs ).append( discriminatorSQLValue );
+			final List<String> actualDiscriminatorSQLValues = new ArrayList<>( discriminatorSQLValues.size() );
+			for ( String value : discriminatorSQLValues ) {
+				if ( !frag.getValues().contains( value ) && !InFragment.NULL.equals( value ) ) {
+					actualDiscriminatorSQLValues.add( value );
 				}
 			}
-			sb.append( ") and " ).append( lhs ).append( " is not null" );
+			final StringBuilder sb = new StringBuilder( 70 + actualDiscriminatorSQLValues.size() * 10 ).append( " or " );
+			if ( !actualDiscriminatorSQLValues.isEmpty() ) {
+				sb.append( lhs ).append( " is not in (" );
+				sb.append( String.join( ",", actualDiscriminatorSQLValues ) );
+				sb.append( ") and " );
+			}
+			sb.append( lhs ).append( " is not null" );
 			frag.getValues().remove( InFragment.NOT_NULL );
 			tableReference.setPrunedTableExpression(
 					"(select * from " + getTableName() + " t where " + frag.toFragmentString() + sb + ")"

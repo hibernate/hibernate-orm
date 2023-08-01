@@ -677,7 +677,8 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 			// Filtering for abstract entities makes no sense, so ignore that
 			// Also, it makes no sense to filter for any of the super types,
 			// as the query will contain a filter for that already anyway
-			if ( !persister.isAbstract() && !isTypeOrSuperType( persister ) && useKind == EntityNameUse.UseKind.TREAT ) {
+			if ( useKind == EntityNameUse.UseKind.TREAT && !persister.isAbstract()
+					&& ( getSuperMappingType() == null || !getSuperMappingType().isTypeOrSuperType( persister ) ) ) {
 				containsTreatUse = true;
 				break;
 			}

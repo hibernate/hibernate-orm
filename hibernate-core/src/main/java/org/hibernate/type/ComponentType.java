@@ -691,7 +691,14 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			final EmbeddableInstantiator instantiator = mappingModelPart.getEmbeddableTypeDescriptor()
 					.getRepresentationStrategy()
 					.getInstantiator();
-			return instantiator.instantiate( () -> assembled, session.getFactory() );
+			final Object instance = instantiator.instantiate( () -> assembled, session.getFactory() );
+
+			final PropertyAccess parentInjectionAccess = mappingModelPart.getParentInjectionAttributePropertyAccess();
+			if ( parentInjectionAccess != null ) {
+				parentInjectionAccess.getSetter().set( instance, owner );
+			}
+
+			return instance;
 		}
 	}
 

@@ -505,10 +505,15 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			final Object existingEntity = persistenceContext.getEntity( entityKey );
 			if ( existingEntity != null ) {
 				entityInstance = existingEntity;
-				if ( existingLoadingEntry == null && isExistingEntityInitialized( existingEntity ) ) {
-					this.isInitialized = true;
-					registerReloadedEntity( rowProcessingState, existingEntity );
-					notifyResolutionListeners( entityInstance );
+				if ( existingLoadingEntry == null ) {
+					if ( isExistingEntityInitialized( existingEntity ) ) {
+						this.isInitialized = true;
+						registerReloadedEntity( rowProcessingState, existingEntity );
+						notifyResolutionListeners( entityInstance );
+					}
+					else {
+						registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
+					}
 				}
 			}
 			else if ( entityInstanceFromExecutionContext != null ) {

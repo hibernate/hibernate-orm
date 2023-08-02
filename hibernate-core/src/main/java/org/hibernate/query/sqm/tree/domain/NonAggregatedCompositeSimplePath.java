@@ -44,7 +44,7 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 				this,
 				new NonAggregatedCompositeSimplePath<>(
 						getNavigablePathCopy( lhsCopy ),
-						getReferencedPathSource(),
+						getModel(),
 						lhsCopy,
 						nodeBuilder()
 				)

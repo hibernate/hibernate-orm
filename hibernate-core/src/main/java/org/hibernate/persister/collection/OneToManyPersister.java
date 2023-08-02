@@ -299,12 +299,16 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 			SqlAstCreationState astCreationState) {
 		super.applyWhereFragments( predicateConsumer, alias, tableGroup, astCreationState );
 
-		getElementPersisterInternal().applyDiscriminator(
-				predicateConsumer,
-				alias,
-				tableGroup,
-				astCreationState
-		);
+		if ( !astCreationState.supportsEntityNameUsage() ) {
+			// We only need to apply discriminator for loads, since queries with joined
+			// inheritance subtypes are already filtered by the entity name usage logic
+			getElementPersisterInternal().applyDiscriminator(
+					predicateConsumer,
+					alias,
+					tableGroup,
+					astCreationState
+			);
+		}
 	}
 
 	@Override

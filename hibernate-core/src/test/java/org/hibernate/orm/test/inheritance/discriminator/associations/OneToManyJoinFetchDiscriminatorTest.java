@@ -44,7 +44,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @DomainModel(annotatedClasses = {
 		OneToManyJoinFetchDiscriminatorTest.Person.class,
 		OneToManyJoinFetchDiscriminatorTest.BodyPart.class,
-		OneToManyJoinFetchDiscriminatorTest.Leg.class
+		OneToManyJoinFetchDiscriminatorTest.Leg.class,
+		OneToManyJoinFetchDiscriminatorTest.Arm.class,
 })
 @JiraKey("HHH-16157")
 public class OneToManyJoinFetchDiscriminatorTest {
@@ -128,6 +129,25 @@ public class OneToManyJoinFetchDiscriminatorTest {
 		}
 
 		public Leg(String name, Person person) {
+			this.name = name;
+			this.person = person;
+		}
+
+		public Person getPerson() {
+			return person;
+		}
+	}
+
+	@Entity(name = "Arm")
+	@DiscriminatorValue("ArmBodyPart")
+	public static class Arm extends BodyPart {
+		@ManyToOne(fetch = FetchType.LAZY, optional = false)
+		private Person person;
+
+		public Arm() {
+		}
+
+		public Arm(String name, Person person) {
 			this.name = name;
 			this.person = person;
 		}

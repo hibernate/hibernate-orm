@@ -627,7 +627,14 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 				assembled[i] = propertyTypes[i].assemble( (Serializable) values[i], session, owner );
 			}
 
-			return instantiator().instantiate( () -> assembled, session.getFactory() );
+			final Object instance = instantiator().instantiate( () -> assembled, session.getFactory() );
+
+			final PropertyAccess parentInjectionAccess = mappingModelPart.getParentInjectionAttributePropertyAccess();
+			if ( parentInjectionAccess != null ) {
+				parentInjectionAccess.getSetter().set( instance, owner );
+			}
+
+			return instance;
 		}
 	}
 

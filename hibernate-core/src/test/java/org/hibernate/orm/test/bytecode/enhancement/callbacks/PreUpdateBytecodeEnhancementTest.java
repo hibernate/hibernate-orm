@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.jpa.callbacks;
+package org.hibernate.orm.test.bytecode.enhancement.callbacks;
 
 import java.time.Instant;
 import java.util.List;
@@ -22,8 +22,8 @@ import jakarta.persistence.PreUpdate;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -31,7 +31,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-@TestForIssue(jiraKey = "HHH-12718")
+@JiraKey("HHH-12718")
 @RunWith(BytecodeEnhancerRunner.class)
 public class PreUpdateBytecodeEnhancementTest extends BaseEntityManagerFunctionalTestCase {
 

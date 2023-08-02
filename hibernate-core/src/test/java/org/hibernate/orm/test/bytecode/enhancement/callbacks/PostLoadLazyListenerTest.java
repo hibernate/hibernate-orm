@@ -4,9 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-package org.hibernate.orm.test.jpa.callbacks;
-
-import static org.assertj.core.api.Assertions.assertThat;
+package org.hibernate.orm.test.bytecode.enhancement.callbacks;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -26,6 +24,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.PostLoad;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @JiraKey("HHH-17019")
 @RunWith(BytecodeEnhancerRunner.class)
 public class PostLoadLazyListenerTest extends BaseCoreFunctionalTestCase {
@@ -38,15 +38,16 @@ public class PostLoadLazyListenerTest extends BaseCoreFunctionalTestCase {
 	@After
 	public void tearDown() {
 		inTransaction( session -> {
-					session.createQuery( "delete from Tag" ).executeUpdate();
-					session.createQuery( "delete from Person" ).executeUpdate();
-				}
+						   session.createQuery( "delete from Tag" ).executeUpdate();
+						   session.createQuery( "delete from Person" ).executeUpdate();
+					   }
 		);
 	}
 
 	@Test
 	public void smoke() {
-		inTransaction( session -> {
+		inTransaction(
+				session -> {
 					Person person = new Person( 1, "name" );
 					Tag tag = new Tag( 100, person );
 					person.tags.add( tag );
@@ -56,10 +57,14 @@ public class PostLoadLazyListenerTest extends BaseCoreFunctionalTestCase {
 				}
 		);
 
-		inTransaction( session -> {
+		inTransaction(
+				session -> {
 					Tag tag = session.find( Tag.class, 100 );
 					assertThat( tag )
 							.isNotNull();
+					assertThat( TagListener.WAS_CALLED ).isTrue();
+					assertThat( PersonListener.WAS_CALLED ).isFalse();
+
 					assertThat( tag.person.name ).isEqualTo( "name" );
 					assertThat( PersonListener.WAS_CALLED ).isTrue();
 				}
@@ -87,6 +92,7 @@ public class PostLoadLazyListenerTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Entity(name = "Tag")
+	@EntityListeners(TagListener.class)
 	public static class Tag {
 
 		@Id
@@ -105,6 +111,15 @@ public class PostLoadLazyListenerTest extends BaseCoreFunctionalTestCase {
 	}
 
 	public static class PersonListener {
+		static boolean WAS_CALLED = false;
+
+		@PostLoad
+		void onPreUpdate(Object o) {
+			WAS_CALLED = true;
+		}
+	}
+
+	public static class TagListener {
 		static boolean WAS_CALLED = false;
 
 		@PostLoad

@@ -361,14 +361,14 @@ tasks.register( "renderMigrationGuide", AsciidoctorTask.class, task-> {
 	description = 'Renders the Migration Guide in HTML format using Asciidoctor.'
 	tasks.buildDocs.dependsOn task
 	tasks.buildDocsForPublishing.dependsOn task
+	dependsOn tasks.renderIntegrationGuide
+	dependsOn tasks.renderIntroduction
+	dependsOn tasks.renderGettingStartedGuides
 	inputs.property "hibernate-version", project.ormVersion
 
-	sourceDir = rootProject.layout.projectDirectory
 	sources {
-		include 'migration-guide.adoc'
+		include rootProject.layout.projectDirectory.file( 'migration-guide.adoc').asFile.canonicalPath
 	}
-
-	outputDir = project.layout.buildDirectory.dir( 'asciidoc/migration-guide' )
 
 	attributes linkcss: true,
 			stylesheet: "css/hibernate.css"
@@ -402,6 +402,7 @@ tasks.register('renderLoggingReport', AsciidoctorTask) { task ->
 	group 'Documentation'
 	description = 'Renders the ORM logging report in HTML format using Asciidoctor.'
 	dependsOn tasks.generateLoggingReport
+	dependsOn tasks.generateDialectReport
 	tasks.renderOrmReports.dependsOn task
 	inputs.property "version", project.ormVersion
 
@@ -429,6 +430,8 @@ tasks.register('renderDialectReport', AsciidoctorTask) { task ->
 	group 'Documentation'
 	description = 'Renders the ORM Dialect report in HTML format using Asciidoctor.'
 	dependsOn tasks.generateDialectReport
+	dependsOn tasks.generateLoggingReport
+
 	tasks.renderOrmReports.dependsOn task
 	inputs.property "version", project.ormVersion
 

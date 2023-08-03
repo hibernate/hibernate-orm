@@ -328,3 +328,8 @@ task collectConfigProperties { task ->
 
     dependsOn tasks.generateConfigsProperties
 }
+
+tasks.sourcesJar.dependsOn ':hibernate-core:generateGraphParser'
+tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
+tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
+tasks.sourcesJar.dependsOn ':hibernate-core:generateOrderingParser'

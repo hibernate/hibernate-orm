@@ -264,7 +264,7 @@ if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolch
             }
             // Refer to the main test resources to avoid processing variables twice
             resources {
-                srcDir 'target/resources/test'
+                srcDirs tasks.processTestResources
             }
         }
     }

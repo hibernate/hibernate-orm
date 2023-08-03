@@ -104,6 +104,9 @@ task jaxb {
         }
     }
 }
+tasks.sourcesJar.dependsOn jaxb
+tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
+tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
 tasks.compileJava.dependsOn jaxb
 
 checkstyleMain.exclude '**/jaxb/**'

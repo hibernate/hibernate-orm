@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-configurations.all {
+configurations.configureEach {
     resolutionStrategy.eachDependency { details ->
         //Force the "byte buddy agent" version to match the Byte Buddy version
         // we use, as Mockito might pull in a mismatched version transitively

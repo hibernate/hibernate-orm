@@ -17,7 +17,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  /**
  * The value/type binding information for a particular query parameter.  Supports
- * both single-valued and multi-valued binds
+ * both single-valued and multivalued binds
  *
  * @author Steve Ebersole
  */
@@ -30,7 +30,7 @@ public interface QueryParameterBinding<T> {
 	boolean isBound();
 
 	/**
-	 * Is the binding multi-valued?
+	 * Is the binding multivalued?
 	 */
 	boolean isMultiValued();
 
@@ -39,7 +39,7 @@ public interface QueryParameterBinding<T> {
 	 *
 	 * @return The currently associated Type
 	 */
-	BindableType<? extends T> getBindType();
+	BindableType<? super T> getBindType();
 
 	/**
 	 * If the parameter represents a temporal type, return the explicitly

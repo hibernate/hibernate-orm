@@ -25,10 +25,9 @@ public abstract class AbstractJpaTupleElement<T>
 	private SqmExpressible<T> expressibleType;
 	private String alias;
 
-	protected AbstractJpaTupleElement(SqmExpressible<? extends T> expressibleType, NodeBuilder criteriaBuilder) {
+	protected AbstractJpaTupleElement(SqmExpressible<? super T> expressibleType, NodeBuilder criteriaBuilder) {
 		super( criteriaBuilder );
-
-		setExpressibleType(expressibleType);
+		setExpressibleType( expressibleType );
 	}
 
 	protected void copyTo(AbstractJpaTupleElement<T> target, SqmCopyContext context) {

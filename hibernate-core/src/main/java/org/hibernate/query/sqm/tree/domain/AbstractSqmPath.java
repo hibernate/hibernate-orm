@@ -20,7 +20,6 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
@@ -175,8 +174,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		if ( subPathSource == null ) {
 			return new SqmLiteral<>(
 					referencedPathSource.getBindableJavaType(),
-					(SqmExpressible<? extends Class<? extends T>>) (SqmExpressible<?>)
-							nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Class.class ),
+					nodeBuilder().getTypeConfiguration().getBasicTypeForJavaType( Class.class ),
 					nodeBuilder()
 			);
 		}

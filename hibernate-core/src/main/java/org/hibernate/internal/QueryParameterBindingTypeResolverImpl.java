@@ -32,32 +32,42 @@ public abstract class QueryParameterBindingTypeResolverImpl implements QueryPara
 		return getMappingMetamodel().resolveQueryParameterType( javaType );
 	}
 
-	@Override
-	public <T> BindableType<? extends T> resolveParameterBindType(T bindValue) {
+	@Override @SuppressWarnings("unchecked")
+	public <T> BindableType<? super T> resolveParameterBindType(T bindValue) {
 		if ( bindValue == null ) {
 			// we can't guess
 			return null;
 		}
 
-		final LazyInitializer lazyInitializer = extractLazyInitializer( bindValue );
-		final Class<?> clazz = lazyInitializer != null ? lazyInitializer.getPersistentClass() : bindValue.getClass();
+		final Class<T> clazz = unproxiedClass( bindValue );
 
 		// Resolve superclass bindable type if necessary, as we don't register types for e.g. Inet4Address
-		Class<?> c = clazz;
+		Class<? super T> c = clazz;
 		do {
-			final BindableType<?> type = resolveParameterBindType( c );
+			final BindableType<? super T> type = resolveParameterBindType( c );
 			if ( type != null ) {
-				//noinspection unchecked
-				return (BindableType<? extends T>) type;
+				return type;
 			}
 			c = c.getSuperclass();
 		}
 		while ( c != Object.class );
-		if ( !clazz.isEnum() && Serializable.class.isAssignableFrom( clazz ) ) {
-			//noinspection unchecked
-			return (BindableType<? extends T>) resolveParameterBindType( Serializable.class );
+
+		if ( clazz.isEnum() ) {
+			return null; //createEnumType( (Class) clazz );
 		}
-		return null;
+		else if ( Serializable.class.isAssignableFrom( clazz ) ) {
+			return (BindableType<? super T>) resolveParameterBindType( Serializable.class );
+		}
+		else {
+			return null;
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private static <T> Class<T> unproxiedClass(T bindValue) {
+		final LazyInitializer lazyInitializer = extractLazyInitializer( bindValue );
+		final Class<?> result = lazyInitializer != null ? lazyInitializer.getPersistentClass() : bindValue.getClass();
+		return (Class<T>) result;
 	}
 
 }

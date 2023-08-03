@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.expression;
 
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.query.BindableType;
-import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 
@@ -30,13 +29,16 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 
 	@Override
 	public void applyInferableType(SqmExpressible<?> type) {
-		if ( type == null ) {
-			return;
+		if ( type != null ) {
+			if ( type instanceof PluralPersistentAttribute ) {
+				final PluralPersistentAttribute<?, ?, ?> pluralPersistentAttribute =
+						(PluralPersistentAttribute<?, ?, ?>) type;
+				internalApplyInferableType( pluralPersistentAttribute.getElementType() );
+			}
+			else {
+				internalApplyInferableType( type );
+			}
 		}
-		else if ( type instanceof PluralPersistentAttribute<?, ?, ?> ) {
-			type = ( (PluralPersistentAttribute<?, ?, ?>) type ).getElementType();
-		}
-		internalApplyInferableType( type );
 	}
 
 	@Override

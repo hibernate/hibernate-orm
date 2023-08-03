@@ -3094,7 +3094,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final int size = ctx.simpleCaseWhen().size();
 		final SqmCaseSimple caseExpression = new SqmCaseSimple<>(
 				(SqmExpression<?>) ctx.expressionOrPredicate().accept( this ),
-				null,
 				size,
 				creationContext.getNodeBuilder()
 		);
@@ -3118,11 +3117,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override @SuppressWarnings({"rawtypes", "unchecked"})
 	public SqmCaseSearched<?> visitSearchedCaseList(HqlParser.SearchedCaseListContext ctx) {
 		final int size = ctx.searchedCaseWhen().size();
-		final SqmCaseSearched caseExpression = new SqmCaseSearched<>(
-				null,
-				size,
-				creationContext.getNodeBuilder()
-		);
+		final SqmCaseSearched caseExpression = new SqmCaseSearched<>( size, creationContext.getNodeBuilder() );
 
 		for ( int i = 0; i < size; i++ ) {
 			final HqlParser.SearchedCaseWhenContext searchedCaseWhenContext = ctx.searchedCaseWhen( i );
@@ -3697,22 +3692,23 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final String originalText = text;
 		text = text.substring( 2 );
 		try {
-			final Number value;
-			final BasicDomainType<? extends Number> type;
 			if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
 				text = text.substring( 0, text.length() - 1 );
-				value = Long.parseUnsignedLong( text, 16 );
-				type = resolveExpressibleTypeBasic( Long.class );
+				final long value = Long.parseUnsignedLong( text, 16 );
+				return new SqmLiteral<>(
+						value,
+						resolveExpressibleTypeBasic( Long.class ),
+						creationContext.getNodeBuilder()
+				);
 			}
 			else {
-				value = Integer.parseUnsignedInt( text, 16 );
-				type = resolveExpressibleTypeBasic( Integer.class );
+				final int value = Integer.parseUnsignedInt( text, 16 );
+				return new SqmLiteral<>(
+						value,
+						resolveExpressibleTypeBasic( Integer.class ),
+						creationContext.getNodeBuilder()
+				);
 			}
-			return new SqmLiteral<>(
-					value,
-					type,
-					creationContext.getNodeBuilder()
-			);
 		}
 		catch (NumberFormatException e) {
 			throw new LiteralNumberFormatException(
@@ -4113,7 +4109,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					// The SQL standard says the default is three periods `...`
 					fillerExpression = new SqmLiteral<>(
 							"...",
-							secondArgument.getNodeType(),
+							resolveExpressibleTypeBasic( String.class ),
 							secondArgument.nodeBuilder()
 					);
 				}
@@ -4130,47 +4126,31 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public List<SqmTypedNode<?>> visitGenericFunctionArguments(HqlParser.GenericFunctionArgumentsContext ctx) {
-		final int size = ctx.getChildCount();
-		final int lastIndex = size - 1;
-		// Shift 1 bit instead of division by 2
-		final int estimateArgumentCount = size >> 1;
-		final List<SqmTypedNode<?>> arguments = new ArrayList<>( estimateArgumentCount );
-		int i = 0;
-
-		boolean distinct = false;
-		final ParseTree firstChild = ctx.getChild( 0 );
-		if ( firstChild instanceof HqlParser.DatetimeFieldContext ) {
-			arguments.add( toDurationUnit( (SqmExtractUnit<?>) firstChild.accept( this ) ) );
-			i += 2;
+		final List<HqlParser.ExpressionOrPredicateContext> argumentContexts = ctx.expressionOrPredicate();
+		int count = argumentContexts.size();
+		final List<SqmTypedNode<?>> arguments = new ArrayList<>( count+1 );
+		final HqlParser.DatetimeFieldContext datetimeFieldContext = ctx.datetimeField();
+		if ( datetimeFieldContext != null  ) {
+			arguments.add( toDurationUnit( (SqmExtractUnit<?>) datetimeFieldContext.accept( this ) ) );
 		}
-		else if ( firstChild instanceof TerminalNode ) {
-			distinct = true;
-			i++;
+		for ( int i = 0; i < count-1; i++ ) {
+			final HqlParser.ExpressionOrPredicateContext argumentContext = argumentContexts.get(i);
+			arguments.add( (SqmTypedNode<?>) argumentContext.accept( this ) );
 		}
+		// we handle the last argument differently...
+		final HqlParser.ExpressionOrPredicateContext argumentContext = argumentContexts.get( count-1 );
+		arguments.add( visitFinalFunctionArgument( argumentContext ) );
 
-		for ( ; i < size; i += 2 ) {
-			// we handle the final argument differently...
-			if ( i == lastIndex ) {
-				arguments.add( visitFinalFunctionArgument( ctx.getChild( i ) ) );
-			}
-			else {
-				arguments.add( (SqmTypedNode<?>) ctx.getChild( i ).accept( this ) );
-			}
-		}
-
-		if ( distinct ) {
+		if ( ctx.DISTINCT() != null ) {
 			final NodeBuilder nodeBuilder = getCreationContext().getNodeBuilder();
 			if ( arguments.size() == 1 ) {
 				arguments.set( 0, new SqmDistinct<>( (SqmExpression<?>) arguments.get( 0 ), nodeBuilder ) );
 			}
 			else {
 				final List<SqmTypedNode<?>> newArguments = new ArrayList<>( 1 );
-				//noinspection unchecked
-				newArguments.add(
-						new SqmDistinct<>(
-								new SqmTuple<>( (List<SqmExpression<?>>) (List<?>) arguments, nodeBuilder ), nodeBuilder
-						)
-				);
+				@SuppressWarnings("unchecked")
+				final List<SqmExpression<?>> expressions = (List<SqmExpression<?>>) (List<?>) arguments;
+				newArguments.add( new SqmDistinct<>( new SqmTuple<>( expressions, nodeBuilder ), nodeBuilder ) );
 				return newArguments;
 			}
 		}

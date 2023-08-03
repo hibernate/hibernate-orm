@@ -21,7 +21,7 @@ import org.junit.Assert;
  *
  * @author Sanne Grinovero (C) 2023 Red Hat Inc.
  */
-public class PhantomReferenceLeakDetector {
+public final class PhantomReferenceLeakDetector {
 
 	/**
 	 * A single second should be more than enough; this might need
@@ -34,6 +34,7 @@ public class PhantomReferenceLeakDetector {
 	 */
 	private static final int MAX_TOTAL_WAIT_SECONDS = 180;
 	private static final int GC_ATTEMPTS = MAX_TOTAL_WAIT_SECONDS * 5;
+	private static PhantomReference hold;
 
 	/**
 	 * Asserts that a certain operation won't be leaking
@@ -73,15 +74,39 @@ public class PhantomReferenceLeakDetector {
 	/**
 	 * Exposed for self-testing w/o having to wait for the regular timeout
 	 */
-	static <T> boolean verifyActionNotLeaking(Supplier<T> action, final int gcAttempts, final int totalWaitSeconds ) {
+	static <T> boolean verifyActionNotLeaking(Supplier<T> action, final int gcAttempts, final int totalWaitSeconds) {
 		T criticalReference = action.get();
 		final ReferenceQueue<T> referenceQueue = new ReferenceQueue<>();
 		final PhantomReference<T> reference = new PhantomReference<>( criticalReference, referenceQueue );
+		holdOnTo( reference );
 		//Ignore IDE's suggestion to remove the following line: we really need it!
 		// (it could be inlined above, but I prefer this style so that it serves as an example for
 		// future maintenance of how this works)
 		criticalReference = null;
-		return verifyCollection( referenceQueue, gcAttempts, totalWaitSeconds );
+		try {
+			return verifyCollection( referenceQueue, gcAttempts, totalWaitSeconds );
+		}
+		finally {
+			clearHeldReferences();
+		}
+	}
+
+	private static synchronized void clearHeldReferences() {
+		PhantomReferenceLeakDetector.hold = null;
+	}
+
+	/**
+	 * Ensure we keep a reference to the PhantomReference until we're done
+	 * with the test, otherwise it might get collected before having had
+	 * a change to trigger; this seems to behave differently on different
+	 * JVMs but is most likely just a timing issue.
+	 * @param reference
+	 */
+	private static synchronized void holdOnTo(PhantomReference reference) {
+		if ( PhantomReferenceLeakDetector.hold != null ) {
+			throw new IllegalStateException( "Detected recursive use of PhantomReferenceLeakDetector, which is not supported, or possibly a leaked previous run" );
+		}
+		PhantomReferenceLeakDetector.hold = reference;
 	}
 
 	private static <T> boolean verifyCollection(final ReferenceQueue<T> referenceQueue, final int gcAttempts, final int totalWaitSeconds) {

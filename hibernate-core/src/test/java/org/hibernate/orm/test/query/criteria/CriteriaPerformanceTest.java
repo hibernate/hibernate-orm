@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.EntityManager;
@@ -17,6 +18,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
@@ -35,6 +37,7 @@ public class CriteriaPerformanceTest extends BaseEntityManagerFunctionalTestCase
 	public Class[] getAnnotatedClasses() {
 		return new Class[] {
 				CriteriaPerformanceTest.Author.class,
+				CriteriaPerformanceTest.AuthorDetails.class,
 				CriteriaPerformanceTest.Book.class
 		};
 	}
@@ -49,6 +52,7 @@ public class CriteriaPerformanceTest extends BaseEntityManagerFunctionalTestCase
 	public void testFetchEntityWithAssociationsPerformance() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.createQuery( "delete Author" ).executeUpdate();
+			entityManager.createQuery( "delete AuthorDetails" ).executeUpdate();
 			entityManager.createQuery( "delete Book" ).executeUpdate();
 			for ( int i = 0; i < 1000; i++ ) {
 				populateData( entityManager );
@@ -78,6 +82,7 @@ public class CriteriaPerformanceTest extends BaseEntityManagerFunctionalTestCase
 	public void testFetchEntityWithAssociationsPerformanceSmallTransactions() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			entityManager.createQuery( "delete Author" ).executeUpdate();
+			entityManager.createQuery( "delete AuthorDetails" ).executeUpdate();
 			entityManager.createQuery( "delete Book" ).executeUpdate();
 			for ( int i = 0; i < 1000; i++ ) {
 				populateData( entityManager );
@@ -108,6 +113,11 @@ public class CriteriaPerformanceTest extends BaseEntityManagerFunctionalTestCase
 		final Author author = new Author();
 		author.name = "David Gourley";
 
+		final AuthorDetails details = new AuthorDetails();
+		details.name = "Author Details";
+		details.author = author;
+		author.details = details;
+
 		author.books.add( book );
 		book.author = author;
 
@@ -127,6 +137,24 @@ public class CriteriaPerformanceTest extends BaseEntityManagerFunctionalTestCase
 
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
 		public List<Book> books = new ArrayList<>();
+
+		@OneToOne(fetch = FetchType.EAGER, optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
+		public AuthorDetails details;
+
+	}
+
+	@Entity(name = "AuthorDetails")
+	@Table(name = "AuthorDetails")
+	public static class AuthorDetails {
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		public Long detailsId;
+
+		@Column
+		public String name;
+
+		@OneToOne(fetch = FetchType.LAZY, mappedBy = "details", optional = false)
+		public Author author;
 	}
 
 	@Entity(name = "Book")

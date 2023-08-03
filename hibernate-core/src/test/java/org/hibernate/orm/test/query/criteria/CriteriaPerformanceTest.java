@@ -16,6 +16,7 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityManager;
@@ -27,6 +28,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -36,6 +38,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @Jpa(
 		annotatedClasses = {
 				CriteriaPerformanceTest.Author.class,
+				CriteriaPerformanceTest.AuthorDetails.class,
 				CriteriaPerformanceTest.Book.class
 		},
 		integrationSettings = {
@@ -102,6 +105,7 @@ public class CriteriaPerformanceTest {
 		scope.inTransaction( (session) -> {
 			session.createQuery( "delete Book" ).executeUpdate();
 			session.createQuery( "delete Author" ).executeUpdate();
+			session.createQuery( "delete AuthorDetails" ).executeUpdate();
 		} );
 	}
 
@@ -111,6 +115,11 @@ public class CriteriaPerformanceTest {
 
 		final Author author = new Author();
 		author.name = "David Gourley";
+
+		final AuthorDetails details = new AuthorDetails();
+		details.name = "Author Details";
+		details.author = author;
+		author.details = details;
 
 		author.books.add( book );
 		book.author = author;
@@ -131,6 +140,24 @@ public class CriteriaPerformanceTest {
 
 		@OneToMany(fetch = FetchType.LAZY, mappedBy = "author")
 		public List<Book> books = new ArrayList<>();
+
+		@OneToOne(fetch = FetchType.EAGER, optional = false, cascade = CascadeType.ALL, orphanRemoval = true)
+		public AuthorDetails details;
+
+	}
+
+	@Entity(name = "AuthorDetails")
+	@Table(name = "AuthorDetails")
+	public static class AuthorDetails {
+		@Id
+		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		public Long detailsId;
+
+		@Column
+		public String name;
+
+		@OneToOne(fetch = FetchType.LAZY, mappedBy = "details", optional = false)
+		public Author author;
 	}
 
 	@Entity(name = "Book")

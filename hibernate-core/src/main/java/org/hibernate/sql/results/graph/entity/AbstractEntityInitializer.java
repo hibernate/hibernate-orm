@@ -1053,6 +1053,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	protected boolean skipInitialization(Object toInitialize, RowProcessingState rowProcessingState) {
+		if ( !isOwningInitializer ) {
+			return true;
+		}
 		final EntityEntry entry =
 				rowProcessingState.getSession().getPersistenceContextInternal().getEntry( toInitialize );
 		if ( entry == null ) {
@@ -1062,7 +1065,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		else if ( entry.getStatus().isDeletedOrGone() ) {
 			return true;
 		}
-		else if ( isOwningInitializer ) {
+		else {
 			if ( isPersistentAttributeInterceptable( toInitialize ) ) {
 				final PersistentAttributeInterceptor interceptor =
 						asPersistentAttributeInterceptable( toInitialize ).$$_hibernate_getInterceptor();
@@ -1085,9 +1088,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			else {
 				return false;
 			}
-		}
-		else {
-			return true;
 		}
 	}
 

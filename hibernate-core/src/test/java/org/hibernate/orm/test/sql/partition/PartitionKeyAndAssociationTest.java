@@ -17,9 +17,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -44,11 +44,13 @@ public class PartitionKeyAndAssociationTest {
 		scope.inTransaction( session -> {
 			session.persist( new SalesContact( 1L, 1L, "name_1" ) );
 			session.persist( new SalesContact( 2L, 2L, "name_2" ) );
+			session.persist( new ContactAddress( 1L, "address_1", 1L, null ) );
 		} );
 	}
 
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> session.createMutationQuery( "delete from ContactAddress" ).executeUpdate() );
 		scope.inTransaction( session -> session.createMutationQuery( "delete from SalesContact" ).executeUpdate() );
 	}
 
@@ -74,6 +76,14 @@ public class PartitionKeyAndAssociationTest {
 				SalesContact.class,
 				2L
 		) ).isNull() );
+	}
+
+	@Test
+	public void testNullPartitionKey(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final ContactAddress address = session.find( ContactAddress.class, 1L );
+			assertThat( address.contact ).isNull();
+		} );
 	}
 
 	@Entity( name = "SalesContact" )
@@ -110,7 +120,6 @@ public class PartitionKeyAndAssociationTest {
 	@Entity( name = "ContactEmail" )
 	public static class ContactEmail {
 		@Id
-		@GeneratedValue
 		private Long id;
 
 		private String email;
@@ -124,14 +133,27 @@ public class PartitionKeyAndAssociationTest {
 	@Entity( name = "ContactAddress" )
 	public static class ContactAddress {
 		@Id
-		@GeneratedValue
 		private Long id;
 
 		private String address;
 
+		@Column(name = "account_id")
+		private Long accountId;
+		@Column(name = "contact_id")
+		private Long contactId;
 		@OneToOne( fetch = FetchType.LAZY )
-		@JoinColumn( name = "account_id", referencedColumnName = "accountId", nullable = false )
-		@JoinColumn( name = "contact_id", referencedColumnName = "id", nullable = false )
+		@JoinColumn( name = "account_id", referencedColumnName = "accountId", insertable = false, updatable = false )
+		@JoinColumn( name = "contact_id", referencedColumnName = "id", insertable = false, updatable = false )
 		private SalesContact contact;
+
+		public ContactAddress() {
+		}
+
+		public ContactAddress(Long id, String address, Long accountId, Long contactId) {
+			this.id = id;
+			this.address = address;
+			this.accountId = accountId;
+			this.contactId = contactId;
+		}
 	}
 }

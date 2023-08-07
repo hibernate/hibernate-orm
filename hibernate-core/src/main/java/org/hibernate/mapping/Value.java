@@ -43,12 +43,6 @@ public interface Value extends Serializable {
 	int getColumnSpan();
 
 	/**
-	 * @deprecated moving away from the use of {@link Iterator} as a return type
-	 */
-	@Deprecated(since = "6.0")
-	Iterator<Selectable> getColumnIterator();
-
-	/**
 	 * The mapping to columns and formulas.
 	 */
 	List<Selectable> getSelectables();

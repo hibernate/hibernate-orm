@@ -6,7 +6,8 @@
  */
 package org.hibernate.orm.test.quote;
 
-import java.util.Iterator;
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -21,9 +22,11 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Selectable;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -51,10 +54,10 @@ public class ColumnDefinitionQuotingTest {
 
 						PersistentClass entityBinding = metadata.getEntityBinding( E1.class.getName() );
 
-						org.hibernate.mapping.Column idColumn = extractColumn( entityBinding.getIdentifier().getColumnIterator() );
+						org.hibernate.mapping.Column idColumn = extractColumn( entityBinding.getIdentifier().getSelectables() );
 						assertTrue( isQuoted( idColumn.getSqlType(), ssr ) );
 
-						org.hibernate.mapping.Column otherColumn = extractColumn( entityBinding.getProperty( "other" ).getColumnIterator() );
+						org.hibernate.mapping.Column otherColumn = extractColumn( entityBinding.getProperty( "other" ).getSelectables() );
 						assertTrue( isQuoted( otherColumn.getSqlType(), ssr ) );
 					}
 				}
@@ -78,18 +81,19 @@ public class ColumnDefinitionQuotingTest {
 
 						PersistentClass entityBinding = metadata.getEntityBinding( E1.class.getName() );
 
-						org.hibernate.mapping.Column idColumn = extractColumn( entityBinding.getIdentifier().getColumnIterator() );
+						org.hibernate.mapping.Column idColumn = extractColumn( entityBinding.getIdentifier().getSelectables() );
 						assertTrue( isQuoted( idColumn.getSqlType(), ssr ) );
 
-						org.hibernate.mapping.Column otherColumn = extractColumn( entityBinding.getProperty( "other" ).getColumnIterator() );
+						org.hibernate.mapping.Column otherColumn = extractColumn( entityBinding.getProperty( "other" ).getSelectables() );
 						assertTrue( isQuoted( otherColumn.getSqlType(), ssr ) );
 					}
 				}
 		);
 	}
 
-	private org.hibernate.mapping.Column extractColumn(Iterator columnIterator) {
-		return (org.hibernate.mapping.Column) columnIterator.next();
+	private org.hibernate.mapping.Column extractColumn(List<Selectable> columns) {
+		Assert.assertEquals( 1, columns.size() );
+		return (org.hibernate.mapping.Column) columns.get( 0 );
 	}
 
 	private boolean isQuoted(String sqlType, StandardServiceRegistry ssr) {
@@ -115,10 +119,10 @@ public class ColumnDefinitionQuotingTest {
 
 						PersistentClass entityBinding = metadata.getEntityBinding( E2.class.getName() );
 
-						org.hibernate.mapping.Column idColumn = extractColumn( entityBinding.getIdentifier().getColumnIterator() );
+						org.hibernate.mapping.Column idColumn = extractColumn( entityBinding.getIdentifier().getSelectables() );
 						assertTrue( isQuoted( idColumn.getSqlType(), ssr ) );
 
-						org.hibernate.mapping.Column otherColumn = extractColumn( entityBinding.getProperty( "other" ).getColumnIterator() );
+						org.hibernate.mapping.Column otherColumn = extractColumn( entityBinding.getProperty( "other" ).getSelectables() );
 						assertTrue( isQuoted( otherColumn.getSqlType(), ssr ) );
 					}
 				}
@@ -142,10 +146,10 @@ public class ColumnDefinitionQuotingTest {
 
 						PersistentClass entityBinding = metadata.getEntityBinding( E2.class.getName() );
 
-						org.hibernate.mapping.Column idColumn = extractColumn( entityBinding.getIdentifier().getColumnIterator() );
+						org.hibernate.mapping.Column idColumn = extractColumn( entityBinding.getIdentifier().getSelectables() );
 						assertTrue( !isQuoted( idColumn.getSqlType(), ssr ) );
 
-						org.hibernate.mapping.Column otherColumn = extractColumn( entityBinding.getProperty( "other" ).getColumnIterator() );
+						org.hibernate.mapping.Column otherColumn = extractColumn( entityBinding.getProperty( "other" ).getSelectables() );
 						assertTrue( !isQuoted( otherColumn.getSqlType(), ssr ) );
 					}
 				}

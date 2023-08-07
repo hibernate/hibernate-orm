@@ -105,11 +105,6 @@ public class Index implements Exportable, Serializable {
 		return columns.size();
 	}
 
-	@Deprecated
-	public Iterator<Column> getColumnIterator() {
-		return getColumns().iterator();
-	}
-
 	public java.util.List<Column> getColumns() {
 		return unmodifiableList( columns );
 	}

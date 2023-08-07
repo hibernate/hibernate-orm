@@ -140,11 +140,6 @@ public abstract class Constraint implements Exportable, Serializable {
 		return columns.get( i );
 	}
 
-	@Deprecated(since = "6.0")
-	public Iterator<Column> getColumnIterator() {
-		return getColumns().iterator();
-	}
-
 	public Table getTable() {
 		return table;
 	}

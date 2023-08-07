@@ -88,14 +88,6 @@ public class DenormalizedTable extends Table {
 		return superColumn != null ? superColumn : includedTable.getColumn(name);
 	}
 
-	@Override @Deprecated
-	public Iterator<Column> getColumnIterator() {
-		if ( reorderedColumns != null ) {
-			return reorderedColumns.iterator();
-		}
-		return new JoinedIterator<>( includedTable.getColumnIterator(), super.getColumnIterator() );
-	}
-
 	@Override
 	public Collection<Column> getColumns() {
 		if ( reorderedColumns != null ) {

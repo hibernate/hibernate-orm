@@ -43,7 +43,7 @@ public class SingleTableSubclass extends Subclass {
 	@Deprecated @SuppressWarnings("deprecation")
 	protected Iterator<Selectable> getDiscriminatorColumnIterator() {
 		return isDiscriminatorInsertable() && !getDiscriminator().hasFormula()
-				? getDiscriminator().getColumnIterator()
+				? getDiscriminator().getSelectables().iterator()
 				: super.getDiscriminatorColumnIterator();
 	}
 

@@ -279,7 +279,7 @@ public abstract class AbstractCollectionMetadataGenerator extends AbstractMetada
 				columnNameIterator = joinTableData.getInverseJoinColumnNamesIterator();
 			}
 			else {
-				columnNameIterator = ColumnNameIterator.from( value.getColumnIterator() );
+				columnNameIterator = ColumnNameIterator.from( value.getSelectables().iterator() );
 			}
 
 			addAttributesToEntity(

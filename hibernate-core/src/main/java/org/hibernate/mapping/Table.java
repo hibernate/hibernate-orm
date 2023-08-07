@@ -302,11 +302,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return columns.size();
 	}
 
-	@Deprecated(since = "6.0")
-	public Iterator<Column> getColumnIterator() {
-		return getColumns().iterator();
-	}
-
 	public Collection<Column> getColumns() {
 		return columns.values();
 	}

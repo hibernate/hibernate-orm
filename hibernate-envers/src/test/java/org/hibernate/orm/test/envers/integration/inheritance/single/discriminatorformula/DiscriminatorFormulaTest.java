@@ -94,7 +94,7 @@ public class DiscriminatorFormulaTest extends BaseEnversJPAFunctionalTestCase {
 	@Test
 	public void testDiscriminatorFormulaInAuditTable() {
 		assert parentAudit.getDiscriminator().hasFormula();
-		Iterator iterator = parentAudit.getDiscriminator().getColumnIterator();
+		Iterator iterator = parentAudit.getDiscriminator().getSelectables().iterator();
 		while ( iterator.hasNext() ) {
 			Object o = iterator.next();
 			if ( o instanceof Formula ) {

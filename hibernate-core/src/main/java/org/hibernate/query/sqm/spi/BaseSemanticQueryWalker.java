@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
+import org.hibernate.query.sqm.InterpretationException;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmVisitableNode;
 import org.hibernate.query.sqm.tree.cte.SqmCteContainer;
@@ -74,7 +75,9 @@ import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -111,6 +114,8 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.query.sqm.tree.update.SqmAssignment;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
+import org.hibernate.sql.ast.tree.from.TableGroup;
 
 /**
  * Base support for an SQM walker
@@ -238,84 +243,166 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitFromClause(SqmFromClause fromClause) {
-		fromClause.visitRoots( root -> root.accept( this ) );
+		fromClause.visitRoots( this::consumeFromClauseRoot );
 		return fromClause;
+	}
+
+	protected void consumeFromClauseRoot(SqmRoot<?> sqmRoot) {
+		if ( sqmRoot instanceof SqmDerivedRoot<?> ) {
+			( (SqmDerivedRoot<?>) sqmRoot ).getQueryPart().accept( this );
+		}
+		consumeJoins( sqmRoot );
+	}
+
+	private void consumeJoins(SqmRoot<?> sqmRoot) {
+		if ( sqmRoot.getOrderedJoins() == null ) {
+			consumeExplicitJoins( sqmRoot );
+		}
+		else {
+			for ( SqmJoin<?, ?> join : sqmRoot.getOrderedJoins() ) {
+				consumeExplicitJoin( join, false );
+			}
+		}
+	}
+
+	protected void consumeExplicitJoins(SqmFrom<?, ?> sqmFrom) {
+		sqmFrom.visitSqmJoins(
+				sqmJoin -> {
+					consumeExplicitJoin( sqmJoin, true );
+				}
+		);
+		final List<SqmFrom<?, ?>> sqmTreats = sqmFrom.getSqmTreats();
+		if ( !sqmTreats.isEmpty() ) {
+			for ( SqmFrom<?, ?> sqmTreat : sqmTreats ) {
+				consumeTreat( sqmTreat );
+			}
+		}
+	}
+
+	protected void consumeTreat(SqmFrom<?, ?> sqmTreat) {
+		consumeExplicitJoins( sqmTreat );
+	}
+
+	protected void consumeExplicitJoin(
+			SqmJoin<?, ?> sqmJoin,
+			boolean transitive) {
+		if ( sqmJoin instanceof SqmAttributeJoin<?, ?> ) {
+			consumeAttributeJoin( ( (SqmAttributeJoin<?, ?>) sqmJoin ), transitive );
+		}
+		else if ( sqmJoin instanceof SqmCrossJoin<?> ) {
+			consumeCrossJoin( ( (SqmCrossJoin<?>) sqmJoin ), transitive );
+		}
+		else if ( sqmJoin instanceof SqmEntityJoin<?> ) {
+			consumeEntityJoin( ( (SqmEntityJoin<?>) sqmJoin ), transitive );
+		}
+		else if ( sqmJoin instanceof SqmDerivedJoin<?> ) {
+			consumeDerivedJoin( ( (SqmDerivedJoin<?>) sqmJoin ), transitive );
+		}
+		else if ( sqmJoin instanceof SqmCteJoin<?> ) {
+			consumeCteJoin( ( (SqmCteJoin<?>) sqmJoin ), transitive );
+		}
+		else if ( sqmJoin instanceof SqmPluralPartJoin<?, ?> ) {
+			consumePluralPartJoin( ( (SqmPluralPartJoin<?, ?>) sqmJoin ), transitive );
+		}
+		else {
+			throw new InterpretationException( "Could not visit SqmJoin [" + sqmJoin.getNavigablePath() + "] of type [" + sqmJoin.getClass().getName() + "]" );
+		}
+	}
+
+	protected void consumeAttributeJoin(SqmAttributeJoin<?, ?> sqmJoin, boolean transitive) {
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			sqmJoin.getJoinPredicate().accept( this );
+		}
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin );
+		}
+	}
+
+	protected void consumeCrossJoin(SqmCrossJoin<?> sqmJoin, boolean transitive) {
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin );
+		}
+	}
+
+	protected void consumeEntityJoin(SqmEntityJoin<?> sqmJoin, boolean transitive) {
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			sqmJoin.getJoinPredicate().accept( this );
+		}
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin );
+		}
+	}
+
+	protected void consumeDerivedJoin(SqmDerivedJoin<?> sqmJoin, boolean transitive) {
+		sqmJoin.getQueryPart().accept( this );
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			sqmJoin.getJoinPredicate().accept( this );
+		}
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin );
+		}
+	}
+
+	protected void consumeCteJoin(SqmCteJoin<?> sqmJoin, boolean transitive) {
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			sqmJoin.getJoinPredicate().accept( this );
+		}
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin );
+		}
+	}
+
+	protected void consumePluralPartJoin(SqmPluralPartJoin<?, ?> sqmJoin, boolean transitive) {
+		if ( sqmJoin.getJoinPredicate() != null ) {
+			sqmJoin.getJoinPredicate().accept( this );
+		}
+		if ( transitive ) {
+			consumeExplicitJoins( sqmJoin );
+		}
 	}
 
 	@Override
 	public Object visitRootPath(SqmRoot<?> sqmRoot) {
-		sqmRoot.visitReusablePaths( path -> path.accept( this ) );
-		sqmRoot.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return sqmRoot;
 	}
 
 	@Override
 	public Object visitRootDerived(SqmDerivedRoot<?> sqmRoot) {
-		sqmRoot.getQueryPart().accept( this );
-		sqmRoot.visitReusablePaths( path -> path.accept( this ) );
-		sqmRoot.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return sqmRoot;
 	}
 
 	@Override
 	public Object visitRootCte(SqmCteRoot<?> sqmRoot) {
-		sqmRoot.visitReusablePaths( path -> path.accept( this ) );
-		sqmRoot.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return sqmRoot;
 	}
 
 	@Override
 	public Object visitCrossJoin(SqmCrossJoin<?> joinedFromElement) {
-		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
-		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return joinedFromElement;
 	}
 
 	@Override
 	public Object visitPluralPartJoin(SqmPluralPartJoin<?, ?> joinedFromElement) {
-		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
-		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return joinedFromElement;
 	}
 
 	@Override
 	public Object visitQualifiedEntityJoin(SqmEntityJoin<?> joinedFromElement) {
-		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
-		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
-		if ( joinedFromElement.getJoinPredicate() != null ) {
-			joinedFromElement.getJoinPredicate().accept( this );
-		}
 		return joinedFromElement;
 	}
 
 	@Override
 	public Object visitQualifiedAttributeJoin(SqmAttributeJoin<?,?> joinedFromElement) {
-		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
-		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
-		if ( joinedFromElement.getJoinPredicate() != null ) {
-			joinedFromElement.getJoinPredicate().accept( this );
-		}
 		return joinedFromElement;
 	}
 
 	@Override
 	public Object visitQualifiedDerivedJoin(SqmDerivedJoin<?> joinedFromElement) {
-		joinedFromElement.getQueryPart().accept( this );
-		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
-		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
-		if ( joinedFromElement.getJoinPredicate() != null ) {
-			joinedFromElement.getJoinPredicate().accept( this );
-		}
 		return joinedFromElement;
 	}
 
 	@Override
 	public Object visitQualifiedCteJoin(SqmCteJoin<?> joinedFromElement) {
-		joinedFromElement.visitReusablePaths( path -> path.accept( this ) );
-		joinedFromElement.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
-		if ( joinedFromElement.getJoinPredicate() != null ) {
-			joinedFromElement.getJoinPredicate().accept( this );
-		}
 		return joinedFromElement;
 	}
 
@@ -376,8 +463,6 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 
 	@Override
 	public Object visitCorrelation(SqmCorrelation<?, ?> correlation) {
-		correlation.visitReusablePaths( path -> path.accept( this ) );
-		correlation.visitSqmJoins( sqmJoin -> sqmJoin.accept( this ) );
 		return correlation;
 	}
 

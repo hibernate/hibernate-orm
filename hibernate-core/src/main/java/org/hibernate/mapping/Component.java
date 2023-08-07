@@ -171,22 +171,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public int getColumnSpan() {
-		return getSelectables().size();
-	}
-
-	@Override @Deprecated @SuppressWarnings("deprecation")
-	public Iterator<Selectable> getColumnIterator() {
-		@SuppressWarnings("unchecked")
-		Iterator<Selectable>[] iters = new Iterator[ getPropertySpan() ];
-		int i = 0;
-		for ( Property property : getProperties() ) {
-			iters[i++] = property.getColumnIterator();
-		}
-		return new JoinedIterator<>( iters );
-	}
-
-	@Override
 	public List<Selectable> getSelectables() {
 		if ( cachedSelectables == null ) {
 			cachedSelectables = properties.stream()
@@ -220,6 +204,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	public void setAggregateColumn(AggregateColumn aggregateColumn) {
 		this.aggregateColumn = aggregateColumn;
 		notifyPropertiesAboutAggregateColumn( aggregateColumn, this );
+	}
+
+	@Override
+	public int getColumnSpan() {
+		return getSelectables().size();
 	}
 
 	public List<Column> getAggregatedColumns() {

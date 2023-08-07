@@ -407,11 +407,6 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		}
 	}
 
-	@Deprecated
-	public Iterator<Selectable> getColumnIterator() {
-		return Collections.emptyIterator();
-	}
-
 	@Override
 	public List<Selectable> getSelectables() {
 		return Collections.emptyList();

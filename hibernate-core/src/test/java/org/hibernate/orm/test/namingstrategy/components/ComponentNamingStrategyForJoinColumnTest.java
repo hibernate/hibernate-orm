@@ -95,7 +95,7 @@ public class ComponentNamingStrategyForJoinColumnTest {
 		assertEquals( 1, collection.getOwner().getKey().getColumnSpan() );
 		assertEquals(
 			ownerForeignKeyNameExpected,
-			collection.getKey().getColumnIterator().next().getText()
+			collection.getKey().getSelectables().get( 0 ).getText()
 		);
 
 		int columnNumber = table.getColumnSpan();

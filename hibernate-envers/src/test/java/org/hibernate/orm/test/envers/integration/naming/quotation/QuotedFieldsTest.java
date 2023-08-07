@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.envers.integration.naming.quotation;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import jakarta.persistence.EntityManager;
 
@@ -101,9 +102,8 @@ public class QuotedFieldsTest extends BaseEnversJPAFunctionalTestCase {
 	}
 
 	private Column getColumnByName(Table table, String columnName) {
-		Iterator<Column> columnIterator = table.getColumnIterator();
-		while ( columnIterator.hasNext() ) {
-			Column column = columnIterator.next();
+		Collection<Column> columns = table.getColumns();
+		for ( Column column : columns ) {
 			if ( columnName.equals( column.getName() ) ) {
 				return column;
 			}

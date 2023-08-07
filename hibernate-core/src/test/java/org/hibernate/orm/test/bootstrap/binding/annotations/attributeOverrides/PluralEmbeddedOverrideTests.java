@@ -78,7 +78,7 @@ public class PluralEmbeddedOverrideTests {
 		assertThat( mapKey.getColumnSpan(), is( 1 ) );
 		final org.hibernate.mapping.Column mapKeyColumn = assertTyping(
 				org.hibernate.mapping.Column.class,
-				mapKey.getColumnIterator().next()
+				mapKey.getSelectables().get( 0 )
 		);
 		assertThat( mapKeyColumn.getName(), equalTo( "attribute_name" ) );
 

@@ -68,7 +68,7 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 		);
 
 		assert bootValueMapping.getColumnSpan() == 2;
-		final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();
+		final Iterator<Selectable> columnIterator = bootValueMapping.getSelectables().iterator();
 
 		assert columnIterator.hasNext();
 		final Selectable metaSelectable = columnIterator.next();

@@ -6,7 +6,6 @@
  */
 package org.hibernate.envers.boot.model;
 
-import java.util.Iterator;
 import java.util.List;
 
 import org.hibernate.mapping.Selectable;
@@ -38,9 +37,9 @@ public interface ColumnContainer {
 	 * @param value the value mapping
 	 */
 	default void addColumnsFromValue(Value value) {
-		final Iterator<Selectable> iterator = value.getColumnIterator();
-		while ( iterator.hasNext() ) {
-			addColumn( Column.from( iterator.next() ) );
+		final List<Selectable> selectables = value.getSelectables();
+		for ( Selectable s : selectables ) {
+			addColumn( Column.from( s ) );
 		}
 	}
 }

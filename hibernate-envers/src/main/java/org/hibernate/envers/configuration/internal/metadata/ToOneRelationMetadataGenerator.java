@@ -85,7 +85,7 @@ public final class ToOneRelationMetadataGenerator extends AbstractMetadataGenera
 
 		// Adding an element to the mapping corresponding to the references entity id's
 		idMapping.getRelation()
-				.getAttributesPrefixed( lastPropertyPrefix, value.getColumnIterator(), false, insertable )
+				.getAttributesPrefixed( lastPropertyPrefix, value.getSelectables().iterator(), false, insertable )
 				.forEach( mapping::addAttribute );
 
 		boolean lazy = ( (ToOne) value ).isLazy();

@@ -221,7 +221,7 @@ public class TemporaryTable implements Exportable, Contributable {
 										.getEntityBinding( pluralAttribute.findContainingEntityMapping().getEntityName() );
 								final Property property = findPropertyByName( declaringClass, attributeName );
 								assert property != null;
-								final Iterator<Selectable> columnIterator = ( (Collection) property.getValue() ).getKey().getColumnIterator();
+								final Iterator<Selectable> columnIterator = ( (Collection) property.getValue() ).getKey().getSelectables().iterator();
 								fkTarget.forEachSelectable(
 										(columnIndex, selection) -> {
 											final Selectable selectable = columnIterator.next();

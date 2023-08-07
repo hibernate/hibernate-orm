@@ -207,7 +207,7 @@ public class JpaXsdVersionsTest {
 		}
 
 		public ClassLoader getNewTempClassLoader() {
-			return getClassLoader();
+			return null;
 		}
 	}
 }

@@ -125,6 +125,6 @@ public class PersistenceUnitInfoPropertiesWrapper implements PersistenceUnitInfo
 	}
 
 	public ClassLoader getNewTempClassLoader() {
-		return Thread.currentThread().getContextClassLoader();
+		return null;
 	}
 }

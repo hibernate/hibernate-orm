@@ -7,6 +7,8 @@
 package org.hibernate.jpa.boot.internal;
 
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import jakarta.persistence.SharedCacheMode;
@@ -15,6 +17,7 @@ import jakarta.persistence.spi.PersistenceUnitInfo;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
 
@@ -23,6 +26,7 @@ import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
  */
 public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor {
 	private final PersistenceUnitInfo persistenceUnitInfo;
+	private final ArrayList<ClassTransformer> classTransformers = new ArrayList<>();
 
 	public PersistenceUnitInfoDescriptor(PersistenceUnitInfo persistenceUnitInfo) {
 		this.persistenceUnitInfo = persistenceUnitInfo;
@@ -110,6 +114,16 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 
 	@Override
 	public void pushClassTransformer(EnhancementContext enhancementContext) {
-		persistenceUnitInfo.addTransformer( new EnhancingClassTransformerImpl( enhancementContext ) );
+		// During testing, we will return a null temp class loader in cases where we don't care about enhancement
+		if ( persistenceUnitInfo.getNewTempClassLoader() != null ) {
+			final EnhancingClassTransformerImpl classTransformer = new EnhancingClassTransformerImpl( enhancementContext );
+			classTransformers.add( classTransformer );
+			persistenceUnitInfo.addTransformer( classTransformer );
+		}
+	}
+
+	@Override
+	public Collection<ClassTransformer> getClassTransformers() {
+		return classTransformers;
 	}
 }

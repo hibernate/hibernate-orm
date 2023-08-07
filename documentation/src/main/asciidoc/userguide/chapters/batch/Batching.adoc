@@ -155,7 +155,7 @@ include::{example-dir-doc-batch}/BatchTests.java[tags=batch-stateless-session-ex
 ----
 ====
 
-The `Customer` instances returned by the query are immediately detached.
+The `Person` instances returned by the query are immediately detached.
 They are never associated with any persistence context.
 
 [NOTE]

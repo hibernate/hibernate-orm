@@ -76,9 +76,9 @@ public class NamingStrategyTest extends BaseUnitTestCase {
 
 		PersistentClass entityBinding = metadata.getEntityBinding( A.class.getName() );
 		assertEquals("NAME",
-					 ((Selectable) entityBinding.getProperty( "name" ).getColumnIterator().next()).getText());
+					 ((Selectable) entityBinding.getProperty( "name" ).getSelectables().get( 0 ) ).getText());
 		assertEquals("VALUE",
-					 ((Selectable) entityBinding.getProperty( "value" ).getColumnIterator().next()).getText());
+					 ((Selectable) entityBinding.getProperty( "value" ).getSelectables().get( 0 ) ).getText());
 	}
 
     @Test

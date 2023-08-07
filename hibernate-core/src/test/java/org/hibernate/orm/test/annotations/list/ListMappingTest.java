@@ -75,7 +75,7 @@ public class ListMappingTest  {
 		org.hibernate.mapping.List asList = (org.hibernate.mapping.List) lineItemsBinding;
 
 		// assert the OrderColumn details
-		final Column positionColumn = (Column) asList.getIndex().getColumnIterator().next();
+		final Column positionColumn = (Column) asList.getIndex().getSelectables().get( 0 );
 		assertThat( positionColumn.getName(), equalTo( "position" ) );
 
 		// make sure the OrderColumn is part of the collection table

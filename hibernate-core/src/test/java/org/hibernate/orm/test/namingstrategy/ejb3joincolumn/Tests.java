@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.namingstrategy.ejb3joincolumn;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.boot.Metadata;
@@ -21,13 +22,13 @@ import org.hibernate.cfg.Environment;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.Selectable;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -60,10 +61,9 @@ public class Tests {
 
 			final PersistentClass languageBinding = metadata.getEntityBinding( Language.class.getName() );
 			final Property property = languageBinding.getProperty( "fallBack" );
-			Iterator itr = property.getValue().getColumnIterator();
-			assertTrue( itr.hasNext() );
-			final Column column = (Column) itr.next();
-			assertFalse( itr.hasNext() );
+			List<Selectable> selectables = property.getValue().getSelectables();
+			assertTrue( selectables.size() == 1 );
+			final Column column = (Column) selectables.get( 0 );
 
 			assertEquals( "C_FALLBACK_ID", column.getName().toUpperCase( Locale.ROOT ) );
 		}

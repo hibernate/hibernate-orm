@@ -916,7 +916,7 @@ public class MappingModelCreationHelper {
 
 		if ( fkTarget instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
-			final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();
+			final Iterator<Selectable> columnIterator = bootValueMapping.getSelectables().iterator();
 			final Table table = bootValueMapping.getTable();
 			final String tableExpression = getTableIdentifierExpression( table, creationProcess );
 			final PropertyAccess declaringKeyPropertyAccess;

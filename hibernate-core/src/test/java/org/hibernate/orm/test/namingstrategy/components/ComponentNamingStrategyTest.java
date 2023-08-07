@@ -53,7 +53,7 @@ public class ComponentNamingStrategyTest {
 			Bag value = assertTyping( Bag.class, p.getValue() );
 			SimpleValue elementValue = assertTyping( SimpleValue.class, value.getElement() );
 			assertEquals( 1, elementValue.getColumnSpan() );
-			Column column = assertTyping( Column.class, elementValue.getColumnIterator().next() );
+			Column column = assertTyping( Column.class, elementValue.getSelectables().get( 0 ) );
 			assertEquals( column.getName(), "name" );
 		}
 		finally {
@@ -81,7 +81,7 @@ public class ComponentNamingStrategyTest {
 			Bag value = assertTyping( Bag.class, p.getValue() );
 			SimpleValue elementValue = assertTyping(  SimpleValue.class, value.getElement() );
 			assertEquals( 1, elementValue.getColumnSpan() );
-			Column column = assertTyping( Column.class, elementValue.getColumnIterator().next() );
+			Column column = assertTyping( Column.class, elementValue.getSelectables().get( 0 ) );
 			assertEquals( "items_name", column.getName() );
 		}
 		finally {

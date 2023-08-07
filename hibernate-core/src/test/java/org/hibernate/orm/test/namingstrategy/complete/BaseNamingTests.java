@@ -68,16 +68,16 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 		validateCustomerPrimaryTableName( customerBinding.getTable().getQuotedName() );
 
 		assertEquals( 1, customerBinding.getIdentifier().getColumnSpan() );
-		validateCustomerPrimaryKeyColumn( (Column) customerBinding.getIdentifier().getColumnIterator().next() );
+		validateCustomerPrimaryKeyColumn( (Column) customerBinding.getIdentifier().getSelectables().get( 0 ) );
 
 		assertNotNull( customerBinding.getVersion() );
 		assertEquals( 1, customerBinding.getVersion().getColumnSpan() );
-		validateCustomerVersionColumn( (Column) customerBinding.getVersion().getColumnIterator().next() );
+		validateCustomerVersionColumn( (Column) customerBinding.getVersion().getSelectables().get( 0 ) );
 
 		final Property nameBinding = customerBinding.getProperty( "name" );
 		assertNotNull( nameBinding );
 		assertEquals( 1, nameBinding.getColumnSpan() );
-		validateCustomerNameColumn( (Column) nameBinding.getColumnIterator().next() );
+		validateCustomerNameColumn( (Column) nameBinding.getSelectables().get( 0 ) );
 
 		final Property hqAddressBinding = customerBinding.getProperty( "hqAddress" );
 		assertNotNull( hqAddressBinding );
@@ -103,27 +103,27 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 		validateOrderPrimaryTableName( orderBinding.getTable().getQuotedName() );
 
 		assertEquals( 1, orderBinding.getIdentifier().getColumnSpan() );
-		validateOrderPrimaryKeyColumn( (Column) orderBinding.getIdentifier().getColumnIterator().next() );
+		validateOrderPrimaryKeyColumn( (Column) orderBinding.getIdentifier().getSelectables().get( 0 ) );
 
 		final Property referenceCodeBinding = orderBinding.getProperty( "referenceCode" );
 		assertNotNull( referenceCodeBinding );
 		assertEquals( 1, referenceCodeBinding.getColumnSpan() );
-		validateOrderReferenceCodeColumn( (Column) referenceCodeBinding.getColumnIterator().next() );
+		validateOrderReferenceCodeColumn( (Column) referenceCodeBinding.getSelectables().get( 0 ) );
 
 		final Property placedBinding = orderBinding.getProperty( "placed" );
 		assertNotNull( placedBinding );
 		assertEquals( 1, placedBinding.getColumnSpan() );
-		validateOrderPlacedColumn( (Column) placedBinding.getColumnIterator().next() );
+		validateOrderPlacedColumn( (Column) placedBinding.getSelectables().get( 0 ) );
 
 		final Property fulfilledBinding = orderBinding.getProperty( "fulfilled" );
 		assertNotNull( fulfilledBinding );
 		assertEquals( 1, fulfilledBinding.getColumnSpan() );
-		validateOrderFulfilledColumn( (Column) fulfilledBinding.getColumnIterator().next() );
+		validateOrderFulfilledColumn( (Column) fulfilledBinding.getSelectables().get( 0 ) );
 
 		final Property customerBinding = orderBinding.getProperty( "customer" );
 		assertNotNull( customerBinding );
 		assertEquals( 1, customerBinding.getColumnSpan() );
-		validateOrderCustomerColumn( (Column) customerBinding.getColumnIterator().next() );
+		validateOrderCustomerColumn( (Column) customerBinding.getSelectables().get( 0 ) );
 	}
 
 	protected abstract void validateOrderPrimaryTableName(String name);
@@ -147,22 +147,22 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 		validateZipCodePrimaryTableName( zipCodeBinding.getTable().getQuotedName() );
 
 		assertEquals( 1, zipCodeBinding.getIdentifier().getColumnSpan() );
-		validateZipCodePrimaryKeyColumn( (Column) zipCodeBinding.getIdentifier().getColumnIterator().next() );
+		validateZipCodePrimaryKeyColumn( (Column) zipCodeBinding.getIdentifier().getSelectables().get( 0 ) );
 
 		final Property codeBinding = zipCodeBinding.getProperty( "code" );
 		assertNotNull( codeBinding );
 		assertEquals( 1, codeBinding.getColumnSpan() );
-		validateZipCodeCodeColumn( (Column) codeBinding.getColumnIterator().next() );
+		validateZipCodeCodeColumn( (Column) codeBinding.getSelectables().get( 0 ) );
 
 		final Property cityBinding = zipCodeBinding.getProperty( "city" );
 		assertNotNull( cityBinding );
 		assertEquals( 1, cityBinding.getColumnSpan() );
-		validateZipCodeCityColumn( (Column) cityBinding.getColumnIterator().next() );
+		validateZipCodeCityColumn( (Column) cityBinding.getSelectables().get( 0 ) );
 
 		final Property stateBinding = zipCodeBinding.getProperty( "state" );
 		assertNotNull( stateBinding );
 		assertEquals( 1, stateBinding.getColumnSpan() );
-		validateZipCodeStateColumn( (Column) stateBinding.getColumnIterator().next() );
+		validateZipCodeStateColumn( (Column) stateBinding.getSelectables().get( 0 ) );
 	}
 
 	protected abstract void validateZipCodePrimaryTableName(String name);
@@ -183,13 +183,13 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 		validateCustomerRegisteredTrademarksTableName( collectionBinding.getCollectionTable().getQuotedName() );
 
 		assertEquals( 1, collectionBinding.getKey().getColumnSpan() );
-		validateCustomerRegisteredTrademarksKeyColumn( (Column) collectionBinding.getKey().getColumnIterator().next() );
+		validateCustomerRegisteredTrademarksKeyColumn( (Column) collectionBinding.getKey().getSelectables().get( 0 ) );
 
 		assertEquals( 1, collectionBinding.getElement().getColumnSpan() );
 		validateCustomerRegisteredTrademarksElementColumn(
 				(Column) collectionBinding.getElement()
-						.getColumnIterator()
-						.next()
+						.getSelectables()
+						.get( 0 )
 		);
 	}
 
@@ -207,7 +207,7 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 		validateCustomerAddressesTableName( collectionBinding.getCollectionTable().getQuotedName() );
 
 		assertEquals( 1, collectionBinding.getKey().getColumnSpan() );
-		validateCustomerAddressesKeyColumn( (Column) collectionBinding.getKey().getColumnIterator().next() );
+		validateCustomerAddressesKeyColumn( (Column) collectionBinding.getKey().getSelectables().get( 0 ) );
 
 		assertEquals( 3, collectionBinding.getElement().getColumnSpan() );
 		validateCustomerAddressesElementComponent( assertTyping( Component.class, collectionBinding.getElement() ) );
@@ -227,10 +227,10 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 		validateCustomerOrdersTableName( collectionBinding.getCollectionTable().getQuotedName() );
 
 		assertEquals( 1, collectionBinding.getKey().getColumnSpan() );
-		validateCustomerOrdersKeyColumn( (Column) collectionBinding.getKey().getColumnIterator().next() );
+		validateCustomerOrdersKeyColumn( (Column) collectionBinding.getKey().getSelectables().get( 0 ) );
 
 		assertEquals( 1, collectionBinding.getElement().getColumnSpan() );
-		validateCustomerOrdersElementColumn( (Column) collectionBinding.getElement().getColumnIterator().next() );
+		validateCustomerOrdersElementColumn( (Column) collectionBinding.getElement().getSelectables().get( 0 ) );
 	}
 
 	protected abstract void validateCustomerOrdersTableName(String name);
@@ -246,10 +246,10 @@ public abstract class BaseNamingTests extends BaseUnitTestCase {
 		validateCustomerIndustriesTableName( collectionBinding.getCollectionTable().getQuotedName() );
 
 		assertEquals( 1, collectionBinding.getKey().getColumnSpan() );
-		validateCustomerIndustriesKeyColumn( (Column) collectionBinding.getKey().getColumnIterator().next() );
+		validateCustomerIndustriesKeyColumn( (Column) collectionBinding.getKey().getSelectables().get( 0 ) );
 
 		assertEquals( 1, collectionBinding.getElement().getColumnSpan() );
-		validateCustomerIndustriesElementColumn( (Column) collectionBinding.getElement().getColumnIterator().next() );
+		validateCustomerIndustriesElementColumn( (Column) collectionBinding.getElement().getSelectables().get( 0 ) );
 	}
 
 	protected abstract void validateCustomerIndustriesTableName(String name);

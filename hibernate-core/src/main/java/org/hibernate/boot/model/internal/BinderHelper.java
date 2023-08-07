@@ -66,6 +66,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
+import static org.hibernate.boot.model.internal.HCANNHelper.findAnnotation;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -814,13 +815,13 @@ public class BinderHelper {
 	private static void processAnyDiscriminatorValues(
 			XProperty property,
 			Consumer<AnyDiscriminatorValue> consumer) {
-		final AnyDiscriminatorValue valueAnn = property.getAnnotation( AnyDiscriminatorValue.class );
+		final AnyDiscriminatorValue valueAnn = findAnnotation( property, AnyDiscriminatorValue.class );
 		if ( valueAnn != null ) {
 			consumer.accept( valueAnn );
 			return;
 		}
 
-		final AnyDiscriminatorValues valuesAnn = property.getAnnotation( AnyDiscriminatorValues.class );
+		final AnyDiscriminatorValues valuesAnn = findAnnotation( property, AnyDiscriminatorValues.class );
 		if ( valuesAnn != null ) {
 			for ( AnyDiscriminatorValue discriminatorValue : valuesAnn.value() ) {
 				consumer.accept( discriminatorValue );

@@ -101,6 +101,10 @@ public @interface Any {
 
 	/**
 	 * Whether the association is optional.
+	 * <p>
+	 * If the discriminator {@link jakarta.persistence.Column Column} or the
+	 * {@link jakarta.persistence.JoinColumn JoinColumn} are not nullable the
+	 * association is always considered non-optional, regardless of this value.
 	 *
 	 * @return {@code false} if the association cannot be null.
 	 */

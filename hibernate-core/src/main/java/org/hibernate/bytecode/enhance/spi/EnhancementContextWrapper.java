@@ -6,6 +6,8 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
+import jakarta.persistence.metamodel.Type;
+
 public class EnhancementContextWrapper implements EnhancementContext {
 
 	private final ClassLoader loadingClassloader;
@@ -74,5 +76,15 @@ public class EnhancementContextWrapper implements EnhancementContext {
 	@Override
 	public boolean isMappedCollection(UnloadedField field) {
 		return wrappedContext.isMappedCollection( field );
+	}
+
+	@Override
+	public boolean isDiscoveredType(UnloadedClass classDescriptor) {
+		return wrappedContext.isDiscoveredType( classDescriptor );
+	}
+
+	@Override
+	public void registerDiscoveredType(UnloadedClass classDescriptor, Type.PersistenceType type) {
+		wrappedContext.registerDiscoveredType( classDescriptor, type );
 	}
 }

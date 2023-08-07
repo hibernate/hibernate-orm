@@ -9,6 +9,8 @@ package org.hibernate.jpa.boot.internal;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
 import jakarta.persistence.SharedCacheMode;
@@ -16,6 +18,7 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.spi.ClassTransformer;
 
 /**
  * Describes the information gleaned from a {@code <persistence-unit/>} element in a {@code persistence.xml} file
@@ -188,5 +191,10 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 	@Override
 	public void pushClassTransformer(EnhancementContext enhancementContext) {
 		// todo : log a message that this is currently not supported...
+	}
+
+	@Override
+	public Collection<ClassTransformer> getClassTransformers() {
+		return Collections.emptyList();
 	}
 }

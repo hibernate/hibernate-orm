@@ -16,11 +16,13 @@ import org.hibernate.bytecode.enhance.internal.bytebuddy.EnhancerImpl.AnnotatedF
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 
 import jakarta.persistence.Embedded;
+import jakarta.persistence.metamodel.Type;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.pool.TypePool;
 
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
 
@@ -86,6 +88,50 @@ class ByteBuddyEnhancementContext {
 
 	public boolean doBiDirectionalAssociationManagement(AnnotatedFieldDescription field) {
 		return enhancementContext.doBiDirectionalAssociationManagement( field );
+	}
+
+	public boolean isDiscoveredType(TypeDescription typeDescription) {
+		return enhancementContext.isDiscoveredType( new UnloadedTypeDescription( typeDescription ) );
+	}
+
+	public void registerDiscoveredType(TypeDescription typeDescription, Type.PersistenceType type) {
+		enhancementContext.registerDiscoveredType( new UnloadedTypeDescription( typeDescription ), type );
+	}
+
+	public void discoverCompositeTypes(TypeDescription managedCtClass, TypePool typePool) {
+		if ( isDiscoveredType( managedCtClass ) ) {
+			return;
+		}
+		final Type.PersistenceType determinedPersistenceType;
+		if ( isEntityClass( managedCtClass ) ) {
+			determinedPersistenceType = Type.PersistenceType.ENTITY;
+		}
+		else if ( isCompositeClass( managedCtClass ) ) {
+			determinedPersistenceType = Type.PersistenceType.EMBEDDABLE;
+		}
+		else if ( isMappedSuperclassClass( managedCtClass ) ) {
+			determinedPersistenceType = Type.PersistenceType.MAPPED_SUPERCLASS;
+		}
+		else {
+			// Default to assuming a basic type if this is not a managed type
+			determinedPersistenceType = Type.PersistenceType.BASIC;
+		}
+		registerDiscoveredType( managedCtClass, determinedPersistenceType );
+		if ( determinedPersistenceType != Type.PersistenceType.BASIC ) {
+			final EnhancerImpl.AnnotatedFieldDescription[] enhancedFields = PersistentAttributeTransformer.collectPersistentFields(
+							managedCtClass,
+							this,
+							typePool
+					)
+					.getEnhancedFields();
+			for ( EnhancerImpl.AnnotatedFieldDescription enhancedField : enhancedFields ) {
+				final TypeDescription type = enhancedField.getType().asErasure();
+				if ( !type.isInterface() && enhancedField.hasAnnotation( Embedded.class ) ) {
+					registerDiscoveredType( type, Type.PersistenceType.EMBEDDABLE );
+				}
+				discoverCompositeTypes( type, typePool );
+			}
+		}
 	}
 
 	Optional<MethodDescription> resolveGetter(FieldDescription fieldDescription) {

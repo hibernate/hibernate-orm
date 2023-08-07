@@ -30,4 +30,6 @@ public interface Enhancer {
 	 * @throws EnhancementException Indicates a problem performing the enhancement
 	 */
 	byte[] enhance(String className, byte[] originalBytes) throws EnhancementException;
+
+	void discoverTypes(String className, byte[] originalBytes);
 }

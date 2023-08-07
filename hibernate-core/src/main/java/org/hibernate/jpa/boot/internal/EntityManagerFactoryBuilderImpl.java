@@ -52,6 +52,7 @@ import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
+import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
@@ -70,6 +71,7 @@ import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
 import org.hibernate.jpa.internal.util.LogHelper;
 import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
@@ -339,6 +341,20 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				);
 
 				persistenceUnit.pushClassTransformer( enhancementContext );
+
+				if ( !persistenceUnit.getClassTransformers().isEmpty() ) {
+					final ClassLoader classLoader = persistenceUnit.getTempClassLoader();
+					if ( classLoader == null ) {
+						throw persistenceException( "Enhancement requires a temp class loader, but none was given." );
+					}
+					for ( ClassTransformer classTransformer : persistenceUnit.getClassTransformers() ) {
+						for ( PersistentClass entityBinding : metadata.getEntityBindings() ) {
+							if ( entityBinding.getClassName() != null ) {
+								classTransformer.discoverTypes( classLoader, entityBinding.getClassName() );
+							}
+						}
+					}
+				}
 			}
 
 			// for the time being we want to revoke access to the temp ClassLoader if one was passed

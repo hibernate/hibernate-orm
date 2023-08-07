@@ -6,6 +6,8 @@
  */
 package org.hibernate.bytecode.enhance.spi;
 
+import jakarta.persistence.metamodel.Type;
+
 /**
  * The context for performing an enhancement.  Enhancement can happen in any number of ways:<ul>
  * <li>Build time, via Ant</li>
@@ -140,4 +142,8 @@ public interface EnhancementContext {
 	 * @return {@code true} if the field is mapped
 	 */
 	boolean isMappedCollection(UnloadedField field);
+
+	boolean isDiscoveredType(UnloadedClass classDescriptor);
+
+	void registerDiscoveredType(UnloadedClass classDescriptor, Type.PersistenceType type);
 }

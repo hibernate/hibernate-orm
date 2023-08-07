@@ -170,6 +170,10 @@ public class EnhancementTask extends Task {
 		try {
 			Enhancer enhancer = bytecodeProvider.getEnhancer( enhancementContext );
 			for ( File file : sourceSet ) {
+				discoverTypes( file, enhancer );
+				log( "Successfully discovered types for class [" + file + "]", Project.MSG_INFO );
+			}
+			for ( File file : sourceSet ) {
 				byte[] enhancedBytecode = doEnhancement( file, enhancer );
 				if ( enhancedBytecode == null ) {
 					continue;
@@ -201,6 +205,35 @@ public class EnhancementTask extends Task {
 		}
 
 		return new URLClassLoader( urls.toArray( new URL[urls.size()] ), Enhancer.class.getClassLoader() );
+	}
+
+	private void discoverTypes(File javaClassFile, Enhancer enhancer) throws BuildException {
+		try {
+			String className = javaClassFile.getAbsolutePath().substring(
+					base.length() + 1,
+					javaClassFile.getAbsolutePath().length() - ".class".length()
+			).replace( File.separatorChar, '.' );
+			ByteArrayOutputStream originalBytes = new ByteArrayOutputStream();
+			FileInputStream fileInputStream = new FileInputStream( javaClassFile );
+			try {
+				byte[] buffer = new byte[1024];
+				int length;
+				while ( ( length = fileInputStream.read( buffer ) ) != -1 ) {
+					originalBytes.write( buffer, 0, length );
+				}
+			}
+			finally {
+				fileInputStream.close();
+			}
+			enhancer.discoverTypes( className, originalBytes.toByteArray() );
+		}
+		catch (Exception e) {
+			String msg = "Unable to discover types for class: " + javaClassFile.getName();
+			if ( failOnError ) {
+				throw new BuildException( msg, e );
+			}
+			log( msg, e, Project.MSG_WARN );
+		}
 	}
 
 	private byte[] doEnhancement(File javaClassFile, Enhancer enhancer) throws BuildException {

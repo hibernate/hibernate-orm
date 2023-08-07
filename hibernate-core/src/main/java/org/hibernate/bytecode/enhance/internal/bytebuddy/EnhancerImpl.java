@@ -46,6 +46,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.Transient;
+import jakarta.persistence.metamodel.Type;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.annotation.AnnotationList;
@@ -159,6 +160,16 @@ public class EnhancerImpl implements Enhancer {
 		catch (RuntimeException e) {
 			throw new EnhancementException( "Failed to enhance class " + className, e );
 		}
+	}
+
+	@Override
+	public void discoverTypes(String className, byte[] originalBytes) {
+		if ( originalBytes != null ) {
+			classFileLocator.setClassNameAndBytes( className, originalBytes );
+		}
+		final TypeDescription typeDescription = typePool.describe( className ).resolve();
+		enhancementContext.registerDiscoveredType( typeDescription, Type.PersistenceType.ENTITY );
+		enhancementContext.discoverCompositeTypes( typeDescription, typePool );
 	}
 
 	private TypePool buildTypePool(final ClassFileLocator classFileLocator) {

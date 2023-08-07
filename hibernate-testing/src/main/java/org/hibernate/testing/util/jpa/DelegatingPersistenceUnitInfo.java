@@ -105,6 +105,6 @@ public class DelegatingPersistenceUnitInfo implements PersistenceUnitInfo {
 
 	@Override
 	public ClassLoader getNewTempClassLoader() {
-		return null;
+		return delegate.getNewTempClassLoader();
 	}
 }

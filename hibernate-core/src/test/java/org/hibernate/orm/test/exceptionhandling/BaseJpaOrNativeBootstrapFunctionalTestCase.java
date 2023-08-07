@@ -9,6 +9,8 @@ package org.hibernate.orm.test.exceptionhandling;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -247,6 +250,11 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 
 		@Override
 		public void pushClassTransformer(EnhancementContext enhancementContext) {
+		}
+
+		@Override
+		public Collection<ClassTransformer> getClassTransformers() {
+			return Collections.emptyList();
 		}
 	}
 

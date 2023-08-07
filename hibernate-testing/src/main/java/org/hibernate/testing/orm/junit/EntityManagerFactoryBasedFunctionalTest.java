@@ -9,6 +9,8 @@ package org.hibernate.testing.orm.junit;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -265,6 +268,11 @@ public class EntityManagerFactoryBasedFunctionalTest
 
 		@Override
 		public void pushClassTransformer(EnhancementContext enhancementContext) {
+		}
+
+		@Override
+		public Collection<ClassTransformer> getClassTransformers() {
+			return Collections.emptyList();
 		}
 	}
 

@@ -7,6 +7,7 @@
 package org.hibernate.jpa.boot.spi;
 
 import java.net.URL;
+import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 import jakarta.persistence.SharedCacheMode;
@@ -14,6 +15,7 @@ import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.spi.ClassTransformer;
 
 /**
  * Abstraction for dealing with either {@code <persistence-unit/>} information whether that comes from
@@ -85,4 +87,6 @@ public interface PersistenceUnitDescriptor {
 	ClassLoader getTempClassLoader();
 
 	void pushClassTransformer(EnhancementContext enhancementContext);
+
+	Collection<ClassTransformer> getClassTransformers();
 }

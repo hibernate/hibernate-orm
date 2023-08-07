@@ -9,6 +9,7 @@ package org.hibernate.orm.test.jpa;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,7 @@ import jakarta.persistence.spi.PersistenceUnitTransactionType;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
@@ -186,6 +188,11 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 
 		@Override
 		public void pushClassTransformer(EnhancementContext enhancementContext) {
+		}
+
+		@Override
+		public Collection<ClassTransformer> getClassTransformers() {
+			return Collections.emptyList();
 		}
 	}
 

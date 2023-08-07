@@ -1081,6 +1081,10 @@ use these and not their deprecated subclasses:
 * `org.hibernate.community.dialect.TeradataDialect`
 * `org.hibernate.community.dialect.TimesTenDialect`
 
+=== `NUMBER(n,0)` on Oracle
+
+In the absence of other information, Hibernate now treats columns of type `NUMBER(n,0)` as the JDBC type `INTEGER` when `n` is smaller than 11 and as type `BIGINT` when `n` is smaller than 20. Previously, all `NUMBER` types were mapped to `DECIMAL`.
+
 [[multitenancy]]
 == Multitenancy simplification
 

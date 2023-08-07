@@ -206,14 +206,15 @@ public class EntityJoinTest {
                     assertThat( roots.size(), is( 1 ) );
 
                     final TableGroup rootTableGroup = roots.get( 0 );
-                    assertThat( rootTableGroup.getTableGroupJoins().size(), is( 2 ) );
+                    assertThat( rootTableGroup.getTableGroupJoins().size(), is( 1 ) );
+                    assertThat( rootTableGroup.getNestedTableGroupJoins().size(), is( 1 ) );
 
-                    // The first table group is an uninitialized lazy table group for the path in the on clause
-                    final TableGroupJoin firstTableGroupJoin = rootTableGroup.getTableGroupJoins().get( 0 );
-                    assertThat( firstTableGroupJoin.getJoinedGroup(), instanceOf( LazyTableGroup.class ) );
-                    assertThat( ((LazyTableGroup) firstTableGroupJoin.getJoinedGroup()).getUnderlyingTableGroup(), is( CoreMatchers.nullValue() ) );
+                    // An uninitialized lazy table group for the path in the on clause
+                    final TableGroupJoin nestedTableGroupJoin = rootTableGroup.getNestedTableGroupJoins().get( 0 );
+                    assertThat( nestedTableGroupJoin.getJoinedGroup(), instanceOf( LazyTableGroup.class ) );
+                    assertThat( ((LazyTableGroup) nestedTableGroupJoin.getJoinedGroup()).getUnderlyingTableGroup(), is( CoreMatchers.nullValue() ) );
 
-                    final TableGroupJoin tableGroupJoin = rootTableGroup.getTableGroupJoins().get( 1 );
+                    final TableGroupJoin tableGroupJoin = rootTableGroup.getTableGroupJoins().get( 0 );
                     assertThat( tableGroupJoin.getJoinedGroup().getModelPart(), is( customerEntityDescriptor ) );
                 }
         );

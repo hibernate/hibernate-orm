@@ -771,7 +771,14 @@ public class OracleDialect extends Dialect {
 					// Don't infer TINYINT or SMALLINT on Oracle, since the
 					// range of values of a NUMBER(3,0) or NUMBER(5,0) just
 					// doesn't really match naturally.
-					if ( precision <= 10 ) {
+
+					// Backwards compatibility patch:
+					// In Oracle8iDialect (maybe also in previous and
+					// intermediate versions) all DECIMALs used BIGINT JDBC
+					// type descriptor.
+					boolean tryInteger = false;
+
+					if ( tryInteger && precision <= 10 ) {
 						// We map INTEGER to NUMBER(10,0), so we should also
 						// map NUMBER(10,0) back to INTEGER. (In principle,
 						// a NUMBER(10,0) might not fit in a 32-bit integer,

@@ -32,6 +32,8 @@ elif [ "$RDBMS" == "mssql" ] || [ "$RDBMS" == "mssql_2017" ]; then
   goal="-Pdb=mssql_ci"
 elif [ "$RDBMS" == "sybase" ]; then
   goal="-Pdb=sybase_ci"
+elif [ "$RDBMS" == "sybase_jconn" ]; then
+  goal="-Pdb=sybase_jconn_ci"
 elif [ "$RDBMS" == "tidb" ]; then
   goal="-Pdb=tidb"
 elif [ "$RDBMS" == "hana_cloud" ]; then

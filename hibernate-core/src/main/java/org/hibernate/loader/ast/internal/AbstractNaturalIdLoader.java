@@ -6,7 +6,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
@@ -51,13 +50,11 @@ import org.hibernate.sql.exec.spi.JdbcParameterBinding;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.graph.DomainResult;
-import org.hibernate.sql.results.graph.Fetch;
-import org.hibernate.sql.results.graph.FetchParent;
-import org.hibernate.sql.results.graph.Fetchable;
-import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.stat.spi.StatisticsImplementor;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Base support for NaturalIdLoader implementations
@@ -92,35 +89,82 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 
 	@Override
 	public T load(Object naturalIdValue, NaturalIdLoadOptions options, SharedSessionContractImplementor session) {
-		return selectByNaturalId(
+		final SessionFactoryImplementor sessionFactory = session.getFactory();
+
+		final LockOptions lockOptions = options.getLockOptions() == null ? LockOptions.NONE : options.getLockOptions();
+
+		final SelectStatement sqlSelect = LoaderSelectBuilder.createSelect(
+				getLoadable(),
+				// null here means to select everything
+				null,
+				true,
+				emptyList(), // we're going to add the restrictions ourselves
+				null,
+				1,
+				session.getLoadQueryInfluencers(),
+				lockOptions,
+				JdbcParametersList.newBuilder()::add,
+				sessionFactory
+		);
+
+		// we have to add the restrictions ourselves manually because we want special null handling
+		final JdbcParameterBindings jdbcParamBindings = new JdbcParameterBindingsImpl( naturalIdMapping.getJdbcTypeCount() );
+		applyNaturalIdRestriction(
 				naturalIdMapping().normalizeInput( naturalIdValue ),
-				options,
-				(tableGroup, creationState) -> entityDescriptor.createDomainResult(
-						new NavigablePath( entityDescriptor().getRootPathName() ),
-						tableGroup,
-						null,
-						creationState
+				sqlSelect.getQuerySpec().getFromClause().getRoots().get(0),
+				sqlSelect.getQuerySpec()::applyPredicate,
+				jdbcParamBindings::addBinding,
+				new LoaderSqlAstCreationState(
+						sqlSelect.getQuerySpec(),
+						new SqlAliasBaseManager(),
+						new SimpleFromClauseAccessImpl(),
+						lockOptions,
+						(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
+						true,
+						new LoadQueryInfluencers( sessionFactory ),
+						sessionFactory
 				),
-				AbstractNaturalIdLoader::visitFetches,
-				(statsEnabled) -> {
-//					entityDescriptor().getPreLoadListener().startingLoad( entityDescriptor, naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
-					return statsEnabled ? System.nanoTime() : -1;
-				},
-				(result,startToken) -> {
-//					entityDescriptor().getPostLoadListener().completedLoad( result, entityDescriptor(), naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
-					if ( startToken > 0 ) {
-						session.getFactory().getStatistics().naturalIdQueryExecuted(
-								entityDescriptor().getEntityPersister().getRootEntityName(),
-								System.nanoTime() - startToken
-						);
-//						// todo (6.0) : need a "load-by-natural-id" stat
-//						//		e.g.,
-//						// final Object identifier = entityDescriptor().getIdentifierMapping().getIdentifier( result, session );
-//						// session.getFactory().getStatistics().entityLoadedByNaturalId( entityDescriptor(), identifier );
-					}
-				},
 				session
 		);
+
+		final QueryOptions queryOptions = new SimpleQueryOptions( lockOptions, false );
+		final JdbcOperationQuerySelect jdbcSelect =
+				sessionFactory.getJdbcServices().getJdbcEnvironment().getSqlAstTranslatorFactory()
+						.buildSelectTranslator( sessionFactory, sqlSelect )
+						.translate( jdbcParamBindings, queryOptions );
+
+		final long startToken = sessionFactory.getStatistics().isStatisticsEnabled() ? System.nanoTime() : -1;
+
+		//noinspection unchecked
+		final List<T> results = session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
+				jdbcSelect,
+				jdbcParamBindings,
+				new NaturalIdLoaderWithOptionsExecutionContext( session, queryOptions ),
+				row -> (T) row[0],
+				ListResultsConsumer.UniqueSemantic.FILTER
+		);
+
+		if ( results.size() > 1 ) {
+			throw new HibernateException(
+					String.format(
+							"Loading by natural-id returned more that one row : %s",
+							entityDescriptor.getEntityName()
+					)
+			);
+		}
+
+		final T result = results.isEmpty() ? null : results.get(0);
+//		entityDescriptor().getPostLoadListener().completedLoad( result, entityDescriptor(), naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
+		if ( startToken > 0 ) {
+			session.getFactory().getStatistics().naturalIdQueryExecuted(
+					entityDescriptor().getEntityPersister().getRootEntityName(),
+					System.nanoTime() - startToken
+			);
+//			// todo (6.0) : need a "load-by-natural-id" stat, e.g.,
+//			// final Object identifier = entityDescriptor().getIdentifierMapping().getIdentifier( result, session );
+//			// session.getFactory().getStatistics().entityLoadedByNaturalId( entityDescriptor(), identifier );
+		}
+		return result;
 	}
 
 	/**
@@ -272,7 +316,7 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 						null,
 						creationState
 				),
-				AbstractNaturalIdLoader::visitFetches,
+				(fetchParent, creationState) -> ImmutableFetchList.EMPTY,
 				(statsEnabled) -> {
 //					entityDescriptor().getPreLoadListener().startingLoad( entityDescriptor, naturalIdValue, KeyType.NATURAL_ID, LoadSource.DATABASE );
 					return statsEnabled ? System.nanoTime() : -1L;
@@ -355,28 +399,6 @@ public abstract class AbstractNaturalIdLoader<T> implements NaturalIdLoader<T> {
 		}
 
 		return results.get( 0 );
-	}
-
-	private static ImmutableFetchList visitFetches(
-			FetchParent fetchParent,
-			LoaderSqlAstCreationState creationState) {
-		final FetchableContainer fetchableContainer = fetchParent.getReferencedMappingContainer();
-		final int size = fetchableContainer.getNumberOfFetchables();
-		final ImmutableFetchList.Builder fetches = new ImmutableFetchList.Builder( fetchableContainer );
-		for ( int i = 0; i < size; i++ ) {
-			final Fetchable fetchable = fetchableContainer.getFetchable( i );
-			final NavigablePath navigablePath = fetchParent.resolveNavigablePath( fetchable );
-			final Fetch fetch = fetchParent.generateFetchableFetch(
-					fetchable,
-					navigablePath,
-					fetchable.getMappedFetchOptions().getTiming(),
-					true,
-					null,
-					creationState
-			);
-			fetches.add( fetch );
-		}
-		return fetches.build();
 	}
 
 	private static class NaturalIdLoaderWithOptionsExecutionContext extends BaseExecutionContext {

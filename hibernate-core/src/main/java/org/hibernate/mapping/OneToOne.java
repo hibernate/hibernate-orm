@@ -119,7 +119,7 @@ public class OneToOne extends ToOne {
 
 	@Override
 	public Iterator<Selectable> getConstraintColumnIterator() {
-		return identifier.getColumnIterator();
+		return identifier.getSelectables().iterator();
 	}
 
 	/**

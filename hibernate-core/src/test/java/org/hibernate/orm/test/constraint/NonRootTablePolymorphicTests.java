@@ -158,7 +158,7 @@ public class NonRootTablePolymorphicTests {
 					assertThat( toOne.getTable().getName(), is( "sub_parent" ) );
 
 					assertThat( toOne.getColumnSpan(), is( 1 ) );
-					final Selectable selectable = toOne.getColumnIterator().next();
+					final Selectable selectable = toOne.getSelectables().get( 0 );
 					assertThat( selectable.getText(), is( "parent_sub_fk" ) );
 
 					assertThat( subParent.getTable().getForeignKeys().size(), is( 1 ) );

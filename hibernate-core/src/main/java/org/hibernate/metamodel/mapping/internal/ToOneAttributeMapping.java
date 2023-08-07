@@ -675,24 +675,21 @@ public class ToOneAttributeMapping
 	}
 
 	private static boolean equal(Value lhsValue, Value rhsValue) {
-		//noinspection deprecation
-		Iterator<Selectable> lhsColumns = lhsValue.getColumnIterator();
-		//noinspection deprecation
-		Iterator<Selectable> rhsColumns = rhsValue.getColumnIterator();
-		boolean hasNext;
-		do {
-			final Selectable lhs = lhsColumns.next();
-			final Selectable rhs = rhsColumns.next();
-			if ( !lhs.getText().equals( rhs.getText() ) ) {
-				return false;
+		List<Selectable> lhsColumns = lhsValue.getSelectables();
+		List<Selectable> rhsColumns = rhsValue.getSelectables();
+		if ( lhsColumns.size() != rhsColumns.size() ) {
+			return false;
+		}
+		else {
+			for ( int i=0; i<lhsColumns.size(); i++ ) {
+				Selectable lhs = lhsColumns.get( i );
+				Selectable rhs = rhsColumns.get( i );
+				if ( !lhs.getText().equals( rhs.getText() ) ) {
+					return false;
+				}
 			}
-
-			hasNext = lhsColumns.hasNext();
-			if ( hasNext != rhsColumns.hasNext() ) {
-				return false;
-			}
-		} while ( hasNext );
-		return true;
+			return true;
+		}
 	}
 
 	static String findMapsIdPropertyName(EntityMappingType entityMappingType, String referencedPropertyName) {

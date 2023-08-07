@@ -6,9 +6,7 @@
  */
 package org.hibernate.id;
 
-import java.util.Iterator;
 import java.util.List;
-import java.util.NoSuchElementException;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
@@ -74,11 +72,6 @@ public class ExportableColumn extends Column {
 		@Override
 		public int getColumnSpan() {
 			return 1;
-		}
-
-		@Override @Deprecated
-		public Iterator<Selectable> getColumnIterator() {
-			return new ColumnIterator( column );
 		}
 
 		@Override
@@ -194,31 +187,4 @@ public class ExportableColumn extends Column {
 		}
 	}
 
-	public static class ColumnIterator implements Iterator<Selectable> {
-		private final ExportableColumn column;
-		private int count = 0;
-
-		public ColumnIterator(ExportableColumn column) {
-			this.column = column;
-		}
-
-		@Override
-		public boolean hasNext() {
-			return count == 0;
-		}
-
-		@Override
-		public ExportableColumn next() {
-			if ( count > 0 ) {
-				throw new NoSuchElementException( "The single element has already been read" );
-			}
-			count++;
-			return column;
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException( "Cannot remove" );
-		}
-	}
 }

@@ -61,7 +61,7 @@ public class EmbeddedOverrideTests {
 		final Property homeAddressStateProperty = homeAddressMapping.getProperty( "state" );
 		final ToOne homeAddressStateMapping = (ToOne) homeAddressStateProperty.getValue();
 		assertThat( homeAddressStateMapping.getColumnSpan(), is( 1 ) );
-		final org.hibernate.mapping.Column homeAddressStateJoinColumn = (org.hibernate.mapping.Column) homeAddressStateMapping.getColumnIterator().next();
+		final org.hibernate.mapping.Column homeAddressStateJoinColumn = (org.hibernate.mapping.Column) homeAddressStateMapping.getSelectables().get( 0 );
 		assertThat( homeAddressStateJoinColumn.getName(), is ( "home_state_id" ) );
 
 		final Property workAddressProperty = contactBinding.getProperty( "workAddress" );
@@ -69,7 +69,7 @@ public class EmbeddedOverrideTests {
 		final Property workAddressStateProperty = workAddressMapping.getProperty( "state" );
 		final ToOne workAddressStateMapping = (ToOne) workAddressStateProperty.getValue();
 		assertThat( workAddressStateMapping.getColumnSpan(), is( 1 ) );
-		final org.hibernate.mapping.Column workAddressStateJoinColumn = (org.hibernate.mapping.Column) workAddressStateMapping.getColumnIterator().next();
+		final org.hibernate.mapping.Column workAddressStateJoinColumn = (org.hibernate.mapping.Column) workAddressStateMapping.getSelectables().get( 0 );
 		assertThat( workAddressStateJoinColumn.getName(), is ( "work_state_id" ) );
 	}
 

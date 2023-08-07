@@ -9,9 +9,11 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.FetchMode;
 import org.hibernate.Incubating;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.spi.Mapping;
@@ -178,5 +180,32 @@ public interface Value extends Serializable {
 	@Incubating
 	default String getExtraCreateTableInfo() {
 		return "";
+	}
+
+	/**
+	 * Checks if this value contains any duplicate column. A column
+	 * is considered duplicate when its {@link Column#getName() name} is
+	 * already contained in the {@code distinctColumn} set.
+	 * <p>
+	 * If a duplicate column is found, a {@link MappingException} is thrown.
+	 *
+	 * @param distinctColumns set containing the names of the columns to check
+	 * @param owner the owner of this value, used just for error reporting
+	 */
+	@Internal
+	default void checkColumnDuplication(Set<String> distinctColumns, String owner) {
+		for ( int i = 0; i < getSelectables().size(); i++ ) {
+			final Selectable selectable = getSelectables().get( i );
+			if ( isColumnInsertable( i ) || isColumnUpdateable( i ) ) {
+				final Column col = (Column) selectable;
+				if ( !distinctColumns.add( col.getName() ) ) {
+					throw new MappingException(
+							"Column '" + col.getName()
+									+ "' is duplicated in mapping for " + owner
+									+ " (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
+					);
+				}
+			}
+		}
 	}
 }

@@ -6,18 +6,20 @@
  */
 package org.hibernate.mapping;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.Internal;
+import org.hibernate.MappingException;
 import org.hibernate.boot.BootLogging;
 import org.hibernate.boot.model.internal.DelayedParameterizedTypeBean;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.metamodel.mapping.MappingModelCreationLogging;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -236,5 +238,16 @@ public final class MappingHelper {
 		}
 
 		return new ProvidedInstanceManagedBeanImpl<>( userCollectionType );
+	}
+
+	public static void checkPropertyColumnDuplication(
+			Set<String> distinctColumns,
+			List<Property> properties,
+			String owner) throws MappingException {
+		for ( Property prop : properties ) {
+			if ( prop.isUpdateable() || prop.isInsertable() ) {
+				prop.getValue().checkColumnDuplication( distinctColumns, owner );
+			}
+		}
 	}
 }

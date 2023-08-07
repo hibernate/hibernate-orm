@@ -88,7 +88,7 @@ ext {
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         // Disable prepared statement caching to avoid issues with changing schemas
-                        'jdbc.url'   : 'jdbc:sybase:Tds:' + dbHost + ':5000/hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:sybase:Tds:' + dbHost + ':9000/hibernate_orm_test',
                         'connection.init_sql' : 'set ansinull on set quoted_identifier on'
                 ],
                 mysql : [

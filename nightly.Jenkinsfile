@@ -38,6 +38,7 @@ stage('Configure') {
 		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
+		new BuildEnvironment( dbName: 'sybase_jconn' ),
 		// Long running databases
 		new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true ),
 		new BuildEnvironment( dbName: 'cockroachdb_21_2', node: 'cockroachdb', longRunning: true ),
@@ -219,6 +220,13 @@ stage('Build') {
 									sh "./docker_db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
 									break;
+								case "sybase_jconn":
+									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
+										docker.image('nguoianphu/docker-sybase').pull()
+									}
+									sh "./docker_db.sh sybase"
+									state[buildEnv.tag]['containerName'] = "sybase"
+									break;
 								case "cockroachdb":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
 										docker.image('cockroachdb/cockroach:v22.2.2').pull()
@@ -240,8 +248,11 @@ stage('Build') {
 							withEnv(["RDBMS=${buildEnv.dbName}"]) {
 								try {
 									if (buildEnv.dbLockableResource == null) {
-										timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
-											sh cmd
+										withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {
+											sh 'cp $jconnect_driver ./drivers/jconn4.jar'
+											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
+												sh cmd
+											}
 										}
 									}
 									else {

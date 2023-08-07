@@ -3409,6 +3409,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroup,
 				predicate.get()
 		);
+		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
@@ -3423,9 +3424,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 		}
 
-		// Note that we add the entity join after processing the predicate because implicit joins needed in there
-		// can be just ordered right before the entity join without changing the semantics
-		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
 		if ( transitive ) {
 			consumeExplicitJoins( sqmJoin, tableGroupJoin.getJoinedGroup() );
 		}
@@ -3465,6 +3463,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				queryPartTableGroup,
 				null
 		);
+		parentTableGroup.addTableGroupJoin( tableGroupJoin );
 
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
@@ -3474,9 +3473,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			currentlyProcessingJoin = oldJoin;
 		}
 
-		// Note that we add the entity join after processing the predicate because implicit joins needed in there
-		// can be just ordered right before the entity join without changing the semantics
-		parentTableGroup.addTableGroupJoin( tableGroupJoin );
 		if ( transitive ) {
 			consumeExplicitJoins( sqmJoin, queryPartTableGroup );
 		}
@@ -3499,6 +3495,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				tableGroup,
 				null
 		);
+		parentTableGroup.addTableGroupJoin( tableGroupJoin );
 
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
@@ -3508,9 +3505,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			currentlyProcessingJoin = oldJoin;
 		}
 
-		// Note that we add the entity join after processing the predicate because implicit joins needed in there
-		// can be just ordered right before the entity join without changing the semantics
-		parentTableGroup.addTableGroupJoin( tableGroupJoin );
 		if ( transitive ) {
 			consumeExplicitJoins( sqmJoin, tableGroup );
 		}
@@ -3760,12 +3754,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							false,
 							this
 					);
-					// Implicit joins in the ON clause of attribute joins need to be added as nested table group joins
-					// We don't have to do that for entity joins etc. as these do not have an inherent dependency on the lhs.
-					// We can just add the implicit join before the currently processing join
-					// See consumeEntityJoin for details
-					final boolean nested = currentClauseStack.getCurrent() == Clause.FROM
-							&& currentlyProcessingJoin instanceof SqmAttributeJoin<?, ?>;
+					// Implicit joins in the ON clause need to be added as nested table group joins
+					final boolean nested = currentClauseStack.getCurrent() == Clause.FROM;
 					if ( nested ) {
 						parentTableGroup.addNestedTableGroupJoin( tableGroupJoin );
 					}

@@ -45,7 +45,7 @@ public final class IdentifierGeneratorHelper {
 	 *
 	 * @deprecated This is not an elegant way to do anything
 	 */
-	@Deprecated(forRemoval = true)
+	@Deprecated(forRemoval = true, since = "6.2")
 	public static final Serializable SHORT_CIRCUIT_INDICATOR = new Serializable() {
 		@Override
 		public String toString() {
@@ -59,7 +59,7 @@ public final class IdentifierGeneratorHelper {
 	 *
 	 * @deprecated Use a {@link org.hibernate.generator.OnExecutionGenerator}
 	 */
-	@Deprecated(forRemoval = true)
+	@Deprecated(forRemoval = true, since = "6.2")
 	public static final Serializable POST_INSERT_INDICATOR = new Serializable() {
 		@Override
 		public String toString() {

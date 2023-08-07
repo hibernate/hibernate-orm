@@ -78,7 +78,6 @@ import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -831,7 +830,19 @@ public abstract class AbstractEntityPersister
 		return memento;
 	}
 
-	private SingleIdEntityLoader<?> createSingleIdEntityLoader(LoadQueryInfluencers loadQueryInfluencers) {
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected SingleIdEntityLoader<?> buildSingleIdEntityLoader() {
+		if ( hasNamedQueryLoader() ) {
+			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
+			final NamedQueryMemento memento = getNamedQueryMemento( null );
+			return new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
+		}
+		return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
+	}
+
+	private SingleIdEntityLoader<?> buildSingleIdEntityLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return factory.getServiceRegistry()
@@ -864,7 +875,7 @@ public abstract class AbstractEntityPersister
 		return entityNameByTableNameMap;
 	}
 
-	private MultiIdEntityLoader<Object> buildMultiIdLoader() {
+	protected MultiIdEntityLoader<Object> buildMultiIdLoader() {
 		if ( getIdentifierType() instanceof BasicType
 				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() ) ) {
 			return new MultiIdEntityLoaderArrayParam<>( this, factory );
@@ -3588,14 +3599,8 @@ public abstract class AbstractEntityPersister
 	@Override
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
-		if ( hasNamedQueryLoader() ) {
-			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
-			final NamedQueryMemento memento = getNamedQueryMemento( null );
-			singleIdLoader = new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
-		}
-		else {
-			singleIdLoader = createSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
-		}
+		// Hibernate Reactive needs to override the loaders
+		singleIdLoader = buildSingleIdEntityLoader();
 		multiIdLoader = buildMultiIdLoader();
 	}
 
@@ -3644,7 +3649,7 @@ public abstract class AbstractEntityPersister
 			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
 			// no subselect fetching for entities for now
 			return isAffectedByInfluencers( influencers )
-					? createSingleIdEntityLoader( influencers )
+					? buildSingleIdEntityLoader( influencers )
 					: getSingleIdLoader();
 		}
 	}

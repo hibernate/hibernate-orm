@@ -467,7 +467,7 @@ public class BookResource {
     @GET @Path("books/{titlePattern}/{page:\\d+}")
     public List<Book> findBooks(String titlePattern, int page) {
         var books = sessionFactory.fromTransaction(session -> {
-            return entityManager.createQuery("from Book where title like ?1 order by title", Book.class)
+            return session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
                     .setParameter(1, titlePattern)
                     .setPage(Page.page(RESULTS_PER_PAGE, page))
                     .getResultList();
@@ -485,9 +485,9 @@ Let's hit the code with our favorite thing, the Extract Method refactoring. We o
 
 [source,java]
 ----
-static List<Book> findBooksByTitleWithPagination(EntityManager entityManager,
+static List<Book> findBooksByTitleWithPagination(Session session,
                                                  String titlePattern, Page page) {
-    return entityManager.createQuery("from Book where title like ?1 order by title", Book.class)
+    return session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
             .setParameter(1, titlePattern)
             .setPage(page)
             .getResultList();
@@ -509,9 +509,9 @@ We need a place to put the annotation, so lets move our query method to a new cl
             query="from Book where title like :title order by title")
 class Queries {
 
-    static List<Book> findBooksByTitleWithPagination(EntityManager entityManager,
+    static List<Book> findBooksByTitleWithPagination(Session session,
                                                      String titlePattern, Page page) {
-        return entityManager.createNamedQuery("findBooksByTitle", Book.class)
+        return session.createNamedQuery("findBooksByTitle", Book.class)
                 .setParameter("title", titlePattern)
                 .setPage(page)
                 .getResultList();

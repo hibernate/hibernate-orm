@@ -261,7 +261,11 @@ public class Any extends SimpleValue {
 	public void setDiscriminator(BasicValue discriminatorDescriptor) {
 		this.discriminatorDescriptor = discriminatorDescriptor;
 		if ( discriminatorDescriptor.getColumn() instanceof Column ) {
-			justAddColumn( (Column) discriminatorDescriptor.getColumn() );
+			justAddColumn(
+					(Column) discriminatorDescriptor.getColumn(),
+					discriminatorDescriptor.isColumnInsertable( 0 ),
+					discriminatorDescriptor.isColumnUpdateable( 0 )
+			);
 		}
 		else {
 			justAddFormula( (Formula) discriminatorDescriptor.getColumn() );
@@ -278,7 +282,11 @@ public class Any extends SimpleValue {
 	public void setKey(BasicValue keyDescriptor) {
 		this.keyDescriptor = keyDescriptor;
 		if ( keyDescriptor.getColumn() instanceof Column ) {
-			justAddColumn( (Column) keyDescriptor.getColumn() );
+			justAddColumn(
+					(Column) keyDescriptor.getColumn(),
+					keyDescriptor.isColumnInsertable( 0 ),
+					keyDescriptor.isColumnUpdateable( 0 )
+			);
 		}
 		else {
 			justAddFormula( (Formula) keyDescriptor.getColumn() );

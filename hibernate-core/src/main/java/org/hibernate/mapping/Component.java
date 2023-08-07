@@ -49,6 +49,7 @@ import org.hibernate.type.Type;
 
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.id.IdentifierGeneratorHelper.POST_INSERT_INDICATOR;
+import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
@@ -279,47 +280,14 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.structName = structName;
 	}
 
-	protected void checkColumnDuplication() throws MappingException {
-		checkPropertyColumnDuplication( new HashSet<>(), getProperties() );
-	}
-	protected void checkColumnDuplication(java.util.Set<String> distinctColumns, Value value)
-			throws MappingException {
-		if ( value != null ) {
-			for ( Selectable columnOrFormula : value.getSelectables() ) {
-				if ( !columnOrFormula.isFormula() ) {
-					final Column col = (Column) columnOrFormula;
-					if ( !distinctColumns.add( col.getName() ) ) {
-						throw new MappingException(
-								"Column '" + col.getName()
-										+ "' is duplicated in mapping for component '" + getRoleName()
-										+ "' (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
-						);
-					}
-				}
-			}
+	@Override
+	public void checkColumnDuplication(Set<String> distinctColumns, String owner) {
+		if ( aggregateColumn == null ) {
+			checkPropertyColumnDuplication( distinctColumns, getProperties(), owner );
 		}
-	}
-
-	protected void checkPropertyColumnDuplication(Set<String> distinctColumns, List<Property> properties)
-			throws MappingException {
-		for ( Property prop : properties ) {
-			Value value = prop.getValue();
-			if ( value instanceof Component ) {
-				Component component = (Component) value;
-				AggregateColumn aggregateColumn = component.getAggregateColumn();
-				if ( aggregateColumn == null ) {
-					checkPropertyColumnDuplication( distinctColumns, component.getProperties() );
-				}
-				else {
-					component.checkColumnDuplication();
-					checkColumnDuplication( distinctColumns, aggregateColumn.getValue() );
-				}
-			}
-			else {
-				if ( prop.isUpdateable() || prop.isInsertable() ) {
-					checkColumnDuplication( distinctColumns, value);
-				}
-			}
+		else {
+			checkPropertyColumnDuplication( new HashSet<>(), getProperties(), "component '" + getRoleName() + "'" );
+			aggregateColumn.getValue().checkColumnDuplication( distinctColumns, owner );
 		}
 	}
 

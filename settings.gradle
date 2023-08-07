@@ -282,7 +282,7 @@ gradle.ext.baselineJavaVersion = JavaLanguageVersion.of( 11 )
 
 // Gradle does bytecode transformation on tests.
 // You can't use bytecode higher than what Gradle supports, even with toolchains.
-def GRADLE_MAX_SUPPORTED_BYTECODE_VERSION = 17
+def GRADLE_MAX_SUPPORTED_BYTECODE_VERSION = 21
 
 // If either 'main.jdk.version' or 'test.jdk.version' is set, enable the toolchain and use the selected jdk.
 // If only one property is set, the other defaults to the baseline Java version (11).

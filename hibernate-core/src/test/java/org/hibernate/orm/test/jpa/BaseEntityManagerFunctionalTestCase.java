@@ -191,8 +191,8 @@ public abstract class BaseEntityManagerFunctionalTestCase extends BaseUnitTestCa
 		}
 
 		@Override
-		public Collection<ClassTransformer> getClassTransformers() {
-			return Collections.emptyList();
+		public ClassTransformer getClassTransformer() {
+			return null;
 		}
 	}
 

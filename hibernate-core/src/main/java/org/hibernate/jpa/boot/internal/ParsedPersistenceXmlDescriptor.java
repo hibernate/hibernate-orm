@@ -194,7 +194,7 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 	}
 
 	@Override
-	public Collection<ClassTransformer> getClassTransformers() {
-		return Collections.emptyList();
+	public ClassTransformer getClassTransformer() {
+		return null;
 	}
 }

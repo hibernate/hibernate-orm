@@ -253,8 +253,8 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 		}
 
 		@Override
-		public Collection<ClassTransformer> getClassTransformers() {
-			return Collections.emptyList();
+		public ClassTransformer getClassTransformer() {
+			return null;
 		}
 	}
 

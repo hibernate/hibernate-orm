@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
+
+import jakarta.persistence.PersistenceException;
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitInfo;
@@ -26,7 +28,7 @@ import org.hibernate.jpa.internal.enhance.EnhancingClassTransformerImpl;
  */
 public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor {
 	private final PersistenceUnitInfo persistenceUnitInfo;
-	private final ArrayList<ClassTransformer> classTransformers = new ArrayList<>();
+	private ClassTransformer classTransformer;
 
 	public PersistenceUnitInfoDescriptor(PersistenceUnitInfo persistenceUnitInfo) {
 		this.persistenceUnitInfo = persistenceUnitInfo;
@@ -114,16 +116,19 @@ public class PersistenceUnitInfoDescriptor implements PersistenceUnitDescriptor 
 
 	@Override
 	public void pushClassTransformer(EnhancementContext enhancementContext) {
+		if ( this.classTransformer != null ) {
+			throw new PersistenceException( "Persistence unit [" + persistenceUnitInfo.getPersistenceUnitName() + "] can only have a single class transformer." );
+		}
 		// During testing, we will return a null temp class loader in cases where we don't care about enhancement
 		if ( persistenceUnitInfo.getNewTempClassLoader() != null ) {
 			final EnhancingClassTransformerImpl classTransformer = new EnhancingClassTransformerImpl( enhancementContext );
-			classTransformers.add( classTransformer );
+			this.classTransformer = classTransformer;
 			persistenceUnitInfo.addTransformer( classTransformer );
 		}
 	}
 
 	@Override
-	public Collection<ClassTransformer> getClassTransformers() {
-		return classTransformers;
+	public ClassTransformer getClassTransformer() {
+		return classTransformer;
 	}
 }

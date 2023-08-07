@@ -341,17 +341,15 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				);
 
 				persistenceUnit.pushClassTransformer( enhancementContext );
-
-				if ( !persistenceUnit.getClassTransformers().isEmpty() ) {
+				final ClassTransformer classTransformer = persistenceUnit.getClassTransformer();
+				if ( classTransformer != null ) {
 					final ClassLoader classLoader = persistenceUnit.getTempClassLoader();
 					if ( classLoader == null ) {
 						throw persistenceException( "Enhancement requires a temp class loader, but none was given." );
 					}
-					for ( ClassTransformer classTransformer : persistenceUnit.getClassTransformers() ) {
-						for ( PersistentClass entityBinding : metadata.getEntityBindings() ) {
-							if ( entityBinding.getClassName() != null ) {
-								classTransformer.discoverTypes( classLoader, entityBinding.getClassName() );
-							}
+					for ( PersistentClass entityBinding : metadata.getEntityBindings() ) {
+						if ( entityBinding.getClassName() != null ) {
+							classTransformer.discoverTypes( classLoader, entityBinding.getClassName() );
 						}
 					}
 				}

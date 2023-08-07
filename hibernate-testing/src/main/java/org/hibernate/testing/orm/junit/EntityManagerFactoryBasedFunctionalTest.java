@@ -271,8 +271,8 @@ public class EntityManagerFactoryBasedFunctionalTest
 		}
 
 		@Override
-		public Collection<ClassTransformer> getClassTransformers() {
-			return Collections.emptyList();
+		public ClassTransformer getClassTransformer() {
+			return null;
 		}
 	}
 

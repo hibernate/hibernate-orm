@@ -88,5 +88,5 @@ public interface PersistenceUnitDescriptor {
 
 	void pushClassTransformer(EnhancementContext enhancementContext);
 
-	Collection<ClassTransformer> getClassTransformers();
+	ClassTransformer getClassTransformer();
 }

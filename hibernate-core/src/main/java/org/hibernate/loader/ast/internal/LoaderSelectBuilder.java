@@ -281,6 +281,36 @@ public class LoaderSelectBuilder {
 		return process.generateSelect();
 	}
 
+	// TODO: this method is probably unnecessary if we make
+	// determineWhetherToForceIdSelection() a bit smarter
+	static SelectStatement createSelect(
+			Loadable loadable,
+			List<ModelPart> partsToSelect,
+			boolean forceIdentifierSelection,
+			List<ModelPart> restrictedParts,
+			DomainResult<?> cachedDomainResult,
+			int numberOfKeysToLoad,
+			LoadQueryInfluencers loadQueryInfluencers,
+			LockOptions lockOptions,
+			Consumer<JdbcParameter> jdbcParameterConsumer,
+			SessionFactoryImplementor sessionFactory) {
+		final LoaderSelectBuilder process = new LoaderSelectBuilder(
+				sessionFactory,
+				loadable,
+				partsToSelect,
+				restrictedParts,
+				cachedDomainResult,
+				numberOfKeysToLoad,
+				loadQueryInfluencers,
+				lockOptions,
+				determineGraphTraversalState( loadQueryInfluencers ),
+				forceIdentifierSelection,
+				jdbcParameterConsumer
+		);
+
+		return process.generateSelect();
+	}
+
 	/**
 	 * Create an SQL AST select-statement used for subselect-based CollectionLoader
 	 *

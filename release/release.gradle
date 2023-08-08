@@ -63,6 +63,8 @@ def stageQueryGuideTasks = tasks.register( "stageQueryGuide", Copy ) {
     group 'documentation'
     description "Stages the Query Language Guide as part of preparing for release"
     dependsOn ':documentation:renderQueryLanguageGuides'
+    description "Stages the Query Language Guide as part of preparing for release"
+    dependsOn ':documentation:renderQueryLanguageGuides'
 
     from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/querylanguage" ) }
     into layout.buildDirectory.dir( "documentation/querylanguage" )
@@ -70,6 +72,8 @@ def stageQueryGuideTasks = tasks.register( "stageQueryGuide", Copy ) {
 
 def stageUserGuideTask = tasks.register( "stageUserGuide", Copy ) {
     group 'documentation'
+    description "Stages the User Guide as part of preparing for release"
+    dependsOn ':documentation:renderUserGuides'
     description "Stages the User Guide as part of preparing for release"
     dependsOn ':documentation:renderUserGuides'
 

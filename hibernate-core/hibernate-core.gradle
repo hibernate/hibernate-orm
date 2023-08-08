@@ -254,7 +254,7 @@ tasks.withType( Test.class ).each { test ->
 }
 
 // Tests with records
-if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolchainEnabled ) {
+if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
 
     // Add a new source set, which contains tests that can run on JDK17+
     sourceSets {

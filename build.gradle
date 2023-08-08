@@ -26,6 +26,7 @@ plugins {
 	id 'biz.aQute.bnd' version '6.3.1' apply false
 
 	id 'org.checkerframework' version '0.6.25'
+	id 'org.hibernate.orm.build.jdks'
 
 	id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
 
@@ -46,9 +47,7 @@ task release {
 			"themselves if they have any release-related activities to perform"
 
 	doFirst {
-		def javaVersionsInUse = [gradle.ext.javaVersions.main.compiler, gradle.ext.javaVersions.main.release,
-								 gradle.ext.javaVersions.test.compiler, gradle.ext.javaVersions.test.release,
-								 gradle.ext.javaVersions.test.launcher].toSet()
+		def javaVersionsInUse = jdkVersions.allVersions
 		if ( javaVersionsInUse != [JavaLanguageVersion.of( 11 )].toSet() ) {
 			throw new IllegalStateException( "Please use JDK 11 to perform the release. Currently using: ${javaVersionsInUse}" )
 		}

@@ -11,6 +11,8 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -413,7 +415,7 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
-	public EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException {
+	public EntityPersister getEntityPersister(@Nullable String entityName, Object object) throws HibernateException {
 		return delegate.getEntityPersister( entityName, object );
 	}
 

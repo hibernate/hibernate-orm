@@ -51,6 +51,7 @@ import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.Metamodel;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * This helper class allows decorating a Session instance, while the
@@ -809,22 +810,22 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey) {
 		return this.lazySession.get().find( entityClass, primaryKey );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
 		return this.lazySession.get().find( entityClass, primaryKey, properties );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
 		return this.lazySession.get().find( entityClass, primaryKey, lockMode );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
 		return this.lazySession.get().find( entityClass, primaryKey, lockMode, properties );
 	}
 

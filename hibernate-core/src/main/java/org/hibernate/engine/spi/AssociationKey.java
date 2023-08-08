@@ -8,6 +8,8 @@ package org.hibernate.engine.spi;
 
 import java.io.Serializable;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Identifies a named association belonging to a particular
  * entity instance. Used to record the fact that an association
@@ -31,7 +33,7 @@ public final class AssociationKey implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object o) {
+	public boolean equals(@Nullable Object o) {
 		if ( this == o ) {
 			return true;
 		}

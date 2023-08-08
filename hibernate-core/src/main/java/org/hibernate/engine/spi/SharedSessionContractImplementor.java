@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.UUID;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.TransactionRequiredException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
@@ -307,7 +308,7 @@ public interface SharedSessionContractImplementor
 	 * @param entityName optional entity name
 	 * @param object the entity instance
 	 */
-	EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException;
+	EntityPersister getEntityPersister(@Nullable String entityName, Object object) throws HibernateException;
 
 	/**
 	 * Get the entity instance associated with the given {@link EntityKey},

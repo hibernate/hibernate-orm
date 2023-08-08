@@ -60,6 +60,11 @@ public class DenormalizedTable extends Table {
 	}
 
 	@Override
+	public Table getInheritedTable() {
+		return includedTable;
+	}
+
+	@Override
 	public void createForeignKeys() {
 		includedTable.createForeignKeys();
 		for ( ForeignKey foreignKey : includedTable.getForeignKeys().values() ) {
@@ -102,6 +107,11 @@ public class DenormalizedTable extends Table {
 			return reorderedColumns;
 		}
 		return new JoinedList<>( new ArrayList<>( includedTable.getColumns() ), new ArrayList<>( super.getColumns() ) );
+	}
+
+	@Override
+	public Collection<Column> getDeclaredColumns() {
+		return super.getColumns();
 	}
 
 	@Override

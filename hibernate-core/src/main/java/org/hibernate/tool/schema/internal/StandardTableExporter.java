@@ -51,10 +51,9 @@ public class StandardTableExporter implements Exporter<Table> {
 			Table table,
 			Metadata metadata,
 			SqlStringGenerationContext context) {
-		final QualifiedName tableName = getTableName( table );
 
 		try {
-			final String formattedTableName = context.format( tableName );
+			final String formattedTableName = formattedTableName( table, context );
 
 			final StringBuilder createTable = new StringBuilder();
 
@@ -66,6 +65,8 @@ public class StandardTableExporter implements Exporter<Table> {
 						.append( viewQuery );
 			}
 			else {
+				boolean inherited = dialect.supportsTableInheritance() && table.getInheritedTable() != null;
+
 				final StringBuilder extra = new StringBuilder();
 
 				createTable.append( tableCreateString( table.hasPrimaryKey() ) )
@@ -74,7 +75,7 @@ public class StandardTableExporter implements Exporter<Table> {
 						.append( " (" );
 
 				boolean isFirst = true;
-				for ( Column column : table.getColumns() ) {
+				for ( Column column : inherited ? table.getDeclaredColumns() : table.getColumns() ) {
 					if ( isFirst ) {
 						isFirst = false;
 					}
@@ -91,7 +92,7 @@ public class StandardTableExporter implements Exporter<Table> {
 						createTable.append(", ").append( rowIdColumn );
 					}
 				}
-				if ( table.hasPrimaryKey() ) {
+				if ( table.hasPrimaryKey() && !inherited ) {
 					createTable.append( ", " ).append( table.getPrimaryKey().sqlConstraintString( dialect ) );
 				}
 
@@ -102,6 +103,12 @@ public class StandardTableExporter implements Exporter<Table> {
 				createTable.append( ')' );
 
 				createTable.append( extra );
+
+				if ( inherited ) {
+					createTable.append(" inherits (")
+							.append( formattedTableName( table.getInheritedTable(), context ) )
+							.append(')');
+				}
 
 				if ( table.getComment() != null ) {
 					createTable.append( dialect.getTableComment( table.getComment() ) );
@@ -120,6 +127,10 @@ public class StandardTableExporter implements Exporter<Table> {
 			throw new MappingException( "Error creating SQL 'create' commands for table '"
 					+ table.getName() + "' [" + e.getMessage() + "]" , e );
 		}
+	}
+
+	private static String formattedTableName(Table table, SqlStringGenerationContext context) {
+		return context.format(getTableName(table));
 	}
 
 	/**
@@ -321,7 +332,7 @@ public class StandardTableExporter implements Exporter<Table> {
 		if ( dialect.supportsIfExistsBeforeTableName() ) {
 			dropTable.append( "if exists " );
 		}
-		dropTable.append( context.format( getTableName( table ) ) )
+		dropTable.append(formattedTableName(table, context))
 				.append( dialect.getCascadeConstraintsString() );
 		if ( dialect.supportsIfExistsAfterTableName() ) {
 			dropTable.append( " if exists" );

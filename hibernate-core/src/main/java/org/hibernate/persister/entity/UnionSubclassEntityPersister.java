@@ -524,8 +524,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 							.append(", ");
 				}
 				subquery.append( clazz.getSubclassId() )
-						.append( " as clazz_ from " )
-						.append( table.getQualifiedName( getFactory().getSqlStringGenerationContext() ) );
+						.append( " as clazz_ from " );
+				if ( clazz.hasSubclasses() && dialect.supportsTableInheritance() ) {
+					subquery.append("only ");
+				}
+				subquery.append( table.getQualifiedName( getFactory().getSqlStringGenerationContext() ) );
 			}
 		}
 
@@ -569,7 +572,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 			}
 		}
 
-		// Create a union sub-query for the table names, like generateSubquery(PersistentClass model, Mapping mapping)
+		// Create a union subquery for the table names, like generateSubquery(PersistentClass model, Mapping mapping)
 		final StringBuilder buf = new StringBuilder( subquery.length() ).append( "(" );
 
 		final Collection<EntityMappingType> subMappingTypes = getSubMappingTypes();
@@ -612,8 +615,11 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 					buf.append( ", " );
 				}
 				buf.append( persister.getDiscriminatorSQLValue() )
-						.append( " as clazz_ from " )
-						.append( subclassTableName );
+						.append( " as clazz_ from " );
+				if ( persister.hasSubclasses() && dialect.supportsTableInheritance() ) {
+					buf.append("only ");
+				}
+				buf.append( subclassTableName );
 			}
 		}
 		return buf.append( ")" ).toString();

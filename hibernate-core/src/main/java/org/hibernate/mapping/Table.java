@@ -123,6 +123,10 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		this.isAbstract = isAbstract;
 	}
 
+	public Table getInheritedTable() {
+		return null;
+	}
+
 	@Override
 	public String getContributor() {
 		return contributor;
@@ -237,7 +241,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 	 *
 	 * @param column column with at least a name.
 	 * @return the underlying column or null if not inside this table.
-	 *         Note: the instance *can* be different than the input parameter,
+	 *         Note: the instance can be different to the input parameter,
 	 *         but the name will be the same.
 	 */
 	public Column getColumn(Column column) {
@@ -309,6 +313,10 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public Collection<Column> getColumns() {
 		return columns.values();
+	}
+
+	public Collection<Column> getDeclaredColumns() {
+		return getColumns();
 	}
 
 	@Deprecated(since = "6.2")

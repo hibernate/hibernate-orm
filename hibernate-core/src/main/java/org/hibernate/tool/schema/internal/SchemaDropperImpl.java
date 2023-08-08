@@ -371,6 +371,22 @@ public class SchemaDropperImpl implements SchemaDropper {
 		for ( Table table : namespace.getTables() ) {
 			if ( table.isPhysicalTable()
 					&& !table.isView()
+					&& table.getInheritedTable() != null
+					&& options.getSchemaFilter().includeTable( table )
+					&& inclusionFilter.matches( table ) ) {
+				checkExportIdentifier( table, exportIdentifiers);
+				applySqlStrings(
+						dialect.getTableExporter().getSqlDropStrings( table, metadata, context),
+						formatter,
+						options,
+						targets
+				);
+			}
+		}
+		for ( Table table : namespace.getTables() ) {
+			if ( table.isPhysicalTable()
+					&& !table.isView()
+					&& table.getInheritedTable() == null
 					&& options.getSchemaFilter().includeTable( table )
 					&& inclusionFilter.matches( table ) ) {
 				checkExportIdentifier( table, exportIdentifiers);

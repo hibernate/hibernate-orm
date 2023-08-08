@@ -1968,6 +1968,12 @@
                 int allocationSize() default 50;
                 }
 
+                @Target({ANNOTATION_TYPE, TYPE, METHOD, FIELD}) @Retention(RUNTIME)
+                public @interface SequenceGeneratorExtension {
+                String name();
+                String optimizerName() default "";
+                boolean perEntitySuffix() default "_SEQ";
+                }
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
@@ -1979,6 +1985,9 @@
         <xsd:attribute name="schema" type="xsd:string"/>
         <xsd:attribute name="initial-value" type="xsd:int"/>
         <xsd:attribute name="allocation-size" type="xsd:int"/>
+
+        <xsd:attribute name="per-entity-suffix" type="xsd:string"/>
+        <xsd:attribute name="optimizer" type="xsd:string"/>
     </xsd:complexType>
 
     <!-- **************************************************** -->
@@ -2106,6 +2115,12 @@
                 Indexes[] indexes() default {};
                 }
 
+                @Target({ANNOTATION_TYPE, TYPE, METHOD, FIELD}) @Retention(RUNTIME)
+                public @interface TableGeneratorExtension {
+                    String name();
+                    String optimizerName() default "";
+                    boolean perEntity() default false;
+                }
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
@@ -2123,6 +2138,9 @@
         <xsd:attribute name="pk-column-value" type="xsd:string"/>
         <xsd:attribute name="initial-value" type="xsd:int"/>
         <xsd:attribute name="allocation-size" type="xsd:int"/>
+
+        <xsd:attribute name="per-entity" type="xsd:boolean"/>
+        <xsd:attribute name="optimizer" type="xsd:string"/>
     </xsd:complexType>
 
     <!-- **************************************************** -->

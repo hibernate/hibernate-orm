@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import org.hibernate.AnnotationException;
@@ -29,7 +30,9 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.SequenceGeneratorExtension;
 import org.hibernate.annotations.Subselect;
+import org.hibernate.annotations.TableGeneratorExtension;
 import org.hibernate.annotations.common.annotationfactory.AnnotationDescriptor;
 import org.hibernate.annotations.common.annotationfactory.AnnotationFactory;
 import org.hibernate.annotations.common.reflection.AnnotationReader;
@@ -102,6 +105,7 @@ import org.hibernate.boot.spi.ClassLoaderAccess;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.AvailableHints;
 
 import jakarta.persistence.Access;
@@ -442,7 +446,9 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				addIfNotNull( annotationList, getDiscriminatorValue( managedTypeOverride, defaults ) );
 				addIfNotNull( annotationList, getDiscriminatorColumn( managedTypeOverride, defaults ) );
 				addIfNotNull( annotationList, getSequenceGenerator( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getSequenceGeneratorExtension( managedTypeOverride, defaults ) );
 				addIfNotNull( annotationList, getTableGenerator( managedTypeOverride, defaults ) );
+				addIfNotNull( annotationList, getTableGeneratorExtension( managedTypeOverride, defaults ) );
 				addIfNotNull( annotationList, getNamedQueries( managedTypeOverride, defaults ) );
 				addIfNotNull( annotationList, getNamedNativeQueries( managedTypeOverride, defaults ) );
 				addIfNotNull( annotationList, getNamedStoredProcedureQueries( managedTypeOverride, defaults ) );
@@ -497,7 +503,9 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 					getManyToAny( annotationList, defaults );
 					getElementCollection( annotationList, defaults );
 					addIfNotNull( annotationList, getSequenceGenerator( elementsForProperty, defaults ) );
+					addIfNotNull( annotationList, getSequenceGeneratorExtension( elementsForProperty, defaults ) );
 					addIfNotNull( annotationList, getTableGenerator( elementsForProperty, defaults ) );
+					addIfNotNull( annotationList, getTableGeneratorExtension( elementsForProperty, defaults ) );
 					addIfNotNull( annotationList, getConvertsForAttribute( elementsForProperty, defaults ) );
 				}
 				processEventAnnotations( annotationList, defaults );
@@ -734,6 +742,22 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	private Annotation getTableGeneratorExtension(PropertyMappingElementCollector elementsForProperty, XMLContext.Default defaults) {
+		for ( JaxbId element : elementsForProperty.getId() ) {
+			JaxbTableGenerator subelement = element.getTableGenerator();
+			if ( subelement != null ) {
+				return buildTableGeneratorExtensionAnnotation( subelement, defaults );
+			}
+		}
+
+		if ( defaults.canUseJavaAnnotations() ) {
+			return getPhysicalAnnotation( TableGeneratorExtension.class );
+		}
+
+		return null;
+
+	}
+
 	private Annotation getTableGenerator(PropertyMappingElementCollector elementsForProperty, XMLContext.Default defaults) {
 		for ( JaxbId element : elementsForProperty.getId() ) {
 			JaxbTableGenerator subelement = element.getTableGenerator();
@@ -747,6 +771,21 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		else {
 			return null;
 		}
+	}
+
+	private Annotation getSequenceGeneratorExtension(PropertyMappingElementCollector elementsForProperty, XMLContext.Default defaults) {
+		for ( JaxbId element : elementsForProperty.getId() ) {
+			JaxbSequenceGenerator subelement = element.getSequenceGenerator();
+			if ( subelement != null ) {
+				return buildSequenceGeneratorExtensionAnnotation( subelement );
+			}
+		}
+
+		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {
+			return getPhysicalAnnotation( SequenceGeneratorExtension.class );
+		}
+
+		return null;
 	}
 
 	private Annotation getSequenceGenerator(PropertyMappingElementCollector elementsForProperty, XMLContext.Default defaults) {
@@ -1705,8 +1744,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				//FIXME: fix the priority of xml over java for generator names
 				annotation = getTableGenerator( element.getTableGenerator(), defaults );
 				addIfNotNull( annotationList, annotation );
+				addIfNotNull( annotationList, getTableGeneratorExtension( element.getTableGenerator(), defaults ) );
 				annotation = getSequenceGenerator( element.getSequenceGenerator(), defaults );
 				addIfNotNull( annotationList, annotation );
+				addIfNotNull( annotationList, getSequenceGeneratorExtension( element.getSequenceGenerator(), defaults ) );
 				AnnotationDescriptor id = new AnnotationDescriptor( Id.class );
 				annotationList.add( AnnotationFactory.create( id ) );
 				getAccessType( annotationList, element.getAccess() );
@@ -2649,11 +2690,30 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		hints.put( AvailableHints.HINT_NATIVE_SPACES, sb.toString() );
 	}
 
+	private TableGeneratorExtension getTableGeneratorExtension(ManagedType root, XMLContext.Default defaults) {
+		return getTableGeneratorExtension(
+				root instanceof JaxbEntity ? ( (JaxbEntity) root ).getTableGenerator() : null,
+				defaults
+		);
+	}
+
 	private TableGenerator getTableGenerator(ManagedType root, XMLContext.Default defaults) {
 		return getTableGenerator(
 				root instanceof JaxbEntity ? ( (JaxbEntity) root ).getTableGenerator() : null,
 				defaults
 		);
+	}
+
+	private TableGeneratorExtension getTableGeneratorExtension(JaxbTableGenerator element, XMLContext.Default defaults) {
+		if ( element != null ) {
+			return buildTableGeneratorExtensionAnnotation( element, defaults );
+		}
+
+		if ( defaults.canUseJavaAnnotations() ) {
+			return getPhysicalAnnotation( TableGeneratorExtension.class );
+		}
+
+		return null;
 	}
 
 	private TableGenerator getTableGenerator(JaxbTableGenerator element, XMLContext.Default defaults) {
@@ -2694,6 +2754,30 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
+	public static TableGeneratorExtension buildTableGeneratorExtensionAnnotation(
+			JaxbTableGenerator element,
+			XMLContext.Default defaults) {
+		final Boolean perEntity = element.isPerEntity();
+		final String optimizerName = element.getOptimizer();
+		if ( perEntity != Boolean.TRUE && StringHelper.isEmpty( optimizerName ) ) {
+			return null;
+		}
+
+		final AnnotationDescriptor ad = new AnnotationDescriptor( TableGeneratorExtension.class );
+		copyAttribute( ad, "name", element.getName(), false );
+
+
+		if ( StringHelper.isNotEmpty( optimizerName ) ) {
+			copyAttribute( ad, "optimizer", optimizerName, false );
+		}
+
+		if ( perEntity ) {
+			copyAttribute( ad, "perEntity", true, false );
+		}
+
+		return AnnotationFactory.create( ad );
+	}
+
 	public static TableGenerator buildTableGeneratorAnnotation(JaxbTableGenerator element, XMLContext.Default defaults) {
 		AnnotationDescriptor ad = new AnnotationDescriptor( TableGenerator.class );
 		copyAttribute( ad, "name", element.getName(), false );
@@ -2714,7 +2798,15 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				&& isNotEmpty( defaults.getCatalog() ) ) {
 			ad.setValue( "catalog", defaults.getCatalog() );
 		}
+
 		return AnnotationFactory.create( ad );
+	}
+
+	private SequenceGeneratorExtension getSequenceGeneratorExtension(ManagedType root, XMLContext.Default defaults) {
+		return getSequenceGeneratorExtension(
+				root instanceof JaxbEntity ? ( (JaxbEntity) root ).getSequenceGenerator() : null,
+				defaults
+		);
 	}
 
 	private SequenceGenerator getSequenceGenerator(ManagedType root, XMLContext.Default defaults) {
@@ -2724,16 +2816,41 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		);
 	}
 
+	private SequenceGeneratorExtension getSequenceGeneratorExtension(JaxbSequenceGenerator element, XMLContext.Default defaults) {
+		if ( element != null ) {
+			return buildSequenceGeneratorExtensionAnnotation( element );
+		}
+
+		if ( defaults.canUseJavaAnnotations() ) {
+			return getPhysicalAnnotation( SequenceGeneratorExtension.class );
+		}
+
+		return null;
+	}
+
 	private SequenceGenerator getSequenceGenerator(JaxbSequenceGenerator element, XMLContext.Default defaults) {
 		if ( element != null ) {
 			return buildSequenceGeneratorAnnotation( element );
 		}
-		else if ( defaults.canUseJavaAnnotations() ) {
+
+		if ( defaults.canUseJavaAnnotations() ) {
 			return getPhysicalAnnotation( SequenceGenerator.class );
 		}
-		else {
+
+		return null;
+	}
+
+	public static SequenceGeneratorExtension buildSequenceGeneratorExtensionAnnotation(JaxbSequenceGenerator element) {
+		if ( element == null ) {
 			return null;
 		}
+
+		final AnnotationDescriptor ad = new AnnotationDescriptor( SequenceGeneratorExtension.class );
+		copyAttribute( ad, "name", element.getName(), false );
+		copyAttribute( ad, "optimizerName", element.getOptimizer(), false );
+		copyAttribute( ad, "perEntitySuffix", element.getPerEntitySuffix(), false );
+
+		return AnnotationFactory.create( ad );
 	}
 
 	public static SequenceGenerator buildSequenceGeneratorAnnotation(JaxbSequenceGenerator element) {

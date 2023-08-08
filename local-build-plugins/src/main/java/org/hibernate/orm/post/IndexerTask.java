@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.post;
 
-import javax.inject.Inject;
-
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.RegularFile;
@@ -26,33 +24,33 @@ import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
  * @author Steve Ebersole
  */
 public abstract class IndexerTask extends DefaultTask {
-	private final IndexManager indexManager;
+	private final Provider<IndexManager> indexManager;
 
-	@Inject
-	public IndexerTask(IndexManager indexManager) {
-		this.indexManager = indexManager;
+	public IndexerTask() {
 		setGroup( TASK_GROUP_NAME );
 		setDescription( "Builds a Jandex Index from the artifacts attached to the `" + CONFIG_NAME + "` Configuration" );
+
+		indexManager = getProject().provider( () -> getProject().getExtensions().getByType( IndexManager.class ) );
 	}
 
 	@InputFiles
 	@SkipWhenEmpty
 	public Configuration getArtifactsToProcess() {
-		return indexManager.getArtifactsToProcess();
+		return indexManager.get().getArtifactsToProcess();
 	}
 
 	@OutputFile
 	public Provider<RegularFile> getIndexFileReference() {
-		return indexManager.getIndexFileReferenceAccess();
+		return indexManager.get().getIndexFileReferenceAccess();
 	}
 
 	@OutputFile
 	public Provider<RegularFile> getPackageFileReferenceAccess() {
-		return indexManager.getPackageFileReferenceAccess();
+		return indexManager.get().getPackageFileReferenceAccess();
 	}
 
 	@TaskAction
 	public void createIndex() {
-		indexManager.index();
+		indexManager.get().index();
 	}
 }

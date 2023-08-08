@@ -14,7 +14,6 @@ import java.io.OutputStreamWriter;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.function.Consumer;
-import javax.inject.Inject;
 
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFile;
@@ -35,34 +34,36 @@ import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
 /**
  * @author Steve Ebersole
  */
-public class AbstractJandexAwareTask extends DefaultTask {
-	private final IndexManager indexManager;
-	private final Provider<RegularFile> reportFileReferenceAccess;
+public abstract class AbstractJandexAwareTask extends DefaultTask {
+	private final Provider<IndexManager> indexManager;
 
-	@Inject
-	public AbstractJandexAwareTask(IndexManager indexManager, Provider<RegularFile> reportFileReferenceAccess) {
-		this.indexManager = indexManager;
-		this.reportFileReferenceAccess = reportFileReferenceAccess;
+	public AbstractJandexAwareTask() {
 		setGroup( TASK_GROUP_NAME );
+
+		this.indexManager = getProject().provider( () -> getProject().getExtensions().getByType( IndexManager.class ) );
+		getInputs().property( "version", getProject().getExtensions().getByName( "ormVersion" ) );
 	}
 
 	@Internal
+	protected abstract Provider<RegularFile> getTaskReportFileReference();
+
+	@Internal
 	protected IndexManager getIndexManager() {
-		return indexManager;
+		return indexManager.get();
 	}
 
 	@InputFile
 	public Provider<RegularFile> getIndexFileReference() {
-		return indexManager.getIndexFileReferenceAccess();
+		return indexManager.get().getIndexFileReferenceAccess();
 	}
 
 	@OutputFile
-	public Provider<RegularFile> getReportFileReferenceAccess() {
-		return reportFileReferenceAccess;
+	public Provider<RegularFile> getReportFileReference() {
+		return getTaskReportFileReference();
 	}
 
 	protected File prepareReportFile() {
-		final File reportFile = getReportFileReferenceAccess().get().getAsFile();
+		final File reportFile = getReportFileReference().get().getAsFile();
 
 		if ( reportFile.getParentFile().exists() ) {
 			if ( reportFile.exists() ) {

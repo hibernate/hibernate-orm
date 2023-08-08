@@ -123,7 +123,7 @@ public abstract class SplitGrammarGenerationTask extends DefaultTask {
 		getProject().javaexec(
 				(javaExecSpec) -> {
 					javaExecSpec.setMain( "org.antlr.v4.Tool" );
-					javaExecSpec.classpath( getProject().getConfigurations().getByName( "antlr" ) );
+					javaExecSpec.classpath( getProject().getConfigurations().named( "antlr" ) );
 					javaExecSpec.args(
 							"-o", getProject().relativePath( outputDir.getAbsolutePath() ),
 							"-long-messages",

@@ -10,12 +10,15 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.Comparator;
 import java.util.TreeSet;
-import javax.inject.Inject;
 
-import org.gradle.api.Project;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskAction;
 
 import org.jboss.jandex.DotName;
+
+import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
 
 /**
  * @author Steve Ebersole
@@ -24,13 +27,17 @@ public class DeprecationReportTask extends AbstractJandexAwareTask {
 	public static final String REMOVE_ANN_NAME = "org.hibernate.Remove";
 	public static final String DEPRECATED_ANN_NAME = Deprecated.class.getName();
 
-	@Inject
-	public DeprecationReportTask(IndexManager indexManager, Project project) {
-		super(
-				indexManager,
-				project.getLayout().getBuildDirectory().file( "orm/reports/deprecating.txt" )
-		);
-		setDescription( "Generates a report for things considered deprecating" );
+	private final Property<RegularFile> reportFile;
+
+	public DeprecationReportTask() {
+		setDescription( "Generates a report for things considered deprecated" );
+		reportFile = getProject().getObjects().fileProperty();
+		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/reports/deprecating.txt" ) );
+	}
+
+	@Override
+	protected Provider<RegularFile> getTaskReportFileReference() {
+		return reportFile;
 	}
 
 	@TaskAction

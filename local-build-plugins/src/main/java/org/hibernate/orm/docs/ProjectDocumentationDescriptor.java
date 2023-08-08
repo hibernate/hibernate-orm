@@ -6,10 +6,8 @@
  */
 package org.hibernate.orm.docs;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 
 import org.hibernate.orm.ReleaseFamilyIdentifier;
 
@@ -23,7 +21,7 @@ import jakarta.json.bind.annotation.JsonbTypeAdapter;
  * @author Steve Ebersole
  */
 @JsonbPropertyOrder( {"name", "stableFamily", "singlePageDetails", "multiPageDetails", "releaseFamilies" } )
-public class ProjectDocumentation {
+public class ProjectDocumentationDescriptor {
 	@JsonbProperty( "project" )
 	private String name;
 
@@ -61,6 +59,11 @@ public class ProjectDocumentation {
 
 	public void setReleaseFamilies(List<ReleaseFamilyDocumentation> releaseFamilies) {
 		this.releaseFamilies = releaseFamilies;
+	}
+
+	public void addReleaseFamily(ReleaseFamilyDocumentation familyDetails) {
+		// Add new entries at the top
+		releaseFamilies.add( 0, familyDetails );
 	}
 
 	public Map<String, String> getMultiPageDetails() {

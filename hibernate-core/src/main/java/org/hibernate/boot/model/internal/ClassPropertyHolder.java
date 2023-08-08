@@ -363,14 +363,19 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 							actualProperty.setValue( context.getMetadataCollector().getGenericComponent( componentClass ) );
 						}
 						else {
-							final Iterator<Property> propertyIterator = component.getPropertyIterator();
-							while ( propertyIterator.hasNext() ) {
-								Property property = propertyIterator.next();
-								try {
-									property.getGetter( componentClass );
-								}
-								catch (PropertyNotFoundException e) {
-									propertyIterator.remove();
+							if ( componentClass == Object.class ) {
+								// Object is not a valid component class, but that is what we get when using a type variable
+								component.getProperties().clear();
+							}
+							else {
+								final Iterator<Property> propertyIterator = component.getPropertyIterator();
+								while ( propertyIterator.hasNext() ) {
+									try {
+										propertyIterator.next().getGetter( componentClass );
+									}
+									catch (PropertyNotFoundException e) {
+										propertyIterator.remove();
+									}
 								}
 							}
 						}

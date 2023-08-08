@@ -15,6 +15,8 @@ plugins {
 
 	// for local publishing
 	id 'maven-publish'
+
+	id 'org.hibernate.orm.build.jdks'
 }
 
 apply from: rootProject.file( 'gradle/module.gradle' )
@@ -125,10 +127,10 @@ tasks.withType( JavaCompile ) {
 	options.encoding = 'UTF-8'
 }
 
-if ( !gradle.ext.javaToolchainEnabled ) {
+if ( !jdkVersions.explicit ) {
 	tasks.withType( GroovyCompile ) {
-		sourceCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
-		targetCompatibility = JavaVersion.toVersion( gradle.ext.baselineJavaVersion )
+		sourceCompatibility = JavaVersion.toVersion( gradle.jdkVersions.baseline )
+		targetCompatibility = JavaVersion.toVersion( gradle.jdkVersions.baseline )
 	}
 }
 else {

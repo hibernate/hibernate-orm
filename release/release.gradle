@@ -12,6 +12,7 @@ import groovy.json.JsonSlurper
 apply from: rootProject.file( 'gradle/module.gradle' )
 
 apply plugin: 'org.hibernate.orm.build.doc-pub'
+apply plugin: 'org.hibernate.orm.build.jdks'
 apply plugin: 'idea'
 
 idea.module {
@@ -193,13 +194,13 @@ task aggregateJavadocs(type: Javadoc) {
 
         options.addStringOption( 'Xdoclint:none', '-quiet' )
 
-        if ( gradle.ext.javaToolchainEnabled ) {
+        if ( jdkVersions.explicit ) {
             options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().
                     split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
         }
     }
 
-    if ( gradle.ext.javaToolchainEnabled ) {
+    if ( jdkVersions.explicit ) {
         // Display version of Java tools
         doFirst {
             if ( javadocTool.present ) {

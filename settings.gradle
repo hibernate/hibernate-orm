@@ -51,6 +51,13 @@ dependencyResolutionManagement {
     }
 
     versionCatalogs {
+        jdks {
+            version( "baseline", "11" )
+
+            // Gradle does bytecode transformation on tests.
+            // You can't use bytecode higher than what Gradle supports, even with toolchains.
+            version( "maxSupportedBytecode", "21" )
+        }
         libs {
             def antlrVersion = "4.10.1"
             def byteBuddyVersion = "1.14.5"
@@ -277,79 +284,6 @@ buildCache {
         url = 'https://ge.hibernate.org/cache/'
     }
 }
-
-gradle.ext.baselineJavaVersion = JavaLanguageVersion.of( 11 )
-
-// Gradle does bytecode transformation on tests.
-// You can't use bytecode higher than what Gradle supports, even with toolchains.
-def GRADLE_MAX_SUPPORTED_BYTECODE_VERSION = 21
-
-// If either 'main.jdk.version' or 'test.jdk.version' is set, enable the toolchain and use the selected jdk.
-// If only one property is set, the other defaults to the baseline Java version (11).
-// Note that when toolchain is enabled, you also need to specify
-// the location of the selected jdks
-// (auto-download and auto-detect are disabled in gradle.properties).
-//
-// Example (with SDKMAN):
-// ./gradlew build -Ptest.jdk.version=15 \
-// -Porg.gradle.java.installations.paths=$SDKMAN_CANDIDATES_DIR/java/15.0.1-open,$SDKMAN_CANDIDATES_DIR/java/8
-if ( hasProperty( 'main.jdk.version' ) || hasProperty( 'test.jdk.version' ) ) {
-    // Testing a particular JDK version
-    // Gradle doesn't support all JDK versions unless we use toolchains
-    gradle.ext.javaToolchainEnabled = true
-    gradle.ext.javaVersions = [
-            main: [
-                    compiler: JavaLanguageVersion.of( hasProperty( 'main.jdk.version' )
-                            ? getProperty( 'main.jdk.version' ) : gradle.ext.baselineJavaVersion.asInt() ),
-                    release: gradle.ext.baselineJavaVersion
-            ],
-            test: [
-                    compiler: JavaLanguageVersion.of( hasProperty( 'test.jdk.version' )
-                            ? getProperty( 'test.jdk.version' ) : gradle.ext.baselineJavaVersion.asInt() )
-            ]
-    ]
-    def testCompilerVersion = gradle.ext.javaVersions.test.compiler
-    if ( testCompilerVersion.asInt() > GRADLE_MAX_SUPPORTED_BYTECODE_VERSION ) {
-        logger.warn( "[WARN] Gradle does not support bytecode version '${testCompilerVersion}'." +
-                 " Forcing test bytecode to version ${GRADLE_MAX_SUPPORTED_BYTECODE_VERSION}." )
-        gradle.ext.javaVersions.test.release = JavaLanguageVersion.of( GRADLE_MAX_SUPPORTED_BYTECODE_VERSION )
-    }
-    else {
-        gradle.ext.javaVersions.test.release = testCompilerVersion
-    }
-    gradle.ext.javaVersions.test.launcher = testCompilerVersion
-}
-else {
-    // Not testing a particular JDK version: we will use the same JDK used to run Gradle.
-    // We disable toolchains for convenience, so that anyone can just run the build with their own JDK
-    // without any additional options and without downloading the whole JDK.
-    gradle.ext.javaToolchainEnabled = false
-    def gradleJdkVersion = JavaLanguageVersion.of( JavaVersion.current().getMajorVersion() )
-    if ( gradleJdkVersion.asInt() > GRADLE_MAX_SUPPORTED_BYTECODE_VERSION ) {
-        logger.warn( "[WARN] Gradle does not support this JDK, because it is too recent; build is likely to fail." +
-                " To avoid failures, you should use an older Java version when running Gradle, and rely on toolchains." +
-                " To that end, specify the version of Java you want to run tests with using property 'test.jdk.version'," +
-                " and specify the path to JDK8 *and* a JDK of the test version using property 'org.gradle.java.installations.paths'." +
-                " Example:" +
-                "./gradlew build -Ptest.jdk.version=15 -Porg.gradle.java.installations.paths=\$SDKMAN_CANDIDATES_DIR/java/15.0.1-open,\$SDKMAN_CANDIDATES_DIR/java/8" )
-    }
-
-    gradle.ext.javaVersions = [
-            main: [
-                    compiler: gradleJdkVersion,
-                    release: gradle.ext.baselineJavaVersion
-            ],
-            test: [
-                    compiler: gradleJdkVersion,
-                    release: JavaLanguageVersion.of(
-                            Math.min( GRADLE_MAX_SUPPORTED_BYTECODE_VERSION, gradleJdkVersion.asInt() ) ),
-                    launcher: gradleJdkVersion
-            ]
-    ]
-}
-
-logger.lifecycle "Java versions for main code: " + gradle.ext.javaVersions.main
-logger.lifecycle "Java versions for tests: " + gradle.ext.javaVersions.test
 
 include 'hibernate-core'
 include 'hibernate-testing'

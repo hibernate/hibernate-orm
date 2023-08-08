@@ -14,6 +14,7 @@ import org.gradle.api.Task;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * @author Steve Ebersole
@@ -28,7 +29,7 @@ public class AntlrSpec {
 
 	@Inject
 	@SuppressWarnings("UnstableApiUsage")
-	public AntlrSpec(Project project, Task groupingTask) {
+	public AntlrSpec(Project project, TaskProvider<Task> groupingTask) {
 		final ObjectFactory objectFactory = project.getObjects();
 		final ProjectLayout layout = project.getLayout();
 

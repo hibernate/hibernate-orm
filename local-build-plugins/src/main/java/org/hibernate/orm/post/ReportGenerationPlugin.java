@@ -10,6 +10,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * @author Steve Ebersole
@@ -24,55 +25,51 @@ public class ReportGenerationPlugin implements Plugin<Project> {
 				.maybeCreate( CONFIG_NAME )
 				.setDescription( "Used to collect the jars with classes files to be used in the aggregation reports for `@Internal`, `@Incubating`, etc" );
 
-		final Task groupingTask = project.getTasks().maybeCreate( "generateHibernateReports" );
-		groupingTask.setGroup( TASK_GROUP_NAME );
-
 		final IndexManager indexManager = new IndexManager( artifactsToProcess, project );
-		final IndexerTask indexerTask = project.getTasks().create(
-				"buildAggregatedIndex",
-				IndexerTask.class,
-				indexManager
-		);
-		groupingTask.dependsOn( indexerTask );
+		project.getExtensions().add( "indexManager", indexManager );
 
-		final IncubationReportTask incubatingTask = project.getTasks().create(
+		final TaskProvider<IndexerTask> indexerTask = project.getTasks().register(
+				"buildAggregatedIndex",
+				IndexerTask.class
+		);
+
+		final TaskProvider<IncubationReportTask> incubatingTask = project.getTasks().register(
 				"generateIncubationReport",
 				IncubationReportTask.class,
-				indexManager
+				(task) -> task.dependsOn( indexerTask )
 		);
-		incubatingTask.dependsOn( indexerTask );
-		groupingTask.dependsOn( incubatingTask );
 
-		final DeprecationReportTask deprecationTask = project.getTasks().create(
+		final TaskProvider<DeprecationReportTask> deprecationTask = project.getTasks().register(
 				"generateDeprecationReport",
 				DeprecationReportTask.class,
-				indexManager
+				(task) -> task.dependsOn( indexerTask )
 		);
-		deprecationTask.dependsOn( indexerTask );
-		groupingTask.dependsOn( deprecationTask );
 
-		final InternalsReportTask internalsTask = project.getTasks().create(
+		final TaskProvider<InternalsReportTask> internalsTask = project.getTasks().register(
 				"generateInternalsReport",
 				InternalsReportTask.class,
-				indexManager
+				(task) -> task.dependsOn( indexerTask )
 		);
-		internalsTask.dependsOn( indexerTask );
-		groupingTask.dependsOn( internalsTask );
 
-		final LoggingReportTask loggingTask = project.getTasks().create(
+		final TaskProvider<LoggingReportTask> loggingTask = project.getTasks().register(
 				"generateLoggingReport",
 				LoggingReportTask.class,
-				indexManager
+				(task) -> task.dependsOn( indexerTask )
 		);
-		loggingTask.dependsOn( indexerTask );
-		groupingTask.dependsOn( loggingTask );
 
-		final DialectReportTask dialectTask = project.getTasks().create(
+		final TaskProvider<DialectReportTask> dialectTask = project.getTasks().register(
 				"generateDialectReport",
 				DialectReportTask.class,
-				indexManager
+				(task) -> task.dependsOn( indexerTask )
 		);
-		dialectTask.dependsOn( indexerTask );
+
+		final Task groupingTask = project.getTasks().maybeCreate( "generateReports" );
+		groupingTask.setGroup( TASK_GROUP_NAME );
+		groupingTask.dependsOn( indexerTask );
+		groupingTask.dependsOn( incubatingTask );
+		groupingTask.dependsOn( deprecationTask );
+		groupingTask.dependsOn( internalsTask );
+		groupingTask.dependsOn( loggingTask );
 		groupingTask.dependsOn( dialectTask );
 	}
 }

@@ -17,9 +17,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import javax.inject.Inject;
 
 import org.gradle.api.Project;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
@@ -29,19 +31,25 @@ import org.hibernate.orm.env.HibernateVersion;
 import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.Index;
 
+import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
+
 /**
  * Generates a report on Dialect information
  *
  * @author Steve Ebersole
  */
 public abstract class DialectReportTask extends AbstractJandexAwareTask {
+	private final Property<RegularFile> reportFile;
 
-	@Inject
-	public DialectReportTask(IndexManager indexManager, Project project) {
-		super(
-				indexManager,
-				project.getLayout().getBuildDirectory().file( "orm/reports/dialect.adoc" )
-		);
+	public DialectReportTask() {
+		setDescription( "Generates a report of the supported Dialects" );
+		reportFile = getProject().getObjects().fileProperty();
+		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/dialect/dialect.adoc" ) );
+	}
+
+	@Override
+	protected Provider<RegularFile> getTaskReportFileReference() {
+		return reportFile;
 	}
 
 	@TaskAction

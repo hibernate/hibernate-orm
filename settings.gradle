@@ -52,207 +52,203 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         jdks {
-            version( "baseline", "11" )
+            version "baseline", "11"
 
             // Gradle does bytecode transformation on tests.
             // You can't use bytecode higher than what Gradle supports, even with toolchains.
-            version( "maxSupportedBytecode", "21" )
+            version "maxSupportedBytecode", "21"
         }
         libs {
-            def antlrVersion = "4.10.1"
-            def byteBuddyVersion = "1.14.7"
-            def classmateVersion = "1.5.1"
-            def geolatteVersion = "1.8.2"
-            def hcannVersion = "6.0.6.Final"
-            def jandexVersion = "3.0.5"
-            def jacksonVersion = "2.14.1"
-            def jbossLoggingVersion = "3.5.0.Final"
-            def jbossLoggingToolVersion = "2.2.1.Final"
+            def antlrVersion = version "antlr", "4.10.1"
+            def byteBuddyVersion = version "byteBuddy", "1.14.7"
+            def classmateVersion = version "classmate", "1.5.1"
+            def geolatteVersion = version "geolatte", "1.8.2"
+            def hcannVersion = version "hcann", "6.0.6.Final"
+            def jandexVersion = version "jandex", "3.0.5"
+            def jacksonVersion = version "jackson", "2.14.1"
+            def jbossLoggingVersion = version "jbossLogging", "3.5.0.Final"
+            def jbossLoggingToolVersion = version "jbossLoggingTool", "2.2.1.Final"
 
-            def agroalVersion = "2.0"
-            def c3poVersion = "0.9.5.5"
-            def hikaricpVersion = "3.2.0"
-            def proxoolVersion = "0.8.3"
-            def viburVersion = "25.0"
+            def agroalVersion = version "agroal", "2.0"
+            def c3poVersion = version"c3p0", "0.9.5.5"
+            def hikaricpVersion = version "hikaricp", "3.2.0"
+            def proxoolVersion = version "proxool", "0.8.3"
+            def viburVersion = version "vibur", "25.0"
 
-            def jcacheVersion = "1.0.0"
-            def ehcache3Version = "3.10.8"
+            def jcacheVersion = version "jcache", "1.0.0"
+            def ehcache3Version = version "ehcache3", "3.10.8"
 
-            def micrometerVersion = "1.10.4"
+            def micrometerVersion = version "micrometer", "1.10.4"
 
-            def hibernateValidatorVersion = "8.0.0.Final"
+            def hibernateValidatorVersion = version "hibernateValidator", "8.0.0.Final"
 
-            // these versions are referenced directly in build scripts
-            version( "byteBuddy", byteBuddyVersion )
-            version( "vibur", viburVersion )
+            library( "antlr", "org.antlr", "antlr4" ).versionRef( antlrVersion )
+            library( "antlrRuntime", "org.antlr", "antlr4-runtime" ).versionRef( antlrVersion)
 
-            library( "antlr", "org.antlr", "antlr4" ).version( antlrVersion )
-            library( "antlrRuntime", "org.antlr", "antlr4-runtime" ).version( antlrVersion)
+            library( "byteBuddy", "net.bytebuddy", "byte-buddy" ).versionRef( byteBuddyVersion )
+            library( "byteBuddyAgent", "net.bytebuddy", "byte-buddy-agent" ).versionRef( byteBuddyVersion )
 
-            library( "byteBuddy", "net.bytebuddy", "byte-buddy" ).version( byteBuddyVersion )
-            library( "byteBuddyAgent", "net.bytebuddy", "byte-buddy-agent" ).version( byteBuddyVersion )
+            library( "logging", "org.jboss.logging", "jboss-logging" ).versionRef( jbossLoggingVersion )
+            library( "loggingAnnotations", "org.jboss.logging", "jboss-logging-annotations" ).versionRef( jbossLoggingToolVersion )
+            library( "loggingProcessor", "org.jboss.logging", "jboss-logging-processor" ).versionRef( jbossLoggingToolVersion )
 
-            library( "logging", "org.jboss.logging", "jboss-logging" ).version( jbossLoggingVersion )
-            library( "loggingAnnotations", "org.jboss.logging", "jboss-logging-annotations" ).version( jbossLoggingToolVersion )
-            library( "loggingProcessor", "org.jboss.logging", "jboss-logging-processor" ).version( jbossLoggingToolVersion )
+            library( "hcann", "org.hibernate.common", "hibernate-commons-annotations" ).versionRef( hcannVersion )
+            library( "jandex", "io.smallrye", "jandex" ).versionRef( jandexVersion )
+            library( "classmate", "com.fasterxml", "classmate" ).versionRef( classmateVersion )
 
-            library( "hcann", "org.hibernate.common", "hibernate-commons-annotations" ).version( hcannVersion )
-            library( "jandex", "io.smallrye", "jandex" ).version( jandexVersion )
-            library( "classmate", "com.fasterxml", "classmate" ).version( classmateVersion )
+            library( "jackson", "com.fasterxml.jackson.core", "jackson-databind" ).versionRef( jacksonVersion )
+            library( "jacksonXml", "com.fasterxml.jackson.dataformat", "jackson-dataformat-xml" ).versionRef( jacksonVersion )
+            library( "jacksonJsr310", "com.fasterxml.jackson.datatype", "jackson-datatype-jsr310" ).versionRef( jacksonVersion )
+            library( "validator", "org.hibernate.validator", "hibernate-validator" ).versionRef( hibernateValidatorVersion )
 
-            library( "jackson", "com.fasterxml.jackson.core", "jackson-databind" ).version( jacksonVersion )
-            library( "jacksonXml", "com.fasterxml.jackson.dataformat", "jackson-dataformat-xml" ).version( jacksonVersion )
-            library( "jacksonJsr310", "com.fasterxml.jackson.datatype", "jackson-datatype-jsr310" ).version( jacksonVersion )
-            library( "validator", "org.hibernate.validator", "hibernate-validator" ).version( hibernateValidatorVersion )
+            library( "agroal", "io.agroal", "agroal-api" ).versionRef( agroalVersion )
+            library( "agroalPool", "io.agroal", "agroal-pool" ).versionRef( agroalVersion )
 
-            library( "agroal", "io.agroal", "agroal-api" ).version( agroalVersion )
-            library( "agroalPool", "io.agroal", "agroal-pool" ).version( agroalVersion )
+            library( "c3p0", "com.mchange", "c3p0" ).versionRef( c3poVersion )
 
-            library( "c3p0", "com.mchange", "c3p0" ).version( c3poVersion )
+            library( "hikaricp", "com.zaxxer", "HikariCP" ).versionRef( hikaricpVersion )
 
-            library( "hikaricp", "com.zaxxer", "HikariCP" ).version( hikaricpVersion )
+            library( "proxool", "proxool", "proxool" ).versionRef( proxoolVersion )
 
-            library( "proxool", "proxool", "proxool" ).version( proxoolVersion )
+            library( "vibur", "org.vibur", "vibur-dbcp" ).versionRef( viburVersion )
 
-            library( "vibur", "org.vibur", "vibur-dbcp" ).version( viburVersion )
+            library( "geolatte", "org.geolatte", "geolatte-geom" ).versionRef( geolatteVersion )
 
-            library( "geolatte", "org.geolatte", "geolatte-geom" ).version( geolatteVersion )
+            library( "jcache", "javax.cache", "cache-api" ).versionRef( jcacheVersion )
+            library( "ehcache3", "org.ehcache", "ehcache" ).versionRef( ehcache3Version )
 
-            library( "jcache", "javax.cache", "cache-api" ).version( jcacheVersion )
-            library( "ehcache3", "org.ehcache", "ehcache" ).version( ehcache3Version )
-
-            library( "micrometer", "io.micrometer", "micrometer-core" ).version( micrometerVersion )
+            library( "micrometer", "io.micrometer", "micrometer-core" ).versionRef( micrometerVersion )
 
             library( "ant", "org.apache.ant", "ant" ).version( "1.8.2" )
         }
         jakartaLibs {
             // `jakartaJpaVersion` comes from the local-build-plugins to allow for command-line overriding of the JPA version to use
-            def jpaVersion = "${jakartaJpaVersion}"
+            def jpaVersion = version "jpa", "${jakartaJpaVersion}"
 
-            def annotationVersion = "2.1.1"
-            def cdiVersion = "4.0.1"
-            def elVersion = "5.0.0"
-            def injectVersion = "2.0.1"
-            def interceptorsVersion = "2.1.0"
-            def jaccVersion = "2.1.0"
-            def jaxbApiVersion = "4.0.0"
-            def jaxbRuntimeVersion = "4.0.2"
-            def jsonbApiVersion = "3.0.0"
-            def jsonbRuntimeVersion = "3.0.2"
-            def jtaVersion = "2.0.1"
-            def validationVersion = "3.0.2"
-            def xjcVersion = jaxbRuntimeVersion
+            def annotationVersion = version "annotation", "2.1.1"
+            def cdiVersion = version "cdi", "4.0.1"
+            def elVersion = version "el", "5.0.0"
+            def injectVersion = version "inject", "2.0.1"
+            def interceptorsVersion = version "interceptors", "2.1.0"
+            def jaccVersion = version "jacc", "2.1.0"
+            def jaxbApiVersion = version "jaxbApi", "4.0.0"
+            def jaxbRuntimeVersion = version "jaxbRuntime", "4.0.2"
+            def jsonbApiVersion = version "jsonbApi", "3.0.0"
+            def jsonbRuntimeVersion = version "jsonbRuntime", "3.0.2"
+            def jtaVersion = version "jta", "2.0.1"
+            def validationVersion = version "validation", "3.0.2"
+            def xjcVersion = version "jaxbRuntime", jaxbRuntimeVersion
 
-            library( "jpa", "jakarta.persistence", "jakarta.persistence-api" ).version( jpaVersion )
-            library( "jta", "jakarta.transaction", "jakarta.transaction-api" ).version( jtaVersion )
+            library( "jpa", "jakarta.persistence", "jakarta.persistence-api" ).versionRef( jpaVersion )
+            library( "jta", "jakarta.transaction", "jakarta.transaction-api" ).versionRef( jtaVersion )
 
-            library( "validation", "jakarta.validation", "jakarta.validation-api" ).version( validationVersion )
-            library( "jacc", "jakarta.authorization", "jakarta.authorization-api" ).version( jaccVersion )
-            library( "cdi", "jakarta.enterprise", "jakarta.enterprise.cdi-api" ).version( cdiVersion )
-            library( "annotation", "jakarta.annotation", "jakarta.annotation-api" ).version( annotationVersion )
-            library( "interceptors", "jakarta.interceptor", "jakarta.interceptor-api" ).version( interceptorsVersion )
-            library( "jsonbApi", "jakarta.json.bind", "jakarta.json.bind-api" ).version( jsonbApiVersion )
-            library( "jsonb", "org.eclipse", "yasson" ).version( jsonbRuntimeVersion )
-            library( "inject", "jakarta.inject", "jakarta.inject-api" ).version( injectVersion )
-            library( "jaxbApi", "jakarta.xml.bind", "jakarta.xml.bind-api" ).version( jaxbApiVersion )
-            library( "jaxb", "org.glassfish.jaxb", "jaxb-runtime" ).version( jaxbRuntimeVersion )
-            library( "xjc", "org.glassfish.jaxb", "jaxb-xjc" ).version( xjcVersion )
-            library( "el", "org.glassfish.expressly", "expressly" ).version( elVersion )
+            library( "validation", "jakarta.validation", "jakarta.validation-api" ).versionRef( validationVersion )
+            library( "jacc", "jakarta.authorization", "jakarta.authorization-api" ).versionRef( jaccVersion )
+            library( "cdi", "jakarta.enterprise", "jakarta.enterprise.cdi-api" ).versionRef( cdiVersion )
+            library( "annotation", "jakarta.annotation", "jakarta.annotation-api" ).versionRef( annotationVersion )
+            library( "interceptors", "jakarta.interceptor", "jakarta.interceptor-api" ).versionRef( interceptorsVersion )
+            library( "jsonbApi", "jakarta.json.bind", "jakarta.json.bind-api" ).versionRef( jsonbApiVersion )
+            library( "jsonb", "org.eclipse", "yasson" ).versionRef( jsonbRuntimeVersion )
+            library( "inject", "jakarta.inject", "jakarta.inject-api" ).versionRef( injectVersion )
+            library( "jaxbApi", "jakarta.xml.bind", "jakarta.xml.bind-api" ).versionRef( jaxbApiVersion )
+            library( "jaxb", "org.glassfish.jaxb", "jaxb-runtime" ).versionRef( jaxbRuntimeVersion )
+            library( "xjc", "org.glassfish.jaxb", "jaxb-xjc" ).versionRef( xjcVersion )
+            library( "el", "org.glassfish.expressly", "expressly" ).versionRef( elVersion )
         }
         testLibs {
-            def junit5Version = "5.9.2"
-            def junit4Version = "4.13.2"
+            def junit5Version = version "junit5", "5.9.2"
+            def junit4Version = version "junit4", "4.13.2"
 
-            def assertjVersion = "3.22.0"
-            def bytemanVersion = "4.0.20"
-            def jbossJtaVersion = "7.0.0.Final"
-            def jbossTxSpiVersion = "8.0.0.Final"
-            def log4jVersion = "2.17.1"
-            def mockitoVersion = "5.2.0"
+            def assertjVersion = version "assertj", "3.22.0"
+            def bytemanVersion = version "byteman", "4.0.20"
+            def jbossJtaVersion = version "jbossJta", "7.0.0.Final"
+            def jbossTxSpiVersion = version "jbossTxSpi", "8.0.0.Final"
+            def log4jVersion = version "log4j", "2.17.1"
+            def mockitoVersion = version "mockito", "5.2.0"
             //Compatible with JDK20
-            def shrinkwrapVersion = "1.2.6"
-            def shrinkwrapDescriptorsVersion = "2.0.0"
-            def weldVersion = "4.0.1.SP1"
-            def wildFlyTxnClientVersion = "2.0.0.Final"
-            def xapoolVersion = "1.5.0"
+            def shrinkwrapVersion = version "shrinkwrap", "1.2.6"
+            def shrinkwrapDescriptorsVersion = version "shrinkwrapDescriptors", "2.0.0"
+            def weldVersion = version "weld", "4.0.1.SP1"
+            def wildFlyTxnClientVersion = version "wildFlyTxnClient", "2.0.0.Final"
+            def xapoolVersion = version "xapool", "1.5.0"
 
-            library( "junit5Api", "org.junit.jupiter", "junit-jupiter-api" ).version( junit5Version )
-            library( "junit5Engine", "org.junit.jupiter", "junit-jupiter-engine" ).version( junit5Version )
-            library( "junit5Params", "org.junit.jupiter", "junit-jupiter-params" ).version( junit5Version )
-            library( "junit4Engine", "org.junit.vintage", "junit-vintage-engine" ).version( junit5Version )
-            library( "junit4", "junit", "junit" ).version( junit4Version )
+            library( "junit5Api", "org.junit.jupiter", "junit-jupiter-api" ).versionRef( junit5Version )
+            library( "junit5Engine", "org.junit.jupiter", "junit-jupiter-engine" ).versionRef( junit5Version )
+            library( "junit5Params", "org.junit.jupiter", "junit-jupiter-params" ).versionRef( junit5Version )
+            library( "junit4Engine", "org.junit.vintage", "junit-vintage-engine" ).versionRef( junit5Version )
+            library( "junit4", "junit", "junit" ).versionRef( junit4Version )
 
-            library( "assertjCore", "org.assertj", "assertj-core" ).version( assertjVersion )
-            library( "assertjApi", "org.assertj", "assertj-core-api" ).version( assertjVersion )
+            library( "assertjCore", "org.assertj", "assertj-core" ).versionRef( assertjVersion )
+            library( "assertjApi", "org.assertj", "assertj-core-api" ).versionRef( assertjVersion )
 
-            library( "log4j2", "org.apache.logging.log4j", "log4j-core" ).version( log4jVersion )
+            library( "log4j2", "org.apache.logging.log4j", "log4j-core" ).versionRef( log4jVersion )
 
-            library( "shrinkwrap", "org.jboss.shrinkwrap", "shrinkwrap-impl-base" ).version( shrinkwrapVersion )
-            library( "shrinkwrapApi", "org.jboss.shrinkwrap", "shrinkwrap-api" ).version( shrinkwrapVersion )
-            library( "shrinkwrapDescriptors", "org.jboss.shrinkwrap.descriptors", "shrinkwrap-descriptors-impl-javaee" ).version( shrinkwrapDescriptorsVersion )
-            library( "shrinkwrapDescriptorsApi", "org.jboss.shrinkwrap.descriptors", "shrinkwrap-descriptors-api-javaee" ).version( shrinkwrapDescriptorsVersion )
+            library( "shrinkwrap", "org.jboss.shrinkwrap", "shrinkwrap-impl-base" ).versionRef( shrinkwrapVersion )
+            library( "shrinkwrapApi", "org.jboss.shrinkwrap", "shrinkwrap-api" ).versionRef( shrinkwrapVersion )
+            library( "shrinkwrapDescriptors", "org.jboss.shrinkwrap.descriptors", "shrinkwrap-descriptors-impl-javaee" ).versionRef( shrinkwrapDescriptorsVersion )
+            library( "shrinkwrapDescriptorsApi", "org.jboss.shrinkwrap.descriptors", "shrinkwrap-descriptors-api-javaee" ).versionRef( shrinkwrapDescriptorsVersion )
 
-            library( "byteman", "org.jboss.byteman", "byteman" ).version( bytemanVersion )
-            library( "bytemanInstall", "org.jboss.byteman", "byteman-install" ).version( bytemanVersion )
-            library( "bytemanBmunit", "org.jboss.byteman", "byteman-bmunit" ).version( bytemanVersion )
+            library( "byteman", "org.jboss.byteman", "byteman" ).versionRef( bytemanVersion )
+            library( "bytemanInstall", "org.jboss.byteman", "byteman-install" ).versionRef( bytemanVersion )
+            library( "bytemanBmunit", "org.jboss.byteman", "byteman-bmunit" ).versionRef( bytemanVersion )
 
-            library( "mockito", "org.mockito", "mockito-core" ).version( mockitoVersion )
-            library( "mockitoInline", "org.mockito", "mockito-inline" ).version( mockitoVersion )
+            library( "mockito", "org.mockito", "mockito-core" ).versionRef( mockitoVersion )
+            library( "mockitoInline", "org.mockito", "mockito-inline" ).versionRef( mockitoVersion )
 
-            library( "xapool", "com.experlog", "xapool" ).version( xapoolVersion )
-            library( "jbossJta", "org.jboss.narayana.jta", "narayana-jta" ).version( jbossJtaVersion )
-            library( "jbossTxSpi", "org.jboss", "jboss-transaction-spi" ).version( jbossTxSpiVersion )
-            library( "wildFlyTxnClient", "org.wildfly.transaction", "wildfly-transaction-client-jakarta" ).version( wildFlyTxnClientVersion )
+            library( "xapool", "com.experlog", "xapool" ).versionRef( xapoolVersion )
+            library( "jbossJta", "org.jboss.narayana.jta", "narayana-jta" ).versionRef( jbossJtaVersion )
+            library( "jbossTxSpi", "org.jboss", "jboss-transaction-spi" ).versionRef( jbossTxSpiVersion )
+            library( "wildFlyTxnClient", "org.wildfly.transaction", "wildfly-transaction-client-jakarta" ).versionRef( wildFlyTxnClientVersion )
 
-            library( "weld", "org.jboss.weld.se", "weld-se-shaded" ).version( weldVersion )
+            library( "weld", "org.jboss.weld.se", "weld-se-shaded" ).versionRef( weldVersion )
         }
         dbLibs {
-            def h2Version = overrideableVersion( "gradle.libs.versions.h2", "2.2.220" )
+            def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.2.220" )
 
-            def db2Version = "11.5.8.0"
+            def db2Version = version "db2", "11.5.8.0"
             // Latest Derby version 10.16.1.1 only supports JDK 17+, but 10.15.2 should be compatible
-            def derbyVersion = overrideableVersion( "gradle.libs.versions.derby", "10.15.2.0" )
-            def firebirdVersion = "4.0.8.java11"
-            def hanaVersion = "2.16.14"
-            def h2gisVersion = overrideableVersion( "gradle.libs.versions.h2gis", "2.1.0" )
-            def hsqldbVersion = overrideableVersion( "gradle.libs.versions.hsqldb", "2.7.2" )
-            def informixVersion = "4.10.12"
-            def mariadbVersion = "2.7.9"
-            def mssqlVersion = "12.2.0.jre11"
-            def mysqlVersion = "8.0.33"
-            def oracleVersion = "23.2.0.0"
-            def pgsqlVersion = "42.6.0"
-            def sybaseVersion = "1.3.1"
-            def tidbVersion = mysqlVersion
+            def derbyVersion = version "dervy", overrideableVersion( "gradle.libs.versions.derby", "10.15.2.0" )
+            def firebirdVersion = version "firebird", "4.0.8.java11"
+            def hanaVersion = version "hana", "2.16.14"
+            def h2gisVersion = version "h2gis", overrideableVersion( "gradle.libs.versions.h2gis", "2.1.0" )
+            def hsqldbVersion = version "hsqldb", overrideableVersion( "gradle.libs.versions.hsqldb", "2.7.2" )
+            def informixVersion = version "informix", "4.10.12"
+            def mariadbVersion = version "mariadb", "2.7.9"
+            def mssqlVersion = version "mssql", "12.2.0.jre11"
+            def mysqlVersion = version "mysql", "8.0.33"
+            def oracleVersion = version "oracle", "23.2.0.0"
+            def pgsqlVersion = version "pgsql", "42.6.0"
+            def sybaseVersion = version "sybase", "1.3.1"
+            def tidbVersion = version "tidb", mysqlVersion
 
-            library( "h2", "com.h2database", "h2" ).version( h2Version )
-            library( "h2gis", "org.orbisgis", "h2gis" ).version( h2gisVersion )
-            library( "hsqldb", "org.hsqldb", "hsqldb" ).version( hsqldbVersion )
-            library( "derby", "org.apache.derby", "derby" ).version( derbyVersion )
-            library( "postgresql", "org.postgresql", "postgresql" ).version( pgsqlVersion )
-            library( "cockroachdb", "org.postgresql", "postgresql" ).version( pgsqlVersion )
-            library( "mysql", "com.mysql", "mysql-connector-j" ).version( mysqlVersion )
-            library( "tidb", "com.mysql", "mysql-connector-j" ).version( tidbVersion )
-            library( "mariadb", "org.mariadb.jdbc", "mariadb-java-client" ).version( mariadbVersion )
-            library( "oracle", "com.oracle.database.jdbc", "ojdbc11" ).version( oracleVersion )
-            library( "oracleXml", "com.oracle.database.xml", "xdb" ).version( oracleVersion )
-            library( "oracleXmlParser", "com.oracle.database.xml", "xmlparserv2" ).version( oracleVersion )
-            library( "mssql", "com.microsoft.sqlserver", "mssql-jdbc" ).version( mssqlVersion )
-            library( "db2", "com.ibm.db2", "jcc" ).version( db2Version )
-            library( "hana", "com.sap.cloud.db.jdbc", "ngdbc" ).version( hanaVersion )
-            library( "sybase", "net.sourceforge.jtds", "jtds" ).version( sybaseVersion )
-            library( "informix", "com.ibm.informix", "jdbc" ).version( informixVersion )
-            library( "firebird", "org.firebirdsql.jdbc", "jaybird" ).version( firebirdVersion )
+            library( "h2", "com.h2database", "h2" ).versionRef( h2Version )
+            library( "h2gis", "org.orbisgis", "h2gis" ).versionRef( h2gisVersion )
+            library( "hsqldb", "org.hsqldb", "hsqldb" ).versionRef( hsqldbVersion )
+            library( "derby", "org.apache.derby", "derby" ).versionRef( derbyVersion )
+            library( "postgresql", "org.postgresql", "postgresql" ).versionRef( pgsqlVersion )
+            library( "cockroachdb", "org.postgresql", "postgresql" ).versionRef( pgsqlVersion )
+            library( "mysql", "com.mysql", "mysql-connector-j" ).versionRef( mysqlVersion )
+            library( "tidb", "com.mysql", "mysql-connector-j" ).versionRef( tidbVersion )
+            library( "mariadb", "org.mariadb.jdbc", "mariadb-java-client" ).versionRef( mariadbVersion )
+            library( "oracle", "com.oracle.database.jdbc", "ojdbc11" ).versionRef( oracleVersion )
+            library( "oracleXml", "com.oracle.database.xml", "xdb" ).versionRef( oracleVersion )
+            library( "oracleXmlParser", "com.oracle.database.xml", "xmlparserv2" ).versionRef( oracleVersion )
+            library( "mssql", "com.microsoft.sqlserver", "mssql-jdbc" ).versionRef( mssqlVersion )
+            library( "db2", "com.ibm.db2", "jcc" ).versionRef( db2Version )
+            library( "hana", "com.sap.cloud.db.jdbc", "ngdbc" ).versionRef( hanaVersion )
+            library( "sybase", "net.sourceforge.jtds", "jtds" ).versionRef( sybaseVersion )
+            library( "informix", "com.ibm.informix", "jdbc" ).versionRef( informixVersion )
+            library( "firebird", "org.firebirdsql.jdbc", "jaybird" ).versionRef( firebirdVersion )
         }
         mavenLibs {
-            def mavenCoreVersion = "3.8.1"
-            def mavenVersion = "3.0.5"
-            def mavenPluginToolsVersion = "3.2"
+            def mavenCoreVersion = version "mavenCore", "3.8.1"
+            def mavenVersion = version "maven", "3.0.5"
+            def mavenPluginToolsVersion = version "mavenPluginTools", "3.2"
 
-            library( "mavenCore", "org.apache.maven", "maven-core" ).version( mavenCoreVersion )
-            library( "mavenArtifact", "org.apache.maven", "maven-artifact" ).version( mavenVersion )
-            library( "mavenPlugin", "org.apache.maven", "maven-plugin-api" ).version( mavenVersion )
-            library( "mavenPluginTools", "org.apache.maven.plugin-tools", "maven-plugin-annotations" ).version( mavenPluginToolsVersion )
+            library( "mavenCore", "org.apache.maven", "maven-core" ).versionRef( mavenCoreVersion )
+            library( "mavenArtifact", "org.apache.maven", "maven-artifact" ).versionRef( mavenVersion )
+            library( "mavenPlugin", "org.apache.maven", "maven-plugin-api" ).versionRef( mavenVersion )
+            library( "mavenPluginTools", "org.apache.maven.plugin-tools", "maven-plugin-annotations" ).versionRef( mavenPluginToolsVersion )
         }
     }
 }

@@ -151,9 +151,10 @@ public class SchemaTruncatorImpl implements SchemaTruncator {
 				checkExportIdentifier( table, exportIdentifiers );
 				list.add( table );
 			}
-			applySqlStrings( dialect.getTableCleaner().getSqlTruncateStrings( list, metadata,
-					context
-			), formatter, options,targets );
+			applySqlStrings(
+					dialect.getTableCleaner().getSqlTruncateStrings( list, metadata, context),
+					formatter, options,targets
+			);
 
 			//TODO: reset the sequences?
 //			for ( Sequence sequence : namespace.getSequences() ) {

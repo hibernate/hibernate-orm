@@ -68,6 +68,14 @@ gradlePlugin {
 			id = 'org.hibernate.orm.build.properties'
 			implementationClass = 'org.hibernate.orm.properties.ConfigPropertyCollectorPlugin'
 		}
+		jdkVersionsPlugin {
+			id = 'org.hibernate.orm.build.jdks'
+			implementationClass = 'org.hibernate.orm.toolchains.JdkVersionPlugin'
+		}
+		javaModulePlugin {
+			id = 'org.hibernate.orm.build.java-module'
+			implementationClass = 'org.hibernate.orm.toolchains.JavaModulePlugin'
+		}
 	}
 }
 

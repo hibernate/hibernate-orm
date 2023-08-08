@@ -44,12 +44,12 @@ compileTestJava {
 
 
 // Tests with records
-if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolchainEnabled ) {
+if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
     // We need to configure the source and target version to 17
     //compileTestJava17Java {
     compileTestJava {
         javaCompiler = javaToolchains.compilerFor {
-            languageVersion = gradle.ext.javaVersions.test.compiler
+            languageVersion = gradle.jdkVersions.test.compile
         }
         sourceCompatibility = 17
         targetCompatibility = 17

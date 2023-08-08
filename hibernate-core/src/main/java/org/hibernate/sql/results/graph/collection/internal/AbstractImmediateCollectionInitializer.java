@@ -212,8 +212,11 @@ public abstract class AbstractImmediateCollectionInitializer extends AbstractCol
 				);
 			}
 
-			if ( getParentAccess() != null ) {
-				getParentAccess().registerResolutionListener(
+			final FetchParentAccess entityParentAccess = getParentAccess() != null ?
+					getParentAccess().findFirstEntityDescriptorAccess() :
+					null;
+			if ( entityParentAccess != null ) {
+				entityParentAccess.registerResolutionListener(
 						owner -> collectionInstance.setOwner( owner )
 				);
 			}

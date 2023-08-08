@@ -19,6 +19,9 @@ import java.util.TreeSet;
 import javax.inject.Inject;
 
 import org.gradle.api.Project;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskAction;
 
 import org.jboss.jandex.AnnotationInstance;
@@ -26,6 +29,7 @@ import org.jboss.jandex.ClassInfo;
 import org.jboss.jandex.DotName;
 import org.jboss.jandex.Index;
 
+import static org.hibernate.orm.post.ReportGenerationPlugin.TASK_GROUP_NAME;
 import static org.jboss.jandex.DotName.createSimple;
 
 /**
@@ -44,12 +48,17 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 	public static final DotName ID_RANGE_ANN_NAME = createSimple( "org.jboss.logging.annotations.ValidIdRange" );
 	public static final DotName MSG_ANN_NAME = createSimple( "org.jboss.logging.annotations.Message" );
 
-	@Inject
-	public LoggingReportTask(IndexManager indexManager, Project project) {
-		super(
-				indexManager,
-				project.getLayout().getBuildDirectory().file( "orm/reports/logging.adoc" )
-		);
+	private final Property<RegularFile> reportFile;
+
+	public LoggingReportTask() {
+		setDescription( "Generates a report of \"system\" logging" );
+		reportFile = getProject().getObjects().fileProperty();
+		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/generated/logging/logging.adoc" ) );
+	}
+
+	@Override
+	protected Provider<RegularFile> getTaskReportFileReference() {
+		return reportFile;
 	}
 
 	@TaskAction

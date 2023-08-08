@@ -23,6 +23,8 @@ import org.hibernate.orm.ReleaseFamilyIdentifier;
  * @author Steve Ebersole
  */
 public class DocumentationPublishing {
+	public static final String DSL_NAME = "documentationPublishing";
+
 	private final Project project;
 
 	private final DirectoryProperty stagingDirectory;
@@ -53,8 +55,6 @@ public class DocumentationPublishing {
 				.fileProperty()
 				.convention( project.getLayout().getBuildDirectory().file( "doc-pub/orm.json" ) );
 
-		// todo : pull HibernateOrmVersion out of `gradle/basic-information.gradle` and use here
-		//		for now, just parse the project version
 		releaseFamilyIdentifier = ReleaseFamilyIdentifier.parse( project.getVersion().toString() );
 	}
 

@@ -282,6 +282,10 @@ public abstract class SimpleValue implements KeyValue {
 		return (List) columns;
 	}
 
+	/**
+	 * @deprecated Use {@link #getSelectables()} instead
+	 */
+	@Deprecated(forRemoval = true, since = "6.3")
 	public Iterator<Selectable> getConstraintColumnIterator() {
 		return getSelectables().iterator();
 	}

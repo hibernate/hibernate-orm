@@ -762,7 +762,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	 * iterator only accounts for "normal" properties (i.e. non-identifier
 	 * properties).
 	 * <p>
-	 * Differs from {@link #getUnjoinedPropertyIterator} in that the returned iterator
+	 * Differs from {@link #getUnjoinedProperties()} (followed by iterator()) in that the returned iterator
 	 * will include properties defined as part of a join.
 	 * <p>
 	 * The properties defined in superclasses of the mapping inheritance are not included.
@@ -801,20 +801,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 			list.add( join.getProperties() );
 		}
 		return new JoinedList<>( list );
-	}
-
-	/**
-	 * Build an iterator over the properties defined on this class <b>which
-	 * are not defined as part of a join</b>.  As with {@link #getPropertyIterator},
-	 * the returned iterator only accounts for non-identifier properties.
-	 *
-	 * @return An iterator over the non-joined "normal" properties.
-	 *
-	 * @deprecated use {@link #getUnjoinedProperties()}
-	 */
-	@Deprecated(since = "6.0")
-	public Iterator<Property> getUnjoinedPropertyIterator() {
-		return properties.iterator();
 	}
 
 	/**

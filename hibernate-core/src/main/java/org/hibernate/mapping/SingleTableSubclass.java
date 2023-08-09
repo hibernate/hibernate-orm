@@ -28,14 +28,6 @@ public class SingleTableSubclass extends Subclass {
 		super( superclass, buildingContext );
 	}
 
-	@Deprecated @SuppressWarnings("deprecation")
-	protected Iterator<Property> getNonDuplicatedPropertyIterator() {
-		return new JoinedIterator<>(
-				getSuperclass().getUnjoinedPropertyIterator(),
-				getUnjoinedPropertyIterator()
-		);
-	}
-
 	protected List<Property> getNonDuplicatedProperties() {
 		return new JoinedList<>( getSuperclass().getUnjoinedProperties(), getUnjoinedProperties() );
 	}

@@ -29,7 +29,6 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.FilterConfiguration;
-import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
@@ -757,30 +756,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	}
 
 	/**
-	 * Build an iterator over the properties defined on this class. The returned
-	 * iterator only accounts for "normal" properties (i.e. non-identifier
-	 * properties).
-	 * <p>
-	 * Differs from {@link #getUnjoinedProperties()} (followed by iterator()) in that the returned iterator
-	 * will include properties defined as part of a join.
-	 * <p>
-	 * The properties defined in superclasses of the mapping inheritance are not included.
-	 *
-	 * @return An iterator over the "normal" properties.
-	 *
-	 * @deprecated use {@link #getProperties()}
-	 */
-	@Deprecated(since = "6.0")
-	public Iterator<Property> getPropertyIterator() {
-		final ArrayList<Iterator<Property>> iterators = new ArrayList<>();
-		iterators.add( properties.iterator() );
-		for ( Join join : joins ) {
-			iterators.add( join.getPropertyIterator() );
-		}
-		return new JoinedIterator<>( iterators );
-	}
-
-	/**
 	 * Build a list of the properties defined on this class. The returned
 	 * iterator only accounts for "normal" properties (i.e. non-identifier
 	 * properties).
@@ -1117,9 +1092,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	}
 
 	private boolean determineIfNaturalIdDefined() {
-		final Iterator<Property> props = getRootClass().getPropertyIterator();
-		while ( props.hasNext() ) {
-			if ( props.next().isNaturalIdentifier() ) {
+		final List<Property> props = getRootClass().getProperties();
+		for ( Property p : props ) {
+			if ( p.isNaturalIdentifier() ) {
 				return true;
 			}
 		}

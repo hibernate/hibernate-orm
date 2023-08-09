@@ -75,7 +75,7 @@ public class NonReflectiveBinderTest {
 		/*Property property = cm.getIdentifierProperty();
 		property.getMetaAttribute(null);*/
 
-		Iterator<Property> propertyIterator = cm.getPropertyIterator();
+		Iterator<Property> propertyIterator = cm.getProperties().iterator();
 		while ( propertyIterator.hasNext() ) {
 			Property element = propertyIterator.next();
 			Map ma = element.getMetaAttributes();

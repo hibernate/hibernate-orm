@@ -31,7 +31,6 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.JoinedList;
-import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.jpa.event.spi.CallbackDefinition;

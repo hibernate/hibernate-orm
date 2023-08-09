@@ -18,7 +18,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;

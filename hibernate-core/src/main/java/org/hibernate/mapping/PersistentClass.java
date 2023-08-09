@@ -1043,11 +1043,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		this.isAbstract = isAbstract;
 	}
 
-	@Deprecated(since = "6.0")
-	protected Iterator<Property> getNonDuplicatedPropertyIterator() {
-		return getUnjoinedPropertyIterator();
-	}
-
 	protected List<Property> getNonDuplicatedProperties() {
 		return getUnjoinedProperties();
 	}

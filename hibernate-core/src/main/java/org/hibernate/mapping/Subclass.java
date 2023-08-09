@@ -16,7 +16,6 @@ import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.FilterConfiguration;
 import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.JoinedList;
-import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.persister.entity.EntityPersister;
 
 /**
@@ -136,14 +135,6 @@ public class Subclass extends PersistentClass {
 				getSuperclass().getTableClosure(),
 				List.of( getTable() )
 		);
-	}
-
-	@Override @Deprecated
-	public Iterator<KeyValue> getKeyClosureIterator() {
-		return new JoinedIterator<>(
-				getSuperclass().getKeyClosureIterator(),
-				new SingletonIterator<>( getKey() )
-			);
 	}
 
 	@Override

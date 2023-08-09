@@ -131,14 +131,6 @@ public class Subclass extends PersistentClass {
 	}
 
 	@Deprecated @Override
-	public Iterator<Property> getPropertyClosureIterator() {
-		return new JoinedIterator<>(
-				getSuperclass().getPropertyClosureIterator(),
-				getPropertyIterator()
-			);
-	}
-
-	@Deprecated @Override
 	public Iterator<Table> getTableClosureIterator() {
 		return new JoinedIterator<>(
 				getSuperclass().getTableClosureIterator(),

@@ -511,23 +511,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	}
 
 	/**
-	 * Build an iterator of properties which may be referenced in association mappings.
-	 * <p>
-	 * Includes properties defined in superclasses of the mapping inheritance.
-	 * Includes all properties defined as part of a join.
-	 *
-	 * @see #getReferencedProperty for a discussion of "referenceable"
-	 *
-	 * @return The referenceable property iterator.
-	 *
-	 * @deprecated use {@link #getReferenceableProperties()}
-	 */
-	@Deprecated(since = "6.0") @Remove
-	public Iterator<Property> getReferenceablePropertyIterator() {
-		return getPropertyClosureIterator();
-	}
-
-	/**
 	 * Build a list of properties which may be referenced in association mappings.
 	 * <p>
 	 * Includes properties defined in superclasses of the mapping inheritance.
@@ -845,8 +828,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	 * Differs from {@link #getUnjoinedPropertyIterator} in that the returned iterator
 	 * will include properties defined as part of a join.
 	 * <p>
-	 * Differs from {@link #getReferenceablePropertyIterator} in that the properties
-	 * defined in superclasses of the mapping inheritance are not included.
+	 * The properties defined in superclasses of the mapping inheritance are not included.
 	 *
 	 * @return An iterator over the "normal" properties.
 	 *

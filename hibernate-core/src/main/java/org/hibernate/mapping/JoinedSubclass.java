@@ -56,11 +56,6 @@ public class JoinedSubclass extends Subclass implements TableOwner {
 		}
 	}
 
-	@Deprecated @SuppressWarnings("deprecation")
-	public Iterator<Property> getReferenceablePropertyIterator() {
-		return getPropertyIterator();
-	}
-
 	public List<Property> getReferenceableProperties() {
 		return getProperties();
 	}

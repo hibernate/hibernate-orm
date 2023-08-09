@@ -14,6 +14,7 @@ import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.mapping.Join;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -71,13 +72,11 @@ public class BasicSecondary extends BaseEnversJPAFunctionalTestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testTableNames() {
-		assert "secondary_AUD".equals(
-				((Iterator<Join>)
+		Assert.assertEquals("secondary_AUD",
 						metadata().getEntityBinding(
 								"org.hibernate.orm.test.envers.integration.secondary.SecondaryTestEntity_AUD"
 						)
-								.getJoinIterator())
-						.next().getTable().getName()
+						.getJoins().get( 0 ).getTable().getName()
 		);
 	}
 }

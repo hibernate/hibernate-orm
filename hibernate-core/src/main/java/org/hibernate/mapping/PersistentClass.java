@@ -382,9 +382,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	public abstract List<Property> getPropertyClosure();
 
-	@Deprecated(since = "6.0") @Remove
-	public abstract Iterator<Property> getPropertyClosureIterator();
-
 	public abstract List<Table> getTableClosure();
 
 	@Deprecated(since = "6.0") @Remove

@@ -131,11 +131,6 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return this;
 	}
 
-	@Override @Deprecated
-	public Iterator<Property> getPropertyClosureIterator() {
-		return getPropertyIterator();
-	}
-
 	@Override
 	public List<Property> getPropertyClosure() {
 		return getProperties();

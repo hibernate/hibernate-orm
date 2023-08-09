@@ -31,13 +31,6 @@ public class SingleTableSubclass extends Subclass {
 		return new JoinedList<>( getSuperclass().getUnjoinedProperties(), getUnjoinedProperties() );
 	}
 
-	@Deprecated @SuppressWarnings("deprecation")
-	protected Iterator<Selectable> getDiscriminatorColumnIterator() {
-		return isDiscriminatorInsertable() && !getDiscriminator().hasFormula()
-				? getDiscriminator().getSelectables().iterator()
-				: super.getDiscriminatorColumnIterator();
-	}
-
 	public Object accept(PersistentClassVisitor mv) {
 		return mv.accept( this );
 	}

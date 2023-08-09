@@ -9,9 +9,7 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -919,11 +917,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	protected List<Property> getNonDuplicatedProperties() {
 		return getUnjoinedProperties();
-	}
-
-	@Deprecated(since = "6.0")
-	protected Iterator<Selectable> getDiscriminatorColumnIterator() {
-		return Collections.emptyIterator();
 	}
 
 	protected void checkColumnDuplication() {

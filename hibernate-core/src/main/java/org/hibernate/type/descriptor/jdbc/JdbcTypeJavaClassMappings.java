@@ -39,20 +39,20 @@ import org.jboss.logging.Logger;
 
 /**
  * Maintains the JDBC recommended mappings for JDBC type-code to/from Java Class
- * as defined in _Appendix B : Data Type Conversion Tables_ of the _JDBC 4.0 Specification_
- *
- * Eventually, the plan is to have {@link org.hibernate.dialect.Dialect} and
- * {@link java.sql.DatabaseMetaData#getTypeInfo()} contribute this information.
+ * as defined in <em>Appendix B: Data Type Conversion Tables</em> of the JDBC
+ * Specification.
  *
  * @author Steve Ebersole
  */
+//TODO: Eventually, the plan is to have {@link org.hibernate.dialect.Dialect} and
+//      {@link java.sql.DatabaseMetaData#getTypeInfo()} contribute this information.
 public class JdbcTypeJavaClassMappings {
 	private static final Logger log = Logger.getLogger( JdbcTypeJavaClassMappings.class );
 
 	public static final JdbcTypeJavaClassMappings INSTANCE = new JdbcTypeJavaClassMappings();
 
-	private final ConcurrentHashMap<Class, Integer> javaClassToJdbcTypeCodeMap;
-	private final ConcurrentHashMap<Integer, Class> jdbcTypeCodeToJavaClassMap;
+	private final ConcurrentHashMap<Class<?>, Integer> javaClassToJdbcTypeCodeMap;
+	private final ConcurrentHashMap<Integer, Class<?>> jdbcTypeCodeToJavaClassMap;
 
 	private JdbcTypeJavaClassMappings() {
 		javaClassToJdbcTypeCodeMap = buildJavaClassToJdbcTypeCodeMappings();
@@ -61,12 +61,12 @@ public class JdbcTypeJavaClassMappings {
 
 	/**
 	 * For the given Java type, determine the JDBC recommended JDBC type.
-	 *
-	 * This includes the mappings defined in <i>TABLE B-2 - Java Types Mapped to JDBC Types</i>
-	 * as well as some additional "common sense" mappings for things like BigDecimal, BigInteger,
-	 * etc.
+	 * <p>
+	 * This includes the mappings defined in <em>TABLE B-2: Java Types Mapped to JDBC Types</em>
+	 * and <em>TABLE B-4: Java Object Types Mapped to JDBC Types</em>, as well as some additional
+	 * "common sense" mappings.
 	 */
-	public int determineJdbcTypeCodeForJavaClass(Class cls) {
+	public int determineJdbcTypeCodeForJavaClass(Class<?> cls) {
 		Integer typeCode = javaClassToJdbcTypeCodeMap.get( cls );
 		if ( typeCode != null ) {
 			return typeCode;
@@ -80,11 +80,12 @@ public class JdbcTypeJavaClassMappings {
 	}
 
 	/**
-	 * For the given JDBC type, determine the JDBC recommended Java type.  These mappings
-	 * are defined by <i>TABLE B-1 - JDBC Types Mapped to Java Types</i>
+	 * For the given JDBC type, determine the JDBC recommended Java type.
+	 * <p>
+	 * These mappings are defined by <em>TABLE B-1: JDBC Types Mapped to Java Types</em>.
 	 */
-	public Class determineJavaClassForJdbcTypeCode(Integer typeCode) {
-		Class cls = jdbcTypeCodeToJavaClassMap.get( typeCode );
+	public Class<?> determineJavaClassForJdbcTypeCode(Integer typeCode) {
+		Class<?> cls = jdbcTypeCodeToJavaClassMap.get( typeCode );
 		if ( cls != null ) {
 			return cls;
 		}
@@ -99,15 +100,15 @@ public class JdbcTypeJavaClassMappings {
 	/**
 	 * @see #determineJavaClassForJdbcTypeCode(Integer)
 	 */
-	public Class determineJavaClassForJdbcTypeCode(int typeCode) {
+	public Class<?> determineJavaClassForJdbcTypeCode(int typeCode) {
 		return determineJavaClassForJdbcTypeCode( Integer.valueOf( typeCode ) );
 	}
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private static ConcurrentHashMap<Class, Integer> buildJavaClassToJdbcTypeCodeMappings() {
-		final ConcurrentHashMap<Class, Integer> workMap = new ConcurrentHashMap<>();
+	private static ConcurrentHashMap<Class<?>, Integer> buildJavaClassToJdbcTypeCodeMappings() {
+		final ConcurrentHashMap<Class<?>, Integer> workMap = new ConcurrentHashMap<>();
 
 		// these mappings are the ones outlined specifically in the spec
 		workMap.put( String.class, SqlTypes.VARCHAR );
@@ -157,8 +158,8 @@ public class JdbcTypeJavaClassMappings {
 		return workMap;
 	}
 
-	private static ConcurrentHashMap<Integer, Class> buildJdbcTypeCodeToJavaClassMappings() {
-		final ConcurrentHashMap<Integer, Class> workMap = new ConcurrentHashMap<>();
+	private static ConcurrentHashMap<Integer, Class<?>> buildJdbcTypeCodeToJavaClassMappings() {
+		final ConcurrentHashMap<Integer, Class<?>> workMap = new ConcurrentHashMap<>();
 
 		workMap.put( SqlTypes.CHAR, String.class );
 		workMap.put( SqlTypes.VARCHAR, String.class );

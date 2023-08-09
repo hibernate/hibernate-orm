@@ -386,11 +386,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return new JoinedList<>( lists );
 	}
 
-	@Deprecated(since = "6.0") @Remove
-	public Iterator<Join> getSubclassJoinClosureIterator() {
-		return new JoinedIterator<>( getJoinClosureIterator(), subclassJoins.iterator() );
-	}
-
 	public List<Join> getSubclassJoinClosure() {
 		return new JoinedList<>( getJoinClosure(), subclassJoins );
 	}

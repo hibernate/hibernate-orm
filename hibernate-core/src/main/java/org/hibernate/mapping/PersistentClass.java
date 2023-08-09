@@ -720,11 +720,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return joins;
 	}
 
-	@Deprecated(since = "6.0")
-	public Iterator<Join> getJoinIterator() {
-		return joins.iterator();
-	}
-
 	public void addJoin(Join join) {
 		if ( !joins.contains(join) ) {
 			joins.add( join );

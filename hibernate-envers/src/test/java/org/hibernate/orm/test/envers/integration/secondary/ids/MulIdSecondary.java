@@ -7,14 +7,14 @@
 package org.hibernate.orm.test.envers.integration.secondary.ids;
 
 import java.util.Arrays;
-import java.util.Iterator;
+
 import jakarta.persistence.EntityManager;
 
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.orm.test.envers.entities.ids.MulId;
-import org.hibernate.mapping.Join;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -25,7 +25,7 @@ public class MulIdSecondary extends BaseEnversJPAFunctionalTestCase {
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class[] {SecondaryMulIdTestEntity.class};
+		return new Class[] { SecondaryMulIdTestEntity.class };
 	}
 
 	@Test
@@ -70,13 +70,11 @@ public class MulIdSecondary extends BaseEnversJPAFunctionalTestCase {
 	@SuppressWarnings("unchecked")
 	@Test
 	public void testTableNames() {
-		assert "sec_mulid_versions".equals(
-				((Iterator<Join>)
-						metadata().getEntityBinding(
-								"org.hibernate.orm.test.envers.integration.secondary.ids.SecondaryMulIdTestEntity_AUD"
-						)
-								.getJoinIterator())
-						.next().getTable().getName()
+		Assert.assertEquals(
+				"sec_mulid_versions",
+				metadata().getEntityBinding(
+						"org.hibernate.orm.test.envers.integration.secondary.ids.SecondaryMulIdTestEntity_AUD"
+				).getJoins().get( 0 ).getTable().getName()
 		);
 	}
 }

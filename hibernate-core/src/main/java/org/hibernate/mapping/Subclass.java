@@ -130,14 +130,6 @@ public class Subclass extends PersistentClass {
 		return new JoinedList<>( getSuperclass().getPropertyClosure(), getProperties() );
 	}
 
-	@Deprecated @Override
-	public Iterator<Table> getTableClosureIterator() {
-		return new JoinedIterator<>(
-				getSuperclass().getTableClosureIterator(),
-				new SingletonIterator<>( getTable() )
-			);
-	}
-
 	@Override
 	public List<Table> getTableClosure() {
 		return new JoinedList<>(

@@ -66,11 +66,6 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 		return superPersistentClass;
 	}
 
-	@Deprecated(since = "6.0")
-	public Iterator<Property> getDeclaredPropertyIterator() {
-		return declaredProperties.iterator();
-	}
-
 	public List<Property> getDeclaredProperties() {
 		return declaredProperties;
 	}

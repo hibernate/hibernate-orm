@@ -72,11 +72,6 @@ public class Join implements AttributeContainer, Serializable {
 		return properties;
 	}
 
-	@Deprecated(since = "6.0")
-	public Iterator<Property> getDeclaredPropertyIterator() {
-		return declaredProperties.iterator();
-	}
-
 	public boolean containsProperty(Property property) {
 		return properties.contains( property );
 	}

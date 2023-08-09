@@ -648,6 +648,7 @@ sessionFactory.getSchemaManager().truncateMappedObjects();
 After truncating tables, we might need to initialize our test data.
 We may specify test data in a SQL script, for example:
 
+[[import.sql]]
 [source,sql]
 ./import.sql
 ----

@@ -368,17 +368,24 @@ This feature is extremely useful for testing.
 // .Importing test or reference data
 ====
 The easiest way to pre-initialize a database with test or "reference" data is to place a list of SQL `insert` statements in a file named, for example, `import.sql`, and specify the path to this file using the property `jakarta.persistence.schema-generation.create-script-source`.
-
-This approach is cleaner than writing Java code to instantiate entity instances and calling `persist()` on each of them.
+We've already seen an <<import.sql,example>> of this approach, which is cleaner than writing Java code to instantiate entity instances and calling `persist()` on each of them.
 ====
+
+As we mentioned <<testing,earlier>>, it can also be useful to control schema export programmatically.
 
 [TIP]
 // .Programmatic schema export
 ====
-Alternatively, the `SchemaManager` API allow you to control schema export programmatically.
+The `SchemaManager` API allows programmatic control over schema export:
 
 [source,java]
 sessionFactory.getSchemaManager().exportMappedObjects(true);
+
+JPA has a more limited and less ergonomic API:
+
+[source,java]
+Persistence.generateSchema("org.hibernate.example",
+                           Map.of(JAKARTA_HBM2DDL_DATABASE_ACTION, CREATE))
 ====
 
 [[logging-generated-sql]]

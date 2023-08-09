@@ -105,10 +105,8 @@ public class CollectionMappedByResolver {
 	}
 
 	private static String searchMappedBy(PersistentClass referencedClass, Collection collectionValue) {
-		final Iterator<Property> assocClassProps = referencedClass.getPropertyIterator();
-		while ( assocClassProps.hasNext() ) {
-			final Property property = assocClassProps.next();
-
+		final List<Property> assocClassProps = referencedClass.getProperties();
+		for ( Property property : assocClassProps ) {
 			final List<Selectable> assocClassSelectables = property.getValue().getSelectables();
 			final List<Selectable> collectionKeySelectables = collectionValue.getKey().getSelectables();
 			if ( Objects.equals( assocClassSelectables, collectionKeySelectables ) ) {

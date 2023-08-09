@@ -306,11 +306,6 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return columns.values();
 	}
 
-	@Deprecated(since = "6.2")
-	public Iterator<Index> getIndexIterator() {
-		return getIndexes().values().iterator();
-	}
-
 	public Map<String, Index> getIndexes() {
 		return unmodifiableMap( indexes );
 	}

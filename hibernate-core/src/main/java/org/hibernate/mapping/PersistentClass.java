@@ -358,9 +358,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	public abstract List<KeyValue> getKeyClosure();
 
-	@Deprecated(since = "6.0") @Remove
-	public abstract Iterator<KeyValue> getKeyClosureIterator();
-
 	protected void addSubclassProperty(Property prop) {
 		subclassProperties.add( prop );
 	}

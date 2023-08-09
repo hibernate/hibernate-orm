@@ -356,9 +356,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 
 	public abstract List<Table> getTableClosure();
 
-	@Deprecated(since = "6.0") @Remove
-	public abstract Iterator<Table> getTableClosureIterator();
-
 	public abstract List<KeyValue> getKeyClosure();
 
 	@Deprecated(since = "6.0") @Remove

@@ -407,17 +407,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		subclassTables.add( subclassTable );
 	}
 
-	@Deprecated(since = "6.0") @Remove
-	public Iterator<Property> getSubclassPropertyClosureIterator() {
-		final ArrayList<Iterator<Property>> iters = new ArrayList<>();
-		iters.add( getPropertyClosureIterator() );
-		iters.add( subclassProperties.iterator() );
-		for (Join join : subclassJoins) {
-			iters.add( join.getPropertyIterator() );
-		}
-		return new JoinedIterator<>( iters );
-	}
-
 	public List<Property> getSubclassPropertyClosure() {
 		final ArrayList<List<Property>> lists = new ArrayList<>();
 		lists.add( getPropertyClosure() );

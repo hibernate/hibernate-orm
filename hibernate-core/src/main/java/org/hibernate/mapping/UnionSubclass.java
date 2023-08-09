@@ -37,11 +37,6 @@ public class UnionSubclass extends Subclass implements TableOwner {
 		return synchronizedTables;
 	}
 
-	@Deprecated @SuppressWarnings("deprecation")
-	protected Iterator<Property> getNonDuplicatedPropertyIterator() {
-		return getPropertyClosureIterator();
-	}
-
 	@Override
 	protected List<Property> getNonDuplicatedProperties() {
 		return getPropertyClosure();

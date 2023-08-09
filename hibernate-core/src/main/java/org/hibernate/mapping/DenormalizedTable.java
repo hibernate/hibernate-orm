@@ -14,7 +14,6 @@ import java.util.List;
 import org.hibernate.Internal;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Namespace;
-import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.internal.util.collections.JoinedList;
 
 /**
@@ -114,19 +113,6 @@ public class DenormalizedTable extends Table {
 			}
 		}
 		return getUniqueKeys().values().iterator();
-	}
-
-	@Override @Deprecated
-	public Iterator<Index> getIndexIterator() {
-		final List<Index> indexes = new ArrayList<>();
-		for ( Index parentIndex : includedTable.getIndexes().values() ) {
-			Index index = new Index();
-			index.setName( getName() + parentIndex.getName() );
-			index.setTable( this );
-			index.addColumns( parentIndex.getColumns() );
-			indexes.add( index );
-		}
-		return new JoinedIterator<>( indexes.iterator(), super.getIndexIterator() );
 	}
 
 	public Table getIncludedTable() {

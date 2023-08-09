@@ -260,24 +260,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return new JoinedList<>( subclassLists );
 	}
 
-	/**
-	 * Iterate over subclasses in a special 'order', most derived subclasses first.
-	 *
-	 * @deprecated use {@link #getSubclasses()}
-	 */
-	@Deprecated(since = "6.0") @Remove
-	public Iterator<Subclass> getSubclassIterator() {
-		@SuppressWarnings("unchecked")
-		final Iterator<Subclass>[] iterators = new Iterator[subclasses.size() + 1];
-		final Iterator<Subclass> iterator = subclasses.iterator();
-		int i = 0;
-		while ( iterator.hasNext() ) {
-			iterators[i++] = iterator.next().getSubclassIterator();
-		}
-		iterators[i] = subclasses.iterator();
-		return new JoinedIterator<>( iterators );
-	}
-
 	public List<PersistentClass> getSubclassClosure() {
 		final ArrayList<List<PersistentClass>> lists = new ArrayList<>();
 		lists.add( List.of( this ) );

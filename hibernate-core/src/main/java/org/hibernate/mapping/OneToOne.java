@@ -117,6 +117,10 @@ public class OneToOne extends ToOne {
 		return columns;
 	}
 
+	/**
+	 * @deprecated Use {@link #getSelectables()} instead
+	 */
+	@Deprecated(forRemoval = true, since = "6.3")
 	@Override
 	public Iterator<Selectable> getConstraintColumnIterator() {
 		return identifier.getSelectables().iterator();

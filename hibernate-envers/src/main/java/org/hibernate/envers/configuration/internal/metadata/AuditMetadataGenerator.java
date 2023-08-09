@@ -322,7 +322,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		LOG.infof( "Adding properties for entity: %s", persistentClass.getEntityName() );
 		addProperties(
 				entity,
-				persistentClass.getUnjoinedPropertyIterator(),
+				persistentClass.getUnjoinedProperties().iterator(),
 				propertyMapper,
 				auditingData,
 				persistentClass.getEntityName(),
@@ -394,7 +394,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		// Mapping unjoined properties
 		addProperties(
 				mappingData.getEntityDefinition(),
-				persistentClass.getUnjoinedPropertyIterator(),
+				persistentClass.getUnjoinedProperties().iterator(),
 				propertyMapper,
 				auditingData,
 				entityName,

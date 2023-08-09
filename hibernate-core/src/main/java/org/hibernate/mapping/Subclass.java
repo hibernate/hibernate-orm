@@ -246,15 +246,6 @@ public class Subclass extends PersistentClass {
 		return new JoinedList<>( getSuperclass().getJoinClosure(), super.getJoinClosure() );
 	}
 
-	@Deprecated(since = "6.0") @SuppressWarnings("deprecation")
-	public Iterator<Join> getJoinClosureIterator() {
-		return new JoinedIterator<>(
-			getSuperclass().getJoinClosureIterator(),
-			super.getJoinClosureIterator()
-		);
-	}
-
-
 	@Override
 	public boolean isClassOrSuperclassJoin(Join join) {
 		return super.isClassOrSuperclassJoin( join )

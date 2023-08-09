@@ -269,16 +269,6 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		return new JoinedList<>( lists );
 	}
 
-	@Deprecated(since = "6.0") @Remove
-	public Iterator<PersistentClass> getSubclassClosureIterator() {
-		final ArrayList<Iterator<PersistentClass>> iterators = new ArrayList<>();
-		iterators.add( new SingletonIterator<>( this ) );
-		for ( Subclass subclass : getSubclasses() ) {
-			iterators.add( subclass.getSubclassClosureIterator() );
-		}
-		return new JoinedIterator<>( iterators );
-	}
-
 	public Table getIdentityTable() {
 		return getRootTable();
 	}

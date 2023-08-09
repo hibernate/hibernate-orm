@@ -785,13 +785,13 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	 * iterator only accounts for "normal" properties (i.e. non-identifier
 	 * properties).
 	 * <p>
-	 * Differs from {@link #getUnjoinedProperties} in that the returned iterator
+	 * Differs from {@link #getUnjoinedProperties} in that the returned list
 	 * will include properties defined as part of a join.
 	 * <p>
 	 * Differs from {@link #getReferenceableProperties} in that the properties
 	 * defined in superclasses of the mapping inheritance are not included.
 	 *
-	 * @return An iterator over the "normal" properties.
+	 * @return A list over the "normal" properties.
 	 */
 	public List<Property> getProperties() {
 		final ArrayList<List<Property>> list = new ArrayList<>();

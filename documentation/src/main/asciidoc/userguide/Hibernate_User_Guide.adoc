@@ -2,7 +2,8 @@
 :toc2:
 :toclevels: 3
 :sectanchors:
-:root-project-dir: ../../../../../../..
+:documentation-project-dir: ../../../..
+:root-project-dir: {documentation-project-dir}/..
 
 
 include::Preface.adoc[]

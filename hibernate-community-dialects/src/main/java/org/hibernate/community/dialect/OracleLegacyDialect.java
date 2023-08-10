@@ -163,6 +163,7 @@ public class OracleLegacyDialect extends Dialect {
 	private static final String ADD_YEAR_EXPRESSION = String.format( yqmSelect, "?2*12", "?3" );
 	private static final String ADD_QUARTER_EXPRESSION = String.format( yqmSelect, "?2*3", "?3" );
 	private static final String ADD_MONTH_EXPRESSION = String.format( yqmSelect, "?2", "?3" );
+	private static final String ADD_TIME_EXPRESSION = "+(?3-trunc(?3))";
 
 	private final LimitHandler limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
 			? Oracle12LimitHandler.INSTANCE
@@ -473,17 +474,31 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-
-		StringBuilder pattern = new StringBuilder();
+		final StringBuilder pattern = new StringBuilder();
 		switch ( unit ) {
 			case YEAR:
-				pattern.append( ADD_YEAR_EXPRESSION );
+				if ( temporalType != TemporalType.DATE ) {
+					pattern.append( "(to_timestamp" ).append( ADD_YEAR_EXPRESSION ).append( ADD_TIME_EXPRESSION + ")" );
+				}
+				else {
+					pattern.append( ADD_YEAR_EXPRESSION );
+				}
 				break;
 			case QUARTER:
-				pattern.append( ADD_QUARTER_EXPRESSION );
+				if ( temporalType != TemporalType.DATE ) {
+					pattern.append( "(to_timestamp" ).append( ADD_QUARTER_EXPRESSION ).append( ADD_TIME_EXPRESSION + ")" );
+				}
+				else {
+					pattern.append( ADD_QUARTER_EXPRESSION );
+				}
 				break;
 			case MONTH:
-				pattern.append( ADD_MONTH_EXPRESSION );
+				if ( temporalType != TemporalType.DATE ) {
+					pattern.append( "(to_timestamp" ).append( ADD_MONTH_EXPRESSION ).append( ADD_TIME_EXPRESSION + ")" );
+				}
+				else {
+					pattern.append( ADD_MONTH_EXPRESSION );
+				}
 				break;
 			case WEEK:
 				pattern.append("(?3+numtodsinterval((?2)*7,'day'))");

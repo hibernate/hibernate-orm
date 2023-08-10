@@ -453,11 +453,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		else {
 			switch ( unit ) {
 				case YEAR:
-					return "extract(year from ?3-?2)";
+					return "extract(year from age(?3,?2))";
 				case QUARTER:
-					return "(extract(year from ?3-?2)*4+extract(month from ?3-?2)/3)";
+					return "(extract(year from age(?3,?2))*4+extract(month from age(?3,?2))/3)";
 				case MONTH:
-					return "(extract(year from ?3-?2)*12+extract(month from ?3-?2))";
+					return "(extract(year from age(?3,?2))*12+extract(month from age(?3,?2)))";
 				case WEEK: //week is not supported by extract() when the argument is a duration
 					return "(extract(day from ?3-?2)/7)";
 				case DAY:

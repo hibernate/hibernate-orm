@@ -10,10 +10,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Consumer;
 
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.RegularFile;
@@ -51,7 +53,7 @@ public class SettingsCollector {
 			}
 
 			final SortedSet<SettingDescriptor> docSectionSettings = findSettingDescriptors( docSection, result );
-			final Map<String,Element> classFieldJavadocs = extractClassFieldJavadocs( className, javadocDirectory );
+			final Map<String, Element> classFieldJavadocs = extractClassFieldJavadocs( className, javadocDirectory );
 
 			final Element tableDiv = blockList.selectFirst( ".summary-table" );
 			final Elements constantFqnColumns = tableDiv.select( ".col-first" );
@@ -72,8 +74,14 @@ public class SettingsCollector {
 				//
 				// NOTE : there may be no Javadoc, in which case the Element will be null;
 				// there is literally no such div in these cases
-				final String simpleFieldName = constantFqn.substring( constantFqn.lastIndexOf( '.' ) );
+				final String simpleFieldName = constantFqn.substring( constantFqn.lastIndexOf( '.' ) + 1 );
 				final Element fieldJavadocElement = classFieldJavadocs.get( simpleFieldName );
+
+				if ( fieldJavadocElement == null || isUselessJavadoc( fieldJavadocElement ) ) {
+					System.out.println( "There was no javadoc found for " + className + "#" + simpleFieldName
+							+ ". Ignoring this setting." );
+					continue;
+				}
 
 				final SettingDescriptor settingDescriptor = new SettingDescriptor(
 						stripQuotes( constantValue ),
@@ -141,8 +149,7 @@ public class SettingsCollector {
 		final Elements fieldDetailSections = document.select( "section.detail" );
 		for ( Element fieldDetailSection : fieldDetailSections ) {
 			final String fieldName = fieldDetailSection.id();
-			final Element fieldJavadocDiv = fieldDetailSection.selectFirst( "div.block" );
-			result.put( fieldName, fieldJavadocDiv );
+			result.put( fieldName, fieldDetailSection );
 		}
 
 		return result;
@@ -180,145 +187,273 @@ public class SettingsCollector {
 			String className,
 			String simpleFieldName,
 			String publishedJavadocsUrl) {
-		// todo : here you go Marko :)
-		return null;
+		Elements javadocsToConvert = cleanupFieldJavadocElement( fieldJavadocElement, className, publishedJavadocsUrl );
+
+		return new DomToAsciidocConverter( javadocsToConvert ).convert();
 	}
 
-	private static String extractJavadoc(
-			Document javadoc,
+	private static Elements cleanupFieldJavadocElement(Element fieldJavadocElement,
 			String className,
-			String constant,
 			String publishedJavadocsUrl) {
-		org.jsoup.nodes.Element block = javadoc.selectFirst( "#" + constant + " + ul li.blockList" );
-		if ( block != null ) {
-			for ( org.jsoup.nodes.Element link : block.getElementsByTag( "a" ) ) {
+		// Before proceeding let's make sure that the javadoc structure is the one that we expect:
+		if ( !isValidFieldJavadocStructure( fieldJavadocElement ) ) {
+			throw new IllegalStateException( "Javadoc's DOM doesn't match the expected structure. " +
+					"This may lead to unexpected results in rendered configuration properties in the User Guide." );
+		}
+
+		fixUrls( className, publishedJavadocsUrl, fieldJavadocElement );
+
+		// We want to take the javadoc block and the see links:
+		Elements usefulDocsPart = new Elements();
+		Element actualJavadocs = fieldJavadocElement.selectFirst( "div.block" );
+		if ( actualJavadocs != null ) {
+			usefulDocsPart.add( actualJavadocs );
+		}
+		cleanupSeeLinks( fieldJavadocElement.selectFirst( "ul.see-list" ) )
+				.ifPresent( ul -> {
+					// add a see also
+					usefulDocsPart.add( new Element( "div" ).appendChild( new Element( "b" ).text( "See also:" ) ) );
+					// add the list of links:
+					usefulDocsPart.add( ul );
+				} );
+
+		return usefulDocsPart;
+	}
+
+	/**
+	 * Any ORM links will be relative, and we want to prepend them with the {@code publishedJavadocsUrl}
+	 * so that they are usable when the doc is published.
+	 * Any external links should have a {@code externalLink} or {@code external-link} CSS class, we want to keep them unchanged.
+	 * <p>
+	 * NOTE: this method modifies the parsed DOM.
+	 */
+	private static void fixUrls(String className,
+			String publishedJavadocsUrl,
+			Element fieldJavadocElement) {
+		for ( Element link : fieldJavadocElement.getElementsByTag( "a" ) ) {
+			// only update links if they are not external:
+			if ( !isExternalLink( link ) ) {
 				String href = link.attr( "href" );
-				// only update links if they are not external:
-				if ( !link.hasClass( "externalLink" ) ) {
-					if ( href.startsWith( "#" ) ) {
-						href = withoutPackagePrefix( className ) + ".html" + href;
-					}
-					String packagePath = packagePrefix( className ).replace( ".", File.separator );
-					href = publishedJavadocsUrl + packagePath + "/" + href;
+				if ( href.startsWith( "#" ) ) {
+					href = withoutPackagePrefix( className ) + ".html" + href;
 				}
-				else if ( href.contains( "/build/parents/" ) && href.contains( "/apidocs" ) ) {
-					// means a link was to a class from other module and javadoc plugin generated some external link
-					// that won't work. So we replace it:
-					href = publishedJavadocsUrl + href.substring( href.indexOf( "/apidocs" ) + "/apidocs".length() );
-				}
+				String packagePath = packagePrefix( className ).replace( ".", File.separator );
+				href = publishedJavadocsUrl + packagePath + "/" + href;
 				link.attr( "href", href );
 			}
-
-			Elements result = new Elements();
-			for ( org.jsoup.nodes.Element child : block.children() ) {
-				if ( "h4".equalsIgnoreCase( child.tagName() ) || "pre".equalsIgnoreCase( child.tagName() ) ) {
-					continue;
-				}
-				result.add( child );
-			}
-
-			return convertToAsciidoc( result );
 		}
-		return "";
 	}
 
-	private static String convertToAsciidoc(Elements elements) {
-		StringBuilder doc = new StringBuilder( "" );
-		for ( Element element : elements ) {
-			convertToAsciidoc( element, doc, false );
-		}
-
-		return doc.toString();
+	private static boolean isExternalLink(Element link) {
+		String href = link.attr( "href" );
+		return link.hasClass( "externalLink" )
+				|| link.hasClass( "external-link" )
+				|| href != null && href.startsWith( "http" );
 	}
 
-	private static void convertToAsciidoc(Node node, StringBuilder doc, boolean innerBlock) {
-		if ( node instanceof Element ) {
-			Element element = (Element) node;
-			String tag = element.tagName();
-			if ( "p".equalsIgnoreCase( tag ) || "div".equalsIgnoreCase( tag ) || "dl".equalsIgnoreCase( tag ) ) {
-				if ( doc.length() != 0 ) {
-					if ( !innerBlock ) {
-						doc.append( "\n+" );
-					}
-					doc.append( "\n\n" );
-				}
-				boolean deprecation = element.hasClass( "deprecationBlock" );
-				if ( deprecation ) {
-					doc.append( "+\n[WARNING]\n====\n" );
-				}
-				for ( Node child : element.childNodes() ) {
-					convertToAsciidoc( child, doc, deprecation );
-				}
-				doc.append( '\n' );
-				if ( deprecation ) {
-					doc.append( "====\n" );
-				}
+	private static Optional<Element> cleanupSeeLinks(Element seeList) {
+		if ( seeList == null ) {
+			return Optional.empty();
+		}
+		Element ul = new Element( "ul" );
+		for ( Element li : seeList.select( "li" ) ) {
+			Element link = li.selectFirst( "a" );
+			if ( link != null && "Constant Field Values".equals( link.text() ) ) {
+				// means it's a link to "self", pointing to the same constant and its javadocs
+				// so we just ignore it:
+				continue;
 			}
-			else if ( "a".equalsIgnoreCase( tag ) ) {
-				convertToAsciidoc( element, "link:" + element.attr( "href" ) + "[", "]", doc, innerBlock );
+			ul.appendChild( li );
+		}
+		return ul.children().isEmpty() ? Optional.empty() : Optional.of( ul );
+	}
+
+	private static boolean isValidFieldJavadocStructure(Element fieldJavadocElement) {
+		// Field's DOM sub-structure that we are expecting should be:
+		//		<section class="detail" id="FIELD_NAME">
+		//			<h3>FIELD_NAME</h3>
+		//			<div class="member-signature"> we don't care about this div </div>
+		//			<div class="block"> Actual Javadocs if present </div>
+		//			<dl class="notes"> contains links to @see references </dl>
+		//		</section>
+		//
+		if ( !"section".equalsIgnoreCase( fieldJavadocElement.tagName() ) ) {
+			return false;
+		}
+		if ( !fieldJavadocElement.selectFirst( "h3" ).text().equals( fieldJavadocElement.id() ) ) {
+			return false;
+		}
+		// since `div.block` can be absent if no javadocs were written we are trying to see if any of the divs is there;
+		if ( fieldJavadocElement.selectFirst( "div.block" ) == null
+				&& fieldJavadocElement.selectFirst( "dl.notes" ) == null
+				&& fieldJavadocElement.selectFirst( "div.member-signature" ) == null
+				&& !fieldJavadocElement.select( "div" ).isEmpty() ) {
+			return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * @param fieldJavadocElement The element to inspect if it has some valuable documentation.
+	 * @return {@code true} if no Javadoc was written for this field; {@false otherwise}.
+	 */
+	private static boolean isUselessJavadoc(Element fieldJavadocElement) {
+		return fieldJavadocElement.selectFirst( "div.block" ) == null;
+	}
+
+	private static class DomToAsciidocConverter {
+		private final Map<String, Consumer<Element>> elementVisitorsByTag = new HashMap<>();
+		private final StringBuilder converted = new StringBuilder();
+		private final Elements elements;
+
+		public DomToAsciidocConverter(Elements elements) {
+			elementVisitorsByTag.put( "a", this::visitLink );
+			elementVisitorsByTag.put( "span", this::visitSpan );
+			elementVisitorsByTag.put( "ul", this::visitUl );
+			elementVisitorsByTag.put( "ol", this::visitUl );
+			elementVisitorsByTag.put( "li", this::visitLi );
+			elementVisitorsByTag.put( "b", this::visitBold );
+			elementVisitorsByTag.put( "strong", this::visitBold );
+			elementVisitorsByTag.put( "em", this::visitBold );
+			elementVisitorsByTag.put( "code", this::visitCode );
+			elementVisitorsByTag.put( "p", this::visitDiv );
+			elementVisitorsByTag.put( "div", this::visitDiv );
+			elementVisitorsByTag.put( "dl", this::visitDiv );
+
+			this.elements = elements;
+		}
+
+		public String convert() {
+			// Elements consist of nodes, that can themselves be elements or simple nodes.
+			// Simple nodes are the ones that will produce text.
+			// Elements are various tags that will be converted to some asciidoc syntax
+			for ( Element element : elements ) {
+				visitElement( element );
 			}
-			else if ( "code".equalsIgnoreCase( tag ) ) {
-				convertToAsciidoc( element, "`", "`", doc, innerBlock );
+			return converted.toString();
+		}
+
+		private void visitNode(Node node) {
+			// We know about 2 types of nodes that we care about:
+			// 	1. Element -- means that it is some tag,
+			// 	so we will defer the decision what to do about it to the visitElement.
+			//	2. TextNode -- simple text that we'll just add to the converted result.
+			//
+			// If we encounter something else -- let's fail,
+			// so we can investigate what new element type it is and decide what to do about it.
+			if ( node instanceof Element ) {
+				visitElement( ( (Element) node ) );
 			}
-			else if ( "strong".equalsIgnoreCase( tag ) || "em".equalsIgnoreCase( tag ) || "b".equalsIgnoreCase( tag ) ) {
-				convertToAsciidoc( element, "**", "**", doc, innerBlock );
-			}
-			else if ( "ul".equalsIgnoreCase( tag ) || "ol".equalsIgnoreCase( tag ) ) {
-				if ( doc.lastIndexOf( "\n" ) != doc.length() - 1 ) {
-					doc.append( '\n' );
-				}
-				convertToAsciidoc( element, "+\n", "", doc, innerBlock );
-			}
-			else if ( "li".equalsIgnoreCase( tag ) ) {
-				convertToAsciidoc( element, "\n  * ", "", doc, innerBlock );
-			}
-			else if ( "dt".equalsIgnoreCase( tag ) ) {
-				convertToAsciidoc( element, "+\n**", "**", doc, innerBlock );
-			}
-			else if ( "dd".equalsIgnoreCase( tag ) ) {
-				convertToAsciidoc( element, " ", "", doc, innerBlock );
-			}
-			else if ( "span".equalsIgnoreCase( tag ) ) {
-				if ( element.hasClass( "deprecatedLabel" ) ) {
-					// label for deprecation, let's make it bold to stand out:
-					convertToAsciidoc( element, "**", "**", doc, innerBlock );
-				}
-				else {
-					// simply pass to render items:
-					convertToAsciidoc( element, "", "", doc, innerBlock );
-				}
+			else if ( node instanceof TextNode ) {
+				visitTextNode( (TextNode) node );
 			}
 			else {
-				// if we encounter an element that we are not handling - we want to fail as the result might be missing some details:
+				visitUnknownNode( node );
+			}
+		}
+
+		private void visitElement(Element element) {
+			String tag = element.tagName();
+
+			Consumer<Element> visitor = elementVisitorsByTag.get( tag );
+			if ( visitor == null ) {
+				// If we encounter an element that we are not handling --
+				// we want to fail as the result might be missing some details:
 				throw new IllegalStateException( "Unknown element: " + element );
 			}
+
+			visitor.accept( element );
 		}
-		else if ( node instanceof TextNode ) {
-			if ( doc.lastIndexOf( "+\n\n" ) == doc.length() - "+\n\n".length() ) {
-				// if it's a start of paragraph - remove any leading spaces:
-				doc.append( ( (TextNode) node ).text().replaceAll( "^\\s+", "" ) );
+
+		private void visitDiv(Element div) {
+			if ( converted.length() != 0 ) {
+				converted.append( "\n+\n" );
+			}
+			boolean deprecation = div.hasClass( "deprecationBlock" );
+			if ( deprecation ) {
+				converted.append( "+\n[WARNING]\n====\n" );
+			}
+			for ( Node childNode : div.childNodes() ) {
+				visitNode( childNode );
+			}
+			converted.append( '\n' );
+			if ( deprecation ) {
+				converted.append( "====\n" );
+			}
+		}
+
+		private void visitCode(Element code) {
+			converted.append( "`" );
+			for ( Node childNode : code.childNodes() ) {
+				visitNode( childNode );
+			}
+			converted.append( "`" );
+		}
+
+		private void visitBold(Element bold) {
+			converted.append( "**" );
+			for ( Node childNode : bold.childNodes() ) {
+				visitNode( childNode );
+			}
+			converted.append( "**" );
+		}
+
+		private void visitLi(Element li) {
+			converted.append( "\n  * " );
+			for ( Node childNode : li.childNodes() ) {
+				visitNode( childNode );
+			}
+		}
+
+		private void visitUl(Element ul) {
+			if ( converted.lastIndexOf( "\n" ) != converted.length() - 1 ) {
+				converted.append( '\n' );
+			}
+			converted.append( "+\n" );
+			for ( Node childNode : ul.childNodes() ) {
+				visitNode( childNode );
+			}
+		}
+
+		private void visitSpan(Element span) {
+			// If it is a label for deprecation, let's make it bold to stand out:
+			boolean deprecatedLabel = span.hasClass( "deprecatedLabel" );
+			if ( deprecatedLabel ) {
+				converted.append( "**" );
+			}
+			for ( Node childNode : span.childNodes() ) {
+				visitNode( childNode );
+			}
+			if ( deprecatedLabel ) {
+				converted.append( "**" );
+			}
+		}
+
+		private void visitLink(Element link) {
+			converted.append( "link:" )
+					.append( link.attr( "href" ) )
+					.append( '[' );
+			for ( Node childNode : link.childNodes() ) {
+				visitNode( childNode );
+			}
+			converted.append( ']' );
+		}
+
+		private void visitTextNode(TextNode node) {
+			if ( converted.lastIndexOf( "+\n" ) == converted.length() - "+\n".length() ) {
+				// if it's a start of a paragraph - remove any leading spaces:
+				converted.append( ( node ).text().replaceAll( "^\\s+", "" ) );
 			}
 			else {
-				doc.append( ( (TextNode) node ).text() );
+				converted.append( ( node ).text() );
 			}
 		}
-		else {
+
+		private void visitUnknownNode(Node node) {
 			// if we encounter a node that we are not handling - we want to fail as the result might be missing some details:
 			throw new IllegalStateException( "Unknown node: " + node );
 		}
-	}
-
-	private static void convertToAsciidoc(
-			Element element,
-			String pre,
-			String post,
-			StringBuilder doc,
-			boolean innerBlock) {
-		doc.append( pre );
-		for ( Node childNode : element.childNodes() ) {
-			convertToAsciidoc( childNode, doc, innerBlock );
-		}
-		doc.append( post );
 	}
 
 	private static String withoutPackagePrefix(String className) {

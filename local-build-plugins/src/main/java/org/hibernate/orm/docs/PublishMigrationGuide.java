@@ -24,7 +24,7 @@ public abstract class PublishMigrationGuide extends DefaultTask {
 	private final DirectoryProperty migrationGuideDirectory;
 
 	public PublishMigrationGuide() {
-		setGroup( "Release" );
+		setGroup( "documentation" );
 		setDescription( "Publishes the migration-guide associated with the current branch. " +
 				"Intended for incremental publishing of the guide for corrections, etc. without doing a full release. " +
 				"Note that this is not needed when doing a release as the migration-guide is published as part of that workflow." );

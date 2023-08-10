@@ -9,6 +9,12 @@ package org.hibernate.orm.properties;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
+import org.hibernate.orm.env.EnvironmentProjectPlugin;
+import org.hibernate.orm.env.HibernateVersion;
+
+import static org.hibernate.orm.properties.SettingsDocExtension.EXTENSION_NAME;
+import static org.hibernate.orm.properties.SettingsDocGenerationTask.TASK_NAME;
+
 /**
  * Integrates collection of documentation about Hibernate configuration properties
  * from the Javadoc of the project, and generates an Asciidoc document from it
@@ -19,6 +25,17 @@ public class SettingsDocumentationPlugin implements Plugin<Project> {
 
 	@Override
 	public void apply(Project project) {
-		project.getTasks().register( SettingsDocGeneratorTask.TASK_NAME, SettingsDocGeneratorTask.class );
+		// if not already, so we can access HibernateVersion
+		project.getPluginManager().apply( EnvironmentProjectPlugin.class );
+
+		// create and register the DSL extension
+		final SettingsDocExtension dslExtension = new SettingsDocExtension( project );
+		project.getExtensions().add( EXTENSION_NAME, dslExtension );
+		dslExtension.getJavadocDirectory().convention( project.getLayout().getBuildDirectory().dir( "javadocs" ) );
+		dslExtension.getPublishedDocsUrl().convention( "https://docs.jboss.org/hibernate/orm" );
+		dslExtension.getOutputFile().convention( project.getLayout().getBuildDirectory().file( "asciidoc/fragments/config-settings.adoc" ) );
+
+		// create the generation task
+		project.getTasks().register( TASK_NAME, SettingsDocGenerationTask.class, dslExtension, project );
 	}
 }

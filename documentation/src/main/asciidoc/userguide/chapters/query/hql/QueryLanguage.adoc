@@ -809,6 +809,8 @@ There are some very important functions for working with dates and times.
 | `extract()` | Extract a datetime field | `extract(field from x)` | &check;
 | `format()` | Format a datetime as a string | `format(datetime as pattern)` | &cross;
 | `trunc()` or `truncate()` | Datetime truncation | `truncate(datetime, field)` | &cross;
+| `timestampadd()` | Add an interval to a datetime | `timestampadd(field, interval, datetime)` | &cross;
+| `timestampdiff()` | Extract the interval between two datetimes | `timestampdiff(field, from, to)` | &cross;
 |===
 
 [[hql-function-extract]]
@@ -866,6 +868,34 @@ The syntax is `truncate(datetime, field)`. Supported temporal units are: `year`,
 
 Truncating a date, time or datetime value translates to obtaining a value of the same type in which all temporal units smaller than `field` have been pruned.
 For hours, minutes and second this means setting them to `00`. For months and days, this means setting them to `01`.
+
+[[hql-function-timestampadd]]
+===== `timestampadd()`
+
+This function adds an `interval` number of the unit of time specified by the `field` parameter to a date, time, or datetime expression.
+
+- Its first argument is a date/time field type, specifying the temporal units the interval will be expressed in.
+- Its second argument is an expression that evaluates to an integral number, representing the interval to be added.
+- Its third argument is an expression that evaluates to a date, time, or datetime that will be the target of the addition.
+
+The syntax is `timestampadd(field, interval, datetime)`.
+
+The resulting date, time or datetime will be of the same type as the `datetime` expression parameter.
+
+Also, `dateadd()` can be used as a synonym of this function.
+
+[[hql-function-timestampdiff]]
+===== `timestampdiff()`
+
+This function extracts the number of temporal units, specified by the `field` parameter, which represents the interval between the `from` and `to` date, time, or datetime expression parameters.
+
+- Its first argument is a date/time field type, specifying the temporal units the resulting interval will be expressed in.
+- Its second argument is an expression that evaluates to a date, time, or datetime, representing the start of the resulting interval.
+- Its third argument is an expression that evaluates to a date, time, or datetime, representing the end of the resulting interval.
+
+The syntax is `timestampdiff(field, from, to)`.
+
+Also, `datediff()` can be used as a synonym of this function.
 
 [[hql-string-functions]]
 ==== Functions for working with strings

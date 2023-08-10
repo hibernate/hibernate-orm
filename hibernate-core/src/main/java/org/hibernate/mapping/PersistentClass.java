@@ -17,7 +17,6 @@ import java.util.StringTokenizer;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
-import org.hibernate.Remove;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -325,7 +324,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	/**
 	 * @deprecated Use {@link #isCached} instead
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public boolean isCachingExplicitlyRequested() {
 		return isCached();
 	}
@@ -333,7 +332,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	/**
 	 * @deprecated Use {@link #setCached} instead
 	 */
-	@Deprecated
+	@Deprecated(forRemoval = true)
 	public void setCachingExplicitlyRequested(boolean cached) {
 		setCached( cached );
 	}
@@ -567,7 +566,10 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		}
 	}
 
-	@Deprecated(since = "6.2")
+	/**
+	 * @deprecated This will be removed with no replacement.
+	 */
+	@Deprecated(since = "6.2", forRemoval = true)
 	public Property getSubclassProperty(String propertyName) throws MappingException {
 		final Property identifierProperty = getIdentifierProperty();
 		if ( identifierProperty != null

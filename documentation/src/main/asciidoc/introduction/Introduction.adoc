@@ -554,7 +554,7 @@ Suppose we simplify `Queries` to just the following:
 [source,java]
 ----
 interface Queries {
-    @HQL("from Book where title like :title order by title")
+    @HQL("where title like :title order by title")
     List<Book> findBooksByTitleWithPagination(String title, Page page);
 }
 ----

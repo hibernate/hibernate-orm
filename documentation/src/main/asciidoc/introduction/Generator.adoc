@@ -146,7 +146,7 @@ Let's just stick it on the `Book` class:
 ----
 @CheckHQL // validate the query at compile time
 @NamedQuery(name = "#findByTitleAndType",
-        query = "select book from Book book where book.title like :titlen and book.type = :type")
+            query = "select book from Book book where book.title like :titlen and book.type = :type")
 @Entity
 public class Book { ... }
 ----
@@ -189,7 +189,7 @@ We'll need a place to put this method, and since our `Book` entity isn't an abst
 [source,java]
 ----
 interface Queries {
-    @HQL("from Book where title like :title and type = :type")
+    @HQL("where title like :title and type = :type")
     List<Book> findBooksByTitleAndType(String title, String type);
 }
 ----
@@ -216,7 +216,7 @@ public abstract class Queries_ {
     }
 
     static final String FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type =
-            "from Book where title like :title and type = :type";
+            "where title like :title and type = :type";
 
 }
 
@@ -229,7 +229,7 @@ If we want to explicitly specify the name and type of this parameter, we may dec
 [source,java]
 ----
 interface Queries {
-    @HQL("from Book where title like :title and type = :type")
+    @HQL("where title like :title and type = :type")
     List<Book> findBooksByTitleAndType(StatelessSession session, String title, String type);
 }
 ----
@@ -277,7 +277,7 @@ We may call this method anything we like:
 interface Queries {
     EntityManager entityManager();
 
-    @HQL("from Book where title like :title and type = :type")
+    @HQL("where title like :title and type = :type")
     List<Book> findBooksByTitleAndType(String title, String type);
 }
 ----
@@ -316,7 +316,7 @@ public class Queries_ implements Queries {
     }
 
     static final String FIND_BOOKS_BY_TITLE_AND_TYPE_String_Type =
-            "from Book where title like :title and type = :type";
+            "where title like :title and type = :type";
 
 }
 ----
@@ -342,7 +342,7 @@ interface Queries {
     // handwritten method replacing previous generated implementation
     default List<Book> findBooksByTitleAndType(String title, String type) {
         entityManager()
-                .createQuery("from Book where title like :title and type = :type", Book.class)
+                .createQuery("where title like :title and type = :type", Book.class)
                         .setParameter("title", title)
                         .setParameter("type", type)
                         .setFlushMode(COMMIT)
@@ -558,7 +558,7 @@ It might return a single `Book`.
 
 [source,java]
 ----
-@HQL("from Book where isbn = :isbn")
+@HQL("where isbn = :isbn")
 Book findBookByIsbn(String isbn);
 ----
 
@@ -592,7 +592,7 @@ A query method might even return `TypedQuery` or `SelectionQuery`:
 
 [source,java]
 ----
-@HQL("from Book where title like :title")
+@HQL("where title like :title")
 SelectionQuery<Book> findBooksByTitle(String title);
 ----
 

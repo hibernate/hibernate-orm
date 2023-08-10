@@ -489,7 +489,7 @@ But when there's no explicit `select` clause, the select list is implied by the 
 List<Book> books =
         session.createQuery("from Book join authors", Book.class)
             .getResultList();
-for (Person person: persons) {
+for (Book book: books) {
     ...
 }
 ----
@@ -544,6 +544,23 @@ Indeed, a fairly innocent-looking HQL query can easily translate to a SQL statem
 We need to be a _bit_ careful about that, but actually it's usually a good thing.
 HQL makes it very easy to fetch all the data we need in a single trip to the database, and that's absolutely key to achieving high performance in data access code.
 Typically, it's much worse to fetch exactly the data we need, but in many round trips to the database server, than it is to fetch just a bit more data than what we're going to need, all a single SQL query.
+====
+
+When there's no explicit `select` clause, a further abbreviation is sometimes possible.
+
+[TIP]
+====
+When the result type of a `select` query is an entity type, and we specify the type explicitly by passing the entity class to `createQuery()` or `createSelectionQuery()`, we're sometimes allowed to omit the `from` clause, for example:
+
+[source, java]
+[%unbreakable]
+----
+// explicit result type Book, so 'from Book' is inferred
+List<Book> books =
+        session.createQuery("where title like :title", Book.class)
+            .setParameter("title", title)
+            .getResultList();
+----
 ====
 
 [[returning-to-java]]

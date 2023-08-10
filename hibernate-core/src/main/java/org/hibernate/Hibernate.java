@@ -305,7 +305,7 @@ public final class Hibernate {
 	 * @return true if the named property of the object is not listed as uninitialized;
 	 *         false otherwise
 	 */
-	public <E, T> boolean isPropertyInitialized(E entity, Attribute<E, T> attribute) {
+	public <E> boolean isPropertyInitialized(E entity, Attribute<? super E, ?> attribute) {
 		return isPropertyInitialized( entity, attribute.getName() );
 	}
 

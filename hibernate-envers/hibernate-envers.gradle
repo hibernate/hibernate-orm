@@ -9,7 +9,6 @@ description = 'Hibernate\'s entity version (audit/history) support'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'org.hibernate.matrix-test'
-apply plugin: 'org.hibernate.orm.build.properties'
 
 dependencies {
     api project( ':hibernate-core' )
@@ -69,12 +68,4 @@ tasks."matrix_mariadb" {
     beforeTest { descriptor ->
         println "Starting test: " + descriptor
     }
-}
-
-task collectConfigProperties { task ->
-    description 'Collect config properties'
-
-    tasks.generateConfigsProperties.javadocsBaseLink = 'https://docs.jboss.org/hibernate/orm/' + rootProject.ormVersion.family + '/javadocs/'
-
-    dependsOn tasks.generateConfigsProperties
 }

@@ -1,3 +1,5 @@
+import java.util.function.Function
+
 import org.asciidoctor.gradle.jvm.AsciidoctorTask
 import org.asciidoctor.gradle.jvm.pdf.AsciidoctorPdfTask
 
@@ -5,6 +7,7 @@ plugins {
 	id 'org.asciidoctor.jvm.convert' version '3.3.2'
 	id 'org.asciidoctor.jvm.pdf' version '3.3.2'
 	id "org.asciidoctor.jvm.gems" version "3.3.2"
+	id "org.hibernate.orm.build.settings-doc"
 }
 
 repositories {
@@ -28,8 +31,88 @@ apply plugin: 'org.hibernate.orm.build.reports'
 
 defaultTasks 'buildDocs'
 
+configurations {
+	core
+
+	testing
+
+	envers
+	spatial
+
+	agroal
+	c3p0
+	hikaricp
+	proxool
+	vibur
+
+	jcache
+
+	jpamodelgen
+
+	javadocClasspath {
+		description = 'Class files for the javadoc to be built'
+		resolutionStrategy.capabilitiesResolution.withCapability('org.junit.jupiter:junit-jupiter-params:5.7.1') { details ->
+			details.select( details.candidates.first() ).because( 'first' )
+		}
+
+		extendsFrom core
+		extendsFrom testing
+		extendsFrom envers
+		extendsFrom spatial
+		extendsFrom agroal
+		extendsFrom c3p0
+		extendsFrom hikaricp
+		extendsFrom proxool
+		extendsFrom vibur
+		extendsFrom jcache
+		extendsFrom jpamodelgen
+	}
+
+	javadocSources {
+		description = 'Source files to be built by the javadoc tool'
+	}
+}
 
 dependencies {
+	attributesSchema { schema ->
+		schema.attribute(Bundling.BUNDLING_ATTRIBUTE) { matchStrategy ->
+			final def nameComparator = Comparator.comparing(
+					new Function<Bundling,String>() {
+						@Override
+						String apply(Bundling o) {
+							return o.name
+						}
+					}
+			)
+			matchStrategy.ordered(new Comparator<Bundling>() {
+				@Override
+				int compare(Bundling o1, Bundling o2) {
+					if ( Objects.equals( o1, o2 ) ) {
+						return 0;
+					}
+
+					if ( o1 == null ) {
+						return 1;
+					}
+
+					if ( o2 == null ) {
+						return -1;
+					}
+
+					if ( o1.name == Bundling.EMBEDDED ) {
+						return -1;
+					}
+
+					if ( o2.name == Bundling.EMBEDDED ) {
+						return 1;
+					}
+
+					return nameComparator.compare(o1,o2)
+				}
+			} )
+		}
+	}
+
 	ext.pressgangVersion = '3.0.0'
 
 	reportAggregation project( ':hibernate-agroal' )
@@ -48,6 +131,51 @@ dependencies {
 	reportAggregation project(':hibernate-jpamodelgen')
 
 	asciidoctorGems 'rubygems:rouge:4.1.1'
+
+	core project( ':hibernate-core' )
+	javadocSources project( path: ':hibernate-core', configuration: 'javadocSources' )
+
+	testing project( ':hibernate-testing' )
+	javadocSources project( path: ':hibernate-testing', configuration: 'javadocSources' )
+
+	envers project( ':hibernate-envers' )
+	javadocSources project( path: ':hibernate-envers', configuration: 'javadocSources' )
+
+	spatial project( ':hibernate-spatial' )
+	javadocSources project( path: ':hibernate-spatial', configuration: 'javadocSources' )
+
+	agroal project( ':hibernate-agroal' )
+	javadocSources project( path: ':hibernate-agroal', configuration: 'javadocSources' )
+
+	c3p0 project( ':hibernate-c3p0' )
+	javadocSources project( path: ':hibernate-c3p0', configuration: 'javadocSources' )
+
+	hikaricp project( ':hibernate-hikaricp' )
+	javadocSources project( path: ':hibernate-hikaricp', configuration: 'javadocSources' )
+
+	proxool project( ':hibernate-proxool' )
+	javadocSources project( path: ':hibernate-proxool', configuration: 'javadocSources' )
+
+	vibur project( ':hibernate-vibur' )
+	javadocSources project( path: ':hibernate-vibur', configuration: 'javadocSources' )
+
+	jcache project( ':hibernate-jcache' )
+	javadocSources project( path: ':hibernate-jcache', configuration: 'javadocSources' )
+
+	jpamodelgen project( ':hibernate-jpamodelgen' )
+	javadocSources project( path: ':hibernate-jpamodelgen', configuration: 'javadocSources' )
+
+	javadocClasspath libs.loggingAnnotations
+	javadocClasspath jakartaLibs.validation
+	javadocClasspath jakartaLibs.cdi
+	javadocClasspath jakartaLibs.jacc
+	javadocClasspath jakartaLibs.jsonbApi
+	javadocClasspath libs.ant
+	javadocClasspath dbLibs.postgresql
+	javadocClasspath libs.jackson
+	javadocClasspath gradleApi()
+	javadocClasspath libs.jacksonXml
+	javadocClasspath dbLibs.oracle
 }
 
 
@@ -58,6 +186,68 @@ if ( project.ormVersion.isSnapshot ) {
 }
 else {
 	tasks.release.dependsOn clean
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// aggregated JavaDoc
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def aggregateJavadocsTask = tasks.register( "aggregateJavadocs", Javadoc ) {
+	group = "documentation"
+	description = 'Builds an aggregated JavaDoc across all ORM sub-projects'
+
+	inputs.property "ormVersion", project.ormVersion
+
+	destinationDir = mkdir( layout.buildDirectory.file( 'javadocs' ) )
+
+	source configurations.javadocSources
+	classpath += configurations.javadocClasspath
+
+	// exclude any generated sources and internal packages
+	exclude '**/generated-src/**'
+	exclude '**/internal/**'
+	include '**/*.java'
+
+
+	final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
+
+	// apply standard config
+	maxMemory = '512m'
+	configure( options ) {
+		overview = 'src/javadoc/overview.html'
+		stylesheetFile = new File( projectDir, 'src/javadoc/stylesheet.css' )
+		windowTitle = 'Hibernate JavaDocs'
+		docTitle = "Hibernate JavaDoc ($project.version)"
+		bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+		use = true
+		options.encoding = 'UTF-8'
+
+		links = [
+				'https://docs.oracle.com/en/java/javase/11/docs/api/',
+				'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
+				'https://docs.jboss.org/cdi/api/2.0/',
+				'https://jakarta.ee/specifications/platform/8/apidocs/'
+		]
+
+		options.addStringOption( 'Xdoclint:none', '-quiet' )
+
+		if ( jdkVersions.explicit ) {
+			options.setJFlags(
+					getProperty( 'toolchain.javadoc.jvmargs' ).toString().
+							split( ' ' ).toList().findAll( { !it.isEmpty() } )
+			)
+		}
+	}
+
+	if ( jdkVersions.explicit ) {
+		// Display version of Java tools
+		doFirst {
+			if ( javadocTool.present ) {
+				logger.lifecycle "Aggregating javadoc with '${javadocTool.get().metadata.installationPath}'"
+			}
+		}
+	}
 }
 
 asciidoctorj {
@@ -394,14 +584,31 @@ tasks.register('renderQL', AsciidoctorTask) {task->
 
 // User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+def generateSettingsDocTask = tasks.named( "generateSettingsDoc" ) {
+//	dependsOn aggregateJavadocsTask
+	javadocDirectory = aggregateJavadocsTask.get().destinationDir
+	sections {
+		core {
+			settingsClassName = "org.hibernate.cfg.AvailableSettings"
+			projectPath = ":hibernate-core"
+		}
+		envers {
+			settingsClassName = "org.hibernate.envers.configuration.EnversSettings"
+			projectPath = ":hibernate-envers"
+		}
+		jcache {
+			settingsClassName = "org.hibernate.cache.jcache.ConfigSettings"
+			projectPath = ":hibernate-jcache"
+		}
+	}
+}
+
 def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', AsciidoctorTask ) { task ->
 	group = "Documentation"
 	description = 'Renders the User Guides in HTML format using Asciidoctor.'
 	inputs.property "hibernate-version", project.ormVersion
 
-	dependsOn ':hibernate-core:collectConfigProperties'
-	dependsOn ':hibernate-envers:collectConfigProperties'
-	dependsOn ':hibernate-jcache:collectConfigProperties'
+	dependsOn generateSettingsDocTask
 
 	sourceDir = file( 'src/main/asciidoc/userguide' )
 	sources {
@@ -568,6 +775,7 @@ def generateReportsTask = tasks.named( "generateReports" ) {
 def buildDocsTask = tasks.register( 'buildDocs' ) { task ->
 	task.group = 'Documentation'
 	task.description = 'Grouping task for performing all documentation building tasks'
+	task.dependsOn aggregateJavadocsTask
 	task.dependsOn renderGettingStartedGuidesTask
 	task.dependsOn renderIntroductionGuidesTask
 	task.dependsOn renderUserGuidesTask

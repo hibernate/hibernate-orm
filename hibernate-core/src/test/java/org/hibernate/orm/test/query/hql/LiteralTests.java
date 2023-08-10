@@ -83,6 +83,17 @@ public class LiteralTests {
 	}
 
 	@Test
+	@JiraKey("HHH-16737")
+	public void testNumericPromotion(SessionFactoryScope scope) {
+		scope.inTransaction(
+			session -> {
+				session.createQuery( "select 1 from (select 199999.99bd bigDecimalValue) h where h.bigDecimalValue > 199999.99f" ).getResultList();
+				session.createQuery( "select 1 from (select 199999.99bd bigDecimalValue) h where h.bigDecimalValue > 199999.99d" ).getResultList();
+			}
+		);
+	}
+
+	@Test
 	public void testJavaString(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -28,7 +28,7 @@ public abstract class PublishTask extends DefaultTask {
 	private final DirectoryProperty stagingDirectory;
 
 	public PublishTask() {
-		setGroup( "Release" );
+		setGroup( "documentation" );
 		setDescription( "Publish documentation to the doc server" );
 
 		buildingFamily = getProject().getObjects().property( ReleaseFamilyIdentifier.class );

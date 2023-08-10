@@ -23,7 +23,7 @@ tasks.build.dependsOn.clear()
 
 
 def stageIntegrationGuideTask = tasks.register( "stageIntegrationGuide", Copy ) {
-    group "Release"
+    group "documentation"
     description "Stages the Integration Guide as part of preparing for release"
     dependsOn ":documentation:renderIntegrationGuides"
 
@@ -32,7 +32,7 @@ def stageIntegrationGuideTask = tasks.register( "stageIntegrationGuide", Copy ) 
 }
 
 def stageQuickstartTask = tasks.register( "stageQuickstart", Copy ) {
-    group 'Release'
+    group 'documentation'
     description "Stages the Getting Started Guide as part of preparing for release"
     dependsOn ':documentation:renderGettingStartedGuides'
 
@@ -41,7 +41,7 @@ def stageQuickstartTask = tasks.register( "stageQuickstart", Copy ) {
 }
 
 def stageTopicalGuideTask = tasks.register( "stageTopicalGuide", Copy ) {
-    group 'Release'
+    group 'documentation'
     description "Stages the Topical Guide as part of preparing for release"
     dependsOn ':documentation:renderTopicalGuides'
 
@@ -51,7 +51,7 @@ def stageTopicalGuideTask = tasks.register( "stageTopicalGuide", Copy ) {
 }
 
 def stageIntroductionGuideTask = tasks.register( "stageIntroductionGuide", Copy ) {
-    group 'Release'
+    group 'documentation'
     description "Stages the Introduction Guide as part of preparing for release"
     dependsOn ':documentation:renderIntroductionGuides'
 
@@ -60,7 +60,7 @@ def stageIntroductionGuideTask = tasks.register( "stageIntroductionGuide", Copy 
 }
 
 def stageQueryGuideTasks = tasks.register( "stageQueryGuide", Copy ) {
-    group 'Release'
+    group 'documentation'
     description "Stages the Query Language Guide as part of preparing for release"
     dependsOn ':documentation:renderQueryLanguageGuides'
 
@@ -69,7 +69,7 @@ def stageQueryGuideTasks = tasks.register( "stageQueryGuide", Copy ) {
 }
 
 def stageUserGuideTask = tasks.register( "stageUserGuide", Copy ) {
-    group 'Release'
+    group 'documentation'
     description "Stages the User Guide as part of preparing for release"
     dependsOn ':documentation:renderUserGuides'
 
@@ -79,7 +79,7 @@ def stageUserGuideTask = tasks.register( "stageUserGuide", Copy ) {
 
 
 def stageMigrationGuideTask = tasks.register( "stageMigrationGuide", Copy ) {
-    group 'Release'
+    group 'documentation'
     description "Stages the Migration Guide as part of preparing for release"
     dependsOn ':documentation:renderMigrationGuide'
 
@@ -92,7 +92,7 @@ tasks.named( "publishMigrationGuide" ).configure {
 }
 
 def stageIncubationReportTask = tasks.register( "stageIncubationReport", Copy ) { task ->
-    group 'Release'
+    group 'documentation'
     description "Stages ORM @Incubating report"
     dependsOn ':documentation:generateIncubationReport'
 
@@ -103,7 +103,7 @@ def stageIncubationReportTask = tasks.register( "stageIncubationReport", Copy ) 
 }
 
 def stageInternalsReportTask = tasks.register( "stageInternalsReport", Copy ) { task ->
-    group 'Release'
+    group 'documentation'
     description "Stages the @Internal report"
     dependsOn ':documentation:generateInternalsReport'
 
@@ -112,7 +112,7 @@ def stageInternalsReportTask = tasks.register( "stageInternalsReport", Copy ) { 
 }
 
 def stageDeprecationReportTask = tasks.register( "stageDeprecationReport", Copy ) {
-    group 'Release'
+    group 'documentation'
     description "Stages the @Deprecated/@Remove report"
 
     dependsOn ':documentation:generateDeprecationReport'
@@ -122,7 +122,7 @@ def stageDeprecationReportTask = tasks.register( "stageDeprecationReport", Copy 
 }
 
 def stageLoggingReportTask = tasks.register( "stageLoggingReport", Copy ) { task ->
-    group 'Release'
+    group 'documentation'
     description "Stages the logging report"
 
     dependsOn ':documentation:renderLoggingReport'
@@ -132,7 +132,7 @@ def stageLoggingReportTask = tasks.register( "stageLoggingReport", Copy ) { task
 }
 
 def stageDialectReportTask = tasks.register( "stageDialectReport", Copy ) { task ->
-    group 'Release'
+    group 'documentation'
     description "Stages the supported Dialects report"
     dependsOn ':documentation:renderDialectReport'
 
@@ -141,7 +141,7 @@ def stageDialectReportTask = tasks.register( "stageDialectReport", Copy ) { task
 }
 
 def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
-    group 'Release'
+    group 'documentation'
     description "Stages all ORM reports as part of preparing for release"
 
     dependsOn ':documentation:generateReports'
@@ -152,6 +152,14 @@ def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
     dependsOn stageDialectReportTask
 }
 
+def stageJavadocsTask = tasks.register( "stageJavadocs", Copy ) {
+    group 'documentation'
+    description "Stages the aggregated Javadocs"
+    dependsOn ':documentation:aggregateJavadocs'
+
+    from project( ":documentation" ).tasks.aggregateJavadocs
+    into "${buildDir}/documentation/javadocs"
+}
 
 /**
  * Assembles all documentation into the {buildDir}/documentation directory.
@@ -159,11 +167,11 @@ def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
  * Depends on building the docs
  */
 def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
-    group 'Release'
+    group 'documentation'
     description 'Assembles all documentation into the {buildDir}/documentation directory'
 
     dependsOn ':documentation:buildDocsForPublishing'
-    dependsOn aggregateJavadocsTask
+    dependsOn stageJavadocsTask
     dependsOn stageQuickstartTask
     dependsOn stageIntroductionGuideTask
     dependsOn stageUserGuideTask
@@ -175,6 +183,8 @@ def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
 }
 
 tasks.named( "uploadDocumentation" ) {
+    group = "documentation"
+    description = "Uploads assembled documentation to the doc server"
     dependsOn assembleDocumentationTask
 
     doFirst {

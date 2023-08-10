@@ -19,6 +19,9 @@ import java.util.SortedSet;
 import org.gradle.api.Project;
 import org.gradle.api.file.RegularFile;
 
+/**
+ * @author Marko Bekhta
+ */
 public class AsciiDocWriter {
 	public static final String ANCHOR_BASE = "settings-";
 	public static final String ANCHOR_START = "[[" + ANCHOR_BASE;
@@ -55,7 +58,7 @@ public class AsciiDocWriter {
 
 			// write an anchor in the form `[[settings-{moduleName}]]`, e.g. `[[settings-hibernate-core]]`
 			tryToWriteLine( writer, ANCHOR_START, sourceProject.getName(), "]]" );
-			tryToWriteLine( writer, "=== ", sourceProject.getDescription() );
+			tryToWriteLine( writer, "=== ", "(", sourceProject.getName(), ") ", sourceProject.getDescription() );
 
 			writer.write( '\n' );
 
@@ -72,6 +75,17 @@ public class AsciiDocWriter {
 				writer.write( settingDescriptor.getJavadoc() );
 
 				writer.write( '\n' );
+
+				writer.write(
+						String.format(
+								"**See:** %s[%s.%s]\n\n",
+								settingDescriptor.getJavadocLink(),
+								Utils.withoutPackagePrefix( settingDescriptor.getSettingsClassName() ),
+								settingDescriptor.getSettingFieldName()
+						)
+				);
+
+				writer.write( "'''\n" );
 			}
 
 			writer.write( '\n' );

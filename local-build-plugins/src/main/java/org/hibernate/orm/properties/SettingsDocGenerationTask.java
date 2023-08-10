@@ -15,24 +15,24 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.IgnoreEmptyDirectories;
-import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
-import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
-import org.hibernate.orm.ReleaseFamilyIdentifier;
+import org.hibernate.orm.env.HibernateVersion;
 
 import static org.hibernate.orm.properties.SettingsDocumentationPlugin.TASK_GROUP_NAME;
 
 /**
  * @author Steve Ebersole
  */
-public class SettingsDocGeneratorTask extends DefaultTask {
+public class SettingsDocGenerationTask extends DefaultTask {
 	public static final String TASK_NAME = "generateSettingsDoc";
 
+	private final HibernateVersion hibernateVersion;
+
 	private final DirectoryProperty javadocDirectory;
-	private final Property<ReleaseFamilyIdentifier> releaseFamily;
 	private final Property<String> publishedDocsUrl;
 
 	private final NamedDomainObjectContainer<SettingsDocSection> sections;
@@ -40,23 +40,23 @@ public class SettingsDocGeneratorTask extends DefaultTask {
 	private final RegularFileProperty outputFile;
 
 	@Inject
-	public SettingsDocGeneratorTask(Project project) {
+	public SettingsDocGenerationTask(SettingsDocExtension dslExtension, Project project) {
 		setGroup( TASK_GROUP_NAME );
 		setDescription( "Collects descriptions of Hibernate configuration properties in preparation for inclusion in the User Guide" );
 
-		javadocDirectory = project.getObjects().directoryProperty();
-		javadocDirectory.convention( project.getLayout().getBuildDirectory().dir( "javadocs" ) );
+		hibernateVersion = (HibernateVersion) project.getExtensions().getByName( HibernateVersion.EXT_KEY );
+		getInputs().property( "ormVersion", hibernateVersion );
 
-		releaseFamily = project.getObjects().property( ReleaseFamilyIdentifier.class );
-		releaseFamily.convention( project.provider( () -> ReleaseFamilyIdentifier.parse( project.getVersion().toString() ) ) );
+		javadocDirectory = project.getObjects().directoryProperty();
+		javadocDirectory.convention( dslExtension.getJavadocDirectory() );
 
 		publishedDocsUrl = project.getObjects().property( String.class );
-		publishedDocsUrl.convention( "https://docs.jboss.org/hibernate/orm" );
+		publishedDocsUrl.convention( dslExtension.getPublishedDocsUrl() );
 
-		sections = project.getObjects().domainObjectContainer( SettingsDocSection.class, SettingsDocSection::create );
+		sections = dslExtension.getSections();
 
 		outputFile = project.getObjects().fileProperty();
-		outputFile.convention( project.getLayout().getBuildDirectory().file( "asciidoc/fragments/config-settings.adoc" ) );
+		outputFile.convention( dslExtension.getOutputFile() );
 	}
 
 	@InputDirectory
@@ -65,13 +65,7 @@ public class SettingsDocGeneratorTask extends DefaultTask {
 		return javadocDirectory;
 	}
 
-	@Input
-	public Property<ReleaseFamilyIdentifier> getReleaseFamily() {
-		return releaseFamily;
-	}
-
-//	@Nested
-	@Internal
+	@Nested
 	public NamedDomainObjectContainer<SettingsDocSection> getSections() {
 		return sections;
 	}
@@ -85,7 +79,7 @@ public class SettingsDocGeneratorTask extends DefaultTask {
 	public void generateSettingsDocumentation() {
 		final String publishedJavadocUrl = publishedDocsUrl.get()
 				+ "/"
-				+ releaseFamily.get().toExternalForm()
+				+ hibernateVersion.getFamily()
 				+ "/javadocs/";
 
 		AsciiDocWriter.writeToFile(

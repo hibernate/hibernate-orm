@@ -1317,6 +1317,22 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <T extends TemporalAccessor> JpaFunction<T> timestampadd(
+			TemporalUnit temporalUnit,
+			Expression<Integer> interval,
+			Expression<T> datetime) {
+		return criteriaBuilder.timestampadd( temporalUnit, interval, datetime );
+	}
+
+	@Override
+	public <T extends TemporalAccessor> JpaFunction<Number> timestampdiff(
+			TemporalUnit temporalUnit,
+			Expression<T> from,
+			Expression<T> to) {
+		return criteriaBuilder.timestampdiff( temporalUnit, from , to );
+	}
+
+	@Override
 	public JpaFunction<String> overlay(Expression<String> string, String replacement, int start) {
 		return criteriaBuilder.overlay( string, replacement, start );
 	}

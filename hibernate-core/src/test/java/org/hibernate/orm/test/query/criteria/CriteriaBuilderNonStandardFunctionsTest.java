@@ -513,4 +513,44 @@ public class CriteriaBuilderNonStandardFunctionsTest {
 			assertEquals( eob.getTheLocalDateTime().truncatedTo( ChronoUnit.SECONDS ), result.get( 6 ) );
 		} );
 	}
+
+	@Test
+	public void testTimestampAddDiffFunctions(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			CriteriaQuery<Tuple> query = cb.createTupleQuery();
+			Root<EntityOfBasics> from = query.from( EntityOfBasics.class );
+
+			Expression<LocalDateTime> theLocalDateTime = from.get( "theLocalDateTime" );
+			Expression<LocalDateTime> addSeconds = cb.timestampadd( TemporalUnit.SECOND, cb.literal( 4 ), theLocalDateTime );
+			Expression<LocalDateTime> addHours = cb.timestampadd( TemporalUnit.HOUR, cb.literal( 3 ), theLocalDateTime );
+			Expression<LocalDateTime> addDays = cb.timestampadd( TemporalUnit.DAY, cb.literal( 2 ), theLocalDateTime );
+			Expression<LocalDateTime> addMonth = cb.timestampadd( TemporalUnit.MONTH, cb.literal( 1 ), theLocalDateTime );
+			query.multiselect(
+					from.get( "id" ),
+					addSeconds,
+					addHours,
+					addDays,
+					addMonth,
+					cb.timestampdiff( TemporalUnit.SECOND, theLocalDateTime, addSeconds ),
+					cb.timestampdiff( TemporalUnit.HOUR, theLocalDateTime, addHours ),
+					cb.timestampdiff( TemporalUnit.DAY, theLocalDateTime, addDays ),
+					cb.timestampdiff( TemporalUnit.MONTH, theLocalDateTime, addMonth )
+			).where( cb.isNotNull( theLocalDateTime ) );
+
+			Tuple result = session.createQuery( query ).getSingleResult();
+			LocalDateTime ldt = session.createQuery(
+					"select theLocalDateTime from EntityOfBasics where id = :id",
+					LocalDateTime.class
+			).setParameter( "id", result.get( 0 ) ).getSingleResult();
+			assertEquals( ldt.plusSeconds( 4 ), result.get( 1 ) );
+			assertEquals( ldt.plusHours( 3 ), result.get( 2 ) );
+			assertEquals( ldt.plusDays( 2 ), result.get( 3 ) );
+			assertEquals( ldt.plusMonths( 1 ), result.get( 4 ) );
+			assertEquals( 4D, result.get( 5 ) );
+			assertEquals( 3L, result.get( 6 ) );
+			assertEquals( 2L, result.get( 7 ) );
+			assertEquals( 1L, result.get( 8 ) );
+		} );
+	}
 }

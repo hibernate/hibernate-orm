@@ -1188,6 +1188,37 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<T extends TemporalAccessor> JpaFunction<T> truncate(Expression<T> datetime, TemporalUnit temporalUnit);
 
 	/**
+	 * Adds an {@code interval} number of {@link TemporalUnit units of time} to the specified {@code datetime} expression.
+	 *
+	 * @param temporalUnit the temporal unit that the {@code interval} parameter is expressed in
+	 * @param interval the interval which must be added to the datetime
+	 * @param datetime the datetime to apply the addition on
+	 *
+	 * @return the datetime resulting from the addition
+	 */
+	@Incubating
+	<T extends TemporalAccessor> JpaFunction<T> timestampadd(
+			TemporalUnit temporalUnit,
+			Expression<Integer> interval,
+			Expression<T> datetime);
+
+	/**
+	 * Extracts the number of {@link TemporalUnit units of time} which represent the interval
+	 * between the {@code from} and the {@code to} datetimes.
+	 *
+	 * @param temporalUnit the temporal unit the resulting interval will be expressed in
+	 * @param from the starting datetime
+	 * @param to the target datetime
+	 *
+	 * @return the interval between the specified datetimes
+	 */
+	@Incubating
+	<T extends TemporalAccessor> JpaFunction<Number> timestampdiff(
+			TemporalUnit temporalUnit,
+			Expression<T> from,
+			Expression<T> to);
+
+	/**
 	 * @see #overlay(Expression, Expression, Expression, Expression)
 	 */
 	@Incubating

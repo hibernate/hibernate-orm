@@ -26,7 +26,7 @@ public abstract class PublishDescriptorTask extends DefaultTask {
 	private final RegularFileProperty jsonFile;
 
 	public PublishDescriptorTask() {
-		setGroup( "Release" );
+		setGroup( "documentation" );
 		setDescription( "Publishes the documentation publication descriptor (JSON)" );
 
 		projectVersion = getProject().provider( () -> getProject().getVersion() );

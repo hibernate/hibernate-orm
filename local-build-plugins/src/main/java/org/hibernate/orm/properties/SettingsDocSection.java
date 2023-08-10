@@ -8,6 +8,9 @@ package org.hibernate.orm.properties;
 
 import java.util.Comparator;
 
+import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
+
 import static java.util.Comparator.comparing;
 
 /**
@@ -38,10 +41,12 @@ public class SettingsDocSection {
 		this.name = name;
 	}
 
+	@Internal
 	public String getName() {
 		return name;
 	}
 
+	@Input
 	public String getProjectPath() {
 		return projectPath;
 	}
@@ -50,6 +55,7 @@ public class SettingsDocSection {
 		this.projectPath = projectPath;
 	}
 
+	@Input
 	public String getSettingsClassName() {
 		return settingsClassName;
 	}

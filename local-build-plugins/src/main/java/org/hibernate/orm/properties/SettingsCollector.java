@@ -27,6 +27,9 @@ import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
 import org.jsoup.select.Elements;
 
+import static org.hibernate.orm.properties.Utils.packagePrefix;
+import static org.hibernate.orm.properties.Utils.withoutPackagePrefix;
+
 /**
  * @author Marko Bekhta
  * @author Steve Ebersole
@@ -42,10 +45,12 @@ public class SettingsCollector {
 		// Load the constant-values.html file with Jsoup and start processing it
 		final Document constantValuesJson = loadConstants( javadocDirectory );
 		final Elements blockLists = constantValuesJson.select( "ul.block-list" );
+		final Map<String,Map<String, Element>> fieldJavadocsByClass = new HashMap<>();
 		for ( int bl = 0; bl < blockLists.size(); bl++ ) {
 			final Element blockList = blockLists.get( bl );
 			final String className = blockList.selectFirst( "span" ).text();
 
+			// find the doc section descriptor defined for this class, if one
 			final SettingsDocSection docSection = findMatchingDocSection( className, sections );
 			if ( docSection == null ) {
 				// does not match any defined sections, skip it
@@ -53,7 +58,7 @@ public class SettingsCollector {
 			}
 
 			final SortedSet<SettingDescriptor> docSectionSettings = findSettingDescriptors( docSection, result );
-			final Map<String, Element> classFieldJavadocs = extractClassFieldJavadocs( className, javadocDirectory );
+			final Map<String, Element> classFieldJavadocs = extractClassFieldJavadocs( className, javadocDirectory, fieldJavadocsByClass );
 
 			final Element tableDiv = blockList.selectFirst( ".summary-table" );
 			final Elements constantFqnColumns = tableDiv.select( ".col-first" );
@@ -85,18 +90,15 @@ public class SettingsCollector {
 
 				final SettingDescriptor settingDescriptor = new SettingDescriptor(
 						stripQuotes( constantValue ),
+						className,
+						simpleFieldName,
 						convertFieldJavadocHtmlToAsciidoc(
 								fieldJavadocElement,
 								className,
 								simpleFieldName,
 								publishedJavadocsUrl
-						)
-//						extractJavadoc(
-//								settingsClassJavadocJson,
-//								className,
-//								withoutPackagePrefix( constantFqn ),
-//								publishedJavadocsUrl
-//						)
+						),
+						Utils.fieldJavadocLink( publishedJavadocsUrl, className, simpleFieldName )
 				);
 				docSectionSettings.add( settingDescriptor );
 			}
@@ -141,8 +143,13 @@ public class SettingsCollector {
 
 	private static Map<String, Element> extractClassFieldJavadocs(
 			String className,
-			Directory javadocDirectory) {
-		System.out.println( "Processing Javadoc for " + className );
+			Directory javadocDirectory,
+			Map<String, Map<String, Element>> fieldJavadocsByClass) {
+		final Map<String, Element> existing = fieldJavadocsByClass.get( className );
+		if ( existing != null ) {
+			return existing;
+		}
+
 		final Map<String, Element> result = new HashMap<>();
 
 		final Document document = loadClassJavadoc( className, javadocDirectory );
@@ -454,13 +461,5 @@ public class SettingsCollector {
 			// if we encounter a node that we are not handling - we want to fail as the result might be missing some details:
 			throw new IllegalStateException( "Unknown node: " + node );
 		}
-	}
-
-	private static String withoutPackagePrefix(String className) {
-		return className.substring( className.lastIndexOf( '.' ) + 1 );
-	}
-
-	private static String packagePrefix(String className) {
-		return className.substring( 0, className.lastIndexOf( '.' ) );
 	}
 }

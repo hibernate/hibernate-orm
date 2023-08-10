@@ -478,9 +478,7 @@ def renderQueryLanguageGuidesTask = tasks.register( 'renderQueryLanguageGuides' 
 
 // User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def generateSettingsDocTask = tasks.named( "generateSettingsDoc" ) {
-//	dependsOn aggregateJavadocsTask
-	javadocDirectory = aggregateJavadocsTask.get().destinationDir
+settingsDocumentation {
 	sections {
 		core {
 			settingsClassName = "org.hibernate.cfg.AvailableSettings"
@@ -495,6 +493,10 @@ def generateSettingsDocTask = tasks.named( "generateSettingsDoc" ) {
 			projectPath = ":hibernate-jcache"
 		}
 	}
+}
+
+def generateSettingsDocTask = tasks.named( "generateSettingsDoc" ) {
+	dependsOn aggregateJavadocsTask
 }
 
 def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', AsciidoctorTask ) { task ->

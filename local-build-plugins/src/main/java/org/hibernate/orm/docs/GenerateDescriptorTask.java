@@ -26,7 +26,7 @@ public abstract class GenerateDescriptorTask extends DefaultTask {
 	private final Property<ReleaseFamilyIdentifier> currentlyBuildingFamily;
 
 	public GenerateDescriptorTask() {
-		setGroup( "Release" );
+		setGroup( "documentation" );
 		setDescription( "Generates the documentation publication descriptor (JSON)" );
 
 		jsonFile = getProject().getObjects().fileProperty();

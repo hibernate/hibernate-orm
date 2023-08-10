@@ -202,6 +202,10 @@ The following table illustrates a list of commands for various databases that ca
 |CockroachDB
 |`./docker_db.sh cockroachdb`
 |`./gradlew test -Pdb=cockroachdb`
+
+|TiDB
+|`./docker_db.sh tidb`
+|`./gradlew test -Pdb=tidb`
 |===
 
 To stop a container started by `docker`, use the command

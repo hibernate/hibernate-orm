@@ -18,7 +18,6 @@ import org.gradle.api.tasks.IgnoreEmptyDirectories;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.Internal;
-import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
@@ -86,7 +85,7 @@ public class SettingsDocGeneratorTask extends DefaultTask {
 	public void generateSettingsDocumentation() {
 		final String publishedJavadocUrl = publishedDocsUrl.get()
 				+ "/"
-				+ releaseFamily.get().getFamilyVersion()
+				+ releaseFamily.get().toExternalForm()
 				+ "/javadocs/";
 
 		AsciiDocWriter.writeToFile(

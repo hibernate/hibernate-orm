@@ -164,7 +164,7 @@ dependencyResolutionManagement {
         dbLibs {
             String h2Version = settings.ext.find( "gradle.libs.versions.h2" )
             if ( h2Version == null ) {
-                h2Version = "2.1.214"
+                h2Version = "2.2.220"
             }
             String h2gisVersion = settings.ext.find( "gradle.libs.versions.h2gis" )
             if ( h2gisVersion == null ) {

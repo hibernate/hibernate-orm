@@ -19,7 +19,6 @@ description = 'Hibernate\'s core ORM functionality'
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'org.hibernate.orm.antlr'
 apply plugin: 'org.hibernate.matrix-test'
-apply plugin: 'org.hibernate.orm.build.properties'
 
 configurations {
     tests {
@@ -319,14 +318,6 @@ javadoc {
         overview = 'src/main/javadoc/overview.html'
         stylesheetFile = new File(projectDir, 'src/main/javadoc/stylesheet.css')
     }
-}
-
-task collectConfigProperties { task ->
-    description 'Collect config properties'
-
-    tasks.generateConfigsProperties.javadocsBaseLink = 'https://docs.jboss.org/hibernate/orm/' + rootProject.ormVersion.family + '/javadocs/'
-
-    dependsOn tasks.generateConfigsProperties
 }
 
 tasks.sourcesJar.dependsOn ':hibernate-core:generateGraphParser'

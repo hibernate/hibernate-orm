@@ -128,7 +128,7 @@ ext {
                         'jdbc.driver': 'com.mysql.jdbc.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + ':4000/hibernate_orm_test',
                         'connection.init_sql' : ''
                 ],
                 oracle : [

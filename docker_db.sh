@@ -799,6 +799,7 @@ tidb_5_1() {
         echo "Waiting for TiDB to start..."
         sleep 3
     done
+    $CONTAINER_CLI run --link tidb:tidb -it --rm docker.io/mysql:8.0.31 mysql -htidb -P4000 -uroot -e "create database hibernate_orm_test; create user 'hibernate_orm_test' identified by 'hibernate_orm_test'; grant all on hibernate_orm_test.* to 'hibernate_orm_test';"
     if [ "$n" -ge 5 ]; then
       echo "TiDB failed to start and configure after 15 seconds"
     else

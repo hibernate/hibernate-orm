@@ -41,7 +41,6 @@ stage('Configure') {
 // 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ),
 		new BuildEnvironment( node: 's390x' ),
 		new BuildEnvironment( dbName: 'tidb', node: 'tidb',
-				additionalOptions: '-DdbHost=localhost:4000',
 				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
 		new BuildEnvironment( testJdkVersion: '17' ),
 		// We want to enable preview features when testing newer builds of OpenJDK:

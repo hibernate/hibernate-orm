@@ -7,52 +7,78 @@
 package org.hibernate.orm.properties;
 
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Set;
-import java.util.function.BiConsumer;
+import java.nio.file.Files;
+import java.util.Map;
+import java.util.SortedMap;
+import java.util.SortedSet;
 
-public class AsciiDocWriter implements BiConsumer<Set<ConfigurationProperty>, Writer> {
+import org.gradle.api.Project;
+import org.gradle.api.file.RegularFile;
 
-	private final String anchor;
-	private final String title;
+public class AsciiDocWriter {
+	public static final String ANCHOR_BASE = "settings-";
+	public static final String ANCHOR_START = "[[" + ANCHOR_BASE;
 
-	public AsciiDocWriter(String anchor, String title) {
-		this.anchor = anchor;
-		this.title = title;
+	public static void writeToFile(
+			SortedMap<SettingsDocSection, SortedSet<SettingDescriptor>> settingDescriptorMap,
+			RegularFile outputFile,
+			Project project) {
+		final File outputFileAsFile = outputFile.getAsFile();
+		try {
+			Files.createDirectories( outputFileAsFile.getParentFile().toPath() );
+		}
+		catch (IOException e) {
+			throw new RuntimeException( "Unable to prepare output directory for writing", e );
+		}
+
+		try ( FileWriter fileWriter = new FileWriter( outputFileAsFile ) ) {
+			write( settingDescriptorMap, fileWriter, project );
+		}
+		catch (IOException e) {
+			throw new RuntimeException( "Failed to produce asciidoc output for collected properties", e );
+		}
 	}
 
-	@Override
-	public void accept(Set<ConfigurationProperty> properties, Writer writer) {
-		try {
-			tryToWriteLine( writer, "[[configuration-properties-aggregated-", anchor, "]]" );
-			tryToWriteLine( writer, "=== ", title );
+	private static void write(
+			SortedMap<SettingsDocSection, SortedSet<SettingDescriptor>> settingDescriptorMap,
+			FileWriter writer,
+			Project project) throws IOException {
+		for ( Map.Entry<SettingsDocSection, SortedSet<SettingDescriptor>> entry : settingDescriptorMap.entrySet() ) {
+			final SettingsDocSection sectionDescriptor = entry.getKey();
+			final SortedSet<SettingDescriptor> sectionSettingDescriptors = entry.getValue();
+
+			final Project sourceProject = project.getRootProject().project( sectionDescriptor.getProjectPath() );
+
+			// write an anchor in the form `[[settings-{moduleName}]]`, e.g. `[[settings-hibernate-core]]`
+			tryToWriteLine( writer, ANCHOR_START, sourceProject.getName(), "]]" );
+			tryToWriteLine( writer, "=== ", sourceProject.getDescription() );
+
 			writer.write( '\n' );
-			for ( ConfigurationProperty el : properties ) {
-				String key = el.key();
-				writer.write( "[[" );
-				writer.write( "configuration-properties-aggregated-" );
-				writer.write( el.anchorPrefix() );
-				writer.write( key.replaceAll( "[^\\w-.]", "-" ) );
+
+			for ( SettingDescriptor settingDescriptor : sectionSettingDescriptors ) {
+				writer.write( ANCHOR_START );
+				writer.write( settingDescriptor.getName() );
 				writer.write( "]] " );
 
 				writer.write( '`' );
-				writer.write( key );
+				writer.write( settingDescriptor.getName() );
 				writer.write( '`' );
 				writer.write( "::\n" );
 
-				writer.write( el.javadoc() );
+				writer.write( settingDescriptor.getJavadoc() );
 
 				writer.write( '\n' );
 			}
+
 			writer.write( '\n' );
-		}
-		catch (IOException e) {
-			throw new RuntimeException( "Unable to create asciidoc output", e );
 		}
 	}
 
-	private void tryToWriteLine(Writer writer, String prefix, String value, String... other) {
+	private static void tryToWriteLine(Writer writer, String prefix, String value, String... other) {
 		try {
 			writer.write( prefix );
 			writer.write( value );

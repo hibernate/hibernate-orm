@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -120,7 +119,6 @@ import static org.hibernate.cfg.AvailableSettings.PASS;
 import static org.hibernate.cfg.AvailableSettings.PERSISTENCE_UNIT_NAME;
 import static org.hibernate.cfg.AvailableSettings.SCANNER_DISCOVERY;
 import static org.hibernate.cfg.AvailableSettings.SESSION_FACTORY_NAME;
-import static org.hibernate.cfg.AvailableSettings.TC_CLASSLOADER;
 import static org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.URL;
 import static org.hibernate.cfg.AvailableSettings.USER;
@@ -468,53 +466,62 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			}
 		}
 
-
-		// ClassLoaders ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// NOTE: See BootstrapServiceRegistryBuilder#build.  providedClassLoaderService and providedClassLoaders are
-		// mutually exclusive concepts, with priority given to the former
-
-		if ( providedClassLoaderService != null ) {
-			bsrBuilder.applyClassLoaderService( providedClassLoaderService );
-		}
-		else {
-			if ( persistenceUnit.getClassLoader() != null ) {
-				bsrBuilder.applyClassLoader( persistenceUnit.getClassLoader() );
-			}
-
-			if ( providedClassLoader != null ) {
-				bsrBuilder.applyClassLoader( providedClassLoader );
-			}
-
-			final Object classLoadersSetting = integrationSettings.get( CLASSLOADERS );
-			if ( classLoadersSetting != null ) {
-				if ( classLoadersSetting instanceof Collection) {
-					@SuppressWarnings("unchecked")
-					Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) classLoadersSetting;
-					for ( ClassLoader classLoader : classLoaders ) {
-						bsrBuilder.applyClassLoader( classLoader );
-					}
-				}
-				else if ( classLoadersSetting.getClass().isArray() ) {
-					for ( ClassLoader classLoader : (ClassLoader[]) classLoadersSetting ) {
-						bsrBuilder.applyClassLoader( classLoader );
-					}
-				}
-				else if ( classLoadersSetting instanceof ClassLoader ) {
-					bsrBuilder.applyClassLoader( (ClassLoader) classLoadersSetting );
-				}
-			}
-                        
-			//configurationValues not assigned yet, using directly the properties of the PU
-			Properties puProperties = persistenceUnit.getProperties();
-			if( puProperties != null ) {
-				final String tcclLookupPrecedence = puProperties.getProperty( TC_CLASSLOADER );
-				if( tcclLookupPrecedence != null ) {
-					bsrBuilder.applyTcclLookupPrecedence( TcclLookupPrecedence.valueOf( tcclLookupPrecedence.toUpperCase( Locale.ROOT ) ) );
-				}
-			}
-		}
+		configureClassLoading( integrationSettings, providedClassLoader, providedClassLoaderService, bsrBuilder );
 
 		return bsrBuilder.build();
+	}
+
+	/**
+	 * @implNote {@code providedClassLoaderService} and {@code providedClassLoaders}
+	 * are mutually exclusive concepts, with priority given to the former.
+	 *
+	 * @see BootstrapServiceRegistryBuilder#build
+	 */
+	private void configureClassLoading(
+			Map<?, ?> integrationSettings,
+			ClassLoader providedClassLoader,
+			ClassLoaderService providedClassLoaderService,
+			BootstrapServiceRegistryBuilder bsrBuilder) {
+		if ( providedClassLoaderService != null ) {
+			bsrBuilder.applyClassLoaderService( providedClassLoaderService );
+			return;
+		}
+
+		if ( persistenceUnit.getClassLoader() != null ) {
+			bsrBuilder.applyClassLoader( persistenceUnit.getClassLoader() );
+		}
+
+		if ( providedClassLoader != null ) {
+			bsrBuilder.applyClassLoader( providedClassLoader );
+		}
+
+		final Object classLoadersSetting = integrationSettings.get( CLASSLOADERS );
+		if ( classLoadersSetting != null ) {
+			if ( classLoadersSetting instanceof Collection) {
+				@SuppressWarnings("unchecked")
+				Collection<ClassLoader> classLoaders = (Collection<ClassLoader>) classLoadersSetting;
+				for ( ClassLoader classLoader : classLoaders ) {
+					bsrBuilder.applyClassLoader( classLoader );
+				}
+			}
+			else if ( classLoadersSetting.getClass().isArray() ) {
+				for ( ClassLoader classLoader : (ClassLoader[]) classLoadersSetting ) {
+					bsrBuilder.applyClassLoader( classLoader );
+				}
+			}
+			else if ( classLoadersSetting instanceof ClassLoader ) {
+				bsrBuilder.applyClassLoader( (ClassLoader) classLoadersSetting );
+			}
+		}
+
+		//configurationValues not assigned yet, using directly the properties of the PU
+		final Properties puProperties = persistenceUnit.getProperties();
+		if ( puProperties != null ) {
+			final TcclLookupPrecedence tcclLookupPrecedence = TcclLookupPrecedence.from( puProperties );
+			if ( tcclLookupPrecedence != null ) {
+				bsrBuilder.applyTcclLookupPrecedence( tcclLookupPrecedence );
+			}
+		}
 	}
 
 	private void applyIntegrationProvider(Map<?,?> integrationSettings, BootstrapServiceRegistryBuilder bsrBuilder) {

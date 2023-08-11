@@ -17,7 +17,7 @@ import org.hibernate.query.sqm.SqmExpressible;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> implements SqmParameter<T> {
-	private final boolean canBeMultiValued;
+	private boolean canBeMultiValued;
 
 	public AbstractSqmParameter(
 			boolean canBeMultiValued,
@@ -54,6 +54,10 @@ public abstract class AbstractSqmParameter<T> extends AbstractSqmExpression<T> i
 	@Override
 	public boolean allowMultiValuedBinding() {
 		return canBeMultiValued;
+	}
+
+	public void disallowMultiValuedBinding() {
+		this.canBeMultiValued = false;
 	}
 
 	@Override

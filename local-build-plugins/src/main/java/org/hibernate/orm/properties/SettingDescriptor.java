@@ -20,19 +20,16 @@ public class SettingDescriptor {
 	private final String settingsClassName;
 	private final String settingFieldName;
 	private final String javadoc;
-	private final String javadocLink;
 
 	public SettingDescriptor(
 			String name,
 			String settingsClassName,
 			String settingFieldName,
-			String javadoc,
-			String javadocLink) {
+			String javadoc) {
 		this.name = name;
 		this.settingsClassName = settingsClassName;
 		this.settingFieldName = settingFieldName;
 		this.javadoc = javadoc;
-		this.javadocLink = javadocLink;
 	}
 
 	/**
@@ -55,9 +52,5 @@ public class SettingDescriptor {
 
 	public String getSettingFieldName() {
 		return settingFieldName;
-	}
-
-	public String getJavadocLink() {
-		return javadocLink;
 	}
 }

@@ -19,4 +19,10 @@
             </basic>
         </attributes>
     </entity>
+    <entity class="HibernateOrmSpecificAttributesMappingTest$MyEntityWithTenantId">
+        <tenant-id name="tenantId"/>
+        <attributes>
+            <id name="id"/>
+        </attributes>
+    </entity>
 </entity-mappings>

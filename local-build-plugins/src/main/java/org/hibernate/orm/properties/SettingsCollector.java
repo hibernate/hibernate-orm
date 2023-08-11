@@ -10,7 +10,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -97,8 +96,7 @@ public class SettingsCollector {
 								className,
 								simpleFieldName,
 								publishedJavadocsUrl
-						),
-						Utils.fieldJavadocLink( publishedJavadocsUrl, className, simpleFieldName )
+						)
 				);
 				docSectionSettings.add( settingDescriptor );
 			}
@@ -194,13 +192,14 @@ public class SettingsCollector {
 			String className,
 			String simpleFieldName,
 			String publishedJavadocsUrl) {
-		Elements javadocsToConvert = cleanupFieldJavadocElement( fieldJavadocElement, className, publishedJavadocsUrl );
+		Elements javadocsToConvert = cleanupFieldJavadocElement( fieldJavadocElement, className, simpleFieldName, publishedJavadocsUrl );
 
 		return new DomToAsciidocConverter( javadocsToConvert ).convert();
 	}
 
 	private static Elements cleanupFieldJavadocElement(Element fieldJavadocElement,
 			String className,
+			String simpleFieldName,
 			String publishedJavadocsUrl) {
 		// Before proceeding let's make sure that the javadoc structure is the one that we expect:
 		if ( !isValidFieldJavadocStructure( fieldJavadocElement ) ) {
@@ -216,13 +215,13 @@ public class SettingsCollector {
 		if ( actualJavadocs != null ) {
 			usefulDocsPart.add( actualJavadocs );
 		}
-		cleanupSeeLinks( fieldJavadocElement.selectFirst( "ul.see-list" ) )
-				.ifPresent( ul -> {
-					// add a see also
-					usefulDocsPart.add( new Element( "div" ).appendChild( new Element( "b" ).text( "See also:" ) ) );
-					// add the list of links:
-					usefulDocsPart.add( ul );
-				} );
+		usefulDocsPart.add( new Element( "div" )
+				.appendChild( new Element( "b" ).text( "See: " ) )
+				.appendChild( new Element( "a" )
+						.attr(
+								"href",
+								Utils.fieldJavadocLink( publishedJavadocsUrl, className, simpleFieldName )
+						).text( Utils.withoutPackagePrefix( className ) + "." + simpleFieldName ) ) );
 
 		return usefulDocsPart;
 	}
@@ -256,23 +255,6 @@ public class SettingsCollector {
 		return link.hasClass( "externalLink" )
 				|| link.hasClass( "external-link" )
 				|| href != null && href.startsWith( "http" );
-	}
-
-	private static Optional<Element> cleanupSeeLinks(Element seeList) {
-		if ( seeList == null ) {
-			return Optional.empty();
-		}
-		Element ul = new Element( "ul" );
-		for ( Element li : seeList.select( "li" ) ) {
-			Element link = li.selectFirst( "a" );
-			if ( link != null && "Constant Field Values".equals( link.text() ) ) {
-				// means it's a link to "self", pointing to the same constant and its javadocs
-				// so we just ignore it:
-				continue;
-			}
-			ul.appendChild( li );
-		}
-		return ul.children().isEmpty() ? Optional.empty() : Optional.of( ul );
 	}
 
 	private static boolean isValidFieldJavadocStructure(Element fieldJavadocElement) {

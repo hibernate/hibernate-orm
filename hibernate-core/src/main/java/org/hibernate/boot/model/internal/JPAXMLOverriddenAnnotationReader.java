@@ -32,6 +32,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Subselect;
+import org.hibernate.annotations.TenantId;
 import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.annotations.common.annotationfactory.AnnotationDescriptor;
@@ -98,6 +99,7 @@ import org.hibernate.boot.jaxb.mapping.JaxbStoredProcedureParameter;
 import org.hibernate.boot.jaxb.mapping.JaxbSynchronizedTable;
 import org.hibernate.boot.jaxb.mapping.JaxbTable;
 import org.hibernate.boot.jaxb.mapping.JaxbTableGenerator;
+import org.hibernate.boot.jaxb.mapping.JaxbTenantId;
 import org.hibernate.boot.jaxb.mapping.JaxbUniqueConstraint;
 import org.hibernate.boot.jaxb.mapping.JaxbUuidGenerator;
 import org.hibernate.boot.jaxb.mapping.JaxbVersion;
@@ -1604,6 +1606,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			annotationList.add( AnnotationFactory.create( basic ) );
 			getType( annotationList, element.getType() );
 			getJdbcTypeCode( annotationList, element.getJdbcTypeCode() );
+			getTenantId( annotationList, element );
 		}
 		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {
 			//no annotation presence constraint, basic is the default
@@ -1627,6 +1630,13 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			addIfNotNull( annotationList, annotation );
 			annotation = getPhysicalAnnotation( AssociationOverrides.class );
 			addIfNotNull( annotationList, annotation );
+		}
+	}
+
+	private void getTenantId(List<Annotation> annotationList, JaxbBasic element) {
+		if ( element instanceof JaxbTenantId ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( TenantId.class );
+			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}
 
@@ -1737,6 +1747,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		if ( entityListener != null ) {
 			elementsForProperty.collectLifecycleCallbacksIfMatching( entityListener );
 		}
+		elementsForProperty.collectTenantIdIfMatching( managedType );
 	}
 
 	private void getId(List<Annotation> annotationList, XMLContext.Default defaults) {

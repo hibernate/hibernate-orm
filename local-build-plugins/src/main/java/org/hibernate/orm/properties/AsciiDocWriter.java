@@ -74,18 +74,7 @@ public class AsciiDocWriter {
 
 				writer.write( settingDescriptor.getJavadoc() );
 
-				writer.write( '\n' );
-
-				writer.write(
-						String.format(
-								"**See:** %s[%s.%s]\n\n",
-								settingDescriptor.getJavadocLink(),
-								Utils.withoutPackagePrefix( settingDescriptor.getSettingsClassName() ),
-								settingDescriptor.getSettingFieldName()
-						)
-				);
-
-				writer.write( "'''\n" );
+				writer.write( "\n\n'''\n" );
 			}
 
 			writer.write( '\n' );

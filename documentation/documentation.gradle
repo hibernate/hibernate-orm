@@ -225,9 +225,10 @@ def aggregateJavadocsTask = tasks.register( "aggregateJavadocs", Javadoc ) {
 
 		links = [
 				'https://docs.oracle.com/en/java/javase/11/docs/api/',
-				'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
-				'https://docs.jboss.org/cdi/api/2.0/',
-				'https://jakarta.ee/specifications/platform/8/apidocs/'
+				'https://jakarta.ee/specifications/bean-validation/3.0/apidocs/',
+				'https://jakarta.ee/specifications/cdi/4.0/apidocs/',
+				'https://jakarta.ee/specifications/platform/9/apidocs/',
+				'https://www.javadoc.io/doc/javax.cache/cache-api/1.0.0/'
 		]
 
 		options.addStringOption( 'Xdoclint:none', '-quiet' )

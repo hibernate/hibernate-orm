@@ -774,7 +774,9 @@ Unsurprisingly, `substring()` returns a substring of the given string.
 
 [source, hql]
 ----
-select substring(title, 0, position(' for Dummies')) from Book
+select substring(title, 1, position(' for Dummies' in title)) from Book         /* JPQL-style */
+
+select substring(title from 1 for position(' for Dummies' in title)) from Book  /* ANSI SQL-style */
 ----
 
 [discrete]
@@ -795,10 +797,27 @@ Its BNF is funky:
 
 [source, antlrv4]
 ----
-trimFunction
-    : "TRIM" "(" trimSpecification? trimCharacter? "FROM"? expression ")" ;
-trimSpecification
-    : "LEADING" | "TRAILING" | "BOTH" ;
+"TRIM" "(" (("LEADING" | "TRAILING" | "BOTH")? trimCharacter? "FROM")? expression ")" ;
+----
+
+[discrete]
+===== Padding strings
+The `pad()` function has a syntax inspired by `trim()`.
+
+[source,hql]
+----
+select concat(pad(b.title with 40 trailing '.'),
+              pad(a.firstName with 10 leading),
+              pad(a.lastName with 10 leading))
+from Book as b
+    join b.authors as a
+----
+
+Its BNF is given by:
+
+[source, antlrv4]
+----
+"PAD" "(" expression "WITH" expression ("LEADING" | "TRAILING") padCharacter? ")"
 ----
 
 [discrete]
@@ -1357,7 +1376,7 @@ As you can surely guess, `not exists` evaluates to true if the thing to the righ
 [[collection-expressions-exists-example]]
 [source, hql]
 ----
-from Author where exists element(books)
+from Author where exists elements(books)
 ----
 [source, hql]
 ----

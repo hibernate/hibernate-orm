@@ -53,6 +53,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
@@ -1137,6 +1138,11 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	@Override
 	public Object visitFieldLiteral(SqmFieldLiteral<?> sqmFieldLiteral) {
+		return null;
+	}
+
+	@Override
+	public <N extends Number> Object visitHqlNumericLiteral(SqmHqlNumericLiteral<N> numericLiteral) {
 		return null;
 	}
 

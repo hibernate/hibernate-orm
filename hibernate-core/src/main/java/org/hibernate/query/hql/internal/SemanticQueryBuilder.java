@@ -145,6 +145,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
@@ -1791,7 +1792,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmExpression<?> visitParameterOrIntegerLiteral(HqlParser.ParameterOrIntegerLiteralContext ctx) {
 		if ( ctx.INTEGER_LITERAL() != null ) {
-			return integralLiteral( ctx.INTEGER_LITERAL().getText() );
+			return integerLiteral( ctx.INTEGER_LITERAL().getText() );
 		}
 		else {
 			return (SqmExpression<?>) ctx.parameter().accept( this );
@@ -1801,10 +1802,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public SqmExpression<?> visitParameterOrNumberLiteral(HqlParser.ParameterOrNumberLiteralContext ctx) {
 		if ( ctx.INTEGER_LITERAL() != null ) {
-			return integralLiteral( ctx.INTEGER_LITERAL().getText() );
+			return integerLiteral( ctx.INTEGER_LITERAL().getText() );
 		}
 		if ( ctx.FLOAT_LITERAL() != null ) {
-			return numericLiteral( ctx.FLOAT_LITERAL().getText() );
+			return floatLiteral( ctx.FLOAT_LITERAL().getText() );
 		}
 		if ( ctx.DOUBLE_LITERAL() != null ) {
 			return doubleLiteral( ctx.DOUBLE_LITERAL().getText() );
@@ -1816,9 +1817,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( firstChild instanceof TerminalNode ) {
 			switch ( ( (TerminalNode) firstChild ).getSymbol().getType() ) {
 				case HqlParser.INTEGER_LITERAL:
-					return integralLiteral( firstChild.getText() );
+					return integerLiteral( firstChild.getText() );
 				case HqlParser.FLOAT_LITERAL:
-					return numericLiteral( firstChild.getText() );
+					return floatLiteral( firstChild.getText() );
 				case HqlParser.DOUBLE_LITERAL:
 					return doubleLiteral( firstChild.getText() );
 				default:
@@ -3224,7 +3225,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 		switch ( node.getSymbol().getType() ) {
 			case HqlParser.INTEGER_LITERAL:
-				return integralLiteral( text );
+				return integerLiteral( text );
 			case HqlParser.LONG_LITERAL:
 				return longLiteral( text );
 			case HqlParser.BIG_INTEGER_LITERAL:
@@ -3232,7 +3233,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			case HqlParser.HEX_LITERAL:
 				return hexLiteral( text );
 			case HqlParser.FLOAT_LITERAL:
-				return numericLiteral( text );
+				return floatLiteral( text );
 			case HqlParser.DOUBLE_LITERAL:
 				return doubleLiteral( text );
 			case HqlParser.BIG_DECIMAL_LITERAL:
@@ -3281,7 +3282,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			case HqlParser.JAVA_STRING_LITERAL:
 				return javaStringLiteral( node.getText() );
 			case HqlParser.INTEGER_LITERAL:
-				return integralLiteral( node.getText() );
+				return integerLiteral( node.getText() );
 			case HqlParser.LONG_LITERAL:
 				return longLiteral( node.getText() );
 			case HqlParser.BIG_INTEGER_LITERAL:
@@ -3289,7 +3290,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			case HqlParser.HEX_LITERAL:
 				return hexLiteral( node.getText() );
 			case HqlParser.FLOAT_LITERAL:
-				return numericLiteral( node.getText() );
+				return floatLiteral( node.getText() );
 			case HqlParser.DOUBLE_LITERAL:
 				return doubleLiteral( node.getText() );
 			case HqlParser.BIG_DECIMAL_LITERAL:
@@ -3621,235 +3622,64 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		);
 	}
 
-	private SqmLiteral<? extends Number> integralLiteral(String text) {
-		final String integralText = text.replace( "_", "" );
-		final int decimalNumbers = integralText.length() - ( integralText.charAt( 0 ) == '-' ? 1 : 0 );
-		if ( decimalNumbers > 19 ) {
-			try {
-				final BigInteger value = new BigInteger( integralText );
-				return new SqmLiteral<>(
-						value,
-						resolveExpressibleTypeBasic( BigInteger.class ),
-						creationContext.getNodeBuilder()
-				);
-			}
-			catch (NumberFormatException e) {
-				throw new LiteralNumberFormatException(
-						"Unable to convert sqm literal [" + text + "] to BigInteger",
-						e
-				);
-			}
-		}
-		else if ( decimalNumbers > 10 ) {
-			try {
-				final Long value = Long.valueOf( integralText );
-				return new SqmLiteral<>(
-						value,
-						resolveExpressibleTypeBasic( Long.class ),
-						creationContext.getNodeBuilder()
-				);
-			}
-			catch (NumberFormatException e) {
-				try {
-					final BigInteger value = new BigInteger( integralText );
-					return new SqmLiteral<>(
-							value,
-							resolveExpressibleTypeBasic( BigInteger.class ),
-							creationContext.getNodeBuilder()
-					);
-				}
-				catch (NumberFormatException e2) {
-					final LiteralNumberFormatException exception = new LiteralNumberFormatException(
-							"Unable to convert sqm literal [" + text + "] to Long or BigInteger",
-							e
-					);
-					exception.addSuppressed( e );
-					exception.addSuppressed( e2 );
-					throw exception;
-				}
-			}
-		}
-		try {
-			final Integer value = Integer.valueOf( integralText );
-			return new SqmLiteral<>(
-					value,
-					resolveExpressibleTypeBasic( Integer.class ),
-					creationContext.getNodeBuilder()
-			);
-		}
-		catch (NumberFormatException e) {
-			try {
-				final Long value = Long.valueOf( integralText );
-				return new SqmLiteral<>(
-						value,
-						resolveExpressibleTypeBasic( Long.class ),
-						creationContext.getNodeBuilder()
-				);
-			}
-			catch (NumberFormatException e2) {
-				try {
-					final BigInteger value = new BigInteger( integralText );
-					return new SqmLiteral<>(
-							value,
-							resolveExpressibleTypeBasic( BigInteger.class ),
-							creationContext.getNodeBuilder()
-					);
-				}
-				catch (NumberFormatException e3) {
-					final LiteralNumberFormatException exception = new LiteralNumberFormatException(
-							"Unable to convert sqm literal [" + text + "] to Integer, Long or BigInteger",
-							e
-					);
-					exception.addSuppressed( e );
-					exception.addSuppressed( e2 );
-					exception.addSuppressed( e3 );
-					throw exception;
-				}
-			}
-		}
+	private SqmHqlNumericLiteral<Integer> integerLiteral(String text) {
+		return new SqmHqlNumericLiteral<>(
+				text.replace( "_", "" ),
+				integerDomainType,
+				creationContext.getNodeBuilder()
+		);
 	}
 
-	private SqmLiteral<Long> longLiteral(String text) {
-		final String originalText = text;
-		try {
-			if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
-				text = text.substring( 0, text.length() - 1 ).replace("_", "");
-			}
-			final Long value = Long.valueOf( text );
-			return new SqmLiteral<>(
-					value,
-					resolveExpressibleTypeBasic( Long.class ),
-					creationContext.getNodeBuilder()
-			);
-		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + originalText + "] to Long",
-					e
-			);
-		}
+	private SqmHqlNumericLiteral<Long> longLiteral(String text) {
+		assert text.endsWith( "l" ) || text.endsWith( "L" );
+		return new SqmHqlNumericLiteral<>(
+				text.substring( 0, text.length() - 1 ).replace( "_", "" ),
+				resolveExpressibleTypeBasic( Long.class ),
+				creationContext.getNodeBuilder()
+		);
 	}
 
-	private SqmLiteral<? extends Number> hexLiteral(String text) {
-		final String originalText = text;
-		text = text.substring( 2 );
-		try {
-			if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
-				text = text.substring( 0, text.length() - 1 );
-				final long value = Long.parseUnsignedLong( text, 16 );
-				return new SqmLiteral<>(
-						value,
-						resolveExpressibleTypeBasic( Long.class ),
-						creationContext.getNodeBuilder()
-				);
-			}
-			else {
-				final int value = Integer.parseUnsignedInt( text, 16 );
-				return new SqmLiteral<>(
-						value,
-						resolveExpressibleTypeBasic( Integer.class ),
-						creationContext.getNodeBuilder()
-				);
-			}
-		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + originalText + "]",
-					e
-			);
-		}
+	private SqmHqlNumericLiteral<BigInteger> bigIntegerLiteral(String text) {
+		assert text.endsWith( "bi" ) || text.endsWith( "BI" );
+		return new SqmHqlNumericLiteral<>(
+				text.substring( 0, text.length() - 2 ).replace( "_", "" ),
+				resolveExpressibleTypeBasic( BigInteger.class ),
+				creationContext.getNodeBuilder()
+		);
 	}
 
-	private SqmLiteral<BigInteger> bigIntegerLiteral(String text) {
-		final String originalText = text;
-		try {
-			if ( text.endsWith( "bi" ) || text.endsWith( "BI" ) ) {
-				text = text.substring( 0, text.length() - 2 );
-			}
-			return new SqmLiteral<>(
-					new BigInteger( text ),
-					resolveExpressibleTypeBasic( BigInteger.class  ),
-					creationContext.getNodeBuilder()
-			);
-		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + originalText + "] to BigInteger",
-					e
-			);
-		}
+	private SqmHqlNumericLiteral<? extends Number> floatLiteral(String text) {
+		assert text.endsWith( "f" ) || text.endsWith( "F" );
+		return new SqmHqlNumericLiteral<>(
+				text.substring( 0, text.length() - 1 ).replace( "_", "" ),
+				resolveExpressibleTypeBasic( Float.class ),
+				creationContext.getNodeBuilder()
+		);
 	}
 
-	private SqmLiteral<? extends Number> numericLiteral(String text) {
-		final String numericText = text.replace( "_", "" );
-		final char lastChar = text.charAt( text.length() - 1 );
-		if ( lastChar == 'f' || lastChar == 'F' ) {
-			try {
-				return new SqmLiteral<>(
-						Float.valueOf( numericText ),
-						resolveExpressibleTypeBasic( Float.class ),
-						creationContext.getNodeBuilder()
-				);
-			}
-			catch (NumberFormatException e) {
-				throw new LiteralNumberFormatException(
-						"Unable to convert sqm literal [" + text + "] to Float",
-						e
-				);
-			}
+	private SqmHqlNumericLiteral<Double> doubleLiteral(String text) {
+		return new SqmHqlNumericLiteral<>(
+				text.replace( "_", "" ),
+				resolveExpressibleTypeBasic( Double.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmHqlNumericLiteral<BigDecimal> bigDecimalLiteral(String text) {
+		assert text.endsWith( "bd" ) || text.endsWith( "BD" );
+		return new SqmHqlNumericLiteral<>(
+				text.substring( 0, text.length() - 2 ).replace( "_", "" ),
+				resolveExpressibleTypeBasic( BigDecimal.class ),
+				creationContext.getNodeBuilder()
+		);
+	}
+
+	private SqmHqlNumericLiteral<? extends Number> hexLiteral(String text) {
+		if ( text.endsWith( "l" ) || text.endsWith( "L" ) ) {
+			return longLiteral( text );
 		}
 		else {
-			// Treat numeric literals without a type suffix like BigDecimal
-			// according to the JPA spec 4.6.1 and SQL spec 5.3
-			try {
-				return new SqmLiteral<>(
-						new BigDecimal( numericText ),
-						resolveExpressibleTypeBasic( BigDecimal.class ),
-						creationContext.getNodeBuilder()
-				);
-			}
-			catch (NumberFormatException e) {
-				throw new LiteralNumberFormatException(
-						"Unable to convert sqm literal [" + text + "] to BigDecimal",
-						e
-				);
-			}
-		}
-	}
-
-	private SqmLiteral<Double> doubleLiteral(String text) {
-		try {
-			return new SqmLiteral<>(
-					Double.valueOf( text ),
-					resolveExpressibleTypeBasic( Double.class ),
-					creationContext.getNodeBuilder()
-			);
-		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + text + "] to Double",
-					e
-			);
-		}
-	}
-
-	private SqmLiteral<BigDecimal> bigDecimalLiteral(String text) {
-		final String originalText = text;
-		try {
-			if ( text.endsWith( "bd" ) || text.endsWith( "BD" ) ) {
-				text = text.substring( 0, text.length() - 2 );
-			}
-			return new SqmLiteral<>(
-					new BigDecimal( text ),
-					resolveExpressibleTypeBasic( BigDecimal.class ),
-					creationContext.getNodeBuilder()
-			);
-		}
-		catch (NumberFormatException e) {
-			throw new LiteralNumberFormatException(
-					"Unable to convert sqm literal [" + originalText + "] to BigDecimal",
-					e
-			);
+			return integerLiteral( text );
 		}
 	}
 

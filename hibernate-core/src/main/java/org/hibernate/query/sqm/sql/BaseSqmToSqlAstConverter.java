@@ -216,6 +216,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
@@ -338,6 +339,7 @@ import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
 import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
 import org.hibernate.sql.ast.tree.from.FromClause;
@@ -5504,6 +5506,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							)
 			);
 		}
+	}
+
+	@Override
+	public <N extends Number> UnparsedNumericLiteral<N> visitHqlNumericLiteral(SqmHqlNumericLiteral<N> numericLiteral) {
+		MappingModelExpressible<?> mappingModelExpressible = resolveInferredType();
+		if ( mappingModelExpressible == null ) {
+			mappingModelExpressible = determineCurrentExpressible( numericLiteral );
+		}
+
+		return new UnparsedNumericLiteral<>(
+				numericLiteral.getLiteralValue(),
+				( (BasicValuedMapping) mappingModelExpressible ).getJdbcMapping()
+		);
 	}
 
 	private MappingModelExpressible<?> getKeyExpressible(JdbcMappingContainer mappingModelExpressible) {

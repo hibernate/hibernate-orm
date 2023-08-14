@@ -63,14 +63,12 @@ public class AsciiDocWriter {
 			writer.write( '\n' );
 
 			for ( SettingDescriptor settingDescriptor : sectionSettingDescriptors ) {
-				writer.write( ANCHOR_START );
-				writer.write( settingDescriptor.getName() );
-				writer.write( "]] " );
+				writeSettingAnchor( settingDescriptor, writer );
 
-				writer.write( '`' );
-				writer.write( settingDescriptor.getName() );
-				writer.write( '`' );
+				writeSettingName( settingDescriptor, writer );
 				writer.write( "::\n" );
+
+				writeLifecycleNotes( settingDescriptor, writer );
 
 				writer.write( settingDescriptor.getJavadoc() );
 
@@ -79,6 +77,42 @@ public class AsciiDocWriter {
 
 			writer.write( '\n' );
 		}
+	}
+
+	private static void writeLifecycleNotes(SettingDescriptor settingDescriptor, FileWriter writer) throws IOException {
+		// NOTE : at the moment, there is at least one setting that is both which fundamentally seems wrong
+		if ( settingDescriptor.isIncubating() ) {
+			writer.write( "NOTE:: _This setting is considered incubating_\n\n" );
+		}
+		if ( settingDescriptor.isDeprecated() ) {
+			writer.write( "WARN:: _This setting is considered deprecated_\n\n" );
+		}
+	}
+
+	private static void writeSettingName(SettingDescriptor settingDescriptor, FileWriter writer) throws IOException {
+		writer.write( "`" );
+		if ( settingDescriptor.isDeprecated() ) {
+			writer.write( "[.line-through]#" );
+		}
+		else {
+			writer.write( '*' );
+		}
+
+		writer.write( settingDescriptor.getName() );
+
+		if ( settingDescriptor.isDeprecated() ) {
+			writer.write( '#' );
+		}
+		else {
+			writer.write( '*' );
+		}
+		writer.write( '`' );
+	}
+
+	private static void writeSettingAnchor(SettingDescriptor settingDescriptor, Writer writer) throws IOException {
+		writer.write( ANCHOR_START );
+		writer.write( settingDescriptor.getName() );
+		writer.write( "]] " );
 	}
 
 	private static void tryToWriteLine(Writer writer, String prefix, String value, String... other) {

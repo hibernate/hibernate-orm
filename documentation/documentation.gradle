@@ -216,7 +216,7 @@ def aggregateJavadocsTask = tasks.register( "aggregateJavadocs", Javadoc ) {
 	maxMemory = '512m'
 	configure( options ) {
 		overview = 'src/javadoc/overview.html'
-		stylesheetFile = new File( projectDir, 'src/javadoc/stylesheet.css' )
+		stylesheetFile = project.file( 'src/javadoc/stylesheet.css' )
 		windowTitle = 'Hibernate JavaDocs'
 		docTitle = "Hibernate JavaDoc ($project.version)"
 		bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."

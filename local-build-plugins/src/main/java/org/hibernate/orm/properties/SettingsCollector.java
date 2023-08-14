@@ -96,7 +96,9 @@ public class SettingsCollector {
 								className,
 								simpleFieldName,
 								publishedJavadocsUrl
-						)
+						),
+						interpretDeprecation( fieldJavadocElement ),
+						interpretIncubation( fieldJavadocElement )
 				);
 				docSectionSettings.add( settingDescriptor );
 			}
@@ -177,6 +179,28 @@ public class SettingsCollector {
 			return value.substring( 1, value.length() - 1 );
 		}
 		return value;
+	}
+
+	private static boolean interpretDeprecation(Element fieldJavadocElement) {
+		// A setting is considered deprecated with either `@Deprecated`
+		final Element deprecationDiv = fieldJavadocElement.selectFirst( ".deprecation-block" );
+		// presence of this <div/> indicates the member is deprecated
+		if ( deprecationDiv != null ) {
+			return true;
+		}
+
+		// or `@Remove`
+		final Element removeMarkerElement = fieldJavadocElement.selectFirst( "[href*=Remove.html]" );
+		if ( removeMarkerElement != null ) {
+			return true;
+		}
+
+		return false;
+	}
+
+	private static boolean interpretIncubation(Element fieldJavadocElement) {
+		final Element incubatingMarkerElement = fieldJavadocElement.selectFirst( "[href*=Incubating.html]" );
+		return incubatingMarkerElement != null;
 	}
 
 	/**

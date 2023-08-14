@@ -53,8 +53,8 @@ public class JavaModulePlugin implements Plugin<Project> {
 		final SourceSet testSourceSet = sourceSets.getByName( SourceSet.TEST_SOURCE_SET_NAME );
 
 		final JavaCompile mainCompileTask = (JavaCompile) project.getTasks().getByName( mainSourceSet.getCompileJavaTaskName() );
-		mainCompileTask.setSourceCompatibility( jdkVersionsConfig.getTestCompileVersion().toString() );
-		mainCompileTask.setTargetCompatibility( jdkVersionsConfig.getTestCompileVersion().toString() );
+		mainCompileTask.setSourceCompatibility( jdkVersionsConfig.getMainCompileVersion().toString() );
+		mainCompileTask.setTargetCompatibility( jdkVersionsConfig.getMainCompileVersion().toString() );
 
 		final JavaCompile testCompileTask = (JavaCompile) project.getTasks().getByName( testSourceSet.getCompileJavaTaskName() );
 		testCompileTask.setSourceCompatibility( jdkVersionsConfig.getTestCompileVersion().toString() );

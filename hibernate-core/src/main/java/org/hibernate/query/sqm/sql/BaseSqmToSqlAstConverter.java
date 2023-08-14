@@ -6245,6 +6245,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final BinaryArithmeticOperator operator = expression.getOperator();
 		final SqmExpression<?> lhs = SqmExpressionHelper.getActualExpression( expression.getLeftHandOperand() );
 		final SqmExpression<?> rhs = SqmExpressionHelper.getActualExpression( expression.getRightHandOperand() );
+		final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
 
 		// we have a date or timestamp somewhere to
 		// the right of us, so we need to restructure
@@ -6277,7 +6278,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 				Expression timestamp = adjustedTimestamp;
 				SqmExpressible<?> timestampType = adjustedTimestampType;
+				inferrableTypeAccessStack.push( () -> determineValueMapping( rhs, fromClauseIndex ) );
 				adjustedTimestamp = toSqlExpression( lhs.accept( this ) );
+				inferrableTypeAccessStack.pop();
 				JdbcMappingContainer type = adjustedTimestamp.getExpressionType();
 				if ( type instanceof SqmExpressible) {
 					adjustedTimestampType = (SqmExpressible<?>) type;
@@ -6293,6 +6296,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					negativeAdjustment = !negativeAdjustment;
 				}
 				try {
+					inferrableTypeAccessStack.push( () -> determineValueMapping( lhs, fromClauseIndex ) );
 					final Object result = rhs.accept( this );
 					if ( result instanceof SqlTupleContainer ) {
 						return result;
@@ -6324,6 +6328,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					);
 				}
 				finally {
+					inferrableTypeAccessStack.pop();
 					if ( operator == SUBTRACT ) {
 						negativeAdjustment = !negativeAdjustment;
 					}
@@ -6342,15 +6347,19 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// x * (d1 - d2) => x * d1 - x * d2
 				// -x * (d1 + d2) => - x * d1 - x * d2
 				// -x * (d1 - d2) => - x * d1 + x * d2
+				inferrableTypeAccessStack.push( () -> determineValueMapping( rhs, fromClauseIndex ) );
 				Expression duration = toSqlExpression( lhs.accept( this ) );
+				inferrableTypeAccessStack.pop();
 				Expression scale = adjustmentScale;
 				boolean negate = negativeAdjustment;
 				adjustmentScale = applyScale( duration );
 				negativeAdjustment = false; //was sucked into the scale
 				try {
+					inferrableTypeAccessStack.push( () -> determineValueMapping( lhs, fromClauseIndex ) );
 					return rhs.accept( this );
 				}
 				finally {
+					inferrableTypeAccessStack.pop();
 					adjustmentScale = scale;
 					negativeAdjustment = negate;
 				}
@@ -6379,8 +6388,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final SqmExpression<?> lhs = SqmExpressionHelper.getActualExpression( expression.getLeftHandOperand() );
 		final SqmExpression<?> rhs = SqmExpressionHelper.getActualExpression( expression.getRightHandOperand() );
 
-		Expression left = getActualExpression( cleanly( () -> toSqlExpression( lhs.accept( this ) ) ) );
-		Expression right = getActualExpression( cleanly( () -> toSqlExpression( rhs.accept( this ) ) ) );
+		final FromClauseIndex fromClauseIndex = fromClauseIndexStack.getCurrent();
+		inferrableTypeAccessStack.push( () -> determineValueMapping( rhs, fromClauseIndex ) );
+		final Expression left = getActualExpression( cleanly( () -> toSqlExpression( lhs.accept( this ) ) ) );
+		inferrableTypeAccessStack.pop();
+		inferrableTypeAccessStack.push( () -> determineValueMapping( lhs, fromClauseIndex ) );
+		final Expression right = getActualExpression( cleanly( () -> toSqlExpression( rhs.accept( this ) ) ) );
+		inferrableTypeAccessStack.pop();
 
 		// The result of timestamp subtraction is always a `Duration`, unless a unit is applied
 		// So use SECOND granularity with fractions as that is what the `DurationJavaType` expects

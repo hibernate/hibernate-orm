@@ -24,6 +24,7 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -1584,6 +1585,22 @@ public class FunctionTests {
 //					assertEquals( LocalTime.of(5,30,25),
 //							session.createQuery("select time 5:30:46 - 21 second")
 //									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-17074")
+	public void testDurationArithmeticWithParameters(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(
+							1,
+							session.createQuery( "from EntityOfBasics e where (:date - e.theTimestamp) by day > 1" )
+									.setParameter( "date", Timestamp.valueOf( "2022-01-01 00:00:00" ) )
+									.getResultList()
+									.size()
+					);
 				}
 		);
 	}

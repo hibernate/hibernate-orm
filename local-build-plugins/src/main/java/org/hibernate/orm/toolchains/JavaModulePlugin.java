@@ -8,26 +8,22 @@ package org.hibernate.orm.toolchains;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.gradle.api.Action;
-import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
-import org.gradle.jvm.toolchain.JavaToolchainSpec;
-
-import static java.util.Arrays.asList;
 
 /**
  * @author Steve Ebersole
@@ -53,51 +49,68 @@ public class JavaModulePlugin implements Plugin<Project> {
 		final SourceSet testSourceSet = sourceSets.getByName( SourceSet.TEST_SOURCE_SET_NAME );
 
 		final JavaCompile mainCompileTask = (JavaCompile) project.getTasks().getByName( mainSourceSet.getCompileJavaTaskName() );
-		mainCompileTask.setSourceCompatibility( jdkVersionsConfig.getMainCompileVersion().toString() );
-		mainCompileTask.setTargetCompatibility( jdkVersionsConfig.getMainCompileVersion().toString() );
-
 		final JavaCompile testCompileTask = (JavaCompile) project.getTasks().getByName( testSourceSet.getCompileJavaTaskName() );
-		testCompileTask.setSourceCompatibility( jdkVersionsConfig.getTestCompileVersion().toString() );
-		testCompileTask.setTargetCompatibility( jdkVersionsConfig.getTestCompileVersion().toString() );
 
-		if ( jdkVersionsConfig.isExplicit() ) {
+		if ( !jdkVersionsConfig.isExplicitlyConfigured() ) {
+			mainCompileTask.setSourceCompatibility( jdkVersionsConfig.getMainReleaseVersion().toString() );
+			mainCompileTask.setTargetCompatibility( jdkVersionsConfig.getMainReleaseVersion().toString() );
+
+			testCompileTask.setSourceCompatibility( jdkVersionsConfig.getTestCompileVersion().toString() );
+			testCompileTask.setTargetCompatibility( jdkVersionsConfig.getTestCompileVersion().toString() );
+		}
+		else {
 			javaPluginExtension.getToolchain().getLanguageVersion().set( jdkVersionsConfig.getMainCompileVersion() );
 
-			prepareCompileTask( mainCompileTask, jdkVersionsConfig.getMainCompileVersion() );
-			prepareCompileTask( testCompileTask, jdkVersionsConfig.getTestCompileVersion() );
+			configureCompileTasks( project );
+			configureJavadocTasks( project );
+
+			configureCompileTask( mainCompileTask, jdkVersionsConfig.getMainReleaseVersion() );
+			configureCompileTask( testCompileTask, jdkVersionsConfig.getTestReleaseVersion() );
 
 			testCompileTask.getJavaCompiler().set(
-					toolchainService.compilerFor( new Action<JavaToolchainSpec>() {
-						@Override
-						public void execute(JavaToolchainSpec javaToolchainSpec) {
-							javaToolchainSpec.getLanguageVersion().set( jdkVersionsConfig.getTestCompileVersion() );
-						}
+					toolchainService.compilerFor( javaToolchainSpec -> {
+						javaToolchainSpec.getLanguageVersion().set( jdkVersionsConfig.getTestCompileVersion() );
 					} )
 			);
+		}
+	}
 
-			project.getTasks().withType( JavaCompile.class ).configureEach( new Action<JavaCompile>() {
-				@Override
-				public void execute(JavaCompile compileTask) {
-					getJvmArgs( compileTask ).addAll(
-							Arrays.asList(
-									project.property( "toolchain.compiler.jvmargs" ).toString().split( " " )
-							)
-					);
-					compileTask.doFirst(
-							new Action<Task>() {
-								@Override
-								public void execute(Task task) {
-									project.getLogger().lifecycle(
-											"Compiling with '%s'",
-											compileTask.getJavaCompiler().get().getMetadata().getInstallationPath()
-									);
-								}
+	private void configureCompileTask(JavaCompile compileTask, JavaLanguageVersion releaseVersion) {
+		final CompileOptions compileTaskOptions = compileTask.getOptions();
+		compileTaskOptions.getRelease().set( releaseVersion.asInt() );
+		// Needs add-opens because of https://github.com/gradle/gradle/issues/15538
+		compileTaskOptions.getForkOptions().getJvmArgs().add( "--add-opens" );
+		compileTaskOptions.getForkOptions().getJvmArgs().add( "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED" );
+	}
+
+	private void configureCompileTasks(Project project) {
+		project.getTasks().withType( JavaCompile.class ).configureEach( new Action<JavaCompile>() {
+			@Override
+			public void execute(JavaCompile compileTask) {
+				getJvmArgs( compileTask ).addAll(
+						Arrays.asList(
+								project.property( "toolchain.compiler.jvmargs" ).toString().split( " " )
+						)
+				);
+				compileTask.doFirst(
+						new Action<Task>() {
+							@Override
+							public void execute(Task task) {
+								project.getLogger().lifecycle(
+										"Compiling with '%s'",
+										compileTask.getJavaCompiler().get().getMetadata().getInstallationPath()
+								);
 							}
-					);
-				}
-			} );
+						}
+				);
+			}
+		} );
+	}
 
-			project.getTasks().withType( Javadoc.class ).configureEach( (javadocTask) -> {
+	private void configureJavadocTasks(Project project) {
+		project.getTasks().withType( Javadoc.class ).configureEach( new Action<Javadoc>() {
+			@Override
+			public void execute(Javadoc javadocTask) {
 				javadocTask.getOptions().setJFlags( javadocFlags( project ) );
 				javadocTask.doFirst( new Action<Task>() {
 					@Override
@@ -108,30 +121,14 @@ public class JavaModulePlugin implements Plugin<Project> {
 						);
 					}
 				} );
-			} );
-		}
+			}
+		} );
 	}
 
 	private static List<String> javadocFlags(Project project) {
 		final String jvmArgs = project.property( "toolchain.javadoc.jvmargs" ).toString();
 		final String[] splits = jvmArgs.split( " " );
 		return Arrays.asList( splits ).stream().filter( (split) -> !split.isEmpty() ).collect( Collectors.toList() );
-	}
-
-	private void prepareCompileTask(JavaCompile compileTask, JavaLanguageVersion version) {
-		compileTask.getJavaCompiler().set(
-				toolchainService.compilerFor( new Action<JavaToolchainSpec>() {
-					@Override
-					public void execute(JavaToolchainSpec javaToolchainSpec) {
-						javaToolchainSpec.getLanguageVersion().set( version );
-					}
-				} )
-		);
-
-		compileTask.getOptions().getRelease().set( version.asInt() );
-
-		// Needs add-opens because of https://github.com/gradle/gradle/issues/15538
-		getJvmArgs( compileTask ).addAll( asList( "--add-opens", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED" ) );
 	}
 
 	public static List<String> getJvmArgs(JavaCompile compileTask) {

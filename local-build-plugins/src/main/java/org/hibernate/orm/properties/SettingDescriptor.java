@@ -20,16 +20,22 @@ public class SettingDescriptor {
 	private final String settingsClassName;
 	private final String settingFieldName;
 	private final String javadoc;
+	private final boolean deprecated;
+	private final boolean incubating;
 
 	public SettingDescriptor(
 			String name,
 			String settingsClassName,
 			String settingFieldName,
-			String javadoc) {
+			String javadoc,
+			boolean deprecated,
+			boolean incubating) {
 		this.name = name;
 		this.settingsClassName = settingsClassName;
 		this.settingFieldName = settingFieldName;
 		this.javadoc = javadoc;
+		this.deprecated = deprecated;
+		this.incubating = incubating;
 	}
 
 	/**
@@ -52,5 +58,13 @@ public class SettingDescriptor {
 
 	public String getSettingFieldName() {
 		return settingFieldName;
+	}
+
+	public boolean isDeprecated() {
+		return deprecated;
+	}
+
+	public boolean isIncubating() {
+		return incubating;
 	}
 }

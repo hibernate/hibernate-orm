@@ -11,6 +11,7 @@ import org.hibernate.orm.test.query.sqm.domain.Person;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
+import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.predicate.SqmNullnessPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
@@ -80,8 +81,8 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 
 		assertThat( relationalPredicate.getSqmOperator(), is( ComparisonOperator.EQUAL ) );
 
-		assertThat( relationalPredicate.getRightHandExpression(), instanceOf( SqmLiteral.class ) );
-		assertThat( ( (SqmLiteral<?>) relationalPredicate.getRightHandExpression() ).getLiteralValue(), is( 311 ) );
+		assertThat( relationalPredicate.getRightHandExpression(), instanceOf( SqmHqlNumericLiteral.class ) );
+		assertThat( ( (SqmHqlNumericLiteral<?>) relationalPredicate.getRightHandExpression() ).getLiteralValue(), is( "311" ) );
 
 		assertThat( relationalPredicate.getLeftHandExpression(), instanceOf( SqmCollectionSize.class ) );
 
@@ -100,8 +101,8 @@ public class WhereClauseTests extends BaseSqmUnitTest {
 
 		assertThat( relationalPredicate.getSqmOperator(), is( ComparisonOperator.GREATER_THAN ) );
 
-		assertThat( relationalPredicate.getRightHandExpression(), instanceOf( SqmLiteral.class ) );
-		assertThat( ( (SqmLiteral<?>) relationalPredicate.getRightHandExpression() ).getLiteralValue(), is( 2 ) );
+		assertThat( relationalPredicate.getRightHandExpression(), instanceOf( SqmHqlNumericLiteral.class ) );
+		assertThat( ( (SqmHqlNumericLiteral<?>) relationalPredicate.getRightHandExpression() ).getLiteralValue(), is( "2" ) );
 
 		assertThat( relationalPredicate.getLeftHandExpression(), instanceOf( SqmPath.class ) );
 		final SqmPath<?> indexPath = (SqmPath<?>) relationalPredicate.getLeftHandExpression();

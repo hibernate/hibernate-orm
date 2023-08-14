@@ -33,17 +33,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  */
 public class SqmHqlNumericLiteral<N extends Number> extends AbstractSqmExpression<N> {
 	private final String literalValue;
-	private final TypeCategory typeCategory;
-
-	public SqmHqlNumericLiteral(
-			String literalValue,
-			TypeCategory typeCategory,
-			BasicDomainType<N> type,
-			NodeBuilder criteriaBuilder) {
-		super( type, criteriaBuilder );
-		this.literalValue = literalValue;
-		this.typeCategory = typeCategory;
-	}
+	private final NumericTypeCategory typeCategory;
 
 	public SqmHqlNumericLiteral(
 			String literalValue,
@@ -52,11 +42,21 @@ public class SqmHqlNumericLiteral<N extends Number> extends AbstractSqmExpressio
 		this( literalValue, interpretCategory( literalValue, type ), type, criteriaBuilder );
 	}
 
+	public SqmHqlNumericLiteral(
+			String literalValue,
+			NumericTypeCategory typeCategory,
+			BasicDomainType<N> type,
+			NodeBuilder criteriaBuilder) {
+		super( type, criteriaBuilder );
+		this.literalValue = literalValue;
+		this.typeCategory = typeCategory;
+	}
+
 	public String getLiteralValue() {
 		return literalValue;
 	}
 
-	public TypeCategory getTypeCategory() {
+	public NumericTypeCategory getTypeCategory() {
 		return typeCategory;
 	}
 
@@ -111,16 +111,7 @@ public class SqmHqlNumericLiteral<N extends Number> extends AbstractSqmExpressio
 		return new SqmHqlNumericLiteral<>( literalValue, typeCategory, getExpressible(), nodeBuilder() );
 	}
 
-	public enum TypeCategory {
-		INTEGER,
-		LONG,
-		BIG_INTEGER,
-		DOUBLE,
-		FLOAT,
-		BIG_DECIMAL
-	}
-
-	private static <N extends Number> TypeCategory interpretCategory(String literalValue, SqmExpressible<N> type) {
+	private static <N extends Number> NumericTypeCategory interpretCategory(String literalValue, SqmExpressible<N> type) {
 		assert type != null;
 
 		final JavaType<N> javaTypeDescriptor = type.getExpressibleJavaType();
@@ -129,28 +120,28 @@ public class SqmHqlNumericLiteral<N extends Number> extends AbstractSqmExpressio
 		final Class<N> javaTypeClass = javaTypeDescriptor.getJavaTypeClass();
 
 		if ( BigDecimal.class.equals( javaTypeClass ) ) {
-			return TypeCategory.BIG_DECIMAL;
+			return NumericTypeCategory.BIG_DECIMAL;
 		}
 
 		if ( Double.class.equals( javaTypeClass ) ) {
-			return TypeCategory.DOUBLE;
+			return NumericTypeCategory.DOUBLE;
 		}
 
 		if ( Float.class.equals( javaTypeClass ) ) {
-			return TypeCategory.FLOAT;
+			return NumericTypeCategory.FLOAT;
 		}
 
 		if ( BigInteger.class.equals( javaTypeClass ) ) {
-			return TypeCategory.BIG_INTEGER;
+			return NumericTypeCategory.BIG_INTEGER;
 		}
 
 		if ( Long.class.equals( javaTypeClass ) ) {
-			return TypeCategory.LONG;
+			return NumericTypeCategory.LONG;
 		}
 
 		if ( Short.class.equals( javaTypeClass )
 				|| Integer.class.equals( javaTypeClass ) ) {
-			return TypeCategory.INTEGER;
+			return NumericTypeCategory.INTEGER;
 		}
 
 		throw new TypeException( literalValue, javaTypeClass );

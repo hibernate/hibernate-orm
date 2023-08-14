@@ -3658,6 +3658,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmHqlNumericLiteral<Double> doubleLiteral(String text) {
+		if ( text.endsWith( "d" ) || text.endsWith( "D" ) ) {
+			text = text.substring( 0, text.length() - 1 );
+		}
 		return new SqmHqlNumericLiteral<>(
 				text.replace( "_", "" ),
 				resolveExpressibleTypeBasic( Double.class ),

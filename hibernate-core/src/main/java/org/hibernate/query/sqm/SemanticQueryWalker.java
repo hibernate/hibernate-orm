@@ -64,6 +64,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
@@ -282,6 +283,8 @@ public interface SemanticQueryWalker<T> {
 	T visitEnumLiteral(SqmEnumLiteral<?> sqmEnumLiteral);
 
 	T visitFieldLiteral(SqmFieldLiteral<?> sqmFieldLiteral);
+
+	<N extends Number> T visitHqlNumericLiteral(SqmHqlNumericLiteral<N> numericLiteral);
 
 	T visitTuple(SqmTuple<?> sqmTuple);
 

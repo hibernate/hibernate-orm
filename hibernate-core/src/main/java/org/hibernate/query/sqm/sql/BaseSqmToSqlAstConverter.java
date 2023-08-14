@@ -216,6 +216,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralEntityType;
@@ -338,6 +339,7 @@ import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.CorrelatedPluralTableGroup;
 import org.hibernate.sql.ast.tree.from.CorrelatedTableGroup;
 import org.hibernate.sql.ast.tree.from.FromClause;
@@ -5504,6 +5506,64 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							)
 			);
 		}
+	}
+
+	@Override
+	public <N extends Number> Expression visitHqlNumericLiteral(SqmHqlNumericLiteral<N> numericLiteral) {
+		final BasicValuedMapping inferredExpressible = (BasicValuedMapping) getInferredValueMapping();
+		final BasicValuedMapping expressible;
+		if ( inferredExpressible == null ) {
+			expressible = (BasicValuedMapping) determineCurrentExpressible( numericLiteral );
+		}
+		else {
+			expressible = inferredExpressible;
+		}
+
+		final JdbcMapping jdbcMapping = expressible.getJdbcMapping();
+		if ( jdbcMapping.getValueConverter() != null ) {
+			// special case where we need to parse the value in order to apply the conversion
+			return handleConvertedUnparsedNumericLiteral( numericLiteral, expressible );
+		}
+
+		return new UnparsedNumericLiteral<>( numericLiteral.getLiteralValue(), jdbcMapping );
+	}
+
+	private <N extends Number> Expression handleConvertedUnparsedNumericLiteral(
+			SqmHqlNumericLiteral<N> numericLiteral,
+			BasicValuedMapping expressible) {
+		//noinspection rawtypes
+		final BasicValueConverter valueConverter = expressible.getJdbcMapping().getValueConverter();
+		assert valueConverter != null;
+
+		final Number parsedValue = numericLiteral.getTypeCategory().parseLiteralValue( numericLiteral.getLiteralValue() );
+		final Object sqlLiteralValue;
+		if ( valueConverter.getDomainJavaType().isInstance( parsedValue ) ) {
+			//noinspection unchecked
+			sqlLiteralValue = valueConverter.toRelationalValue( parsedValue );
+		}
+		else if ( valueConverter.getRelationalJavaType().isInstance( parsedValue ) ) {
+			sqlLiteralValue = parsedValue;
+		}
+		else if ( Number.class.isAssignableFrom( valueConverter.getRelationalJavaType().getJavaTypeClass() ) ) {
+			//noinspection unchecked
+			sqlLiteralValue = valueConverter.getRelationalJavaType().coerce(
+					parsedValue,
+					creationContext.getSessionFactory()::getTypeConfiguration
+			);
+		}
+		else {
+			throw new SemanticException(
+					String.format(
+							Locale.ROOT,
+							"Literal type '%s' did not match domain type '%s' nor converted type '%s'",
+							parsedValue.getClass(),
+							valueConverter.getDomainJavaType().getJavaTypeClass().getName(),
+							valueConverter.getRelationalJavaType().getJavaTypeClass().getName()
+					)
+			);
+		}
+
+		return new QueryLiteral<>( sqlLiteralValue, expressible );
 	}
 
 	private MappingModelExpressible<?> getKeyExpressible(JdbcMappingContainer mappingModelExpressible) {

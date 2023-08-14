@@ -14,6 +14,26 @@ earlier versions, see any other pertinent migration guides as well.
 * link:{docsBase}/6.1/migration-guide/migration-guide.html[6.1 Migration guide]
 * link:{docsBase}/6.0/migration-guide/migration-guide.html[6.0 Migration guide]
 
+[[hql-numeric-literal-types]]
+== HQL Numeric Literal Types
+
+Version 3.2 of the Jakarta Persistence specification
+https://github.com/jakartaee/persistence/issues/423[clarifies] the interpretation of
+numeric literals with regard to type, explicitly aligning with the Java specification (as well
+as adopting Hibernate's long-standing `BigInteger` and `BigDecimal` suffixes).
+HQL and JPQL are domain/object-level queries, so that makes perfect sense.
+
+* `Integer` - 123
+* `Long` - 123l, 123L
+* `BigInteger` - 123bi, 123BI
+* `Double` - 123.4
+* `Float` - 123.4f, 123.4F
+* `BigDecimal` - 123.4bd, 123.4BD
+
+Hibernate 6.3 aligns with those interpretations, which may lead to different behavior
+from prior versions.
+
+
 [[batch-fetching-changes]]
 == Batch Fetching and LockMode
 
@@ -22,8 +42,9 @@ This because the lock mode is different from the one of the proxies in the batch
 
 E.g.
 
-`
+```java
 MyEntity proxy = session.getReference( MyEntity.class, 1 );
 MyEntity myEntity = session.find(MyEntity.class, 2, LockMode.WRITE);
-`
+```
+
 only the entity with id equals to 2 will be loaded but the proxy will not be initialized.

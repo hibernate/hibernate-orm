@@ -12,6 +12,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
+import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -57,7 +58,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 		assertThat( caseStatement.getFixture(), instanceOf( SqmPath.class ) );
 
 		assertThat( caseStatement.getOtherwise(), notNullValue() );
-		assertThat( caseStatement.getOtherwise(), instanceOf( SqmLiteral.class ) );
+		assertThat( caseStatement.getOtherwise(), instanceOf( SqmHqlNumericLiteral.class ) );
 
 		assertThat( caseStatement.getWhenFragments().size(), is(1) );
 	}
@@ -79,7 +80,7 @@ public class CaseExpressionsTest extends BaseSqmUnitTest {
 		);
 
 		assertThat( caseStatement.getOtherwise(), notNullValue() );
-		assertThat( caseStatement.getOtherwise(), instanceOf( SqmLiteral.class ) );
+		assertThat( caseStatement.getOtherwise(), instanceOf( SqmHqlNumericLiteral.class ) );
 
 		assertThat( caseStatement.getWhenFragments().size(), is(1) );
 	}

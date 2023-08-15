@@ -64,8 +64,8 @@ public class JavaModulePlugin implements Plugin<Project> {
 			javaPluginExtension.getToolchain().getLanguageVersion().set( jdkVersionsConfig.getMainCompileVersion() );
 
 			configureCompileTasks( project );
-			configureJavadocTasks( project );
 			configureTestTasks( project );
+			configureJavadocTasks( project, mainSourceSet );
 
 			configureCompileTask( mainCompileTask, jdkVersionsConfig.getMainReleaseVersion() );
 			configureCompileTask( testCompileTask, jdkVersionsConfig.getTestReleaseVersion() );
@@ -117,24 +117,6 @@ public class JavaModulePlugin implements Plugin<Project> {
 		} );
 	}
 
-	private void configureJavadocTasks(Project project) {
-		project.getTasks().withType( Javadoc.class ).configureEach( new Action<Javadoc>() {
-			@Override
-			public void execute(Javadoc javadocTask) {
-				javadocTask.getOptions().setJFlags( javadocFlags( project ) );
-				javadocTask.doFirst( new Action<Task>() {
-					@Override
-					public void execute(Task task) {
-						project.getLogger().lifecycle(
-								"Generating javadoc with '{}}'",
-								javadocTask.getJavadocTool().get().getMetadata().getInstallationPath()
-						);
-					}
-				} );
-			}
-		} );
-	}
-
 	private void configureTestTasks(Project project) {
 		project.getTasks().withType( Test.class ).configureEach( new Action<Test>() {
 			@Override
@@ -163,6 +145,21 @@ public class JavaModulePlugin implements Plugin<Project> {
 						}
 				);
 			}
+		} );
+	}
+
+	private void configureJavadocTasks(Project project, SourceSet mainSourceSet) {
+		project.getTasks().named( mainSourceSet.getJavadocTaskName(), Javadoc.class, (task) -> {
+			task.getOptions().setJFlags( javadocFlags( project ) );
+			task.doFirst( new Action<Task>() {
+				@Override
+				public void execute(Task t) {
+					project.getLogger().lifecycle(
+							"Generating javadoc with '{}'",
+							task.getJavadocTool().get().getMetadata().getInstallationPath()
+					);
+				}
+			} );
 		} );
 	}
 

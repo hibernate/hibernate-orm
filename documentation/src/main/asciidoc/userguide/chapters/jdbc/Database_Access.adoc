@@ -1,5 +1,5 @@
 [[database]]
-== Database access
+== Database Access
 
 [[database-connectionprovider]]
 === ConnectionProvider

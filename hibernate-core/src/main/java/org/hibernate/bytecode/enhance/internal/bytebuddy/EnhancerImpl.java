@@ -6,8 +6,6 @@
  */
 package org.hibernate.bytecode.enhance.internal.bytebuddy;
 
-import static net.bytebuddy.matcher.ElementMatchers.isDefaultFinalizer;
-
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
@@ -18,11 +16,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import jakarta.persistence.Access;
-import jakarta.persistence.AccessType;
-import jakarta.persistence.Transient;
-
 import org.hibernate.Version;
+import org.hibernate.bytecode.enhance.UnknownVersionException;
+import org.hibernate.bytecode.enhance.VersionMismatchException;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
 import org.hibernate.bytecode.enhance.spi.CollectionTracker;
@@ -48,6 +44,9 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Transient;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.annotation.AnnotationDescription;
 import net.bytebuddy.description.annotation.AnnotationList;
@@ -66,6 +65,8 @@ import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.StubMethod;
 import net.bytebuddy.pool.TypePool;
+
+import static net.bytebuddy.matcher.ElementMatchers.isDefaultFinalizer;
 
 public class EnhancerImpl implements Enhancer {
 
@@ -168,13 +169,16 @@ public class EnhancerImpl implements Enhancer {
 			log.debugf( "Skipping enhancement of [%s]: it's an interface", managedCtClass.getName() );
 			return null;
 		}
+
 		// can't effectively enhance records
 		if ( managedCtClass.isRecord() ) {
 			log.debugf( "Skipping enhancement of [%s]: it's a record", managedCtClass.getName() );
 			return null;
 		}
-		// skip already enhanced classes
+
+		// handle already enhanced classes
 		if ( alreadyEnhanced( managedCtClass ) ) {
+			verifyVersions( managedCtClass, enhancementContext );
 			log.debugf( "Skipping enhancement of [%s]: already enhanced", managedCtClass.getName() );
 			return null;
 		}
@@ -378,6 +382,24 @@ public class EnhancerImpl implements Enhancer {
 			log.debugf( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );
 			return null;
 		}
+	}
+
+	private static void verifyVersions(TypeDescription managedCtClass, ByteBuddyEnhancementContext enhancementContext) {
+		final AnnotationDescription.Loadable<EnhancementInfo> existingInfo = managedCtClass
+				.getDeclaredAnnotations()
+				.ofType( EnhancementInfo.class );
+		if ( existingInfo == null ) {
+			throw new UnknownVersionException( managedCtClass );
+		}
+
+		final String enhancementVersion = extractVersion( existingInfo );
+		if ( !Version.getVersionString().equals( enhancementVersion ) ) {
+			throw new VersionMismatchException( managedCtClass, enhancementVersion, Version.getVersionString() );
+		}
+	}
+
+	private static String extractVersion(AnnotationDescription.Loadable<EnhancementInfo> annotation) {
+		return annotation.load().version();
 	}
 
 	private PersistentAttributeTransformer createTransformer(TypeDescription typeDescription) {

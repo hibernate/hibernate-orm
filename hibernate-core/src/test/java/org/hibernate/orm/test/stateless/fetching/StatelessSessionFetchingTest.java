@@ -105,13 +105,14 @@ public class StatelessSessionFetchingTest {
 		scope.inStatelessTransaction(
 				session -> {
 					final Query query = session.createQuery( "from Task t join fetch t.resource join fetch t.user" );
-					final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-					while ( scrollableResults.next() ) {
-						Task taskRef = (Task) scrollableResults.get();
-						assertTrue( Hibernate.isInitialized( taskRef ) );
-						assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
-						assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
-						assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+					try (ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
+						while ( scrollableResults.next() ) {
+							Task taskRef = (Task) scrollableResults.get();
+							assertTrue( Hibernate.isInitialized( taskRef ) );
+							assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
+							assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
+							assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+						}
 					}
 				}
 		);
@@ -148,13 +149,14 @@ public class StatelessSessionFetchingTest {
 		scope.inStatelessTransaction(
 				session -> {
 					final Query query = session.createQuery( "from Task t join fetch t.resource join fetch t.user" );
-					final ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-					while ( scrollableResults.next() ) {
-						Task taskRef = (Task) scrollableResults.get();
-						assertTrue( Hibernate.isInitialized( taskRef ) );
-						assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
-						assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
-						assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+					try (ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
+						while ( scrollableResults.next() ) {
+							Task taskRef = (Task) scrollableResults.get();
+							assertTrue( Hibernate.isInitialized( taskRef ) );
+							assertTrue( Hibernate.isInitialized( taskRef.getUser() ) );
+							assertTrue( Hibernate.isInitialized( taskRef.getResource() ) );
+							assertFalse( Hibernate.isInitialized( taskRef.getResource().getOwner() ) );
+						}
 					}
 				}
 		);
@@ -189,21 +191,22 @@ public class StatelessSessionFetchingTest {
 		scope.inStatelessTransaction(
 				session -> {
 					final Query query = session.createQuery( "select p from Producer p join fetch p.products" );
-					final ScrollableResults scrollableResults = getScrollableResults(
+					try (ScrollableResults scrollableResults = getScrollableResults(
 							query,
 							scope.getSessionFactory()
 									.getJdbcServices()
 									.getDialect()
-					);
+					)) {
 
-					while ( scrollableResults.next() ) {
-						Producer producer = (Producer) scrollableResults.get();
-						assertTrue( Hibernate.isInitialized( producer ) );
-						assertTrue( Hibernate.isInitialized( producer.getProducts() ) );
+						while ( scrollableResults.next() ) {
+							Producer producer = (Producer) scrollableResults.get();
+							assertTrue( Hibernate.isInitialized( producer ) );
+							assertTrue( Hibernate.isInitialized( producer.getProducts() ) );
 
-						for ( Product product : producer.getProducts() ) {
-							assertTrue( Hibernate.isInitialized( product ) );
-							assertFalse( Hibernate.isInitialized( product.getVendor() ) );
+							for ( Product product : producer.getProducts() ) {
+								assertTrue( Hibernate.isInitialized( product ) );
+								assertFalse( Hibernate.isInitialized( product.getVendor() ) );
+							}
 						}
 					}
 				}

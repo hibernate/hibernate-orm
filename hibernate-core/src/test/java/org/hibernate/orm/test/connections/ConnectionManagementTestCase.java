@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.connections;
 
+import org.hibernate.ScrollableResults;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
 import org.hibernate.engine.spi.SessionImplementor;
@@ -134,19 +135,21 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 		Session sessionUnderTest = getSessionUnderTest();
 
 		// force the connection to be retained
-		sessionUnderTest.createQuery( "from Silly" ).scroll().next();
+		try (ScrollableResults sr = sessionUnderTest.createQuery( "from Silly" ).scroll()) {
+			sr.next();
 
-		try {
-			SerializationHelper.serialize( sessionUnderTest );
+			try {
+				SerializationHelper.serialize( sessionUnderTest );
 
-			fail( "Serialization of connected session allowed!" );
-		}
-		catch( IllegalStateException e ) {
-			// expected behaviour
-		}
-		finally {
-			release( sessionUnderTest );
-			done();
+				fail( "Serialization of connected session allowed!" );
+			}
+			catch (IllegalStateException e) {
+				// expected behaviour
+			}
+			finally {
+				release( sessionUnderTest );
+				done();
+			}
 		}
 	}
 
@@ -247,18 +250,19 @@ public abstract class ConnectionManagementTestCase extends BaseNonConfigCoreFunc
 		sessionUnderTest.save( silly );
 		sessionUnderTest.flush();
 
-		sessionUnderTest.createQuery( "from Silly" ).scroll();
+		try (ScrollableResults sr = sessionUnderTest.createQuery( "from Silly" ).scroll()) {
 
-		disconnect( sessionUnderTest );
-		SerializationHelper.serialize( sessionUnderTest );
-		checkSerializedState( sessionUnderTest );
+			disconnect( sessionUnderTest );
+			SerializationHelper.serialize( sessionUnderTest );
+			checkSerializedState( sessionUnderTest );
 
-		reconnect( sessionUnderTest );
-		sessionUnderTest.delete( silly );
-		sessionUnderTest.flush();
+			reconnect( sessionUnderTest );
+			sessionUnderTest.delete( silly );
+			sessionUnderTest.flush();
 
-		release( sessionUnderTest );
-		done();
+			release( sessionUnderTest );
+			done();
+		}
 	}
 
 	/**

@@ -25,8 +25,9 @@ public class ProcedureCallImplTest {
 		scope.inTransaction( em -> {
 			em.createNativeQuery("CREATE ALIAS GET_RANDOM_VALUE FOR \"java.lang.Math.random\";").executeUpdate();
 			Query query = em.createStoredProcedureQuery("GET_RANDOM_VALUE");
-			Stream stream = query.getResultStream();
-			Assert.assertEquals(1, stream.count());
+			try (Stream stream = query.getResultStream()) {
+				Assert.assertEquals( 1, stream.count() );
+			}
 		} );
 	}
 }

@@ -455,10 +455,10 @@ public class SQLFunctionsInterSystemsTest extends BaseCoreFunctionalTestCase {
 			q.setParameter( "count", new Integer( -1 ) );
 			assertTrue( q.list().size() == 1 );
 
-			ScrollableResults sr = s.createQuery( "from Simple s" ).scroll();
-			sr.next();
-			sr.get();
-			sr.close();
+			try (ScrollableResults sr = s.createQuery( "from Simple s" ).scroll()) {
+				sr.next();
+				sr.get();
+			}
 
 			s.delete( other );
 			s.delete( simple );

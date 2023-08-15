@@ -96,6 +96,9 @@ public class SqmHqlNumericLiteral<N extends Number> extends AbstractSqmExpressio
 				sb.append( "l" );
 				break;
 			}
+			default: {
+				// nothing to do for double/integer
+			}
 		}
 	}
 

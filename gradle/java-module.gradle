@@ -177,26 +177,6 @@ if ( toolsJar.exists() ) {
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Testing
-
-if ( jdkVersions.explicitlyConfigured ) {
-	tasks.test {
-		// Configure version of Java tools
-		javaLauncher = javaToolchains.launcherFor {
-			languageVersion = gradle.ext.javaVersions.test.launcher
-		}
-
-		// Configure JVM Options
-		jvmArgs( getProperty( 'toolchain.launcher.jvmargs' ).toString().split( ' ' ) )
-		if ( project.hasProperty( 'test.jdk.launcher.args' ) ) {
-			jvmArgs( project.getProperty( 'test.jdk.launcher.args' ).toString().split( ' ' ) )
-		}
-
-		// Display version of Java tools
-		doFirst {
-			logger.lifecycle "Testing with '${javaLauncher.get().metadata.installationPath}'"
-		}
-	}
-}
 class HeapDumpPathProvider implements CommandLineArgumentProvider {
 	@OutputDirectory
 	Provider<Directory> path

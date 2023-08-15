@@ -138,13 +138,14 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					final String qry = "select d from D d";
 
 					final Query query = session.createQuery( qry );
-					final ScrollableResults scrollableResults = getScrollableResults( query );
-					while ( scrollableResults.next() ) {
-						final DEntity dEntity = (DEntity) scrollableResults.get();
-						assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
-						assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
-						assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
-						assertTrue( Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ) );
+					try (ScrollableResults scrollableResults = getScrollableResults( query )) {
+						while ( scrollableResults.next() ) {
+							final DEntity dEntity = (DEntity) scrollableResults.get();
+							assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
+							assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyString" ) );
+							assertFalse( Hibernate.isPropertyInitialized( dEntity, "lazyStringBlobGroup" ) );
+							assertTrue( Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ) );
+						}
 					}
 				}
 		);
@@ -231,12 +232,13 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					final String qry = "select e from E e join fetch e.d";
 
 					final Query query = session.createQuery( qry );
-					final ScrollableResults scrollableResults = getScrollableResults( query );
-					while ( scrollableResults.next() ) {
-						final EEntity eEntity = (EEntity) scrollableResults.get();
-						final DEntity dEntity = eEntity.getD();
-						assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
-						assertTrue( Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ) );
+					try (ScrollableResults scrollableResults = getScrollableResults( query )) {
+						while ( scrollableResults.next() ) {
+							final EEntity eEntity = (EEntity) scrollableResults.get();
+							final DEntity dEntity = eEntity.getD();
+							assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
+							assertTrue( Hibernate.isPropertyInitialized( dEntity, "nonLazyString" ) );
+						}
 					}
 				}
 		);
@@ -251,14 +253,15 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 							"join fetch d.g";
 
 					final Query query = session.createQuery( qry );
-					final ScrollableResults scrollableResults = getScrollableResults( query );
-					int i = 0;
-					while ( scrollableResults.next() ) {
-						i++;
-						final DEntity dEntity = (DEntity) scrollableResults.get();
-						assertThat( dEntity.getBs().size(), is( 2 ) );
+					try (ScrollableResults scrollableResults = getScrollableResults( query )) {
+						int i = 0;
+						while ( scrollableResults.next() ) {
+							i++;
+							final DEntity dEntity = (DEntity) scrollableResults.get();
+							assertThat( dEntity.getBs().size(), is( 2 ) );
+						}
+						assertThat( i, is( 1 ) );
 					}
-					assertThat( i, is( 1 ) );
 				}
 		);
 
@@ -267,9 +270,10 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					final String qry = "select g from G g join fetch g.dEntities";
 
 					final Query query = session.createQuery( qry );
-					final ScrollableResults scrollableResults = getScrollableResults( query );
-					while ( scrollableResults.next() ) {
-						final Object o = scrollableResults.get();
+					try (ScrollableResults scrollableResults = getScrollableResults( query )) {
+						while ( scrollableResults.next() ) {
+							final Object o = scrollableResults.get();
+						}
 					}
 				}
 		);
@@ -296,16 +300,17 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 							"join fetch d.g";
 
 					final Query query = session.createQuery( qry );
-					final ScrollableResults scrollableResults = getScrollableResults( query );
-					int i = 0;
-					while ( scrollableResults.next() ) {
-						i++;
-						final Object[] result = (Object[]) scrollableResults.get();
-						final DEntity dEntity = (DEntity) result[0];
-						assertThat( dEntity.getBs().size(), is( 2 ) );
-						assertThat( result[1], is( "bla" ) );
+					try (ScrollableResults scrollableResults = getScrollableResults( query )) {
+						int i = 0;
+						while ( scrollableResults.next() ) {
+							i++;
+							final Object[] result = (Object[]) scrollableResults.get();
+							final DEntity dEntity = (DEntity) result[0];
+							assertThat( dEntity.getBs().size(), is( 2 ) );
+							assertThat( result[1], is( "bla" ) );
+						}
+						assertThat( i, is( 1 ) );
 					}
-					assertThat( i, is( 1 ) );
 				}
 		);
 	}

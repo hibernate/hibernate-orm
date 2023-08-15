@@ -130,8 +130,8 @@ tasks.withType( JavaCompile ) {
 
 if ( !jdkVersions.explicit ) {
 	tasks.withType( GroovyCompile ) {
-		sourceCompatibility = JavaVersion.toVersion( gradle.jdkVersions.baseline )
-		targetCompatibility = JavaVersion.toVersion( gradle.jdkVersions.baseline )
+		sourceCompatibility = JavaVersion.toVersion( jdkVersions.baseline )
+		targetCompatibility = JavaVersion.toVersion( jdkVersions.baseline )
 	}
 }
 else {

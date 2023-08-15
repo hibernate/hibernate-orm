@@ -122,7 +122,7 @@ public abstract class LoggingReportTask extends AbstractJandexAwareTask {
 
 	private IdRange calculateIdRange(AnnotationInstance msgLoggerAnnUsage, SubSystem subSystem) {
 		final ClassInfo loggerClassInfo = msgLoggerAnnUsage.target().asClass();
-		getProject().getLogger().lifecycle( "MessageLogger (`%s`) missing id-range", loggerClassInfo.simpleName() );
+		getProject().getLogger().lifecycle( "MessageLogger (`{}`) missing id-range", loggerClassInfo.simpleName() );
 
 		final List<AnnotationInstance> messageAnnUsages = loggerClassInfo.annotations( MSG_ANN_NAME );
 		if ( messageAnnUsages.isEmpty() ) {

@@ -49,7 +49,7 @@ if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
     //compileTestJava17Java {
     compileTestJava {
         javaCompiler = javaToolchains.compilerFor {
-            languageVersion = gradle.jdkVersions.test.compile
+            languageVersion = jdkVersions.test.compile
         }
         sourceCompatibility = 17
         targetCompatibility = 17
@@ -57,10 +57,10 @@ if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
 
     test {
         javaLauncher = javaToolchains.launcherFor {
-            languageVersion = gradle.ext.javaVersions.test.launcher
+            languageVersion = jdkVersions.test.launcher
         }
 
-        if ( gradle.ext.javaVersions.test.launcher.asInt() >= 19 ) {
+        if ( jdkVersions.test.launcher.asInt() >= 19 ) {
             logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
                                  " Setting 'net.bytebuddy.experimental=true'." )
             systemProperty 'net.bytebuddy.experimental', true

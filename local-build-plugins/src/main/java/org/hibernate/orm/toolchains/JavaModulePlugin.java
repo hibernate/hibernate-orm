@@ -22,6 +22,7 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
+import org.gradle.api.tasks.testing.Test;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 
@@ -50,6 +51,7 @@ public class JavaModulePlugin implements Plugin<Project> {
 
 		final JavaCompile mainCompileTask = (JavaCompile) project.getTasks().getByName( mainSourceSet.getCompileJavaTaskName() );
 		final JavaCompile testCompileTask = (JavaCompile) project.getTasks().getByName( testSourceSet.getCompileJavaTaskName() );
+		final Test testTask = (Test) project.getTasks().findByName( testSourceSet.getName() );
 
 		if ( !jdkVersionsConfig.isExplicitlyConfigured() ) {
 			mainCompileTask.setSourceCompatibility( jdkVersionsConfig.getMainReleaseVersion().toString() );
@@ -63,6 +65,7 @@ public class JavaModulePlugin implements Plugin<Project> {
 
 			configureCompileTasks( project );
 			configureJavadocTasks( project );
+			configureTestTasks( project );
 
 			configureCompileTask( mainCompileTask, jdkVersionsConfig.getMainReleaseVersion() );
 			configureCompileTask( testCompileTask, jdkVersionsConfig.getTestReleaseVersion() );
@@ -72,6 +75,13 @@ public class JavaModulePlugin implements Plugin<Project> {
 						javaToolchainSpec.getLanguageVersion().set( jdkVersionsConfig.getTestCompileVersion() );
 					} )
 			);
+			if ( testTask != null ) {
+				testTask.getJavaLauncher().set(
+						toolchainService.launcherFor( javaToolchainSpec -> {
+							javaToolchainSpec.getLanguageVersion().set( jdkVersionsConfig.getTestLauncherVersion() );
+						} )
+				);
+			}
 		}
 	}
 
@@ -97,7 +107,7 @@ public class JavaModulePlugin implements Plugin<Project> {
 							@Override
 							public void execute(Task task) {
 								project.getLogger().lifecycle(
-										"Compiling with '%s'",
+										"Compiling with '{}'",
 										compileTask.getJavaCompiler().get().getMetadata().getInstallationPath()
 								);
 							}
@@ -116,11 +126,42 @@ public class JavaModulePlugin implements Plugin<Project> {
 					@Override
 					public void execute(Task task) {
 						project.getLogger().lifecycle(
-								"Generating javadoc with '%s'",
+								"Generating javadoc with '{}}'",
 								javadocTask.getJavadocTool().get().getMetadata().getInstallationPath()
 						);
 					}
 				} );
+			}
+		} );
+	}
+
+	private void configureTestTasks(Project project) {
+		project.getTasks().withType( Test.class ).configureEach( new Action<Test>() {
+			@Override
+			public void execute(Test testTask) {
+				getJvmArgs( testTask ).addAll(
+						Arrays.asList(
+								project.property( "toolchain.launcher.jvmargs" ).toString().split( " " )
+						)
+				);
+				if ( project.hasProperty( "test.jdk.launcher.args" ) ) {
+					getJvmArgs( testTask ).addAll(
+							Arrays.asList(
+								project.getProperties().get( "test.jdk.launcher.args" ).toString().split( " " )
+							)
+					);
+				}
+				testTask.doFirst(
+						new Action<Task>() {
+							@Override
+							public void execute(Task task) {
+								project.getLogger().lifecycle(
+										"Testing with '{}'",
+										testTask.getJavaLauncher().get().getMetadata().getInstallationPath()
+								);
+							}
+						}
+				);
 			}
 		} );
 	}
@@ -139,6 +180,18 @@ public class JavaModulePlugin implements Plugin<Project> {
 		if ( existing == null ) {
 			final List<String> target = new ArrayList<>();
 			compileTask.getOptions().getForkOptions().setJvmArgs( target );
+			return target;
+		}
+		else {
+			return existing;
+		}
+	}
+
+	public static List<String> getJvmArgs(Test testTask) {
+		final List<String> existing = testTask.getJvmArgs();
+		if ( existing == null || !( existing instanceof ArrayList ) ) {
+			final List<String> target = new ArrayList<>();
+			testTask.setJvmArgs( target );
 			return target;
 		}
 		else {

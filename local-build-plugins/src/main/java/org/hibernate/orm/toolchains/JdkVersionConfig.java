@@ -124,10 +124,10 @@ public class JdkVersionConfig {
 			testCompileVersion = requireNonNullElse( explicitTestVersion, baselineJdkVersion );
 			mainReleaseVersion = baselineJdkVersion;
 
-			if ( testCompileVersion.asInt() > gradleJdkVersion.asInt() ) {
+			if ( testCompileVersion.asInt() > maxSupportedJdkVersion.asInt() ) {
 				System.out.println(
-						"[WARN] Gradle does not support bytecode version '${testCompilerVersion}'."
-								+ " Forcing test bytecode to version ${GRADLE_MAX_SUPPORTED_BYTECODE_VERSION}."
+						"[WARN] Gradle does not support bytecode version '" + testCompileVersion + "'."
+								+ " Forcing test bytecode to version " + maxSupportedJdkVersion + "."
 				);
 				testReleaseVersion = maxSupportedJdkVersion;
 			}
@@ -138,7 +138,7 @@ public class JdkVersionConfig {
 			testLauncherVersion = testCompileVersion;
 
 			return new JdkVersionConfig(
-					false,
+					true,
 					baselineJdkVersion,
 					mainCompileVersion,
 					mainReleaseVersion,

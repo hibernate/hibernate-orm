@@ -49,8 +49,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result ).isInstanceOf( Product.class );
 			}
 
-			{
-				final ScrollableResults<?> results = query.scroll();
+			try (ScrollableResults<?> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Object result = results.get();
 				assertThat( result ).isInstanceOf( Product.class );
@@ -71,8 +70,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result ).isNotNull();
 			}
 
-			{
-				final ScrollableResults<Product> results = query.scroll();
+			try (ScrollableResults<Product> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Product result = results.get();
 				assertThat( result ).isNotNull();
@@ -96,8 +94,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( (Object[]) result ).hasExactlyElementsOfTypes(Product.class, Vendor.class, Product.class, Vendor.class);
 			}
 
-			{
-				final ScrollableResults<?> results = query.scroll();
+			try (ScrollableResults<?> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Object result = results.get();
 				assertThat( result ).isNotNull();
@@ -153,8 +150,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result ).hasExactlyElementsOfTypes(Product.class, Vendor.class, Product.class, Vendor.class);
 			}
 
-			{
-				final ScrollableResults<Object[]> results = query.scroll();
+			try (ScrollableResults<Object[]> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Object[] result = results.get();
 				assertThat( results.next() ).isFalse();
@@ -182,8 +178,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result ).hasExactlyElementsOfTypes(Product.class, Vendor.class);
 			}
 
-			{
-				final ScrollableResults<Object[]> results = query.scroll();
+			try (final ScrollableResults<Object[]> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Object[] result = results.get();
 				assertThat( results.next() ).isFalse();
@@ -212,8 +207,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result[ 0 ] ).isInstanceOf( Product.class );
 			}
 
-			{
-				final ScrollableResults<Object[]> results = query.scroll();
+			try (ScrollableResults<Object[]> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Object[] result = results.get();
 				assertThat( results.next() ).isFalse();
@@ -237,8 +231,7 @@ public class ImplicitSelectWithJoinTests {
 				assertThat( result ).isNotNull();
 			}
 
-			{
-				final ScrollableResults<Product> results = query.scroll();
+			try (ScrollableResults<Product> results = query.scroll()) {
 				assertThat( results.next() ).isTrue();
 				final Product result = results.get();
 				assertThat( result ).isNotNull();

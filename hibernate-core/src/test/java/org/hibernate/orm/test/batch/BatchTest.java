@@ -92,14 +92,15 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 		s.setCacheMode( CacheMode.IGNORE );
 		t = s.beginTransaction();
 		int i = 0;
-		ScrollableResults sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
-				.scroll( ScrollMode.FORWARD_ONLY );
-		while ( sr.next() ) {
-			DataPoint dp = ( DataPoint ) sr.get();
-			dp.setDescription( "done!" );
-			if ( ++i % nBeforeFlush == 0 ) {
-				s.flush();
-				s.clear();
+		try (ScrollableResults sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
+				.scroll( ScrollMode.FORWARD_ONLY )) {
+			while ( sr.next() ) {
+				DataPoint dp = (DataPoint) sr.get();
+				dp.setDescription( "done!" );
+				if ( ++i % nBeforeFlush == 0 ) {
+					s.flush();
+					s.clear();
+				}
 			}
 		}
 		t.commit();
@@ -109,14 +110,15 @@ public class BatchTest extends BaseCoreFunctionalTestCase {
 		s.setCacheMode( CacheMode.IGNORE );
 		t = s.beginTransaction();
 		i = 0;
-		sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
-				.scroll( ScrollMode.FORWARD_ONLY );
-		while ( sr.next() ) {
-			DataPoint dp = ( DataPoint ) sr.get();
-			s.delete( dp );
-			if ( ++i % nBeforeFlush == 0 ) {
-				s.flush();
-				s.clear();
+		try (ScrollableResults sr = s.createQuery( "from DataPoint dp order by dp.x asc" )
+				.scroll( ScrollMode.FORWARD_ONLY )) {
+			while ( sr.next() ) {
+				DataPoint dp = (DataPoint) sr.get();
+				s.delete( dp );
+				if ( ++i % nBeforeFlush == 0 ) {
+					s.flush();
+					s.clear();
+				}
 			}
 		}
 		t.commit();

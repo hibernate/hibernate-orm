@@ -3267,17 +3267,17 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		assertTrue( ( (Map) results.get( 0 ) ).containsKey("descr") );
 		assertTrue( ( (Map) results.get( 0 ) ).containsKey("bw") );
 
-		ScrollableResults sr = session.createQuery( "select new map(an.description, an.bodyWeight) from Animal an" ).scroll();
-		assertTrue( "Incorrect result size", sr.next() );
-		obj = sr.get();
-		assertTrue( "Incorrect return type", obj instanceof Map );
-		assertEquals( "Incorrect return type", ( (Map) obj ).size(), 2 );
-		sr.close();
+		try (ScrollableResults sr = session.createQuery( "select new map(an.description, an.bodyWeight) from Animal an" ).scroll()) {
+			assertTrue( "Incorrect result size", sr.next() );
+			obj = sr.get();
+			assertTrue( "Incorrect return type", obj instanceof Map );
+			assertEquals( "Incorrect return type", ( (Map) obj ).size(), 2 );
+		}
 
-		sr = session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an" ).scroll();
-		assertTrue( "Incorrect result size", sr.next() );
-		assertTrue( "Incorrect return type", sr.get() instanceof Animal );
-		sr.close();
+		try (ScrollableResults sr = session.createQuery( "select new Animal(an.description, an.bodyWeight) from Animal an" ).scroll()) {
+			assertTrue( "Incorrect result size", sr.next() );
+			assertTrue( "Incorrect return type", sr.get() instanceof Animal );
+		}
 
 		// caching...
 		QueryStatistics stats = sessionFactory().getStatistics().getQueryStatistics( "select new Animal(an.description, an.bodyWeight) from Animal an" );
@@ -3558,13 +3558,12 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session = openSession();
 		t = session.beginTransaction();
 
-		ScrollableResults sr = session.createQuery( query )
-			     .setResultTransformer(Transformers.aliasToBean(Animal.class)).scroll();
-
-		assertTrue( "Incorrect result size", sr.next() );
-		assertTrue( "Incorrect return type", sr.get() instanceof Animal );
-		assertFalse( session.contains( sr.get() ) );
-		sr.close();
+		try (ScrollableResults sr = session.createQuery( query )
+			     .setResultTransformer(Transformers.aliasToBean(Animal.class)).scroll()) {
+			assertTrue( "Incorrect result size", sr.next() );
+			assertTrue( "Incorrect return type", sr.get() instanceof Animal );
+			assertFalse( session.contains( sr.get() ) );
+		}
 
 		t.commit();
 		session.close();
@@ -3621,12 +3620,11 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		session = openSession();
 		t = session.beginTransaction();
 
-		ScrollableResults sr = session.createQuery( query )
-				.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).scroll();
-
-		assertTrue( "Incorrect result size", sr.next() );
-		assertTrue( "Incorrect return type", sr.get() instanceof Map );
-		sr.close();
+		try (ScrollableResults sr = session.createQuery( query )
+				.setResultTransformer(Transformers.ALIAS_TO_ENTITY_MAP).scroll()) {
+			assertTrue( "Incorrect result size", sr.next() );
+			assertTrue( "Incorrect return type", sr.get() instanceof Map );
+		}
 
 		t.commit();
 		session.close();
@@ -3816,7 +3814,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			s.beginTransaction();
 			Query query = s.createQuery( hql );
 			preparer.prepare( query );
-			query.scroll();
+			query.scroll().close();
 			s.getTransaction().commit();
 			s.close();
 			return this;

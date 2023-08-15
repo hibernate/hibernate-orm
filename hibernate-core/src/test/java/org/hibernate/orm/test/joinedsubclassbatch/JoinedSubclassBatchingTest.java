@@ -106,24 +106,26 @@ public class JoinedSubclassBatchingTest {
 		} );
 
 		scope.inTransaction( s -> {
-			ScrollableResults sr = s.createQuery(
+			try (ScrollableResults sr = s.createQuery(
 							"select e from Employee e" )
-					.scroll( ScrollMode.FORWARD_ONLY );
+					.scroll( ScrollMode.FORWARD_ONLY )) {
 
-			while ( sr.next() ) {
-				Employee e = (Employee) sr.get();
-				e.setTitle( "Unknown" );
+				while ( sr.next() ) {
+					Employee e = (Employee) sr.get();
+					e.setTitle( "Unknown" );
+				}
 			}
 		} );
 
 		scope.inTransaction( s -> {
-			ScrollableResults sr = s.createQuery(
+			try (ScrollableResults sr = s.createQuery(
 							"select e from Employee e" )
-					.scroll( ScrollMode.FORWARD_ONLY );
+					.scroll( ScrollMode.FORWARD_ONLY )) {
 
-			while ( sr.next() ) {
-				Employee e = (Employee) sr.get();
-				s.delete( e );
+				while ( sr.next() ) {
+					Employee e = (Employee) sr.get();
+					s.delete( e );
+				}
 			}
 		} );
 	}

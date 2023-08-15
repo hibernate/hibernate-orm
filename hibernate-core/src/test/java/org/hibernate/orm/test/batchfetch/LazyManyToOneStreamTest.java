@@ -80,20 +80,21 @@ public class LazyManyToOneStreamTest {
 					QueryImplementor<Child> query = session
 							.createQuery( "select c from Child as c where c.parent.someField=:someField", Child.class )
 							.setParameter( "someField", FIELD_VALUE );
-					Stream<Child> resultStream = query.getResultStream();
+					try (Stream<Child> resultStream = query.getResultStream()) {
 
-					List<Child> children = resultStream.collect( Collectors.toList() );
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 1 );
-					assertThat( children.size() ).isEqualTo( 1 );
+						List<Child> children = resultStream.collect( Collectors.toList() );
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 1 );
+						assertThat( children.size() ).isEqualTo( 1 );
 
-					Parent parent = children.get( 0 ).getParent();
-					assertThat( parent ).isNotNull();
+						Parent parent = children.get( 0 ).getParent();
+						assertThat( parent ).isNotNull();
 
-					assertThat( Hibernate.isInitialized( parent ) ).isFalse();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 1 );
+						assertThat( Hibernate.isInitialized( parent ) ).isFalse();
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 1 );
 
-					assertThat( parent.getSomeField() ).isEqualTo( FIELD_VALUE );
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
+						assertThat( parent.getSomeField() ).isEqualTo( FIELD_VALUE );
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
+					}
 				}
 		);
 	}
@@ -106,29 +107,30 @@ public class LazyManyToOneStreamTest {
 				session -> {
 					QueryImplementor<Child> query = session
 							.createQuery( "select c from Child as c order by id", Child.class );
-					Stream<Child> resultStream = query.getResultStream();
+					try (Stream<Child> resultStream = query.getResultStream()) {
 
-					List<Child> children = resultStream.collect( Collectors.toList() );
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 1 );
+						List<Child> children = resultStream.collect( Collectors.toList() );
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 1 );
 
-					assertThat( children.size() ).isEqualTo( 2 );
+						assertThat( children.size() ).isEqualTo( 2 );
 
-					Parent parent = children.get( 0 ).getParent();
-					assertThat( parent ).isNotNull();
-					assertThat( Hibernate.isInitialized( parent ) ).isFalse();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 1 );
+						Parent parent = children.get( 0 ).getParent();
+						assertThat( parent ).isNotNull();
+						assertThat( Hibernate.isInitialized( parent ) ).isFalse();
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 1 );
 
-					assertThat( parent.getSomeField() ).isEqualTo( FIELD_VALUE );
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
+						assertThat( parent.getSomeField() ).isEqualTo( FIELD_VALUE );
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
 
-					Parent parent1 = children.get( 1 ).getParent();
-					assertThat( parent1 ).isNotNull();
-					// parent2 has been batch loaded
-					assertThat( Hibernate.isInitialized( parent1 ) ).isTrue();
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
+						Parent parent1 = children.get( 1 ).getParent();
+						assertThat( parent1 ).isNotNull();
+						// parent2 has been batch loaded
+						assertThat( Hibernate.isInitialized( parent1 ) ).isTrue();
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
 
-					assertThat( parent1.getSomeField() ).isEqualTo( FIELD_VALUE_2 );
-					assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
+						assertThat( parent1.getSomeField() ).isEqualTo( FIELD_VALUE_2 );
+						assertThat( sqlStatementInterceptor.getSqlQueries().size() ).isEqualTo( 2 );
+					}
 				}
 		);
 	}
@@ -140,15 +142,16 @@ public class LazyManyToOneStreamTest {
 					QueryImplementor<Child> query = session
 							.createQuery( "select c from Child as c where c.parent.someField=:someField", Child.class )
 							.setParameter( "someField", FIELD_VALUE );
-					Stream<Child> resultStream = query.getResultStream();
+					try (Stream<Child> resultStream = query.getResultStream()) {
 
-					Optional<Child> child = resultStream.findFirst();
-					assertThat( child.isEmpty() ).isFalse();
+						Optional<Child> child = resultStream.findFirst();
+						assertThat( child.isEmpty() ).isFalse();
 
-					Parent parent = child.get().getParent();
-					assertThat( parent ).isNotNull();
+						Parent parent = child.get().getParent();
+						assertThat( parent ).isNotNull();
 
-					assertThat( Hibernate.isInitialized( parent ) ).isFalse();
+						assertThat( Hibernate.isInitialized( parent ) ).isFalse();
+					}
 				}
 		);
 	}

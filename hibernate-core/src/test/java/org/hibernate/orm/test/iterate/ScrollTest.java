@@ -64,6 +64,8 @@ public class ScrollTest {
 						s.delete( i1 );
 						s.delete( i2 );
 					}
+
+					assertTrue( s.getPersistenceContext().getLoadContexts().isLoadingFinished() );
 				}
 		);
 

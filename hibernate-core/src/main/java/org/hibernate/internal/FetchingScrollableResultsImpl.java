@@ -8,6 +8,7 @@ package org.hibernate.internal;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
@@ -15,6 +16,7 @@ import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.sql.results.spi.RowReader;
 
 /**
@@ -299,8 +301,9 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 	}
 
 	private boolean prepareCurrentRow() {
-		if ( getRowProcessingState().isBeforeFirst() ) {
-			getRowProcessingState().next();
+		final RowProcessingStateStandardImpl rowProcessingState = getRowProcessingState();
+		if ( rowProcessingState.isBeforeFirst() ) {
+			rowProcessingState.next();
 		}
 
 		final RowReader<R> rowReader = getRowReader();
@@ -309,32 +312,43 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		boolean resultProcessed = false;
 
 		final EntityKey entityKey = getEntityKey();
+		final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContext();
+		final LoadContexts loadContexts = persistenceContext.getLoadContexts();
 
-		currentRow = rowReader.readRow( getRowProcessingState(), getProcessingOptions() );
+		loadContexts.register( getJdbcValuesSourceProcessingState() );
+		persistenceContext.beforeLoad();
+		try {
+			currentRow = rowReader.readRow( rowProcessingState, getProcessingOptions() );
 
-		getRowProcessingState().finishRowProcessing();
+			rowProcessingState.finishRowProcessing();
 
-		while ( !resultProcessed ) {
-			if ( getRowProcessingState().next() ) {
-				final EntityKey entityKey2 = getEntityKey();
-				if ( !entityKey.equals( entityKey2 ) ) {
-					resultInitializer.finishUpRow( getRowProcessingState() );
-					resultProcessed = true;
-					afterLast = false;
+			while ( !resultProcessed ) {
+				if ( rowProcessingState.next() ) {
+					final EntityKey entityKey2 = getEntityKey();
+					if ( !entityKey.equals( entityKey2 ) ) {
+						resultInitializer.finishUpRow( rowProcessingState );
+						resultProcessed = true;
+						afterLast = false;
+					}
+					else {
+						rowReader.readRow( rowProcessingState, getProcessingOptions() );
+						rowProcessingState.finishRowProcessing();
+					}
 				}
 				else {
-					rowReader.readRow( getRowProcessingState(), getProcessingOptions() );
-					getRowProcessingState().finishRowProcessing();
+					afterLast = true;
+					resultProcessed = true;
 				}
-			}
-			else {
-				afterLast = true;
-				resultProcessed = true;
-			}
 
+			}
+			getJdbcValuesSourceProcessingState().finishUp();
 		}
-		getJdbcValuesSourceProcessingState().finishUp();
-		getRowProcessingState().getSession().getPersistenceContext().initializeNonLazyCollections();
+		finally {
+			persistenceContext.afterLoad();
+			loadContexts.deregister( getJdbcValuesSourceProcessingState() );
+		}
+		persistenceContext.initializeNonLazyCollections();
+		afterScrollOperation();
 		return afterLast;
 	}
 

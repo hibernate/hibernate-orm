@@ -257,7 +257,7 @@ stage('Build') {
 								try {
 									if (buildEnv.dbLockableResource == null) {
 										withCredentials([file(credentialsId: 'sybase-jconnect-driver', variable: 'jconnect_driver')]) {
-											sh 'cp $jconnect_driver ./drivers/jconn4.jar'
+											sh 'cp -f $jconnect_driver ./drivers/jconn4.jar'
 											timeout( [time: buildEnv.longRunning ? 480 : 120, unit: 'MINUTES'] ) {
 												sh cmd
 											}

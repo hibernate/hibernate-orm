@@ -1,0 +1,10 @@
+[[settings]]
+== Configuration settings
+
+Reference for Hibernate ORM configuration settings.
+
+[sidebar]
+For settings defined by JPA, this section documents both the `jakarta.persistence`
+and legacy `javax.persistence` namespaces.  The `jakarta.persistence` form should be preferred.
+
+include::../../../../../target/asciidoc/fragments/config-settings.adoc[]

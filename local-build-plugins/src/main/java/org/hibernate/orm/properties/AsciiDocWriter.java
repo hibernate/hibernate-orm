@@ -80,12 +80,17 @@ public class AsciiDocWriter {
 	}
 
 	private static void writeLifecycleNotes(SettingDescriptor settingDescriptor, FileWriter writer) throws IOException {
+		if ( settingDescriptor.getSince() != null ) {
+			// Asciidoctor requires italic always be the innermost formatting, hence the odd syntax here
+			writer.write( "*_Since:_* _" + settingDescriptor.getSince() + "_\n+\n" );
+		}
+
 		// NOTE : at the moment, there is at least one setting that is both which fundamentally seems wrong
 		if ( settingDescriptor.isIncubating() ) {
-			writer.write( "NOTE:: _This setting is considered incubating_\n\n" );
+			writer.write( "NOTE:: _This setting is considered incubating_\n+\n" );
 		}
 		if ( settingDescriptor.isDeprecated() ) {
-			writer.write( "WARN:: _This setting is considered deprecated_\n\n" );
+			writer.write( "WARN:: _This setting is considered deprecated_\n+\n" );
 		}
 	}
 

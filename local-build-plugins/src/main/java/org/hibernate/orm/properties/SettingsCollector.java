@@ -97,10 +97,19 @@ public class SettingsCollector {
 								simpleFieldName,
 								publishedJavadocsUrl
 						),
+						interpretSince( fieldJavadocElement ),
 						interpretDeprecation( fieldJavadocElement ),
 						interpretIncubation( fieldJavadocElement )
 				);
 				docSectionSettings.add( settingDescriptor );
+
+				if ( settingDescriptor.getSince() != null ) {
+					System.out.println( "Setting with @since..." );
+					System.out.println( settingDescriptor.getName() + " {" );
+					System.out.println( "  " + settingDescriptor.getSettingsClassName() + "." + settingDescriptor.getSettingFieldName() );
+					System.out.println( "  @since " + settingDescriptor.getSince() );
+					System.out.println( "}" );
+				}
 			}
 		}
 
@@ -201,6 +210,27 @@ public class SettingsCollector {
 	private static boolean interpretIncubation(Element fieldJavadocElement) {
 		final Element incubatingMarkerElement = fieldJavadocElement.selectFirst( "[href*=Incubating.html]" );
 		return incubatingMarkerElement != null;
+	}
+
+	private static String interpretSince(Element fieldJavadocElement) {
+		final Element notesElement = fieldJavadocElement.selectFirst( "dl.notes" );
+		if ( notesElement == null ) {
+			return null;
+		}
+
+		// should be a list of alternating <dt/> and <dd/> elements.
+		final Elements notesChildren = notesElement.children();
+		for ( int i = 0; i < notesChildren.size(); i++ ) {
+			final Element notesChild = notesChildren.get( i );
+			if ( !notesChild.tagName().equals( "dt" ) ) {
+				continue;
+			}
+			if ( notesChild.text().equals( "Since:" ) ) {
+				return notesChildren.get( i + 1 ).text();
+			}
+		}
+
+		return null;
 	}
 
 	/**

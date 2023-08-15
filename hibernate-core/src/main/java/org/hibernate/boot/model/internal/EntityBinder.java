@@ -1485,20 +1485,18 @@ public class EntityBinder {
 		final Proxy proxy = annotatedClass.getAnnotation( Proxy.class );
 		if ( proxy != null ) {
 			lazy = proxy.lazy();
-			if ( !lazy ) {
-				proxyClass = null;
-			}
-			else {
-				final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
-				proxyClass = isDefault( reflectionManager.toXClass(proxy.proxyClass() ), context )
-						? annotatedClass
-						: reflectionManager.toXClass(proxy.proxyClass());
-			}
+			proxyClass = lazy ? proxyClass( proxy ) : null;
 		}
 		else {
 			lazy = true; //needed to allow association lazy loading.
 			proxyClass = annotatedClass;
 		}
+	}
+
+	private XClass proxyClass(Proxy proxy) {
+		final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
+		final XClass proxyClass = reflectionManager.toXClass( proxy.proxyClass() );
+		return isDefault( proxyClass, context ) ? annotatedClass : proxyClass;
 	}
 
 	public void bindWhere() {

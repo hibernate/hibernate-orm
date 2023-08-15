@@ -271,7 +271,7 @@ if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
     // For the new source set, we need to configure the source and target version to 17
     compileTestJava17Java {
         javaCompiler = javaToolchains.compilerFor {
-            languageVersion = gradle.ext.javaVersions.test.compiler
+            languageVersion = jdkVersions.test.compiler
         }
         sourceCompatibility = 17
         targetCompatibility = 17
@@ -295,13 +295,13 @@ if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
     // We execute the Java 17 tests in a custom test task
     task testJava17(type: Test) {
         javaLauncher = javaToolchains.launcherFor {
-            languageVersion = gradle.ext.javaVersions.test.launcher
+            languageVersion = jdkVersions.test.launcher
         }
         useJUnitPlatform()
         testClassesDirs = sourceSets.testJava17.output.classesDirs
         classpath = sourceSets.testJava17.runtimeClasspath
 
-        if ( gradle.ext.javaVersions.test.launcher.asInt() >= 19 ) {
+        if ( jdkVersions.test.launcher.asInt() >= 19 ) {
             logger.warn( "The version of Java bytecode that will be tested is not supported by Byte Buddy by default. " +
                                  " Setting 'net.bytebuddy.experimental=true'." )
             systemProperty 'net.bytebuddy.experimental', true

@@ -8,7 +8,7 @@ package org.hibernate.bytecode.enhance;
 
 import java.util.Locale;
 
-import org.hibernate.HibernateException;
+import org.hibernate.bytecode.enhance.spi.EnhancementException;
 
 import net.bytebuddy.description.type.TypeDescription;
 
@@ -18,7 +18,7 @@ import net.bytebuddy.description.type.TypeDescription;
  *
  * @author Steve Ebersole
  */
-public class VersionMismatchException extends HibernateException {
+public class VersionMismatchException extends EnhancementException {
 	private final String typeName;
 	private final String enhancementVersion;
 	private final String runtimeVersion;

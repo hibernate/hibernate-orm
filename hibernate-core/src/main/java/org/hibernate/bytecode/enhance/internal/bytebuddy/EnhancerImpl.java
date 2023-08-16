@@ -17,7 +17,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.hibernate.Version;
-import org.hibernate.bytecode.enhance.UnknownVersionException;
 import org.hibernate.bytecode.enhance.VersionMismatchException;
 import org.hibernate.bytecode.enhance.internal.tracker.CompositeOwnerTracker;
 import org.hibernate.bytecode.enhance.internal.tracker.DirtyTracker;
@@ -154,6 +153,9 @@ public class EnhancerImpl implements Enhancer {
 					typeDescription
 			) );
 		}
+		catch (EnhancementException e) {
+			throw e;
+		}
 		catch (RuntimeException e) {
 			throw new EnhancementException( "Failed to enhance class " + className, e );
 		}
@@ -179,6 +181,7 @@ public class EnhancerImpl implements Enhancer {
 		// handle already enhanced classes
 		if ( alreadyEnhanced( managedCtClass ) ) {
 			verifyVersions( managedCtClass, enhancementContext );
+
 			log.debugf( "Skipping enhancement of [%s]: already enhanced", managedCtClass.getName() );
 			return null;
 		}
@@ -389,7 +392,14 @@ public class EnhancerImpl implements Enhancer {
 				.getDeclaredAnnotations()
 				.ofType( EnhancementInfo.class );
 		if ( existingInfo == null ) {
-			throw new UnknownVersionException( managedCtClass );
+			// There is an edge case here where a user manually adds `implement Managed` to
+			// their domain class, in which case there will most likely not be a
+			// `EnhancementInfo` annotation.  Such cases should simply not do version checking.
+			//
+			// However, there is also ambiguity in this case with classes that were enhanced
+			// with old versions of Hibernate which did not add that annotation as part of
+			// enhancement.  But overall we consider this condition to be acceptable
+			return;
 		}
 
 		final String enhancementVersion = extractVersion( existingInfo );

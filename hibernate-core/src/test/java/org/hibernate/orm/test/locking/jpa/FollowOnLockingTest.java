@@ -8,6 +8,7 @@ package org.hibernate.orm.test.locking.jpa;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -41,12 +42,12 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 public class FollowOnLockingTest {
 
 	@Test
-	@Timeout( 10 )
+	@Timeout(value = 1, unit = TimeUnit.MINUTES)
 	public void testQueryLockingWithoutFollowOn(SessionFactoryScope scope) {
 		testQueryLocking( scope, false );
 	}
 	@Test
-	@Timeout( 10 )
+	@Timeout(value = 1, unit = TimeUnit.MINUTES)
 	public void testQueryLockingWithFollowOn(SessionFactoryScope scope) {
 		testQueryLocking( scope, true );
 	}

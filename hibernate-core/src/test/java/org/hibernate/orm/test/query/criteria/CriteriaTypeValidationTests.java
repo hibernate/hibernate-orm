@@ -56,7 +56,7 @@ public class CriteriaTypeValidationTests {
 	}
 
 
-	@Entity
+	@Entity(name = "Parent")
 	public static class Parent {
 		@Id
 		private Long id;
@@ -67,7 +67,7 @@ public class CriteriaTypeValidationTests {
 		private Set<Child> children = new HashSet<>();
 	}
 
-	@Entity
+	@Entity(name = "Child")
 	public static class Child {
 		@Id
 		private Long id;

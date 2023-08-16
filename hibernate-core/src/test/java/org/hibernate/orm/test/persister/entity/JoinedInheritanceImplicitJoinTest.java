@@ -100,9 +100,9 @@ public class JoinedInheritanceImplicitJoinTest {
         });
     }
 
-    @Entity
+    @Entity(name = "MasterEntity")
     @Inheritance(strategy = InheritanceType.JOINED)
-    public class MasterEntity {
+    public static class MasterEntity {
         @Id
         @GeneratedValue
         public Long id;
@@ -123,8 +123,8 @@ public class JoinedInheritanceImplicitJoinTest {
         }
     }
 
-    @Entity
-    public class ChildEntity extends MasterEntity {
+    @Entity(name = "ChildEntity")
+    public static class ChildEntity extends MasterEntity {
         private String childField;
 
         @OneToMany(mappedBy = "childEntity")
@@ -147,8 +147,8 @@ public class JoinedInheritanceImplicitJoinTest {
         }
     }
 
-    @Entity
-    public class RelatedEntity {
+    @Entity(name = "RelatedEntity")
+    public static class RelatedEntity {
         @Id
         @GeneratedValue
         public Long id;

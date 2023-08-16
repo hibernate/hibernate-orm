@@ -27,7 +27,7 @@ import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.jandex.IndexView;
@@ -232,10 +232,10 @@ public interface BootstrapContext {
 	/**
 	 * To support Envers.
 	 */
-	void registerAdHocBasicType(BasicTypeImpl<?> basicType);
+	void registerAdHocBasicType(BasicType<?> basicType);
 
 	/**
 	 * To support Envers.
 	 */
-	<T> BasicTypeImpl<T> resolveAdHocBasicType(String key);
+	<T> BasicType<T> resolveAdHocBasicType(String key);
 }

@@ -614,6 +614,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			if ( existingLoadingEntry.getEntityInitializer() == this ) {
 				isOwningInitializer = true;
 			}
+			else {
+				isInitialized = true;
+			}
 		}
 		else {
 			isOwningInitializer = true;

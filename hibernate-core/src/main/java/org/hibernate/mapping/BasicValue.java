@@ -625,7 +625,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 //		}
 
 		if ( name.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX ) ) {
-			final BasicTypeImpl<Object> basicType = context.getBootstrapContext().resolveAdHocBasicType( name );
+			final BasicType<Object> basicType = context.getBootstrapContext().resolveAdHocBasicType( name );
 			return new NamedBasicTypeResolution<>(
 					basicType.getJavaTypeDescriptor(),
 					basicType,

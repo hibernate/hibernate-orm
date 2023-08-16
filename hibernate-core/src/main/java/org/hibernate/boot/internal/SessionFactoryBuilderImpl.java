@@ -31,6 +31,7 @@ import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.type.format.FormatMapper;
 
 /**
  * @author Gail Badner
@@ -419,6 +420,18 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled) {
 		this.optionsBuilder.enableJpaClosedCompliance( enabled );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyJsonFormatMapper(FormatMapper jsonFormatMapper) {
+		this.optionsBuilder.applyJsonFormatMapper( jsonFormatMapper );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyXmlFormatMapper(FormatMapper xmlFormatMapper) {
+		this.optionsBuilder.applyXmlFormatMapper( xmlFormatMapper );
 		return this;
 	}
 

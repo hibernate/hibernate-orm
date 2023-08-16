@@ -133,12 +133,12 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for PostgreSQL 10 and above.
+ * A {@linkplain Dialect SQL dialect} for PostgreSQL 11 and above.
  *
  * @author Gavin King
  */
 public class PostgreSQLDialect extends Dialect {
-	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10 );
+	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11 );
 
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
@@ -1034,9 +1034,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
-		return getVersion().isSameOrAfter( 11 )
-				? PostgreSQLCallableStatementSupport.INSTANCE
-				: PostgreSQLCallableStatementSupport.V10_INSTANCE;
+		return PostgreSQLCallableStatementSupport.INSTANCE;
 	}
 
 	@Override

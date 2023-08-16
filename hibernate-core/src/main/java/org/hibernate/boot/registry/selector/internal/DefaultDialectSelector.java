@@ -30,7 +30,6 @@ import org.hibernate.dialect.MySQL8Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.OracleDialect;
-import org.hibernate.dialect.PostgreSQL10Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServer2008Dialect;
@@ -120,9 +119,8 @@ public class DefaultDialectSelector implements DialectSelector {
 			case "PostgreSQL93":
 			case "PostgreSQL94":
 			case "PostgreSQL95":
-				return findCommunityDialect( name );
 			case "PostgreSQL10":
-				return PostgreSQL10Dialect.class;
+				return findCommunityDialect( name );
 			case "Spanner":
 				return SpannerDialect.class;
 			case "SQLServer":

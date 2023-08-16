@@ -84,6 +84,8 @@ public class CommunityDialectSelector implements DialectSelector {
 				return PostgreSQL94Dialect.class;
 			case "PostgreSQL95":
 				return PostgreSQL95Dialect.class;
+			case "PostgreSQL10":
+				return PostgreSQL10Dialect.class;
 			case "RDMSOS2200":
 				return RDMSOS2200Dialect.class;
 			case "SAPDB":

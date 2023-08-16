@@ -13,8 +13,6 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.Version;
-import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
-import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.internal.util.config.ConfigurationHelper;
@@ -193,38 +191,6 @@ public final class Environment implements AvailableSettings {
 		Properties copy = new Properties();
 		copy.putAll(GLOBAL_PROPERTIES);
 		return copy;
-	}
-
-	/**
-	 * @deprecated Replaced by {@code org.hibernate.bytecode.internal.BytecodeProviderInitiator#BYTECODE_PROVIDER_NAME_BYTEBUDDY},
-	 * however note that that's an internal contract: a different BytecodeProvider Initiator might ignore these constants
-	 * or interpret them differently.
-	 */
-	@Deprecated(forRemoval = true)
-	public static final String BYTECODE_PROVIDER_NAME_BYTEBUDDY = "bytebuddy";
-
-	/**
-	 * @deprecated Replaced by {@code org.hibernate.bytecode.internal.BytecodeProviderInitiator#BYTECODE_PROVIDER_NAME_NONE},
-	 * however note that that's an internal contract: a different BytecodeProvider Initiator might ignore these constants
-	 * or interpret them differently.
-	 */
-	@Deprecated(forRemoval = true)
-	public static final String BYTECODE_PROVIDER_NAME_NONE = "none";
-
-	/**
-	 * @deprecated Replaced by {@code org.hibernate.bytecode.internal.BytecodeProviderInitiator#BYTECODE_PROVIDER_NAME_DEFAULT}
-	 * however note that that's an internal contract: a different BytecodeProvider Initiator might apply a different default.
-	 */
-	@Deprecated(forRemoval = true)
-	public static final String BYTECODE_PROVIDER_NAME_DEFAULT = BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY;
-
-	/**
-	 * @deprecated this will be removed; retrieval of the BytecodeProvider should be performed via the {@link org.hibernate.service.ServiceRegistry}.
-	 */
-	@Deprecated(forRemoval = true)
-	public static BytecodeProvider buildBytecodeProvider(Properties properties) {
-		String provider = ConfigurationHelper.getString( BYTECODE_PROVIDER, properties, BYTECODE_PROVIDER_NAME_DEFAULT );
-		return BytecodeProviderInitiator.buildBytecodeProvider( provider );
 	}
 
 }

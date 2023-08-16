@@ -17,6 +17,7 @@ import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
+import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.PersistentAttributeInterceptable;
@@ -50,7 +51,7 @@ public class SimpleDynamicUpdateTest extends BaseNonConfigCoreFunctionalTestCase
 	@Override
 	protected void applyMetadataSources(MetadataSources sources) {
 		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
-		if ( byteCodeProvider != null && !Environment.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
+		if ( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
 			// skip the test if the bytecode provider is Javassist
 			skipTest = true;
 		}

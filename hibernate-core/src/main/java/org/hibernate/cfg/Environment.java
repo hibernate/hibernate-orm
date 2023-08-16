@@ -21,9 +21,6 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
-
-
 /**
  * Provides access to configuration properties passed in {@link Properties} objects.
  * <p>
@@ -35,9 +32,6 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
  * <li><em>System-level</em> properties are shared by all factory instances and are
  * always determined by the {@code Environment} properties in {@link #getProperties()}.
  * </ul>
- * <p>
- * The only system-level property is {@value #USE_REFLECTION_OPTIMIZER},
- * and it's deprecated.
  * <p>
  * {@code Environment} properties are populated by calling {@link System#getProperties()}
  * and then from a resource named {@code /hibernate.properties}, if it exists. System
@@ -142,15 +136,12 @@ import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 public final class Environment implements AvailableSettings {
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, Environment.class.getName());
 
-	private static final boolean ENABLE_REFLECTION_OPTIMIZER;
-
 	private static final Properties GLOBAL_PROPERTIES;
 
 	static {
 		Version.logVersion();
 
 		GLOBAL_PROPERTIES = new Properties();
-		GLOBAL_PROPERTIES.setProperty( USE_REFLECTION_OPTIMIZER, Boolean.TRUE.toString() );
 
 		try {
 			InputStream stream = ConfigHelper.getResourceAsStream( "/hibernate.properties" );
@@ -185,33 +176,6 @@ public final class Environment implements AvailableSettings {
 		catch (SecurityException se) {
 			LOG.unableToCopySystemProperties();
 		}
-
-		ENABLE_REFLECTION_OPTIMIZER = ConfigurationHelper.getBoolean(USE_REFLECTION_OPTIMIZER, GLOBAL_PROPERTIES);
-		if ( ENABLE_REFLECTION_OPTIMIZER ) {
-			LOG.usingReflectionOptimizer();
-		}
-		else {
-			DEPRECATION_LOGGER.deprecatedSettingForRemoval( USE_REFLECTION_OPTIMIZER, "true" );
-		}
-	}
-
-	/**
-	 * Should we use reflection optimization?
-	 *
-	 * @return True if reflection optimization should be used; false otherwise.
-	 *
-	 * @see #USE_REFLECTION_OPTIMIZER
-	 * @see BytecodeProvider#getReflectionOptimizer
-	 *
-	 * @deprecated Deprecated to indicate that the method will be moved to
-	 * {@link org.hibernate.boot.spi.SessionFactoryOptions} /
-	 * {@link org.hibernate.boot.SessionFactoryBuilder}.
-	 * See <a href="https://hibernate.atlassian.net/browse/HHH-12194">HHH-12194</a> and
-	 * <a href="https://hibernate.atlassian.net/browse/HHH-12193">HHH-12193</a> for details
-	 */
-	@Deprecated
-	public static boolean useReflectionOptimizer() {
-		return ENABLE_REFLECTION_OPTIMIZER;
 	}
 
 	/**

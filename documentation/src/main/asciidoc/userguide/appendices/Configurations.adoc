@@ -474,9 +474,6 @@ Enable association management feature in runtime bytecode enhancement which auto
 `*hibernate.bytecode.provider*` (e.g. `bytebuddy` (default value))::
 The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/BytecodeProvider.html[`BytecodeProvider`] built-in implementation flavor. Currently, only `bytebuddy` is a valid value, as older deprecated options have been removed.
 
-`*hibernate.bytecode.use_reflection_optimizer*` (e.g. `true` (default value) or `false`)::
-Should we use reflection optimization? The reflection optimizer implements the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/bytecode/spi/ReflectionOptimizer.html[`ReflectionOptimizer`] interface and improves entity instantiation and property getter/setter calls. This setting is deprecated for removal without a replacement.
-
 [[configurations-query]]
 === Query settings
 

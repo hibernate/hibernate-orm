@@ -1380,10 +1380,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide", id = 404)
 	void usingOldDtd();
 
-	@LogMessage(level = INFO)
-	@Message(value = "Using bytecode reflection optimizer", id = 406)
-	void usingReflectionOptimizer();
-
 //	@LogMessage(level = INFO)
 //	@Message(value = "Using java.io streams to persist binary types", id = 407)
 //	void usingStreams();

@@ -15,9 +15,6 @@ plugins {
 
 	// for local publishing
 	id 'maven-publish'
-
-	id 'org.hibernate.orm.build.jdks'
-	id 'org.hibernate.orm.build.java-module'
 }
 
 apply from: rootProject.file( 'gradle/module.gradle' )

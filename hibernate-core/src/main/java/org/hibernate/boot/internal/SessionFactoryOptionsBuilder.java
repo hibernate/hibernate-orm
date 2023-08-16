@@ -155,8 +155,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// integration
 	private Object beanManagerReference;
 	private Object validatorFactoryReference;
-	private final FormatMapper jsonFormatMapper;
-	private final FormatMapper xmlFormatMapper;
+	private FormatMapper jsonFormatMapper;
+	private FormatMapper xmlFormatMapper;
 
 	// SessionFactory behavior
 	private final boolean jpaBootstrap;
@@ -1236,6 +1236,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void applyValidatorFactory(Object validatorFactory) {
 		this.validatorFactoryReference = validatorFactory;
+	}
+
+	public void applyJsonFormatMapper(FormatMapper jsonFormatMapper) {
+		this.jsonFormatMapper = jsonFormatMapper;
+	}
+
+	public void applyXmlFormatMapper(FormatMapper xmlFormatMapper) {
+		this.xmlFormatMapper = xmlFormatMapper;
 	}
 
 	public void applySessionFactoryName(String sessionFactoryName) {

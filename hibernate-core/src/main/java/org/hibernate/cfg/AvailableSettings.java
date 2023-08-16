@@ -31,6 +31,7 @@ import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 import org.hibernate.type.WrapperArrayHandling;
+import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -2747,6 +2748,7 @@ public interface AvailableSettings {
 	 * used, according to the listing order.
 	 *
 	 * @since 6.0
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyJsonFormatMapper(FormatMapper)
 	 */
 	@Incubating
 	String JSON_FORMAT_MAPPER = "hibernate.type.json_format_mapper";
@@ -2765,6 +2767,7 @@ public interface AvailableSettings {
 	 * used, according to the listing order.
 	 *
 	 * @since 6.0.1
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyXmlFormatMapper(FormatMapper)
 	 */
 	@Incubating
 	String XML_FORMAT_MAPPER = "hibernate.type.xml_format_mapper";

@@ -1893,7 +1893,6 @@ public class EntityBinder {
 	}
 
 	private void setForeignKeyNameIfDefined(Join join) {
-		// just awful..
 		final String tableName = join.getTable().getQuotedName();
 		final org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( tableName );
 		final SimpleValue key = (SimpleValue) join.getKey();
@@ -2041,7 +2040,7 @@ public class EntityBinder {
 	}
 
 	public Join addJoin(SecondaryTable secondaryTable, PropertyHolder holder, boolean noDelayInPkColumnCreation) {
-		Join join = addJoin(
+		final Join join = addJoin(
 				holder,
 				noDelayInPkColumnCreation,
 				true,
@@ -2090,7 +2089,7 @@ public class EntityBinder {
 		);
 	}
 
-	private Join createJoin(
+	Join createJoin(
 			PropertyHolder propertyHolder,
 			boolean noDelayInPkColumnCreation,
 			boolean secondaryTable,

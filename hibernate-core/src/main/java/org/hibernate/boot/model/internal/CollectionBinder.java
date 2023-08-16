@@ -2432,9 +2432,7 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private void handleOwnedManyToMany(
-			PersistentClass collectionEntity,
-			boolean isCollectionOfEntities) {
+	private void handleOwnedManyToMany(PersistentClass collectionEntity, boolean isCollectionOfEntities) {
 		//TODO: only for implicit columns?
 		//FIXME NamingStrategy
 		final InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
@@ -2461,7 +2459,7 @@ public abstract class CollectionBinder {
 		tableBinder.setJPA2ElementCollection(
 				!isCollectionOfEntities && property.isAnnotationPresent( ElementCollection.class )
 		);
-		Table collectionTable = tableBinder.bind();
+		final Table collectionTable = tableBinder.bind();
 		collection.setCollectionTable( collectionTable );
 		handleCheckConstraints( collectionTable );
 	}

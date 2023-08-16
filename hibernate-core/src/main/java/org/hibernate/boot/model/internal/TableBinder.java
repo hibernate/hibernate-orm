@@ -193,7 +193,7 @@ public class TableBinder {
 					);
 				}
 				else {
-					name =  namingStrategy.determineJoinTableName(
+					name = namingStrategy.determineJoinTableName(
 							new ImplicitJoinTableNameSource() {
 								private final EntityNaming owningEntityNaming = new EntityNaming() {
 									@Override
@@ -481,33 +481,12 @@ public class TableBinder {
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
-		schema = nullIfEmpty( schema );
-		catalog = nullIfEmpty( catalog );
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
 
-		InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
-
-		final Table table;
-		if ( denormalizedSuperTableXref != null ) {
-			table = metadataCollector.addDenormalizedTable(
-					schema,
-					catalog,
-					logicalName.render(),
-					isAbstract,
-					subselect,
-					denormalizedSuperTableXref.getPrimaryTable(),
-					buildingContext
-			);
-		}
-		else {
-			table = metadataCollector.addTable(
-					schema,
-					catalog,
-					logicalName.render(),
-					subselect,
-					isAbstract,
-					buildingContext
-			);
-		}
+		final Table table =
+				addTable( nullIfEmpty( schema ), nullIfEmpty( catalog ),
+						logicalName, isAbstract, buildingContext, subselect,
+						denormalizedSuperTableXref, metadataCollector );
 
 		if ( isNotEmpty( uniqueConstraints ) ) {
 			metadataCollector.addUniqueConstraintHolders( table, uniqueConstraints );
@@ -520,6 +499,38 @@ public class TableBinder {
 		metadataCollector.addTableNameBinding( logicalName, table );
 
 		return table;
+	}
+
+	private static Table addTable(
+			String schema,
+			String catalog,
+			Identifier logicalName,
+			boolean isAbstract,
+			MetadataBuildingContext buildingContext,
+			String subselect,
+			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref,
+			InFlightMetadataCollector metadataCollector) {
+		if ( denormalizedSuperTableXref != null ) {
+			return metadataCollector.addDenormalizedTable(
+					schema,
+					catalog,
+					logicalName.render(),
+					isAbstract,
+					subselect,
+					denormalizedSuperTableXref.getPrimaryTable(),
+					buildingContext
+			);
+		}
+		else {
+			return metadataCollector.addTable(
+					schema,
+					catalog,
+					logicalName.render(),
+					subselect,
+					isAbstract,
+					buildingContext
+			);
+		}
 	}
 
 	public static void bindForeignKey(

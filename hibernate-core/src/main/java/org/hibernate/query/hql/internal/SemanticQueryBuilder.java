@@ -3623,11 +3623,33 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private SqmHqlNumericLiteral<Integer> integerLiteral(String text) {
+		text = text.replace( "_", "" );
+
+		// special handling for octal and hexadecimal literals
+		if ( isHexOrOctal( text ) ) {
+			final int intValue = Integer.decode( text );
+			text = Integer.toString( intValue );
+		}
+
 		return new SqmHqlNumericLiteral<>(
-				text.replace( "_", "" ),
+				text,
 				integerDomainType,
 				creationContext.getNodeBuilder()
 		);
+	}
+
+	@SuppressWarnings("RedundantIfStatement")
+	private boolean isHexOrOctal(String text) {
+		if ( text.startsWith( "0x" ) || text.startsWith( "-0x" ) ) {
+			return true;
+		}
+
+		if ( ( text.startsWith( "0" ) && text.length() > 1 )
+				|| ( text.startsWith( "-0" ) && text.length() > 2 ) ) {
+			return true;
+		}
+
+		return false;
 	}
 
 	private SqmHqlNumericLiteral<Long> longLiteral(String text) {

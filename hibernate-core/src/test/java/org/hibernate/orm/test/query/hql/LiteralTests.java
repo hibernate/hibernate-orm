@@ -297,6 +297,16 @@ public class LiteralTests {
 	}
 
 	@Test
+	public void testOctalLiteral(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery( "select 015053" )
+							.getSingleResult(), is(6699) );
+				}
+		);
+	}
+
+	@Test
 	public void testBigLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

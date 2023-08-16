@@ -179,11 +179,6 @@ stage('Build') {
 									sh "./docker_db.sh edb"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
-								case "edb_10":
-									docker.image('quay.io/enterprisedb/edb-postgres-advanced:10.22').pull()
-									sh "./docker_db.sh edb_10"
-									state[buildEnv.tag]['containerName'] = "edb"
-									break;
 								case "oracle":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
 										docker.image('gvenzl/oracle-xe:21.3.0-full').pull()

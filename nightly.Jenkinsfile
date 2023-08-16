@@ -33,7 +33,7 @@ stage('Configure') {
 		new BuildEnvironment( dbName: 'mysql_5_7' ),
 		new BuildEnvironment( dbName: 'mariadb_10_3' ),
 		new BuildEnvironment( dbName: 'postgresql_11' ),
-		new BuildEnvironment( dbName: 'edb_10' ),
+		new BuildEnvironment( dbName: 'edb_11' ),
 		new BuildEnvironment( dbName: 'oracle_11_2' ),
 		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
@@ -171,9 +171,9 @@ stage('Build') {
 									sh "./docker_db.sh edb"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
-								case "edb_10":
-									docker.image('quay.io/enterprisedb/edb-postgres-advanced:10.22').pull()
-									sh "./docker_db.sh edb_10"
+								case "edb_11":
+									docker.image('quay.io/enterprisedb/edb-postgres-advanced:11.20-3.3-postgis').pull()
+									sh "./docker_db.sh edb_11"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
 								case "oracle":

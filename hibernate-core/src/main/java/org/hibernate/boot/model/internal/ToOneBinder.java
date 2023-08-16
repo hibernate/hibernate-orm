@@ -58,6 +58,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
 import static org.hibernate.internal.CoreLogging.messageLogger;
+import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
@@ -108,15 +109,10 @@ public class ToOneBinder {
 		matchIgnoreNotFoundWithFetchType( propertyHolder.getEntityName(), property.getName(), notFoundAction, manyToOne.fetch() );
 		final OnDelete onDelete = property.getAnnotation( OnDelete.class );
 		final JoinTable joinTable = propertyHolder.getJoinTable( property );
-		if ( joinTable != null ) {
-			final Join join = propertyHolder.addJoin( joinTable, false );
-			for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
-				joinColumn.setExplicitTableName( join.getTable().getName() );
-			}
-		}
 		bindManyToOne(
 				getCascadeStrategy( manyToOne.cascade(), hibernateCascade, false, forcePersist ),
 				joinColumns,
+				joinTable,
 				!isMandatory( manyToOne.optional(), property, notFoundAction ),
 				notFoundAction,
 				onDelete == null ? null : onDelete.action(),
@@ -135,7 +131,10 @@ public class ToOneBinder {
 			PropertyHolder propertyHolder,
 			PropertyBinder propertyBinder,
 			boolean isIdentifierMapper) {
-		return propertyBinder.isId() || propertyHolder.isOrWithinEmbeddedId() || propertyHolder.isInIdClass() || isIdentifierMapper;
+		return propertyBinder.isId()
+			|| propertyHolder.isOrWithinEmbeddedId()
+			|| propertyHolder.isInIdClass()
+			|| isIdentifierMapper;
 	}
 
 	private static boolean isMandatory(boolean optional, XProperty property, NotFoundAction notFoundAction) {
@@ -147,13 +146,14 @@ public class ToOneBinder {
 		// the association is optional.
 		// @OneToOne(optional = true) with @PKJC makes the association optional.
 		return !optional
-				|| property.isAnnotationPresent( Id.class )
-				|| property.isAnnotationPresent( MapsId.class ) && notFoundAction != NotFoundAction.IGNORE;
+			|| property.isAnnotationPresent( Id.class )
+			|| property.isAnnotationPresent( MapsId.class ) && notFoundAction != NotFoundAction.IGNORE;
 	}
 
 	private static void bindManyToOne(
 			String cascadeStrategy,
 			AnnotatedJoinColumns joinColumns,
+			JoinTable joinTable,
 			boolean optional,
 			NotFoundAction notFoundAction,
 			OnDeleteAction onDeleteAction,
@@ -165,9 +165,28 @@ public class ToOneBinder {
 			boolean inSecondPass,
 			PropertyBinder propertyBinder,
 			MetadataBuildingContext context) {
+
+		if ( joinTable != null && !isEmpty( joinTable.name() ) ) {
+			final Join join = propertyHolder.addJoin( joinTable, false );
+			// TODO: if notFoundAction!=null should we call join.disableForeignKeyCreation() ?
+			for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
+				joinColumn.setExplicitTableName( join.getTable().getName() );
+			}
+			if ( notFoundAction != null ) {
+				join.disableForeignKeyCreation();
+			}
+		}
+
 		// All FK columns should be in the same table
 		final org.hibernate.mapping.ManyToOne value =
 				new org.hibernate.mapping.ManyToOne( context, joinColumns.getTable() );
+
+		if ( joinTable != null && isEmpty( joinTable.name() ) ) {
+			context.getMetadataCollector()
+					.addSecondPass( new ImplicitToOneJoinTableSecondPass( propertyHolder, inferredData, context,
+							joinColumns, joinTable, notFoundAction, value ) );
+		}
+
 		if ( unique ) {
 			// This is a @OneToOne mapped to a physical o.h.mapping.ManyToOne
 			value.markAsLogicalOneToOne();
@@ -455,23 +474,14 @@ public class ToOneBinder {
 		final NotFound notFound = property.getAnnotation( NotFound.class );
 		final NotFoundAction notFoundAction = notFound == null ? null : notFound.action();
 
-		final boolean mandatory = isMandatory( oneToOne.optional(), property, notFoundAction );
 		matchIgnoreNotFoundWithFetchType( propertyHolder.getEntityName(), property.getName(), notFoundAction, oneToOne.fetch() );
 		final OnDelete onDelete = property.getAnnotation( OnDelete.class );
 		final JoinTable joinTable = propertyHolder.getJoinTable(property);
-		if ( joinTable != null ) {
-			final Join join = propertyHolder.addJoin( joinTable, false );
-			if ( notFoundAction != null ) {
-				join.disableForeignKeyCreation();
-			}
-			for ( AnnotatedJoinColumn joinColumn : joinColumns.getJoinColumns() ) {
-				joinColumn.setExplicitTableName( join.getTable().getName() );
-			}
-		}
 		bindOneToOne(
 				getCascadeStrategy( oneToOne.cascade(), hibernateCascade, oneToOne.orphanRemoval(), forcePersist ),
 				joinColumns,
-				!mandatory,
+				joinTable,
+				!isMandatory( oneToOne.optional(), property, notFoundAction ),
 				getFetchMode( oneToOne.fetch() ),
 				notFoundAction,
 				onDelete == null ? null : onDelete.action(),
@@ -490,6 +500,7 @@ public class ToOneBinder {
 	private static void bindOneToOne(
 			String cascadeStrategy,
 			AnnotatedJoinColumns joinColumns,
+			JoinTable joinTable,
 			boolean optional,
 			FetchMode fetchMode,
 			NotFoundAction notFoundAction,
@@ -536,7 +547,7 @@ public class ToOneBinder {
 			bindManyToOne(
 					cascadeStrategy,
 					joinColumns,
-					optional,
+					joinTable, optional,
 					notFoundAction,
 					cascadeOnDelete,
 					targetEntity,
@@ -632,7 +643,7 @@ public class ToOneBinder {
 			return false;
 		}
 		else {
-			ConstraintMode mode = joinColumns.value();
+			final ConstraintMode mode = joinColumns.value();
 			return mode == NO_CONSTRAINT
 				|| mode == PROVIDER_DEFAULT && context.getBuildingOptions().isNoConstraintByDefault();
 		}
@@ -665,7 +676,7 @@ public class ToOneBinder {
 		if ( oneToOne != null ) {
 			return oneToOne.targetEntity();
 		}
-		throw new AssertionFailure("Unexpected discovery of a targetEntity: " + property.getName() );
+		throw new AssertionFailure( "Unexpected discovery of a targetEntity: " + property.getName() );
 	}
 
 	private static void matchIgnoreNotFoundWithFetchType(

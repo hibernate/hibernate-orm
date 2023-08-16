@@ -47,6 +47,7 @@ import org.hibernate.boot.model.internal.AnnotatedClassType;
 import org.hibernate.boot.model.internal.CreateKeySecondPass;
 import org.hibernate.boot.model.internal.FkSecondPass;
 import org.hibernate.boot.model.internal.IdGeneratorResolverSecondPass;
+import org.hibernate.boot.model.internal.ImplicitToOneJoinTableSecondPass;
 import org.hibernate.boot.model.internal.JPAIndexHolder;
 import org.hibernate.boot.model.internal.OptionalDeterminationSecondPass;
 import org.hibernate.boot.model.internal.QuerySecondPass;
@@ -1662,7 +1663,8 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private ArrayList<SetBasicValueTypeSecondPass> setBasicValueTypeSecondPassList;
 	private ArrayList<AggregateComponentSecondPass> aggregateComponentSecondPassList;
 	private ArrayList<FkSecondPass> fkSecondPassList;
-	private ArrayList<CreateKeySecondPass> createKeySecondPasList;
+	private ArrayList<CreateKeySecondPass> createKeySecondPassList;
+	private ArrayList<ImplicitToOneJoinTableSecondPass> toOneJoinTableSecondPassList;
 	private ArrayList<SecondaryTableSecondPass> secondaryTableSecondPassList;
 	private ArrayList<SecondaryTableFromAnnotationSecondPass> secondaryTableFromAnnotationSecondPassesList;
 	private ArrayList<QuerySecondPass> querySecondPassList;
@@ -1692,6 +1694,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 		else if ( secondPass instanceof CreateKeySecondPass ) {
 			addCreateKeySecondPass( (CreateKeySecondPass) secondPass, onTopOfTheQueue );
+		}
+		else if ( secondPass instanceof ImplicitToOneJoinTableSecondPass ) {
+			addImplicitToOneJoinTableSecondPass( (ImplicitToOneJoinTableSecondPass) secondPass );
 		}
 		else if ( secondPass instanceof SecondaryTableSecondPass ) {
 			addSecondaryTableSecondPass( (SecondaryTableSecondPass) secondPass, onTopOfTheQueue );
@@ -1758,10 +1763,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	private void addCreateKeySecondPass(CreateKeySecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( createKeySecondPasList == null ) {
-			createKeySecondPasList = new ArrayList<>();
+		if ( createKeySecondPassList == null ) {
+			createKeySecondPassList = new ArrayList<>();
 		}
-		addSecondPass( secondPass, createKeySecondPasList, onTopOfTheQueue );
+		addSecondPass( secondPass, createKeySecondPassList, onTopOfTheQueue );
+	}
+
+	private void addImplicitToOneJoinTableSecondPass(ImplicitToOneJoinTableSecondPass secondPass) {
+		if ( toOneJoinTableSecondPassList == null ) {
+			toOneJoinTableSecondPassList = new ArrayList<>();
+		}
+		toOneJoinTableSecondPassList.add( secondPass );
 	}
 
 	private void addSecondaryTableSecondPass(SecondaryTableSecondPass secondPass, boolean onTopOfTheQueue) {
@@ -1815,12 +1827,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			processSecondPasses( implicitColumnNamingSecondPassList );
 			processSecondPasses( setBasicValueTypeSecondPassList );
 			processSecondPasses( aggregateComponentSecondPassList );
+			processSecondPasses( toOneJoinTableSecondPassList );
 
 			composites.forEach( Component::sortProperties );
 
 			processFkSecondPassesInOrder();
 
-			processSecondPasses( createKeySecondPasList );
+			processSecondPasses(createKeySecondPassList);
 			processSecondPasses( secondaryTableSecondPassList );
 
 			processSecondPasses( querySecondPassList );

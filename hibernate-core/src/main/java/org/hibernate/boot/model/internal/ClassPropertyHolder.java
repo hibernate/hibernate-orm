@@ -226,8 +226,22 @@ public class ClassPropertyHolder extends AbstractPropertyHolder {
 
 	@Override
 	public Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation) {
-		Join join = entityBinder.addJoin( joinTableAnn, this, noDelayInPkColumnCreation );
-		this.joins = entityBinder.getSecondaryTables();
+		final Join join = entityBinder.addJoin( joinTableAnn, this, noDelayInPkColumnCreation );
+		joins = entityBinder.getSecondaryTables();
+		return join;
+	}
+
+	@Override
+	public Join addJoin(JoinTable joinTable, Table table, boolean noDelayInPkColumnCreation) {
+		final Join join = entityBinder.createJoin(
+				this,
+				noDelayInPkColumnCreation,
+				false,
+				joinTable.joinColumns(),
+				table.getQualifiedTableName(),
+				table
+		);
+		joins = entityBinder.getSecondaryTables();
 		return join;
 	}
 

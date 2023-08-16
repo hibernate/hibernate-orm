@@ -91,6 +91,8 @@ public interface PropertyHolder {
 
 	Join addJoin(JoinTable joinTableAnn, boolean noDelayInPkColumnCreation);
 
+	Join addJoin(JoinTable joinTable, Table table, boolean noDelayInPkColumnCreation);
+
 	boolean isInIdClass();
 
 	void setInIdClass(Boolean isInIdClass);

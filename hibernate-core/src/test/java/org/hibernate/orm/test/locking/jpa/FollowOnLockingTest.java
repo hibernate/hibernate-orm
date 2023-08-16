@@ -20,6 +20,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockTimeoutException;
@@ -40,10 +41,12 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 public class FollowOnLockingTest {
 
 	@Test
+	@Timeout( 10 )
 	public void testQueryLockingWithoutFollowOn(SessionFactoryScope scope) {
 		testQueryLocking( scope, false );
 	}
 	@Test
+	@Timeout( 10 )
 	public void testQueryLockingWithFollowOn(SessionFactoryScope scope) {
 		testQueryLocking( scope, true );
 	}

@@ -48,7 +48,6 @@ public class DefaultDialectSelectorTest {
 
 		testDialectNamingResolution( PostgreSQLDialect.class );
 		testDialectNamingResolution( PostgresPlusDialect.class );
-		testDialectNamingResolution( PostgreSQL10Dialect.class );
 
 		testDialectNamingResolution( SQLServerDialect.class );
 		testDialectNamingResolution( SQLServer2008Dialect.class );

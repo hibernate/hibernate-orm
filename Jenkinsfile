@@ -174,14 +174,6 @@ stage('Build') {
 									sh "./docker_db.sh postgresql"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
-								case "postgresql_10":
-									// use the postgis image to enable the PGSQL GIS (spatial) extension
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:10-2.5').pull()
-									}
-									sh "./docker_db.sh postgresql_10"
-									state[buildEnv.tag]['containerName'] = "postgres"
-									break;
 								case "edb":
 									docker.image('quay.io/enterprisedb/edb-postgres-advanced:15.2-3.3-postgis').pull()
 									sh "./docker_db.sh edb"

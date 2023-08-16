@@ -109,6 +109,12 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			return;
 		}
 
+		final EntityInitializer parentEntityInitializer = parentAccess.findFirstEntityInitializer();
+		if ( parentEntityInitializer != null && parentEntityInitializer.isEntityInitialized() ) {
+			isInitialized = true;
+			return;
+		}
+
 		if ( !isAttributeAssignableToConcreteDescriptor() ) {
 			return;
 		}

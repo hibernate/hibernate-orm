@@ -23,6 +23,7 @@ import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.type.format.FormatMapper;
 
 /**
  * Convenience base class for custom implementors of SessionFactoryBuilder, using delegation
@@ -393,6 +394,18 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyConnectionHandlingMode(PhysicalConnectionHandlingMode connectionHandlingMode) {
 		delegate.applyConnectionHandlingMode( connectionHandlingMode );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyJsonFormatMapper(FormatMapper jsonFormatMapper) {
+		delegate.applyJsonFormatMapper( jsonFormatMapper );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyXmlFormatMapper(FormatMapper xmlFormatMapper) {
+		delegate.applyXmlFormatMapper( xmlFormatMapper );
 		return getThis();
 	}
 

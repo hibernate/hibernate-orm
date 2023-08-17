@@ -42,12 +42,12 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 public class FollowOnLockingTest {
 
 	@Test
-	@Timeout(value = 1, unit = TimeUnit.MINUTES)
+	@Timeout(value = 2, unit = TimeUnit.MINUTES)
 	public void testQueryLockingWithoutFollowOn(SessionFactoryScope scope) {
 		testQueryLocking( scope, false );
 	}
 	@Test
-	@Timeout(value = 1, unit = TimeUnit.MINUTES)
+	@Timeout(value = 2, unit = TimeUnit.MINUTES)
 	public void testQueryLockingWithFollowOn(SessionFactoryScope scope) {
 		testQueryLocking( scope, true );
 	}

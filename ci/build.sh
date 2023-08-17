@@ -1,7 +1,7 @@
 #! /bin/bash
 
 goal=
-if [ "$RDBMS" == "h2" ] || [ "$RDBMS" == "h2_1_4" ]; then
+if [ "$RDBMS" == "h2" ]; then
   # This is the default.
   goal=""
 elif [ "$RDBMS" == "hsqldb" ] || [ "$RDBMS" == "hsqldb_2_6" ]; then

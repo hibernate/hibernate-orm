@@ -39,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		settings = { @Setting(name=AvailableSettings.STATEMENT_BATCH_SIZE, value = "60") }
 )
 @SessionFactory()
-@RequiresDialect( value = H2Dialect.class, majorVersion = 2 )
+@RequiresDialect( value = H2Dialect.class )
 @JiraKey(value = "HHH-16868")
 public class InExpressionCountLimitExceededTest {
 

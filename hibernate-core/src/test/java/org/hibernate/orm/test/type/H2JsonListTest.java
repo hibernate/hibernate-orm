@@ -33,7 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SessionFactory
 @DomainModel( annotatedClasses = { H2JsonListTest.Path.class, H2JsonListTest.PathClob.class } )
-@RequiresDialect( value = H2Dialect.class, majorVersion = 2 )
+@RequiresDialect( value = H2Dialect.class )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16320" )
 public class H2JsonListTest {
 	@BeforeAll

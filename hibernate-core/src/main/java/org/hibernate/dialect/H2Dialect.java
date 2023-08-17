@@ -23,7 +23,6 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.hint.IndexQueryHintHandler;
 import org.hibernate.dialect.identity.H2FinalTableIdentityColumnSupport;
-import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.OffsetFetchLimitHandler;
@@ -65,13 +64,10 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.model.jdbc.OptionalTableUpdateOperation;
-import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorH2DatabaseImpl;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorLegacyImpl;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.descriptor.jdbc.H2FormatJsonJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.TimeAsTimestampWithTimeZoneJdbcType;
-import org.hibernate.type.descriptor.jdbc.TimeUtcAsJdbcTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimeUtcAsOffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
@@ -83,11 +79,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.TemporalType;
 
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
-import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.CHAR;
-import static org.hibernate.type.SqlTypes.DECIMAL;
 import static org.hibernate.type.SqlTypes.DOUBLE;
 import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
@@ -97,11 +91,9 @@ import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
 import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
-import static org.hibernate.type.SqlTypes.NUMERIC;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
@@ -117,7 +109,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * @author Thomas Mueller
  */
 public class H2Dialect extends Dialect {
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 1, 4, 197 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 1, 214 );
 
 	private final boolean ansiSequence;
 	private final boolean cascadeConstraints;
@@ -141,25 +133,18 @@ public class H2Dialect extends Dialect {
 	public H2Dialect(DatabaseVersion version) {
 		super(version);
 
-//		supportsTuplesInSubqueries = version.isSameOrAfter( 1, 4, 198 );
-
 		// Prior to 1.4.200 there was no support for 'current value for sequence_name'
 		// After 2.0.202 there is no support for 'sequence_name.nextval' and 'sequence_name.currval'
-		ansiSequence = version.isSameOrAfter( 1, 4, 200 );
+		ansiSequence = true;
 
 		// Prior to 1.4.200 the 'cascade' in 'drop table' was implicit
-		cascadeConstraints = version.isSameOrAfter( 1, 4, 200 );
+		cascadeConstraints = true;
 		// 1.4.200 introduced changes in current_time and current_timestamp
-		useLocalTime = version.isSameOrAfter( 1, 4, 200 );
+		useLocalTime = true;
 
-		this.sequenceInformationExtractor = version.isSameOrAfter( 1, 4, 201 )
-				? SequenceInformationExtractorLegacyImpl.INSTANCE
-				: SequenceInformationExtractorH2DatabaseImpl.INSTANCE;
+		this.sequenceInformationExtractor = SequenceInformationExtractorLegacyImpl.INSTANCE;
 		this.querySequenceString = "select * from INFORMATION_SCHEMA.SEQUENCES";
-
-		this.optionalTableUpdateStrategy = version.isSameOrAfter( 1, 4, 200 )
-				? H2Dialect::usingMerge
-				: H2Dialect::withoutMerge;
+		this.optionalTableUpdateStrategy = H2Dialect::usingMerge;
 	}
 
 	private static DatabaseVersion parseVersion(DialectResolutionInfo info) {
@@ -189,7 +174,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsStandardArrays() {
-		return getVersion().isSameOrAfter( 2 );
+		return true;
 	}
 
 	@Override
@@ -201,13 +186,6 @@ public class H2Dialect extends Dialect {
 	@Override
 	protected String columnType(int sqlTypeCode) {
 		switch ( sqlTypeCode ) {
-			// prior to version 2.0, H2 reported NUMERIC columns as DECIMAL,
-			// which caused problems for schema update tool
-			case NUMERIC:
-				return getVersion().isBefore( 2 ) ? columnType( DECIMAL ) : super.columnType( sqlTypeCode );
-			// Support was only added in 2.0
-			case TIME_WITH_TIMEZONE:
-				return getVersion().isBefore( 2 ) ? columnType( TIMESTAMP_WITH_TIMEZONE ) : super.columnType( sqlTypeCode );
 			case NCHAR:
 				return columnType( CHAR );
 			case NVARCHAR:
@@ -241,17 +219,10 @@ public class H2Dialect extends Dialect {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
 
-		if ( getVersion().isBefore( 2 ) ) {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( ARRAY, "array", this ) );
-		}
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( UUID, "uuid", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
-		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
-		}
-		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
-			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
-		}
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 	}
 
 	@Override
@@ -261,22 +232,11 @@ public class H2Dialect extends Dialect {
 		final JdbcTypeRegistry jdbcTypeRegistry = typeContributions.getTypeConfiguration()
 				.getJdbcTypeRegistry();
 
-		if ( getVersion().isBefore( 2 ) ) {
-			// Support for TIME_WITH_TIMEZONE was only added in 2.0
-			jdbcTypeRegistry.addDescriptor( TimeAsTimestampWithTimeZoneJdbcType.INSTANCE );
-			jdbcTypeRegistry.addDescriptor( TimeUtcAsJdbcTimeJdbcType.INSTANCE );
-		}
-		else {
-			jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
-		}
+		jdbcTypeRegistry.addDescriptor( TimeUtcAsOffsetTimeJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( TimestampUtcAsInstantJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
-		if ( getVersion().isSameOrAfter( 1, 4, 198 ) ) {
-			jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
-		}
-		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
-			jdbcTypeRegistry.addDescriptorIfAbsent( H2FormatJsonJdbcType.INSTANCE );
-		}
+		jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptorIfAbsent( H2FormatJsonJdbcType.INSTANCE );
 	}
 
 	@Override
@@ -286,7 +246,7 @@ public class H2Dialect extends Dialect {
 
 	public boolean hasOddDstBehavior() {
 		// H2 1.4.200 has a bug: https://github.com/h2database/h2database/issues/3184
-		return getVersion().isSameOrAfter( 1, 4, 200 );
+		return true;
 	}
 
 	@Override
@@ -344,36 +304,17 @@ public class H2Dialect extends Dialect {
 		functionFactory.median();
 		functionFactory.stddevPopSamp();
 		functionFactory.varPopSamp();
-		if ( getVersion().isSame( 1, 4, 200 ) ) {
-			// See https://github.com/h2database/h2database/issues/2518
-			functionFactory.format_toChar();
-		}
-		else {
-			functionFactory.format_formatdatetime();
-		}
+		functionFactory.format_formatdatetime();
 		functionFactory.rownum();
-		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
-			functionFactory.windowFunctions();
-			functionFactory.inverseDistributionOrderedSetAggregates();
-			functionFactory.hypotheticalOrderedSetAggregates();
-			if ( getVersion().isSameOrAfter( 2 ) ) {
-				functionFactory.listagg( null );
-			}
-			else {
-				// Use group_concat until 2.x as listagg was buggy
-				functionFactory.listagg_groupConcat();
-			}
-		}
-		else {
-			functionFactory.listagg_groupConcat();
-		}
+		functionFactory.windowFunctions();
+		functionFactory.listagg( null );
+		functionFactory.inverseDistributionOrderedSetAggregates();
+		functionFactory.hypotheticalOrderedSetAggregates();
 	}
 
 	@Override
 	public void augmentPhysicalTableTypes(List<String> tableTypesList) {
-		if ( getVersion().isSameOrAfter( 2 ) ) {
-			tableTypesList.add( "BASE TABLE" );
-		}
+		tableTypesList.add( "BASE TABLE" );
 	}
 
 	@Override
@@ -584,7 +525,7 @@ public class H2Dialect extends Dialect {
 	}
 
 	public boolean supportsTimeLiteralOffset() {
-		return getVersion().isSameOrAfter( 1, 4, 200 );
+		return true;
 	}
 
 	@Override
@@ -823,17 +764,17 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsWindowFunctions() {
-		return getVersion().isSameOrAfter( 1, 4, 200 );
+		return true;
 	}
 
 	@Override
 	public boolean supportsRecursiveCTE() {
-		return getVersion().isSameOrAfter( 1, 4, 196 );
+		return true;
 	}
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-		return getVersion().isSameOrAfter( 1, 4, 198 );
+		return true;
 	}
 
 	@Override
@@ -843,9 +784,7 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return getVersion().isSameOrAfter( 2 )
-				? H2FinalTableIdentityColumnSupport.INSTANCE
-				: H2IdentityColumnSupport.INSTANCE;
+		return H2FinalTableIdentityColumnSupport.INSTANCE;
 	}
 
 	/**
@@ -853,7 +792,7 @@ public class H2Dialect extends Dialect {
 	 */
 	@Override
 	public boolean supportsInsertReturning() {
-		return getVersion().isSameOrAfter( 2 );
+		return true;
 	}
 
 	@Override
@@ -868,20 +807,14 @@ public class H2Dialect extends Dialect {
 
 	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
-		if ( getVersion().isSame( 1, 4, 200 ) ) {
-			// See https://github.com/h2database/h2database/issues/2518
-			appender.appendSql( OracleDialect.datetimeFormat( format, true, true ).result() );
-		}
-		else {
-			appender.appendSql(
-					new Replacer( format, "'", "''" )
-					.replace("e", "u")
-					.replace( "xxx", "XXX" )
-					.replace( "xx", "XX" )
-					.replace( "x", "X" )
-					.result()
-			);
-		}
+		appender.appendSql(
+				new Replacer( format, "'", "''" )
+				.replace("e", "u")
+				.replace( "xxx", "XXX" )
+				.replace( "xx", "XX" )
+				.replace( "x", "X" )
+				.result()
+		);
 	}
 
 	public String translateExtractField(TemporalUnit unit) {

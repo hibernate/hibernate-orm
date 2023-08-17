@@ -63,7 +63,7 @@ public class StandardForeignKeyExporterTest {
 					sqlStringGenerationContext
 			);
 			assertEquals( sqlCreateStrings.length, 1 );
-			assertEquals( sqlCreateStrings[0], "alter table PERSON add constraint fk_firstLastName foreign key (pkFirstName, pkLastName) references PERSON" );
+			assertEquals( sqlCreateStrings[0], "alter table if exists PERSON add constraint fk_firstLastName foreign key (pkFirstName, pkLastName) references PERSON" );
 		}
 	}
 

@@ -27,7 +27,6 @@ helper.runWithNotification {
 stage('Configure') {
 	this.environments = [
 		// Minimum supported versions
-		new BuildEnvironment( dbName: 'h2_1_4' ),
 		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
 		new BuildEnvironment( dbName: 'derby_10_14' ),
 		new BuildEnvironment( dbName: 'mysql_5_7' ),
@@ -110,10 +109,6 @@ stage('Build') {
 					try {
 						stage('Start database') {
 							switch (buildEnv.dbName) {
-								case "h2_1_4":
-									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
-										" -Pgradle.libs.versions.h2=1.4.197 -Pgradle.libs.versions.h2gis=1.5.0"
-									break;
 								case "hsqldb_2_6":
 									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
 										" -Pgradle.libs.versions.hsqldb=2.6.1"

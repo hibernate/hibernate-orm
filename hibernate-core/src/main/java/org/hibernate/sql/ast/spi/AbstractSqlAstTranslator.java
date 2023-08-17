@@ -6678,7 +6678,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public <N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal) {
-		appendSql( literal.getLiteralValue() );
+		appendSql( literal.getUnparsedLiteralValue() );
 	}
 
 	private void visitLiteral(Literal literal) {

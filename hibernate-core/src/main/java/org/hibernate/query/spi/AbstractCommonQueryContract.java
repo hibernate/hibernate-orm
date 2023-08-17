@@ -45,7 +45,6 @@ import org.hibernate.query.TypedParameterValue;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.internal.QueryOptionsImpl;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.query.sqm.tree.expression.SqmHqlNumericLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -132,10 +131,6 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		final Number fetchValue;
 		if ( expression instanceof SqmLiteral<?> ) {
 			fetchValue = ( (SqmLiteral<Number>) expression ).getLiteralValue();
-		}
-		else if ( expression instanceof SqmHqlNumericLiteral ) {
-			final SqmHqlNumericLiteral<Number> hqlNumericLiteral = (SqmHqlNumericLiteral<Number>) expression;
-			fetchValue = hqlNumericLiteral.getTypeCategory().parseLiteralValue( hqlNumericLiteral.getLiteralValue() );
 		}
 		else if ( expression instanceof SqmParameter<?> ) {
 			fetchValue = getParameterValue( (Parameter<Number>) expression );

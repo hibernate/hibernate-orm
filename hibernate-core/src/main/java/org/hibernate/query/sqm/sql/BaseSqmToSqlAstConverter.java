@@ -5525,7 +5525,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return handleConvertedUnparsedNumericLiteral( numericLiteral, expressible );
 		}
 
-		return new UnparsedNumericLiteral<>( numericLiteral.getLiteralValue(), jdbcMapping );
+		return new UnparsedNumericLiteral<>(
+				numericLiteral.getUnparsedLiteralValue(),
+				numericLiteral.getTypeCategory(),
+				jdbcMapping
+		);
 	}
 
 	private <N extends Number> Expression handleConvertedUnparsedNumericLiteral(
@@ -5535,7 +5539,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final BasicValueConverter valueConverter = expressible.getJdbcMapping().getValueConverter();
 		assert valueConverter != null;
 
-		final Number parsedValue = numericLiteral.getTypeCategory().parseLiteralValue( numericLiteral.getLiteralValue() );
+		final Number parsedValue = numericLiteral.getTypeCategory().parseLiteralValue( numericLiteral.getUnparsedLiteralValue() );
 		final Object sqlLiteralValue;
 		if ( valueConverter.getDomainJavaType().isInstance( parsedValue ) ) {
 			//noinspection unchecked
@@ -6663,7 +6667,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		//TODO: do we need to temporarily set appliedByUnit
 		//      to null before we recurse down the tree?
 		//      and what about scale?
+		inferrableTypeAccessStack.push( () -> null );
 		Expression magnitude = toSqlExpression( toDuration.getMagnitude().accept( this ) );
+		inferrableTypeAccessStack.pop();
 		DurationUnit unit = (DurationUnit) toDuration.getUnit().accept( this );
 
 		// let's start by applying the propagated scale

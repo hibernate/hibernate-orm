@@ -31,7 +31,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public class SqmHqlNumericLiteral<N extends Number> extends AbstractSqmExpression<N> {
+public class SqmHqlNumericLiteral<N extends Number> extends SqmLiteral<N> {
 	private final String literalValue;
 	private final NumericTypeCategory typeCategory;
 
@@ -52,8 +52,13 @@ public class SqmHqlNumericLiteral<N extends Number> extends AbstractSqmExpressio
 		this.typeCategory = typeCategory;
 	}
 
-	public String getLiteralValue() {
+	public String getUnparsedLiteralValue() {
 		return literalValue;
+	}
+
+	@Override
+	public N getLiteralValue() {
+		return typeCategory.parseLiteralValue( literalValue );
 	}
 
 	public NumericTypeCategory getTypeCategory() {

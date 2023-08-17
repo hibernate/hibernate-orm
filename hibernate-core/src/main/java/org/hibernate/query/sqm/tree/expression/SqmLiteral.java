@@ -67,12 +67,12 @@ public class SqmLiteral<T> extends AbstractSqmExpression<T> {
 
 	@Override
 	public String asLoggableText() {
-		return "Literal( " + value + ")";
+		return "Literal( " + getLiteralValue() + ")";
 	}
 
 	@Override
 	public void appendHqlString(StringBuilder sb) {
-		appendHqlString( sb, getJavaTypeDescriptor(), value );
+		appendHqlString( sb, getJavaTypeDescriptor(), getLiteralValue() );
 	}
 
 	public static <T> void appendHqlString(StringBuilder sb, JavaType<T> javaType, T value) {

@@ -6,7 +6,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +53,7 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 	public MultiIdEntityLoaderArrayParam(EntityMappingType entityDescriptor, SessionFactoryImplementor sessionFactory) {
 		super( entityDescriptor, sessionFactory );
-		final Class<?> arrayClass = createTypedArray( 0 ).getClass();
+		final Class<?> arrayClass = getIdentifierMapping().getJavaType().getArrayType();
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				getSessionFactory().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( arrayClass ),
 				getIdentifierMapping().getJdbcMapping(),
@@ -393,6 +392,6 @@ public class MultiIdEntityLoaderArrayParam<E> extends AbstractMultiIdEntityLoade
 
 	private <X> X[] createTypedArray(@SuppressWarnings("SameParameterValue") int length) {
 		//noinspection unchecked
-		return (X[]) Array.newInstance( getIdentifierMapping().getJavaType().getJavaTypeClass(), length );
+		return (X[]) getIdentifierMapping().getJavaType().createTypedArray( length );
 	}
 }

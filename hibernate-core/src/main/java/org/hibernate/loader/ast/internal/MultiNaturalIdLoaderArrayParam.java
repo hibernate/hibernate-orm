@@ -41,8 +41,7 @@ public class MultiNaturalIdLoaderArrayParam<E> implements MultiNaturalIdLoader<E
 
 		this.entityDescriptor = entityDescriptor;
 
-		final Class<?> keyClass = entityDescriptor.getNaturalIdMapping().getJavaType().getJavaTypeClass();
-		this.keyArrayClass = LoaderHelper.createTypedArray( keyClass, 0 ).getClass();
+		this.keyArrayClass = entityDescriptor.getNaturalIdMapping().getJavaType().getArrayType();
 	}
 
 	@Override

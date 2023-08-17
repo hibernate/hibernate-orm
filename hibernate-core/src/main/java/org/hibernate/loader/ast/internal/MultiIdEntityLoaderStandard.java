@@ -6,7 +6,6 @@
  */
 package org.hibernate.loader.ast.internal;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,7 +29,6 @@ import org.hibernate.loader.ast.spi.MultiIdLoadOptions;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
@@ -38,6 +36,7 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import org.jboss.logging.Logger;
 
@@ -365,18 +364,15 @@ public class MultiIdEntityLoaderStandard<T> extends AbstractMultiIdEntityLoader<
 
 			if ( foundAnyManagedEntities ) {
 				if ( nonManagedIds.isEmpty() ) {
-					// all of the given ids were already associated with the Session
+					// all the given ids were already associated with the Session
 					return result;
 				}
 				else {
 					// over-write the ids to be loaded with the collection of
 					// just non-managed ones
-					ids = nonManagedIds.toArray(
-							(Object[]) Array.newInstance(
-									ids.getClass().getComponentType(),
-									nonManagedIds.size()
-							)
-					);
+					final JavaType<?> idJavaType = getIdentifierMapping().getJavaType();
+					final Object[] typedArray = idJavaType.createTypedArray( nonManagedIds.size() );
+					ids = nonManagedIds.toArray( typedArray );
 				}
 			}
 		}

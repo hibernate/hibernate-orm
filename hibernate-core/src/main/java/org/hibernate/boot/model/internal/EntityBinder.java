@@ -644,21 +644,21 @@ public class EntityBinder {
 		final String schema;
 		final String table;
 		final String catalog;
-		final List<UniqueConstraintHolder> uniqueConstraints;
+		final UniqueConstraint[] uniqueConstraints;
 		boolean hasTableAnnotation = annotatedClass.isAnnotationPresent( jakarta.persistence.Table.class );
 		if ( hasTableAnnotation ) {
 			final jakarta.persistence.Table tableAnnotation = annotatedClass.getAnnotation( jakarta.persistence.Table.class );
 			table = tableAnnotation.name();
 			schema = tableAnnotation.schema();
 			catalog = tableAnnotation.catalog();
-			uniqueConstraints = TableBinder.buildUniqueConstraintHolders( tableAnnotation.uniqueConstraints() );
+			uniqueConstraints = tableAnnotation.uniqueConstraints();
 		}
 		else {
 			//might be no @Table annotation on the annotated class
 			schema = "";
 			table = "";
 			catalog = "";
-			uniqueConstraints = Collections.emptyList();
+			uniqueConstraints = new UniqueConstraint[0];
 		}
 
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
@@ -684,7 +684,7 @@ public class EntityBinder {
 			String schema,
 			String table,
 			String catalog,
-			List<UniqueConstraintHolder> uniqueConstraints,
+			UniqueConstraint[] uniqueConstraints,
 			InFlightMetadataCollector collector) {
 		final RowId rowId = annotatedClass.getAnnotation( RowId.class );
 		final View view = annotatedClass.getAnnotation( View.class );
@@ -1749,7 +1749,7 @@ public class EntityBinder {
 			String schema,
 			String catalog,
 			String tableName,
-			List<UniqueConstraintHolder> uniqueConstraints,
+			UniqueConstraint[] uniqueConstraints,
 			String rowId,
 			String viewQuery,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
@@ -2050,7 +2050,9 @@ public class EntityBinder {
 				secondaryTable.pkJoinColumns(),
 				secondaryTable.uniqueConstraints()
 		);
-		TableBinder.addIndexes( join.getTable(), secondaryTable.indexes(), context );
+		final Table table = join.getTable();
+		context.getMetadataCollector()
+				.addIndexHolders( table, TableBinder.buildIndexHolders( secondaryTable.indexes() ) );
 		return join;
 	}
 
@@ -2083,7 +2085,7 @@ public class EntityBinder {
 						catalog,
 						logicalName.getTableName(),
 						false,
-						TableBinder.buildUniqueConstraintHolders( uniqueConstraints ),
+						uniqueConstraints,
 						context
 				)
 		);
@@ -2237,7 +2239,9 @@ public class EntityBinder {
 
 	public void processComplementaryTableDefinitions(jakarta.persistence.Table table) {
 		if ( table != null ) {
-			TableBinder.addIndexes( persistentClass.getTable(), table.indexes(), context );
+			final Table classTable = persistentClass.getTable();
+			context.getMetadataCollector()
+					.addIndexHolders( classTable, TableBinder.buildIndexHolders( table.indexes() ) );
 		}
 	}
 

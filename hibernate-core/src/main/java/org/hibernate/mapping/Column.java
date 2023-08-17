@@ -571,8 +571,8 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	}
 
 	@Override
-	public String getText(Dialect d) {
-		return assignmentExpression != null ? assignmentExpression : getQuotedName( d );
+	public String getText(Dialect dialect) {
+		return assignmentExpression != null ? assignmentExpression : getQuotedName( dialect );
 	}
 
 	@Override

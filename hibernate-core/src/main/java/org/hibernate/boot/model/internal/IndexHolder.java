@@ -16,23 +16,26 @@ import jakarta.persistence.Index;
 /**
  * @author Strong Liu
  */
-public class JPAIndexHolder {
+public class IndexHolder {
 	private final String name;
 	private final String[] columns;
 	private final String[] ordering;
 	private final boolean unique;
 
-	public JPAIndexHolder(Index index) {
-		StringTokenizer tokenizer = new StringTokenizer( index.columnList(), "," );
-		List<String> tmp = new ArrayList<>();
+	public IndexHolder(Index index) {
+		final StringTokenizer tokenizer = new StringTokenizer( index.columnList(), "," );
+		final List<String> parsed = new ArrayList<>();
 		while ( tokenizer.hasMoreElements() ) {
-			tmp.add( tokenizer.nextToken().trim() );
+			final String trimmed = tokenizer.nextToken().trim();
+			if ( !trimmed.isEmpty() ) {
+				parsed.add( trimmed ) ;
+			}
 		}
 		this.name = index.name();
-		this.columns = new String[tmp.size()];
-		this.ordering = new String[tmp.size()];
+		this.columns = new String[parsed.size()];
+		this.ordering = new String[parsed.size()];
 		this.unique = index.unique();
-		initializeColumns( columns, ordering, tmp );
+		initializeColumns( columns, ordering, parsed );
 	}
 
 	public String[] getColumns() {

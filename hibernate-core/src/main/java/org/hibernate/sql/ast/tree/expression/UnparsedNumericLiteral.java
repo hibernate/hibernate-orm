@@ -6,12 +6,17 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.basic.BasicResult;
@@ -24,7 +29,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Steve Ebersole
  */
-public class UnparsedNumericLiteral<N extends Number> implements Expression, DomainResultProducer<N> {
+public class UnparsedNumericLiteral<N extends Number> implements Literal, DomainResultProducer<N> {
 	private final String literalValue;
 	private final JdbcMapping jdbcMapping;
 
@@ -78,5 +83,14 @@ public class UnparsedNumericLiteral<N extends Number> implements Expression, Dom
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitUnparsedNumericLiteral( this );
+	}
+
+	@Override
+	public void bindParameterValue(
+			PreparedStatement statement,
+			int startPosition,
+			JdbcParameterBindings jdbcParameterBindings,
+			ExecutionContext executionContext) throws SQLException {
+		statement.setString( startPosition, literalValue );
 	}
 }

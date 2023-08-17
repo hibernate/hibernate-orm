@@ -27,7 +27,7 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.internal.AnnotatedClassType;
-import org.hibernate.boot.model.internal.JPAIndexHolder;
+import org.hibernate.boot.model.internal.IndexHolder;
 import org.hibernate.boot.model.internal.UniqueConstraintHolder;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -359,7 +359,7 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	@Deprecated(forRemoval = true)
 	void addUniqueConstraints(Table table, List<String[]> uniqueConstraints);
 	void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraints);
-	void addJpaIndexHolders(Table table, List<JPAIndexHolder> jpaIndexHolders);
+	void addIndexHolders(Table table, List<IndexHolder> indexHolders);
 
 
 	interface EntityTableXref {

@@ -10,7 +10,6 @@ import java.io.Serializable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -94,5 +93,16 @@ public class Formula implements Selectable, Serializable {
 	@Override
 	public String toString() {
 		return getClass().getSimpleName() + "( " + formula + " )";
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof Formula
+			&& ( (Formula) obj ).formula.equals( formula );
+	}
+
+	@Override
+	public int hashCode() {
+		return formula.hashCode();
 	}
 }

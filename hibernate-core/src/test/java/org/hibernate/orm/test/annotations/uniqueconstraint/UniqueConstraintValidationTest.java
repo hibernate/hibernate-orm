@@ -33,12 +33,12 @@ public class UniqueConstraintValidationTest extends BaseUnitTestCase {
 		buildSessionFactory(EmptyColumnNameEntity.class);
 	}
 
-	@Test
+	@Test(expected = AnnotationException.class)
 	public void testUniqueConstraintWithEmptyColumnNameList() {
 		buildSessionFactory(EmptyColumnNameListEntity.class);
 	}
 
-	@Test(expected = AnnotationException.class)
+	@Test
 	public void testUniqueConstraintWithNotExistsColumnName() {
 		buildSessionFactory(NotExistsColumnEntity.class);
 	}

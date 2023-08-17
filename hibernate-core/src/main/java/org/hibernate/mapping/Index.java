@@ -9,19 +9,22 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.Exportable;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.util.StringHelper;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.qualify;
+import static org.hibernate.internal.util.StringHelper.unqualify;
 
 /**
  * A mapping model object representing an {@linkplain jakarta.persistence.Index index} on a relational database table.
@@ -34,15 +37,22 @@ import static org.hibernate.internal.util.StringHelper.qualify;
 public class Index implements Exportable, Serializable {
 	private Identifier name;
 	private Table table;
-	private final java.util.List<Column> columns = new ArrayList<>();
-	private final java.util.Map<Column, String> columnOrderMap = new HashMap<>(  );
+	private boolean unique;
+	private final java.util.List<Selectable> selectables = new ArrayList<>();
+	private final java.util.Map<Selectable, String> selectableOrderMap = new HashMap<>();
 
-	public static String buildSqlDropIndexString(
-			String name,
-			String tableName) {
+	/**
+	 * @deprecated This method will be removed in the next release
+	 */
+	@Deprecated(forRemoval = true)
+	public static String buildSqlDropIndexString(String name, String tableName) {
 		return "drop index " + qualify( tableName, name );
 	}
 
+	/**
+	 * @deprecated This method will be removed in the next release
+	 */
+	@Deprecated(forRemoval = true)
 	public static String buildSqlCreateIndexString(
 			Dialect dialect,
 			String name,
@@ -52,7 +62,7 @@ public class Index implements Exportable, Serializable {
 			boolean unique) {
 		StringBuilder statement = new StringBuilder( dialect.getCreateIndexString( unique ) )
 				.append( " " )
-				.append( dialect.qualifyIndexName() ? name : StringHelper.unqualify( name ) )
+				.append( dialect.qualifyIndexName() ? name : unqualify( name ) )
 				.append( " on " )
 				.append( tableName )
 				.append( " (" );
@@ -75,6 +85,10 @@ public class Index implements Exportable, Serializable {
 		return statement.toString();
 	}
 
+	/**
+	 * @deprecated This method will be removed in the next release
+	 */
+	@Deprecated(forRemoval = true)
 	public static String buildSqlCreateIndexString(
 			SqlStringGenerationContext context,
 			String name,
@@ -101,39 +115,73 @@ public class Index implements Exportable, Serializable {
 		this.table = table;
 	}
 
+	public void setUnique(boolean unique) {
+		this.unique = unique;
+	}
+
+	public boolean isUnique() {
+		return unique;
+	}
+
 	public int getColumnSpan() {
-		return columns.size();
+		return selectables.size();
 	}
 
+	public List<Selectable> getSelectables() {
+		return unmodifiableList( selectables );
+	}
+
+	public Map<Selectable, String> getSelectableOrderMap() {
+		return unmodifiableMap( selectableOrderMap );
+	}
+
+	/**
+	 * @deprecated use {@link #getSelectables()}
+	 */
+	@Deprecated(since = "6.3")
 	public java.util.List<Column> getColumns() {
-		return unmodifiableList( columns );
+		return selectables.stream()
+				.map( s -> (Column) s ).collect( toUnmodifiableList() );
 	}
 
+	/**
+	 * @deprecated use {@link #getSelectableOrderMap()}
+	 */
+	@Deprecated(since = "6.3")
 	public java.util.Map<Column, String> getColumnOrderMap() {
-		return unmodifiableMap( columnOrderMap );
+		return selectableOrderMap.entrySet().stream()
+				.collect( toUnmodifiableMap( e -> (Column) e.getKey(), Map.Entry::getValue ) );
 	}
 
-	public void addColumn(Column column) {
-		if ( !columns.contains( column ) ) {
-			columns.add( column );
+	public void addColumn(Selectable selectable) {
+		if ( !selectables.contains( selectable ) ) {
+			selectables.add( selectable );
 		}
 	}
 
-	public void addColumn(Column column, String order) {
-		addColumn( column );
+	public void addColumn(Selectable selectable, String order) {
+		addColumn( selectable );
 		if ( isNotEmpty( order ) ) {
-			columnOrderMap.put( column, order );
+			selectableOrderMap.put( selectable, order );
 		}
 	}
 
+	/**
+	 * @deprecated use {@link #getSelectableOrderMap()}
+	 */
+	@Deprecated(since = "6.3", forRemoval = true)
 	public void addColumns(java.util.List<Column> extraColumns) {
 		for ( Column column : extraColumns ) {
 			addColumn( column );
 		}
 	}
 
+	/**
+	 * @deprecated use {@link #getSelectableOrderMap()}
+	 */
+	@Deprecated(since = "6.3", forRemoval = true)
 	public boolean containsColumn(Column column) {
-		return columns.contains( column );
+		return selectables.contains( column );
 	}
 
 	public String getName() {

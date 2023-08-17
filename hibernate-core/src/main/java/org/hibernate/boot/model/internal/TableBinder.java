@@ -65,7 +65,6 @@ public class TableBinder {
 	private String catalog;
 	private String name;
 	private boolean isAbstract;
-	private List<UniqueConstraintHolder> uniqueConstraints;
 	private String ownerEntityTable;
 	private String associatedEntityTable;
 	private String propertyName;
@@ -76,7 +75,8 @@ public class TableBinder {
 	private String associatedEntity;
 	private String associatedJpaEntity;
 	private boolean isJPA2ElementCollection;
-	private List<JPAIndexHolder> jpaIndexHolders;
+	private UniqueConstraint[] uniqueConstraints;
+	private Index[] indexes;
 
 	public void setBuildingContext(MetadataBuildingContext buildingContext) {
 		this.buildingContext = buildingContext;
@@ -103,11 +103,11 @@ public class TableBinder {
 	}
 
 	public void setUniqueConstraints(UniqueConstraint[] uniqueConstraints) {
-		this.uniqueConstraints = TableBinder.buildUniqueConstraintHolders( uniqueConstraints );
+		this.uniqueConstraints = uniqueConstraints;
 	}
 
-	public void setJpaIndex(Index[] jpaIndex){
-		this.jpaIndexHolders = buildJpaIndexHolder( jpaIndex );
+	public void setJpaIndex(Index[] indexes){
+		this.indexes = indexes;
 	}
 
 	public void setJPA2ElementCollection(boolean isJPA2ElementCollection) {
@@ -292,7 +292,7 @@ public class TableBinder {
 						: namingStrategyHelper.determineImplicitName( buildingContext ),
 				isAbstract,
 				uniqueConstraints,
-				jpaIndexHolders,
+				indexes,
 				buildingContext,
 				null,
 				null
@@ -434,7 +434,7 @@ public class TableBinder {
 			String catalog,
 			Identifier logicalName,
 			boolean isAbstract,
-			List<UniqueConstraintHolder> uniqueConstraints,
+			UniqueConstraint[] uniqueConstraints,
 			MetadataBuildingContext buildingContext) {
 		return buildAndFillTable(
 				schema,
@@ -454,7 +454,7 @@ public class TableBinder {
 			String catalog,
 			Identifier logicalName,
 			boolean isAbstract,
-			List<UniqueConstraintHolder> uniqueConstraints,
+			UniqueConstraint[] uniqueConstraints,
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
@@ -476,8 +476,8 @@ public class TableBinder {
 			String catalog,
 			Identifier logicalName,
 			boolean isAbstract,
-			List<UniqueConstraintHolder> uniqueConstraints,
-			List<JPAIndexHolder> jpaIndexHolders,
+			UniqueConstraint[] uniqueConstraints,
+			Index[] indexes,
 			MetadataBuildingContext buildingContext,
 			String subselect,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
@@ -489,11 +489,11 @@ public class TableBinder {
 						denormalizedSuperTableXref, metadataCollector );
 
 		if ( isNotEmpty( uniqueConstraints ) ) {
-			metadataCollector.addUniqueConstraintHolders( table, uniqueConstraints );
+			metadataCollector.addUniqueConstraintHolders( table, buildUniqueConstraintHolders( uniqueConstraints ) );
 		}
 
-		if ( isNotEmpty( jpaIndexHolders ) ) {
-			metadataCollector.addJpaIndexHolders( table, jpaIndexHolders );
+		if ( isNotEmpty( indexes ) ) {
+			metadataCollector.addIndexHolders( table, buildIndexHolders( indexes ) );
 		}
 
 		metadataCollector.addTableNameBinding( logicalName, table );
@@ -806,7 +806,7 @@ public class TableBinder {
 		}
 	}
 
-	public static void addIndexes(Table table, org.hibernate.annotations.Index[] indexes, MetadataBuildingContext context) {
+	static void addIndexes(Table table, org.hibernate.annotations.Index[] indexes, MetadataBuildingContext context) {
 		for ( org.hibernate.annotations.Index index : indexes ) {
 			//no need to handle inSecondPass here since it is only called from EntityBinder
 			context.getMetadataCollector().addSecondPass(
@@ -815,38 +815,33 @@ public class TableBinder {
 		}
 	}
 
-	public static void addIndexes(Table table, Index[] indexes, MetadataBuildingContext context) {
-		context.getMetadataCollector().addJpaIndexHolders( table, buildJpaIndexHolder( indexes ) );
-	}
-
-	public static List<JPAIndexHolder> buildJpaIndexHolder(Index[] indexes) {
-		List<JPAIndexHolder> holders = new ArrayList<>( indexes.length );
+	/**
+	 * Build a list of {@link IndexHolder} instances given a
+	 * list of {@link Index} annotations.
+	 */
+	static List<IndexHolder> buildIndexHolders(Index[] indexes) {
+		List<IndexHolder> holders = new ArrayList<>( indexes.length );
 		for ( Index index : indexes ) {
-			holders.add( new JPAIndexHolder( index ) );
+			holders.add( new IndexHolder( index ) );
 		}
 		return holders;
 	}
 
 	/**
-	 * Build a list of {@link UniqueConstraintHolder} instances given a list of
-	 * {@link UniqueConstraint} annotations.
-	 *
-	 * @param annotations The {@link UniqueConstraint} annotations.
-	 *
-	 * @return The built {@link UniqueConstraintHolder} instances.
+	 * Build a list of {@link UniqueConstraintHolder} instances
+	 * given a list of {@link UniqueConstraint} annotations.
 	 */
-	public static List<UniqueConstraintHolder> buildUniqueConstraintHolders(UniqueConstraint[] annotations) {
-		List<UniqueConstraintHolder> result;
-		if ( annotations == null || annotations.length == 0 ) {
-			result = emptyList();
+	static List<UniqueConstraintHolder> buildUniqueConstraintHolders(UniqueConstraint[] uniqueConstraints) {
+		if ( uniqueConstraints == null || uniqueConstraints.length == 0 ) {
+			return emptyList();
 		}
 		else {
-			result = arrayList( annotations.length );
-			for ( UniqueConstraint uc : annotations ) {
-				result.add( new UniqueConstraintHolder().setName( uc.name(), !uc.name().isEmpty() ).setColumns( uc.columnNames() ) );
+			final List<UniqueConstraintHolder> result = arrayList( uniqueConstraints.length );
+			for ( UniqueConstraint uniqueConstraint : uniqueConstraints ) {
+				result.add( new UniqueConstraintHolder( uniqueConstraint ) );
 			}
+			return result;
 		}
-		return result;
 	}
 
 	public void setDefaultName(

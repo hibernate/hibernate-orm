@@ -7,28 +7,33 @@
 package org.hibernate.boot.model.internal;
 
 
+import jakarta.persistence.UniqueConstraint;
+
 /**
- * {@link jakarta.persistence.UniqueConstraint} annotations are handled via second pass.  I do not
+ * {@link jakarta.persistence.UniqueConstraint} annotations are handled via second pass. I do not
  * understand the reasons why at this time, so here I use a holder object to hold the information
- * needed to create the unique constraint.  The ability to name it is new, and so the code used to
+ * needed to create the unique constraint. The ability to name it is new, and so the code used to
  * simply keep this as a String array (the column names).
- *
- * Isn't this ultimately the same as org.hibernate.cfg.IndexOrUniqueKeySecondPass?
  *
  * @author Steve Ebersole
  */
+// Isn't this ultimately the same as IndexOrUniqueKeySecondPass?
 public class UniqueConstraintHolder {
-	private String name;
-	private boolean nameExplicit;
-	private String[] columns;
+	private final String name;
+	private final String[] columns;
 
 	public String getName() {
 		return name;
 	}
 
-	public UniqueConstraintHolder setName(String name) {
+	public UniqueConstraintHolder(UniqueConstraint uniqueConstraint) {
+		this.name = uniqueConstraint.name();
+		this.columns = uniqueConstraint.columnNames();
+	}
+
+	public UniqueConstraintHolder(String name, String[] columns) {
 		this.name = name;
-		return this;
+		this.columns = columns;
 	}
 
 	public boolean isNameExplicit() {
@@ -37,15 +42,5 @@ public class UniqueConstraintHolder {
 
 	public String[] getColumns() {
 		return columns;
-	}
-
-	public UniqueConstraintHolder setColumns(String[] columns) {
-		this.columns = columns;
-		return this;
-	}
-
-	public UniqueConstraintHolder setName(String name, boolean nameExplicit) {
-		this.nameExplicit = nameExplicit;
-		return setName(name);
 	}
 }

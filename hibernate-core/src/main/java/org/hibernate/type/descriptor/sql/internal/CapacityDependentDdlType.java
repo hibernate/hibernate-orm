@@ -26,12 +26,14 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 				builder.sqlTypeCode,
 				builder.typeNamePattern,
 				builder.castTypeNamePattern,
+				builder.castTypeName,
 				builder.dialect
 		);
 		builder.typeEntries.sort( Comparator.naturalOrder() );
 		this.typeEntries = builder.typeEntries.toArray(new TypeEntry[0]);
 	}
 
+	@Override @Deprecated
 	public String[] getRawTypeNames() {
 		final String[] rawTypeNames = new String[typeEntries.length + 1];
 		for ( int i = 0; i < typeEntries.length; i++ ) {
@@ -78,15 +80,25 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 	public static Builder builder(
 			int sqlTypeCode,
 			String typeNamePattern,
-			String castTypeNamePattern,
+			String castTypeName,
 			Dialect dialect) {
-		return new Builder( sqlTypeCode, typeNamePattern, castTypeNamePattern, dialect );
+		return new Builder( sqlTypeCode, typeNamePattern, null, castTypeName, dialect );
+	}
+
+	public static Builder builder(
+			int sqlTypeCode,
+			String typeNamePattern,
+			String castTypeNamePattern,
+			String castTypeName,
+			Dialect dialect) {
+		return new Builder( sqlTypeCode, typeNamePattern, castTypeNamePattern, castTypeName, dialect );
 	}
 
 	public static class Builder {
 		private final int sqlTypeCode;
 		private final String typeNamePattern;
 		private final String castTypeNamePattern;
+		private final String castTypeName;
 		private final Dialect dialect;
 		private final List<TypeEntry> typeEntries;
 
@@ -94,10 +106,12 @@ public class CapacityDependentDdlType extends DdlTypeImpl {
 				int sqlTypeCode,
 				String typeNamePattern,
 				String castTypeNamePattern,
+				String castTypeName,
 				Dialect dialect) {
 			this.sqlTypeCode = sqlTypeCode;
 			this.typeNamePattern = typeNamePattern;
 			this.castTypeNamePattern = castTypeNamePattern;
+			this.castTypeName = castTypeName;
 			this.dialect = dialect;
 			this.typeEntries = new ArrayList<>();
 		}

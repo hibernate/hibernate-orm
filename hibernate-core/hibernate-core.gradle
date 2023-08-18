@@ -64,6 +64,7 @@ dependencies {
         // for test runtime
         transitive = true
     }
+    testImplementation('org.joda:joda-money:1.0.1')
     testImplementation "joda-time:joda-time:2.3"
     testImplementation dbLibs.h2
 

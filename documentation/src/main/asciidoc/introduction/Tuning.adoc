@@ -1029,11 +1029,13 @@ It's even possible to specify an ordering for an indexed column, or that the ind
 [source,java]
 ----
 @Entity
-@Table(indexes=@Index(columnList="lower(title), year desc, publisher_id"))
+@Table(indexes=@Index(columnList="(lower(title)), year desc, publisher_id"))
 class Book { ... }
 ----
 
 This lets us create a customized index for a particular query.
+
+Note that SQL expressions like `lower(title)` must be enclosed in parentheses in the `columnList` of the index definition.
 
 [TIP]
 ====

@@ -835,3 +835,50 @@ class Order {
     ...
 }
 ----
+
+[[constraints]]
+=== Adding constraints
+
+Database constraints are important.
+Even if you're sure that your program has no bugs 🧐, it's probably not the only program with access to the database.
+Constraints help ensure that different programs (and human administrators) play nicely with each other.
+
+Hibernate adds certain constraints to generated DDL automatically: primary key constraints, foreign key constraints, and some unique constraints.
+But it's common to need to:
+
+- add additional unique constraints,
+- add check constraints, or
+- customize the name of a foreign key constraint.
+
+We've <<join-column-mappings,already seen>> how to use `@ForeignKey` to specify the name of a foreign key constraint.
+
+There's two ways to add a unique constraint to a table:
+
+- using `@Column(unique=true)` to indicate a single-column unique key, or
+- using the `@UniqueConstraint` annotation to define a uniqueness constraint on a combination of columns.
+
+[source,java]
+----
+@Entity
+@Table(uniqueConstraints=@UniqueConstraint(columnNames={"title", "year", "publisher_id"}))
+class Book { ... }
+----
+
+This annotation looks a bit ugly perhaps, but it's actually useful even as documentation.
+
+The `@Check` annotation adds a check constraint to the table.
+
+[source,java]
+----
+@Entity
+@Check(name="ValidISBN", constraints="length(isbn)=13")
+class Book { ... }
+----
+
+The `@Check` annotation is commonly used at the field level:
+
+[source,java]
+----
+@Id @Check(constraints="length(isbn)=13")
+String isbn;
+----

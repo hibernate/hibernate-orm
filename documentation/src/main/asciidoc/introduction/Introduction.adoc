@@ -659,12 +659,12 @@ insert into Books (isbn, title) values ('9781617290459', 'Java Persistence with 
 
 If we name this file `import.sql`, and place it in the root classpath, that's all we need to do.
 
-Otherwise, we need to specify the file in the <<automatic-schema-export,configuration property>> `jakarta.persistence.schema-generation.create-script-source`.
+Otherwise, we need to specify the file in the <<automatic-schema-export,configuration property>> `jakarta.persistence.sql-load-script-source`.
 If we're using `Configuration` to configure Hibernate, we could write:
 
 [source,java]
 ----
-configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE,
+configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE,
                           "/org/example/test-data.sql");
 ----
 

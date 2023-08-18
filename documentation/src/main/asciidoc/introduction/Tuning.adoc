@@ -1002,6 +1002,47 @@ The comment text may be customized:
 - by calling `Query.setComment(comment)` or `Query.setHint(AvailableHints.HINT_COMMENT,comment)`, or
 - via the `@NamedQuery` annotation.
 
+[TIP]
+====
+Once you've identified a slow query, one of the best ways to make it faster is to _actually go and talk to someone who is an expert at making queries go fast_.
+These people are called "database administrators", and if you're reading this document you probably aren't one.
+Database administrators know lots of stuff that Java developers don't.
+So if you're lucky enough to have a DBA about, you don't need to Dunning-Kruger your way out of a slow query.
+====
+
+An expertly-defined index might be all you need to fix a slow query.
+
+[[indexes]]
+=== Adding indexes
+
+The `@Index` annotation may be used to add an index to a table:
+
+[source,java]
+----
+@Entity
+@Table(indexes=@Index(columnList="title, year, publisher_id"))
+class Book { ... }
+----
+
+It's even possible to specify an ordering for an indexed column, or that the index should be case-insensitive:
+
+[source,java]
+----
+@Entity
+@Table(indexes=@Index(columnList="lower(title), year desc, publisher_id"))
+class Book { ... }
+----
+
+This lets us create a customized index for a particular query.
+
+[TIP]
+====
+It's not clear that information about indexes belongs in annotations of Java code.
+Indexes are usually maintained and modified by a database administrator, ideally by an expert in tuning the performance of one particular RDBMS.
+So it might be better to keep the definition of indexes a SQL DDL script that your DBA can easily read and modify.
+<<automatic-schema-export,Remember>>, we can ask Hibernate to execute a DDL script using the property `javax.persistence.schema-generation.create-script-source`.
+====
+
 [[hibernate-reactive]]
 === Reactive programming with Hibernate
 

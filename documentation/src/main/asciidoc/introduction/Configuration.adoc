@@ -359,7 +359,10 @@ Additionally, drop the schema on `SessionFactory` shutdown
 | (Optional) If `metadata-then-script` or `script-then-metadata`, execute an additional SQL script when exported tables and sequences
 
 | `jakarta.persistence.schema-generation.create-script-source`
-| (Optional) The name of the SQL script to be executed
+| (Optional) The name of a SQL DDL script to be executed
+
+| `jakarta.persistence.sql-load-script-source`
+| (Optional) The name of a SQL DML script to be executed
 |===
 
 This feature is extremely useful for testing.
@@ -367,7 +370,7 @@ This feature is extremely useful for testing.
 [TIP]
 // .Importing test or reference data
 ====
-The easiest way to pre-initialize a database with test or "reference" data is to place a list of SQL `insert` statements in a file named, for example, `import.sql`, and specify the path to this file using the property `jakarta.persistence.schema-generation.create-script-source`.
+The easiest way to pre-initialize a database with test or "reference" data is to place a list of SQL `insert` statements in a file named, for example, `import.sql`, and specify the path to this file using the property `jakarta.persistence.sql-load-script-source`.
 We've already seen an <<import.sql,example>> of this approach, which is cleaner than writing Java code to instantiate entity instances and calling `persist()` on each of them.
 ====
 

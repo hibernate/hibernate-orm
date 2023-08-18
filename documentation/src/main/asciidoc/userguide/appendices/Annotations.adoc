@@ -808,6 +808,25 @@ The supported property types are:
 
 See the <<chapters/domain/basic_types.adoc#mapping-generated-CreationTimestamp,`@CreationTimestamp` mapping>> section for more info.
 
+[[annotations-hibernate-compositetype]]
+==== `@CompositeType`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CompositeType.html[`@CompositeType`] annotation is used to supply an implementation of the `org.hibernate.usertype.CompositeUserType` contract for the annotated attribute mapping.
+
+See the <<chapters/domain/embeddables.adoc#embeddable-mapping-custom, Custom type mapping>> section for more info.
+
+[[annotations-hibernate-compositetyperegistration]]
+==== `@CompositeTypeRegistration`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CompositeTypeRegistration.html[`@CompositeTypeRegistration`] annotation provides a way to register an implementation of the `org.hibernate.usertype.CompositeUserType` contract for all references to a particular `@Embeddable`.
+
+See the <<chapters/domain/embeddables.adoc#embeddable-usertype-registration-ex, Custom type mapping>> section for more info.
+
+[[annotations-hibernate-compositetyperegistrations]]
+==== `@CompositeTypeRegistrations`
+
+The https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hibernate/annotations/CompositeTypeRegistrations.html[`@CompositeTypeRegistrations`] annotation is used to group multiple <<annotations-hibernate-compositetyperegistration>> annotations.
+
 [[annotations-hibernate-discriminatorformula]]
 ==== `@DiscriminatorFormula`
 

@@ -119,7 +119,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private Component(Component original) {
 		super( original );
 		this.properties.addAll( original.properties );
-		this.originalPropertyOrder = original.originalPropertyOrder.clone();
+		this.originalPropertyOrder = original.originalPropertyOrder == null ? null : original.originalPropertyOrder.clone();
 		this.componentClassName = original.componentClassName;
 		this.embedded = original.embedded;
 		this.parentProperty = original.parentProperty;

@@ -15,7 +15,10 @@ import jakarta.persistence.Index;
 
 /**
  * @author Strong Liu
+ *
+ * @deprecated no longer used, will be removed in next release
  */
+@Deprecated(since = "6.3", forRemoval = true)
 public class IndexHolder {
 	private final String name;
 	private final String[] columns;

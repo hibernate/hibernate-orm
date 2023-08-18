@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
@@ -57,9 +56,6 @@ import org.hibernate.boot.model.internal.SetBasicValueTypeSecondPass;
 import org.hibernate.boot.model.internal.UniqueConstraintHolder;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
-import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
-import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
@@ -92,19 +88,15 @@ import org.hibernate.mapping.Component;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.ForeignKey;
-import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.IdentifierCollection;
-import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
-import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -122,7 +114,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.MapsId;
 
 import static java.util.Collections.emptyList;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
 /**
@@ -181,8 +172,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private Map<String, String> mappedByResolver;
 	private Map<String, String> propertyRefResolver;
 	private Set<DelayedPropertyReferenceHandler> delayedPropertyReferenceHandlers;
-	private Map<Table, List<UniqueConstraintHolder>> uniqueConstraintHoldersByTable;
-	private Map<Table, List<IndexHolder>> indexHoldersByTable;
 	private List<Function<MetadataBuildingContext, Boolean>> valueResolvers;
 
 	public InFlightMetadataCollectorImpl(
@@ -1440,59 +1429,16 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 	@Override @Deprecated(forRemoval = true)
 	public void addUniqueConstraints(Table table, List<String[]> uniqueConstraints) {
-		List<UniqueConstraintHolder> constraintHolders = new ArrayList<>( uniqueConstraints.size() );
-
-		int keyNameBase = determineCurrentNumberOfUniqueConstraintHolders( table );
-		for ( String[] columns : uniqueConstraints ) {
-			final String keyName = "key" + keyNameBase++;
-			constraintHolders.add(
-					new UniqueConstraintHolder( keyName, columns )
-			);
-		}
-		addUniqueConstraintHolders( table, constraintHolders );
+		throw new UnsupportedOperationException("addUniqueConstraints() will be removed");
 	}
-
-	private int determineCurrentNumberOfUniqueConstraintHolders(Table table) {
-		List currentHolders = uniqueConstraintHoldersByTable == null ? null : uniqueConstraintHoldersByTable.get( table );
-		return currentHolders == null ? 0 : currentHolders.size();
-	}
-
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> holders) {
-		List<UniqueConstraintHolder> holderList = null;
-
-		if ( uniqueConstraintHoldersByTable == null ) {
-			uniqueConstraintHoldersByTable = new HashMap<>();
-		}
-		else {
-			holderList = uniqueConstraintHoldersByTable.get( table );
-		}
-
-		if ( holderList == null ) {
-			holderList = new ArrayList<>();
-			uniqueConstraintHoldersByTable.put( table, holderList );
-		}
-
-		holderList.addAll( holders );
+		throw new UnsupportedOperationException("addUniqueConstraintHolders() will be removed");
 	}
 
-	@Override
+	@Override @Deprecated(forRemoval = true)
 	public void addIndexHolders(Table table, List<IndexHolder> holders) {
-		List<IndexHolder> holderList = null;
-
-		if ( indexHoldersByTable == null ) {
-			indexHoldersByTable = new HashMap<>();
-		}
-		else {
-			holderList = indexHoldersByTable.get( table );
-		}
-
-		if ( holderList == null ) {
-			holderList = new ArrayList<>();
-			indexHoldersByTable.put( table, holderList );
-		}
-
-		holderList.addAll( holders );
+		throw new UnsupportedOperationException("addIndexHolders() will be removed");
 	}
 
 	private final Map<String,EntityTableXrefImpl> entityTableXrefMap = new HashMap<>();
@@ -1848,9 +1794,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 
 			secondPassCompileForeignKeys( buildingContext );
 
-			processUniqueConstraintHolders( buildingContext );
-			processIndexHolders( buildingContext );
-
 			processNaturalIdUniqueKeyBinders();
 
 			processCachingOverrides();
@@ -2044,18 +1987,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 	}
 
-	private List<Identifier> toIdentifiers(String[] names) {
-		if ( names == null ) {
-			return emptyList();
-		}
-
-		final List<Identifier> columnNames = arrayList( names.length );
-		for ( String name : names ) {
-			columnNames.add( getDatabase().toIdentifier( name ) );
-		}
-		return columnNames;
-	}
-
 	private List<Identifier> extractColumnNames(List<Column> columns) {
 		if ( columns == null || columns.isEmpty() ) {
 			return emptyList();
@@ -2080,141 +2011,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 
 		delayedPropertyReferenceHandlers.clear();
-	}
-
-	private void processUniqueConstraintHolders(MetadataBuildingContext buildingContext) {
-		if ( uniqueConstraintHoldersByTable == null ) {
-			return;
-		}
-
-		for ( Map.Entry<Table, List<UniqueConstraintHolder>> tableListEntry : uniqueConstraintHoldersByTable.entrySet() ) {
-			final Table table = tableListEntry.getKey();
-			final List<UniqueConstraintHolder> uniqueConstraints = tableListEntry.getValue();
-			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
-				buildUniqueKeyFromColumnNames( table, holder.getName(), holder.isNameExplicit(), holder.getColumns(), buildingContext );
-			}
-		}
-
-		uniqueConstraintHoldersByTable.clear();
-	}
-
-	private void buildUniqueKeyFromColumnNames(
-			Table table,
-			String keyName,
-			boolean nameExplicit,
-			String[] columnNames,
-			MetadataBuildingContext context) {
-		buildUniqueKeyFromColumnNames( table, keyName, nameExplicit, columnNames, null, true, context );
-	}
-
-	private void buildUniqueKeyFromColumnNames(
-			final Table table,
-			String keyName,
-			boolean nameExplicit,
-			final String[] columnNames,
-			String[] orderings,
-			boolean unique,
-			final MetadataBuildingContext context) {
-		final int size = columnNames.length;
-		if ( size == 0 ) {
-			throw new AnnotationException( ( unique ? "Unique constraint" : "Index" )
-					+ ( isEmpty( keyName ) ? "" : " '" + keyName + "'" )
-					+ " on table '" + table.getName() + "' has no columns" );
-		}
-		final Selectable[] columns = new Selectable[size];
-		for ( int index = 0; index < size; index++ ) {
-			final String columnName = columnNames[index];
-			if ( isEmpty( columnName ) ) {
-				throw new AnnotationException( ( unique ? "Unique constraint" : "Index" )
-						+ ( isEmpty( keyName ) ? "" : " '" + keyName + "'" )
-						+ " on table '" + table.getName() + "' has an empty column name" );
-			}
-			columns[index] = indexColumn( table, context, columnName);
-		}
-		createIndexOrUniqueKey( table, keyName, nameExplicit, columnNames, orderings, unique, context, columns );
-	}
-
-	private static Selectable indexColumn(Table table, MetadataBuildingContext buildingContext, String logicalColumnName) {
-		if ( logicalColumnName.startsWith("(") ) {
-			return new Formula( logicalColumnName );
-		}
-		else {
-			Column column;
-			try {
-				column = table.getColumn( buildingContext.getMetadataCollector(), logicalColumnName );
-			}
-			catch (MappingException me) {
-				column = null;
-			}
-			if ( column != null ) {
-				return column;
-			}
-			else {
-				// assume it's a SQL formula with missing parens
-				return new Formula( "(" + logicalColumnName + ")" );
-//				throw new AnnotationException(
-//						"Table '" + table.getName() + "' has no column named '" + logicalColumnName
-//								+ "' matching the column specified in '@UniqueConstraint'"
-//				);
-			}
-		}
-	}
-
-	private void createIndexOrUniqueKey(
-			Table table,
-			String originalKeyName,
-			boolean nameExplicit,
-			String[] columnNames,
-			String[] orderings,
-			boolean unique,
-			MetadataBuildingContext context,
-			Selectable[] columns) {
-		final ImplicitNamingStrategy naming = getMetadataBuildingOptions().getImplicitNamingStrategy();
-		final IndexOrUniqueKeyNameSource source =
-				new IndexOrUniqueKeyNameSource( context, table, columnNames, originalKeyName );
-		final Dialect dialect = getDatabase().getJdbcEnvironment().getDialect();
-		boolean hasFormula = false;
-		for ( Selectable selectable : columns ) {
-			if ( selectable.isFormula() ) {
-				hasFormula = true;
-			}
-		}
-		if ( unique && !hasFormula ) {
-			final String keyName = naming.determineUniqueKeyName( source ).render( dialect );
-			final UniqueKey uniqueKey = table.getOrCreateUniqueKey( keyName );
-			uniqueKey.setNameExplicit( nameExplicit );
-			for ( int i = 0; i < columns.length; i++ ) {
-				uniqueKey.addColumn( (Column) columns[i], orderings != null ? orderings[i] : null );
-			}
-		}
-		else {
-			final String keyName = naming.determineIndexName( source ).render( dialect );
-			final Index index = table.getOrCreateIndex( keyName );
-			index.setUnique( unique );
-			for ( int i = 0; i < columns.length; i++ ) {
-				index.addColumn( columns[i], orderings != null ? orderings[i] : null );
-			}
-		}
-	}
-
-	private void processIndexHolders(MetadataBuildingContext context) {
-		if ( indexHoldersByTable != null ) {
-			for ( Map.Entry<Table, List<IndexHolder>> entry : indexHoldersByTable.entrySet() ) {
-				final Table table = entry.getKey();
-				final List<IndexHolder> indexHolders = entry.getValue();
-				for ( IndexHolder holder : indexHolders) {
-					buildUniqueKeyFromColumnNames(
-							table,
-							holder.getName(),
-							!holder.getName().isEmpty(),
-							holder.getColumns(),
-							holder.getOrdering(),
-							holder.isUnique(),
-							context
-					);
-				}
-			}
-		}
 	}
 
 	private Map<String,NaturalIdUniqueKeyBinder> naturalIdUniqueKeyBinderMap;
@@ -2391,46 +2187,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			// try to build a SF.  Here, just building the Metadata, it is "ok" for an
 			// exception to occur, the same exception will happen later as we build the SF.
 			log.debugf( "Ignoring exception thrown when trying to build IdentifierGenerator as part of Metadata building", e );
-		}
-	}
-
-	private class IndexOrUniqueKeyNameSource implements ImplicitIndexNameSource, ImplicitUniqueKeyNameSource {
-		private final MetadataBuildingContext buildingContext;
-		private final Table table;
-		private final String[] columnNames;
-		private final String originalKeyName;
-
-		public IndexOrUniqueKeyNameSource(MetadataBuildingContext buildingContext, Table table, String[] columnNames, String originalKeyName) {
-			this.buildingContext = buildingContext;
-			this.table = table;
-			this.columnNames = columnNames;
-			this.originalKeyName = originalKeyName;
-		}
-
-		@Override
-		public MetadataBuildingContext getBuildingContext() {
-			return buildingContext;
-		}
-
-		@Override
-		public Identifier getTableName() {
-			return table.getNameIdentifier();
-		}
-
-		private List<Identifier> columnNameIdentifiers;
-
-		@Override
-		public List<Identifier> getColumnNames() {
-			// be lazy about building these
-			if ( columnNameIdentifiers == null ) {
-				columnNameIdentifiers = toIdentifiers(columnNames);
-			}
-			return columnNameIdentifiers;
-		}
-
-		@Override
-		public Identifier getUserProvidedIdentifier() {
-			return originalKeyName != null ? Identifier.toIdentifier(originalKeyName) : null;
 		}
 	}
 

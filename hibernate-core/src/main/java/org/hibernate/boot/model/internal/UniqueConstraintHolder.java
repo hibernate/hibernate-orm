@@ -10,14 +10,13 @@ package org.hibernate.boot.model.internal;
 import jakarta.persistence.UniqueConstraint;
 
 /**
- * {@link jakarta.persistence.UniqueConstraint} annotations are handled via second pass. I do not
- * understand the reasons why at this time, so here I use a holder object to hold the information
- * needed to create the unique constraint. The ability to name it is new, and so the code used to
- * simply keep this as a String array (the column names).
+ * {@link jakarta.persistence.UniqueConstraint} annotations are handled via second pass.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated no longer used, will be removed in next release
  */
-// Isn't this ultimately the same as IndexOrUniqueKeySecondPass?
+@Deprecated(since = "6.3", forRemoval = true)
 public class UniqueConstraintHolder {
 	private final String name;
 	private final String[] columns;

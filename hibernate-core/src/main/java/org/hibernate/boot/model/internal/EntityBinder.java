@@ -2051,8 +2051,7 @@ public class EntityBinder {
 				secondaryTable.uniqueConstraints()
 		);
 		final Table table = join.getTable();
-		context.getMetadataCollector()
-				.addIndexHolders( table, TableBinder.buildIndexHolders( secondaryTable.indexes() ) );
+		new IndexBinder( context ).bindIndexes( table, secondaryTable.indexes() );
 		return join;
 	}
 
@@ -2239,9 +2238,7 @@ public class EntityBinder {
 
 	public void processComplementaryTableDefinitions(jakarta.persistence.Table table) {
 		if ( table != null ) {
-			final Table classTable = persistentClass.getTable();
-			context.getMetadataCollector()
-					.addIndexHolders( classTable, TableBinder.buildIndexHolders( table.indexes() ) );
+			new IndexBinder( context ).bindIndexes( persistentClass.getTable(), table.indexes() );
 		}
 	}
 

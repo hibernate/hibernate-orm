@@ -354,11 +354,19 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 	String getFromMappedBy(String ownerEntityName, String propertyName);
 
 	/**
-	 * @deprecated no longer used
+	 * @deprecated no longer implemented, will be removed in next release
 	 */
 	@Deprecated(forRemoval = true)
 	void addUniqueConstraints(Table table, List<String[]> uniqueConstraints);
+	/**
+	 * @deprecated no longer implemented, will be removed in next release
+	 */
+	@Deprecated(forRemoval = true)
 	void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraints);
+	/**
+	 * @deprecated no longer implemented, will be removed in next release
+	 */
+	@Deprecated(forRemoval = true)
 	void addIndexHolders(Table table, List<IndexHolder> indexHolders);
 
 

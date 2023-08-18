@@ -47,13 +47,11 @@ import org.hibernate.boot.model.internal.CreateKeySecondPass;
 import org.hibernate.boot.model.internal.FkSecondPass;
 import org.hibernate.boot.model.internal.IdGeneratorResolverSecondPass;
 import org.hibernate.boot.model.internal.ImplicitToOneJoinTableSecondPass;
-import org.hibernate.boot.model.internal.IndexHolder;
 import org.hibernate.boot.model.internal.OptionalDeterminationSecondPass;
 import org.hibernate.boot.model.internal.QuerySecondPass;
 import org.hibernate.boot.model.internal.SecondaryTableFromAnnotationSecondPass;
 import org.hibernate.boot.model.internal.SecondaryTableSecondPass;
 import org.hibernate.boot.model.internal.SetBasicValueTypeSecondPass;
-import org.hibernate.boot.model.internal.UniqueConstraintHolder;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -1425,20 +1423,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		addDelayedPropertyReferenceHandler(
 				new DelayedPropertyReferenceHandlerAnnotationImpl( referencedClass, propertyName, true )
 		);
-	}
-
-	@Override @Deprecated(forRemoval = true)
-	public void addUniqueConstraints(Table table, List<String[]> uniqueConstraints) {
-		throw new UnsupportedOperationException("addUniqueConstraints() will be removed");
-	}
-	@Override @Deprecated(forRemoval = true)
-	public void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> holders) {
-		throw new UnsupportedOperationException("addUniqueConstraintHolders() will be removed");
-	}
-
-	@Override @Deprecated(forRemoval = true)
-	public void addIndexHolders(Table table, List<IndexHolder> holders) {
-		throw new UnsupportedOperationException("addIndexHolders() will be removed");
 	}
 
 	private final Map<String,EntityTableXrefImpl> entityTableXrefMap = new HashMap<>();

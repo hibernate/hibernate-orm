@@ -12,6 +12,8 @@ import java.util.Map;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.internal.util.StringHelper;
 
+import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+
 /**
  * A mapping model object representing a {@linkplain jakarta.persistence.UniqueConstraint unique key}
  * constraint on a relational database table.
@@ -35,7 +37,7 @@ public class UniqueKey extends Constraint {
 
 	public void addColumn(Column column, String order) {
 		addColumn( column );
-		if ( StringHelper.isNotEmpty( order ) ) {
+		if ( isNotEmpty( order ) ) {
 			columnOrderMap.put( column, order );
 		}
 	}
@@ -63,7 +65,8 @@ public class UniqueKey extends Constraint {
 
 	public boolean hasNullableColumn() {
 		for ( Column column : getColumns() ) {
-			if ( column.isNullable() ) {
+			final Column tableColumn = getTable().getColumn( column );
+			if ( tableColumn != null && tableColumn.isNullable() ) {
 				return true;
 			}
 		}

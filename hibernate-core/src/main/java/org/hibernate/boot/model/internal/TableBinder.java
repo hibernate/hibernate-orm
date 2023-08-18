@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.model.internal;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.AnnotationException;
@@ -43,13 +42,10 @@ import org.jboss.logging.Logger;
 import jakarta.persistence.Index;
 import jakarta.persistence.UniqueConstraint;
 
-import static java.util.Collections.emptyList;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 import static org.hibernate.internal.util.StringHelper.isQuoted;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 import static org.hibernate.internal.util.StringHelper.unquote;
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
-import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
  * Stateful binder responsible for producing instances of {@link Table}.
@@ -488,12 +484,12 @@ public class TableBinder {
 						logicalName, isAbstract, buildingContext, subselect,
 						denormalizedSuperTableXref, metadataCollector );
 
-		if ( isNotEmpty( uniqueConstraints ) ) {
-			metadataCollector.addUniqueConstraintHolders( table, buildUniqueConstraintHolders( uniqueConstraints ) );
+		if ( uniqueConstraints != null ) {
+			new IndexBinder( buildingContext ).bindUniqueConstraints( table, uniqueConstraints );
 		}
 
-		if ( isNotEmpty( indexes ) ) {
-			metadataCollector.addIndexHolders( table, buildIndexHolders( indexes ) );
+		if ( indexes != null ) {
+			new IndexBinder( buildingContext ).bindIndexes( table, indexes );
 		}
 
 		metadataCollector.addTableNameBinding( logicalName, table );
@@ -812,35 +808,6 @@ public class TableBinder {
 			context.getMetadataCollector().addSecondPass(
 					new IndexOrUniqueKeySecondPass( table, index.name(), index.columnNames(), context )
 			);
-		}
-	}
-
-	/**
-	 * Build a list of {@link IndexHolder} instances given a
-	 * list of {@link Index} annotations.
-	 */
-	static List<IndexHolder> buildIndexHolders(Index[] indexes) {
-		List<IndexHolder> holders = new ArrayList<>( indexes.length );
-		for ( Index index : indexes ) {
-			holders.add( new IndexHolder( index ) );
-		}
-		return holders;
-	}
-
-	/**
-	 * Build a list of {@link UniqueConstraintHolder} instances
-	 * given a list of {@link UniqueConstraint} annotations.
-	 */
-	static List<UniqueConstraintHolder> buildUniqueConstraintHolders(UniqueConstraint[] uniqueConstraints) {
-		if ( uniqueConstraints == null || uniqueConstraints.length == 0 ) {
-			return emptyList();
-		}
-		else {
-			final List<UniqueConstraintHolder> result = arrayList( uniqueConstraints.length );
-			for ( UniqueConstraint uniqueConstraint : uniqueConstraints ) {
-				result.add( new UniqueConstraintHolder( uniqueConstraint ) );
-			}
-			return result;
 		}
 	}
 

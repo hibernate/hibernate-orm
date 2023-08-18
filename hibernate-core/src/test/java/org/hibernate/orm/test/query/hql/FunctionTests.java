@@ -14,6 +14,7 @@ import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.TestForIssue;
@@ -57,6 +58,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isOneOf;
 
 import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.FEMALE;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -998,21 +1000,6 @@ public class FunctionTests {
 	}
 
 	@Test
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTruncateThroughCast.class)
-	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "We need to fix this, see HHH-16989")
-	public void testCastFunction_withTruncation(SessionFactoryScope scope) {
-		scope.inTransaction(
-				session -> {
-					session.createQuery("select cast(e.theString as String(15)), cast(e.theDouble as String(8)) from EntityOfBasics e", Object[].class)
-							.list();
-
-					session.createQuery("select cast('ABCDEF' as Character) from EntityOfBasics", Character.class)
-							.list();
-				}
-		);
-	}
-
-	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting to the binary types")
 	public void testCastFunctionBinary(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -1024,15 +1011,62 @@ public class FunctionTests {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = MySQLDialect.class, matchSubTypes = true, reason = "We need to fix this, see HHH-16989")
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting to the binary types")
 	public void testCastFunctionWithLength(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
 					session.createQuery("select cast(e.theString as String(15)), cast(e.theDouble as String(17)) from EntityOfBasics e", Object[].class)
 							.list();
+					assertEquals( 'A',
+							session.createQuery("select cast('ABCDEF' as Character)", Character.class)
+									.getSingleResult() );
+					assertEquals( "ABC",
+							session.createQuery("select cast('ABCDEF' as String(3))", String.class)
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting to binary types")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL bytea doesn't have a length")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle cast to raw does not do truncatation")
+	public void testCastBinaryWithLength(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					session.createQuery("select cast(e.theString as Binary(10)) from EntityOfBasics e", byte[].class)
 							.list();
+					assertArrayEquals( new byte[]{(byte)0xFF,(byte)0},
+							session.createQuery("select cast(X'FF00EE11' as Binary(2))", byte[].class)
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting varchar to binary")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL bytea doesn't have a length")
+	public void testCastBinaryWithLengthForOracle(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select cast(e.theString as Binary(10)) from EntityOfBasics e", byte[].class)
+							.list();
+					assertArrayEquals( new byte[]{(byte)0xFF,(byte)0},
+							session.createQuery("select cast(X'FF00' as Binary(2))", byte[].class)
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL bytea doesn't have a length")
+	public void testCastBinaryWithLengthForDerby(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select cast(X'22FF00EE11' as Binary(10))", byte[].class)
+							.list();
+					assertArrayEquals( new byte[]{(byte)0xFF,(byte)0},
+							session.createQuery("select cast(X'FF00' as Binary(2))", byte[].class)
+									.getSingleResult() );
 				}
 		);
 	}

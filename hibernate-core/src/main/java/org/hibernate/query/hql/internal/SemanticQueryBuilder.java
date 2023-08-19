@@ -98,9 +98,9 @@ import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmCreationProcessingStateImpl;
-import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.internal.SqmDmlCreationProcessingState;
 import org.hibernate.query.sqm.internal.SqmQueryPartCreationProcessingStateStandardImpl;
+import org.hibernate.query.sqm.internal.TypecheckUtil;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.spi.ParameterDeclarationContext;
@@ -2946,8 +2946,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmExpression<?> left = (SqmExpression<?>) ctx.expression(0).accept(this);
 		final SqmExpression<?> right = (SqmExpression<?>) ctx.expression(1).accept(this);
 		final BinaryArithmeticOperator operator = (BinaryArithmeticOperator) ctx.additiveOperator().accept(this);
-		SqmCriteriaNodeBuilder.assertNumeric( left, operator );
-		SqmCriteriaNodeBuilder.assertNumeric( right, operator );
+		TypecheckUtil.assertOperable( left, right, operator );
 
 		return new SqmBinaryArithmetic<>(
 				operator,
@@ -2967,8 +2966,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		final SqmExpression<?> left = (SqmExpression<?>) ctx.expression(0).accept( this );
 		final SqmExpression<?> right = (SqmExpression<?>) ctx.expression(1).accept( this );
 		final BinaryArithmeticOperator operator = (BinaryArithmeticOperator) ctx.multiplicativeOperator().accept( this );
-		SqmCriteriaNodeBuilder.assertNumeric( left, operator );
-		SqmCriteriaNodeBuilder.assertNumeric( right, operator );
+		TypecheckUtil.assertOperable( left, right, operator );
 
 		if ( operator == BinaryArithmeticOperator.MODULO ) {
 			return getFunctionDescriptor("mod").generateSqmExpression(
@@ -3009,7 +3007,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	@Override
 	public Object visitFromDurationExpression(HqlParser.FromDurationExpressionContext ctx) {
 		SqmExpression<?> expression = (SqmExpression<?>) ctx.expression().accept( this );
-
+		TypecheckUtil.assertDuration( expression );
 		return new SqmByUnit(
 				toDurationUnit( (SqmExtractUnit<?>) ctx.datetimeField().accept( this ) ),
 				expression,
@@ -3022,11 +3020,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmUnaryOperation<?> visitUnaryExpression(HqlParser.UnaryExpressionContext ctx) {
 		final SqmExpression<?> expression = (SqmExpression<?>) ctx.expression().accept(this);
 		final UnaryArithmeticOperator operator = (UnaryArithmeticOperator) ctx.signOperator().accept(this);
-		SqmCriteriaNodeBuilder.assertNumeric( expression, operator );
-		return new SqmUnaryOperation<>(
-				operator,
-				expression
-		);
+		TypecheckUtil.assertNumeric( expression, operator );
+		return new SqmUnaryOperation<>( operator, expression );
 	}
 
 	@Override

@@ -341,6 +341,19 @@ public class LiteralTests {
 	}
 
 	@Test
+	public void testFloatingPointLiteralInSelect(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery( "select 1.0" ).getSingleResult(), is( 1.0 ) );
+					assertThat( session.createQuery( "select 123.456" ).getSingleResult(), is( 123.456 ) );
+					assertThat( session.createQuery( "select 123.456F" ).getSingleResult(), is( 123.456F ) );
+					assertThat( session.createQuery( "select 123.456D" ).getSingleResult(), is( 123.456D ) );
+					assertThat( session.createQuery( "select 1.23e45" ).getSingleResult(), is( 1.23e45 ) );
+				}
+		);
+	}
+
+	@Test
 	public void testEnumLiteralInSelect(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

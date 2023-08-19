@@ -358,8 +358,12 @@ Here we list the basic operations.
 
 | `-` | Difference between two dates | `your.birthday - local date` | year-day duration
 | `-` | Difference between two datetimes | `local datetime - record.lastUpdated` | week-nanosecond duration
+| `-` | Difference of a date and a year-day duration | `local date - 1 day` | date
+| `-` | Difference of a datetime and a week-nanosecond duration | `record.lastUpdated - 1 minute` | datetime
+| `-` | Difference between two durations | `1 week - 1 day` | duration
 | `+` | Sum of a date and a year-day duration | `local date + 1 week` | date
 | `+` | Sum of a datetime and a week-nanosecond duration | `record.lastUpdated + 1 second` | datetime
+| `+` | Sum of two durations | `1 day + 4 hour` | duration
 | `*` | Product of an integer and a duration | `billing.cycles * 30 day` | duration
 | `by unit` | Convert a duration to an integer | `(1 year) by day` | integer
 |===

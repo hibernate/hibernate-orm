@@ -16,14 +16,19 @@ import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAmount;
 
 import static org.hibernate.type.descriptor.java.JavaTypeHelper.isUnknown;
 
@@ -357,6 +362,126 @@ public class TypecheckUtil {
 						hqlString,
 						null
 				);
+			}
+		}
+	}
+
+	public static void assertOperable(SqmExpression<?> left, SqmExpression<?> right, BinaryArithmeticOperator op) {
+		final SqmExpressible<?> leftNodeType = left.getNodeType();
+		final SqmExpressible<?> rightNodeType = right.getNodeType();
+		if ( leftNodeType != null && rightNodeType != null ) {
+			final Class<?> leftJavaType = leftNodeType.getExpressibleJavaType().getJavaTypeClass();
+			final Class<?> rightJavaType = rightNodeType.getExpressibleJavaType().getJavaTypeClass();
+			if ( Number.class.isAssignableFrom( leftJavaType ) ) {
+				// left operand is a number
+				switch (op) {
+					case MULTIPLY:
+						if ( !Number.class.isAssignableFrom( rightJavaType )
+								// we can scale a duration by a number
+								&& !TemporalAmount.class.isAssignableFrom( rightJavaType ) ) {
+							throw new SemanticException( "Operand of " + op.getOperatorSqlText()
+									+ " is of type '" + rightNodeType.getTypeName() + "' which is not a numeric type"
+									+ " (it is not an instance of 'java.lang.Number' or 'java.time.TemporalAmount')" );
+						}
+						break;
+					default:
+						if ( !Number.class.isAssignableFrom( rightJavaType ) ) {
+							throw new SemanticException( "Operand of " + op.getOperatorSqlText()
+									+ " is of type '" + rightNodeType.getTypeName() + "' which is not a numeric type"
+									+ " (it is not an instance of 'java.lang.Number')" );
+						}
+						break;
+				}
+			}
+			else if ( TemporalAmount.class.isAssignableFrom( leftJavaType ) ) {
+				// left operand is a duration
+				switch (op) {
+					case ADD:
+					case SUBTRACT:
+						// we can add/subtract durations
+						if ( !TemporalAmount.class.isAssignableFrom( rightJavaType ) ) {
+							throw new SemanticException( "Operand of " + op.getOperatorSqlText()
+									+ " is of type '" + rightNodeType.getTypeName() + "' which is not a temporal amount"
+									+ " (it is not an instance of 'java.time.TemporalAmount')" );
+						}
+						break;
+					default:
+						throw new SemanticException( "Operand of " + op.getOperatorSqlText()
+								+ " is of type '" + leftNodeType.getTypeName() + "' which is not a numeric type"
+								+ " (it is not an instance of 'java.lang.Number')" );
+				}
+			}
+			else if ( Temporal.class.isAssignableFrom( leftJavaType )
+					|| java.util.Date.class.isAssignableFrom( leftJavaType ) ) {
+				// left operand is a date, time, or datetime
+				switch (op) {
+					case ADD:
+						// we can add a duration to date, time, or datetime
+						if ( !TemporalAmount.class.isAssignableFrom( rightJavaType ) ) {
+							throw new SemanticException( "Operand of " + op.getOperatorSqlText()
+									+ " is of type '" + rightNodeType.getTypeName() + "' which is not a temporal amount"
+									+ " (it is not an instance of 'java.time.TemporalAmount')" );
+						}
+						break;
+					case SUBTRACT:
+						// we can subtract dates, times, or datetimes
+						if ( !Temporal.class.isAssignableFrom( rightJavaType )
+								&& !java.util.Date.class.isAssignableFrom( rightJavaType )
+								// we can subtract a duration from a date, time, or datetime
+								&& !TemporalAmount.class.isAssignableFrom( rightJavaType ) ) {
+							throw new SemanticException( "Operand of " + op.getOperatorSqlText()
+									+ " is of type '" + rightNodeType.getTypeName() + "' which is not a temporal amount"
+									+ " (it is not an instance of 'java.time.TemporalAmount')" );
+						}
+						break;
+					default:
+						throw new SemanticException( "Operand of " + op.getOperatorSqlText()
+								+ " is of type '" + leftNodeType.getTypeName() + "' which is not a numeric type"
+								+ " (it is not an instance of 'java.lang.Number')" );
+				}
+			}
+			else {
+				throw new SemanticException( "Operand of " + op.getOperatorSqlText()
+						+ " is of type '" + leftNodeType.getTypeName() + "' which is not a numeric type"
+						+ " (it is not an instance of 'java.lang.Number', 'java.time.Temporal', or 'java.time.TemporalAmount')" );
+			}
+		}
+	}
+
+//	public static void assertNumeric(SqmExpression<?> expression, BinaryArithmeticOperator op) {
+//		final SqmExpressible<?> nodeType = expression.getNodeType();
+//		if ( nodeType != null ) {
+//			final Class<?> javaType = nodeType.getExpressibleJavaType().getJavaTypeClass();
+//			if ( !Number.class.isAssignableFrom( javaType )
+//					&& !Temporal.class.isAssignableFrom( javaType )
+//					&& !TemporalAmount.class.isAssignableFrom( javaType )
+//					&& !java.util.Date.class.isAssignableFrom( javaType ) ) {
+//				throw new SemanticException( "Operand of " + op.getOperatorSqlText()
+//						+ " is of type '" + nodeType.getTypeName() + "' which is not a numeric type"
+//						+ " (it is not an instance of 'java.lang.Number', 'java.time.Temporal', or 'java.time.TemporalAmount')" );
+//			}
+//		}
+//	}
+
+	public static void assertDuration(SqmExpression<?> expression) {
+		final SqmExpressible<?> nodeType = expression.getNodeType();
+		if ( nodeType != null ) {
+			final Class<?> javaType = nodeType.getExpressibleJavaType().getJavaTypeClass();
+			if ( !TemporalAmount.class.isAssignableFrom( javaType ) ) {
+				throw new SemanticException( "Operand of 'by' is of type '" + nodeType.getTypeName() + "' which is not a duration"
+						+ " (it is not an instance of 'java.time.TemporalAmount')" );
+			}
+		}
+	}
+
+	public static void assertNumeric(SqmExpression<?> expression, UnaryArithmeticOperator op) {
+		final SqmExpressible<?> nodeType = expression.getNodeType();
+		if ( nodeType != null ) {
+			final Class<?> javaType = nodeType.getExpressibleJavaType().getJavaTypeClass();
+			if ( !Number.class.isAssignableFrom( javaType ) ) {
+				throw new SemanticException( "Operand of " + op.getOperatorChar()
+						+ " is of type '" + nodeType.getTypeName() + "' which is not a numeric type"
+						+ " (it is not an instance of 'java.lang.Number')" );
 			}
 		}
 	}

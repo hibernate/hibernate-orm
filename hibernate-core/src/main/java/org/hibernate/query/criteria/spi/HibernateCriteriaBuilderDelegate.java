@@ -11,10 +11,12 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.List;
@@ -2038,5 +2040,90 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 			JpaWindow window,
 			Expression<?>... arguments) {
 		return criteriaBuilder.percentRank( order, filter, window, arguments );
+	}
+
+	@Override
+	public JpaExpression<Duration> durationSum(Expression<Duration> x, Expression<Duration> y) {
+		return criteriaBuilder.durationSum( x, y );
+	}
+
+	@Override
+	public JpaExpression<Duration> durationSum(Expression<Duration> x, Duration y) {
+		return criteriaBuilder.durationSum( x, y );
+	}
+
+	@Override
+	public JpaExpression<Duration> durationDiff(Expression<Duration> x, Expression<Duration> y) {
+		return criteriaBuilder.durationDiff( x, y );
+	}
+
+	@Override
+	public JpaExpression<Duration> durationDiff(Expression<Duration> x, Duration y) {
+		return criteriaBuilder.durationDiff( x, y );
+	}
+
+	@Override
+	public JpaExpression<Duration> durationScaled(Expression<? extends Number> number, Expression<Duration> duration) {
+		return criteriaBuilder.durationScaled( number, duration );
+	}
+
+	@Override
+	public JpaExpression<Duration> durationScaled(Number number, Expression<Duration> duration) {
+		return criteriaBuilder.durationScaled( number, duration );
+	}
+
+	@Override
+	public JpaExpression<Duration> durationScaled(Expression<? extends Number> number, Duration duration) {
+		return criteriaBuilder.durationScaled( number, duration );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<Duration> durationBetween(Expression<T> x, Expression<T> y) {
+		return criteriaBuilder.durationBetween( x, y );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<Duration> durationBetween(Expression<T> x, T y) {
+		return criteriaBuilder.durationBetween( x, y );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<T> addDuration(Expression<T> datetime, Expression<Duration> duration) {
+		return criteriaBuilder.addDuration( datetime, duration );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<T> addDuration(Expression<T> datetime, Duration duration) {
+		return criteriaBuilder.addDuration( datetime, duration );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<T> addDuration(T datetime, Expression<Duration> duration) {
+		return criteriaBuilder.addDuration(datetime, duration);
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<T> subtractDuration(Expression<T> datetime, Expression<Duration> duration) {
+		return criteriaBuilder.subtractDuration( datetime, duration );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<T> subtractDuration(Expression<T> datetime, Duration duration) {
+		return criteriaBuilder.subtractDuration( datetime, duration );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<T> subtractDuration(T datetime, Expression<Duration> duration) {
+		return criteriaBuilder.subtractDuration(datetime, duration);
+	}
+
+	@Override
+	public JpaExpression<Long> durationByUnit(TemporalUnit unit, Expression<Duration> duration) {
+		return criteriaBuilder.durationByUnit(unit, duration);
+	}
+
+	@Override
+	public JpaExpression<Duration> duration(long magnitude, TemporalUnit unit) {
+		return criteriaBuilder.duration( magnitude, unit );
 	}
 }

@@ -13,10 +13,12 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -97,6 +99,7 @@ import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmBinaryArithmetic;
+import org.hibernate.query.sqm.tree.expression.SqmByUnit;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSearched;
 import org.hibernate.query.sqm.tree.expression.SqmCaseSimple;
 import org.hibernate.query.sqm.tree.expression.SqmCastTarget;
@@ -104,6 +107,7 @@ import org.hibernate.query.sqm.tree.expression.SqmCoalesce;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
 import org.hibernate.query.sqm.tree.expression.SqmCollectionSize;
 import org.hibernate.query.sqm.tree.expression.SqmDistinct;
+import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
 import org.hibernate.query.sqm.tree.expression.SqmFormat;
@@ -112,6 +116,7 @@ import org.hibernate.query.sqm.tree.expression.SqmLiteral;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmModifiedSubQueryExpression;
 import org.hibernate.query.sqm.tree.expression.SqmOver;
+import org.hibernate.query.sqm.tree.expression.SqmToDuration;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.expression.SqmUnaryOperation;
@@ -191,6 +196,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	private final transient ValueHandlingMode criteriaValueHandlingMode;
 	private transient BasicType<Boolean> booleanType;
 	private transient BasicType<Integer> integerType;
+	private transient BasicType<Long> longType;
 	private transient BasicType<Character> characterType;
 	private final transient Map<Class<? extends HibernateCriteriaBuilder>, HibernateCriteriaBuilder> extensions;
 
@@ -256,6 +262,17 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 							.resolve( StandardBasicTypes.INTEGER );
 		}
 		return integerType;
+	}
+
+	@Override
+	public BasicType<Long> getLongType() {
+		final BasicType<Long> longType = this.longType;
+		if ( longType == null ) {
+			return this.longType =
+					getTypeConfiguration().getBasicTypeRegistry()
+							.resolve( StandardBasicTypes.LONG );
+		}
+		return longType;
 	}
 
 	@Override
@@ -921,11 +938,122 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <N extends Number> SqmExpression<N> sum(Expression<? extends N> x, Expression<? extends N> y) {
-		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD, (SqmExpression<?>) x, (SqmExpression<?>) y );
+	public JpaExpression<Duration> duration(long magnitude, TemporalUnit unit) {
+		return new SqmToDuration<>(
+				literal( magnitude ),
+				new SqmDurationUnit<>( unit, getLongType(), this ),
+				getTypeConfiguration().standardBasicTypeForJavaType( Duration.class ),
+				this
+		);
 	}
 
-	private <N extends Number> SqmExpression<N> createSqmArithmeticNode(
+	@Override
+	public JpaExpression<Long> durationByUnit(TemporalUnit unit, Expression<Duration> duration) {
+		return new SqmByUnit(
+				new SqmDurationUnit<>( unit, getLongType(), this ),
+				(SqmExpression<Duration>) duration,
+				getLongType(),
+				this
+		);
+	}
+
+	@Override
+	public JpaExpression<Duration> durationSum(Expression<Duration> x, Expression<Duration> y) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD,
+				(SqmExpression<Duration>) x, (SqmExpression<Duration>) y );
+	}
+
+	@Override
+	public JpaExpression<Duration> durationSum(Expression<Duration> x, Duration y) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD,
+				(SqmExpression<Duration>) x, value( y ) );
+	}
+
+	@Override
+	public JpaExpression<Duration> durationDiff(Expression<Duration> x, Expression<Duration> y) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.SUBTRACT,
+				(SqmExpression<Duration>) x, (SqmExpression<Duration>) y );
+	}
+
+	@Override
+	public JpaExpression<Duration> durationDiff(Expression<Duration> x, Duration y) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.SUBTRACT,
+				(SqmExpression<Duration>) x, value( y ) );
+	}
+
+	@Override
+	public JpaExpression<Duration> durationScaled(Expression<? extends Number> number, Expression<Duration> duration) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.MULTIPLY,
+				(SqmExpression<? extends Number>) number, (SqmExpression<Duration>) duration );
+	}
+
+	@Override
+	public JpaExpression<Duration> durationScaled(Number number, Expression<Duration> duration) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.MULTIPLY,
+				value( number ), (SqmExpression<Duration>) duration );
+	}
+
+	@Override
+	public JpaExpression<Duration> durationScaled(Expression<? extends Number> number, Duration duration) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.MULTIPLY,
+				(SqmExpression<? extends Number>) number, value( duration ) );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<Duration> durationBetween(Expression<T> x, Expression<T> y) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.SUBTRACT,
+				(SqmExpression<T>) x, (SqmExpression<T>) y );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<Duration> durationBetween(Expression<T> x, T y) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.SUBTRACT,
+				(SqmExpression<T>) x, value( y ) );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<T> addDuration(Expression<T> datetime, Expression<Duration> duration) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD,
+				(SqmExpression<T>) datetime, (SqmExpression<Duration>) duration );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<T> addDuration(Expression<T> datetime, Duration duration) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD,
+				(SqmExpression<T>) datetime, value( duration ) );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<T> addDuration(T datetime, Expression<Duration> duration) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD,
+				value( datetime ), (SqmExpression<Duration>) duration );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<T> subtractDuration(Expression<T> datetime, Expression<Duration> duration) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.SUBTRACT,
+				(SqmExpression<T>) datetime, (SqmExpression<Duration>) duration );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<T> subtractDuration(Expression<T> datetime, Duration duration) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.SUBTRACT,
+				(SqmExpression<T>) datetime, value( duration ) );
+	}
+
+	@Override
+	public <T extends Temporal> JpaExpression<T> subtractDuration(T datetime, Expression<Duration> duration) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.SUBTRACT,
+				value( datetime ), (SqmExpression<Duration>) duration );
+	}
+
+	@Override
+	public <N extends Number> SqmExpression<N> sum(Expression<? extends N> x, Expression<? extends N> y) {
+		return createSqmArithmeticNode( BinaryArithmeticOperator.ADD,
+				(SqmExpression<? extends N>) x, (SqmExpression<? extends N>) y );
+	}
+
+	private <N> SqmExpression<N> createSqmArithmeticNode(
 			BinaryArithmeticOperator operator,
 			SqmExpression<?> leftHandExpression,
 			SqmExpression<?> rightHandExpression) {
@@ -947,7 +1075,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <N extends Number> SqmExpression<N> sum(Expression<? extends N> x, N y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.ADD,
-				(SqmExpression<?>) x,
+				(SqmExpression<? extends N>) x,
 				value( y )
 		);
 	}
@@ -957,7 +1085,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.ADD,
 				value( x ),
-				(SqmExpression<?>) y
+				(SqmExpression<? extends N>) y
 		);
 	}
 
@@ -965,8 +1093,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <N extends Number> SqmExpression<N> prod(Expression<? extends N> x, Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MULTIPLY,
-				(SqmExpression<?>) x,
-				(SqmExpression<?>) y
+				(SqmExpression<? extends N>) x,
+				(SqmExpression<? extends N>) y
 		);
 	}
 
@@ -974,7 +1102,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <N extends Number> SqmExpression<N> prod(Expression<? extends N> x, N y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MULTIPLY,
-				(SqmExpression<?>) x,
+				(SqmExpression<? extends N>) x,
 				value( y )
 		);
 	}
@@ -984,7 +1112,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.MULTIPLY,
 				value( x ),
-				(SqmExpression<?>) y
+				(SqmExpression<? extends N>) y
 		);
 	}
 
@@ -992,8 +1120,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <N extends Number> SqmExpression<N> diff(Expression<? extends N> x, Expression<? extends N> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.SUBTRACT,
-				(SqmExpression<?>) x,
-				(SqmExpression<?>) y
+				(SqmExpression<? extends N>) x,
+				(SqmExpression<? extends N>) y
 		);
 	}
 
@@ -1001,7 +1129,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <N extends Number> SqmExpression<N> diff(Expression<? extends N> x, N y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.SUBTRACT,
-				(SqmExpression<?>) x,
+				(SqmExpression<? extends N>) x,
 				value( y )
 		);
 	}
@@ -1011,7 +1139,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.SUBTRACT,
 				value( x ),
-				(SqmExpression<?>) y
+				(SqmExpression<? extends N>) y
 		);
 	}
 
@@ -1019,8 +1147,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmExpression<Number> quot(Expression<? extends Number> x, Expression<? extends Number> y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.QUOT,
-				(SqmExpression<?>) x,
-				(SqmExpression<?>) y
+				(SqmExpression<? extends Number>) x,
+				(SqmExpression<? extends Number>) y
 		);
 	}
 
@@ -1028,7 +1156,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public SqmExpression<Number> quot(Expression<? extends Number> x, Number y) {
 		return createSqmArithmeticNode(
 				BinaryArithmeticOperator.QUOT,
-				(SqmExpression<?>) x,
+				(SqmExpression<? extends Number>) x,
 				value( y )
 		);
 	}
@@ -1650,7 +1778,17 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T> value(T value) {
-		return inlineValue( value ) ? literal( value ) : valueParameter( value );
+		if ( value instanceof Duration ) {
+			final Duration duration = (Duration) value;
+			final JpaExpression<Duration> expression = duration.getNano() == 0
+					? duration( duration.getSeconds(), TemporalUnit.SECOND )
+					: duration( duration.getNano() + duration.getSeconds() * 1_000_000_000, TemporalUnit.NANOSECOND );
+			//noinspection unchecked
+			return (SqmExpression<T>) expression;
+		}
+		else {
+			return inlineValue( value ) ? literal( value ) : valueParameter( value );
+		}
 	}
 
 	private <T> boolean isInstance(BindableType<T> bindableType, T value) {

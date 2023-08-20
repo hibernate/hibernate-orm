@@ -11,7 +11,9 @@ import java.math.BigInteger;
 import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.List;
@@ -386,7 +388,6 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	<N extends Number> JpaExpression<N> abs(Expression<N> x);
 
-
 	@Override
 	<N extends Number> JpaExpression<N> sum(Expression<? extends N> x, Expression<? extends N> y);
 
@@ -434,6 +435,127 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	JpaExpression<Double> sqrt(Expression<? extends Number> x);
+
+	/**
+	 * Add two {@linkplain Duration durations}.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationSum(Expression<Duration> x, Expression<Duration> y);
+
+	/**
+	 * Add two {@linkplain Duration durations}.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationSum(Expression<Duration> x, Duration y);
+
+	/**
+	 * Subtract one {@linkplain Duration duration} from another.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationDiff(Expression<Duration> x, Expression<Duration> y);
+
+	/**
+	 * Subtract one {@linkplain Duration duration} from another.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationDiff(Expression<Duration> x, Duration y);
+
+	/**
+	 * Scale a {@linkplain Duration duration} by a number.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationScaled(Expression<? extends Number> number, Expression<Duration> duration);
+
+	/**
+	 * Scale a {@linkplain Duration duration} by a number.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationScaled(Number number, Expression<Duration> duration);
+
+	/**
+	 * Scale a {@linkplain Duration duration} by a number.
+	 * @since 6.3
+	 */
+	JpaExpression<Duration> durationScaled(Expression<? extends Number> number, Duration duration);
+
+	/**
+	 * A literal {@link Duration}, for example, "five days" or "30 minutes".
+	 * @since 6.3
+	 */
+	@Incubating // layer breaker (leaks SQM type)
+	JpaExpression<Duration> duration(long magnitude, TemporalUnit unit);
+
+	/**
+	 * Convert a {@link Duration} to a numeric magnitude in the given units.
+	 * @param unit a choice of temporal granularity
+	 * @param duration the duration in a "unit-free" form
+	 * @return the magnitude of the duration measured in the given units
+	 * @since 6.3
+	 */
+	@Incubating // layer breaker (leaks SQM type)
+	JpaExpression<Long> durationByUnit(TemporalUnit unit, Expression<Duration> duration);
+
+	/**
+	 * Subtract two dates or two datetimes, returning the duration between the
+	 * two dates or between two datetimes.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<Duration> durationBetween(Expression<T> x, Expression<T> y);
+
+	/**
+	 * Subtract two dates or two datetimes, returning the duration between the
+	 * two dates or between two datetimes.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<Duration> durationBetween(Expression<T> x, T y);
+
+	/**
+	 * Add a duration to a date or datetime, that is, return a later date or
+	 * datetime which is separated from the given date or datetime by the given
+	 * duration.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<T> addDuration(Expression<T> datetime, Expression<Duration> duration);
+
+	/**
+	 * Add a duration to a date or datetime, that is, return a later date or
+	 * datetime which is separated from the given date or datetime by the given
+	 * duration.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<T> addDuration(Expression<T> datetime, Duration duration);
+
+	/**
+	 * Add a duration to a date or datetime, that is, return a later date or
+	 * datetime which is separated from the given date or datetime by the given
+	 * duration.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<T> addDuration(T datetime, Expression<Duration> duration);
+
+	/**
+	 * Subtract a duration to a date or datetime, that is, return an earlier date
+	 * or datetime which is separated from the given date or datetime by the given
+	 * duration.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<T> subtractDuration(Expression<T> datetime, Expression<Duration> duration);
+
+	/**
+	 * Subtract a duration to a date or datetime, that is, return an earlier date
+	 * or datetime which is separated from the given date or datetime by the given
+	 * duration.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<T> subtractDuration(Expression<T> datetime, Duration duration);
+
+	/**
+	 * Subtract a duration to a date or datetime, that is, return an earlier date
+	 * or datetime which is separated from the given date or datetime by the given
+	 * duration.
+	 * @since 6.3
+	 */
+	<T extends Temporal> JpaExpression<T> subtractDuration(T datetime, Expression<Duration> duration);
 
 	@Override
 	JpaExpression<Long> toLong(Expression<? extends Number> number);

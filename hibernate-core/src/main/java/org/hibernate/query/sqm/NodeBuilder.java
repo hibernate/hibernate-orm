@@ -649,6 +649,8 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	BasicType<Integer> getIntegerType();
 
+	BasicType<Long> getLongType();
+
 	BasicType<Character> getCharacterType();
 
 	SessionFactoryImplementor getSessionFactory();

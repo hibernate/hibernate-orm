@@ -153,6 +153,9 @@ public final class Hibernate {
 	 * @return true if the argument is already initialized, or is not a proxy or collection
 	 */
 	public static boolean isInitialized(Object proxy) {
+		if ( proxy == null ) {
+			return false;
+		}
 		final LazyInitializer lazyInitializer = extractLazyInitializer( proxy );
 		if ( lazyInitializer != null ) {
 			return !lazyInitializer.isUninitialized();

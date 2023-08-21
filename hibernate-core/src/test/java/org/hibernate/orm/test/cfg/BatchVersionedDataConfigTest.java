@@ -34,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -49,6 +50,7 @@ public class BatchVersionedDataConfigTest extends BaseUnitTestCase {
 	@Before
 	public void setUp() {
 		cfg = new Configuration();
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 
 		// HHH-10290 ignore environment property hibernate.jdbc.batch_versioned_data
 		if (cfg.getProperties().getProperty(AvailableSettings.BATCH_VERSIONED_DATA) != null) {

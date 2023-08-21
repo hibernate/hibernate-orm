@@ -9,7 +9,6 @@ package org.hibernate.orm.test.dialect.functional;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.Collections;
 
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -29,6 +28,7 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,15 +72,22 @@ public class SQLServerDialectSequenceInformationTest extends BaseUnitTestCase {
 
 		Dialect dialect = DialectContext.getDialect();
 
-		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
-		ssrb.applySettings( Collections.singletonMap( AvailableSettings.URL, newUrl ) );
-		StandardServiceRegistry ssr = ssrb.build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( AvailableSettings.URL, newUrl )
+				// Reset the connection provider to avoid rebuilding the shared connection pool for this single test
+				.applySetting( AvailableSettings.CONNECTION_PROVIDER, "" )
+				.build();
 
 		final JdbcConnectionAccess bootstrapJdbcConnectionAccess = ssr.getService( JdbcServices.class )
 				.getBootstrapJdbcConnectionAccess();
-
-		try ( Connection connection = bootstrapJdbcConnectionAccess.obtainConnection() ) {
-
+		final Connection connection;
+		try {
+			connection = bootstrapJdbcConnectionAccess.obtainConnection();
+		}
+		catch (SQLException e) {
+			throw new RuntimeException( e );
+		}
+		try {
 			try (Statement statement = connection.createStatement()) {
 				statement.execute( "CREATE SEQUENCE ITEM_SEQ START WITH 100 INCREMENT BY 10" );
 			}
@@ -109,6 +116,14 @@ public class SQLServerDialectSequenceInformationTest extends BaseUnitTestCase {
 			fail( "Sequence information was not retrieved: " + e.getMessage() );
 		}
 		finally {
+			if ( connection != null ) {
+				try {
+					bootstrapJdbcConnectionAccess.releaseConnection( connection );
+				}
+				catch (SQLException e) {
+					// Ignore
+				}
+			}
 			StandardServiceRegistryBuilder.destroy( ssr );
 		}
 	}

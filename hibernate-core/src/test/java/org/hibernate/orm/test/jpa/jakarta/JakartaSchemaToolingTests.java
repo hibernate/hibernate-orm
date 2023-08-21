@@ -13,6 +13,7 @@ import java.util.Properties;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
+import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.boot.spi.Bootstrap;
@@ -25,6 +26,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.testing.transaction.TransactionUtil2;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -140,7 +142,16 @@ public class JakartaSchemaToolingTests {
 	}
 
 	private SessionFactoryImplementor buildSessionFactory(Object... settingPairs) {
-		final Properties settings = CollectionHelper.toProperties( settingPairs );
+		final Properties settings = new Properties();
+		settings.setProperty( AvailableSettings.AUTOCOMMIT, "false" );
+		settings.setProperty( AvailableSettings.POOL_SIZE, "5" );
+		settings.setProperty( DriverManagerConnectionProviderImpl.INITIAL_SIZE, "0" );
+		settings.setProperty(
+				DriverManagerConnectionProviderImpl.INIT_SQL,
+				Environment.getProperties().getProperty( DriverManagerConnectionProviderImpl.INIT_SQL )
+		);
+		CollectionHelper.applyToProperties( settings, settingPairs );
+		ServiceRegistryUtil.applySettings( settings );
 
 		final PersistenceUnitDescriptorAdapter puDescriptor = new PersistenceUnitDescriptorAdapter() {
 			@Override

@@ -13,6 +13,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.service.ServiceRegistry;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.fail;
@@ -25,7 +26,7 @@ public class SpreadNaturalIdTest {
 	@Test
 	@SuppressWarnings("EmptyCatchBlock")
 	public void testSpreadNaturalIdDeclarationGivesMappingException() {
-		final MetadataSources metadataSources = new MetadataSources()
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 			.addAnnotatedClass( Principal.class )
 			.addAnnotatedClass( User.class );
 		try {

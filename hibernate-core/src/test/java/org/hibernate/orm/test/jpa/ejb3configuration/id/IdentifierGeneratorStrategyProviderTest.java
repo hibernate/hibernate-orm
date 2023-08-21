@@ -14,6 +14,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.jpa.boot.spi.Bootstrap;
 
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -27,7 +28,7 @@ public class IdentifierGeneratorStrategyProviderTest {
 	@Test
 	@SuppressWarnings("unchecked")
 	public void testIdentifierGeneratorStrategyProvider() {
-		Map settings = new HashMap();
+		Map settings = ServiceRegistryUtil.createBaseSettings();
 		settings.put(
 				AvailableSettings.IDENTIFIER_GENERATOR_STRATEGY_PROVIDER,
 				FunkyIdentifierGeneratorProvider.class.getName()

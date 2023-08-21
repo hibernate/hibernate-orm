@@ -15,6 +15,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -30,6 +31,7 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator.ActionGroup
 
 import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.SharedCacheMode;
@@ -318,22 +320,26 @@ public class ConfigurationObjectSettingTest {
 
 		// the check above uses a "for testing only" form of what happens for "real".
 		// verify the "real" path as well
-		final Metadata metadata = new MetadataSources().addAnnotatedClass( Bell.class ).buildMetadata();
-		final Set<ActionGrouping> actionGroupings = ActionGrouping.interpret( metadata, settings );
-		assertThat( actionGroupings ).hasSize( 1 );
-		final ActionGrouping grouping = actionGroupings.iterator().next();
-		assertThat( grouping.getContributor() ).isEqualTo( "orm" );
-		assertThat( grouping.getDatabaseAction() ).isEqualTo( dbAction );
-		assertThat( grouping.getScriptAction() ).isEqualTo( scriptAction );
+		try (StandardServiceRegistryImpl servicedRegistry = ServiceRegistryUtil.serviceRegistry()) {
+			final Metadata metadata = new MetadataSources( servicedRegistry )
+					.addAnnotatedClass( Bell.class )
+					.buildMetadata();
+			final Set<ActionGrouping> actionGroupings = ActionGrouping.interpret( metadata, settings );
+			assertThat( actionGroupings ).hasSize( 1 );
+			final ActionGrouping grouping = actionGroupings.iterator().next();
+			assertThat( grouping.getContributor() ).isEqualTo( "orm" );
+			assertThat( grouping.getDatabaseAction() ).isEqualTo( dbAction );
+			assertThat( grouping.getScriptAction() ).isEqualTo( scriptAction );
 
-		// verify also interpreting the db-name, etc... they are used by SF/EMF to resolve Dialect
-		final DialectResolver dialectResolver = new DialectResolverInitiator()
-				.initiateService(
-						new HashMap<>(settings),
-						(ServiceRegistryImplementor) new StandardServiceRegistryBuilder().build()
-				);
-		final Dialect dialect = dialectResolver.resolveDialect( TestingDialectResolutionInfo.forDatabaseInfo( dbName ) );
-		assertThat( dialect ).isInstanceOf( H2Dialect.class );
+			// verify also interpreting the db-name, etc... they are used by SF/EMF to resolve Dialect
+			final DialectResolver dialectResolver = new DialectResolverInitiator()
+					.initiateService(
+							new HashMap<>( settings ),
+							servicedRegistry
+					);
+			final Dialect dialect = dialectResolver.resolveDialect( TestingDialectResolutionInfo.forDatabaseInfo( dbName ) );
+			assertThat( dialect ).isInstanceOf( H2Dialect.class );
+		}
 	}
 
 }

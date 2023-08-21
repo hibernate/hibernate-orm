@@ -19,6 +19,8 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.jpa.xml.versions.JpaXsdVersionsTest;
 
 
@@ -60,7 +62,7 @@ public class ValidatorFactory2PhaseInjectionTest {
 						return HibernatePersistenceProvider.class.getResource( "/org/hibernate/jpa/persistence_1_0.xsd" );
 					}
 				},
-				Collections.emptyMap()
+				ServiceRegistryUtil.createBaseSettings()
 		);
 		emfb.withValidatorFactory( vf );
 

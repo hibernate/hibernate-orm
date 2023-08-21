@@ -19,6 +19,7 @@ import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.hibernate.orm.test.annotations.id.sequences.entities.Bunny;
 import org.hibernate.orm.test.annotations.id.sequences.entities.PointyTooth;
@@ -44,7 +45,7 @@ public class JoinColumnOverrideTest {
 	@Test
 	@TestForIssue(jiraKey = "ANN-748")
 	public void testBlownPrecision() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, "SQLServer" )
 				.build();
 		try {

@@ -14,7 +14,6 @@ import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuilderImplementor;
 import org.hibernate.boot.spi.MetadataContributor;
@@ -28,6 +27,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService;
 import org.hibernate.testing.boot.ExtraJavaServicesClassLoaderService.JavaServiceDescriptor;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import org.jboss.jandex.IndexView;
@@ -50,7 +50,7 @@ public class CustomTypeConverterTest extends BaseUnitTestCase {
 		final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().enableAutoClose()
 				.applyClassLoaderService( new ExtraJavaServicesClassLoaderService( services ) )
 				.build();
-		try ( final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 				.build() ) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )
@@ -98,7 +98,7 @@ public class CustomTypeConverterTest extends BaseUnitTestCase {
 		final BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().enableAutoClose()
 				.applyClassLoaderService( new ExtraJavaServicesClassLoaderService( services ) )
 				.build();
-		try ( final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+		try ( final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 				.build() ) {
 			final MetadataSources metadataSources = new MetadataSources( ssr )

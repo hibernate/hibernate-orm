@@ -29,6 +29,7 @@ import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.util.ExceptionUtil;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.Test;
 
@@ -47,7 +48,7 @@ public class SequenceMismatchStrategyDefaultExceptionTest extends EntityManagerF
 
 	@Override
 	public EntityManagerFactory produceEntityManagerFactory() {
-		serviceRegistry = new StandardServiceRegistryBuilder().build();
+		serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
 				.addAnnotatedClass( ApplicationConfigurationHBM2DDL.class )
 				.buildMetadata();

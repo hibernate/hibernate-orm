@@ -22,6 +22,7 @@ import org.hibernate.mapping.Property;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -40,7 +41,7 @@ public class NonReflectiveBinderTest {
 
 	@BeforeEach
 	public void setUp() throws Exception {
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( "jakarta.persistence.validation.mode", "none" )
 				.build();
 		metadata = new MetadataSources( ssr )

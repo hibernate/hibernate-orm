@@ -23,6 +23,7 @@ import org.hibernate.jpa.boot.spi.Bootstrap;
 import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,6 +46,7 @@ public class SchemaCreateDropUtf8WithoutHbm2DdlCharsetNameTest {
 
 	protected Map getConfig() {
 		final Map<Object, Object> config = Environment.getProperties();
+		ServiceRegistryUtil.applySettings( config );
 		config.put( JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, createSchema.toPath() );
 		config.put( JAKARTA_HBM2DDL_SCRIPTS_DROP_TARGET, dropSchema.toPath() );
 		config.put( JAKARTA_HBM2DDL_SCRIPTS_ACTION, "drop-and-create" );

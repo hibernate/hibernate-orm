@@ -83,30 +83,31 @@ public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerF
 			);
 
 			TransactionUtil.doInJPA( this::entityManagerFactory, em2 -> {
-				TransactionUtil.setJdbcTimeout( em2.unwrap( Session.class ) );
-				try {
-					em2.find( Lock.class, lockId, LockModeType.PESSIMISTIC_WRITE, properties );
-					fail( "Exception should be thrown" );
-				}
-				catch (Exception lte) {
-					if( !ExceptionUtil.isSqlLockTimeout( lte )) {
-						fail("Should have thrown a Lock timeout exception");
-					}
-				}
-				finally {
+				TransactionUtil.withJdbcTimeout( em2.unwrap( Session.class ), () -> {
 					try {
-						for ( PreparedStatement statement : CONNECTION_PROVIDER.getPreparedStatements() ) {
-							assertThat(
-								"A SQL Statement was not closed : " + statement.toString(),
-								statement.isClosed(),
-								is( true )
-							);
+						em2.find( Lock.class, lockId, LockModeType.PESSIMISTIC_WRITE, properties );
+						fail( "Exception should be thrown" );
+					}
+					catch (Exception lte) {
+						if( !ExceptionUtil.isSqlLockTimeout( lte )) {
+							fail("Should have thrown a Lock timeout exception");
 						}
 					}
-					catch (SQLException e) {
-						fail( e.getMessage() );
+					finally {
+						try {
+							for ( PreparedStatement statement : CONNECTION_PROVIDER.getPreparedStatements() ) {
+								assertThat(
+										"A SQL Statement was not closed : " + statement.toString(),
+										statement.isClosed(),
+										is( true )
+								);
+							}
+						}
+						catch (SQLException e) {
+							fail( e.getMessage() );
+						}
 					}
-				}
+				} );
 			} );
 
 		} );

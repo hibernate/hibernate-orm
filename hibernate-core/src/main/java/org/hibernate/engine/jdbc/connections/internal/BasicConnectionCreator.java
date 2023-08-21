@@ -64,30 +64,41 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 		}
 
 		try {
-			if ( isolation != null ) {
-				conn.setTransactionIsolation( isolation );
-			}
-		}
-		catch (SQLException e) {
-			throw convertSqlException( "Unable to set transaction isolation (" + isolation + ")", e );
-		}
-
-		try {
-			if ( conn.getAutoCommit() != autoCommit ) {
-				conn.setAutoCommit( autoCommit );
-			}
-		}
-		catch (SQLException e) {
-			throw convertSqlException( "Unable to set auto-commit (" + autoCommit + ")", e );
-		}
-
-		if ( initSql != null && !initSql.trim().isEmpty() ) {
-			try (Statement s = conn.createStatement()) {
-				s.execute( initSql );
+			try {
+				if ( isolation != null ) {
+					conn.setTransactionIsolation( isolation );
+				}
 			}
 			catch (SQLException e) {
-				throw convertSqlException( "Unable to execute initSql (" + initSql + ")", e );
+				throw convertSqlException( "Unable to set transaction isolation (" + isolation + ")", e );
 			}
+
+			try {
+				if ( conn.getAutoCommit() != autoCommit ) {
+					conn.setAutoCommit( autoCommit );
+				}
+			}
+			catch (SQLException e) {
+				throw convertSqlException( "Unable to set auto-commit (" + autoCommit + ")", e );
+			}
+
+			if ( initSql != null && !initSql.trim().isEmpty() ) {
+				try (Statement s = conn.createStatement()) {
+					s.execute( initSql );
+				}
+				catch (SQLException e) {
+					throw convertSqlException( "Unable to execute initSql (" + initSql + ")", e );
+				}
+			}
+		}
+		catch (RuntimeException | Error e) {
+			try {
+				conn.close();
+			}
+			catch (SQLException ex) {
+				e.addSuppressed( ex );
+			}
+			throw e;
 		}
 
 		return conn;

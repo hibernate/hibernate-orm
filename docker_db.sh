@@ -489,18 +489,23 @@ oracle_setup() {
         sleep 5;
         # On WSL, health-checks intervals don't work for Podman, so run them manually
         if command -v podman > /dev/null; then
-          $CONTAINER_CLI healthcheck run oracle > /dev/null
+          $PRIVILEGED_CLI $CONTAINER_CLI healthcheck run oracle > /dev/null
         fi
-        HEALTHSTATUS="`$CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
+        HEALTHSTATUS="`$PRIVILEGED_CLI $CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
         HEALTHSTATUS=${HEALTHSTATUS##+( )} #Remove longest matching series of spaces from the front
         HEALTHSTATUS=${HEALTHSTATUS%%+( )} #Remove longest matching series of spaces from the back
     done
     sleep 2;
     echo "Oracle successfully started"
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
-    $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
+    $PRIVILEGED_CLI $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
 set timing on
+-- Remove DISABLE_OOB parameter from Listener configuration and restart it
+!echo Enabling OOB for Listener...
+!echo NAMES.DIRECTORY_PATH=\(EZCONNECT,TNSNAMES\) > /opt/oracle/oradata/dbconfig/XE/sqlnet.ora
+!lsnrctl reload
+
 -- Increasing redo logs
 alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/redo04.log' size 500M reuse;
 alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/redo05.log' size 500M reuse;
@@ -564,14 +569,14 @@ oracle_setup_old() {
         sleep 5;
         # On WSL, health-checks intervals don't work for Podman, so run them manually
         if command -v podman > /dev/null; then
-          $CONTAINER_CLI healthcheck run oracle > /dev/null
+          $PRIVILEGED_CLI $CONTAINER_CLI healthcheck run oracle > /dev/null
         fi
-        HEALTHSTATUS="`$CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
+        HEALTHSTATUS="`$PRIVILEGED_CLI $CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
         HEALTHSTATUS=${HEALTHSTATUS##+( )} #Remove longest matching series of spaces from the front
         HEALTHSTATUS=${HEALTHSTATUS%%+( )} #Remove longest matching series of spaces from the back
     done
     # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
-    $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
+    $PRIVILEGED_CLI $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
 cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
 alter database tempfile '\$ORACLE_BASE/oradata/XE/temp.dbf' resize 400M;
 alter database datafile '\$ORACLE_BASE/oradata/XE/system.dbf' resize 1000M;
@@ -621,15 +626,30 @@ EOF\""
   echo "Oracle successfully started"
 }
 
+disable_userland_proxy() {
+  if [[ "$HEALTCHECK_PATH" == "{{.State.Health.Status}}" ]]; then
+    if [[ ! -f /etc/docker/daemon.json ]]; then
+      sudo service docker stop
+      echo '{"userland-proxy": false}' > /etc/docker/daemon.json
+      sudo service docker start
+    elif ! grep -q userland-proxy /etc/docker/daemon.json; then
+      docker_daemon_json=$(</etc/docker/daemon.json)
+      sudo service docker stop
+      echo "${docker_daemon_json/\}/,}\"userland-proxy\": false}" > /etc/docker/daemon.json
+      sudo service docker start
+    fi
+  fi
+}
+
 oracle() {
   oracle_21
 }
 
 oracle_11() {
-    $CONTAINER_CLI rm -f oracle || true
+    $PRIVILEGED_CLI $CONTAINER_CLI rm -f oracle || true
     # We need to use the defaults
     # SYSTEM/Oracle18
-    $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
       --health-cmd healthcheck.sh \
       --health-interval 5s \
       --health-timeout 5s \
@@ -638,24 +658,13 @@ oracle_11() {
     oracle_setup_old
 }
 
-oracle_18() {
-    $CONTAINER_CLI rm -f oracle || true
-    # We need to use the defaults
-    # SYSTEM/Oracle18
-    $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
-       --health-cmd healthcheck.sh \
-       --health-interval 5s \
-       --health-timeout 5s \
-       --health-retries 10 \
-       docker.io/gvenzl/oracle-xe:18.4.0-full
-    oracle_setup
-}
-
 oracle_21() {
-    $CONTAINER_CLI rm -f oracle || true
+    $PRIVILEGED_CLI $CONTAINER_CLI rm -f oracle || true
+    disable_userland_proxy
     # We need to use the defaults
     # SYSTEM/Oracle18
-    $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+       --cap-add cap_net_raw \
        --health-cmd healthcheck.sh \
        --health-interval 5s \
        --health-timeout 5s \
@@ -918,7 +927,6 @@ if [ -z ${1} ]; then
     echo -e "\tmysql_5_7"
     echo -e "\toracle"
     echo -e "\toracle_21"
-    echo -e "\toracle_18"
     echo -e "\toracle_11"
     echo -e "\tpostgresql"
     echo -e "\tpostgresql_15"

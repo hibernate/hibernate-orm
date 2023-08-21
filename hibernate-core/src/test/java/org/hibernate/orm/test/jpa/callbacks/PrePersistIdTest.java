@@ -27,7 +27,7 @@ public class PrePersistIdTest {
         });
     }
 
-    @Entity
+    @Entity(name = "GeneratedIdInCallback")
     static class GeneratedIdInCallback {
         @Transient boolean success;
         @Id @GeneratedValue UUID uuid;

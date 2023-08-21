@@ -26,6 +26,7 @@ import org.hibernate.mapping.Selectable;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
@@ -161,7 +162,7 @@ public class ColumnDefinitionQuotingTest {
 	}
 
 	void withStandardServiceRegistry(boolean globalQuoting, boolean skipColumnDefinitions, TestWork work) {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, globalQuoting )
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS_SKIP_COLUMN_DEFINITIONS, skipColumnDefinitions )
 				.build();

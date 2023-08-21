@@ -23,6 +23,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.loader.MultipleBagFetchException;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.fail;
@@ -31,7 +32,7 @@ public class MultipleBagFetchTest {
 
 	@Test
 	public void testEntityWithMultipleJoinFetchedBags() {
-		try (StandardServiceRegistry standardRegistry = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry standardRegistry = ServiceRegistryUtil.serviceRegistry()) {
 
 			Metadata metadata = new MetadataSources( standardRegistry )
 					.addAnnotatedClass( Post.class )

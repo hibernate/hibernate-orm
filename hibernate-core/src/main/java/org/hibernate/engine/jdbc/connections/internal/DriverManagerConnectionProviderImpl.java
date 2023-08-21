@@ -291,8 +291,12 @@ public class DriverManagerConnectionProviderImpl
 		}
 	}
 
+	protected int getOpenConnections() {
+		return state.pool.allConnections.size() - state.pool.availableConnections.size();
+	}
+
 	protected void validateConnectionsReturned() {
-		int allocationCount = state.pool.allConnections.size() - state.pool.availableConnections.size();
+		int allocationCount = getOpenConnections();
 		if ( allocationCount != 0 ) {
 			CONNECTIONS_MESSAGE_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections");
 		}
@@ -462,33 +466,26 @@ public class DriverManagerConnectionProviderImpl
 		public void close() throws SQLException {
 			try {
 				int allocationCount = allConnections.size() - availableConnections.size();
-				if(allocationCount > 0) {
+				if (allocationCount > 0) {
 					CONNECTIONS_LOGGER.error( "Connection leak detected: there are " + allocationCount + " unclosed connections upon shutting down pool " + getUrl());
 				}
 			}
 			finally {
-				for ( Connection connection : allConnections ) {
-					connection.close();
-				}
+				removeConnections( Integer.MAX_VALUE );
 			}
 		}
 
 		public int size() {
-			return availableConnections.size();
+			return allConnections.size();
 		}
 
 		protected void removeConnections(int numberToBeRemoved) {
 			for ( int i = 0; i < numberToBeRemoved; i++ ) {
-				Connection connection = availableConnections.poll();
-				try {
-					if ( connection != null ) {
-						connection.close();
-					}
-					allConnections.remove( connection );
+				final Connection connection = availableConnections.poll();
+				if ( connection == null ) {
+					break;
 				}
-				catch (SQLException e) {
-					CONNECTIONS_MESSAGE_LOGGER.unableToCloseConnection( e );
-				}
+				closeConnection( connection, null );
 			}
 		}
 

@@ -26,7 +26,7 @@ import static org.junit.Assert.assertThat;
  */
 @RequiresDialectFeature( value = ConnectionProviderBuilder.class )
 public class SchemaBasedMultiTenancyTest extends AbstractSchemaBasedMultiTenancyTest<
-		AbstractMultiTenantConnectionProvider, DriverManagerConnectionProviderImpl> {
+		AbstractMultiTenantConnectionProvider, ConnectionProvider> {
 
 	protected AbstractMultiTenantConnectionProvider buildMultiTenantConnectionProvider() {
 		acmeProvider = ConnectionProviderBuilder.buildConnectionProvider( "acme" );

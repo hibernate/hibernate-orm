@@ -20,6 +20,8 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tool.schema.Action;
 
 import org.hibernate.orm.test.cdi.testsupport.TestingExtendedBeanManager;
+
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
@@ -37,7 +39,7 @@ public class ExtendedMixedAccessTest implements BeanContainer.LifecycleOptions {
 	}
 
 	private void doTest(TestingExtendedBeanManager extendedBeanManager) {
-		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 				.applySetting( AvailableSettings.CDI_BEAN_MANAGER, extendedBeanManager )
 				.build()) {

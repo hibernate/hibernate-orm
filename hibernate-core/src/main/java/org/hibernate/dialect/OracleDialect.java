@@ -1265,7 +1265,7 @@ public class OracleDialect extends Dialect {
 			case WAIT_FOREVER:
 				return lockString;
 			default:
-				return supportsWait() ? lockString + " wait " + Math.round(timeout / 1e3f) : lockString;
+				return supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
 		}
 	}
 

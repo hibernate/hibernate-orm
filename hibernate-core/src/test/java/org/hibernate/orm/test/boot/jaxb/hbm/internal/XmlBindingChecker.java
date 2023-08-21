@@ -17,6 +17,8 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.XmlMappingBinderAccess;
 import org.hibernate.service.ServiceRegistry;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 /**
  * @author Jean-François Boeuf
  */
@@ -32,7 +34,7 @@ public class XmlBindingChecker {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		jaxbMarshaller.marshal( hbmMapping, bos );
 		ByteArrayInputStream is = new ByteArrayInputStream( bos.toByteArray() );
-		try (ServiceRegistry sr = new StandardServiceRegistryBuilder().build()) {
+		try (ServiceRegistry sr = ServiceRegistryUtil.serviceRegistry()) {
 			new XmlMappingBinderAccess( sr ).bind( is );
 		}
 	}

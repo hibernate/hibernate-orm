@@ -18,6 +18,7 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.fail;
@@ -60,9 +61,11 @@ public class SchemaGenetationSciptsActionPropertyValueEndingWithSpaceTest extend
 
 		StandardServiceRegistryBuilder cfgRegistryBuilder = configuration.getStandardServiceRegistryBuilder();
 
-		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder(
-				bootRegistry,
-				cfgRegistryBuilder.getAggregatedCfgXml()
+		StandardServiceRegistryBuilder registryBuilder = ServiceRegistryUtil.applySettings(
+				new StandardServiceRegistryBuilder(
+						bootRegistry,
+						cfgRegistryBuilder.getAggregatedCfgXml()
+				)
 		).applySettings( properties );
 
 		prepareBasicRegistryBuilder( registryBuilder );

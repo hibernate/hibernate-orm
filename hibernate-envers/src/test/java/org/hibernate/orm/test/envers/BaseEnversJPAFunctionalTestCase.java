@@ -39,6 +39,7 @@ import org.hibernate.testing.jta.TestingJtaPlatformImpl;
 import org.hibernate.testing.junit4.Helper;
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.service.ServiceRegistry;
@@ -151,12 +152,7 @@ public abstract class BaseEnversJPAFunctionalTestCase extends AbstractEnversTest
 		config.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		config.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		config.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
-		if ( !Environment.getProperties().containsKey( AvailableSettings.CONNECTION_PROVIDER ) ) {
-			config.put(
-					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
-			);
-		}
+		ServiceRegistryUtil.applySettings( config );
 		// Envers tests expect sequences to not skip values...
 		config.put( EnversSettings.REVISION_SEQUENCE_NOCACHE, "true" );
 		addConfigOptions( config );

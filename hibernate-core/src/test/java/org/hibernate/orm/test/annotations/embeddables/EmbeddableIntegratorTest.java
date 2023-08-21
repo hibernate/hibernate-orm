@@ -19,6 +19,7 @@ import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.PersistenceException;
@@ -39,9 +40,10 @@ public class EmbeddableIntegratorTest {
 	 */
 	@Test
 	public void testWithoutIntegrator() {
-		try (SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
-				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" )
-				.buildSessionFactory()) {
+		final Configuration cfg = new Configuration().addAnnotatedClass( Investor.class )
+				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" );
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
+		try (SessionFactory sf = cfg.buildSessionFactory()) {
 			Session sess = sf.openSession();
 			try {
 				sess.getTransaction().begin();
@@ -72,10 +74,11 @@ public class EmbeddableIntegratorTest {
 
 	@Test
 	public void testWithTypeContributor() {
-		try (SessionFactory sf = new Configuration().addAnnotatedClass( Investor.class )
+		final Configuration cfg = new Configuration().addAnnotatedClass( Investor.class )
 				.registerTypeContributor( new InvestorTypeContributor() )
-				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" )
-				.buildSessionFactory(); Session sess = sf.openSession()) {
+				.setProperty( "hibernate.hbm2ddl.auto", "create-drop" );
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
+		try (SessionFactory sf = cfg.buildSessionFactory(); Session sess = sf.openSession()) {
 			try {
 				sess.getTransaction().begin();
 				Investor myInv = getInvestor();

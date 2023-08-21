@@ -2209,6 +2209,10 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return sql + new ForUpdateFragment( this, aliasedLockOptions, keyColumnNames ).toFragmentString();
 	}
 
+	protected int getTimeoutInSeconds(int millis) {
+		return millis == 0 ? 0 : Math.max( 1, Math.round( millis / 1e3f ) );
+	}
+
 
 	// table support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

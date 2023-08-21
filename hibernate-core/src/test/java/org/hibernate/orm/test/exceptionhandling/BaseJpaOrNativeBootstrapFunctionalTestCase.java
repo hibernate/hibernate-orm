@@ -43,6 +43,7 @@ import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 
 import jakarta.persistence.EntityManager;
@@ -127,6 +128,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 
 		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
 		properties.put( org.hibernate.cfg.AvailableSettings.LOADED_CLASSES, classes );
+		ServiceRegistryUtil.applySettings( properties );
 
 		sessionFactory =  Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
@@ -277,6 +279,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 
 		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootRegistry, cfgRegistryBuilder.getAggregatedCfgXml() )
 				.applySettings( properties );
+		ServiceRegistryUtil.applySettings( registryBuilder );
 
 		return (StandardServiceRegistryImpl) registryBuilder.build();
 	}

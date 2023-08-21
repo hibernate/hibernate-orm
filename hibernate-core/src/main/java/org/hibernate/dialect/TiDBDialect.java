@@ -6,8 +6,6 @@
  */
 package org.hibernate.dialect;
 
-import java.time.Duration;
-
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.sequence.TiDBSequenceSupport;
@@ -137,7 +135,7 @@ public class TiDBDialect extends MySQLDialect {
 		}
 
 		if ( timeout > 0 ) {
-			return getForUpdateString() + " wait " + getLockWaitTimeoutInSeconds( timeout );
+			return getForUpdateString() + " wait " + getTimeoutInSeconds( timeout );
 		}
 
 		return getForUpdateString();
@@ -151,11 +149,6 @@ public class TiDBDialect extends MySQLDialect {
 	@Override
 	public String getForUpdateNowaitString(String aliases) {
 		return getForUpdateString( aliases ) + " nowait";
-	}
-
-	private static long getLockWaitTimeoutInSeconds(int timeoutInMilliseconds) {
-		Duration duration = Duration.ofMillis( timeoutInMilliseconds );
-		return duration.getSeconds();
 	}
 
 	@Override

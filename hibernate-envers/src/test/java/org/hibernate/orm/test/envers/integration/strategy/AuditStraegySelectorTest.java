@@ -8,13 +8,10 @@ package org.hibernate.orm.test.envers.integration.strategy;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.envers.boot.internal.EnversService;
 import org.hibernate.envers.configuration.Configuration;
 import org.hibernate.envers.configuration.EnversSettings;
@@ -22,11 +19,11 @@ import org.hibernate.envers.strategy.AuditStrategy;
 import org.hibernate.envers.strategy.DefaultAuditStrategy;
 import org.hibernate.envers.strategy.ValidityAuditStrategy;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.junit.Test;
 
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 /**
  * A set of unit tests that verify that the audit strategy selector appropriately selects and
@@ -71,12 +68,10 @@ public class AuditStraegySelectorTest {
 	}
 
 	private void testAuditStrategySelector(String propertyValue, Class<? extends AuditStrategy> expectedStrategyClass) {
-		final Map<String, Object> properties = new HashMap<>();
+		final Map<String, Object> properties = ServiceRegistryUtil.createBaseSettings();
 		if ( propertyValue != null ) {
 			properties.put( EnversSettings.AUDIT_STRATEGY, propertyValue );
 		}
-
-		properties.put(AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance() );
 
 		final ServiceRegistry sr = ServiceRegistryBuilder.buildServiceRegistry( properties );
 		try {

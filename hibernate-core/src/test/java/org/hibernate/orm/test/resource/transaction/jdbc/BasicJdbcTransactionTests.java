@@ -18,6 +18,7 @@ import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.anyOf;
@@ -32,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 public class BasicJdbcTransactionTests extends BaseUnitTestCase {
 
 	private SessionFactoryImplementor generateSessionFactory() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				// should be the default, but lets be specific about which we want to test
 				.applySetting( AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jdbc" )
 				.build();

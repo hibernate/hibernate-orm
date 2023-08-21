@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Test;
 
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 /**
  * Test to illustrate that the {@link org.hibernate.mapping.Table#sqlAlterStrings} method
@@ -44,9 +45,12 @@ public class SchemaUpdateSchemaNameTest {
 		StandardServiceRegistry ssr = null;
 		try {
 			final Configuration cfg = buildConfiguration( SimpleFirst.class );
-			ssr = new StandardServiceRegistryBuilder(
-							new BootstrapServiceRegistryBuilder().build(),
-							cfg.getStandardServiceRegistryBuilder().getAggregatedCfgXml() )
+			ssr = ServiceRegistryUtil.applySettings(
+							new StandardServiceRegistryBuilder(
+									new BootstrapServiceRegistryBuilder().build(),
+									cfg.getStandardServiceRegistryBuilder().getAggregatedCfgXml()
+							)
+					)
 					.applySettings( cfg.getProperties() )
 					.build();
 			cfg.buildSessionFactory( ssr ).close();
@@ -65,10 +69,12 @@ public class SchemaUpdateSchemaNameTest {
 			final Configuration cfg = buildConfiguration( SimpleFirst.class );
 
 			// Build Standard Service Registry
-			ssr = new StandardServiceRegistryBuilder(
-					new BootstrapServiceRegistryBuilder().build(),
-					cfg.getStandardServiceRegistryBuilder().getAggregatedCfgXml()
-			)
+			ssr = ServiceRegistryUtil.applySettings(
+							new StandardServiceRegistryBuilder(
+									new BootstrapServiceRegistryBuilder().build(),
+									cfg.getStandardServiceRegistryBuilder().getAggregatedCfgXml()
+							)
+					)
 					.applySettings( cfg.getProperties() )
 					.build();
 
@@ -100,9 +106,12 @@ public class SchemaUpdateSchemaNameTest {
 		StandardServiceRegistry ssr = null;
 		try {
 			final Configuration cfg = buildConfiguration( SimpleNext.class );
-			ssr = new StandardServiceRegistryBuilder(
-					new BootstrapServiceRegistryBuilder().build(),
-					cfg.getStandardServiceRegistryBuilder().getAggregatedCfgXml() )
+			ssr = ServiceRegistryUtil.applySettings(
+							new StandardServiceRegistryBuilder(
+									new BootstrapServiceRegistryBuilder().build(),
+									cfg.getStandardServiceRegistryBuilder().getAggregatedCfgXml()
+							)
+					)
 					.applySettings( cfg.getProperties() )
 					.build();
 			try (SessionFactory sf = cfg.buildSessionFactory( ssr )) {

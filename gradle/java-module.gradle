@@ -251,6 +251,7 @@ processTestResources {
 	duplicatesStrategy DuplicatesStrategy.INCLUDE
 	inputs.property( "db", db )
 	inputs.property( "dbHost", dbHost )
+	inputs.property( "dbBundle", dbBundle[db] )
 	doLast {
 		copy {
 			from( sourceSets.test.java.srcDirs ) {

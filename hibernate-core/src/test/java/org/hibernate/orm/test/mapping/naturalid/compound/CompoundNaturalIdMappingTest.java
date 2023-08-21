@@ -19,6 +19,7 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -32,8 +33,7 @@ public class CompoundNaturalIdMappingTest {
 
 	@Test
 	public void test() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
-				.build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			Metadata meta = new MetadataSources( ssr )

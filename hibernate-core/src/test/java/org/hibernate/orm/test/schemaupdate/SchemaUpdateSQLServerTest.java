@@ -9,7 +9,6 @@ package org.hibernate.orm.test.schemaupdate;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Arrays;
@@ -42,7 +41,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.SQLServerDialect;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
 import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.hbm2ddl.SchemaValidator;
@@ -52,6 +50,8 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -90,24 +90,30 @@ public class SchemaUpdateSQLServerTest extends BaseUnitTestCase {
 
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" )
 				.applySetting( AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, jdbcMetadataExtractorStrategy )
 				.build();
 
-		try (Connection connection = ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess().obtainConnection();
-			 Statement statement = connection.createStatement()) {
-			connection.setAutoCommit( true );
-			statement.executeUpdate( "DROP DATABASE hibernate_orm_test_collation" );
+		try {
+			TransactionUtil.doWithJDBC( ssr, connection -> {
+				try (Statement statement = connection.createStatement()) {
+					connection.setAutoCommit( true );
+					statement.executeUpdate( "DROP DATABASE hibernate_orm_test_collation" );
+				}
+			} );
 		}
 		catch (SQLException e) {
 			log.debug( e.getMessage() );
 		}
-		try (Connection connection = ssr.getService( JdbcServices.class ).getBootstrapJdbcConnectionAccess().obtainConnection();
-			 Statement statement = connection.createStatement()) {
-			connection.setAutoCommit( true );
-			statement.executeUpdate( "CREATE DATABASE hibernate_orm_test_collation COLLATE Latin1_General_CS_AS" );
-			statement.executeUpdate( "ALTER DATABASE [hibernate_orm_test_collation] SET AUTO_CLOSE OFF " );
+		try {
+			TransactionUtil.doWithJDBC( ssr, connection -> {
+				try (Statement statement = connection.createStatement()) {
+					connection.setAutoCommit( true );
+					statement.executeUpdate( "CREATE DATABASE hibernate_orm_test_collation COLLATE Latin1_General_CS_AS" );
+					statement.executeUpdate( "ALTER DATABASE [hibernate_orm_test_collation] SET AUTO_CLOSE OFF " );
+				}
+			} );
 		}
 		catch (SQLException e) {
 			log.debug( e.getMessage() );

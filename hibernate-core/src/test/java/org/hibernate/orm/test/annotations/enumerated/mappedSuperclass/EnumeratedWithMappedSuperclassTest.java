@@ -27,10 +27,10 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.ConvertedBasicType;
-import org.hibernate.type.CustomType;
-import org.hibernate.type.EnumType;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,7 +49,7 @@ public class EnumeratedWithMappedSuperclassTest extends BaseUnitTestCase {
 
 	@Before
 	public void before() {
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.DIALECT, PostgreSQLDialect.class.getName() )
 				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION, "8" )
 				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION, "1" )

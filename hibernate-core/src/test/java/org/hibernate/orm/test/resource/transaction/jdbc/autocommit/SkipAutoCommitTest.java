@@ -10,15 +10,20 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
-import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
 import org.hibernate.testing.orm.junit.DialectContext;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryBasedFunctionalTest;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.Test;
 
@@ -31,8 +36,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * @author Vlad Mihalcea
  */
+@RequiresDialect(MySQLDialect.class)
+@RequiresDialect(PostgreSQLDialect.class)
+@RequiresDialect(H2Dialect.class)
+@RequiresDialect(value = OracleDialect.class)
+@RequiresDialect(SQLServerDialect.class)
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
-public abstract class AbstractSkipAutoCommitTest extends EntityManagerFactoryBasedFunctionalTest {
+public class SkipAutoCommitTest extends EntityManagerFactoryBasedFunctionalTest {
 
 	private PreparedStatementSpyConnectionProvider connectionProvider =
 		new PreparedStatementSpyConnectionProvider() {
@@ -48,14 +58,11 @@ public abstract class AbstractSkipAutoCommitTest extends EntityManagerFactoryBas
 	protected Map getConfig() {
 		Map config = super.getConfig();
 
-		config.put( AvailableSettings.DATASOURCE, dataSource() );
 		config.put( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT, Boolean.TRUE );
 		config.put( AvailableSettings.CONNECTION_PROVIDER, connectionProvider );
 
 		return config;
 	}
-
-	protected abstract DataSource dataSource();
 
 	@Override
 	protected boolean isCleanupTestDataRequired() {

@@ -16,6 +16,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertTyping;
@@ -28,7 +29,7 @@ import static org.junit.Assert.assertTrue;
 public class ServiceContributorTest extends BaseUnitTestCase {
 	@Test
 	public void overrideCachingInitiator() {
-		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+		StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
 		ssrb.clearSettings();
 
 		final MyRegionFactoryInitiator initiator = new MyRegionFactoryInitiator();
@@ -46,7 +47,7 @@ public class ServiceContributorTest extends BaseUnitTestCase {
 	}
 	@Test
 	public void overrideCachingInitiatorExplicitSet() {
-		StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+		StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
 
 		final MyRegionFactoryInitiator initiator = new MyRegionFactoryInitiator();
 		ssrb.addInitiator( initiator );

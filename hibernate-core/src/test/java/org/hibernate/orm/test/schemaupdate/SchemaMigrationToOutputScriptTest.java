@@ -31,6 +31,7 @@ import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,10 +76,8 @@ public class SchemaMigrationToOutputScriptTest {
 			}
 		}
 
-		serviceRegistry = new StandardServiceRegistryBuilder().applySetting(
-				AvailableSettings.HBM2DDL_AUTO,
-				"create-only"
-		)
+		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-only" )
 				.build();
 
 		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )
@@ -89,7 +88,7 @@ public class SchemaMigrationToOutputScriptTest {
 	}
 
 	private void createServiceRegistryAndMetadata(String append) {
-		final StandardServiceRegistryBuilder standardServiceRegistryBuilder = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistryBuilder standardServiceRegistryBuilder = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( Environment.FORMAT_SQL, "false" )
 				.applySetting( Environment.JAKARTA_HBM2DDL_SCRIPTS_ACTION, "update" )
 				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_SCRIPTS_CREATE_TARGET, output.getAbsolutePath() );
@@ -111,7 +110,8 @@ public class SchemaMigrationToOutputScriptTest {
 	@AfterEach
 	public void tearDown() {
 		ServiceRegistryBuilder.destroy( serviceRegistry );
-		serviceRegistry = new StandardServiceRegistryBuilder().applySetting( AvailableSettings.HBM2DDL_AUTO, "drop" )
+		serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
+				.applySetting( AvailableSettings.HBM2DDL_AUTO, "drop" )
 				.build();
 
 		metadata = (MetadataImplementor) new MetadataSources( serviceRegistry )

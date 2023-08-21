@@ -38,6 +38,7 @@ import org.hibernate.type.YesNoConverter;
 
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
@@ -57,7 +58,7 @@ public class EnumCheckColumnDefinitionTests {
 	public void testFallbackToolIsPickedUp() {
 		ServiceRegistryScope.using(
 				() -> {
-					return new StandardServiceRegistryBuilder()
+					return ServiceRegistryUtil.serviceRegistryBuilder()
 							.applySetting( AvailableSettings.DIALECT, CustomDialect.class.getName() )
 							.build();
 				},

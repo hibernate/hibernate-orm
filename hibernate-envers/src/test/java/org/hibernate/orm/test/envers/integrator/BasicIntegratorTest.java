@@ -9,12 +9,10 @@ package org.hibernate.orm.test.envers.integrator;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -28,12 +26,8 @@ public class BasicIntegratorTest {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9675" )
 	public void testNoAudited() {
-		new Configuration().buildSessionFactory(new StandardServiceRegistryBuilder()
-				.applySetting(AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance())
-				.build()).close();
-		new Configuration().addAnnotatedClass( SimpleNonAuditedEntity.class ).buildSessionFactory(new StandardServiceRegistryBuilder()
-				.applySetting(AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance())
-				.build()).close();
+		new Configuration().buildSessionFactory( ServiceRegistryUtil.serviceRegistry()).close();
+		new Configuration().addAnnotatedClass( SimpleNonAuditedEntity.class ).buildSessionFactory(ServiceRegistryUtil.serviceRegistry()).close();
 	}
 
 	@Entity

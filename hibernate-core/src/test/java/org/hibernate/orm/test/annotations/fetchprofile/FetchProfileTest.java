@@ -20,6 +20,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.ServiceRegistryBuilder;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,7 +73,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 
 	@Test
 	public void testWrongAssociationName() {
-		final MetadataSources metadataSources = new MetadataSources()
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 				.addAnnotatedClass( Customer2.class )
 				.addAnnotatedClass( Order.class )
 				.addAnnotatedClass( Country.class );
@@ -94,7 +95,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 
 	@Test
 	public void testWrongClass() {
-		final MetadataSources metadataSources = new MetadataSources()
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 				.addAnnotatedClass( Customer3.class )
 				.addAnnotatedClass( Order.class )
 				.addAnnotatedClass( Country.class );
@@ -116,7 +117,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 
 	@Test
 	public void testUnsupportedFetchMode() {
-		final MetadataSources metadataSources = new MetadataSources()
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 				.addAnnotatedClass( Customer4.class )
 				.addAnnotatedClass( Order.class )
 				.addAnnotatedClass( Country.class );
@@ -157,7 +158,7 @@ public class FetchProfileTest extends BaseUnitTestCase {
 		}
 
 		// now the same with no xml
-		final MetadataSources metadataSources = new MetadataSources()
+		final MetadataSources metadataSources = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
 				.addAnnotatedClass( Customer5.class )
 				.addAnnotatedClass( Order.class )
 				.addAnnotatedClass( Country.class );

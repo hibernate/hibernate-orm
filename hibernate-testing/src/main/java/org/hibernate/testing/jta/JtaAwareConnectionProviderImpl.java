@@ -19,13 +19,18 @@ import javax.transaction.xa.XAException;
 import javax.transaction.xa.XAResource;
 import javax.transaction.xa.Xid;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.build.AllowSysOut;
 import org.hibernate.service.spi.Configurable;
+import org.hibernate.service.spi.ServiceRegistryAwareService;
+import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
+
+import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 
 /**
  * A {@link ConnectionProvider} implementation intended for testing Hibernate/JTA interaction.  In that limited scope we
@@ -35,12 +40,18 @@ import org.hibernate.service.spi.Stoppable;
  * @author Steve Ebersole
  * @author Jonathan Halliday
  */
-public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable {
+public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Configurable, Stoppable,
+		ServiceRegistryAwareService {
 	private static final String CONNECTION_KEY = "_database_connection";
 
-	private DriverManagerConnectionProviderImpl delegate;
+	private final SharedDriverManagerConnectionProviderImpl delegate = SharedDriverManagerConnectionProviderImpl.getInstance();
 
 	private final List<Connection> nonEnlistedConnections = new ArrayList<>();
+
+	@Override
+	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
+		delegate.injectServices( serviceRegistry );
+	}
 
 	@Override
 	public void configure(Map<String, Object> configurationValues) {
@@ -54,9 +65,13 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 		for ( String setting : passThroughSettings.stringPropertyNames() ) {
 			transferSetting( Environment.CONNECTION_PREFIX + '.' + setting, configurationValues, connectionSettings );
 		}
-		connectionSettings.put( Environment.AUTOCOMMIT, "false" );
+		// We don't need this setting for configuring the connection provider
+		connectionSettings.remove( AvailableSettings.CONNECTION_HANDLING );
 
-		delegate = new DriverManagerConnectionProviderImpl();
+		connectionSettings.put( Environment.AUTOCOMMIT, "false" );
+		connectionSettings.put( Environment.POOL_SIZE, "5" );
+		connectionSettings.put( DriverManagerConnectionProviderImpl.INITIAL_SIZE, "0" );
+
 		delegate.configure( connectionSettings );
 	}
 
@@ -120,6 +135,7 @@ public class JtaAwareConnectionProviderImpl implements ConnectionProvider, Confi
 			nonEnlistedConnections.remove( conn );
 			delegate.closeConnection( conn );
 		}
+
 //		else {
 			// do nothing.  part of the enlistment contract here is that the XAResource wrapper
 			// takes that responsibility.

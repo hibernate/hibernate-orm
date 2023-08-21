@@ -16,7 +16,7 @@ import org.hibernate.orm.test.envers.AbstractEnversTest;
 import org.hibernate.mapping.PersistentClass;
 
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNotNull;
@@ -28,9 +28,8 @@ public class BasicModelingTest extends AbstractEnversTest {
 	@Test
 	@TestForIssue( jiraKey = "HHH-9042" )
 	public void testMetamodelBuilding() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "create-drop" )
-				.applySetting( AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance() )
 				.build();
 		try {
 			Metadata metadata = new MetadataSources( ssr )

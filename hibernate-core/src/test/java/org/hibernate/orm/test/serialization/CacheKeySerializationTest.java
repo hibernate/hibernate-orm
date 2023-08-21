@@ -21,6 +21,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,6 +40,7 @@ public class CacheKeySerializationTest {
             .setProperty(Environment.DEFAULT_CACHE_CONCURRENCY_STRATEGY, "transactional")
             .setProperty("javax.persistence.sharedCache.mode", "ALL")
             .setProperty(Environment.HBM2DDL_AUTO, "create-drop");
+      ServiceRegistryUtil.applySettings( configuration.getStandardServiceRegistryBuilder() );
       if (cacheKeysFactory != null) {
          configuration.setProperty(Environment.CACHE_KEYS_FACTORY, cacheKeysFactory);
       }

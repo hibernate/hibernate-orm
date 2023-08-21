@@ -51,6 +51,7 @@ import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.SkipLog;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -95,7 +96,7 @@ public class SchemaUpdateTest {
 		}
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.KEYWORD_AUTO_QUOTING_ENABLED, "true" )
 				.applySetting( AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY, jdbcMetadataExtractorStrategy )
 				.build();

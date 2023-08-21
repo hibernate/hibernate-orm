@@ -8,12 +8,12 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.Table;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AssociationOverride;
@@ -40,7 +40,7 @@ public class OverrideOneToOneJoinColumnTest {
 
 	@Test
 	public void allowIfJoinColumnIsAbsent() {
-		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final Metadata metadata = new MetadataSources( ssr )
 					.addAnnotatedClass( Person.class )
 					.addAnnotatedClass( State.class )
@@ -62,7 +62,7 @@ public class OverrideOneToOneJoinColumnTest {
 
 	@Test
 	public void disallowOnSideWithMappedBy() {
-		try (StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final AnnotationException ex = assertThrows(
 					AnnotationException.class, () ->
 							new MetadataSources( ssr )

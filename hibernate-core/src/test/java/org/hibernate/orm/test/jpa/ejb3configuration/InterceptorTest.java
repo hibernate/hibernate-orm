@@ -26,6 +26,7 @@ import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.orm.test.jpa.SettingsGenerator;
 
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.AfterEach;
 
@@ -153,8 +154,7 @@ public class InterceptorTest {
     @Test
     public void testConfiguredSessionInterceptorWithSessionFactory() {
 
-		StandardServiceRegistryImpl standardRegistry = (StandardServiceRegistryImpl)
-				new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistryImpl standardRegistry = ServiceRegistryUtil.serviceRegistry();
 
 		SessionFactory sessionFactory = null;
 

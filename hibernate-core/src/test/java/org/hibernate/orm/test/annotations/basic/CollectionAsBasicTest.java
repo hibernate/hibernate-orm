@@ -18,6 +18,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.usertype.UserTypeSupport;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Basic;
@@ -31,7 +32,7 @@ import jakarta.persistence.Table;
 public class CollectionAsBasicTest {
 	@Test
 	public void testCollectionAsBasic() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			Metadata metadata = new MetadataSources(ssr).addAnnotatedClass( Post.class ).getMetadataBuilder().build();
 			PersistentClass postBinding = metadata.getEntityBinding( Post.class.getName() );

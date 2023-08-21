@@ -45,7 +45,7 @@ public class InstantTimestampWithoutTimezoneTest {
 		TimeZone timeZone = TimeZone.getDefault();
 		try {
 			TimeZone.setDefault( TimeZone.getTimeZone( "GMT+1" ) );
-			SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+			SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 			scope.inTransaction(
 					session -> {
 						session.doWork(
@@ -83,7 +83,7 @@ public class InstantTimestampWithoutTimezoneTest {
 		}
 		finally {
 			TimeZone.setDefault( timeZone );
-			SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+			SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 		}
 	}
 
@@ -93,7 +93,7 @@ public class InstantTimestampWithoutTimezoneTest {
 		TimeZone timeZone = TimeZone.getDefault();
 		try {
 			TimeZone.setDefault( TimeZone.getTimeZone( "GMT+1" ) );
-			SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+			SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 			scope.inTransaction(
 					session -> {
 						session.createNativeMutationQuery( "insert into SOMEENTITY (ID,TSDATA) values (2,?)" )
@@ -112,7 +112,7 @@ public class InstantTimestampWithoutTimezoneTest {
 		}
 		finally {
 			TimeZone.setDefault( timeZone );
-			SharedDriverManagerConnectionProviderImpl.getInstance().reset();
+			SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 		}
 	}
 

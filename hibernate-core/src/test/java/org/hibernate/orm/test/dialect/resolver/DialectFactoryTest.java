@@ -23,6 +23,7 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolver;
 import org.hibernate.orm.test.dialect.TestingDialects;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,7 +46,7 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		final BootstrapServiceRegistry bootReg = new BootstrapServiceRegistryBuilder().applyClassLoader(
 				DialectFactoryTest.class.getClassLoader()
 		).build();
-		registry = new StandardServiceRegistryBuilder( bootReg ).build();
+		registry = ServiceRegistryUtil.serviceRegistryBuilder( bootReg ).build();
 
 		dialectFactory = new DialectFactoryImpl();
 		dialectFactory.injectServices( (ServiceRegistryImplementor) registry );
@@ -73,8 +74,8 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 	public void testExplicitlySuppliedDialectClassName() {
 		final Map<String, Object> configValues = new HashMap<>();
 
-		configValues.put( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );
-		assertEquals( HSQLDialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
+		configValues.put( Environment.DIALECT, PostgreSQLDialect.class.getName() );
+		assertEquals( PostgreSQLDialect.class, dialectFactory.buildDialect( configValues, null ).getClass() );
 
 		configValues.put( Environment.DIALECT, "org.hibernate.dialect.NoSuchDialect" );
 		try {
@@ -107,8 +108,8 @@ public class DialectFactoryTest extends BaseUnitTestCase {
 		}
 
 		Map<String,Object> props = new HashMap<>();
-		props.put( Environment.DIALECT, "org.hibernate.dialect.HSQLDialect" );
-		assertEquals( HSQLDialect.class, dialectFactory.buildDialect( props, null ).getClass() );
+		props.put( Environment.DIALECT, PostgreSQLDialect.class.getName() );
+		assertEquals( PostgreSQLDialect.class, dialectFactory.buildDialect( props, null ).getClass() );
 	}
 
 	@Test

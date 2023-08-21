@@ -20,6 +20,7 @@ import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.Test;
 
@@ -47,7 +48,7 @@ public class MappedSuperclassType2Test {
 			}
 		};
 
-		final Map settings = new HashMap();
+		final Map settings = ServiceRegistryUtil.createBaseSettings();
 		settings.put( AvailableSettings.HBM2DDL_AUTO, "create-drop" );
 
 		EntityManagerFactory emf = Bootstrap.getEntityManagerFactoryBuilder( pu, settings ).build();

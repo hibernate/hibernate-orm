@@ -25,6 +25,7 @@ import org.hibernate.integrator.spi.IntegratorService;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -71,7 +72,7 @@ public class ClassLoaderServiceImplTest {
     public void testStoppableClassLoaderService() {
     	final BootstrapServiceRegistryBuilder bootstrapBuilder = new BootstrapServiceRegistryBuilder();
     	bootstrapBuilder.applyClassLoader( new TestClassLoader() );
-    	final ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder( bootstrapBuilder.build() ).build();
+    	final ServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder( bootstrapBuilder.build() ).build();
 
 		final TypeContributor contributor1 = getTypeContributorServices( serviceRegistry );
 		assertThat( contributor1 ).isNotNull();

@@ -35,16 +35,16 @@ ext {
                         'jdbc.driver': 'org.apache.derby.iapi.jdbc.AutoloadedDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:derby:target/tmp/derby/hibernate_orm_test;databaseName=hibernate_orm_test;create=true',
-                        'connection.init_sql' : 'CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(\'derby.locks.waitTimeout\', \'10\')'
+                        'jdbc.url'   : 'jdbc:derby:memory:;databaseName=hibernate_orm_test;create=true',
+                        'connection.init_sql' : ''
                 ],
                 derby_old : [
                         'db.dialect' : 'org.hibernate.dialect.DerbyDialect',
                         'jdbc.driver': 'org.apache.derby.jdbc.EmbeddedDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:derby:target/tmp/derby/hibernate_orm_test;databaseName=hibernate_orm_test;create=true',
-                        'connection.init_sql' : 'CALL SYSCS_UTIL.SYSCS_SET_DATABASE_PROPERTY(\'derby.locks.waitTimeout\', \'10\')'
+                        'jdbc.url'   : 'jdbc:derby:memory:;databaseName=hibernate_orm_test;create=true',
+                        'connection.init_sql' : ''
                 ],
                 pgsql : [
                         'db.dialect' : 'org.hibernate.dialect.PostgreSQLDialect',
@@ -136,7 +136,7 @@ ext {
                         'jdbc.driver': 'oracle.jdbc.OracleDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/xepdb1?oracle.jdbc.ReadTimeout=10000',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/xepdb1',
                         'connection.init_sql' : ''
                 ],
                 oracle_ci : [
@@ -144,7 +144,7 @@ ext {
                         'jdbc.driver': 'oracle.jdbc.OracleDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/xepdb1?oracle.jdbc.ReadTimeout=10000',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521/xepdb1',
                         'connection.init_sql' : ''
                 ],
                 oracle_legacy_ci : [
@@ -153,7 +153,7 @@ ext {
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         // For 11 version that doesn't have any XEPDB1 database service
-                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521:XE?oracle.jdbc.ReadTimeout=10000',
+                        'jdbc.url'   : 'jdbc:oracle:thin:@' + dbHost + ':1521:XE',
                         'connection.init_sql' : ''
                 ],
                 oracle_cloud_autonomous_tls : [

@@ -22,6 +22,7 @@ import org.hibernate.mapping.ForeignKey;
 
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.Test;
 
@@ -44,7 +45,7 @@ public class StandardForeignKeyExporterTest {
 
 	@Test
 	public void testForeignKeySqlStringForCompositePK() {
-		try (final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build()) {
+		try (final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry()) {
 			final MetadataImplementor bootModel = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( CompositePk.class )
 					.addAnnotatedClass( Person.class )

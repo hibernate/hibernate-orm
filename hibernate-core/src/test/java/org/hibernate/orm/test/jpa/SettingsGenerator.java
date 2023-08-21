@@ -9,6 +9,7 @@ package org.hibernate.orm.test.jpa;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assert;
 
 /**
@@ -16,7 +17,7 @@ import org.junit.Assert;
  */
 public class SettingsGenerator {
 	public static Map generateSettings(Object... keysAndValues) {
-		final Map settings = new HashMap();
+		final Map settings = ServiceRegistryUtil.createBaseSettings();
 
 		if ( keysAndValues != null ) {
 			if ( keysAndValues.length %2 != 0 ) {

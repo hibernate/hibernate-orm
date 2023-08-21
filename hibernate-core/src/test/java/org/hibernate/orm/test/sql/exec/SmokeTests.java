@@ -57,7 +57,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 )
 @ServiceRegistry(
 		settings = {
-				@Setting(name = AvailableSettings.POOL_SIZE, value = "15"),
 				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "false")
 		}
 )

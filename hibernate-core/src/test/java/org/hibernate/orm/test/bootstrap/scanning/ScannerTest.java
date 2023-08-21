@@ -9,6 +9,8 @@ package org.hibernate.orm.test.bootstrap.scanning;
 import java.io.File;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Map;
+
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.Persistence;
 
@@ -28,6 +30,7 @@ import org.hibernate.jpa.boot.spi.PersistenceUnitDescriptor;
 import org.hibernate.orm.test.jpa.pack.defaultpar.ApplicationServer;
 import org.hibernate.orm.test.jpa.pack.defaultpar.Version;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -87,7 +90,7 @@ public class ScannerTest extends PackagingTestCase {
 		
 		EntityManagerFactory emf;
 		CustomScanner.resetUsed();
-		final HashMap integration = new HashMap();
+		final Map<String, Object> integration = ServiceRegistryUtil.createBaseSettings();
 		emf = Persistence.createEntityManagerFactory( "defaultpar", integration );
 		assertTrue( ! CustomScanner.isUsed() );
 		emf.close();
@@ -104,7 +107,7 @@ public class ScannerTest extends PackagingTestCase {
 		emf.close();
 
 		CustomScanner.resetUsed();
-		emf = Persistence.createEntityManagerFactory( "defaultpar", null );
+		emf = Persistence.createEntityManagerFactory( "defaultpar", ServiceRegistryUtil.createBaseSettings() );
 		assertTrue( ! CustomScanner.isUsed() );
 		emf.close();
 	}

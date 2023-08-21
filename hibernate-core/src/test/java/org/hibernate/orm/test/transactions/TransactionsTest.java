@@ -15,12 +15,11 @@ import org.hibernate.SessionFactory;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -37,8 +36,7 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void jdbc() {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-				.applySetting(AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance())
+		StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				// "jdbc" is the default, but for explicitness
 				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jdbc")
 				.build();
@@ -93,8 +91,7 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void cmt() {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-				.applySetting(AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance())
+		StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				// "jdbc" is the default, but for explicitness
 				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta")
 				.build();
@@ -154,8 +151,7 @@ public class TransactionsTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test
 	public void bmt() {
-		StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder()
-				.applySetting(AvailableSettings.CONNECTION_PROVIDER, SharedDriverManagerConnectionProviderImpl.getInstance())
+		StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistryBuilder()
 				// "jdbc" is the default, but for explicitness
 				.applySetting(AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY, "jta")
 				.build();

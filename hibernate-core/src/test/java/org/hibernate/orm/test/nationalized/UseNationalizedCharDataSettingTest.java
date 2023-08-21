@@ -29,6 +29,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 import org.junit.jupiter.api.Assertions;
 
@@ -44,7 +45,7 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10528")
 	public void testSetting() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA, true )
 				.build();
 
@@ -77,7 +78,7 @@ public class UseNationalizedCharDataSettingTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-11205")
 	public void testSettingOnCharType() {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.USE_NATIONALIZED_CHARACTER_DATA, true )
 				.build();
 

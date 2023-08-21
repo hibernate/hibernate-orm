@@ -22,6 +22,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.tool.schema.internal.SchemaCreatorImpl;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import org.jboss.logging.Logger;
@@ -38,7 +39,7 @@ public class ImplicitCompositeKeyJoinTest {
 
 	@Test
 	public void testSchemaCreationSQLCommandIsGeneratedWithTheCorrectColumnSizeValues() throws Exception {
-		final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final org.hibernate.boot.Metadata metadata = new MetadataSources( ssr )
 					.addAnnotatedClass( Employee.class )

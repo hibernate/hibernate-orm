@@ -197,10 +197,7 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 	protected final void withDefaultTimeZone(Runnable runnable) {
 		TimeZone timeZoneBefore = TimeZone.getDefault();
 		TimeZone.setDefault( toTimeZone( env.defaultJvmTimeZone ) );
-		// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
-		if( determineDialect() instanceof H2Dialect || determineDialect() instanceof HSQLDialect) {
-			SharedDriverManagerConnectionProviderImpl.getInstance().reset();
-		}
+		SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 		/*
 		 * Run the code in a new thread, because some libraries (looking at you, h2 JDBC driver)
 		 * cache data dependent on the default timezone in thread local variables,
@@ -229,10 +226,7 @@ public abstract class AbstractJavaTimeTypeTest<T, E> extends BaseCoreFunctionalT
 		}
 		finally {
 			TimeZone.setDefault( timeZoneBefore );
-			// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
-			if( determineDialect() instanceof H2Dialect || determineDialect() instanceof HSQLDialect) {
-				SharedDriverManagerConnectionProviderImpl.getInstance().reset();
-			}
+			SharedDriverManagerConnectionProviderImpl.getInstance().onDefaultTimeZoneChange();
 		}
 	}
 

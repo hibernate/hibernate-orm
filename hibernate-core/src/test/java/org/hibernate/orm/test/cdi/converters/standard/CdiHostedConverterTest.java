@@ -23,6 +23,8 @@ import org.hibernate.tool.schema.Action;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.cdi.converters.ConverterBean;
 import org.hibernate.orm.test.cdi.converters.MonitorBean;
 import org.hibernate.orm.test.cdi.converters.TheEntity;
@@ -47,7 +49,7 @@ public class CdiHostedConverterTest extends BaseUnitTestCase {
 		try ( final SeContainer cdiContainer = cdiInitializer.initialize() ) {
 			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
-			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 					.build();
@@ -115,7 +117,7 @@ public class CdiHostedConverterTest extends BaseUnitTestCase {
 		try ( final SeContainer cdiContainer = cdiInitializer.initialize() ) {
 			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
 
-			final StandardServiceRegistry ssr = new StandardServiceRegistryBuilder( bsr )
+			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
 					.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 					.build();

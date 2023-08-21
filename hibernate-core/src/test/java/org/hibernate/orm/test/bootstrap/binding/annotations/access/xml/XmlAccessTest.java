@@ -21,6 +21,7 @@ import org.hibernate.property.access.spi.Getter;
 import org.hibernate.property.access.spi.GetterFieldImpl;
 import org.hibernate.property.access.spi.GetterMethodImpl;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.AccessType;
@@ -168,6 +169,7 @@ public class XmlAccessTest {
 		for ( Class<?> clazz : classesUnderTest ) {
 			cfg.addAnnotatedClass( clazz );
 		}
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		for ( String configFile : configFiles ) {
 			try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream( configFile )) {
 				cfg.addInputStream( is );

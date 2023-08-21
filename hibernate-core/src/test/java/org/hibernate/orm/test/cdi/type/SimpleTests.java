@@ -21,6 +21,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.tool.schema.Action;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import jakarta.enterprise.inject.se.SeContainer;
@@ -41,7 +42,7 @@ public class SimpleTests {
 	void testProperUsage() {
 		final ExtendedBeanManagerImpl extendedBeanManager = new ExtendedBeanManagerImpl();
 
-		final StandardServiceRegistryBuilder ssrbBuilder = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistryBuilder ssrbBuilder = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, Action.CREATE_DROP )
 				.applySetting( AvailableSettings.JAKARTA_CDI_BEAN_MANAGER, extendedBeanManager );
 

@@ -21,6 +21,7 @@ import org.hibernate.testing.orm.jpa.PersistenceUnitInfoAdapter;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -115,7 +116,7 @@ public class ConfigurationTest {
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private MetadataImplementor buildMetadata(SharedCacheMode mode) {
-		Map settings = new HashMap();
+		Map settings = ServiceRegistryUtil.createBaseSettings();
 		settings.put( AvailableSettings.JPA_SHARED_CACHE_MODE, mode );
 		settings.put( AvailableSettings.CACHE_REGION_FACTORY, CustomRegionFactory.class.getName() );
 		settings.put(

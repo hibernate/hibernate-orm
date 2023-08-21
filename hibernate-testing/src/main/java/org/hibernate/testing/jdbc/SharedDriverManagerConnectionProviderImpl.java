@@ -73,8 +73,20 @@ public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConn
 		validateConnectionsReturned();
 	}
 
+	public void onDefaultTimeZoneChange() {
+		if ( "org.h2.Driver".equals( config.driverClassName ) || "org.hsqldb.jdbc.JDBCDriver".equals( config.driverClassName ) ) {
+			// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ
+			super.stop();
+		}
+	}
+
 	public void reset() {
 		super.stop();
+	}
+
+	@Override
+	public int getOpenConnections() {
+		return super.getOpenConnections();
 	}
 
 	private static class Config {

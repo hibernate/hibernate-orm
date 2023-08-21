@@ -32,6 +32,8 @@ import org.hibernate.orm.test.jcache.domain.Event;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.tool.schema.Action;
 
 import static org.hibernate.cache.jcache.JCacheHelper.locateStandardCacheManager;
@@ -116,7 +118,7 @@ public class TestHelper {
 	}
 
 	public static StandardServiceRegistryBuilder getStandardServiceRegistryBuilder() {
-		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder()
+		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder()
 				.configure( "hibernate-config/hibernate.cfg.xml" )
 				.applySetting( AvailableSettings.GENERATE_STATISTICS, "true" )
 				.applySetting( AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION, Action.CREATE_DROP )

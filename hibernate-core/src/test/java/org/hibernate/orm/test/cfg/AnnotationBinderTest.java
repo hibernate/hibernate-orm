@@ -10,12 +10,12 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.model.internal.EntityBinder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.internal.CoreMessageLogger;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.logger.LoggerInspectionRule;
 import org.hibernate.testing.logger.Triggerable;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -42,7 +42,7 @@ public class AnnotationBinderTest {
 
 		Triggerable triggerable = logInspection.watchForLogMessages( "HHH000137" );
 
-		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {
+		try (StandardServiceRegistry serviceRegistry = ServiceRegistryUtil.serviceRegistry()) {
 
 			Metadata metadata = new MetadataSources( serviceRegistry )
 					.addAnnotatedClass( InvalidPrimaryKeyJoinColumnAnnotationEntity.class )

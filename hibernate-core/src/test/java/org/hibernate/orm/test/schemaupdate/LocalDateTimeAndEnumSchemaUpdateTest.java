@@ -15,6 +15,7 @@ import org.hibernate.tool.hbm2ddl.SchemaUpdate;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,7 @@ public class LocalDateTimeAndEnumSchemaUpdateTest {
 	public void setUp() throws IOException {
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 	}
 
 	@AfterEach

@@ -28,6 +28,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -45,7 +46,7 @@ public class SchemaCreationTest {
 	public void setUp() throws IOException {
 		output = File.createTempFile( "update_script", ".sql" );
 		output.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 		dialect = ssr.getService(JdbcEnvironment.class).getDialect();
 	}
 

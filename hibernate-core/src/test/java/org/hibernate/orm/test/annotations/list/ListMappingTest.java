@@ -28,6 +28,7 @@ import org.hibernate.tool.schema.internal.exec.GenerationTargetToStdout;
 
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -49,7 +50,7 @@ public class ListMappingTest  {
 
 	@BeforeEach
 	public void before() {
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.FORMAT_SQL, false )
 				.build();
 	}

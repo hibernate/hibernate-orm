@@ -100,6 +100,10 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return null;
 		}
 
+		if ( configurationValues.get( AvailableSettings.DATASOURCE ) != null ) {
+			return new DatasourceConnectionProviderImpl();
+		}
+
 		final StrategySelector strategySelector = registry.getService( StrategySelector.class );
 		final Object explicitSetting = configurationValues.get( AvailableSettings.CONNECTION_PROVIDER );
 		if ( explicitSetting != null ) {
@@ -140,10 +144,6 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 					}
 				}
 			}
-		}
-
-		if ( configurationValues.get( AvailableSettings.DATASOURCE ) != null ) {
-			return new DatasourceConnectionProviderImpl();
 		}
 
 		ConnectionProvider connectionProvider = null;

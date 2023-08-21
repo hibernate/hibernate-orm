@@ -19,6 +19,7 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -29,7 +30,7 @@ public class InheritanceSchemaUpdateTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBidirectionalOneToManyReferencingRootEntity() throws Exception {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )

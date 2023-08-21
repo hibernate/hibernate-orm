@@ -11,6 +11,7 @@ import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +56,7 @@ public class MySqlExistingEnumColumnValidationTest extends BaseCoreFunctionalTes
 
 	@Test
 	public void testSynonymUsingGroupedSchemaValidator() {
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.HBM2DDL_AUTO, "validate" )
 				.build();
 		try {

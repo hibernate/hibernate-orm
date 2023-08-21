@@ -23,6 +23,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.logger.LoggerInspectionRule;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.hibernate.testing.logger.Triggerable;
 import org.junit.Rule;
 import org.junit.Test;
@@ -54,7 +55,7 @@ public class NonRootEntityWithCacheAnnotationTest {
 		settings.put( Environment.CACHE_REGION_FACTORY, CachingRegionFactory.class.getName() );
 		settings.put( AvailableSettings.JPA_SHARED_CACHE_MODE, SharedCacheMode.ENABLE_SELECTIVE );
 
-		try (ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+		try (ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySettings( settings )
 				.build()) {
 

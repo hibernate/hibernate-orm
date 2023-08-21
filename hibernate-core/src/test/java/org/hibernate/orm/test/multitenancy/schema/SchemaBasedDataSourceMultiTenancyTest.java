@@ -11,6 +11,7 @@ import javax.sql.DataSource;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.AbstractDataSourceBasedMultiTenantConnectionProviderImpl;
+import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 
 import org.hibernate.testing.RequiresDialectFeature;
@@ -27,7 +28,7 @@ import static org.junit.Assert.assertThat;
  */
 @RequiresDialectFeature( value = ConnectionProviderBuilder.class )
 public class SchemaBasedDataSourceMultiTenancyTest  extends AbstractSchemaBasedMultiTenancyTest<
-		AbstractDataSourceBasedMultiTenantConnectionProviderImpl, DatasourceConnectionProviderImpl> {
+		AbstractDataSourceBasedMultiTenantConnectionProviderImpl, ConnectionProvider> {
 
 	protected AbstractDataSourceBasedMultiTenantConnectionProviderImpl buildMultiTenantConnectionProvider() {
 		acmeProvider = ConnectionProviderBuilder.buildDataSourceConnectionProvider( "acme" );

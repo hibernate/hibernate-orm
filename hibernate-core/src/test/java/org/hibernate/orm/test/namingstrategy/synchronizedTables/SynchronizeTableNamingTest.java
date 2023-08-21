@@ -16,6 +16,7 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.PersistentClass;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,7 +32,7 @@ public class SynchronizeTableNamingTest {
 
 	@BeforeEach
 	public void before() {
-		ssr = new StandardServiceRegistryBuilder().build();
+		ssr = ServiceRegistryUtil.serviceRegistry();
 	}
 
 	@AfterEach

@@ -1338,7 +1338,7 @@ public class MySQLDialect extends Dialect {
 			case LockOptions.WAIT_FOREVER:
 				return lockString;
 			default:
-				return supportsWait() ? lockString + " wait " + timeout : lockString;
+				return supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
 		}
 	}
 

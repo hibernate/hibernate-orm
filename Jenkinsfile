@@ -130,10 +130,6 @@ stage('Build') {
 									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
 										" -Pgradle.libs.versions.hsqldb=2.6.1"
 									break;
-								case "derby_10_14":
-									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
-										" -Pgradle.libs.versions.derby=10.14.2.0"
-									break;
 								case "mysql":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
 										docker.image('mysql:8.0.31').pull()

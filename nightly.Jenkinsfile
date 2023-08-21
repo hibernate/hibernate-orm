@@ -28,7 +28,6 @@ stage('Configure') {
 	this.environments = [
 		// Minimum supported versions
 		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
-		new BuildEnvironment( dbName: 'derby_10_14' ),
 		new BuildEnvironment( dbName: 'mysql_5_7' ),
 		new BuildEnvironment( dbName: 'mariadb_10_3' ),
 		new BuildEnvironment( dbName: 'postgresql_11' ),
@@ -112,10 +111,6 @@ stage('Build') {
 								case "hsqldb_2_6":
 									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
 										" -Pgradle.libs.versions.hsqldb=2.6.1"
-									break;
-								case "derby_10_14":
-									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
-										" -Pgradle.libs.versions.derby=10.14.2.0"
 									break;
 								case "mysql":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {

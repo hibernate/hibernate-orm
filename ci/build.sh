@@ -8,8 +8,6 @@ elif [ "$RDBMS" == "hsqldb" ] || [ "$RDBMS" == "hsqldb_2_6" ]; then
   goal="-Pdb=hsqldb"
 elif [ "$RDBMS" == "derby" ]; then
   goal="-Pdb=derby"
-elif [ "$RDBMS" == "derby_10_14" ]; then
-  goal="-Pdb=derby_old"
 elif [ "$RDBMS" == "mysql" ] || [ "$RDBMS" == "mysql_5_7" ]; then
   goal="-Pdb=mysql_ci"
 elif [ "$RDBMS" == "mariadb" ] || [ "$RDBMS" == "mariadb_10_3" ]; then

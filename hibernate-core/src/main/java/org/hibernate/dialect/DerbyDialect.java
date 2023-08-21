@@ -94,7 +94,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
 
 /**
- * A {@linkplain Dialect SQL dialect} for Apache Derby 10.14.2 and above.
+ * A {@linkplain Dialect SQL dialect} for Apache Derby 10.15.2 and above.
  *
  * @author Simon Johnston
  * @author Gavin King
@@ -113,7 +113,7 @@ public class DerbyDialect extends Dialect {
 	// * can't select a parameter unless wrapped
 	//   in a cast or function call
 
-	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 14, 2 );
+	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 15, 2 );
 
 	private final LimitHandler limitHandler = new DerbyLimitHandler( true );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);

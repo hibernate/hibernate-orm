@@ -303,6 +303,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				inclusionChecker,
 				lockingChecker,
 				dirtinessChecker,
+				rowId,
 				forceDynamicUpdate,
 				session
 		);
@@ -620,6 +621,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			InclusionChecker inclusionChecker,
 			InclusionChecker lockingChecker,
 			InclusionChecker dirtinessChecker,
+			Object rowId,
 			boolean forceDynamicUpdate,
 			SharedSessionContractImplementor session) {
 		final AbstractEntityPersister persister = entityPersister();
@@ -636,6 +638,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				oldValues,
 				dirtyAttributeIndexes,
 				dirtinessChecker,
+				rowId,
 				forceDynamicUpdate
 		);
 
@@ -1294,6 +1297,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				Object[] oldValues,
 				int[] dirtyAttributeIndexes,
 				InclusionChecker dirtinessChecker,
+				Object rowId,
 				boolean forceDynamicUpdate) {
 			this.values = values;
 			this.dirtyAttributeIndexes = dirtyAttributeIndexes;
@@ -1338,6 +1342,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					else if ( dirtyAttributeIndexes != null ) {
 						if ( entityPersister().getEntityMetamodel().isDynamicUpdate()
 								|| entityPersister().optimisticLockStyle() == DIRTY ) {
+							tablesNeedingDynamicUpdate.add( tableMapping );
+						}
+						else if ( rowId == null && entityPersister().getRowIdMapping() != null && tableMapping.isIdentifierTable() ) {
 							tablesNeedingDynamicUpdate.add( tableMapping );
 						}
 					}
@@ -1619,6 +1626,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					}
 				},
 				(index,attribute) -> true,
+				"", // pass anything here to generate the row id restriction if possible
 				false,
 				null
 		);

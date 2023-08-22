@@ -38,6 +38,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.EmbeddedId;
@@ -146,7 +147,7 @@ public class EmbeddableBinder {
 	static boolean isEmbedded(XProperty property, XClass returnedClass) {
 		return property.isAnnotationPresent( Embedded.class )
 			|| property.isAnnotationPresent( EmbeddedId.class )
-			|| returnedClass.isAnnotationPresent( Embeddable.class );
+			|| returnedClass.isAnnotationPresent( Embeddable.class ) && !property.isAnnotationPresent( Convert.class );
 	}
 
 	private static Component bindEmbeddable(

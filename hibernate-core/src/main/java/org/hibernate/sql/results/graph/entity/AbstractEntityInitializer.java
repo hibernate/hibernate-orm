@@ -172,7 +172,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					: fetch.createAssembler( this, creationState );
 
 			final int stateArrayPosition = attributeMapping.getStateArrayPosition();
-			final EntityMappingType declaringType = (EntityMappingType) attributeMapping.getDeclaringType();
+			final EntityMappingType declaringType = attributeMapping.getDeclaringType().asEntityMappingType();
+
 			assemblers[declaringType.getSubclassId()][stateArrayPosition] = stateAssembler;
 			for ( EntityMappingType subMappingType : declaringType.getSubMappingTypes() ) {
 				assemblers[subMappingType.getSubclassId()][stateArrayPosition] = stateAssembler;

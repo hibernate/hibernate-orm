@@ -25,6 +25,7 @@ import org.hibernate.engine.spi.SelfDirtinessTracker;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.id.Assigned;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -111,31 +112,34 @@ public abstract class AbstractSaveEventListener<C>
 			C context,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
-		callbackRegistry.preCreate( entity );
-
-		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
-
 		final EntityPersister persister = source.getEntityPersister( entityName, entity );
 		final Generator generator = persister.getGenerator();
 		if ( !generator.generatedOnExecution() ) {
-			final Object generatedId = ( (BeforeExecutionGenerator) generator ).generate( source, entity, null, INSERT );
-			if ( generatedId == null ) {
-				throw new IdentifierGenerationException( "null id generated for: " + entity.getClass() );
-			}
-			else if ( generatedId == SHORT_CIRCUIT_INDICATOR ) {
-				return source.getIdentifier( entity );
+			final BeforeExecutionGenerator beforeExecutionGenerator = (BeforeExecutionGenerator) generator;
+			final Object generatedId;
+			if ( generator instanceof Assigned ) {
+				// get it from the entity later, since we need
+				// the preCreate() callback to happen first
+				generatedId = null;
 			}
 			else {
-				// TODO: define toString()s for generators
-				if ( LOG.isDebugEnabled() ) {
-					LOG.debugf(
-							"Generated identifier: %s, using strategy: %s",
-							persister.getIdentifierType().toLoggableString( generatedId, source.getFactory() ),
-							generator.getClass().getName()
-					);
+				generatedId = beforeExecutionGenerator.generate( source, entity, null, INSERT );
+				if ( generatedId == null ) {
+					throw new IdentifierGenerationException( "null id generated for: " + entity.getClass() );
 				}
-				return performSave( entity, generatedId, persister, false, context, source, true );
+				else if ( generatedId == SHORT_CIRCUIT_INDICATOR ) {
+					return source.getIdentifier( entity );
+				}
 			}
+			// TODO: define toString()s for generators
+			if ( LOG.isDebugEnabled() ) {
+				LOG.debugf(
+						"Generated identifier: %s, using strategy: %s",
+						persister.getIdentifierType().toLoggableString( generatedId, source.getFactory() ),
+						generator.getClass().getName()
+				);
+			}
+			return performSave( entity, generatedId, persister, false, context, source, true );
 		}
 		else {
 			return performSave( entity, null, persister, true, context, source, requiresImmediateIdAccess );
@@ -168,6 +172,20 @@ public abstract class AbstractSaveEventListener<C>
 			C context,
 			EventSource source,
 			boolean requiresImmediateIdAccess) {
+
+		callbackRegistry.preCreate( entity );
+
+		processIfSelfDirtinessTracker( entity, SelfDirtinessTracker::$$_hibernate_clearDirtyAttributes );
+
+		if ( persister.getGenerator() instanceof Assigned ) {
+			id = persister.getIdentifier( entity, source );
+			if ( id == null ) {
+				throw new IdentifierGenerationException(
+						"Identifier of entity '" + persister.getEntityName()
+								+ "' must be manually assigned before calling 'persist()'"
+				);
+			}
+		}
 
 		if ( LOG.isTraceEnabled() ) {
 			LOG.tracev( "Saving {0}", infoString( persister, id, source.getFactory() ) );

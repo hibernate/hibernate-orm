@@ -24,8 +24,6 @@ import org.hibernate.procedure.internal.Util;
 import org.hibernate.procedure.spi.NamedCallableQueryMemento;
 import org.hibernate.procedure.spi.ParameterStrategy;
 import org.hibernate.query.results.ResultSetMapping;
-import org.hibernate.query.results.ResultSetMappingImpl;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 
 import jakarta.persistence.NamedStoredProcedureQuery;
 import jakarta.persistence.ParameterMode;
@@ -129,8 +127,8 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 
 	private ResultSetMapping buildResultSetMapping(String registeredName, SessionFactoryImplementor sessionFactory) {
 		return sessionFactory
-				.getServiceRegistry()
-				.getService( JdbcValuesMappingProducerProvider.class )
+				.getFastSessionServices()
+				.getJdbcValuesMappingProducerProvider()
 				.buildResultSetMapping( registeredName, false, sessionFactory );
 	}
 

@@ -46,6 +46,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 	private final TableGroup tableGroup;
 	private final boolean hasTableGroup;
 	private final SqlSelection aggregateSelection;
+	private final EmbeddableMappingType fetchContainer;
 
 	public AggregateEmbeddableFetchImpl(
 			NavigablePath navigablePath,
@@ -54,7 +55,8 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 			FetchTiming fetchTiming,
 			boolean hasTableGroup,
 			DomainResultCreationState creationState) {
-		super( embeddedPartDescriptor.getEmbeddableTypeDescriptor(), navigablePath );
+		super( navigablePath );
+		this.fetchContainer = embeddedPartDescriptor.getEmbeddableTypeDescriptor();
 
 		this.fetchParent = fetchParent;
 		this.fetchTiming = fetchTiming;
@@ -84,7 +86,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 
 		final SqlExpressionResolver sqlExpressionResolver = sqlAstCreationState.getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.getPrimaryTableReference();
-		final SelectableMapping selectableMapping = embeddedPartDescriptor.getEmbeddableTypeDescriptor().getAggregateMapping();
+		final SelectableMapping selectableMapping = fetchContainer.getAggregateMapping();
 		final Expression expression = sqlExpressionResolver.resolveSqlExpression( tableReference, selectableMapping );
 		final TypeConfiguration typeConfiguration = sqlAstCreationState.getCreationContext()
 				.getSessionFactory()
@@ -115,7 +117,7 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 
 	@Override
 	public EmbeddableMappingType getFetchContainer() {
-		return (EmbeddableMappingType) super.getFetchContainer();
+		return fetchContainer;
 	}
 
 	@Override

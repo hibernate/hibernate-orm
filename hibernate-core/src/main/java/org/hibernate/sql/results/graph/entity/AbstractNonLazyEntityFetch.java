@@ -13,6 +13,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
 
 /**
@@ -22,18 +23,25 @@ import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
  */
 public abstract class AbstractNonLazyEntityFetch extends AbstractFetchParent implements EntityFetch {
 	private final FetchParent fetchParent;
+	private final EntityValuedFetchable fetchContainer;
 
 	public AbstractNonLazyEntityFetch(
 			FetchParent fetchParent,
 			EntityValuedFetchable fetchedPart,
 			NavigablePath navigablePath) {
-		super( fetchedPart, navigablePath );
+		super( navigablePath );
+		this.fetchContainer = fetchedPart;
 		this.fetchParent = fetchParent;
 	}
 
 	@Override
 	public EntityValuedFetchable getEntityValuedModelPart() {
-		return (EntityValuedFetchable) getFetchContainer();
+		return fetchContainer;
+	}
+
+	@Override
+	public FetchableContainer getFetchContainer() {
+		return fetchContainer;
 	}
 
 	@Override

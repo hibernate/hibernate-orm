@@ -10,7 +10,7 @@ import org.gradle.api.NamedDomainObjectFactory;
 import org.gradle.api.Project;
 
 /**
- * Factory for {@link DatabaseConfig} instances as part of {@link DatabasesExtension#getAvailableDatabases()}
+ * Factory for {@link DatabaseConfig} instances as part of {@link DatabasesExtension#getAvailable()}
  *
  * @author Steve Ebersole
  */

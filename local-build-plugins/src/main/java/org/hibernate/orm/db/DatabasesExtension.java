@@ -6,73 +6,64 @@
  */
 package org.hibernate.orm.db;
 
+import java.util.Map;
 import javax.inject.Inject;
 
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.Project;
-import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 
 /**
  * @author Steve Ebersole
  */
 public abstract class DatabasesExtension {
-	public static final String DSL_NAME = "databases";
+	public static final String DSL_NAME = "testingDatabases";
 
 	private final Project project;
 
-	private final Property<DatabaseConfig> testingDatabase;
-	private final NamedDomainObjectContainer<DatabaseConfig> availableDatabases;
+	private final Property<DatabaseConfig> effective;
+	private final NamedDomainObjectContainer<DatabaseConfig> available;
 
 	@Inject
 	public DatabasesExtension(Project project) {
 		this.project = project;
 
-		this.availableDatabases = project.getObjects().domainObjectContainer( DatabaseConfig.class, new DatabaseConfigFactory( project ) );
+		this.available = project.getObjects().domainObjectContainer( DatabaseConfig.class, new DatabaseConfigFactory( project ) );
 
-		this.testingDatabase = project.getObjects().property( DatabaseConfig.class );
-		this.testingDatabase.convention( project.provider( () -> availableDatabases.getByName(  "h2" ) ) );
+		this.effective = project.getObjects().property( DatabaseConfig.class );
+		this.effective.convention( project.provider( () -> available.getByName( "h2" ) ) );
+	}
+
+	@Input
+	public NamedDomainObjectContainer<DatabaseConfig> getAvailable() {
+		return available;
 	}
 
 	@Input
 	@Nested
-	public NamedDomainObjectContainer<DatabaseConfig> getAvailableDatabases() {
-		return availableDatabases;
+	public Property<DatabaseConfig> getEffective() {
+		return effective;
 	}
 
-//	@Input
-//	public Property<String> getTestingDatabase() {
-//		return testingDatabase;
-//	}
-//
-//	public void setTestingDatabase(String configName) {
-//		testingDatabase.set( configName );
-//	}
-//
-//	public void setTestingDatabase(Provider<String> configName) {
-//		testingDatabase.set( configName );
-//	}
-//
-//	@Internal
-//	public DatabaseConfig getEffectiveDatabase() {
-//		return getAvailableDatabases().getByName( testingDatabase.get() );
-//	}
-
-
-	public Property<DatabaseConfig> getTestingDatabase() {
-		return testingDatabase;
-	}
-
-	public void setTestingDatabase(String databaseName) {
-		testingDatabase.convention( availableDatabases.named( databaseName ) );
-//		effectiveDatabase.convention( project.provider( () -> bundles.getByName( databaseName ) ) );
+	public void setEffective(String databaseName) {
+		effective.convention( project.provider( () -> available.getByName( databaseName ) ) );
 	}
 
 	public void setTestingDatabase(Provider<String> databaseName) {
-		testingDatabase.set( databaseName.flatMap( availableDatabases::named ) );
+		effective.set( databaseName.flatMap( available::named ) );
 	}
 
+	@Internal
+	public String getEffectiveDatabaseName() {
+		return effective.get().getName();
+	}
+
+	@Internal
+	public Map<String, String> getEffectiveDatabaseSettings() {
+		return effective.get().getSettings();
+	}
 }

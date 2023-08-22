@@ -52,6 +52,6 @@ tasks.test {
 			   'oracle_ci',
 			   'mssql',
 			   'mssql_ci'
-	].contains( project.db )
+	].contains( testingDatabases.effectiveDatabaseName )
 }
 

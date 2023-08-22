@@ -19,8 +19,8 @@ public abstract class AvailableDatabasesTask extends DefaultTask {
 	public void listAvailableDatabases() {
 		final DatabasesExtension databasesExtension = getProject().getExtensions().getByType( DatabasesExtension.class );
 		getLogger().lifecycle( "Available Testing Databases {" );
-		databasesExtension.getAvailableDatabases().forEach( (database) -> {
-			if ( databasesExtension.getAvailableDatabases().equals( database ) ) {
+		databasesExtension.getAvailable().forEach( (database) -> {
+			if ( databasesExtension.getAvailable().equals( database ) ) {
 				getLogger().lifecycle( "  {} (*) {", database.getName() );
 			}
 			else {

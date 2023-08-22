@@ -141,10 +141,10 @@ xjc {
 }
 
 task copyBundleResourcesXml (type: Copy) {
-    inputs.property( "testingDatabaseConfig", databases.testingDatabase.get().settings )
+    inputs.property( "testingDatabaseSettings", testingDatabases.effectiveDatabaseSettings )
 
     def bundlesTargetDir = file( "${buildDir}/bundles" )
-    def bundleTokens = [buildDirName: project.relativePath( buildDir )] + databases.testingDatabase.get().settings
+    def bundleTokens = [buildDirName: project.relativePath( buildDir )] + testingDatabases.effectiveDatabaseSettings
 
     from('src/test/bundles/templates') {
         include '**/*.xml'
@@ -158,10 +158,10 @@ task copyBundleResourcesXml (type: Copy) {
 }
 
 task copyBundleResourcesNonXml (type: Copy) {
-    inputs.property( "testingDatabaseConfig", databases.testingDatabase.get().settings )
+    inputs.property( "testingDatabaseSettings", testingDatabases.effectiveDatabaseSettings )
 
     def bundlesTargetDir = file( "${buildDir}/bundles" )
-    def bundleTokens = [buildDirName: project.relativePath( buildDir )] + databases.testingDatabase.get().settings
+    def bundleTokens = [buildDirName: project.relativePath( buildDir )] + testingDatabases.effectiveDatabaseSettings
 
     from('src/test/bundles/templates') {
         exclude '**/*.xml'

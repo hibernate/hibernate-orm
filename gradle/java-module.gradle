@@ -99,19 +99,20 @@ dependencies {
 	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally
 	// This is due to the "no split-packages" requirement of Java 9+
 
-	if ( db.startsWith( 'db2' ) ) {
+	if ( testingDatabases.effectiveDatabaseName.startsWith( 'db2' ) ) {
 		testRuntimeOnly dbLibs.db2
 	}
-	else if ( db.startsWith( 'hana' ) ) {
+	else if ( testingDatabases.effectiveDatabaseName.startsWith( 'hana' ) ) {
 		testRuntimeOnly dbLibs.hana
 	}
-	else if ( db.startsWith( 'mysql' ) || db.startsWith( 'tidb' ) ) {
+	else if ( testingDatabases.effectiveDatabaseName.startsWith( 'mysql' )
+			|| testingDatabases.effectiveDatabaseName.startsWith( 'tidb' ) ) {
 		testRuntimeOnly dbLibs.mysql
 	}
-	else if ( db.startsWith( 'mariadb' ) ) {
+	else if ( testingDatabases.effectiveDatabaseName.startsWith( 'mariadb' ) ) {
 		testRuntimeOnly dbLibs.mariadb
 	}
-	else if ( db.startsWith( 'firebird' ) ) {
+	else if ( testingDatabases.effectiveDatabaseName.startsWith( 'firebird' ) ) {
 		testRuntimeOnly dbLibs.firebird
 	}
 
@@ -249,8 +250,7 @@ sourceSets {
 
 processTestResources {
 	duplicatesStrategy DuplicatesStrategy.INCLUDE
-	inputs.property( "testingDatabaseName", databases.testingDatabase.get().name )
-	inputs.property( "testingDatabaseConfig", databases.testingDatabase.get().settings )
+	inputs.property( "testingDatabaseSettings", testingDatabases.effectiveDatabaseSettings )
 	doLast {
 		copy {
 			from( sourceSets.test.java.srcDirs ) {
@@ -267,7 +267,7 @@ processTestResources {
 		copy {
 			from file( 'src/test/resources/hibernate.properties' )
 			into file( "${buildDir}/resources/test" )
-			filter( ReplaceTokens, tokens: databases.testingDatabase.get().settings )
+			filter( ReplaceTokens, tokens: testingDatabases.effectiveDatabaseSettings )
 		}
 	}
 }
@@ -418,7 +418,7 @@ task copyResourcesToIntelliJOutFolder(type: Task, dependsOn: project.tasks.proce
  Afterward, you can run any test from the IDE against that particular DB.
  */
 task setDataBase dependsOn( processTestResources, copyResourcesToIntelliJOutFolder ) {
-	println( "Setting current database to ${db}" )
+	println( "Setting current database to ${testingDatabases.effectiveDatabaseName}" )
 }
 
 tasks.copyResourcesToIntelliJOutFolder.mustRunAfter processTestResources

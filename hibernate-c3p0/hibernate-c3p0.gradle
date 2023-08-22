@@ -17,7 +17,7 @@ dependencies {
     testImplementation libs.validator
     testRuntimeOnly jakartaLibs.el
 
-    if ( db.equalsIgnoreCase( 'oracle' ) ) {
+    if ( testingDatabases.effectiveDatabaseName.equalsIgnoreCase( 'oracle' ) ) {
         testRuntimeOnly dbLibs.oracle
     }
 }

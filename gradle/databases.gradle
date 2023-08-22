@@ -9,15 +9,17 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 apply plugin: 'org.hibernate.orm.build.database-bundles'
 
-ext {
-        db = project.hasProperty('db') ? project.getProperty('db') : 'h2'
-}
+//ext {
+//        db = project.hasProperty('db') ? project.getProperty('db') : 'h2'
+//}
 
-databases {
+testingDatabases {
+        effective = project.hasProperty('db') ? project.getProperty('db') : 'h2'
+
         def dbHost = System.getProperty( 'dbHost', 'localhost' )
         def dbService = System.getProperty( 'dbService', '' )
 
-        availableDatabases {
+        available {
                 h2 {
                         dialect = "org.hibernate.dialect.H2Dialect"
                         driver = "org.h2.Driver"
@@ -228,14 +230,4 @@ databases {
                 }
         }
 
-        testingDatabase = project.ext.db
-}
-
-
-ext {
-        // assume "callers" only ever use the effective one
-        dbBundle = [
-                project.ext.db,
-                databases.testingDatabase.get().settings
-        ]
 }

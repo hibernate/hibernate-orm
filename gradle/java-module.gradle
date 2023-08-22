@@ -249,9 +249,8 @@ sourceSets {
 
 processTestResources {
 	duplicatesStrategy DuplicatesStrategy.INCLUDE
-	inputs.property( "db", db )
-	inputs.property( "dbHost", dbHost )
-	inputs.property( "dbBundle", dbBundle[db] )
+	inputs.property( "testingDatabaseName", databases.testingDatabase.get().name )
+	inputs.property( "testingDatabaseConfig", databases.testingDatabase.get().settings )
 	doLast {
 		copy {
 			from( sourceSets.test.java.srcDirs ) {
@@ -268,7 +267,7 @@ processTestResources {
 		copy {
 			from file( 'src/test/resources/hibernate.properties' )
 			into file( "${buildDir}/resources/test" )
-			filter( ReplaceTokens, tokens: dbBundle[db] )
+			filter( ReplaceTokens, tokens: databases.testingDatabase.get().settings )
 		}
 	}
 }

@@ -141,55 +141,40 @@ xjc {
 }
 
 task copyBundleResourcesXml (type: Copy) {
-    inputs.property( "db", db )
-    inputs.property( "dbHost", dbHost )
-    ext {
-        bundlesTargetDir = file( "${buildDir}/bundles" )
-        // Escape
-        bundleTokens = [
-                'db.dialect' : dbBundle[db]['db.dialect'].replace("&", "&amp;"),
-                'jdbc.driver' : dbBundle[db]['jdbc.driver'].replace("&", "&amp;"),
-                'jdbc.user' : dbBundle[db]['jdbc.user'].replace("&", "&amp;"),
-                'jdbc.pass' : dbBundle[db]['jdbc.pass'].replace("&", "&amp;"),
-                'jdbc.url' : dbBundle[db]['jdbc.url'].replace("&", "&amp;"),
-                'connection.init_sql' : dbBundle[db]['connection.init_sql'].replace("&", "&amp;")
-        ]
-        ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
-    }
+    inputs.property( "testingDatabaseConfig", databases.testingDatabase.get().settings )
+
+    def bundlesTargetDir = file( "${buildDir}/bundles" )
+    def bundleTokens = [buildDirName: project.relativePath( buildDir )] + databases.testingDatabase.get().settings
 
     from('src/test/bundles/templates') {
         include '**/*.xml'
     }
-    into ext.bundlesTargetDir
-    filter( ReplaceTokens, tokens: ext.bundleTokens)
+    into bundlesTargetDir
+    filter( ReplaceTokens, tokens: bundleTokens)
 
     doFirst {
-        ext.bundlesTargetDir.mkdirs()
+        bundlesTargetDir.mkdirs()
     }
 }
 
 task copyBundleResourcesNonXml (type: Copy) {
-    inputs.property( "db", db )
-    ext {
-        bundlesTargetDir = file( "${buildDir}/bundles" )
-        // Escape
-        bundleTokens = dbBundle[db]
-        ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )
-    }
+    inputs.property( "testingDatabaseConfig", databases.testingDatabase.get().settings )
+
+    def bundlesTargetDir = file( "${buildDir}/bundles" )
+    def bundleTokens = [buildDirName: project.relativePath( buildDir )] + databases.testingDatabase.get().settings
 
     from('src/test/bundles/templates') {
         exclude '**/*.xml'
     }
-    into ext.bundlesTargetDir
-    filter( ReplaceTokens, tokens: ext.bundleTokens)
+    into bundlesTargetDir
+    filter( ReplaceTokens, tokens: bundleTokens )
 
     doFirst {
-        ext.bundlesTargetDir.mkdirs()
+        bundlesTargetDir.mkdirs()
     }
 }
 
-task copyBundleResources (type: Copy) {
-    inputs.property( "db", db )
+task copyBundleResources {
     dependsOn tasks.copyBundleResourcesXml
     dependsOn tasks.copyBundleResourcesNonXml
 }

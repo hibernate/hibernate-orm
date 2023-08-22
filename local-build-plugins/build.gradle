@@ -76,6 +76,10 @@ gradlePlugin {
 			id = 'org.hibernate.orm.build.java-module'
 			implementationClass = 'org.hibernate.orm.toolchains.JavaModulePlugin'
 		}
+		databasesBundlePlugin {
+			id = "org.hibernate.orm.build.database-bundles"
+			implementationClass = "org.hibernate.orm.db.DatabasesPlugin"
+		}
 	}
 }
 

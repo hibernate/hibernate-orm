@@ -80,7 +80,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 
 	@Override
 	public ValueExtractor getJdbcValueExtractor() {
-		final JdbcMapping jdbcMapping = ( (SqlExpressible) sqlExpression.getExpressionType() ).getJdbcMapping();
+		final JdbcMapping jdbcMapping = sqlExpression.getExpressionType().getSingleJdbcMapping();
 		if ( jdbcJavaType == null || jdbcMapping.getMappedJavaType() == jdbcJavaType ) {
 			return jdbcMapping.getJdbcValueExtractor();
 		}

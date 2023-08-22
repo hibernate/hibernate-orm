@@ -56,6 +56,8 @@ import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.internal.ConvertedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -421,12 +423,19 @@ public class SqmUtil {
 			List<SqmParameter<?>> sqmParameters,
 			SqmParameterMappingModelResolutionAccess mappingModelResolutionAccess,
 			SessionFactoryImplementor sessionFactory) {
-		if ( binding.getBindType() instanceof Bindable ) {
-			return (Bindable) binding.getBindType();
+
+		{
+			final Bindable tryOne = asBindable( binding.getBindType() );
+			if ( tryOne != null ) {
+				return tryOne;
+			}
 		}
 
-		if ( parameter.getHibernateType() instanceof Bindable ) {
-			return (Bindable) parameter.getHibernateType();
+		{
+			final Bindable tryTwo = asBindable( parameter.getHibernateType() );
+			if ( tryTwo != null ) {
+				return tryTwo;
+			}
 		}
 
 		if ( binding.getType() != null ) {
@@ -445,6 +454,35 @@ public class SqmUtil {
 
 		// assume we have (or can create) a mapping for the parameter's Java type
 		return typeConfiguration.standardBasicTypeForJavaType( parameter.getParameterType() );
+	}
+
+	/**
+	 * Utility to mitigate issues related to type pollution.
+	 * Returns the passes object after casting it to Bindable,
+	 * if the type is compatible.
+	 * If it's not, null will be returned.
+	 * @param o any object instance
+	 * @return a reference to the same object o, but of type Bindable if possible, or null.
+	 */
+	private static Bindable asBindable(final Object o) {
+		if ( o == null ) {
+			return null;
+		}
+		//There a high chance that we're dealing with a BasicTypeImpl, or a subclass of it.
+		else if ( o instanceof BasicTypeImpl ) {
+			return (BasicTypeImpl) o;
+		}
+		//Alternatively, there's strong chances we're dealing with an ConvertedBasicTypeImpl.
+		else if ( o instanceof ConvertedBasicTypeImpl ) {
+			return (ConvertedBasicTypeImpl) o;
+		}
+		else {
+			//Eventually fallback to the standard check for completeness:
+			if ( o instanceof Bindable ) {
+				return (Bindable) o;
+			}
+			return null;
+		}
 	}
 
 	public static SqmStatement.ParameterResolutions resolveParameters(SqmStatement<?> statement) {

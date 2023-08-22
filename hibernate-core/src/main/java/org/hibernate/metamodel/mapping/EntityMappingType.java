@@ -105,6 +105,11 @@ public interface EntityMappingType
 	}
 
 	@Override
+	default EntityMappingType asEntityMappingType() {
+		return this;
+	}
+
+	@Override
 	default MappingType getPartMappingType() {
 		return this;
 	}

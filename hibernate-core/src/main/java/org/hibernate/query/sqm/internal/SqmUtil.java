@@ -421,12 +421,15 @@ public class SqmUtil {
 			List<SqmParameter<?>> sqmParameters,
 			SqmParameterMappingModelResolutionAccess mappingModelResolutionAccess,
 			SessionFactoryImplementor sessionFactory) {
-		if ( binding.getBindType() instanceof Bindable ) {
-			return (Bindable) binding.getBindType();
+
+		final Bindable j = BindableTypeHelper.asBindable( binding.getBindType() );
+		if ( j != null ) {
+			return j;
 		}
 
-		if ( parameter.getHibernateType() instanceof Bindable ) {
-			return (Bindable) parameter.getHibernateType();
+		final Bindable ja = BindableTypeHelper.asBindable( parameter.getHibernateType() );
+		if ( ja != null ) {
+			return ja;
 		}
 
 		if ( binding.getType() != null ) {

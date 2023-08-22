@@ -38,6 +38,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 	private final FetchTiming fetchTiming;
 	private final TableGroup tableGroup;
 	private final boolean hasTableGroup;
+	private final EmbeddableMappingType fetchContainer;
 
 	public EmbeddableFetchImpl(
 			NavigablePath navigablePath,
@@ -46,7 +47,8 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 			FetchTiming fetchTiming,
 			boolean hasTableGroup,
 			DomainResultCreationState creationState) {
-		super( embeddedPartDescriptor.getEmbeddableTypeDescriptor(), navigablePath );
+		super( navigablePath );
+		this.fetchContainer = embeddedPartDescriptor.getEmbeddableTypeDescriptor();
 
 		this.fetchParent = fetchParent;
 		this.fetchTiming = fetchTiming;
@@ -80,7 +82,8 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 	 * For Hibernate Reactive
 	 */
 	protected EmbeddableFetchImpl(EmbeddableFetchImpl original) {
-		super( original.getFetchContainer(), original.getNavigablePath() );
+		super( original.getNavigablePath() );
+		this.fetchContainer = original.getFetchContainer();
 		fetchParent = original.fetchParent;
 		fetchTiming = original.fetchTiming;
 		tableGroup = original.tableGroup;
@@ -104,7 +107,7 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 
 	@Override
 	public EmbeddableMappingType getFetchContainer() {
-		return (EmbeddableMappingType) super.getFetchContainer();
+		return this.fetchContainer;
 	}
 
 	@Override

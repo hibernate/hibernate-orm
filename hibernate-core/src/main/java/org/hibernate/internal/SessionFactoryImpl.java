@@ -269,6 +269,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			runtimeMetamodels = runtimeMetamodelsImpl;
 			final MappingMetamodelImpl mappingMetamodelImpl = new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
 			runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
+			fastSessionServices = new FastSessionServices( this );
 			initializeMappingModel( mappingMetamodelImpl, bootstrapContext, bootMetamodel, options );
 			runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
 
@@ -279,7 +280,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
 			temporarySessionOpenOptions = defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
 			defaultStatelessOptions = defaultSessionOpenOptions == null ? null : withStatelessOptions();
-			fastSessionServices = new FastSessionServices( this );
+
 			wrapperOptions = new SessionFactoryBasedWrapperOptions( this );
 
 			currentSessionContext = buildCurrentSessionContext();

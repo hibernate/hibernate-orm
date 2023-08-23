@@ -15,8 +15,12 @@ import org.hibernate.event.spi.SaveOrUpdateEvent;
 
 /**
  * An event handler for save() events
+ *
  * @author Gavin King
+ *
+ * @deprecated since {@link org.hibernate.Session#save} is deprecated
  */
+@Deprecated(since="6")
 public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 
 	protected Object performSaveOrUpdate(SaveOrUpdateEvent event) {

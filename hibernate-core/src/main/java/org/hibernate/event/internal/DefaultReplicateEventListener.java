@@ -33,7 +33,10 @@ import org.hibernate.type.Type;
  * entities in response to generated replicate events.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated since {@link org.hibernate.Session#replicate} is deprecated
  */
+@Deprecated(since="6")
 public class DefaultReplicateEventListener
 		extends AbstractSaveEventListener<ReplicationMode>
 		implements ReplicateEventListener {

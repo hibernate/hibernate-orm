@@ -26,29 +26,14 @@ public class DefaultSaveEventListener extends DefaultSaveOrUpdateEventListener {
 	protected Object performSaveOrUpdate(SaveOrUpdateEvent event) {
 		// this implementation is supposed to tolerate incorrect unsaved-value
 		// mappings, for the purpose of backward-compatibility
-		EntityEntry entry = event.getSession().getPersistenceContextInternal().getEntry( event.getEntity() );
+		final EntityEntry entry = event.getSession().getPersistenceContextInternal().getEntry( event.getEntity() );
 		return entry != null && entry.getStatus() != Status.DELETED
 				? entityIsPersistent( event )
 				: entityIsTransient( event );
 	}
-	
-	protected Object saveWithGeneratedOrRequestedId(SaveOrUpdateEvent event) {
-		if ( event.getRequestedId() == null ) {
-			return super.saveWithGeneratedOrRequestedId( event );
-		}
-		else {
-			return saveWithRequestedId(
-					event.getEntity(),
-					event.getRequestedId(),
-					event.getEntityName(),
-					null,
-					event.getSession()
-				);
-		}
-	}
 
 	protected boolean reassociateIfUninitializedProxy(Object object, SessionImplementor source) {
-		if ( !Hibernate.isInitialized(object) ) {
+		if ( !Hibernate.isInitialized( object ) ) {
 			throw new PersistentObjectException("uninitialized proxy passed to save()");
 		}
 		else {

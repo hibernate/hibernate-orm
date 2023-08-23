@@ -114,7 +114,7 @@ public class EmbeddableForeignKeyResultImpl<T>
 
 	@Override
 	public EmbeddableMappingType getReferencedMappingType() {
-		return (EmbeddableMappingType) getFetchContainer().getPartMappingType();
+		return fetchContainer.getPartMappingType();
 	}
 
 	@Override

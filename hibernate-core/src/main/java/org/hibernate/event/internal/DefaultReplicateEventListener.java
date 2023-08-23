@@ -126,16 +126,7 @@ public class DefaultReplicateEventListener
 			final boolean regenerate = persister.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
 			final EntityKey key = regenerate ? null : source.generateEntityKey( id, persister );
 
-			performSaveOrReplicate(
-					entity,
-					key,
-					persister,
-					regenerate,
-					replicationMode,
-					source,
-					true
-			);
-
+			performSaveOrReplicate( entity, key, persister, regenerate, replicationMode, source, false );
 		}
 	}
 

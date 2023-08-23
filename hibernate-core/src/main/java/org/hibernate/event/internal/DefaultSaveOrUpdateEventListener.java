@@ -40,7 +40,10 @@ import org.hibernate.proxy.LazyInitializer;
  *
  * @author Steve Ebersole
  * @author Gavin King
+ * 
+ * @deprecated since {@link org.hibernate.Session#saveOrUpdate} is deprecated
  */
+@Deprecated(since="6")
 public class DefaultSaveOrUpdateEventListener
 		extends AbstractSaveEventListener<PersistContext>
 		implements SaveOrUpdateEventListener {

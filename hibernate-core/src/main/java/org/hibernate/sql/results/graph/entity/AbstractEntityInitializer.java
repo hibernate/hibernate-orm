@@ -419,7 +419,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						.getEntityMetamodel()
 						.isPolymorphic() ) {
 					parentInitializer.resolveKey( rowProcessingState );
-					return isReferencedModelPartInConcreteParent(
+					return !isReferencedModelPartInConcreteParent(
 							modelPart,
 							currentNavigablePath,
 							parentInitializer
@@ -437,7 +437,13 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final EntityPersister parentConcreteDescriptor = parentInitializer.asEntityInitializer()
 				.getConcreteDescriptor();
 		if ( parentConcreteDescriptor != null && parentConcreteDescriptor.getEntityMetamodel().isPolymorphic() ) {
-			final ModelPart concreteModelPart = parentConcreteDescriptor.findByPath( partNavigablePath.getLocalName() );
+			final EntityMappingType entityType = modelPart.asAttributeMapping() != null ?
+					modelPart.asAttributeMapping().getDeclaringType().findContainingEntityMapping() :
+					modelPart.asEntityMappingType();
+			final ModelPart concreteModelPart = parentConcreteDescriptor.findSubPart(
+					partNavigablePath.getLocalName(),
+					entityType
+			);
 			if ( concreteModelPart == null
 					|| !modelPart.getJavaType().getJavaTypeClass()
 					.isAssignableFrom( concreteModelPart.getJavaType().getJavaTypeClass() ) ) {
@@ -470,10 +476,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			and for AddressB skip resolving the EntityJoinedFetchInitializer of UserA
 
 		 */
-				return true;
+				return false;
 			}
 		}
-		return false;
+		return true;
 	}
 
 	protected void resolveEntityInstance(

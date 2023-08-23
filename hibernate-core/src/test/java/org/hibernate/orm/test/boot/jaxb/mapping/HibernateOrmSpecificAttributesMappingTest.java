@@ -22,6 +22,7 @@ import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.usertype.UserTypeSupport;
@@ -35,7 +36,7 @@ public class HibernateOrmSpecificAttributesMappingTest {
 	@Test
 	public void verifyMapping(DomainModelScope scope) {
 		scope.withHierarchy( HibernateOrmSpecificAttributesMappingTest.MyEntity.class, (entityDescriptor) -> {
-			Generator generator = entityDescriptor.getIdentifierProperty().createGenerator( null );
+			Generator generator = entityDescriptor.getIdentifierProperty().createGenerator( (RuntimeModelCreationContext) null );
 			assertThat( generator )
 					.isInstanceOf( UuidGenerator.class );
 

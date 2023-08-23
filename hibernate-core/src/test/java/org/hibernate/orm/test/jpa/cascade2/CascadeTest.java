@@ -14,7 +14,9 @@ import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.fail;
 
 /**
@@ -305,6 +307,34 @@ public class CascadeTest extends AbstractJPATest {
 		}
 	}
 
+	@Test
+	public void testForeignGenerator() {
+		// NOTES: Child defines a many-to-one back to its Parent.  This
+		// association does not define persist cascading (which is natural;
+		// a child should not be able to create its parent).
+		try (Session s = sessionFactory().openSession()) {
+			s.beginTransaction();
+			Parent p = new Parent( "parent" );
+			Child c = new Child( "child" );
+			ParentInfo pi = new ParentInfo( "parent info" );
+			ChildInfo ci = new ChildInfo( "child info" );
+			c.setInfo( ci );
+			ci.setOwner( c );
+			c.setParent( p );
+			p.setInfo( pi );
+			pi.setOwner( p );
+			assertNull( pi.getId() );
+			s.save( p );
+			s.save ( pi );
+			s.save( c );
+			s.save( ci );
+			s.getTransaction().commit();
+			assertEquals( p.getId(), pi.getId() );
+		}
+		finally {
+			cleanupData();
+		}
+	}
 
 	private void cleanupData() {
 		inTransaction(

@@ -33,7 +33,6 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiation;
 import org.hibernate.query.sqm.tree.select.SqmDynamicInstantiationArgument;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
-import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
@@ -49,6 +48,8 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
+
+import jakarta.persistence.criteria.Selection;
 
 public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpretation<T>
 		implements SqlTupleContainer, Assignable {
@@ -361,20 +362,27 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				? Collections.emptyList()
 				: sqmQuerySpec.getSelectClause().getSelections();
 		for ( SqmSelection<?> selection : selections ) {
-			if ( selectableNodeContains( selection.getSelectableNode(), path ) ) {
+			if ( selectionContains( selection.getSelectableNode(), path ) ) {
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private static boolean selectableNodeContains(SqmSelectableNode<?> selectableNode, NavigablePath path) {
-		if ( selectableNode instanceof SqmPath && path.isParentOrEqual( ( (SqmPath<?>) selectableNode ).getNavigablePath() ) ) {
+	private static boolean selectionContains(Selection<?> selection, NavigablePath path) {
+		if ( selection instanceof SqmPath && path.isParentOrEqual( ( (SqmPath<?>) selection ).getNavigablePath() ) ) {
 			return true;
 		}
-		else if ( selectableNode instanceof SqmDynamicInstantiation ) {
-			for ( SqmDynamicInstantiationArgument<?> argument : ( (SqmDynamicInstantiation<?>) selectableNode ).getArguments() ) {
-				if ( selectableNodeContains( argument.getSelectableNode(), path ) ) {
+		else if ( selection.isCompoundSelection() ) {
+			for ( Selection<?> compoundSelection : selection.getCompoundSelectionItems() ) {
+				if ( selectionContains( compoundSelection, path ) ) {
+					return true;
+				}
+			}
+		}
+		else if ( selection instanceof SqmDynamicInstantiation ) {
+			for ( SqmDynamicInstantiationArgument<?> argument : ( (SqmDynamicInstantiation<?>) selection ).getArguments() ) {
+				if ( selectionContains( argument.getSelectableNode(), path ) ) {
 					return true;
 				}
 			}

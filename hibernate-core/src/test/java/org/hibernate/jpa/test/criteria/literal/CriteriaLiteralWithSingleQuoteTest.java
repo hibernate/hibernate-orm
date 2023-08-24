@@ -15,6 +15,7 @@ import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.dialect.PostgreSQL81Dialect;
+import org.hibernate.dialect.SybaseASE157Dialect;
 import org.hibernate.jpa.test.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.SkipForDialect;
@@ -60,6 +61,7 @@ public class CriteriaLiteralWithSingleQuoteTest extends BaseEntityManagerFunctio
 	}
 
 	@Test
+	@SkipForDialect(value = SybaseASE157Dialect.class, jiraKey = "HHH-14669")
 	@SkipForDialect(value = PostgreSQL81Dialect.class, comment = "PostgreSQL does not support literals in group by statement")
 	public void testLiteralProjectionAndGroupBy() throws Exception {
 		doInJPA(

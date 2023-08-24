@@ -8,8 +8,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 
+import org.hibernate.dialect.SybaseASEDialect;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,6 +53,7 @@ public class CriteriaLiteralWithSingleQuoteTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "HHH-14669")
 	public void testLiteralProjectionAndGroupBy(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

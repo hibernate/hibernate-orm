@@ -104,6 +104,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 						creationState.determineEffectiveLockMode( sourceAlias ),
 						notFoundAction,
 						keyResult,
+						entityResult.getRowIdResult(),
 						entityResult.getIdentifierFetch(),
 						entityResult.getDiscriminatorFetch(),
 						creationState
@@ -121,6 +122,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 			LockMode lockMode,
 			NotFoundAction notFoundAction,
 			DomainResult<?> keyResult,
+			DomainResult<Object> rowIdResult,
 			Fetch identifierFetch,
 			Fetch discriminatorFetch,
 			AssemblerCreationState creationState) {
@@ -131,6 +133,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 				lockMode,
 				notFoundAction,
 				keyResult,
+				rowIdResult,
 				identifierFetch,
 				discriminatorFetch,
 				creationState

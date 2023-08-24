@@ -42,6 +42,7 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 			LockMode lockMode,
 			NotFoundAction notFoundAction,
 			DomainResult<?> keyResult,
+			DomainResult<Object> rowIdResult,
 			Fetch identifierFetch,
 			Fetch discriminatorFetch,
 			AssemblerCreationState creationState) {
@@ -51,7 +52,7 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 				lockMode,
 				identifierFetch,
 				discriminatorFetch,
-				null,
+				rowIdResult,
 				creationState
 		);
 		this.referencedFetchable = referencedFetchable;

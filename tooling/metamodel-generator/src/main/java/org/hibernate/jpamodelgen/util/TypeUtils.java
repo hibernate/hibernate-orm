@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -124,16 +125,15 @@ public final class TypeUtils {
 		return mirror == null ? "?" : mirror.toString();
 	}
 
-	private static @Nullable TypeMirror lowerBound(TypeMirror bound) {
-		return bound.getKind() == TypeKind.NULL ? null : bound;
+	private static @Nullable TypeMirror lowerBound(@Nullable TypeMirror bound) {
+		return bound == null || bound.getKind() == TypeKind.NULL ? null : bound;
 	}
 
-	private static @Nullable TypeMirror upperBound(TypeMirror bound) {
-		return bound.getKind() == TypeKind.DECLARED && bound.toString().equals("java.lang.Object") ? null : bound;
+	private static @Nullable TypeMirror upperBound(@Nullable TypeMirror bound) {
+		return bound == null || (bound.getKind() == TypeKind.DECLARED && bound.toString().equals("java.lang.Object")) ? null : bound;
 	}
 
-	@SuppressWarnings("nullness")
-	public static TypeMirror extractClosestRealType(TypeMirror type, Context context) {
+	public static @Nullable TypeMirror extractClosestRealType(TypeMirror type, Context context) {
 		if ( type == null ) {
 			return null;
 		}
@@ -153,10 +153,17 @@ public final class TypeUtils {
 			case DECLARED:
 				final DeclaredType declaredType = (DeclaredType) type;
 				final TypeElement typeElement = (TypeElement) declaredType.asElement();
-				return context.getTypeUtils().getDeclaredType( typeElement,
+				return context.getTypeUtils().getDeclaredType(
+						typeElement,
 						declaredType.getTypeArguments().stream()
-							.map( arg -> extractClosestRealType( arg, context ) )
-								.toArray( TypeMirror[]::new ) );
+								.map( new Function<TypeMirror, TypeMirror>() {
+											@Override
+											public @Nullable TypeMirror apply(TypeMirror arg) {
+												return extractClosestRealType( arg, context );
+											}
+										} )
+								.toArray( TypeMirror[]::new )
+				);
 			default:
 				return context.getTypeUtils().erasure( type );
 		}

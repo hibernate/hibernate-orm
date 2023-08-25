@@ -1782,7 +1782,8 @@ public abstract class AbstractCollectionPersister
 				"one-shot delete for " + getRolePath(),
 				keyRestrictionBindings,
 				Collections.emptyList(),
-				parameterBinders
+				parameterBinders,
+				sqlWhereString
 		);
 	}
 

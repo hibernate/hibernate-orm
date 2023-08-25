@@ -6,15 +6,12 @@
  */
 package org.hibernate.sql.model.ast.builder;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.TableMapping;
-import org.hibernate.sql.model.ast.ColumnValueParameter;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.TableDelete;
 import org.hibernate.sql.model.internal.TableDeleteCustomSql;
@@ -34,21 +31,32 @@ public class TableDeleteBuilderStandard
 
 	private String sqlComment;
 
+	private final String whereFragment;
+
 	public TableDeleteBuilderStandard(
 			MutationTarget<?> mutationTarget,
 			TableMapping table,
 			SessionFactoryImplementor sessionFactory) {
-		this( mutationTarget, new MutatingTableReference( table ), sessionFactory );
+		this( mutationTarget, new MutatingTableReference( table ), sessionFactory, null );
 	}
 
 	public TableDeleteBuilderStandard(
 			MutationTarget<?> mutationTarget,
 			MutatingTableReference tableReference,
 			SessionFactoryImplementor sessionFactory) {
+		this( mutationTarget, tableReference, sessionFactory, null );
+	}
+
+	public TableDeleteBuilderStandard(
+			MutationTarget<?> mutationTarget,
+			MutatingTableReference tableReference,
+			SessionFactoryImplementor sessionFactory,
+			String whereFragment) {
 		super( MutationType.DELETE, mutationTarget, tableReference, sessionFactory );
 
 		this.isCustomSql = tableReference.getTableMapping().getDeleteDetails().getCustomSql() != null;
 		this.sqlComment = "delete for " + mutationTarget.getRolePath();
+		this.whereFragment = whereFragment;
 	}
 
 	public String getSqlComment() {
@@ -98,7 +106,8 @@ public class TableDeleteBuilderStandard
 				sqlComment,
 				getKeyRestrictionBindings(),
 				getOptimisticLockBindings(),
-				getParameters()
+				getParameters(),
+				whereFragment
 		);
 	}
 }

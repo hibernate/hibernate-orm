@@ -458,7 +458,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final PluralAttributeMapping attribute = getAttributeMapping();
 		assert attribute != null;
 
-		final TableUpdateBuilderStandard<?> updateBuilder = new TableUpdateBuilderStandard<>( this, tableReference, getFactory() );
+		final TableUpdateBuilderStandard<?> updateBuilder = new TableUpdateBuilderStandard<>(
+				this,
+				tableReference,
+				getFactory(),
+				sqlWhereString
+		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SET
@@ -667,7 +672,12 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final ForeignKeyDescriptor fkDescriptor = pluralAttribute.getKeyDescriptor();
 		assert fkDescriptor != null;
 
-		final TableDeleteBuilderStandard deleteBuilder = new TableDeleteBuilderStandard( this, tableReference, getFactory() );
+		final TableDeleteBuilderStandard deleteBuilder = new TableDeleteBuilderStandard(
+				this,
+				tableReference,
+				getFactory(),
+				sqlWhereString
+		);
 
 		if ( pluralAttribute.getIdentifierDescriptor() != null ) {
 			deleteBuilder.addKeyRestrictionsLeniently( pluralAttribute.getIdentifierDescriptor() );

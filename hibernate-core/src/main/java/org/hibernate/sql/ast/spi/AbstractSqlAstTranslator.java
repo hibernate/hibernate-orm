@@ -8178,6 +8178,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						}
 					} );
 				}
+
+				if ( tableDelete.getWhereFragment() != null ) {
+					sqlBuffer.append( " and (" ).append( tableDelete.getWhereFragment() ).append( ")" );
+				}
 			}
 			finally {
 				getCurrentClauseStack().pop();

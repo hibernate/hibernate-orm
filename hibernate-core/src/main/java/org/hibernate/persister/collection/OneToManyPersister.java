@@ -568,7 +568,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteRowAst(MutatingTableReference tableReference) {
-		final TableUpdateBuilderStandard<MutationOperation> updateBuilder = new TableUpdateBuilderStandard<>( this, tableReference, getFactory() );
+		final TableUpdateBuilderStandard<MutationOperation> updateBuilder = new TableUpdateBuilderStandard<>(
+				this,
+				tableReference,
+				getFactory(),
+				sqlWhereString
+		);
 
 		// for each key column -
 		// 		1) set the value to null
@@ -658,9 +663,14 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	private TableUpdate<JdbcMutationOperation> buildTableUpdate(MutatingTableReference tableReference) {
-		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>( this, tableReference, getFactory() );
-		final PluralAttributeMapping attributeMapping = getAttributeMapping();
+		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>(
+				this,
+				tableReference,
+				getFactory(),
+				sqlWhereString
+		);
 
+		final PluralAttributeMapping attributeMapping = getAttributeMapping();
 		attributeMapping.getKeyDescriptor().getKeyPart().forEachSelectable( updateBuilder );
 
 		final CollectionPart indexDescriptor = attributeMapping.getIndexDescriptor();
@@ -761,7 +771,12 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	private JdbcMutationOperation buildGeneratedWriteIndexOperation(MutatingTableReference tableReference) {
-		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>( this, tableReference, getFactory() );
+		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>(
+				this,
+				tableReference,
+				getFactory(),
+				sqlWhereString
+		);
 
 		final OneToManyCollectionPart elementDescriptor = (OneToManyCollectionPart) getAttributeMapping().getElementDescriptor();
 		updateBuilder.addKeyRestrictionsLeniently( elementDescriptor.getAssociatedEntityMappingType().getIdentifierMapping() );

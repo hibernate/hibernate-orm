@@ -520,7 +520,8 @@ public abstract class CollectionBinder {
 			final Class<?> targetElement = elementCollectionAnn.targetClass();
 			collectionBinder.setTargetEntity( reflectionManager.toXClass( targetElement ) );
 			//collectionBinder.setCascadeStrategy( getCascadeStrategy( embeddedCollectionAnn.cascade(), hibernateCascade ) );
-			collectionBinder.setOneToMany( true );
+			//While this is a collection-valued property, its mapping significantly differs from those of one-to-many.
+			collectionBinder.setOneToMany( false );
 		}
 		else if ( manyToManyAnn != null ) {
 			mappedBy = nullIfEmpty( manyToManyAnn.mappedBy() );
@@ -1293,7 +1294,8 @@ public abstract class CollectionBinder {
 				&& !property.isAnnotationPresent( JoinColumns.class )) {
 			throw new AnnotationException( "Unidirectional '@OneToMany' association '"
 					+ qualify( propertyHolder.getPath(), propertyName )
-					+ "' is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'" );
+					+ "' is annotated '@OnDelete' and must explicitly specify a '@JoinColumn'"
+					+ " (so that Join Table mechanic is not used)" );
 		}
 	}
 

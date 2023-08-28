@@ -25,6 +25,7 @@ import org.jboss.logging.Logger;
 public class PrimaryKey extends Constraint {
 	private static final Logger log = Logger.getLogger( PrimaryKey.class );
 
+	private UniqueKey orderingUniqueKey = null;
 	private int[] originalOrder;
 
 	public PrimaryKey(Table table){
@@ -117,6 +118,14 @@ public class PrimaryKey extends Constraint {
 		return Arrays.asList( columnsInOriginalOrder );
 	}
 
+	public void setOrderingUniqueKey(UniqueKey uniqueKey) {
+		this.orderingUniqueKey = uniqueKey;
+	}
+
+	public UniqueKey getOrderingUniqueKey() {
+		return this.orderingUniqueKey;
+	}
+
 	@Internal
 	public void reorderColumns(List<Column> reorderedColumns) {
 		if ( originalOrder != null ) {
@@ -126,12 +135,13 @@ public class PrimaryKey extends Constraint {
 		assert getColumns().size() == reorderedColumns.size() && getColumns().containsAll( reorderedColumns );
 		final List<Column> columns = getColumns();
 		originalOrder = new int[columns.size()];
-		for ( int i = 0; i < reorderedColumns.size(); i++ ) {
-			final Column reorderedColumn = reorderedColumns.get( i );
+		List<Column> newColumns = getOrderingUniqueKey() != null ? getOrderingUniqueKey().getColumns() : reorderedColumns;
+		for ( int i = 0; i < newColumns.size(); i++ ) {
+			final Column reorderedColumn = newColumns.get( i );
 			originalOrder[i] = columns.indexOf( reorderedColumn );
 		}
 		columns.clear();
-		columns.addAll( reorderedColumns );
+		columns.addAll( newColumns );
 	}
 
 	@Internal

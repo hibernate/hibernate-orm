@@ -14,6 +14,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import org.hibernate.boot.Metadata;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
@@ -71,6 +73,9 @@ class CompositePrimaryKeyColumnOrderTest {
 	}
 
 	@Entity
+	@Table(
+			indexes = @Index(unique = true, columnList = "b, a")
+	)
 	@IdClass( CompositePrimaryKey.class )
 	static class TestEntity {
 

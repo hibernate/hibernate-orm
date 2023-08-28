@@ -61,8 +61,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	protected void copyTo(AbstractSqmPath<T> target, SqmCopyContext context) {
-		assert lhs == null || lhs.getNavigablePath() == target.getLhs().getNavigablePath()
-				|| getRoot( lhs ).getNodeType() instanceof SqmPolymorphicRootDescriptor;
+		assert navigablePathsMatch( target );
 		super.copyTo( target, context );
 		if ( reusablePaths != null ) {
 			target.reusablePaths = new HashMap<>( reusablePaths.size() );
@@ -70,6 +69,13 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 				target.reusablePaths.put( entry.getKey(), entry.getValue().copy( context ) );
 			}
 		}
+	}
+
+	// meant for assertions only
+	private boolean navigablePathsMatch(AbstractSqmPath<T> target) {
+		final SqmPath<?> targetLhs = target.getLhs() != null ? target.getLhs() : target.findRoot();
+		return lhs == null || lhs.getNavigablePath() == targetLhs.getNavigablePath()
+				|| getRoot( lhs ).getNodeType() instanceof SqmPolymorphicRootDescriptor;
 	}
 
 	private SqmPath<?> getRoot(SqmPath<?> lhs) {

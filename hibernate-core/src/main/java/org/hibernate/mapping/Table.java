@@ -357,10 +357,10 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		// 		any sharing the same columns as other defined unique keys; this is needed for the annotation
 		// 		processor since it creates unique constraints automagically for the user
 		//	2) Remove any unique keys that share the same columns as the primary key; again, this is
-		//		needed for the annotation processor to handle @Id @OneToOne cases.  In such cases the
-		//		unique key is unnecessary because a primary key is already unique by definition.  We handle
+		//		needed for the annotation processor to handle @Id @OneToOne cases.  In such cases we handle
 		//		this case specifically because some databases fail if you try to apply a unique key to
-		//		the primary key columns which causes schema export to fail in these cases.
+		//		the primary key columns which causes schema export to fail in these cases. Furthermore, we
+		//		pass the unique key to a primary key for reordering columns specified by the unique key.
 		if ( !uniqueKeys.isEmpty() ) {
 			if ( uniqueKeys.size() == 1 ) {
 				// we have to worry about condition 2 above, but not condition 1
@@ -395,6 +395,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 					// condition 2 : check against pk
 					if ( !removeIt && isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
+						primaryKey.setOrderingUniqueKey(uniqueKeyEntry.getValue());
 						removeIt = true;
 					}
 
@@ -413,7 +414,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 			return false;
 		}
 		return primaryKey.getColumns().containsAll( uniqueKey.getColumns() )
-			&& uniqueKey.getColumns().containsAll( primaryKey.getColumns() );
+			&& primaryKey.getColumns().size() == uniqueKey.getColumns().size();
 	}
 
 	@Override
@@ -471,6 +472,7 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public void setPrimaryKey(PrimaryKey primaryKey) {
 		this.primaryKey = primaryKey;
+		checkPrimaryKeyUniqueKey();
 	}
 
 	public Index getOrCreateIndex(String indexName) {
@@ -580,6 +582,21 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		return foreignKey;
 	}
 
+	/**
+	 * Checks for uniqueKey containing only whole primary key and sets
+	 * 	order of the columns accordingly
+	 */
+	private void checkPrimaryKeyUniqueKey() {
+		final Iterator<Map.Entry<String,UniqueKey>> uniqueKeyEntries = uniqueKeys.entrySet().iterator();
+		while ( uniqueKeyEntries.hasNext() ) {
+			final Map.Entry<String,UniqueKey> uniqueKeyEntry = uniqueKeyEntries.next();
+
+			if ( isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
+				primaryKey.setOrderingUniqueKey(uniqueKeyEntry.getValue());
+				uniqueKeyEntries.remove();
+			}
+		}
+	}
 
 	// This must be done outside of Table, rather than statically, to ensure
 	// deterministic alias names.  See HHH-2448.

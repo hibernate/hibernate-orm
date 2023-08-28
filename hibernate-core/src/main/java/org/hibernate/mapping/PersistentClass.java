@@ -424,9 +424,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		final Table table = getTable();
 		final PrimaryKey pk = new PrimaryKey( table );
 		pk.setName( PK_ALIAS.toAliasString( table.getName() ) );
-		table.setPrimaryKey( pk );
-
 		pk.addColumns( getKey() );
+
+		table.setPrimaryKey( pk );
 	}
 
 	public abstract String getWhere();

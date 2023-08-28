@@ -69,7 +69,7 @@ class ByteBuddyEnhancementContext {
 	}
 
 	public boolean isCompositeField(AnnotatedFieldDescription field) {
-		return isCompositeClass( field.getType().asErasure() ) || field.hasAnnotation( Embedded.class );
+		return isCompositeClass( field.getType().asErasure() );
 	}
 
 	public AnnotatedFieldDescription[] order(AnnotatedFieldDescription[] persistentFields) {

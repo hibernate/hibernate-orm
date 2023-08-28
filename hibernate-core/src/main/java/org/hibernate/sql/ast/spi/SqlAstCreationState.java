@@ -42,9 +42,4 @@ public interface SqlAstCreationState {
 			String hibernateEntityName) {
 		// No-op
 	}
-
-	@Internal
-	default boolean supportsEntityNameUsage() {
-		return false;
-	}
 }

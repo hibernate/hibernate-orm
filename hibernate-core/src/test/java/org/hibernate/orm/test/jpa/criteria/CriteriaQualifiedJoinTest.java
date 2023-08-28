@@ -22,9 +22,12 @@ import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 
+import org.hibernate.testing.orm.junit.DialectFeatureCheck;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -68,6 +71,8 @@ public class CriteriaQualifiedJoinTest {
 	}
 
 	@Test
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsSubqueryInOnClause.class )
+	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsOrderByInCorrelatedSubquery.class )
 	public void testJoinLateral(EntityManagerFactoryScope scope) {
 		scope.inTransaction( entityManager -> {
 			final HibernateCriteriaBuilder cb = entityManager.unwrap( Session.class ).getCriteriaBuilder();

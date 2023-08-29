@@ -150,6 +150,11 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 		return true;
 	}
 
+	@Override
+	public boolean containsCollectionFetches() {
+		return entityResult.containsCollectionFetches();
+	}
+
 	public EntityResultImpl getEntityResult() {
 		return entityResult;
 	}

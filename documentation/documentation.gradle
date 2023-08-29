@@ -190,68 +190,33 @@ else {
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// aggregated JavaDoc
+// aggregated Javadoc
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def aggregateJavadocsTask = tasks.register( "aggregateJavadocs", Javadoc ) {
+def aggregateJavadocsTask = tasks.register( "javadoc", Javadoc ) {
 	group = "documentation"
-	description = 'Builds an aggregated JavaDoc across all ORM sub-projects'
-
-	inputs.property "ormVersion", project.ormVersion
+	description = 'Builds JavaDoc aggregated across all ORM sub-projects'
 
 	destinationDir = mkdir( layout.buildDirectory.file( 'javadocs' ) )
 	source = configurations.javadocSources
 	classpath = configurations.javadocClasspath
 
-	// exclude any generated sources and internal packages
-	exclude '**/generated-src/**'
-	exclude '**/internal/**'
-	include '**/*.java'
-
-	maxMemory = '512m'
-
-	final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
-
 	configure( options ) {
-		overview = 'src/main/javadoc/overview.html'
-		stylesheetFile = project.file( 'src/main/javadoc/stylesheet.css' )
+		overview = rootProject.file( "shared/javadoc/overview.html" )
 		windowTitle = 'Hibernate Javadocs'
 		docTitle = "Hibernate Javadoc ($project.version)"
-		bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
-		use = true
-		encoding = 'UTF-8'
+	}
 
-		tags(
-				'todo:X',
-				'apiNote:a:API Note:',
-				'implSpec:a:Implementation Specification:',
-				'implNote:a:Implementation Note:',
-				'settingDefault:f:Default Value:'
-		)
-
-		links = [
-				'https://docs.oracle.com/en/java/javase/11/docs/api/',
-				'https://jakarta.ee/specifications/bean-validation/3.0/apidocs/',
-				'https://jakarta.ee/specifications/cdi/4.0/apidocs/',
-				'https://jakarta.ee/specifications/platform/9/apidocs/',
-				'https://www.javadoc.io/doc/javax.cache/cache-api/1.0.0/'
-		]
-
-		addStringOption( 'Xdoclint:none', '-quiet' )
-//
-//		if ( jdkVersions.explicit ) {
+	if ( jdkVersions.explicit ) {
 //			setJFlags(
 //					getProperty( 'toolchain.javadoc.jvmargs' ).toString().
 //							split( ' ' ).toList().findAll( { !it.isEmpty() } )
 //			)
-//		}
-	}
 
-	if ( jdkVersions.explicit ) {
 		// Display version of Java tools
 		doFirst {
 			if ( javadocTool.present ) {
-				logger.lifecycle "Aggregating javadoc with '${javadocTool.get().metadata.installationPath}'"
+				logger.lifecycle "Building aggregated javadoc with '${javadocTool.get().metadata.installationPath}'"
 			}
 		}
 	}
@@ -262,12 +227,15 @@ def aggregateJavadocsTask = tasks.register( "aggregateJavadocs", Javadoc ) {
 				: JavaLanguageVersion.of( JavaVersion.current().name )
 
 		if ( javaLanguageVersion.asInt() > 11 ) {
-			println "`aggregateJavadocs` is being run with a JDK newer than version 11: \n" +
+			println "Aggregated Javadocs are bing built` using a JDK newer than version 11: \n" +
 							"\t* `stylesheet.css` will not be compatible\n" +
 							"\t* generating the User Guide settings fragment will not succeed"
 		}
 	}
 }
+
+apply from: rootProject.file( 'gradle/javadoc.gradle' )
+
 
 asciidoctorj {
 	requires 'rouge'
@@ -601,7 +569,7 @@ def generateSettingsDocTask = tasks.named( "generateSettingsDoc" ) {
 				: JavaLanguageVersion.of( JavaVersion.current().name )
 
 		if ( javaLanguageVersion.asInt() > 11 ) {
-			println "`aggregateJavadocs` was run with a JDK newer than version 11; generating the settings User Guide fragment will not succeed"
+			println "Aggregated Javadocs was built using a JDK newer than version 11; generating the settings User Guide fragment will not succeed"
 		}
 	}
 }

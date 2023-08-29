@@ -21,11 +21,12 @@ buildscript {
 import de.thetaphi.forbiddenapis.gradle.CheckForbiddenApis
 import org.apache.tools.ant.filters.ReplaceTokens
 
-apply from: rootProject.file( 'gradle/module.gradle' )
-apply from: rootProject.file( 'gradle/libraries.gradle' )
-apply from: rootProject.file( 'gradle/databases.gradle' )
-
 apply plugin: 'java-library'
+
+apply from: rootProject.file( 'gradle/module.gradle' )
+apply from: rootProject.file( 'gradle/databases.gradle' )
+apply from: rootProject.file( 'gradle/javadoc.gradle' )
+
 apply plugin: 'biz.aQute.bnd.builder'
 apply plugin: 'org.hibernate.orm.database-service'
 apply plugin: 'org.hibernate.orm.build.java-module'
@@ -58,6 +59,15 @@ if ( !project.description ) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Configurations and Dependencies
 
+configurations.configureEach {
+	resolutionStrategy.eachDependency { details ->
+		//Force the "byte buddy agent" version to match the Byte Buddy version
+		// we use, as Mockito might pull in a mismatched version transitively
+		if (details.requested.group == "net.bytebuddy" && details.requested.name == 'byte-buddy-agent') {
+			details.useVersion libs.versions.byteBuddy.get()
+		}
+	}
+}
 
 dependencies {
 	implementation libs.logging
@@ -383,7 +393,12 @@ task sourcesJar(type: Jar) {
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Javadoc
 
-apply from: rootProject.file( 'gradle/javadoc.gradle' )
+tasks.named( "javadoc", Javadoc ) {
+	configure( options ) {
+		windowTitle = "Hibernate Javadocs ($project.name)"
+		docTitle = "Hibernate Javadocs ($project.name : $project.version)"
+	}
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // IDE

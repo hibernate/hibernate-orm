@@ -16,6 +16,7 @@ import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -108,10 +109,9 @@ public class StandardFunctionReturnTypeResolvers {
 					ReturnableType<?> impliedType,
 					List<? extends SqmTypedNode<?>> arguments,
 					TypeConfiguration typeConfiguration) {
-				for ( SqmTypedNode<?> arg : arguments ) {
-					final SqmExpressible<?> argumentNodeType = arg != null ? getArgumentExpressible( arg ) : null;
-					if ( argumentNodeType instanceof ReturnableType ) {
-						ReturnableType<?> argType = (ReturnableType<?>) argumentNodeType;
+				for ( int i = 0; i < arguments.size(); i++ ) {
+					if ( arguments.get( i ) != null ) {
+						final ReturnableType<?> argType = extractArgumentType( arguments, i + 1 );
 						return isAssignableTo( argType, impliedType ) ? impliedType : argType;
 					}
 				}
@@ -214,7 +214,7 @@ public class StandardFunctionReturnTypeResolvers {
 			int position) {
 		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
 		final SqmExpressible<?> specifiedArgType = getArgumentExpressible( specifiedArgument );
-		if ( !(specifiedArgType instanceof ReturnableType ) ) {
+		if ( specifiedArgType != null && !(specifiedArgType instanceof ReturnableType ) ) {
 			throw new FunctionArgumentException(
 					String.format(
 							Locale.ROOT,

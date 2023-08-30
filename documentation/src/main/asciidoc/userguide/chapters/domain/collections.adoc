@@ -204,10 +204,41 @@ instead.
 [[collections-map]]
 ==== Mapping Maps
 
-// todo (6.0) - finish
+A `java.util.Map` is a collection of key/value pairs.
 
+[[collection-map-ex]]
+.Simple MAP mapping
+====
+[source, JAVA, indent=0]
+----
+include::{example-dir-collection}/classification/map/EntityWithMap.java[tags=collections-map-ex]
+----
+====
 
+Hibernate has the ability to map sorted and ordered maps - the ordering and sorting applies
+to the Map key.  As we saw with Sets, the use of ordered Maps is generally discouraged.
 
+Maps may be sorted naturally -
+
+[[collection-sortedmap-natural-ex]]
+.Naturally sorted MAP mapping
+====
+[source, JAVA, indent=0]
+----
+include::{example-dir-collection}/classification/map/EntityWithNaturallySortedMap.java[tags=example]
+----
+====
+
+or via a Comparator -
+
+[[collection-sortedmap-ex]]
+.Comparator sorted MAP mapping
+====
+[source, JAVA, indent=0]
+----
+include::{example-dir-collection}/classification/map/EntityWithSortedMap.java[tags=example]
+----
+====
 
 
 

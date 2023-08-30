@@ -194,6 +194,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * @author Brett Meyer
  * @author Chris Cranford
  * @author Sanne Grinovero
+ * @author Yanming Zhou
  */
 public class SessionImpl
 		extends AbstractSharedSessionContract
@@ -836,7 +837,7 @@ public class SessionImpl
 	@Override
 	public void merge(String entityName, Object object, MergeContext copiedAlready) throws HibernateException {
 		checkOpenOrWaitingForAutoClose();
-		fireMerge( copiedAlready, new MergeEvent( entityName, object, this ) );
+		fireMerge( copiedAlready, new MergeEvent( entityName, object, this, true ) );
 	}
 
 	private Object fireMerge(MergeEvent event) {

@@ -32,6 +32,9 @@ import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
 import org.hibernate.event.spi.MergeEvent;
 import org.hibernate.event.spi.MergeEventListener;
+import org.hibernate.generator.Generator;
+import org.hibernate.id.Assigned;
+import org.hibernate.id.IdentifierGeneratorAggregator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
@@ -59,6 +62,7 @@ import static org.hibernate.event.internal.EntityState.getEntityState;
  * in response to generated copy events.
  *
  * @author Gavin King
+ * @author Yanming Zhou
  */
 public class DefaultMergeEventListener
 		extends AbstractSaveEventListener<MergeContext>
@@ -408,13 +412,13 @@ public class DefaultMergeEventListener
 
 		);
 		if ( result == null ) {
-			//TODO: we should throw an exception if we really *know* for sure
-			//      that this is a detached instance, rather than just assuming
-			//throw new StaleObjectStateException(entityName, id);
-
-			// we got here because we assumed that an instance
-			// with an assigned id was detached, when it was
-			// really persistent
+			Generator generator = persister.getGenerator();
+			if ( !( event.isCascading() || generator instanceof Assigned || generator instanceof IdentifierGeneratorAggregator) ) {
+				// cascaded merge child could trigger merge or persist
+				// Section 3.2.7.1 of the JPA spec:
+				// If X is a removed entity instance, an IllegalArgumentException will be thrown by the merge operation (or the transaction commit will fail).
+				throw new IllegalArgumentException( "Row was deleted by another transaction (or non-existent id is assigned) : [" + entityName + "#" + id + "]" );
+			}
 			entityIsTransient( event, clonedIdentifier, copyCache );
 		}
 		else {

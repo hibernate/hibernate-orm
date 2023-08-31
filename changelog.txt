@@ -3,6 +3,64 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.8.Final (August 31, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32178
+
+** Bug
+    * [HHH-17130] - Refactor restrictive code in SubselectFetch checking for instanceof EntityResultInitializer
+    * [HHH-17116] - AssertionError when using lateral join to subquery if criteria tree copy is enabled
+    * [HHH-17085] - SQLGrammarException when selecting property of grouped join association in HyperSQL and PostgreSQL
+    * [HHH-17081] - Loading an entity which uses joined inheritance fails if two or more implementations have the same association property name
+    * [HHH-17078] - Memory leak in ScrollableResultsConsumer 
+    * [HHH-17075] - Lazy loading of association with non-PK referencedColumnName always yields null when bytecode enhancement is enabled
+    * [HHH-17074] - Type inference in duration arithmetic is wrong
+    * [HHH-17071] - Basic Collection of 'Converted' Embeddables stopped working with 6.2
+    * [HHH-17064] - Fetch mode select  causes StackOverflowError if used together with fetch type lazy
+    * [HHH-17045] - Unable to locate parameter for RESTRICT - UPDATE error when updating entity with RowId
+    * [HHH-17041] - Embeddable and Generics throws IllegalArgumentException
+    * [HHH-17035] - Bytecode enhancement leads to StackOverflowError with specific setup involving different generic parameter names
+    * [HHH-17034] - Bytecode enhancement leads to broken constructor for a generic embedded field in a twice removed MappedSuperclass
+    * [HHH-17033] - Invalid SQL generated when implicit joins are used
+    * [HHH-17019] - EntityListener is not triggered for a LAZY loaded association when using bytecode enhancement
+    * [HHH-17016] - Using a legacy MySQL dialect leads to an error
+    * [HHH-17011] - The ddl is applied every time the application starts, even if the table structure has not changed.
+    * [HHH-17004] - Nullpointer wenn using setFirstResult and setMaxResults in diffrent combinations 
+    * [HHH-17001] - An "on"-clause referencing the affected join node causes a StackOverflowException
+    * [HHH-17000] - Do not keep static references to log levels
+    * [HHH-16997] - Embedded components in HibernateProxy are not initilized when entity has reference to another entity of the same type
+    * [HHH-16988] - AssertionError in AbstractSqmPath.copyTo when using subquery correlated to root with more than 1 level in the class hierarchy
+    * [HHH-16979] - SQLGrammarException for JOINED entity with additional join in query
+    * [HHH-16970] - Orphan removal not working in @Embeddable for FetchType.EAGER collections
+    * [HHH-16968] - StackOverflowError when using NaturalIdLoadAccess and bi-directional association
+    * [HHH-16966] - StackOverFlowError with @ManyToOne and @Proxy( lazy=false )
+    * [HHH-16959] - Fail to batch delete entities with nested embeddeds
+    * [HHH-16952] - Bytecode enhancement now requires embedded component to be @Embeddable
+    * [HHH-16939] - Optimistic and Pessimistic Force Increment Update Statements are not committed when using a batch
+    * [HHH-16938] - Meta annotation @AnyDiscriminatorValue does not work
+    * [HHH-16937] - Persisting entity with nullable @Any field throws “not-null property references a null or transient value”
+    * [HHH-16928] - Subquery in 'where' clause causes additional 'join' creation in SQM
+    * [HHH-16919] - Bidirectional mapping with @Any causes infinite loop on fetch
+    * [HHH-16918] - Can't use the the primary id column as the joincolumn for @Any association
+    * [HHH-16911] - MapBackedClassValue ClassLoader leak
+    * [HHH-16908] - Fail to compute column mapping on entity with idClass having one field as pk of a OneToOne association
+    * [HHH-16901] - Embedded field in entity association from composite key not correctly instantiated
+    * [HHH-16888] - Left join with exists subquery adds extra join
+    * [HHH-16879] - Inconsistent @Parent behavior if cache is enabled
+    * [HHH-16878] - Invalid SQL generated for mutation when using association with @NotFound
+    * [HHH-16825] - Cascading an entity with a composite key causes NullPointerException in AbstractClassJavaType.extractHashCode
+    * [HHH-16816] - Hibernate 6.2 could not execute certain delete statements
+    * [HHH-16798] - ClassCastException in Hibernate 6 when "join fetch" is used in a query with entity inheritance
+    * [HHH-16766] - Unable to fully load entity with IdClass lazily or with max fetch depth
+    * [HHH-16762] - SchemaMigrator generates ORA-22859 errors on columns annotated with @Lob
+    * [HHH-16759] - Merge fails when entity has an Embedded Java record
+    * [HHH-16755] - NPE while retrieving static metamodel attribute of generic embeddable extending a superclass
+    * [HHH-16670] - ENUM column definitions cannot be customized (on MySQL/MariaDB)
+    * [HHH-16611] - Sybase: ERROR org.hibernate.engine.jdbc.spi.SqlExceptionHelper - db.tablename not found
+    * [HHH-16591] - @org.hibernate.annotations.JdbcTypeCode does not override the `hibernate.type.preferred_duration_jdbc_type` type
+
+
 Changes in 6.2.7.Final (July 20, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

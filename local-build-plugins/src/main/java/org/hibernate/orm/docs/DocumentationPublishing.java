@@ -29,8 +29,8 @@ public class DocumentationPublishing {
 
 	private final DirectoryProperty stagingDirectory;
 	private final Property<String> docServerUrl;
-	private final Property<String> docDescriptorServerUrl;
 
+	private final Property<String> docDescriptorUploadUrl;
 	private final RegularFileProperty updatedJsonFile;
 
 	private final ReleaseFamilyIdentifier releaseFamilyIdentifier;
@@ -42,13 +42,14 @@ public class DocumentationPublishing {
 		stagingDirectory = project.getObjects()
 				.directoryProperty()
 				.convention( project.getLayout().getBuildDirectory().dir( "documentation" ) );
+
 		docServerUrl = project.getObjects()
 				.property( String.class )
 				.convention( "filemgmt-prod-sync.jboss.org:/docs_htdocs/hibernate/orm" );
 
-		docDescriptorServerUrl = project.getObjects()
+		docDescriptorUploadUrl = project.getObjects()
 				.property( String.class )
-				.convention( "filemgmt-prod-sync.jboss.org:/docs_htdocs/hibernate" );
+				.convention( "filemgmt-prod-sync.jboss.org:/docs_htdocs/hibernate/_outdated-content/orm.json" );
 
 
 		updatedJsonFile = project.getObjects()
@@ -62,20 +63,26 @@ public class DocumentationPublishing {
 		return releaseFamilyIdentifier;
 	}
 
-	public Provider<RegularFile> getUpdatedJsonFile() {
-		return updatedJsonFile;
-	}
-
 	public Property<String> getDocServerUrl() {
 		return docServerUrl;
 	}
 
-	public Property<String> getDocDescriptorServerUrl() {
-		return docDescriptorServerUrl;
-	}
-
 	public DirectoryProperty getStagingDirectory() {
 		return stagingDirectory;
+	}
+
+	/**
+	 * Where to upload the {@link #getUpdatedJsonFile() documentation descriptor}
+	 */
+	public Property<String> getDocDescriptorUploadUrl() {
+		return docDescriptorUploadUrl;
+	}
+
+	/**
+	 * THe ORM documentation descriptor
+	 */
+	public Provider<RegularFile> getUpdatedJsonFile() {
+		return updatedJsonFile;
 	}
 
 	public void setUpdatedJsonFile(Object ref) {

@@ -22,7 +22,7 @@ public abstract class PublishDescriptorTask extends DefaultTask {
 	public static final String UPLOAD_DESC_TASK_NAME = "uploadDocumentationDescriptor";
 
 	private final Provider<Object> projectVersion;
-	private final Property<String> docServerUrl;
+	private final Property<String> docDescriptorUploadUrl;
 	private final RegularFileProperty jsonFile;
 
 	public PublishDescriptorTask() {
@@ -30,7 +30,7 @@ public abstract class PublishDescriptorTask extends DefaultTask {
 		setDescription( "Publishes the documentation publication descriptor (JSON)" );
 
 		projectVersion = getProject().provider( () -> getProject().getVersion() );
-		docServerUrl = getProject().getObjects().property( String.class );
+		docDescriptorUploadUrl = getProject().getObjects().property( String.class );
 		jsonFile = getProject().getObjects().fileProperty();
 	}
 
@@ -41,8 +41,8 @@ public abstract class PublishDescriptorTask extends DefaultTask {
 	}
 
 	@Input
-	public Property<String> getDocServerUrl() {
-		return docServerUrl;
+	public Property<String> getDocDescriptorUploadUrl() {
+		return docDescriptorUploadUrl;
 	}
 
 	@Input
@@ -53,10 +53,7 @@ public abstract class PublishDescriptorTask extends DefaultTask {
 
 	@TaskAction
 	public void uploadDescriptor() {
-		final String base = docServerUrl.get();
-		final String normalizedBase = base.endsWith( "/" ) ? base : base + "/";
-		final String url = normalizedBase + "_outdated-content/orm.json";
-
+		final String url = docDescriptorUploadUrl.get();
 		RsyncHelper.rsync( jsonFile.get(), url, getProject() );
 	}
 }

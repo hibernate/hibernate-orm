@@ -291,7 +291,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public final SelectionQuery<R> setOrder(List<Order<? super R>> orderList) {
+	public SelectionQuery<R> setOrder(List<Order<? super R>> orderList) {
 		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
 		sqm.orderBy( orderList.stream().map( order -> sortSpecification( sqm, order ) )
 				.collect( toList() ) );
@@ -302,7 +302,7 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 	}
 
 	@Override
-	public final SelectionQuery<R> setOrder(Order<? super R> order) {
+	public SelectionQuery<R> setOrder(Order<? super R> order) {
 		sqm = sqm.copy( SqmCopyContext.noParamCopyContext() );
 		sqm.orderBy( sortSpecification( sqm, order ) );
 		// TODO: when the QueryInterpretationCache can handle caching criteria queries,

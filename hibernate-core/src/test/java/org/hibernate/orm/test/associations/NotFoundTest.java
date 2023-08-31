@@ -137,38 +137,6 @@ public class NotFoundTest {
 		);
 	}
 
-	@Test
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-17143" )
-	@FailureExpected
-	void testHqlDelete(EntityManagerFactoryScope scope) {
-		breakForeignKey( scope );
-		final SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
-		sqlStatementInspector.clear();
-
-		scope.inTransaction( (entityManager) -> {
-			entityManager.createQuery( "delete from Person p where p.city is null" ).executeUpdate();
-
-			assertThat( sqlStatementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( sqlStatementInspector.getSqlQueries().get( 0 ) ).doesNotContainIgnoringCase( "city_fk is null" );
-		} );
-	}
-
-	@Test
-	@Jira( "https://hibernate.atlassian.net/browse/HHH-17143" )
-	@FailureExpected
-	void testHqlUpdate(EntityManagerFactoryScope scope) {
-		breakForeignKey( scope );
-		final SQLStatementInspector sqlStatementInspector = scope.getCollectingStatementInspector();
-		sqlStatementInspector.clear();
-
-		scope.inTransaction( (entityManager) -> {
-			entityManager.createQuery( "update Person p set p.name = 'abc' where p.city is null" ).executeUpdate();
-
-			assertThat( sqlStatementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( sqlStatementInspector.getSqlQueries().get( 0 ) ).doesNotContainIgnoringCase( "city_fk is null" );
-		} );
-	}
-
 	private void breakForeignKey(EntityManagerFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {

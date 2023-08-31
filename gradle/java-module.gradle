@@ -292,15 +292,15 @@ test {
 	jvmArgs '-XX:+StartAttachListener'
 }
 
-// Enable the experimental features of ByteBuddy with JDK 19+
+// Enable the experimental features of ByteBuddy with JDK 22+
 test {
 	// We need to test the *launcher* version,
 	// because some tests will use Mockito (and thus Bytebuddy) to mock/spy
 	// classes that are part of the JDK,
 	// and those classes always have bytecode matching the version of the launcher.
-	// So for example, when using a JDK19 launcher and compiling tests with --release 17,
-	// Bytebuddy will still encounter classes with Java 19 bytecode.
-	if ( jdkVersions.test.launcher.asInt() >= 19 ) {
+	// So for example, when using a JDK22 launcher and compiling tests with --release 21,
+	// Bytebuddy will still encounter classes with Java 22 bytecode.
+	if ( jdkVersions.test.launcher.asInt() >= 22 ) {
 		logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
 				 " Setting 'net.bytebuddy.experimental=true'." )
 		systemProperty 'net.bytebuddy.experimental', true

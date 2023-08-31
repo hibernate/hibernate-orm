@@ -8,23 +8,37 @@ package org.hibernate.orm.test.notfound;
 
 import java.util.List;
 
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
+
+import org.hibernate.testing.FailureExpected;
+import org.hibernate.testing.jdbc.SQLStatementInspector;
+import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.Jira;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
-import org.hibernate.annotations.NotFound;
-import org.hibernate.annotations.NotFoundAction;
-
-import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
 
 public class IsNullAndNotFoundTest extends BaseNonConfigCoreFunctionalTestCase {
+	private final SQLStatementInspector inspector = new SQLStatementInspector();
+
+	@Override
+	protected void configureStandardServiceRegistryBuilder(StandardServiceRegistryBuilder ssrb) {
+		super.configureStandardServiceRegistryBuilder( ssrb );
+		ssrb.applySetting( AvailableSettings.STATEMENT_INSPECTOR, inspector );
+	}
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
@@ -55,36 +69,63 @@ public class IsNullAndNotFoundTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void tearDown() {
 		inTransaction(
 				session -> {
-					session.createQuery( "delete from Person" ).executeUpdate();
-					session.createQuery( "delete from Account" ).executeUpdate();
+					session.createMutationQuery( "delete from Person" ).executeUpdate();
+					session.createMutationQuery( "delete from Account" ).executeUpdate();
 				}
 		);
 	}
 
 	@Test
-	public void testIsNullInWhereClause() {
+	public void testAssociationDereferenceIsNullInWhereClause() {
 		inTransaction(
 				session -> {
+					inspector.clear();
+
+					// should produce an inner join to ACCOUNT_TABLE
+
 					final List<Integer> ids = session.createQuery(
-							"select p.id from Person p where p.account.code is null" ).getResultList();
+							"select p.id from Person p where p.account.code is null", Integer.class )
+							.getResultList();
 
 					assertEquals( 1, ids.size() );
 					assertEquals( 1, (int) ids.get( 0 ) );
 
+					assertThat( inspector.getSqlQueries() ).hasSize( 1 );
+					assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( " join " );
+					assertThat( inspector.getSqlQueries().get( 0 ) ).doesNotContainIgnoringCase( " left " );
+					assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( " ACCOUNT_TABLE " );
 				}
 		);
 	}
 
 	@Test
-	public void testIsNullInWhereClause2() {
+	@FailureExpected(
+			jiraKey = "HHH-17143",
+			message = "Conceptually this should render as a left join because of the path terminal; currently uses inner join"
+	)
+	public void testAssociationIsNullInWhereClause() {
 		inTransaction(
 				session -> {
+					inspector.clear();
+
+					// should produce a left join to ACCOUNT_TABLE and restrict based on the Account's id -
+					//
+					//	...
+					//	from PERSON p
+					//		left join ACCOUNT_TABLE a
+					//			on p.account_id = a.id
+					//	where a.id is null
+
 					final List<Integer> ids = session.createQuery(
-							"select distinct p.id from Person p where p.account is null" ).getResultList();
+							"select distinct p.id from Person p where p.account is null", Integer.class )
+							.getResultList();
 
 					assertEquals( 1, ids.size() );
 					assertEquals( 3, (int) ids.get( 0 ) );
 
+					assertThat( inspector.getSqlQueries() ).hasSize( 1 );
+					assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( " left join " );
+					assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( ".id is null" );
 				}
 		);
 	}
@@ -93,22 +134,61 @@ public class IsNullAndNotFoundTest extends BaseNonConfigCoreFunctionalTestCase {
 	public void testIsNullInWhereClause3() {
 		inTransaction(
 				session -> {
+					inspector.clear();
+
 					final List<Integer> ids = session.createQuery(
-							"select distinct p.id from Person p where p.account is null" ).getResultList();
+							"select distinct p.id from Person p where fk(p.account) is null", Integer.class )
+							.getResultList();
 
 					assertEquals( 1, ids.size() );
 					assertEquals( 3, (int) ids.get( 0 ) );
 
+					assertThat( inspector.getSqlQueries() ).hasSize( 1 );
+					assertThat( inspector.getSqlQueries().get( 0 ) ).doesNotContainIgnoringCase( " join " );
+					assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( ".account_id is null" );
 				}
 		);
 	}
 
 	@Test
-	public void testIsNullInWhereClause4() {
+	public void testAssociationEqualsInWhereClause() {
+		inTransaction(
+				session -> {
+					inspector.clear();
+
+					// at the moment -
+					//
+					// select
+					//        distinct p1_0.id
+					//    from
+					//        Person p1_0
+					//    join
+					//        ACCOUNT_TABLE a1_0
+					//            on a1_0.id=p1_0.account_id
+					//    where
+					//        a1_0.id=?
+
+					final List<Integer> ids = session.createQuery(
+							"select distinct p.id from Person p where p.account = :acct", Integer.class )
+							.setParameter( "acct", new Account( 1, null, null ) )
+							.getResultList();
+
+					assertThat( ids ).hasSize( 1 );
+					assertThat( ids.get(0) ).isEqualTo( 1 );
+
+					assertThat( inspector.getSqlQueries() ).hasSize( 1 );
+					assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( " join " );
+					assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( ".id=?" );
+				}
+		);
+	}
+
+	@Test
+	public void testIsNullInWhereClause5() {
 		inTransaction(
 				session -> {
 					final List<Integer> ids = session.createQuery(
-									"select p.id from Person p where p.account.code is null or p.account.id is null" )
+									"select p.id from Person p where p.account.code is null or p.account.id is null", Integer.class )
 							.getResultList();
 
 					assertEquals( 1, ids.size() );
@@ -123,7 +203,7 @@ public class IsNullAndNotFoundTest extends BaseNonConfigCoreFunctionalTestCase {
 		inTransaction(
 				session -> {
 					final List<Integer> ids = session.createQuery(
-									"select p.id from Person p where p.account.code = :code and p.account.id = :id" )
+									"select p.id from Person p where p.account.code = :code and p.account.id = :id", Integer.class )
 							.setParameter( "code", "Fab" )
 							.setParameter( "id", 2 )
 							.getResultList();
@@ -133,6 +213,49 @@ public class IsNullAndNotFoundTest extends BaseNonConfigCoreFunctionalTestCase {
 
 				}
 		);
+	}
+
+	@Test
+	public void testDelete() {
+		inspector.clear();
+
+		inTransaction( (entityManager) -> {
+			entityManager.createQuery( "delete from Person p where p.account is null" ).executeUpdate();
+
+			assertThat( inspector.getSqlQueries() ).hasSize( 1 );
+			// could physically be a join or exists sub-query
+			assertThat( inspector.getSqlQueries().get( 0 ) )
+					.matches( (sql) -> sql.contains( "left join" ) || sql.contains( "where exists" ) );
+			assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( ".id is null" );
+		} );
+	}
+
+	@Test
+	public void testHqlUpdate() {
+		inspector.clear();
+
+		inTransaction( (entityManager) -> {
+			entityManager.createQuery( "update Person p set p.name = 'abc' where p.account is null" ).executeUpdate();
+
+			assertThat( inspector.getSqlQueries() ).hasSize( 1 );
+			// could physically be a join or exists sub-query
+			assertThat( inspector.getSqlQueries().get( 0 ) )
+					.matches( (sql) -> sql.contains( "left join" ) || sql.contains( "where exists" ) );
+			assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( ".id is null" );
+		} );
+	}
+
+	@Test
+	public void testHqlUpdateSet() {
+		inspector.clear();
+
+		inTransaction( (entityManager) -> {
+			entityManager.createQuery( "update Person p set p.account = null" ).executeUpdate();
+
+			assertThat( inspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( inspector.getSqlQueries().get(0) ).doesNotContainIgnoringCase( " join " );
+			assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( "account_id=null" );
+		} );
 	}
 
 
@@ -170,6 +293,7 @@ public class IsNullAndNotFoundTest extends BaseNonConfigCoreFunctionalTestCase {
 		}
 	}
 
+	@SuppressWarnings({ "FieldCanBeLocal", "unused" })
 	@Entity(name = "Account")
 	@Table(name = "ACCOUNT_TABLE")
 	public static class Account {

@@ -3,6 +3,7 @@ package org.hibernate.orm.test.notfound;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 
+import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -17,7 +18,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel(
 		annotatedClasses = {
@@ -25,7 +26,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				MutationQueriesAndNotFoundActionTest.Comment.class
 		}
 )
-@SessionFactory
+@SessionFactory( useCollectingStatementInspector = true )
 @JiraKey("HHH-16878")
 public class MutationQueriesAndNotFoundActionTest {
 
@@ -56,8 +57,12 @@ public class MutationQueriesAndNotFoundActionTest {
 
 	@Test
 	public void testUpdate(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+
 		scope.inTransaction(
 				session -> {
+					statementInspector.clear();
+
 					int affectedComments = session.createMutationQuery(
 									"update Comment c set c.text = :text where c.user = :user" )
 							.setParameter( "text", "updated" )
@@ -65,6 +70,10 @@ public class MutationQueriesAndNotFoundActionTest {
 							.executeUpdate();
 
 					assertThat( affectedComments ).isEqualTo( 2 );
+					assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+					assertThat( statementInspector.getSqlQueries().get( 0 ) ).matches( (sql) -> {
+						return sql.contains( " join " ) || sql.contains( "exists" );
+					} );
 				}
 		);
 	}

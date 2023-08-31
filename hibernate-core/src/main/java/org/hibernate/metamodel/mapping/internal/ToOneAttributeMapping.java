@@ -62,6 +62,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.TreatedNavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -1981,6 +1982,19 @@ public class ToOneAttributeMapping
 		);
 
 		return join;
+	}
+
+	@Override
+	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, SqlAstJoinType requestedJoinType, boolean fetched) {
+		if ( requestedJoinType != null ) {
+			return requestedJoinType;
+		}
+
+		if ( fetched ) {
+			return getDefaultSqlAstJoinType( lhs );
+		}
+
+		return SqlAstJoinType.INNER;
 	}
 
 	@Override

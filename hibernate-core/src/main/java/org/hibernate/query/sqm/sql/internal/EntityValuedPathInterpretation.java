@@ -210,10 +210,11 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 					resultTableGroup = tableGroup;
 				}
 			}
-			else if ( inferredMapping == null && hasNotFound( mapping ) ) {
-				// This is necessary to allow expression like `where root.notFoundAssociation is null`
-				// to render to `alias.not_found_fk is null`, but IMO this shouldn't be done
-				// todo: discuss removing this part and create a left joined table group instead?
+			else if ( inferredMapping == null
+					&& hasNotFound( mapping )
+					&& sqlAstCreationState.getCurrentClauseStack().getCurrent() == Clause.SET ) {
+				// for not-found mappings encountered in the SET clause of an UPDATE statement
+				// we will want to (1) not join and (2) render the fk
 				resultModelPart = keyTargetMatchPart;
 				resultTableGroup = sqlAstCreationState.getFromClauseAccess()
 						.findTableGroup( tableGroup.getNavigablePath().getParent() );
@@ -222,6 +223,10 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 				// If the mapping is an inverse association, use the PK and disallow FK optimizations
 				resultModelPart = ( (EntityAssociationMapping) mapping ).getAssociatedEntityMappingType().getIdentifierMapping();
 				resultTableGroup = tableGroup;
+
+				// todo (not-found) : in the case of not-found=ignore, we want to do the join, however -
+				//  	* use a left join when the association is the path terminus (`root.association`)
+				//  	* use an inner join when it is further de-referenced (`root.association.stuff`)
 			}
 		}
 		else if ( mapping instanceof AnonymousTupleEntityValuedModelPart ) {

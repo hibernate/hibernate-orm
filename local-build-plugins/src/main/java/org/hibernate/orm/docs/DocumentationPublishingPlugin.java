@@ -45,7 +45,7 @@ public class DocumentationPublishingPlugin implements Plugin<Project> {
 				UPLOAD_DESC_TASK_NAME,
 				PublishDescriptorTask.class,
 				(task) -> {
-					task.getDocServerUrl().convention( docPubDsl.getDocServerUrl() );
+					task.getDocDescriptorUploadUrl().convention( docPubDsl.getDocDescriptorUploadUrl() );
 					task.getJsonFile().convention( docPubDsl.getUpdatedJsonFile() );
 
 					task.dependsOn( generateDescriptorTask );

@@ -159,9 +159,9 @@ def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
 def stageJavadocsTask = tasks.register( "stageJavadocs", Copy ) {
     group 'documentation'
     description "Stages the aggregated Javadocs"
-    dependsOn ':documentation:aggregateJavadocs'
+    dependsOn ':documentation:javadoc'
 
-    from project( ":documentation" ).tasks.aggregateJavadocs
+    from project( ":documentation" ).tasks.javadoc
     into "${buildDir}/documentation/javadocs"
 }
 

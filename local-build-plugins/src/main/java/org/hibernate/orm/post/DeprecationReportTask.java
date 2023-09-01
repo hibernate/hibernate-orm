@@ -32,7 +32,7 @@ public class DeprecationReportTask extends AbstractJandexAwareTask {
 	public DeprecationReportTask() {
 		setDescription( "Generates a report for things considered deprecated" );
 		reportFile = getProject().getObjects().fileProperty();
-		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/reports/deprecating.txt" ) );
+		reportFile.convention( getProject().getLayout().getBuildDirectory().file( "orm/reports/deprecated.txt" ) );
 	}
 
 	@Override

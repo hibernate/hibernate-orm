@@ -5298,6 +5298,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( mappingModelExpressible instanceof BasicValuedMapping ) {
 				return new QueryLiteral<>( null, (BasicValuedMapping) mappingModelExpressible );
 			}
+			else if ( mappingModelExpressible instanceof EntityMappingType ) {
+				// When selecting a literal null entity type, we should simply return a single null object
+				mappingModelExpressible = null;
+			}
 			final MappingModelExpressible<?> keyExpressible = getKeyExpressible( mappingModelExpressible );
 			if ( keyExpressible == null ) {
 				// treat Void as the bottom type, the class of null

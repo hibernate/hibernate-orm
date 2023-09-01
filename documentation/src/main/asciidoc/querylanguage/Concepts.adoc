@@ -1,7 +1,7 @@
 [[basic-concepts]]
 == Basic concepts
 
-This document describes Hibernate Query Language (HQL), which is, I suppose we could say, a dialect of the Java (now Jakarta) Persistence Query Language (JPQL).
+This document describes Hibernate Query Language (HQL), which is, I suppose we could say, a "dialect" of the Java (now Jakarta) Persistence Query Language (JPQL).
 
 [NOTE]
 ====
@@ -95,7 +95,7 @@ In hindsight, it might have been better to define the whole language as case-sen
 [%unbreakable]
 [NOTE]
 ====
-Incidentally, it's standard practice to use lowercase keywords in HQL and JPQL.
+Incidentally, it's standard practice to use lowercase keywords in HQL.
 
 The use of uppercase keywords indicates an endearing but unhealthy attachment to the culture of the 1970's.
 ====
@@ -207,8 +207,8 @@ This rule is the source of the famous (and controversial) _ternary logic_ of SQL
 A logical expression like `firstName='Gavin' and team='Hibernate'` isn't restricted to the values `true` and `false`.
 It may also be `null`.
 
-This can in principle lead to some quite unintuitive results: we can't use the law of the excluded middle to reason about logical expressions in SQL!
-But in practice, we've once never run into a case where this caused us problems.
+This can, in principle, lead to some quite unintuitive results: we can't use the law of the excluded middle to reason about logical expressions in SQL!
+But in practice, we've never once run into a case where this caused us problems.
 
 As you probably know, when a logical predicate occurs as a <<where-clause,restriction>>, rows for which the predicate evaluates to `null` are _excluded_ from the result set.
 That is, in this context at least, a logical null is interpreted as "effectively false".
@@ -325,7 +325,7 @@ For example:
 delete Author author where is empty author.books
 ----
 
-As in SQL, the presence or absence of the `from` keyword has absolutely no effect on the semantics of the `update` statement.
+As in SQL, the presence or absence of the `from` keyword has absolutely no effect on the semantics of the `delete` statement.
 
 Just like update statements, delete statements are polymorphic, and affect mapped subclasses of the given entity class.
 Therefore, a single HQL `delete` statement might result in multiple SQL delete statements executed against the database.
@@ -708,7 +708,7 @@ But at least we don't have to write them explicitly.
 [[select-new]]
 ==== Instantiation
 
-In JPA, and in older versions of Hibernate, this functionality required more ceremony.
+In JPQL, and in older versions of Hibernate, this functionality required more ceremony.
 
 [cols="25,~,~,^15"]
 |===

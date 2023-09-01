@@ -42,11 +42,13 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.jpa.boot.internal.EntityManagerFactoryBuilderImpl;
 import org.hibernate.jpa.boot.internal.PersistenceUnitInfoDescriptor;
+import org.hibernate.jpa.boot.spi.EntityManagerFactoryBuilder;
 import org.hibernate.orm.test.mapping.basic.bitset.BitSetType;
 import org.hibernate.orm.test.mapping.basic.bitset.BitSetUserType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.AttributeConverter;
@@ -320,6 +322,22 @@ public class BootstrapTest {
         }
         catch (Exception ignore) {
         }
+    }
+
+    @Test
+    @JiraKey("HHH-17154")
+    public void build_EntityManagerFactory_with_NewTempClassLoader() {
+        new EntityManagerFactoryBuilderImpl(
+                new PersistenceUnitInfoDescriptor(
+                        new PersistenceUnitInfoImpl( "", new ArrayList<>(), new Properties() ) {
+                            @Override
+                            public ClassLoader getNewTempClassLoader() {
+                                return Thread.currentThread().getContextClassLoader();
+                            }
+                        }
+                ),
+                new HashMap<>()
+        ).cancel();
     }
 
     public Object getBeanManager() {

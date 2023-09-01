@@ -1861,4 +1861,9 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 515)
 	HibernateException nullIdentitySelectString();
 
+	@LogMessage(level = WARN)
+	@Message(value = "Failed to discover types for enhancement from class: %s",
+			id = 516)
+	void enhancementDiscoveryFailed(String className, @Cause Throwable cause);
+
 }

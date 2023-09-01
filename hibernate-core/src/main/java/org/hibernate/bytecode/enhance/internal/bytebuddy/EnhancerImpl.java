@@ -167,9 +167,14 @@ public class EnhancerImpl implements Enhancer {
 		if ( originalBytes != null ) {
 			classFileLocator.setClassNameAndBytes( className, originalBytes );
 		}
-		final TypeDescription typeDescription = typePool.describe( className ).resolve();
-		enhancementContext.registerDiscoveredType( typeDescription, Type.PersistenceType.ENTITY );
-		enhancementContext.discoverCompositeTypes( typeDescription, typePool );
+		try {
+			final TypeDescription typeDescription = typePool.describe( className ).resolve();
+			enhancementContext.registerDiscoveredType( typeDescription, Type.PersistenceType.ENTITY );
+			enhancementContext.discoverCompositeTypes( typeDescription, typePool );
+		}
+		catch (RuntimeException e) {
+			throw new EnhancementException( "Failed to discover types for class " + className, e );
+		}
 	}
 
 	private TypePool buildTypePool(final ClassFileLocator classFileLocator) {

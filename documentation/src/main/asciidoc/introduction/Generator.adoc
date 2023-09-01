@@ -426,7 +426,7 @@ Oh and, you know, it's pretty useful to be able to rename a finder method _witho
 
 The code generated for this finder method depends on what kind of fields match the method parameters:
 
-[cols="35,~"]
+[cols="45,~"]
 |===
 |`@Id` field | Uses `EntityManager.find()`
 |All `@NaturalId` fields | Uses `Session.byNaturalId()`

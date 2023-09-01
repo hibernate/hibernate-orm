@@ -31,5 +31,16 @@ public interface Enhancer {
 	 */
 	byte[] enhance(String className, byte[] originalBytes) throws EnhancementException;
 
-	void discoverTypes(String className, byte[] originalBytes);
+	/**
+	 * Discovers types prior to enhancement.
+	 *
+	 * It is possible to invoke this method concurrently.
+	 *
+	 * @param className The name of the class whose bytecode is being analyzed for type discovery.
+	 * @param originalBytes The class's original (pre-enhancement) byte code
+	 *
+	 * @throws EnhancementException Indicates a problem during type discovery
+	 * @since 6.3
+	 */
+	void discoverTypes(String className, byte[] originalBytes) throws EnhancementException;
 }

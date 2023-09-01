@@ -57,8 +57,8 @@ public class EnhancingClassTransformerImpl implements ClassTransformer {
 	}
 
 	@Override
-	public void discoverTypes(ClassLoader loader, String entityClassName) {
-		getEnhancer( loader ).discoverTypes( entityClassName, null );
+	public void discoverTypes(ClassLoader loader, String className) {
+		getEnhancer( loader ).discoverTypes( className, null );
 	}
 
 	private Enhancer getEnhancer(ClassLoader loader) {

@@ -43,5 +43,5 @@ public interface ClassTransformer extends jakarta.persistence.spi.ClassTransform
 			ProtectionDomain protectionDomain,
 			byte[] classfileBuffer)  throws TransformerException;
 
-	void discoverTypes(ClassLoader loader, String entityClassName);
+	void discoverTypes(ClassLoader loader, String className);
 }

@@ -31,6 +31,10 @@ import org.hibernate.boot.beanvalidation.BeanValidationIntegrator;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
+import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
+import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
@@ -50,6 +54,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryBuilderImplementor;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.enhance.spi.EnhancementException;
 import org.hibernate.bytecode.enhance.spi.UnloadedClass;
 import org.hibernate.bytecode.enhance.spi.UnloadedField;
 import org.hibernate.bytecode.spi.ClassTransformer;
@@ -347,10 +352,33 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					if ( classLoader == null ) {
 						throw persistenceException( "Enhancement requires a temp class loader, but none was given." );
 					}
-					for ( PersistentClass entityBinding : metadata.getEntityBindings() ) {
-						if ( entityBinding.getClassName() != null ) {
-							classTransformer.discoverTypes( classLoader, entityBinding.getClassName() );
+					for ( Binding<BindableMappingDescriptor> binding : metadataSources.getXmlBindings() ) {
+						final BindableMappingDescriptor root = binding.getRoot();
+						if ( root instanceof JaxbHbmHibernateMapping ) {
+							final JaxbHbmHibernateMapping hibernateMapping = (JaxbHbmHibernateMapping) root;
+							final String packageName = hibernateMapping.getPackage();
+							for ( JaxbHbmRootEntityType clazz : hibernateMapping.getClazz() ) {
+								final String className;
+								if ( packageName == null || packageName.isEmpty() ) {
+									className = clazz.getName();
+								}
+								else {
+									className = packageName + '.' + clazz.getName();
+								}
+								try {
+									classTransformer.discoverTypes( classLoader, className );
+								}
+								catch (EnhancementException ex) {
+									LOG.enhancementDiscoveryFailed( className, ex );
+								}
+							}
 						}
+					}
+					for ( String annotatedClassName : metadataSources.getAnnotatedClassNames() ) {
+						classTransformer.discoverTypes( classLoader, annotatedClassName );
+					}
+					for ( Class<?> annotatedClass : metadataSources.getAnnotatedClasses() ) {
+						classTransformer.discoverTypes( classLoader, annotatedClass.getName() );
 					}
 				}
 			}

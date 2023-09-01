@@ -59,7 +59,7 @@ dependencyResolutionManagement {
             version "maxSupportedBytecode", "21"
         }
         libs {
-            def antlrVersion = version "antlr", "4.10.1"
+            def antlrVersion = version "antlr", "4.13.0"
             def byteBuddyVersion = version "byteBuddy", "1.14.7"
             def classmateVersion = version "classmate", "1.5.1"
             def geolatteVersion = version "geolatte", "1.8.2"

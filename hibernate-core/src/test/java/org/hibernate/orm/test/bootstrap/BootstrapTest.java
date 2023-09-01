@@ -47,6 +47,7 @@ import org.hibernate.orm.test.mapping.basic.bitset.BitSetUserType;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import jakarta.persistence.AttributeConverter;
@@ -66,6 +67,7 @@ import jakarta.persistence.spi.PersistenceUnitTransactionType;
 
 /**
  * @author Vlad Mihalcea
+ * @author Yanming Zhou
  */
 public class BootstrapTest {
 
@@ -320,6 +322,26 @@ public class BootstrapTest {
         }
         catch (Exception ignore) {
         }
+    }
+
+    @Test
+    @JiraKey("HHH-17154")
+    public void build_EntityManagerFactory_with_NewTempClassLoader() {
+
+        PersistenceUnitInfoImpl persistenceUnitInfo = new PersistenceUnitInfoImpl( "TEST", new ArrayList<>(), new Properties() ) {
+            @Override
+            public ClassLoader getNewTempClassLoader() {
+                return new ClassLoader(Thread.currentThread().getContextClassLoader()) {
+                };
+            }
+        };
+
+        EntityManagerFactoryBuilderImpl entityManagerFactoryBuilder = new EntityManagerFactoryBuilderImpl(
+                        new PersistenceUnitInfoDescriptor(persistenceUnitInfo),
+                        new HashMap<>()
+                );
+
+        entityManagerFactoryBuilder.build();
     }
 
     public Object getBeanManager() {

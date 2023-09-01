@@ -347,7 +347,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					if ( classLoader == null ) {
 						throw persistenceException( "Enhancement requires a temp class loader, but none was given." );
 					}
-					for ( PersistentClass entityBinding : metadata.getEntityBindings() ) {
+					for ( PersistentClass entityBinding : metadata().getEntityBindings() ) {
 						if ( entityBinding.getClassName() != null ) {
 							classTransformer.discoverTypes( classLoader, entityBinding.getClassName() );
 						}

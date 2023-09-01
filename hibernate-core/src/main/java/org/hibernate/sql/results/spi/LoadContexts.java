@@ -16,6 +16,7 @@ import org.hibernate.internal.util.collections.StandardStack;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
+import org.hibernate.sql.results.graph.entity.LoadingProxyEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 
 /**
@@ -53,6 +54,10 @@ public class LoadContexts {
 
 	public LoadingEntityEntry findLoadingEntityEntry(final EntityKey entityKey) {
 		return jdbcValuesSourceProcessingStateStack.findCurrentFirstWithParameter( entityKey, JdbcValuesSourceProcessingState::findLoadingEntityLocally );
+	}
+
+	public LoadingProxyEntry findLoadingProxy(final EntityKey entityKey){
+		return jdbcValuesSourceProcessingStateStack.findCurrentFirstWithParameter( entityKey, JdbcValuesSourceProcessingState::findLoadingProxyLocally );
 	}
 
 	public LoadingCollectionEntry findLoadingCollectionEntry(final CollectionKey collectionKey) {

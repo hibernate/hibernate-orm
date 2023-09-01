@@ -30,6 +30,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityLoadingLogging;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
+import org.hibernate.sql.results.graph.entity.LoadingProxyEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.LoadContexts;
 
@@ -109,12 +110,6 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			return;
 		}
 
-		final EntityInitializer parentEntityInitializer = parentAccess.findFirstEntityInitializer();
-		if ( parentEntityInitializer != null && parentEntityInitializer.isEntityInitialized() ) {
-			isInitialized = true;
-			return;
-		}
-
 		if ( !isAttributeAssignableToConcreteDescriptor() ) {
 			return;
 		}
@@ -147,7 +142,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		}
 
 		final LoadContexts loadContexts = session.getPersistenceContext().getLoadContexts();
-		final LoadingEntityEntry existingLoadingEntry = loadContexts.findLoadingEntityEntry( entityKey );
+		LoadingEntityEntry existingLoadingEntry = loadContexts.findLoadingEntityEntry( entityKey );
 
 		if ( existingLoadingEntry != null ) {
 			if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
@@ -184,6 +179,14 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 					return;
 				}
 			}
+		}
+
+		LoadingProxyEntry loadingProxy = loadContexts.findLoadingProxy( entityKey );
+
+		if ( loadingProxy != null ) {
+			entityInstance = loadingProxy.getProxyTarget();
+			isInitialized = true;
+			return;
 		}
 
 		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {

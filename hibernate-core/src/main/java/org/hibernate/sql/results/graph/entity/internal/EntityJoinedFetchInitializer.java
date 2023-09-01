@@ -104,8 +104,6 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 		}
 	}
 
-
-
 	@Override
 	protected Object getProxy(PersistenceContext persistenceContext) {
 		ModelPart referencedModelPart = getInitializedPart();

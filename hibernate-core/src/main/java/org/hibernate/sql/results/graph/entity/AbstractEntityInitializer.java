@@ -104,6 +104,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	boolean isInitialized;
 	private boolean isOwningInitializer;
 	private Object[] resolvedEntityState;
+	private Object proxyTarget;
 
 	// todo (6.0) : ^^ need a better way to track whether we are loading the entity state or if something else is/has
 
@@ -506,6 +507,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			}
 			else {
 				entityInstance = proxy;
+				proxyTarget = instantiateEntity( entityIdentifier, rowProcessingState.getSession() );
+				registerLoadingProxyInstanceFromExecutionContext( rowProcessingState, proxy, proxyTarget );
 			}
 		}
 		else {
@@ -542,6 +545,16 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 			upgradeLockMode( rowProcessingState );
 		}
+	}
+
+	private void registerLoadingProxyInstanceFromExecutionContext(
+			RowProcessingState rowProcessingState,
+			Object proxy,
+			Object target) {
+		rowProcessingState.getJdbcValuesSourceProcessingState().registerLoadingProxy(
+				getEntityKey(),
+				new LoadingProxyEntry( this, getEntityKey(), proxy, target )
+		);
 	}
 
 	protected abstract void registerLoadingEntityInstanceFromExecutionContext(
@@ -621,6 +634,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				isOwningInitializer = true;
 			}
 			else {
+				entityInstance = existingLoadingEntry.getEntityInstance();
 				isInitialized = true;
 			}
 		}
@@ -750,11 +764,17 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			if ( lazyInitializer != null ) {
 				Object instance = persistenceContext.getEntity( entityKey );
 				if ( instance == null ) {
-					instance = resolveInstance(
-							entityKey.getIdentifier(),
-							persistenceContext.getLoadContexts().findLoadingEntityEntry( entityKey ),
-							rowProcessingState
-					);
+					instance = proxyTarget;
+					if ( instance == null ) {
+						instance = resolveInstance(
+								entityKey.getIdentifier(),
+								persistenceContext.getLoadContexts().findLoadingEntityEntry( entityKey ),
+								rowProcessingState
+						);
+					}
+					else {
+						registerLoadingEntity( rowProcessingState, instance );
+					}
 					initializeEntity( instance, rowProcessingState );
 				}
 				lazyInitializer.setImplementation( instance );
@@ -1191,6 +1211,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		missing = false;
 		resolvedEntityState = null;
 		isInitialized = false;
+		proxyTarget = null;
 		clearResolutionListeners();
 	}
 }

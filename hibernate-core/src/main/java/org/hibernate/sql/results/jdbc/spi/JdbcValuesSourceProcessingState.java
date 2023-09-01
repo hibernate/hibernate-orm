@@ -13,6 +13,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.entity.LoadingProxyEntry;
 import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
@@ -48,6 +49,10 @@ public interface JdbcValuesSourceProcessingState {
 	 */
 	LoadingEntityEntry findLoadingEntityLocally(EntityKey entityKey);
 
+	default LoadingProxyEntry findLoadingProxyLocally(EntityKey entityKey){
+		return null;
+	}
+
 	/**
 	 * Registers a LoadingEntityEntry locally to this context
 	 */
@@ -58,6 +63,12 @@ public interface JdbcValuesSourceProcessingState {
 	void registerReloadedEntity(
 			EntityKey entityKey,
 			LoadingEntityEntry loadingEntry);
+
+	default void registerLoadingProxy(
+			EntityKey entityKey,
+			LoadingProxyEntry loadingProxy
+	) {
+	}
 
 	void registerInitializer(
 			EntityUniqueKey entityKey,

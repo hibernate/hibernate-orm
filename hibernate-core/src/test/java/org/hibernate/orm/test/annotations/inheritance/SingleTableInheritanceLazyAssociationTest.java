@@ -2,6 +2,8 @@ package org.hibernate.orm.test.annotations.inheritance;
 
 import java.util.List;
 
+import org.hibernate.Hibernate;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
@@ -23,6 +25,8 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Query;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 
 @Jpa(
@@ -69,7 +73,12 @@ public class SingleTableInheritanceLazyAssociationTest {
 
 					for ( Message message : resultList ) {
 						Address address = message.getAddress();
+						assertThat( Hibernate.isInitialized( address ) ).isFalse();
 						address.getId();
+						assertThat( Hibernate.isInitialized( address ) ).isTrue();
+						User user = address.getUser();
+						assertThat( Hibernate.isInitialized( user ) ).isTrue();
+						assertThat( Hibernate.isInitialized( user.getAddress() ) ).isTrue();
 					}
 				}
 		);
@@ -205,6 +214,8 @@ public class SingleTableInheritanceLazyAssociationTest {
 		public String getId() {
 			return this.userId;
 		}
+
+		public abstract Address getAddress();
 	}
 
 	@Entity(name = "UserA")
@@ -225,6 +236,11 @@ public class SingleTableInheritanceLazyAssociationTest {
 		public void setAddressA(AddressA addressA) {
 			this.addressA = addressA;
 		}
+
+		@Override
+		public AddressA getAddress() {
+			return addressA;
+		}
 	}
 
 	@Entity(name = "UserB")
@@ -244,6 +260,11 @@ public class SingleTableInheritanceLazyAssociationTest {
 
 		public void setAddressB(AddressB addressB) {
 			this.addressB = addressB;
+		}
+
+		@Override
+		public AddressB getAddress() {
+			return addressB;
 		}
 	}
 

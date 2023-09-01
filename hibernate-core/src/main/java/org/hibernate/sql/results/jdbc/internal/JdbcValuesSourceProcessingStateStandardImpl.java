@@ -30,6 +30,7 @@ import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.graph.collection.internal.ArrayInitializer;
 import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
+import org.hibernate.sql.results.graph.entity.LoadingProxyEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 
@@ -45,6 +46,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 
 	private Map<EntityKey, LoadingEntityEntry> loadingEntityMap;
 	private Map<EntityKey, LoadingEntityEntry> reloadedEntityMap;
+	private Map<EntityKey, LoadingProxyEntry> loadingProxyMap;
 	private Map<EntityUniqueKey, Initializer> initializerByUniquKeyMap;
 	private Map<CollectionKey, LoadingCollectionEntry> loadingCollectionMap;
 	private List<CollectionInitializer> arrayInitializers;
@@ -105,6 +107,14 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	@Override
+	public void registerLoadingProxy(EntityKey entityKey, LoadingProxyEntry loadingProxy) {
+		if ( loadingProxyMap == null ) {
+			loadingProxyMap = new HashMap<>();
+		}
+		loadingProxyMap.put( entityKey, loadingProxy );
+	}
+
+	@Override
 	public void registerReloadedEntity(EntityKey entityKey, LoadingEntityEntry loadingEntry) {
 		if ( reloadedEntityMap == null ) {
 			reloadedEntityMap = new HashMap<>();
@@ -138,6 +148,14 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 		}
 
 		return loadingCollectionMap.get( key );
+	}
+
+	@Override
+	public LoadingProxyEntry findLoadingProxyLocally(EntityKey entityKey) {
+		if ( loadingProxyMap == null ) {
+			return null;
+		}
+		return loadingProxyMap.get( entityKey );
 	}
 
 	@Override
@@ -232,6 +250,7 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 			}
 			reloadedEntityMap = null;
 		}
+		loadingProxyMap = null;
 	}
 
 	@SuppressWarnings("SimplifiableIfStatement")

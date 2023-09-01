@@ -1,11 +1,14 @@
-= Hibernate {{version-here}}
+:family: 6.3
+:version: 6.3.0.Final
+
+= Hibernate {version}
 Steve Ebersole
 :awestruct-tags: ["Hibernate ORM", "Releases"]
 :awestruct-layout: blog-post
-:version: {{version-here}}
-:docs-url: https://docs.jboss.org/hibernate/orm/{version}
+:docs-url: https://docs.jboss.org/hibernate/orm/{family}
 :javadocs-url: {docs-url}/javadocs
 :migration-guide-url: {docs-url}/migration-guide/migration-guide.html
+:intro-guide-url: {docs-url}/introduction/html_single/Hibernate_Introduction.html
 :user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
 
 // Text ...
@@ -15,15 +18,17 @@ Steve Ebersole
 
 For additional details, see:
 
-- the link:{user-guide-url}[User Guide]
-- the link:{migration-guide-url}[Migration Guide]
 - the https://hibernate.org/orm/releases/6.0/[release page]
+- the link:{migration-guide-url}[Migration Guide]
+- the link:{intro-guide-url}[Hibernate 6 Introduction]
+- the link:{user-guide-url}[User Guide]
 
 See also the following resources related to supported APIs:
 
-- the link:{docs-url}/incubating/incubating.txt[incubating API report] - `@Incubating`
-- the link:{docs-url}/deprecated/deprecated.txt[deprecated API report] - `@Deprecated` + `@Remove`
-- the link:{docs-url}/internals/internal.txt[internal API report] - internal packages, `@Internal`
+- the https://hibernate.org/community/compatibility-policy/[compatibility policy]
+- the link:{docs-url}/incubating/incubating.txt[incubating API report] (`@Incubating`)
+- the link:{docs-url}/deprecated/deprecated.txt[deprecated API report] (`@Deprecated` + `@Remove`)
+- the link:{docs-url}/internals/internal.txt[internal API report] (internal packages, `@Internal`)
 
 Visit the https://hibernate.org/community/[website] for details on getting in touch with us.
 

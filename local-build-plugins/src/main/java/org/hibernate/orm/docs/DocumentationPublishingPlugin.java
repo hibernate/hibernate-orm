@@ -60,7 +60,7 @@ public class DocumentationPublishingPlugin implements Plugin<Project> {
 				(task) -> {
 					task.getCurrentlyBuildingFamily().convention( docPubDsl.getReleaseFamilyIdentifier() );
 					task.getDocServerUrl().convention( docPubDsl.getDocServerUrl() );
-					task.getMigrationGuideDirectory().convention( project.getLayout().getBuildDirectory().dir( "asciidoc/migration-guide" ) );
+					task.getMigrationGuideDirectory().convention( project.getLayout().getBuildDirectory().dir( "documentation/migration-guide" ) );
 				}
 		);
 

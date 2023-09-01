@@ -282,10 +282,23 @@ def renderTopicalGuidesTask = tasks.register( 'renderTopicalGuides', Asciidoctor
 
 def gettingStartedGuideHtmlDir = layout.buildDirectory.dir( "asciidoc/quickstart/html_single" )
 
+def buildTutorialZipTask = tasks.register( 'buildTutorialZip', Zip ) { task ->
+	from 'src/main/asciidoc/quickstart/tutorials'
+	destinationDirectory.set( gettingStartedGuideHtmlDir )
+	archiveFileName = 'hibernate-tutorials.zip'
+	expand(
+			version: project.version,
+			slf4j: "2.0.7",
+			junit: testLibs.versions.junit4.get(),
+			h2: dbLibs.versions.h2.get()
+	)
+}
+
 def renderGettingStartedGuideHtmlTask = tasks.register( 'renderGettingStartedGuideHtmlTask', AsciidoctorTask ) { task ->
 	group = "Documentation"
 	description = 'Renders the Getting Started Guides (quickstarts) in HTML format using Asciidoctor.'
 	inputs.property "hibernate-version", project.ormVersion
+	finalizedBy buildTutorialZipTask
 
 	sourceDir = file( 'src/main/asciidoc/quickstart/guides' )
 	sources 'index.adoc'
@@ -323,18 +336,6 @@ def renderGettingStartedGuidePdfTask = tasks.register( 'renderGettingStartedGuid
 	outputDir = layout.buildDirectory.dir( "asciidoc/quickstart/pdf" )
 
 	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
-}
-
-def buildTutorialZipTask = tasks.register( 'buildTutorialZip', Zip ) { task ->
-	from 'src/main/asciidoc/quickstart/tutorials'
-	destinationDirectory.set( gettingStartedGuideHtmlDir )
-	archiveFileName = 'hibernate-tutorials.zip'
-	expand(
-			version: project.version,
-			slf4j: "2.0.7",
-			junit: testLibs.versions.junit4.get(),
-			h2: dbLibs.versions.h2.get()
-	)
 }
 
 def renderGettingStartedGuidesTask = tasks.register( 'renderGettingStartedGuides' ) { task ->
@@ -658,15 +659,28 @@ def renderIntegrationGuidesTask = tasks.register( "renderIntegrationGuides" ) { 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Migration Guide
 
-def renderMigrationGuideTask = tasks.register( "renderMigrationGuide", AsciidoctorTask ) { task ->
+def migrationGuideSourceStagingDir = layout.buildDirectory.dir( "tmp/asciidoc/migration-guide" )
+
+def copyMigrationGuideTask = tasks.register( "copyMigrationGuide", Copy ) {task ->
 	group = "Documentation"
-	description = 'Renders the Migration Guide in HTML format using Asciidoctor.'
+	description = "Copies migration-guide.adoc in preparation for rendering."
 
 	inputs.property "hibernate-version", project.ormVersion
 
-	sources {
-		include rootProject.layout.projectDirectory.file( 'migration-guide.adoc' ).asFile.canonicalPath
-	}
+	from rootProject.layout.projectDirectory.file( "migration-guide.adoc" )
+	into migrationGuideSourceStagingDir
+}
+
+def renderMigrationGuideTask = tasks.register( "renderMigrationGuide", AsciidoctorTask ) { task ->
+	group = "Documentation"
+	description = "Renders the Migration Guide in HTML format using Asciidoctor."
+
+	dependsOn copyMigrationGuideTask
+	inputs.property "hibernate-version", project.ormVersion
+
+	sourceDir = migrationGuideSourceStagingDir
+
+	outputDir = project.layout.buildDirectory.dir( 'asciidoc/migration-guide' )
 
 	attributes linkcss: true,
 			   stylesheet: "css/hibernate.css"

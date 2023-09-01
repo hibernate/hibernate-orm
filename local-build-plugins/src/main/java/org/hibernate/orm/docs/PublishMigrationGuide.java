@@ -54,6 +54,8 @@ public abstract class PublishMigrationGuide extends DefaultTask {
 		return docServerUrl;
 	}
 
+
+	@Input
 	public Property<ReleaseFamilyIdentifier> getCurrentlyBuildingFamily() {
 		return currentlyBuildingFamily;
 	}

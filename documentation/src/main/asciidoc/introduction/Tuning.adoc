@@ -289,7 +289,7 @@ If we need eager join fetching in some particular transaction, we have four diff
 |===
 | Passing a JPA `EntityGraph` | We've already seen this in <<entity-graph>>
 | Specifying a named _fetch profile_ | We'll discuss this approach later in <<fetch-profiles>>
-| Using `left join fetch` in HQL/JPQL | See _A guide to Hibernate Query Language 6_ for details
+| Using `left join fetch` in HQL/JPQL | See {doc-query-language-url}[_A Guide to Hibernate Query Language_] for details
 | Using `From.fetch()` in a criteria query | Same semantics as `join fetch` in HQL
 |===
 
@@ -334,7 +334,7 @@ Join fetching, despite its non-lazy nature, is clearly more efficient than eithe
 
 [TIP]
 ====
-There's one interesting case where join fetching becomes inefficient: when we fetch two many-values associations _in parallel_.
+There's one interesting case where join fetching becomes inefficient: when we fetch two many-valued associations _in parallel_.
 Imagine we wanted to fetch both `Author.books` and `Author.royaltyStatements` in some unit of work.
 Joining both collections in a single query would result in a cartesian product of tables, and a large SQL result set.
 Subselect fetching comes to the rescue here, allowing us to fetch `books` using a join, and `royaltyStatements` using a single subsequent `select`.
@@ -794,7 +794,7 @@ SessionFactory sessionFactory =
             .buildSessionFactory();
 // prime the second-level cache
 sessionFactory.inSession(session -> {
-    session.createSelectionQuery("from Countries"))
+    session.createSelectionQuery("from Country"))
         .setReadOnly(true)
         .getResultList();
     session.createSelectionQuery("from Product where discontinued = false"))
@@ -867,7 +867,7 @@ a `select`
 | `insert(Object)`     | Immediately `insert` the state of the given transient object into the database
 | `update(Object)`     | Immediately `update` the state of the given detached object in the database
 | `delete(Object)`     | Immediately `delete` the state of the given detached object from the database
-| `upsert(Object)1     | Immediately `insert` or `update` the state of the given detached object using a SQL `merge into` statement
+| `upsert(Object)`     | Immediately `insert` or `update` the state of the given detached object using a SQL `merge into` statement
 |===
 
 NOTE: There's no `flush()` operation, and so `update()` is always explicit.

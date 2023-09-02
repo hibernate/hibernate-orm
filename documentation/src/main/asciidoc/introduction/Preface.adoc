@@ -21,17 +21,16 @@ Hibernate 6 and Hibernate Reactive are now core components of Quarkus 3, the mos
 Unfortunately, the changes in Hibernate 6 have obsoleted much of the information about Hibernate that's available in books, in blog posts, and on stackoverflow.
 
 
-This guide is an up-to-date, high-level discussion of the current set of Hibernate features.  It does not attempt
-to cover every feature and should be used in conjunction with other documentation -
+This guide is an up-to-date, high-level discussion of the current feature set and recommended usage.
+It does not attempt to cover every feature and should be used in conjunction with other documentation:
 
-- Hibernate's extensive link:{doc-javadoc-url}[Javadoc]
-- The link:{doc-query-language-url}[Hibernate Query Language Guide]
-- The Hibernate link:{doc-user-guide-url}[User Guide].
+- Hibernate's extensive link:{doc-javadoc-url}[Javadoc],
+- the link:{doc-query-language-url}[Guide to Hibernate Query Language], and
+- the Hibernate link:{doc-user-guide-url}[User Guide].
 
 [NOTE]
 ====
-The Hibernate User Guide provides detailed discussion about most aspects of Hibernate.
-But with so much information to cover, readability is difficult to achieve - it should be considered more of a reference guide.
-
-Where applicable, this guide will provide links to detailed User Guide content within its covered topics.
+The Hibernate User Guide includes detailed discussions of most aspects of Hibernate.
+But with so much information to cover, readability is difficult to achieve, and so it's most useful as a reference.
+Where necessary, we'll provide links to relevant sections of the User Guide.
 ====

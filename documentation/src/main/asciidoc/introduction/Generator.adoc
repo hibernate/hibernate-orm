@@ -100,7 +100,7 @@ For each attribute of the entity, the `Book_` class has:
 2. a typesafe reference like `title` to a metamodel object of type `Attribute`.
 
 We've already been using metamodel references like `Book_.authors` and `Book.AUTHORS` in the previous chapters.
-So now lets see what else the Metamodel Generator can do for us.
+So now let's see what else the Metamodel Generator can do for us.
 
 [TIP]
 ====

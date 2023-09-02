@@ -14,7 +14,7 @@ Hibernate makes *relational data* visible to a program written in Java, in a *na
 ****
 
 Here the relational data is the focus, along with the importance of typesafety.
-The goal of _Object/relational mapping_ (ORM) is to eliminate fragile and untypesafe code, and make large programs easier to maintain in the long run.
+The goal of _object/relational mapping_ (ORM) is to eliminate fragile and untypesafe code, and make large programs easier to maintain in the long run.
 
 ORM takes the pain out of persistence by relieving the developer of the need to hand-write tedious, repetitive, and fragile code for flattening graphs of objects to database tables and rebuilding graphs of objects from flat SQL query result sets.
 Even better, ORM makes it much easier to tune performance later, after the basic persistence logic has already been written.
@@ -154,21 +154,21 @@ repositories {
 
 dependencies {
     // the GOAT ORM
-    implementation 'org.hibernate.orm:hibernate-core:6.2.2.Final'
+    implementation 'org.hibernate.orm:hibernate-core:6.3.0.Final'
 
     // Hibernate Validator
     implementation 'org.hibernate.validator:hibernate-validator:8.0.0.Final'
     implementation 'org.glassfish:jakarta.el:4.0.2'
 
     // Agroal connection pool
-    implementation 'org.hibernate.orm:hibernate-agroal:6.2.2.Final'
+    implementation 'org.hibernate.orm:hibernate-agroal:6.3.0.Final'
     implementation 'io.agroal:agroal-pool:2.1'
 
     // logging via Log4j
     implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
 
     // JPA Metamodel Generator
-    annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.2.2.Final'
+    annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.3.0.Final'
 
     // Compile-time checking for HQL
     //implementation 'org.hibernate:query-validator:2.0-SNAPSHOT'
@@ -804,7 +804,7 @@ And, on the contrary, a layer is only easily replaceable if it has a very _narro
 [TIP]
 ====
 Some people do indeed use mock repositories for testing, but we really struggle to see any value in this.
-If you don't want to run your tests against our real database, it's usually very easy to "mock" the database itself by running tests against an in-memory Java database like H2.
+If we don't want to run our tests against our real database, it's usually very easy to "mock" the database itself by running tests against an in-memory Java database like H2.
 This works even better in Hibernate 6 than in older versions of Hibernate, since HQL is now _much_ more portable between platforms.
 ====
 

@@ -232,7 +232,7 @@ The `Configuration` class has survived almost unchanged since the very earliest 
 On the other hand, it's very easy to use, and exposes some options that `persistence.xml` doesn't support.
 
 :native-bootstrap: {doc-user-guide-url}#bootstrap-native
-:boot: {versionDocBase}/javadocs/org/hibernate/boot/package-summary.html
+:boot: {doc-javadoc-url}/org/hibernate/boot/package-summary.html
 
 .Advanced configuration options
 ****

@@ -118,6 +118,11 @@ This is completely by design and is not in any way a bug.
 
 More than one filter may be enabled in a given session.
 
+[TIP]
+====
+When we only need to filter rows by a static condition with no parameters, we don't need a filter, since `@SQLRestriction` provides a much simpler way to do that.
+====
+
 :envers: https://hibernate.org/orm/envers/
 :envers-doc: {doc-user-guide-url}#envers
 
@@ -203,7 +208,7 @@ var entityManager =
         entityManagerFactory.createEntityManager(Map.of(HibernateHints.HINT_TENANT_ID, tenantId));
 ----
 
-However, since we often don't have this level of control over creation of the session, it's more common to supply an implementation of `CurrentTenantIdentifierResolver` to Hibernate.
+However, since we often don't have this level of control over creation of the session, it's more common to supply an implementation of link:{doc-javadoc-url}org/hibernate/context/spi/CurrentTenantIdentifierResolver.html[`CurrentTenantIdentifierResolver`] to Hibernate.
 
 There are three common ways to implement multi-tenancy:
 
@@ -214,14 +219,14 @@ There are three common ways to implement multi-tenancy:
 From the point of view of Hibernate, there's little difference between the first two options.
 Hibernate will need to obtain a JDBC connection with permissions on the database and schema owned by the current tenant.
 
-Therefore, we must implement a `MultiTenantConnectionProvider` which takes on this responsibility:
+Therefore, we must implement a link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/MultiTenantConnectionProvider.html[`MultiTenantConnectionProvider`] which takes on this responsibility:
 
 - from time to time, Hibernate will ask for a connection, passing the id of the current tenant, and then we must create an appropriate connection or obtain one from a pool, and return it to Hibernate, and
 - later, Hibernate will release the connection and ask us to destroy it or return it to the appropriate pool.
 
 [TIP]
 ====
-Check out `DataSourceBasedMultiTenantConnectionProviderImpl` for inspiration.
+Check out link:{doc-javadoc-url}org/hibernate/engine/jdbc/connections/spi/DataSourceBasedMultiTenantConnectionProviderImpl.html[`DataSourceBasedMultiTenantConnectionProviderImpl`] for inspiration.
 ====
 
 The third option is quite different.
@@ -246,6 +251,8 @@ Within a given session, our data is automatically filtered so that only rows tag
 Native SQL queries are _not_ automatically filtered by tenant id; you'll have to do that part yourself.
 ====
 
+To make use of multi-tenancy, we'll usually need to set at least one of these configuration properties:
+
 .Multi-tenancy configuration
 [%breakable,cols="36,~"]
 |===
@@ -254,11 +261,6 @@ Native SQL queries are _not_ automatically filtered by tenant id; you'll have to
 | `hibernate.tenant_identifier_resolver`  | Specifies the `CurrentTenantIdentifierResolver`
 | `hibernate.multi_tenant_connection_provider`  | Specifies the `MultiTenantConnectionProvider`
 |===
-
-[TIP]
-====
-If you only need to filter rows by a static condition with no parameters, `@SQLRestriction` is a much simpler way to do that.
-====
 
 [[custom-sql]]
 === Using custom-written SQL
@@ -364,16 +366,17 @@ For columns which should be generated using a SQL `generated always as` clause, 
 ====
 
 Actually, the `@Generated` and `@GeneratedColumn` annotations are defined in terms of a more generic and user-extensible framework for handling attribute values generated in Java, or by the database.
+So let's drop down a layer, and see how that works.
 
 [[user-defined-generators]]
 === User-defined generators
 
 JPA doesn't define a standard way to extend the set of id generation strategies, but Hibernate does:
 
-- the `Generator` hierarchy of interfaces in the package `org.hibernate.generator` lets you define new generators, and
-- the `@IdGeneratorType` meta-annotation from the package `org.hibernate.annotations` lets you write an annotation which associates a `Generator` type with identifier attributes.
+- the link:{doc-javadoc-url}org/hibernate/generator/Generator.html[`Generator`] hierarchy of interfaces in the package `org.hibernate.generator` lets you define new generators, and
+- the link:{doc-javadoc-url}org/hibernate/annotations/IdGeneratorType.html[`@IdGeneratorType`] meta-annotation from the package `org.hibernate.annotations` lets you write an annotation which associates a `Generator` type with identifier attributes.
 
-Furthermore, the `@ValueGenerationType` meta-annotation lets you write an annotation which associates a `Generator` type with a non-`@Id` attribute.
+Furthermore, the link:{doc-javadoc-url}org/hibernate/annotations/ValueGenerationType.html[`@ValueGenerationType`] meta-annotation lets you write an annotation which associates a `Generator` type with a non-`@Id` attribute.
 
 [NOTE]
 // .The older APIs are still available in Hibernate 6
@@ -482,9 +485,9 @@ Hibernate comes with default implementations of these interfaces:
 |===
 | Flavor | Default implementation
 
-| An `ImplicitNamingStrategy` is responsible for assigning a logical name when none is specified by an annotation
+| An link:{doc-javadoc-url}org/hibernate/boot/model/naming/ImplicitNamingStrategy.html[`ImplicitNamingStrategy`] is responsible for assigning a logical name when none is specified by an annotation
 | A default strategy which implements the rules defined by JPA
-| A `PhysicalNamingStrategy` is responsible for transforming a logical name and producing the name used in the database
+| A link:{doc-javadoc-url}org/hibernate/boot/model/naming/PhysicalNamingStrategy.html[`PhysicalNamingStrategy`] is responsible for transforming a logical name and producing the name used in the database
 | A trivial implementation which does no processing
 |===
 
@@ -622,7 +625,7 @@ sessionFactory.inTransaction(session -> {
 Java lists and maps don't map very naturally to foreign key relationships between tables, and so we tend to avoid using them to represent associations between our entity classes.
 But if you feel like you _really_ need a collection with a fancier structure than `Set`, Hibernate does have options.
 
-The first two options let us map the index of a `List` or key of a `Map` to a column:
+The first three options let us map the index of a `List` or key of a `Map` to a column, and are usually used with a `@ElementCollection`, or on the owning side of an association:
 
 .Annotations for mapping lists and maps
 [%breakable,cols="22,~,^13"]
@@ -630,10 +633,22 @@ The first two options let us map the index of a `List` or key of a `Map` to a co
 | Annotation | Purpose | JPA-standard
 
 | `@OrderColumn` | Specifies the column used to maintain the order of a list | &#10004;
-| `@MapKeyColumn` | Specifies the column used to persist the keys of a map | &#10004;
+| `@MapKeyColumn` | Specifies the column used to persist the keys of a map
+(used when the key is of basic type)| &#10004;
+| `@MapKeyJoinColumn` | Specifies the column used to persist the keys of a map
+(used when the key is an entity) | &#10004;
 |===
 
-For an unowned association, the column must also be mapped on the owning side, usually by an attribute of the target entity.
+For an unowned `@OneToMany` association, the column must also be mapped on the owning side, usually by an attribute of the target entity.
+In this case we usually use a different annotation:
+
+.Annotation for mapping an entity attribute to a map key
+[%breakable,cols="22,~,^13"]
+|===
+| Annotation | Purpose | JPA-standard
+
+| `@MapKey` | Specifies an attribute of the target entity which acts as the key of the map | &#10004;
+|===
 
 Now, let's introduce a little distinction:
 
@@ -651,7 +666,7 @@ These annotations allow us to specify how the elements of a collection should be
 | `@SQLOrder` | Specifies a fragment of SQL used to order the collection | &#10006;
 |===
 
-On the other hand, the following annotation specify how a collection should be sorted in memory, and are used for collections of type `SortedSet` or `SortedMap`:
+On the other hand, the following annotations specify how a collection should be sorted in memory, and are used for collections of type `SortedSet` or `SortedMap`:
 
 .Annotations for sorted collections
 [%breakable,cols="22,~,^13"]
@@ -757,7 +772,7 @@ This means that:
 - if an attribute is `null` when the entity is made persistent, its mapped column is redundantly included in the SQL `insert`, and
 - worse, if a certain attribute is unmodified when other attributes are changed, the column mapped by that attribute is redundantly included in the SQL `update`.
 
-Most of the time this just isn't an issue worth worrying about.
+Most of the time, this just isn't an issue worth worrying about.
 The cost of interacting with the database is _usually_ dominated by the cost of a round trip, not by the number of columns in the `insert` or `update`.
 But in cases where it does become important, there are two ways to be more selective about which columns are included in the SQL.
 
@@ -799,7 +814,7 @@ Of course, this consideration doesn't arise for entities with a `@Version` attri
 But there's a solution!
 Well-designed relational schemas should have _constraints_ to ensure data integrity.
 That's true no matter what measures we take to preserve integrity in our program logic.
-We may ask Hibernate to add a `check` constraint to our table using the `@Check` annotation.
+We may ask Hibernate to add a <<constraints,`check` constraint>> to our table using the `@Check` annotation.
 Check constraints and foreign key constraints can help ensure that a row never contains inconsistent column values.
 ====
 
@@ -818,7 +833,7 @@ To use the bytecode enhancer, we must add the Hibernate plugin to our gradle bui
 [source,groovy]
 ----
 plugins {
-    id "org.hibernate.orm" version "6.2.2.Final"
+    id "org.hibernate.orm" version "6.3.0.Final"
 }
 
 hibernate { enhancement }

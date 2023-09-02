@@ -122,7 +122,7 @@ It is in principle possible to mix field and property access using explicit `@Ac
 We don't recommend doing this.
 ====
 
-An entity class like `Book`, which does not extend any other entity class is called a _root entity_.
+An entity class like `Book`, which does not extend any other entity class, is called a _root entity_.
 Every root entity must declare an identifier attribute.
 
 [[entity-inheritance]]
@@ -920,7 +920,7 @@ We can think of it as a whole/part relationship.
 The embeddable object belongs to the entity, and can't be shared with other entity instances.
 And it exits for only as long as its parent entity exists.
 
-Next we'll discuss a different kind of relationship: a relationship between Java objects that each have their persistent identity and persistence lifecycle.
+Next we'll discuss a different kind of relationship: a relationship between Java objects which each have their own distinct persistent identity and persistence lifecycle.
 
 [[associations]]
 === Associations
@@ -1158,7 +1158,7 @@ class Person {
 }
 ----
 
-`Person.author` is the unowned sure, because it's the side marked `mappedBy`.
+`Person.author` is the unowned side, because it's the side marked `mappedBy`.
 
 .Lazy fetching for one-to-one associations
 ****
@@ -1291,7 +1291,7 @@ That is, the collection is a _bag_, not a set.
 
 We've now seen the following kinds of entity attribute:
 
-[%breakable,cols="32,^15,^15,~"]
+[%breakable,cols="37,^15,^15,~"]
 |===
 | Kind of entity attribute | Kind of reference | Multiplicity | Examples
 
@@ -1321,7 +1321,7 @@ And the answer again is that _it does_. Indeed, there are two different ways to 
 
 So we may expand our taxonomy with:
 
-[%breakable,cols="32,^15,^15,~"]
+[%breakable,cols="37,^15,^15,~"]
 |===
 | Kind of entity attribute | Kind of reference | Multiplicity | Examples
 
@@ -1435,7 +1435,7 @@ class Event {
 }
 ----
 
-Here, each collection elements are stored as separate rows of the auxiliary table.
+Here, each collection element is stored as a separate row of the auxiliary table.
 By default, this table has the following definition:
 
 [source,sql]
@@ -1444,7 +1444,7 @@ create table Event_daysOfWeek (
     Event_id bigint not null,
     daysOfWeek tinyint check (daysOfWeek between 0 and 6),
     daysOfWeek_ORDER integer not null,
-    primary key (Event1_id, daysOfWeek_ORDER)
+    primary key (Event_id, daysOfWeek_ORDER)
 )
 ----
 
@@ -1485,10 +1485,10 @@ Let's pause to remember the annotations we've met so far.
 | `@Entity` | Declare an entity class | &#10004;
 | `@MappedSuperclass` | Declare a non-entity class with mapped attributes inherited by an entity | &#10004;
 | `@Embeddable` | Declare an embeddable type | &#10004;
-| `@IdClass` | declare the identifier class for an entity with multiple `@Id` attributes | &#10004;
+| `@IdClass` | Declare the identifier class for an entity with multiple `@Id` attributes | &#10004;
 |===
 
-.Declaring basic attributes
+.Declaring basic and embedded attributes
 [%breakable,cols="22,~,^10,^13"]
 |===
 | Annotation | Purpose | | JPA-standard
@@ -1550,7 +1550,7 @@ That's already a lot of annotations, and we have not even started with the annot
 Entity classes should override `equals()` and `hashCode()`, especially when associations are <<set-vs-list,represented as sets>>.
 
 People new to Hibernate or JPA are often confused by exactly which fields should be included in the `hashCode()`.
-Even people with plenty of experience often argue quite religiously that one or another approach is the only right way.
+And people with more experience often argue quite religiously that one or another approach is the only right way.
 The truth is, there's no unique right way to do it, but there are some constraints.
 So please keep the following principles in mind:
 
@@ -1560,6 +1560,8 @@ So please keep the following principles in mind:
 It's OK to include any immutable, non-generated field in the hashcode.
 
 TIP: We therefore recommend identifying a <<natural-id-attributes,natural key>> for each entity, that is, a combination of fields that uniquely identifies an instance of the entity, from the perspective of the data model of the program. The natural key should correspond to a unique constraint on the database, and to the fields which are included in `equals()` and `hashCode()`.
+
+In this example, the `equals()` and `hashCode()` methods agree with the `@NaturalId` annotation:
 
 [source,java]
 ----

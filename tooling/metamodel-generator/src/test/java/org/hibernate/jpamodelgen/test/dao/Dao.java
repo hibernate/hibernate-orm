@@ -74,4 +74,10 @@ public interface Dao {
 
     @Find
     List<Bean> beansForText(String text);
+
+    @HQL("where isbn = ?1")
+    List<Book> sortedBooksForIsbn(String isbn, Order<? super Book>... order);
+
+    @Find
+    List<Book> sortedBooks(String isbn, Order<? super Book>... order);
 }

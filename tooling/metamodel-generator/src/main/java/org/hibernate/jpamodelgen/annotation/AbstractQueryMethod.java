@@ -15,6 +15,7 @@ import org.hibernate.query.Page;
 
 import java.util.List;
 
+import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpamodelgen.util.Constants.SESSION_TYPES;
 import static org.hibernate.jpamodelgen.util.TypeUtils.isPrimitive;
 
@@ -68,6 +69,14 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 	}
 
 	abstract boolean isNullable(int index);
+
+	List<String> parameterTypes() {
+		return paramTypes.stream()
+				.map(paramType -> isOrderParam(paramType) && paramType.endsWith("[]")
+						? paramType.substring(0, paramType.length() - 2) + "..."
+						: paramType)
+				.collect(toList());
+	}
 
 	String parameterList() {
 		return paramTypes.stream()

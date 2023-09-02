@@ -46,6 +46,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 
 	@Override
 	public String getAttributeDeclarationString() {
+		final List<String> paramTypes = parameterTypes();
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );

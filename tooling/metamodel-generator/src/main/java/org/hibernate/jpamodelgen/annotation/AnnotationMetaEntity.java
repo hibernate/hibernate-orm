@@ -283,7 +283,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 
-		findSessionGetter( methodsOfClass );
+		findSessionGetter( element );
 
 		if ( managed ) {
 			putMember( "class", new AnnotationMetaType(this) );
@@ -301,12 +301,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		initialized = true;
 	}
 
-	private void findSessionGetter(List<ExecutableElement> methodsOfClass) {
-		if ( !containsAnnotation( element, Constants.ENTITY ) ) {
-			for ( ExecutableElement method : methodsOfClass ) {
+	private void findSessionGetter(TypeElement type) {
+		if ( !containsAnnotation( type, Constants.ENTITY ) ) {
+			for ( ExecutableElement method : methodsIn( type.getEnclosedElements() ) ) {
 				if ( isSessionGetter( method ) ) {
 					dao = true;
 					sessionType = addDaoConstructor( method );
+				}
+			}
+			if ( !dao ) {
+				final TypeMirror superclass = type.getSuperclass();
+				if ( superclass.getKind() == TypeKind.DECLARED ) {
+					final DeclaredType declaredType = (DeclaredType) superclass;
+					findSessionGetter( (TypeElement) declaredType.asElement() );
+				}
+				for ( TypeMirror superinterface : type.getInterfaces() ) {
+					if ( superinterface.getKind() == TypeKind.DECLARED ) {
+						final DeclaredType declaredType = (DeclaredType) superinterface;
+						findSessionGetter( (TypeElement) declaredType.asElement() );
+					}
 				}
 			}
 		}

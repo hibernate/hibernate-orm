@@ -43,12 +43,14 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
+import org.hibernate.metamodel.model.domain.SimpleDomainType;
 import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.ReturnableType;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
@@ -2040,8 +2042,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate between(Expression<? extends Y> value, Expression<? extends Y> lower, Expression<? extends Y> upper) {
-		assertComparable( value, lower, getNodeBuilder().getSessionFactory() );
-		assertComparable( value, upper, getNodeBuilder().getSessionFactory() );
 		return new SqmBetweenPredicate(
 				(SqmExpression<? extends Y>) value,
 				(SqmExpression<? extends Y>) lower,
@@ -2056,8 +2056,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final SqmExpression<? extends Y> valueExpression = (SqmExpression<? extends Y>) value;
 		final SqmExpression<?> lowerExpr = value( lower, valueExpression );
 		final SqmExpression<?> upperExpr = value( upper, valueExpression );
-		assertComparable( valueExpression, lowerExpr, getNodeBuilder().getSessionFactory() );
-		assertComparable( valueExpression, upperExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmBetweenPredicate(
 				valueExpression,
 				lowerExpr,
@@ -2069,7 +2067,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate equal(Expression<?> x, Expression<?> y) {
-		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.EQUAL,
@@ -2081,7 +2078,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate equal(Expression<?> x, Object y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.EQUAL,
@@ -2092,7 +2088,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate notEqual(Expression<?> x, Expression<?> y) {
-		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_EQUAL,
@@ -2104,7 +2099,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate notEqual(Expression<?> x, Object y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_EQUAL,
@@ -2115,7 +2109,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate distinctFrom(Expression<?> x, Expression<?> y) {
-		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.DISTINCT_FROM,
@@ -2127,7 +2120,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate distinctFrom(Expression<?> x, Object y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.DISTINCT_FROM,
@@ -2138,7 +2130,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate notDistinctFrom(Expression<?> x, Expression<?> y) {
-		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_DISTINCT_FROM,
@@ -2150,7 +2141,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate notDistinctFrom(Expression<?> x, Object y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.NOT_DISTINCT_FROM,
@@ -2161,7 +2151,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThan(Expression<? extends Y> x, Expression<? extends Y> y) {
-		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
@@ -2173,7 +2162,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThan(Expression<? extends Y> x, Y y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
@@ -2184,7 +2172,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThanOrEqualTo(Expression<? extends Y> x, Expression<? extends Y> y) {
-		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
@@ -2196,7 +2183,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate greaterThanOrEqualTo(Expression<? extends Y> x, Y y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
@@ -2207,7 +2193,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate lessThan(Expression<? extends Y> x, Expression<? extends Y> y) {
-		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
@@ -2219,7 +2204,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate lessThan(Expression<? extends Y> x, Y y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
@@ -2241,7 +2225,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <Y extends Comparable<? super Y>> SqmPredicate lessThanOrEqualTo(Expression<? extends Y> x, Y y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN_OR_EQUAL,
@@ -2252,7 +2235,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate gt(Expression<? extends Number> x, Expression<? extends Number> y) {
-		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
@@ -2264,7 +2246,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate gt(Expression<? extends Number> x, Number y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN,
@@ -2275,7 +2256,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate ge(Expression<? extends Number> x, Expression<? extends Number> y) {
-		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
@@ -2287,7 +2267,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate ge(Expression<? extends Number> x, Number y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.GREATER_THAN_OR_EQUAL,
@@ -2298,7 +2277,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate lt(Expression<? extends Number> x, Expression<? extends Number> y) {
-		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
@@ -2310,7 +2288,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate lt(Expression<? extends Number> x, Number y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN,
@@ -2321,7 +2298,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate le(Expression<? extends Number> x, Expression<? extends Number> y) {
-		assertComparable( x, y, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN_OR_EQUAL,
@@ -2333,7 +2309,6 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate le(Expression<? extends Number> x, Number y) {
 		final SqmExpression<?> yExpr = value( y, (SqmExpression<?>) x );
-		assertComparable( x, yExpr, getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				(SqmExpression<?>) x,
 				ComparisonOperator.LESS_THAN_OR_EQUAL,
@@ -2354,22 +2329,31 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isMember(Expression<E> elem, Expression<C> collection) {
-		return new SqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, false, this );
+		return createSqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, false, this );
 	}
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isMember(E elem, Expression<C> collection) {
-		return new SqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, false, this );
+		return createSqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, false, this );
 	}
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isNotMember(Expression<E> elem, Expression<C> collection) {
-		return new SqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, true, this );
+		return createSqmMemberOfPredicate( (SqmExpression<?>) elem, (SqmPath<?>) collection, true, this );
 	}
 
 	@Override
 	public <E, C extends Collection<E>> SqmPredicate isNotMember(E elem, Expression<C> collection) {
-		return new SqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, true, this );
+		return createSqmMemberOfPredicate( value( elem ), (SqmPath<?>) collection, true, this );
+	}
+
+	private SqmMemberOfPredicate createSqmMemberOfPredicate(SqmExpression<?> elem, SqmPath<?> collection, boolean negated, NodeBuilder nodeBuilder) {
+		if ( collection instanceof SqmPluralValuedSimplePath ) {
+			return new SqmMemberOfPredicate( elem, (SqmPluralValuedSimplePath) collection, negated, this );
+		}
+		else {
+			throw new SemanticException( "Operand of 'member of' operator must be a plural path" );
+		}
 	}
 
 	@Override

@@ -2646,7 +2646,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
 				"from Person p " +
-				"where p.createdOn between '1999-01-01' and '2001-01-02'",
+				"where p.createdOn between date 1999-01-01 and date 2001-01-02",
 				Person.class)
 			.getResultList();
 			//end::hql-between-predicate-example[]

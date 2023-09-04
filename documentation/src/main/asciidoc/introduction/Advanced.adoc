@@ -633,13 +633,38 @@ The first three options let us map the index of a `List` or key of a `Map` to a 
 | Annotation | Purpose | JPA-standard
 
 | `@OrderColumn` | Specifies the column used to maintain the order of a list | &#10004;
+| `@ListIndexBase` | The column value for the first element of the list (zero by default) | &#10006;
 | `@MapKeyColumn` | Specifies the column used to persist the keys of a map
 (used when the key is of basic type)| &#10004;
 | `@MapKeyJoinColumn` | Specifies the column used to persist the keys of a map
 (used when the key is an entity) | &#10004;
 |===
 
-For an unowned `@OneToMany` association, the column must also be mapped on the owning side, usually by an attribute of the target entity.
+[source,java]
+----
+@ManyToMany
+@OrderColumn // order of list is persistent
+List<Author> authors = new ArrayList<>();
+----
+
+[source,java]
+----
+@ElementCollection
+@OrderColumn(name="tag_order") @ListIndexBase(1) // order column and base value
+List<String> tags;
+----
+
+[source,java]
+----
+@ElementCollection
+@CollectionTable(name = "author_bios",                 // table name
+        joinColumns = @JoinColumn(name = "book_ssn"))  // column holding foreign key of owner
+@Column(name="bio")                                    // column holding map values
+@MapKeyJoinColumn(name="author_ssn")                   // column holding map keys
+Map<Author,String> biographies;
+----
+
+For a `Map` representing an unowned `@OneToMany` association, the column must also be mapped on the owning side, usually by an attribute of the target entity.
 In this case we usually use a different annotation:
 
 .Annotation for mapping an entity attribute to a map key
@@ -649,6 +674,13 @@ In this case we usually use a different annotation:
 
 | `@MapKey` | Specifies an attribute of the target entity which acts as the key of the map | &#10004;
 |===
+
+[source,java]
+----
+@OneToMany(mappedBy = Book_.PUBLISHER)
+@MapKey(name = Book_.TITLE) // the key of the map is the title of the book
+Map<String,Book> booksByTitle = new HashMap<>();
+----
 
 Now, let's introduce a little distinction:
 

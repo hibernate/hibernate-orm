@@ -8,9 +8,10 @@ package org.hibernate.orm.test.ops;
 
 import java.util.ArrayList;
 import java.util.Collection;
+
+import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.PersistenceException;
 
-import org.hibernate.PersistentObjectException;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.exception.ConstraintViolationException;
 
@@ -187,9 +188,9 @@ public class CreateTest extends AbstractOperationTestCase {
 						session.persist( dupe );
 						fail( "Expecting failure" );
 					}
-					catch (PersistenceException e) {
+					catch (Exception e) {
 						//verify that an exception is thrown!
-						assertTyping( PersistentObjectException.class, e );
+						assertTyping( EntityExistsException.class, e );
 					}
 				}
 		);
@@ -203,9 +204,9 @@ public class CreateTest extends AbstractOperationTestCase {
 						session.persist( nondupe );
 						fail( "Expecting failure" );
 					}
-					catch (PersistenceException e) {
+					catch (Exception e) {
 						//verify that an exception is thrown!
-						assertTyping( PersistentObjectException.class, e );
+						assertTyping( EntityExistsException.class, e );
 					}
 				}
 		);

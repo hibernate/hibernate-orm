@@ -726,9 +726,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * database. This operation cascades to associated instances if the association
 	 * is mapped with {@link jakarta.persistence.CascadeType#PERSIST}.
 	 * <p>
-	 * For entities with a {@link jakarta.persistence.GeneratedValue generated id},
-	 * {@code persist()} ultimately results in generation of an identifier for the
-	 * given instance. But this may happen asynchronously, when the session is
+	 * For an entity with a {@linkplain jakarta.persistence.GeneratedValue generated}
+	 * id, {@code persist()} ultimately results in generation of an identifier for
+	 * the given instance. But this may happen asynchronously, when the session is
 	 * {@linkplain #flush() flushed}, depending on the identifier generation strategy.
 	 *
 	 * @param object a transient instance to be made persistent
@@ -858,12 +858,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Reread the state of the given managed instance associated with this session
 	 * from the underlying database. This may be useful:
 	 * <ul>
-	 * <li>when a database trigger alters the object state upon insert or update
+	 * <li>when a database trigger alters the object state upon insert or update,
 	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update
-	 *     or delete statement
+	 *     or delete statement,
 	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native
-	 *     SQL statement
-	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
+	 *     SQL statement, or
+	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}.
 	 * </ul>
 	 * <p>
 	 * This operation cascades to associated instances if the association is mapped
@@ -880,12 +880,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Reread the state of the given managed instance associated with this session
 	 * from the underlying database. This may be useful:
 	 * <ul>
-	 * <li>when a database trigger alters the object state upon insert or update
+	 * <li>when a database trigger alters the object state upon insert or update,
 	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update
-	 *     or delete statement
+	 *     or delete statement,
 	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native
-	 *     SQL statement
-	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
+	 *     SQL statement, or
+	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}.
 	 * </ul>
 	 * <p>
 	 * This operation cascades to associated instances if the association is mapped

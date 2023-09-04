@@ -1041,7 +1041,7 @@ Note that SQL expressions like `lower(title)` must be enclosed in parentheses in
 ====
 It's not clear that information about indexes belongs in annotations of Java code.
 Indexes are usually maintained and modified by a database administrator, ideally by an expert in tuning the performance of one particular RDBMS.
-So it might be better to keep the definition of indexes a SQL DDL script that your DBA can easily read and modify.
+So it might be better to keep the definition of indexes in a SQL DDL script that your DBA can easily read and modify.
 <<automatic-schema-export,Remember>>, we can ask Hibernate to execute a DDL script using the property `javax.persistence.schema-generation.create-script-source`.
 ====
 

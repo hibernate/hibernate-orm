@@ -16,12 +16,12 @@ else
 fi
 
 mysql() {
-  mysql_8_0
+  mysql_8_1
 }
 
 mysql_5_7() {
     $CONTAINER_CLI rm -f mysql || true
-    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mysql:5.7.40 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --log-bin-trust-function-creators=1
+    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mysql:5.7.43 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake --log-bin-trust-function-creators=1
     # Give the container some time to start
     OUTPUT=
     n=0
@@ -67,13 +67,37 @@ mysql_8_0() {
     fi
 }
 
+mysql_8_1() {
+    $CONTAINER_CLI rm -f mysql || true
+    $CONTAINER_CLI run --name mysql -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mysql:8.1.0 --character-set-server=utf8mb4 --collation-server=utf8mb4_0900_as_cs --skip-character-set-client-handshake --log-bin-trust-function-creators=1
+    # Give the container some time to start
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
+        { OUTPUT="$( { $CONTAINER_CLI logs mysql; } 2>&1 1>&3 3>&- )"; } 3>&1;
+        if [[ $OUTPUT == *"ready for connections"* ]]; then
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for MySQL to start..."
+        sleep 3
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "MySQL failed to start and configure after 15 seconds"
+    else
+      echo "MySQL successfully started"
+    fi
+}
+
 mariadb() {
-  mariadb_10_9
+  mariadb_11_1
 }
 
 mariadb_10_3() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.3.36 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
+    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.3.39 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
     OUTPUT=
     n=0
     until [ "$n" -ge 5 ]
@@ -97,6 +121,29 @@ mariadb_10_3() {
 mariadb_10_9() {
     $CONTAINER_CLI rm -f mariadb || true
     $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.9.3 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
+    OUTPUT=
+    n=0
+    until [ "$n" -ge 5 ]
+    do
+        # Need to access STDERR. Thanks for the snippet https://stackoverflow.com/a/56577569/412446
+        { OUTPUT="$( { $CONTAINER_CLI logs mariadb; } 2>&1 1>&3 3>&- )"; } 3>&1;
+        if [[ $OUTPUT == *"ready for connections"* ]]; then
+          break;
+        fi
+        n=$((n+1))
+        echo "Waiting for MariaDB to start..."
+        sleep 3
+    done
+    if [ "$n" -ge 5 ]; then
+      echo "MariaDB failed to start and configure after 15 seconds"
+    else
+      echo "MariaDB successfully started"
+    fi
+}
+
+mariadb_11_1() {
+    $CONTAINER_CLI rm -f mariadb || true
+    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:11.1.2 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
     OUTPUT=
     n=0
     until [ "$n" -ge 5 ]
@@ -172,7 +219,7 @@ db2() {
 
 db2_11_5() {
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f db2 || true
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name db2 --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false -p 50000:50000 -d docker.io/ibmcom/db2:11.5.7.0
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name db2 --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false -p 50000:50000 -d docker.io/ibmcom/db2:11.5.8.0
     # Give the container some time to start
     OUTPUT=
     while [[ $OUTPUT != *"INSTANCE"* ]]; do
@@ -644,7 +691,7 @@ hana() {
 }
 
 cockroachdb() {
-  cockroachdb_22_2
+  cockroachdb_23_1
 }
 
 cockroachdb_23_1() {
@@ -657,7 +704,7 @@ sinks:
     redact: false
     exit-on-error: true
 "
-  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 cockroachdb/cockroach-unstable:v23.1.0-rc.1 start-single-node \
+  $CONTAINER_CLI run -d --name=cockroach -m 6g -p 26257:26257 -p 8080:8080 cockroachdb/cockroach-unstable:v23.1.8 start-single-node \
     --insecure --store=type=mem,size=0.25 --advertise-addr=localhost --log="$LOG_CONFIG"
   OUTPUT=
   while [[ $OUTPUT != *"CockroachDB node starting"* ]]; do
@@ -849,22 +896,24 @@ if [ -z ${1} ]; then
     echo -e "\tcockroachdb_23_1"
     echo -e "\tcockroachdb_22_2"
     echo -e "\tcockroachdb_22_1"
-    echo -e "\tcockroachdb_21_1"
     echo -e "\tdb2"
     echo -e "\tdb2_11_5"
     echo -e "\tdb2_10_5"
     echo -e "\tdb2_spatial"
     echo -e "\tedb"
+    echo -e "\tedb_15"
     echo -e "\tedb_14"
-    echo -e "\tedb_10"
+    echo -e "\tedb_11"
     echo -e "\thana"
     echo -e "\tmariadb"
+    echo -e "\tmariadb_11_1"
     echo -e "\tmariadb_10_9"
     echo -e "\tmariadb_10_3"
     echo -e "\tmssql"
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"
     echo -e "\tmysql"
+    echo -e "\tmysql_8_1"
     echo -e "\tmysql_8_0"
     echo -e "\tmysql_5_7"
     echo -e "\toracle"
@@ -875,8 +924,6 @@ if [ -z ${1} ]; then
     echo -e "\tpostgresql_15"
     echo -e "\tpostgresql_14"
     echo -e "\tpostgresql_13"
-    echo -e "\tpostgresql_10"
-    echo -e "\tpostgresql_9_5"
     echo -e "\tsybase"
     echo -e "\ttidb"
     echo -e "\ttidb_5_1"

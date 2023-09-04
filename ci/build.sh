@@ -12,9 +12,9 @@ elif [ "$RDBMS" == "mysql" ] || [ "$RDBMS" == "mysql_5_7" ]; then
   goal="-Pdb=mysql_ci"
 elif [ "$RDBMS" == "mariadb" ] || [ "$RDBMS" == "mariadb_10_3" ]; then
   goal="-Pdb=mariadb_ci"
-elif [ "$RDBMS" == "postgresql" ] || [ "$RDBMS" == "postgresql_10" ]; then
+elif [ "$RDBMS" == "postgresql" ] || [ "$RDBMS" == "postgresql_11" ]; then
   goal="-Pdb=pgsql_ci"
-elif [ "$RDBMS" == "edb" ] || [ "$RDBMS" == "edb_10" ]; then
+elif [ "$RDBMS" == "edb" ] || [ "$RDBMS" == "edb_11" ]; then
   goal="-Pdb=edb_ci -DdbHost=localhost:5444"
 elif [ "$RDBMS" == "oracle" ]; then
   # I have no idea why, but these tests don't seem to work on CI...
@@ -36,7 +36,7 @@ elif [ "$RDBMS" == "tidb" ]; then
   goal="-Pdb=tidb"
 elif [ "$RDBMS" == "hana_cloud" ]; then
   goal="-Pdb=hana_cloud"
-elif [ "$RDBMS" == "cockroachdb" ] || [ "$RDBMS" == "cockroachdb_21_2" ]; then
+elif [ "$RDBMS" == "cockroachdb" ]; then
   goal="-Pdb=cockroachdb"
 fi
 

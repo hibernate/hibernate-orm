@@ -126,95 +126,10 @@ stage('Build') {
 					try {
 						stage('Start database') {
 							switch (buildEnv.dbName) {
-								case "hsqldb_2_6":
-									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
-										" -Pgradle.libs.versions.hsqldb=2.6.1"
-									break;
-								case "mysql":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mysql:8.0.31').pull()
-									}
-									sh "./docker_db.sh mysql"
-									state[buildEnv.tag]['containerName'] = "mysql"
-									break;
-								case "mysql_5_7":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mysql:5.7.40').pull()
-									}
-									sh "./docker_db.sh mysql_5_7"
-									state[buildEnv.tag]['containerName'] = "mysql"
-									break;
-								case "mariadb":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.9.3').pull()
-									}
-									sh "./docker_db.sh mariadb"
-									state[buildEnv.tag]['containerName'] = "mariadb"
-									break;
-								case "mariadb_10_3":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.3.36').pull()
-									}
-									sh "./docker_db.sh mariadb_10_3"
-									state[buildEnv.tag]['containerName'] = "mariadb"
-									break;
-								case "postgresql":
-									// use the postgis image to enable the PGSQL GIS (spatial) extension
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:15-3.3').pull()
-									}
-									sh "./docker_db.sh postgresql"
-									state[buildEnv.tag]['containerName'] = "postgres"
-									break;
 								case "edb":
-									docker.image('quay.io/enterprisedb/edb-postgres-advanced:15.2-3.3-postgis').pull()
+									docker.image('quay.io/enterprisedb/edb-postgres-advanced:15.4-3.3-postgis').pull()
 									sh "./docker_db.sh edb"
 									state[buildEnv.tag]['containerName'] = "edb"
-									break;
-								case "oracle":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('gvenzl/oracle-xe:21.3.0-full').pull()
-									}
-									sh "./docker_db.sh oracle"
-									state[buildEnv.tag]['containerName'] = "oracle"
-									break;
-								case "oracle_11_2":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('gvenzl/oracle-xe:11.2.0.2-full').pull()
-									}
-									sh "./docker_db.sh oracle_11"
-									state[buildEnv.tag]['containerName'] = "oracle"
-									break;
-								case "db2":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('ibmcom/db2:11.5.7.0').pull()
-									}
-									sh "./docker_db.sh db2"
-									state[buildEnv.tag]['containerName'] = "db2"
-									break;
-								case "db2_10_5":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('ibmoms/db2express-c@sha256:a499afd9709a1f69fb41703e88def9869955234c3525547e2efc3418d1f4ca2b').pull()
-									}
-									sh "./docker_db.sh db2_10_5"
-									state[buildEnv.tag]['containerName'] = "db2"
-									break;
-								case "mssql":
-									docker.image('mcr.microsoft.com/mssql/server@sha256:f54a84b8a802afdfa91a954e8ddfcec9973447ce8efec519adf593b54d49bedf').pull()
-									sh "./docker_db.sh mssql"
-									state[buildEnv.tag]['containerName'] = "mssql"
-									break;
-								case "mssql_2017":
-									docker.image('mcr.microsoft.com/mssql/server@sha256:7d194c54e34cb63bca083542369485c8f4141596805611e84d8c8bab2339eede').pull()
-									sh "./docker_db.sh mssql_2017"
-									state[buildEnv.tag]['containerName'] = "mssql"
-									break;
-								case "sybase":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('nguoianphu/docker-sybase').pull()
-									}
-									sh "./docker_db.sh sybase"
-									state[buildEnv.tag]['containerName'] = "sybase"
 									break;
 								case "sybase_jconn":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
@@ -225,16 +140,9 @@ stage('Build') {
 									break;
 								case "cockroachdb":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach:v22.2.2').pull()
+										docker.image('cockroachdb/cockroach:v23.1.8').pull()
 									}
 									sh "./docker_db.sh cockroachdb"
-									state[buildEnv.tag]['containerName'] = "cockroach"
-									break;
-								case "cockroachdb_21_2":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach:v21.2.16').pull()
-									}
-									sh "./docker_db.sh cockroachdb_21_2"
 									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;
 							}
@@ -301,6 +209,7 @@ class BuildEnvironment {
 
 	String toString() { getTag() }
 	String getTag() { "${node ? node + "_" : ''}${testJdkVersion ? 'jdk_' + testJdkVersion + '_' : '' }${dbName}" }
+	String getRdbms() { dbName.contains("_") ? dbName.substring(0, dbName.indexOf('_')) : dbName }
 }
 
 void runBuildOnNode(String label, Closure body) {

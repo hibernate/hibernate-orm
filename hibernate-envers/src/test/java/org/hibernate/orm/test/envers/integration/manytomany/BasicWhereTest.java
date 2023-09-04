@@ -15,6 +15,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
@@ -116,7 +117,7 @@ public class BasicWhereTest extends BaseEnversJPAFunctionalTestCase {
 		private String name;
 
 		@ManyToMany
-		@JoinColumn(name = "allC")
+		@JoinTable(joinColumns = @JoinColumn(name = "allC"))
 		@SQLRestriction("type = 'C'")
 		@Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
 		@AuditJoinTable(name = "A_C_AUD")

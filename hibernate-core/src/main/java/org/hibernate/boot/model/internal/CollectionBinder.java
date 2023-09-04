@@ -413,21 +413,34 @@ public abstract class CollectionBinder {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			XProperty property,
-			OneToMany oneToManyAnn,
-			ManyToMany manyToManyAnn,
-			ElementCollection elementCollectionAnn) {
-		if ( ( oneToManyAnn != null || manyToManyAnn != null || elementCollectionAnn != null )
-				&& isToManyAssociationWithinEmbeddableCollection(propertyHolder) ) {
-			String ann = oneToManyAnn != null ? "'@OneToMany'" : manyToManyAnn !=null ? "'@ManyToMany'" : "'@ElementCollection'";
-			throw new AnnotationException( "Property '" + getPath(propertyHolder, inferredData) +
-					"' belongs to an '@Embeddable' class that is contained in an '@ElementCollection' and may not be a " + ann );
+			OneToMany oneToMany,
+			ManyToMany manyToMany,
+			ElementCollection elementCollection) {
+		if ( ( oneToMany != null || manyToMany != null || elementCollection != null )
+				&& isToManyAssociationWithinEmbeddableCollection( propertyHolder ) ) {
+			throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData ) +
+					"' belongs to an '@Embeddable' class that is contained in an '@ElementCollection' and may not be a "
+					+ annotationName( oneToMany, manyToMany, elementCollection ));
 		}
 
 		if ( property.isAnnotationPresent( OrderColumn.class )
-				&& manyToManyAnn != null && !manyToManyAnn.mappedBy().isEmpty() ) {
-			throw new AnnotationException("Collection '" + getPath(propertyHolder, inferredData) +
+				&& manyToMany != null && !manyToMany.mappedBy().isEmpty() ) {
+			throw new AnnotationException("Collection '" + getPath( propertyHolder, inferredData ) +
 					"' is the unowned side of a bidirectional '@ManyToMany' and may not have an '@OrderColumn'");
 		}
+
+		if ( manyToMany != null || elementCollection != null ) {
+			if ( property.isAnnotationPresent( JoinColumn.class ) || property.isAnnotationPresent( JoinColumns.class ) ) {
+				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
+						+ "' is a " + annotationName( oneToMany, manyToMany, elementCollection )
+						+ " and is directly annotated '@JoinColumn'"
+						+ " (specify '@JoinColumn' inside '@JoinTable' or '@CollectionTable')" );
+			}
+		}
+	}
+
+	private static String annotationName(OneToMany oneToMany, ManyToMany manyToMany, ElementCollection elementCollection) {
+		return oneToMany != null ? "'@OneToMany'" : manyToMany != null ? "'@ManyToMany'" : "'@ElementCollection'";
 	}
 
 	private static IndexColumn getIndexColumn(

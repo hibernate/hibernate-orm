@@ -170,6 +170,7 @@ class IndexBinder {
 		if ( unique && !hasFormula ) {
 			final String keyName = getImplicitNamingStrategy().determineUniqueKeyName( source ).render( getDialect() );
 			final UniqueKey uniqueKey = table.getOrCreateUniqueKey( keyName );
+			uniqueKey.setExplicit( true );
 			uniqueKey.setNameExplicit( nameExplicit );
 			for ( int i = 0; i < columns.length; i++ ) {
 				uniqueKey.addColumn( (Column) columns[i], orderings != null ? orderings[i] : null );

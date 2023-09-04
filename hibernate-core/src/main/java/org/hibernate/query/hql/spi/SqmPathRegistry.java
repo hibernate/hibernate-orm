@@ -9,6 +9,10 @@ package org.hibernate.query.hql.spi;
 import java.util.function.Function;
 
 import org.hibernate.Incubating;
+import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -31,6 +35,17 @@ public interface SqmPathRegistry {
 	 * Register an SqmPath
 	 */
 	void register(SqmPath<?> sqmPath);
+
+	/**
+	 * Used with {@linkplain JpaCompliance#isJpaQueryComplianceEnabled() JPA compliance}
+	 * to treat secondary query roots as cross-joins.  Here we will replace the {@code sqmRoot}
+	 * with the {@code sqmJoin}
+	 *
+	 * @apiNote Care should be taken when calling this method to ensure that nothing
+	 * has used the previous registration between its registration and this call.
+	 * Generally, most callers want {@link #register(SqmPath)} instead.
+	 */
+	<E> void replace(SqmEntityJoin<E> sqmJoin, SqmRoot<E> sqmRoot);
 
 	/**
 	 * Find a SqmFrom by its identification variable (alias).

@@ -46,9 +46,11 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 				final SqmRoot<?> root = pathRoot.findRoot();
 				final SqmRoot<?> joinRoot = sqmJoin.findRoot();
 				if ( root != joinRoot ) {
-					// The root of a path within a join condition doesn't have the same root as the current join we are processing.
-					// The aim of this check is to prevent uses of different "spaces" i.e. `from A a, B b join b.id = a.id` would be illegal
-					SqmCreationProcessingState processingState = getCreationState().getCurrentProcessingState();
+					// The root of a path within a join condition doesn't have the same root as the
+					// current join we are processing.
+					// The aim of this check is to prevent uses of different roots i.e.
+					// `from A a, B b join C c c.id = a.id` would be illegal
+					final SqmCreationProcessingState processingState = getCreationState().getCurrentProcessingState();
 					// First, we need to find out if the current join is part of current processing query
 					final SqmQuery<?> currentProcessingQuery = processingState.getProcessingQuery();
 					if ( currentProcessingQuery instanceof SqmSelectQuery<?> ) {
@@ -74,6 +76,7 @@ public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsum
 						validateAsRootOnParentQueryClosure( pathRoot, root, processingState );
 						return;
 					}
+
 					throw new SemanticException(
 							String.format(
 									Locale.ROOT,

@@ -337,7 +337,15 @@ public class Table implements Serializable, ContributableDatabaseObject {
 
 	public Map<String, UniqueKey> getUniqueKeys() {
 		cleanseUniqueKeyMapIfNeeded();
-		return unmodifiableMap( uniqueKeys );
+		return getRawUniqueKeys();
+	}
+
+	public Map<String, UniqueKey> getRawUniqueKeys() {
+		return unmodifiableMap(uniqueKeys);
+	}
+
+	public boolean removeUniqueKey(String uniqueKeyName) {
+		return uniqueKeys.remove(uniqueKeyName) != null;
 	}
 
 	private int sizeOfUniqueKeyMapOnLastCleanse;

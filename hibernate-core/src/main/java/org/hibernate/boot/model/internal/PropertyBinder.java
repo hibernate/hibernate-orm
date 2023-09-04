@@ -62,6 +62,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
+import org.hibernate.mapping.Table;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
@@ -527,6 +528,10 @@ public class PropertyBinder {
 						+ "' is annotated '@OptimisticLock(excluded=true)' and '@EmbeddedId'" );
 			}
 		}
+	}
+
+	static String getNaturalIDUniqueKeyName(Table table) {
+		return "UK_" + hashedName( table.getName() + "_NaturalID" );
 	}
 
 	/**
@@ -1247,13 +1252,13 @@ public class PropertyBinder {
 		final NaturalId naturalId = property.getAnnotation( NaturalId.class );
 		if ( naturalId != null ) {
 			if ( joinColumns != null ) {
-				final String keyName = "UK_" + hashedName( joinColumns.getTable().getName() + "_NaturalID" );
+				final String keyName = getNaturalIDUniqueKeyName(joinColumns.getTable());
 				for ( AnnotatedColumn column : joinColumns.getColumns() ) {
 					column.addUniqueKey( keyName, inSecondPass );
 				}
 			}
 			else {
-				final String keyName = "UK_" + hashedName( columns.getTable().getName() + "_NaturalID" );
+				final String keyName = getNaturalIDUniqueKeyName(columns.getTable());
 				for ( AnnotatedColumn column : columns.getColumns() ) {
 					column.addUniqueKey( keyName, inSecondPass );
 				}

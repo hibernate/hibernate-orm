@@ -994,6 +994,10 @@ public class EntityBinder {
 				missingIdProperties.remove( propertyName );
 			}
 		}
+		// As last general second pass we remove duplicated NaturalID unique constraint in case
+		//	a user has defined a custom one with containing only NaturalID (even composite)
+		final InvestigateNaturalIDUniqueKey secondPass = new InvestigateNaturalIDUniqueKey(persistentClass.getTable());
+		context.getMetadataCollector().addSecondPass(secondPass);
 
 		if ( !missingIdProperties.isEmpty() ) {
 			throw new AnnotationException( "Entity '" + persistentClass.getEntityName()

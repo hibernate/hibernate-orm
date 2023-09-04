@@ -12,10 +12,10 @@ The four basic ways to obtain an instance of Hibernate are shown in the followin
 | Using the standard JPA-defined XML, and the operation `Persistence.createEntityManagerFactory()`
 | Usually chosen when portability between JPA implementations is important.
 
-| Using the `Configuration` class to construct a `SessionFactory`
+| Using the link:{doc-javadoc-url}org/hibernate/cfg/Configuration.html[`Configuration`] class to construct a `SessionFactory`
 | When portability between JPA implementations is not important, this option is quicker, adds some flexibility and saves a typecast.
 
-| Using the more complex APIs defined in `org.hibernate.boot`
+| Using the more complex APIs defined in link:{doc-javadoc-url}org/hibernate/boot/package-summary.html[`org.hibernate.boot`]
 | Used primarily by framework integrators, this option is outside the scope of this document.
 
 | By letting the container take care of the bootstrap process and of injecting the `SessionFactory` or `EntityManagerFactory`
@@ -204,7 +204,7 @@ EntityManagerFactory entityManagerFactory =
 [[configuration-api]]
 === Configuration using Hibernate API
 
-Alternatively, the venerable class `org.hibernate.cfg.Configuration` allows an instance of Hibernate to be configured in Java code:
+Alternatively, the venerable class link:{doc-javadoc-url}org/hibernate/cfg/Configuration.html[`Configuration`] allows an instance of Hibernate to be configured in Java code.
 
 [source,java]
 ----
@@ -263,7 +263,7 @@ hibernate.highlight_sql=true
 [[basic-configuration-settings]]
 === Basic configuration settings
 
-The class `org.hibernate.cfg.AvailableSettings` enumerates all the configuration properties understood by Hibernate.
+The class link:{doc-javadoc-url}org/hibernate/cfg/AvailableSettings.html[`AvailableSettings`] enumerates all the configuration properties understood by Hibernate.
 
 Of course, we're not going to cover every useful configuration setting in this chapter.
 Instead, we'll mention the ones you need to get started, and come back to some other important settings later, especially when we talk about performance tuning.
@@ -379,7 +379,7 @@ As we mentioned <<testing,earlier>>, it can also be useful to control schema exp
 [TIP]
 // .Programmatic schema export
 ====
-The `SchemaManager` API allows programmatic control over schema export:
+The link:{doc-javadoc-url}org/hibernate/relational/SchemaManager.html[`SchemaManager`] API allows programmatic control over schema export:
 
 [source,java]
 sessionFactory.getSchemaManager().exportMappedObjects(true);

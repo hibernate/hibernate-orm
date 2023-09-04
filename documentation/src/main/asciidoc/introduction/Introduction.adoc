@@ -54,8 +54,8 @@ We're all especially grateful to Steve, who has led the project for many years, 
 We can think of the API of Hibernate in terms of three basic elements:
 
 - an implementation of the JPA-defined APIs, most importantly, of the interfaces `EntityManagerFactory` and `EntityManager`, and of the JPA-defined O/R mapping annotations,
-- a _native API_ exposing the full set of available functionality, centered around the interfaces `SessionFactory`, which extends `EntityManagerFactory`, and `Session`, which extends `EntityManager`, and
-- a set of _mapping annotations_ which augment the O/R mapping annotations defined by JPA, and which may be used with the JPA-defined interfaces, or with the native API.
+- a _native API_ exposing the full set of available functionality, centered around the interfaces link:{doc-javadoc-url}org/hibernate/SessionFactory.html[`SessionFactory`], which extends `EntityManagerFactory`, and link:{doc-javadoc-url}org/hibernate/Session.html[`Session`], which extends `EntityManager`, and
+- a set of link:{doc-javadoc-url}org/hibernate/annotations/package-summary.html[_mapping annotations_] which augment the O/R mapping annotations defined by JPA, and which may be used with the JPA-defined interfaces, or with the native API.
 
 Hibernate also offers a range of SPIs for frameworks and libraries which extend or integrate with Hibernate, but we're not interested in any of that stuff here.
 
@@ -448,7 +448,7 @@ public class BookResource {
 Indeed, we might also _finish_ with something like that—it's quite hard to identify anything concretely wrong with the code above, and for such a simple case it seems really difficult to justify making this code more complicated by introducing additional objects.
 
 One very nice aspect of this code, which we wish to draw your attention to, is that session and transaction management is handled by generic "framework" code, just as we already recommended above.
-In this case, we're using the `fromTransaction()` method, which happens to come built in to Hibernate.
+In this case, we're using the link:{doc-javadoc-url}org/hibernate/SessionFactory.html#fromTransaction(java.util.function.Function)[`fromTransaction()`] method, which happens to come built in to Hibernate.
 But you might prefer to use something else, for example:
 
 - in a container environment like Jakarta EE or Quarkus, _container-managed transactions_ and _container-managed persistence contexts_, or
@@ -625,7 +625,7 @@ configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
                           Action.SPEC_ACTION_DROP_AND_CREATE);
 ----
 
-Alternatively, in Hibernate 6, we may use the new `SchemaManager` API to export the schema, just as we did <<main-hibernate,above>>.
+Alternatively, in Hibernate 6, we may use the new link:{doc-javadoc-url}org/hibernate/relational/SchemaManager.html[`SchemaManager`] API to export the schema, just as we did <<main-hibernate,above>>.
 
 [source,java]
 ----

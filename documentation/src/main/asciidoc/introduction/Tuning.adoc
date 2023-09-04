@@ -419,7 +419,7 @@ The `@Cache` annotation must be specified on the _root class_ of an entity inher
 It's an error to place it on a subclass entity.
 ====
 
-The `@Cache` annotation always specifies a `CacheConcurrencyStrategy`, a policy governing access to the second-level cache by concurrent transactions.
+The `@Cache` annotation always specifies a link:{doc-javadoc-url}org/hibernate/annotations/CacheConcurrencyStrategy.html[`CacheConcurrencyStrategy`], a policy governing access to the second-level cache by concurrent transactions.
 
 .Cache concurrency
 [%breakable,cols="20,30,~"]
@@ -838,13 +838,13 @@ And if you find yourself thinking you _do_ need them in a certain situation, you
 [[stateless-sessions]]
 === Stateless sessions
 
-An arguably-underappreciated feature of Hibernate is the `StatelessSession` interface, which provides a command-oriented, more bare-metal approach to interacting with the database.
+An arguably-underappreciated feature of Hibernate is the link:{doc-javadoc-url}org/hibernate/StatelessSession.html[`StatelessSession`] interface, which provides a command-oriented, more bare-metal approach to interacting with the database.
 
-You may obtain a reactive stateless session from the `SessionFactory`:
+You may obtain a stateless session from the `SessionFactory`:
 
 [source, JAVA, indent=0]
 ----
-Stage.StatelessSession ss = getSessionFactory().openStatelessSession();
+StatelessSession ss = getSessionFactory().openStatelessSession();
 ----
 
 A stateless session:
@@ -960,7 +960,7 @@ We may ask Hibernate to collect statistics about its activity by setting this co
 | `hibernate.generate_statistics` | `true` to enable collection of statistics
 |===
 
-The statistics are exposed by the `Statistics` object:
+The statistics are exposed by the link:{doc-javadoc-url}org/hibernate/stat/Statistics.html[`Statistics`] object:
 
 [source,java]
 ----

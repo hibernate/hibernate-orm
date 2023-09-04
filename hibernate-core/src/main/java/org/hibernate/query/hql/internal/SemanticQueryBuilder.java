@@ -62,7 +62,6 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.SyntaxException;
-import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
@@ -90,6 +89,7 @@ import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.StrictJpaComplianceViolation;
 import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.TerminalPathException;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.UnknownEntityException;
@@ -214,12 +214,12 @@ import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
-
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.ObjectJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
+
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.criteria.Predicate;
@@ -237,7 +237,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.hibernate.grammars.hql.HqlParser.ELEMENTS;
 import static org.hibernate.grammars.hql.HqlParser.EXCEPT;
-import static org.hibernate.grammars.hql.HqlParser.IDENTIFIER;
 import static org.hibernate.grammars.hql.HqlParser.INDICES;
 import static org.hibernate.grammars.hql.HqlParser.INTERSECT;
 import static org.hibernate.grammars.hql.HqlParser.ListaggFunctionContext;
@@ -245,6 +244,7 @@ import static org.hibernate.grammars.hql.HqlParser.OnOverflowClauseContext;
 import static org.hibernate.grammars.hql.HqlParser.PLUS;
 import static org.hibernate.grammars.hql.HqlParser.UNION;
 import static org.hibernate.internal.util.QuotingHelper.unquoteStringLiteral;
+import static org.hibernate.query.hql.internal.SqmTreeCreationHelper.extractJpaCompliantAlias;
 import static org.hibernate.query.sqm.TemporalUnit.DATE;
 import static org.hibernate.query.sqm.TemporalUnit.DAY_OF_MONTH;
 import static org.hibernate.query.sqm.TemporalUnit.DAY_OF_WEEK;
@@ -451,11 +451,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmRoot<R> visitTargetEntity(HqlParser.TargetEntityContext dmlTargetContext) {
-		final HqlParser.VariableContext variable = dmlTargetContext.variable();
 		//noinspection unchecked
 		return new SqmRoot<>(
 				(EntityDomainType<R>) visitEntityName( dmlTargetContext.entityName() ),
-				variable == null ? null : applyJpaCompliance( visitVariable( variable ) ),
+				extractAlias( dmlTargetContext.variable() ),
 				false,
 				creationContext.getNodeBuilder()
 		);
@@ -1307,9 +1306,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmSelection<?> visitSelection(HqlParser.SelectionContext ctx) {
-		final String resultIdentifier = ctx.variable() == null ? null
-				: applyJpaCompliance( visitVariable( ctx.variable() ) );
 		final SqmSelectableNode<?> selectableNode = visitSelectableNode( ctx );
+		final String resultIdentifier = extractJpaCompliantAlias( ctx.variable(), this );
 
 		final SqmSelection<?> selection = new SqmSelection<>(
 				selectableNode,
@@ -1419,7 +1417,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmDynamicInstantiationArgument<?> visitInstantiationArgument(HqlParser.InstantiationArgumentContext ctx) {
 		final String alias;
 		if ( ctx.getChildCount() > 1 ) {
-			alias = visitVariable( (HqlParser.VariableContext) ctx.getChild( ctx.getChildCount() - 1 ) );
+			alias = extractAlias( (HqlParser.VariableContext) ctx.getChild( ctx.getChildCount() - 1 ) );
 		}
 		else {
 			alias = null;
@@ -1880,16 +1878,34 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmFromClause visitFromClause(HqlParser.FromClauseContext parserFromClause) {
-		final List<HqlParser.EntityWithJoinsContext> joins = parserFromClause.entityWithJoins();
-		final SqmFromClause fromClause = new SqmFromClause( joins.size() );
-		currentQuerySpec().setFromClause( fromClause ); //have to do this here because visitEntityWithJoins() needs it
-		for ( HqlParser.EntityWithJoinsContext join : joins ) {
-			final SqmRoot<?> sqmRoot = visitEntityWithJoins( join );
-			// Correlations are implicitly added to the from clause
-			if ( !( sqmRoot instanceof SqmCorrelation<?, ?> ) ) {
-				fromClause.addRoot( sqmRoot );
+		final List<HqlParser.EntityWithJoinsContext> roots = parserFromClause.entityWithJoins();
+		final SqmFromClause fromClause = new SqmFromClause( roots.size() );
+
+		//have to do this here because visiting the from-elements needs it
+		currentQuerySpec().setFromClause( fromClause );
+
+		if ( creationOptions.useStrictJpaCompliance() && roots.size() > 1 ) {
+			// for multiple roots, JPA says that the secondary roots should be
+			// treated with semantics effectively akin to CROSS joins
+			// (specifically in regard to alias scoping and join ordering).
+			final SqmRoot<?> sqmRoot = visitEntityWithJoins( roots.get( 0 ) );
+			fromClause.addRoot( sqmRoot );
+
+			for ( int i = 1; i < roots.size(); i++ ) {
+				final HqlParser.EntityWithJoinsContext secondaryRoot = roots.get( i );
+				SqmTreeCreationHelper.handleRootAsCrossJoin( secondaryRoot, sqmRoot, this );
 			}
 		}
+		else {
+			for ( HqlParser.EntityWithJoinsContext root : roots ) {
+				final SqmRoot<?> sqmRoot = visitEntityWithJoins( root );
+				// Correlations are implicitly added to the from-clause
+				if ( !( sqmRoot instanceof SqmCorrelation<?, ?> ) ) {
+					fromClause.addRoot( sqmRoot );
+				}
+			}
+		}
+
 		return fromClause;
 	}
 
@@ -1920,7 +1936,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		final EntityDomainType<?> entityDescriptor = creationContext.getJpaMetamodel().getHqlEntityReference( name );
 
-		final String alias = applyJpaCompliance( visitVariable( ctx.variable() ) );
+		final String alias = extractAlias( ctx.variable() );
 
 		final SqmCreationProcessingState processingState = processingStateStack.getCurrent();
 		final SqmPathRegistry pathRegistry = processingState.getPathRegistry();
@@ -2024,7 +2040,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		}
 
 		final SqmSubQuery<?> subQuery = (SqmSubQuery<?>) ctx.subquery().accept( this );
-		final String alias = applyJpaCompliance( visitVariable( ctx.variable() ) );
+		final String alias = extractAlias( ctx.variable() );
 		final SqmRoot<?> sqmRoot = new SqmDerivedRoot<>( subQuery, alias );
 		processingStateStack.getCurrent().getPathRegistry().register( sqmRoot );
 		return sqmRoot;
@@ -2032,62 +2048,15 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public String visitVariable(HqlParser.VariableContext ctx) {
-		if ( ctx == null ) {
-			return null;
-		}
-		final ParseTree lastChild = ctx.getChild( ctx.getChildCount() - 1 );
-		if ( lastChild instanceof HqlParser.IdentifierContext ) {
-			final HqlParser.IdentifierContext identifierContext = (HqlParser.IdentifierContext) lastChild;
-			// in this branch, the alias could be a reserved word ("keyword as identifier")
-			// which JPA disallows...
-			if ( getCreationOptions().useStrictJpaCompliance() ) {
-				final Token identificationVariableToken = identifierContext.getStart();
-				if ( identificationVariableToken.getType() != IDENTIFIER ) {
-					throw new StrictJpaComplianceViolation(
-							String.format(
-									Locale.ROOT,
-									"Strict JPQL compliance was violated : %s [%s]",
-									StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS.description(),
-									identificationVariableToken.getText()
-							),
-							StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS
-					);
-				}
-			}
-			return visitIdentifier( identifierContext );
-		}
-		else {
-			final HqlParser.NakedIdentifierContext identifierContext = (HqlParser.NakedIdentifierContext) lastChild;
-			// in this branch, the alias could be a reserved word ("keyword as identifier")
-			// which JPA disallows...
-			if ( getCreationOptions().useStrictJpaCompliance() ) {
-				final Token identificationVariableToken = identifierContext.getStart();
-				if ( identificationVariableToken.getType() != IDENTIFIER ) {
-					throw new StrictJpaComplianceViolation(
-							String.format(
-									Locale.ROOT,
-									"Strict JPQL compliance was violated : %s [%s]",
-									StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS.description(),
-									identificationVariableToken.getText()
-							),
-							StrictJpaComplianceViolation.Type.RESERVED_WORD_USED_AS_ALIAS
-					);
-				}
-			}
-			return visitNakedIdentifier( identifierContext );
-		}
+		return extractAlias( ctx );
 	}
 
-	private String applyJpaCompliance(String text) {
-		if ( text == null ) {
-			return null;
-		}
+	protected String extractAlias(HqlParser.VariableContext ctx) {
+		return SqmTreeCreationHelper.extractAlias( ctx, this );
+	}
 
-		if ( getCreationOptions().useStrictJpaCompliance() ) {
-			return text.toLowerCase( Locale.getDefault() );
-		}
-
-		return text;
+	protected String applyJpaCompliance(String text) {
+		return SqmTreeCreationHelper.applyJpaCompliance( text, this );
 	}
 
 	@Override
@@ -2095,7 +2064,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		throw new UnsupportedOperationException( "Unexpected call to #visitCrossJoin, see #consumeCrossJoin" );
 	}
 
-	private <T> void consumeCrossJoin(HqlParser.CrossJoinContext parserJoin, SqmRoot<T> sqmRoot) {
+	protected <T> void consumeCrossJoin(HqlParser.CrossJoinContext parserJoin, SqmRoot<T> sqmRoot) {
 		final String name = getEntityName( parserJoin.entityName() );
 
 		SqmTreeCreationLogger.LOGGER.debugf( "Handling root path - %s", name );
@@ -2106,8 +2075,11 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( entityDescriptor instanceof SqmPolymorphicRootDescriptor ) {
 			throw new SemanticException( "Unmapped polymorphic reference cannot be used as a target of 'cross join'" );
 		}
-		final SqmCrossJoin<T> join =
-				new SqmCrossJoin<>( entityDescriptor, visitVariable( parserJoin.variable() ), sqmRoot );
+		final SqmCrossJoin<T> join = new SqmCrossJoin<>(
+				entityDescriptor,
+				extractAlias( parserJoin.variable() ),
+				sqmRoot
+		);
 
 		processingStateStack.getCurrent().getPathRegistry().register( join );
 
@@ -2123,7 +2095,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	protected <X> void consumeJoin(HqlParser.JoinContext parserJoin, SqmRoot<X> sqmRoot) {
 		final SqmJoinType joinType = getSqmJoinType( parserJoin.joinType() );
 		final HqlParser.JoinTargetContext qualifiedJoinTargetContext = parserJoin.joinTarget();
-		final String alias = visitVariable( getVariable( qualifiedJoinTargetContext ) );
+		final String alias = extractAlias( getVariable( qualifiedJoinTargetContext ) );
 		final boolean fetch = parserJoin.FETCH() != null;
 
 		if ( fetch && processingStateStack.depth() > 1 ) {
@@ -2246,7 +2218,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	 * Deprecated syntax dating back to EJB-QL prior to EJB 3, required by JPA, never documented in Hibernate
 	 */
 	protected void consumeJpaCollectionJoin(HqlParser.JpaCollectionJoinContext ctx, SqmRoot<?> sqmRoot) {
-		final String alias = visitVariable( ctx.variable() );
+		final String alias = extractAlias( ctx.variable() );
 		dotIdentifierConsumerStack.push(
 				// According to JPA spec 4.4.6 this is an inner join
 				new QualifiedJoinPathConsumer( sqmRoot, SqmJoinType.INNER, false, alias, this )

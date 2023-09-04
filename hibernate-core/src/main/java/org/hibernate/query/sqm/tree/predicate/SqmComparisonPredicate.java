@@ -6,13 +6,17 @@
  */
 package org.hibernate.query.sqm.tree.predicate;
 
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.internal.QueryHelper;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
+import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
+
+import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 
 /**
  * @author Steve Ebersole
@@ -41,6 +45,8 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		this.rightHandExpression = rightHandExpression;
 		this.operator = operator;
 
+		assertComparable( leftHandExpression, rightHandExpression, nodeBuilder.getSessionFactory() );
+
 		final SqmExpressible<?> expressibleType = QueryHelper.highestPrecedenceType(
 				leftHandExpression.getExpressible(),
 				rightHandExpression.getExpressible()
@@ -55,6 +61,7 @@ public class SqmComparisonPredicate extends AbstractNegatableSqmPredicate {
 		this.leftHandExpression = affirmativeForm.leftHandExpression;
 		this.rightHandExpression = affirmativeForm.rightHandExpression;
 		this.operator = affirmativeForm.operator;
+		assertComparable( leftHandExpression, rightHandExpression, nodeBuilder().getSessionFactory() );
 	}
 
 	@Override

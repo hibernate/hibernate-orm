@@ -256,7 +256,6 @@ import static org.hibernate.query.sqm.TemporalUnit.TIMEZONE_HOUR;
 import static org.hibernate.query.sqm.TemporalUnit.TIMEZONE_MINUTE;
 import static org.hibernate.query.sqm.TemporalUnit.WEEK_OF_MONTH;
 import static org.hibernate.query.sqm.TemporalUnit.WEEK_OF_YEAR;
-import static org.hibernate.query.sqm.internal.TypecheckUtil.assertComparable;
 import static org.hibernate.type.descriptor.DateTimeUtils.DATE_TIME;
 import static org.hibernate.type.spi.TypeConfiguration.isJdbcTemporalType;
 
@@ -2441,7 +2440,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				right = r;
 			}
 		}
-		assertComparable( left, right, creationContext.getNodeBuilder().getSessionFactory() );
 		return new SqmComparisonPredicate(
 				left,
 				comparisonOperator,
@@ -2556,10 +2554,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmPredicate visitMemberOfPredicate(HqlParser.MemberOfPredicateContext ctx) {
 		final boolean negated = ctx.NOT() != null;
 		final SqmPath<?> sqmPluralPath = consumeDomainPath( ctx.path() );
-		if ( sqmPluralPath.getReferencedPathSource() instanceof PluralPersistentAttribute ) {
+		if ( sqmPluralPath instanceof SqmPluralValuedSimplePath ) {
 			return new SqmMemberOfPredicate(
 					(SqmExpression<?>) ctx.expression().accept( this ),
-					sqmPluralPath,
+					(SqmPluralValuedSimplePath<?>) sqmPluralPath,
 					negated,
 					creationContext.getNodeBuilder()
 			);
@@ -2636,7 +2634,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		else if ( inListContext instanceof HqlParser.SubqueryInListContext ) {
 			final HqlParser.SubqueryInListContext subQueryOrParamInListContext = (HqlParser.SubqueryInListContext) inListContext;
 			final SqmSubQuery<?> subquery = visitSubquery( subQueryOrParamInListContext.subquery() );
-			assertComparable( testExpression, subquery, creationContext.getNodeBuilder().getSessionFactory() );
 			return new SqmInSubQueryPredicate(
 					testExpression,
 					subquery,

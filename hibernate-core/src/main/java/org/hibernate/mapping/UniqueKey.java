@@ -23,6 +23,7 @@ import static org.hibernate.internal.util.StringHelper.isNotEmpty;
 public class UniqueKey extends Constraint {
 	private final Map<Column, String> columnOrderMap = new HashMap<>();
 	private boolean nameExplicit; // true when the constraint name was explicitly specified by @UniqueConstraint annotation
+	private boolean explicit; // true when the constraint was explicitly specified by @UniqueConstraint annotation
 
 	@Override @Deprecated(since="6.2", forRemoval = true)
 	public String sqlConstraintString(
@@ -61,6 +62,14 @@ public class UniqueKey extends Constraint {
 
 	public void setNameExplicit(boolean nameExplicit) {
 		this.nameExplicit = nameExplicit;
+	}
+
+	public boolean isExplicit() {
+		return explicit;
+	}
+
+	public void setExplicit(boolean explicit) {
+		this.explicit = explicit;
 	}
 
 	public boolean hasNullableColumn() {

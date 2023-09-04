@@ -23,7 +23,7 @@ public class NaturalIdUniqueConstraintNameTest extends BaseCoreFunctionalTestCas
 
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] { City.class };
+		return new Class<?>[] { City1.class, City2.class };
 	}
 
 	@Test
@@ -32,7 +32,7 @@ public class NaturalIdUniqueConstraintNameTest extends BaseCoreFunctionalTestCas
 				.addAnnotatedClasses( getAnnotatedClasses() )
 				.buildMetadata();
 
-		Map<String, UniqueKey> uniqueKeys = metadata.getEntityBinding( City.class.getName() )
+		Map<String, UniqueKey> uniqueKeys = metadata.getEntityBinding( City1.class.getName() )
 				.getTable()
 				.getUniqueKeys();
 
@@ -44,9 +44,65 @@ public class NaturalIdUniqueConstraintNameTest extends BaseCoreFunctionalTestCas
 		assertEquals( "UK_zipCode_city", uniqueKey.getName() );
 	}
 
-	@Entity(name = "City")
+	@Test
+	public void testNaturalIdUsesExplicitColumns() {
+		Metadata metadata = new MetadataSources( serviceRegistry() )
+				.addAnnotatedClasses( getAnnotatedClasses() )
+				.buildMetadata();
+
+		Map<String, UniqueKey> uniqueKeys = metadata.getEntityBinding( City2.class.getName() )
+				.getTable()
+				.getUniqueKeys();
+
+		// The unique key should not be duplicated for NaturalID + UniqueConstraint.
+		assertEquals( 1, uniqueKeys.size() );
+
+		// The unique key should use the name specified in UniqueConstraint.
+		UniqueKey uniqueKey = uniqueKeys.values().iterator().next();
+		assertEquals( "zipCode", uniqueKey.getColumns().get( 0 ).getName() );
+		assertEquals( "city", uniqueKey.getColumns().get( 1 ).getName() );
+	}
+
+	@Entity(name = "City1")
 	@Table(uniqueConstraints = @UniqueConstraint(name = "UK_zipCode_city", columnNames = { "zipCode", "city" }))
-	public static class City {
+	public static class City1 {
+
+		@Id
+		private Long id;
+
+		@NaturalId
+		private String zipCode;
+		@NaturalId
+		private String city;
+
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public String getZipCode() {
+			return zipCode;
+		}
+
+		public void setZipCode(String zipCode) {
+			this.zipCode = zipCode;
+		}
+
+		public String getCity() {
+			return city;
+		}
+
+		public void setCity(String city) {
+			this.city = city;
+		}
+	}
+
+	@Entity(name = "City2")
+	@Table(uniqueConstraints = @UniqueConstraint(columnNames = { "zipCode", "city" }))
+	public static class City2 {
 
 		@Id
 		private Long id;

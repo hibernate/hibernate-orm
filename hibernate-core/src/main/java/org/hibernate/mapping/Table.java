@@ -377,21 +377,24 @@ public class Table implements Serializable, ContributableDatabaseObject {
 					final UniqueKey uniqueKey = uniqueKeyEntry.getValue();
 					boolean removeIt = false;
 
-					// condition 1 : check against other unique keys
-					for ( UniqueKey otherUniqueKey : uniqueKeys.values() ) {
-						// make sure it's not the same unique key
-						if ( uniqueKeyEntry.getValue() == otherUniqueKey ) {
-							continue;
-						}
-						if ( otherUniqueKey.getColumns().containsAll( uniqueKey.getColumns() )
-								&& uniqueKey.getColumns().containsAll( otherUniqueKey.getColumns() ) ) {
-							removeIt = true;
-							break;
+					// Never remove explicit unique keys based on column matching
+					if ( !uniqueKey.isExplicit() ) {
+						// condition 1 : check against other unique keys
+						for ( UniqueKey otherUniqueKey : uniqueKeys.values() ) {
+							// make sure it's not the same unique key
+							if ( uniqueKeyEntry.getValue() == otherUniqueKey ) {
+								continue;
+							}
+							if ( otherUniqueKey.getColumns().containsAll( uniqueKey.getColumns() )
+									&& uniqueKey.getColumns().containsAll( otherUniqueKey.getColumns() ) ) {
+								removeIt = true;
+								break;
+							}
 						}
 					}
 
 					// condition 2 : check against pk
-					if ( isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
+					if ( !removeIt && isSameAsPrimaryKeyColumns( uniqueKeyEntry.getValue() ) ) {
 						removeIt = true;
 					}
 

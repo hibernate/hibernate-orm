@@ -1029,6 +1029,7 @@ public class FunctionTests {
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting to binary types")
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL bytea doesn't have a length")
+	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "CockroachDB bytes doesn't have a length")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle cast to raw does not do truncatation")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, minorVersion = 5, reason = "On this version the length of the cast to the parameter appears to be > 2")
 	public void testCastBinaryWithLength(SessionFactoryScope scope) {
@@ -1045,7 +1046,6 @@ public class FunctionTests {
 
 	@Test
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting varchar to binary")
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL bytea doesn't have a length")
 	public void testCastBinaryWithLengthForOracle(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

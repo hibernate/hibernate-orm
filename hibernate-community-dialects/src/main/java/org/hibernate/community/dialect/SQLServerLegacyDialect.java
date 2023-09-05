@@ -300,7 +300,8 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 						"count_big",
 						"+",
 						"varchar(max)",
-						false
+						false,
+						"varbinary(max)"
 				)
 		);
 

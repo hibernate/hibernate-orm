@@ -9,6 +9,8 @@ import org.hibernate.query.Order;
 import org.hibernate.query.Page;
 import org.hibernate.query.SelectionQuery;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface Dao {
@@ -98,4 +100,13 @@ public interface Dao {
 
     @Find
     List<Book> sortedBooks(String isbn, Order<? super Book>... order);
+
+    @HQL("select local date")
+    LocalDate localDate();
+
+    @HQL("select local datetime")
+    LocalDateTime localDatetime();
+
+    @HQL("select avg(pages) from Book")
+    double averagePageCount();
 }

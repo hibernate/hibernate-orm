@@ -314,7 +314,8 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 						"count_big",
 						"+",
 						"varchar(max)",
-						false
+						true,
+						"varbinary(max)"
 				)
 		);
 

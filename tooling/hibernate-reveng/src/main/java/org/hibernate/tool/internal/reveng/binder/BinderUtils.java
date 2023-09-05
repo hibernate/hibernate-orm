@@ -9,7 +9,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.hibernate.FetchMode;
-import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Fetchable;
@@ -48,16 +48,15 @@ public class BinderUtils {
         if( clazz.isVersioned() ) {
             list.add( clazz.getVersion() );
         }
-		Iterator<Property> propertyClosureIterator = clazz.getProperties().iterator();
-        JoinedIterator<Property> iterator = 
-        		new JoinedIterator<Property>( 
-        				list.iterator(), 
-        				propertyClosureIterator);
-        return BinderUtils.makeUnique(iterator, propertyName);
+       JoinedList<Property> joinedList = 
+        		new JoinedList<Property>( 
+        				list, 
+        				clazz.getProperties());
+        return BinderUtils.makeUnique(joinedList.iterator(), propertyName);
     }
  
 	public static String makeUnique(Component clazz, String propertyName) {
-        return BinderUtils.makeUnique(clazz.getPropertyIterator(), propertyName);
+        return BinderUtils.makeUnique(clazz.getProperties().iterator(), propertyName);
     }
     
 	public static void checkColumnForMultipleBinding(Column column) {

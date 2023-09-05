@@ -14,7 +14,7 @@ import org.hibernate.boot.Metadata;
 import org.hibernate.id.PersistentIdentifierGenerator;
 import org.hibernate.id.enhanced.TableGenerator;
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.internal.util.collections.JoinedIterator;
+import org.hibernate.internal.util.collections.JoinedList;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.Component;
@@ -85,7 +85,6 @@ public class EntityPOJOClass extends BasicPOJOClass {
 	}
 
 
-	@SuppressWarnings("unchecked")
 	public String getImplements() {
 		List<String> interfaces = new ArrayList<String>();
 
@@ -127,10 +126,9 @@ public class EntityPOJOClass extends BasicPOJOClass {
 	}
 
 
-	@SuppressWarnings("unchecked")
 	public Iterator<Property> getAllPropertiesIterator(PersistentClass pc) {
 		List<Property> properties = new ArrayList<Property>();
-		List<Iterator<Property>> iterators = new ArrayList<Iterator<Property>>();
+		List<List<Property>> lists = new ArrayList<List<Property>>();
 		if ( pc.getSuperclass() == null ) {
 			// only include identifier for the root class.
 			if ( pc.hasIdentifierProperty() ) {
@@ -138,7 +136,7 @@ public class EntityPOJOClass extends BasicPOJOClass {
 			}
 			else if ( pc.hasEmbeddedIdentifier() ) {
 				Component embeddedComponent = (Component) pc.getIdentifier();
-				iterators.add( embeddedComponent.getPropertyIterator() );
+				lists.add( embeddedComponent.getProperties() );
 			}
 			/*if(clazz.isVersioned() ) { // version is already in property set
 				properties.add(clazz.getVersion() );
@@ -149,27 +147,25 @@ public class EntityPOJOClass extends BasicPOJOClass {
 		//		iterators.add( pc.getPropertyIterator() );
 		// Need to skip <properties> element which are defined via "embedded" components
 		// Best if we could return an intelligent iterator, but for now we just iterate explicitly.
-		Iterator<Property> pit = pc.getProperties().iterator();
-		while(pit.hasNext())
+		List<Property> pl = pc.getProperties();
+		for(Property element : pl)
 		{
-			Property element = pit.next();
 			if ( element.getValue() instanceof Component
 					&& element.getPropertyAccessorName().equals( "embedded" )) {
 				Component component = (Component) element.getValue();
 				// need to "explode" property to get proper sequence in java code.
-				Iterator<Property> embeddedProperty = component.getPropertyIterator();
-				while(embeddedProperty.hasNext()) {
-					properties.add(embeddedProperty.next());
+				List<Property> embeddedProperties = component.getProperties();
+				for(Property p : embeddedProperties) {
+					properties.add(p);
 				}
 			} else {
 				properties.add(element);
 			}
 		}
 
-		iterators.add( properties.iterator() );
+		lists.add(properties);
 
-		Iterator<Property>[] it = (Iterator<Property>[]) iterators.toArray( new Iterator[iterators.size()] );
-		return new SkipBackRefPropertyIterator( new JoinedIterator<Property>( it ) );
+		return new SkipBackRefPropertyIterator( new JoinedList<Property>( lists ).iterator() );
 	}
 
 	public boolean isComponent() {

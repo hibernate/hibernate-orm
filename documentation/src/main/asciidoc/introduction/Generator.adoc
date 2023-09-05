@@ -578,6 +578,12 @@ But when there's just one item in the `select` list, the type of that item shoul
 String getBookTitleByIsbn(String isbn);
 ----
 
+[source,java]
+----
+@HQL("select local datetime")
+LocalDateTime getServerDateTime();
+----
+
 A query which returns a selection list may have a query method which repackages the result as a record, as we saw in <<projection-lists>>.
 
 [source,java]
@@ -640,7 +646,13 @@ An `insert`, `update`, or `delete` query must return `int` or `void`.
 [source,java]
 ----
 @HQL("delete from Book")
-void deleteAllBooks();
+int deleteAllBooks();
+----
+
+[source,java]
+----
+@HQL("update Book set discontinued = true where isbn = :isbn")
+void discontinueBook(String isbn);
 ----
 
 On the other hand, finder methods are currently much more limited.

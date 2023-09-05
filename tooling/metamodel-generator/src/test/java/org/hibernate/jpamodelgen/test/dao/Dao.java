@@ -63,6 +63,24 @@ public interface Dao {
 //    @HQL("from Book where title like :title")
 //    SelectionQuery<Book> findByTitleWithOrderingByVarargs(String title, Order<? super Book>... order);
 
+    @HQL("select count(*) from Book")
+    long countBooks();
+
+    @HQL("select count(*)>1 from Book")
+    boolean booksExist();
+
+    @HQL("delete from Book")
+    int deleteBooks();
+
+    @HQL("select count(*), count(*)>1 from Book")
+    Object[] funnyQueryReturningArray();
+
+    class Record {
+        Record(Long count, Boolean exists) {}
+    }
+    @HQL("select count(*), count(*)>1 from Book")
+    Record funnyQueryReturningRecord();
+
     @HQL("from Book where isbn = :isbn")
     Book findByIsbn(String isbn);
 

@@ -441,11 +441,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void addQueryMethod(ExecutableElement method) {
 		final TypeMirror returnType = method.getReturnType();
 		final TypeKind kind = returnType.getKind();
-		if ( kind == TypeKind.VOID || kind.isPrimitive() ) {
+		if ( kind == TypeKind.VOID ||  kind == TypeKind.ARRAY || kind.isPrimitive() ) {
 			addQueryMethod( method, returnType, null );
 		}
 		else if ( kind == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = ununi((DeclaredType) returnType);
+			final DeclaredType declaredType = ununi( (DeclaredType) returnType );
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 			switch ( typeArguments.size() ) {
@@ -1060,7 +1060,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			else {
 				// TODO: anything more we can do here? e.g. check constructor
-				returnTypeCorrect = true;
+				try {
+					final Class<?> javaResultType = selection.getJavaType();
+					final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( javaResultType.getName() );
+					returnTypeCorrect = context.getTypeUtils().isAssignable( returnType,  typeElement.asType() );
+				}
+				catch (Exception e) {
+					//ignore
+					returnTypeCorrect = true;
+				}
 			}
 			if ( !returnTypeCorrect ) {
 				context.message(method, mirror, value,

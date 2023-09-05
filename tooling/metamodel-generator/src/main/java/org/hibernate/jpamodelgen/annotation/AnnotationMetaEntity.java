@@ -386,15 +386,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			|| isGetter( methodSimpleName, methodParameterTypes, returnType );
 	}
 
-	private static boolean isGetter(Name methodSimpleName, List<? extends TypeMirror> methodParameterTypes, TypeMirror returnType) {
-		return ( methodSimpleName.subSequence(0,3).toString().equals("get")
-				|| methodSimpleName.subSequence(0,2).toString().equals("is") )
+	private static boolean hasPrefix(Name methodSimpleName, String prefix) {
+		return methodSimpleName.length() > prefix.length()
+			&& methodSimpleName.subSequence( 0, prefix.length() ).toString().equals( prefix );
+	}
+
+	private static boolean isGetter(
+			Name methodSimpleName,
+			List<? extends TypeMirror> methodParameterTypes,
+			TypeMirror returnType) {
+		return ( hasPrefix( methodSimpleName, "get" ) || hasPrefix( methodSimpleName,"is" ) )
 			&& methodParameterTypes.isEmpty()
 			&& returnType.getKind() != TypeKind.VOID;
 	}
 
-	private static boolean isSetter(Name methodSimpleName, List<? extends TypeMirror> methodParameterTypes, TypeMirror returnType) {
-		return methodSimpleName.subSequence(0,3).toString().equals("set")
+	private static boolean isSetter(
+			Name methodSimpleName,
+			List<? extends TypeMirror> methodParameterTypes,
+			TypeMirror returnType) {
+		return hasPrefix( methodSimpleName, "set")
 			&& methodParameterTypes.size() == 1
 			&& returnType.getKind() != TypeKind.VOID;
 	}
@@ -905,17 +915,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean fieldMatches(String token, Name fieldName) {
-		return fieldName.contentEquals(token);
+		return fieldName.contentEquals( token );
 	}
 
 	private static boolean getterMatches(String token, Name methodName) {
-		if ( methodName.length() > 3 && methodName.subSequence(0,3).toString().equals("get")) {
-			final String propertyName = decapitalize(methodName.subSequence(3, methodName.length()).toString());
-			return token.equals(propertyName);
+		if ( hasPrefix( methodName, "get" ) ) {
+			return token.equals( decapitalize( methodName.subSequence( 3, methodName.length()).toString() ) );
 		}
-		else if ( methodName.length() > 2 && methodName.subSequence(0,2).toString().equals("is")) {
-			final String propertyName = decapitalize(methodName.subSequence(2, methodName.length()).toString());
-			return token.equals(propertyName);
+		else if ( hasPrefix( methodName, "is" ) ) {
+			return token.equals( decapitalize( methodName.subSequence( 2, methodName.length() ).toString() ) );
 		}
 		else {
 			return false;

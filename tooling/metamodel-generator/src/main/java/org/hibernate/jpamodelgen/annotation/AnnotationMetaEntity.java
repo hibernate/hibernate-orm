@@ -953,10 +953,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								containerType == null ? null : containerType.getQualifiedName().toString(),
 								paramNames,
 								paramTypes,
-								// update/delete/insert query methods must return int or void
-								returnType != null
-										&& returnType.getKind() != TypeKind.DECLARED
-										&& returnType.getKind() != TypeKind.ARRAY,
+								isInsertUpdateDelete( hql ),
 								isNative,
 								dao,
 								sessionType[0],
@@ -974,6 +971,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				checkParameters( method, paramNames, paramTypes, mirror, value, hql );
 			}
 		}
+	}
+
+	private static boolean isInsertUpdateDelete(String hql) {
+		final String trimmed = hql.trim();
+		final String keyword = trimmed.length() > 6 ? trimmed.substring(0, 6) : "";
+		return keyword.equalsIgnoreCase("update")
+			|| keyword.equalsIgnoreCase("delete")
+			|| keyword.equalsIgnoreCase("insert");
 	}
 
 	private void validateHql(

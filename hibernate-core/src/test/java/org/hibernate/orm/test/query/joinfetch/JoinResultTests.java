@@ -121,7 +121,7 @@ public class JoinResultTests {
 	void createTestData(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final Vendor vendor = new Vendor( 1, "ACME", "acme", "Some notes" );
-			final Product product = new Product( 1, UUID.randomUUID(), vendor );
+			final Product product = new Product( 1, UUID.fromString( "53886a8a-7082-4879-b430-25cb94415be8" ), vendor );
 			session.persist( vendor );
 			session.persist( product );
 		} );

@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.model.ast.builder;
 
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.sql.model.ast.TableInsert;

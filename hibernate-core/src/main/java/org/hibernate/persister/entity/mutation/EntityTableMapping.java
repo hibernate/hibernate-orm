@@ -285,7 +285,7 @@ public class EntityTableMapping implements TableMapping {
 		}
 	}
 
-	public static class KeyColumn implements SelectableMapping, TableDetails.KeyColumn {
+	public static class KeyColumn implements TableDetails.KeyColumn {
 		private final String tableName;
 		private final String columnName;
 		private final String writeExpression;

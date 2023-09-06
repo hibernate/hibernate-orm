@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -36,11 +37,14 @@ import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.metamodel.mapping.ordering.OrderByFragmentTranslator;
 import org.hibernate.metamodel.mapping.ordering.TranslationContext;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.collection.mutation.CollectionMutationTarget;
 import org.hibernate.persister.entity.Joinable;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.NavigablePath;
@@ -70,6 +74,9 @@ import org.hibernate.sql.results.graph.collection.internal.EagerCollectionFetch;
 import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollectionFetch;
 
 import org.jboss.logging.Logger;
+
+import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
+import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 
 /**
  * @author Steve Ebersole
@@ -106,6 +113,8 @@ public class PluralAttributeMappingImpl
 	private final CollectionIdentifierDescriptor identifierDescriptor;
 	private final FetchTiming fetchTiming;
 	private final FetchStyle fetchStyle;
+	private final SoftDeleteMapping softDeleteMapping;
+	private Boolean hasSoftDelete;
 
 	private final String bidirectionalAttributeName;
 
@@ -136,7 +145,8 @@ public class PluralAttributeMappingImpl
 			FetchStyle fetchStyle,
 			CascadeStyle cascadeStyle,
 			ManagedMappingType declaringType,
-			CollectionPersister collectionDescriptor) {
+			CollectionPersister collectionDescriptor,
+			MappingModelCreationProcess creationProcess) {
 		super( attributeName, fetchableIndex, declaringType );
 		this.propertyAccess = propertyAccess;
 		this.attributeMetadata = attributeMetadata;
@@ -193,8 +203,11 @@ public class PluralAttributeMappingImpl
 			}
 		};
 
+		softDeleteMapping = resolveSoftDeleteMapping( this, bootDescriptor, getSeparateCollectionTable(), creationProcess.getCreationContext().getDialect() );
+
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 	}
+
 
 	/**
 	 * For Hibernate Reactive
@@ -210,6 +223,8 @@ public class PluralAttributeMappingImpl
 		this.identifierDescriptor = original.identifierDescriptor;
 		this.fetchTiming = original.fetchTiming;
 		this.fetchStyle = original.fetchStyle;
+		this.softDeleteMapping = original.softDeleteMapping;
+		this.hasSoftDelete = original.hasSoftDelete;
 		this.collectionDescriptor = original.collectionDescriptor;
 		this.referencedPropertyName = original.referencedPropertyName;
 		this.mapKeyPropertyName = original.mapKeyPropertyName;
@@ -336,6 +351,16 @@ public class PluralAttributeMappingImpl
 	}
 
 	@Override
+	public SoftDeleteMapping getSoftDeleteMapping() {
+		return softDeleteMapping;
+	}
+
+	@Override
+	public TableDetails getSoftDeleteTableDetails() {
+		return ( (CollectionMutationTarget) getCollectionDescriptor() ).getCollectionTableMapping();
+	}
+
+	@Override
 	public OrderByFragment getOrderByFragment() {
 		return orderByFragment;
 	}
@@ -399,6 +424,39 @@ public class PluralAttributeMappingImpl
 	@Override
 	public boolean hasPartitionedSelectionMapping() {
 		return false;
+	}
+
+	@Override
+	public void applySoftDeleteRestrictions(TableGroup tableGroup, PredicateConsumer predicateConsumer) {
+		if ( !hasSoftDelete() ) {
+			// short-circuit
+			return;
+		}
+
+		if ( getCollectionDescriptor().isOneToMany()
+				|| getCollectionDescriptor().isManyToMany() ) {
+			// see if the associated entity has soft-delete defined
+			final EntityCollectionPart elementDescriptor = (EntityCollectionPart) getElementDescriptor();
+			final EntityMappingType associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
+			final SoftDeleteMapping softDeleteMapping = associatedEntityDescriptor.getSoftDeleteMapping();
+			if ( softDeleteMapping != null ) {
+				final Predicate softDeleteRestriction = SoftDeleteHelper.createNonSoftDeletedRestriction(
+						tableGroup.resolveTableReference( associatedEntityDescriptor.getSoftDeleteTableDetails().getTableName() ),
+						softDeleteMapping
+				);
+				predicateConsumer.applyPredicate( softDeleteRestriction );
+			}
+		}
+
+		// apply the collection's soft-delete mapping, if one
+		final SoftDeleteMapping softDeleteMapping = getSoftDeleteMapping();
+		if ( softDeleteMapping != null ) {
+			final Predicate softDeleteRestriction = SoftDeleteHelper.createNonSoftDeletedRestriction(
+					tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() ),
+					softDeleteMapping
+			);
+			predicateConsumer.applyPredicate( softDeleteRestriction );
+		}
 	}
 
 	@Override
@@ -643,6 +701,7 @@ public class PluralAttributeMappingImpl
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
 		final PredicateCollector predicateCollector = new PredicateCollector();
+
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
@@ -672,12 +731,90 @@ public class PluralAttributeMappingImpl
 				creationState
 		);
 
+		applySoftDeleteRestriction(
+				predicateCollector::applyPredicate,
+				tableGroup,
+				creationState
+		);
+
 		return new TableGroupJoin(
 				navigablePath,
 				determineSqlJoinType( lhs, requestedJoinType, fetched ),
 				tableGroup,
 				predicateCollector.getPredicate()
 		);
+	}
+
+	private boolean hasSoftDelete() {
+		// NOTE : this needs to be done lazily because the associated entity mapping (if one)
+		// does not know its SoftDeleteMapping yet when this is created
+		if ( hasSoftDelete == null ) {
+			if ( softDeleteMapping != null ) {
+				hasSoftDelete = true;
+			}
+			else {
+				if ( getElementDescriptor() instanceof EntityCollectionPart ) {
+					final EntityMappingType associatedEntityMapping = ( (EntityCollectionPart) getElementDescriptor() ).getAssociatedEntityMappingType();
+					hasSoftDelete = associatedEntityMapping.getSoftDeleteMapping() != null;
+				}
+				else {
+					hasSoftDelete = false;
+				}
+			}
+		}
+
+		return hasSoftDelete;
+	}
+
+	private void applySoftDeleteRestriction(
+			Consumer<Predicate> predicateConsumer,
+			TableGroup tableGroup,
+			SqlAstCreationState creationState) {
+		if ( !hasSoftDelete() ) {
+			// short circuit
+			return;
+		}
+
+		if ( getElementDescriptor() instanceof EntityCollectionPart ) {
+			final EntityMappingType entityMappingType = ( (EntityCollectionPart) getElementDescriptor() ).getAssociatedEntityMappingType();
+			final SoftDeleteMapping softDeleteMapping = entityMappingType.getSoftDeleteMapping();
+			if ( softDeleteMapping != null ) {
+				final TableDetails softDeleteTable = entityMappingType.getSoftDeleteTableDetails();
+				predicateConsumer.accept( createNonSoftDeletedRestriction(
+						tableGroup.resolveTableReference( softDeleteTable.getTableName() ),
+						softDeleteMapping,
+						creationState.getSqlExpressionResolver()
+				) );
+			}
+		}
+
+		final SoftDeleteMapping softDeleteMapping = getSoftDeleteMapping();
+		if ( softDeleteMapping != null ) {
+			final TableDetails softDeleteTable = getSoftDeleteTableDetails();
+			predicateConsumer.accept( createNonSoftDeletedRestriction(
+					tableGroup.resolveTableReference( softDeleteTable.getTableName() ),
+					softDeleteMapping,
+					creationState.getSqlExpressionResolver()
+			) );
+		}
+	}
+
+	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, SqlAstJoinType requestedJoinType, boolean fetched) {
+		if ( hasSoftDelete() ) {
+			return SqlAstJoinType.LEFT;
+		}
+
+		if ( requestedJoinType == null ) {
+			if ( fetched ) {
+				return getDefaultSqlAstJoinType( lhs );
+			}
+			else {
+				return SqlAstJoinType.INNER;
+			}
+		}
+		else {
+			return requestedJoinType;
+		}
 	}
 
 	@Override

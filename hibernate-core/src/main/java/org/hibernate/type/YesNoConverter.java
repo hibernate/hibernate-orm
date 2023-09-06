@@ -19,6 +19,7 @@ public class YesNoConverter extends CharBooleanConverter {
 	 * Singleton access
 	 */
 	public static final YesNoConverter INSTANCE = new YesNoConverter();
+
 	private static final String[] VALUES = {"N", "Y"};
 
 	@Override

@@ -50,13 +50,14 @@ import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLDeletes;
 import org.hibernate.annotations.SQLInsert;
 import org.hibernate.annotations.SQLInserts;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
 import org.hibernate.annotations.SQLUpdates;
-import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SecondaryRow;
 import org.hibernate.annotations.SecondaryRows;
 import org.hibernate.annotations.SelectBeforeUpdate;
+import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.Subselect;
 import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.Tables;
@@ -146,6 +147,7 @@ import static org.hibernate.boot.model.internal.PropertyBinder.addElementsOfClas
 import static org.hibernate.boot.model.internal.PropertyBinder.hasIdAnnotation;
 import static org.hibernate.boot.model.internal.PropertyBinder.processElementAnnotations;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
+import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -214,6 +216,7 @@ public class EntityBinder {
 		final InheritanceState inheritanceState = inheritanceStates.get( clazzToProcess );
 		final PersistentClass superEntity = getSuperEntity( clazzToProcess, inheritanceStates, context, inheritanceState );
 		detectedAttributeOverrideProblem( clazzToProcess, superEntity );
+
 		final PersistentClass persistentClass = makePersistentClass( inheritanceState, superEntity, context );
 		final EntityBinder entityBinder = new EntityBinder( clazzToProcess, persistentClass, context );
 		entityBinder.bindEntity();
@@ -233,6 +236,7 @@ public class EntityBinder {
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
 		if ( persistentClass instanceof RootClass ) {
 			collector.addSecondPass( new CreateKeySecondPass( (RootClass) persistentClass ) );
+			bindSoftDelete( clazzToProcess, (RootClass) persistentClass, inheritanceState, context );
 		}
 		if ( persistentClass instanceof Subclass) {
 			assert superEntity != null;
@@ -246,6 +250,51 @@ public class EntityBinder {
 		entityBinder.processComplementaryTableDefinitions();
 		bindCallbacks( clazzToProcess, persistentClass, context );
 		entityBinder.callTypeBinders( persistentClass );
+	}
+
+	private static void bindSoftDelete(
+			XClass xClass,
+			RootClass rootClass,
+			InheritanceState inheritanceState,
+			MetadataBuildingContext context) {
+		// todo (soft-delete) : do we assume all package-level registrations are already available?
+		//		or should this be a "second pass"?
+
+		final SoftDelete softDelete = extractSoftDelete( xClass, rootClass, inheritanceState, context );
+		if ( softDelete == null ) {
+			return;
+		}
+
+		SoftDeleteHelper.bindSoftDeleteIndicator(
+				softDelete,
+				rootClass,
+				rootClass.getRootTable(),
+				context
+		);
+	}
+
+	private static SoftDelete extractSoftDelete(
+			XClass xClass,
+			RootClass rootClass,
+			InheritanceState inheritanceState,
+			MetadataBuildingContext context) {
+		final SoftDelete fromClass = xClass.getAnnotation( SoftDelete.class );
+		if ( fromClass != null ) {
+			return fromClass;
+		}
+
+		MappedSuperclass mappedSuperclass = rootClass.getSuperMappedSuperclass();
+		while ( mappedSuperclass != null ) {
+			// todo (soft-delete) : use XClass for MappedSuperclass? for the time being, just use the Java type
+			final SoftDelete fromMappedSuperclass = mappedSuperclass.getMappedClass().getAnnotation( SoftDelete.class );
+			if ( fromMappedSuperclass != null ) {
+				return fromMappedSuperclass;
+			}
+
+			mappedSuperclass = mappedSuperclass.getSuperMappedSuperclass();
+		}
+
+		return extractFromPackage( SoftDelete.class, xClass, context );
 	}
 
 	private void handleCheckConstraints() {

@@ -16,6 +16,8 @@ import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -71,6 +73,11 @@ public class CollectionBatchLoaderInPredicate
 				jdbcParametersBuilder::add,
 				sessionFactory
 		);
+
+		final QuerySpec querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
+		final TableGroup tableGroup = querySpec.getFromClause().getRoots().get( 0 );
+		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
+
 		this.jdbcParameters = jdbcParametersBuilder.build();
 		assert this.jdbcParameters.size() == this.sqlBatchSize * this.keyColumnCount;
 

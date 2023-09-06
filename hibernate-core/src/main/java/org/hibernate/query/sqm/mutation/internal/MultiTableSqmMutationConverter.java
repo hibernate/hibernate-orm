@@ -185,7 +185,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 		this.parameterResolutionConsumer = parameterResolutionConsumer;
 
 		if ( sqmWhereClause == null || sqmWhereClause.getPredicate() == null ) {
-			return null;
+			return discriminatorPredicate;
 		}
 
 		final SqlAstProcessingState rootProcessingState = getCurrentProcessingState();

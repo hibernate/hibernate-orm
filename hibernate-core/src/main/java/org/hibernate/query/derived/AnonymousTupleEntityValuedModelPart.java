@@ -40,6 +40,7 @@ import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
@@ -679,6 +680,16 @@ public class AnonymousTupleEntityValuedModelPart
 	@Override
 	public EntityRowIdMapping getRowIdMapping() {
 		return delegate.getEntityMappingType().getRowIdMapping();
+	}
+
+	@Override
+	public SoftDeleteMapping getSoftDeleteMapping() {
+		return delegate.getEntityMappingType().getSoftDeleteMapping();
+	}
+
+	@Override
+	public TableDetails getSoftDeleteTableDetails() {
+		return delegate.getEntityMappingType().getSoftDeleteTableDetails();
 	}
 
 	@Override

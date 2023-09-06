@@ -57,7 +57,7 @@ public class FailingAddToBatchTest extends AbstractBatchingTest {
 	}
 
 	@Test
-	@NotImplementedYet( reason = "Still need to work on entity update executors", strict = false )
+	@NotImplementedYet( reason = "Still need to work on entity update executors" )
 	public void testUpdate(EntityManagerFactoryScope scope) {
 		throw new RuntimeException();
 //		final Long id = scope.fromTransaction( (em) -> {
@@ -80,7 +80,7 @@ public class FailingAddToBatchTest extends AbstractBatchingTest {
 	}
 
 	@Test
-	@NotImplementedYet( reason = "Still need to work on entity delete executors", strict = false )
+	@NotImplementedYet( reason = "Still need to work on entity delete executors" )
 	public void testRemove(EntityManagerFactoryScope scope) {
 		throw new RuntimeException();
 //		Long id = scope.fromTransaction( em -> {

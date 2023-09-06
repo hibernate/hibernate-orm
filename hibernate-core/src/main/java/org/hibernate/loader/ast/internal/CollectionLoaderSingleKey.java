@@ -8,7 +8,6 @@ package org.hibernate.loader.ast.internal;
 
 import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityKey;
@@ -19,7 +18,9 @@ import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -64,6 +65,12 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				jdbcParametersBuilder::add,
 				sessionFactory
 		);
+
+		final QuerySpec querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
+		final FromClause fromClause = querySpec.getFromClause();
+		final TableGroup tableGroup = fromClause.getRoots().get( 0 );
+		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
+
 		this.jdbcParameters = jdbcParametersBuilder.build();
 		this.jdbcSelect = sessionFactory.getJdbcServices()
 				.getJdbcEnvironment()

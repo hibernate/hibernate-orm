@@ -46,6 +46,7 @@ import org.hibernate.Remove;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.boot.spi.SessionFactoryOptions;
@@ -147,11 +148,13 @@ import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
+import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.Association;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
@@ -179,6 +182,8 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CompoundNaturalIdMapping;
@@ -203,6 +208,8 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.mutation.DeleteCoordinator;
+import org.hibernate.persister.entity.mutation.DeleteCoordinatorSoft;
+import org.hibernate.persister.entity.mutation.DeleteCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
@@ -262,6 +269,7 @@ import org.hibernate.sql.exec.spi.JdbcParametersList;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
@@ -438,6 +446,7 @@ public abstract class AbstractEntityPersister
 	private EntityVersionMapping versionMapping;
 	private EntityRowIdMapping rowIdMapping;
 	private EntityDiscriminatorMapping discriminatorMapping;
+	private SoftDeleteMapping softDeleteMapping;
 
 	private AttributeMappingsList attributeMappings;
 	protected AttributeMappingsMap declaredAttributeMappings = AttributeMappingsMap.builder().build();
@@ -3092,10 +3101,22 @@ public abstract class AbstractEntityPersister
 				getFactory()
 		);
 
-		if ( additionalPredicateCollectorAccess != null && needsDiscriminator() ) {
-			final String alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
-			final Predicate discriminatorPredicate = createDiscriminatorPredicate( alias, tableGroup, creationState );
-			additionalPredicateCollectorAccess.get().accept( discriminatorPredicate );
+		if ( additionalPredicateCollectorAccess != null ) {
+			if ( needsDiscriminator() ) {
+				final String alias = tableGroup.getPrimaryTableReference().getIdentificationVariable();
+				final Predicate discriminatorPredicate = createDiscriminatorPredicate( alias, tableGroup, creationState );
+				additionalPredicateCollectorAccess.get().accept( discriminatorPredicate );
+			}
+
+			if ( softDeleteMapping != null ) {
+				final TableReference tableReference = tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() );
+				final Predicate softDeletePredicate = SoftDeleteHelper.createNonSoftDeletedRestriction(
+						tableReference,
+						softDeleteMapping,
+						creationState.getSqlExpressionResolver()
+				);
+				additionalPredicateCollectorAccess.get().accept( softDeletePredicate );
+			}
 		}
 
 		return tableGroup;
@@ -3363,6 +3384,15 @@ public abstract class AbstractEntityPersister
 		initPropertyPaths( mapping );
 	}
 
+	@Override
+	public void prepareLoaders() {
+		// Hibernate Reactive needs to override the loaders
+		singleIdLoader = buildSingleIdEntityLoader();
+		multiIdLoader = buildMultiIdLoader();
+
+		lazyLoadPlanByFetchGroup = getLazyLoadPlanByFetchGroup();
+	}
+
 	private void doLateInit() {
 		if ( isIdentifierAssignedByInsert() ) {
 			final OnExecutionGenerator generator = (OnExecutionGenerator) getGenerator();
@@ -3386,7 +3416,6 @@ public abstract class AbstractEntityPersister
 		}
 
 		//select SQL
-		lazyLoadPlanByFetchGroup = getLazyLoadPlanByFetchGroup();
 		sqlVersionSelectString = generateSelectVersionString();
 
 		logStaticSQL();
@@ -3617,10 +3646,22 @@ public abstract class AbstractEntityPersister
 	}
 
 	protected DeleteCoordinator buildDeleteCoordinator() {
-		return new DeleteCoordinator( this, factory );
+		if ( softDeleteMapping == null ) {
+			return new DeleteCoordinatorStandard( this, factory );
+		}
+		else {
+			return new DeleteCoordinatorSoft( this, factory );
+		}
 	}
 
 	public void addDiscriminatorToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+	}
+
+	public void addSoftDeleteToInsertGroup(MutationGroupBuilder insertGroupBuilder) {
+		if ( softDeleteMapping != null ) {
+			final TableInsertBuilder insertBuilder = insertGroupBuilder.getTableDetailsBuilder( getIdentifierTableName() );
+			insertBuilder.addValueColumn( softDeleteMapping );
+		}
 	}
 
 	protected String substituteBrackets(String sql) {
@@ -3630,9 +3671,6 @@ public abstract class AbstractEntityPersister
 	@Override
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
-		// Hibernate Reactive needs to override the loaders
-		singleIdLoader = buildSingleIdEntityLoader();
-		multiIdLoader = buildMultiIdLoader();
 	}
 
 	/**
@@ -4883,6 +4921,7 @@ public abstract class AbstractEntityPersister
 				naturalIdMapping = superMappingType.getNaturalIdMapping();
 				versionMapping = superMappingType.getVersionMapping();
 				rowIdMapping = superMappingType.getRowIdMapping();
+				softDeleteMapping = superMappingType.getSoftDeleteMapping();
 			}
 			else {
 				prepareMappingModel( creationProcess, bootEntityDescriptor );
@@ -5068,6 +5107,27 @@ public abstract class AbstractEntityPersister
 		}
 
 		discriminatorMapping = generateDiscriminatorMapping( bootEntityDescriptor, creationProcess );
+		softDeleteMapping = resolveSoftDeleteMapping( this, bootEntityDescriptor, getIdentifierTableName(), creationProcess );
+
+		if ( softDeleteMapping != null ) {
+			if ( bootEntityDescriptor.getRootClass().getCustomSQLDelete() != null ) {
+				throw new UnsupportedMappingException( "Entity may not define both @SoftDelete and @SQLDelete" );
+			}
+		}
+	}
+
+	private static SoftDeleteMapping resolveSoftDeleteMapping(
+			AbstractEntityPersister persister,
+			PersistentClass bootEntityDescriptor,
+			String identifierTableName,
+			MappingModelCreationProcess creationProcess) {
+		final RootClass rootClass = bootEntityDescriptor.getRootClass();
+		return SoftDeleteHelper.resolveSoftDeleteMapping(
+				persister,
+				rootClass,
+				identifierTableName,
+				creationProcess.getCreationContext().getJdbcServices().getDialect()
+		);
 	}
 
 	private void postProcessAttributeMappings(MappingModelCreationProcess creationProcess, PersistentClass bootEntityDescriptor) {
@@ -5796,6 +5856,16 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public SoftDeleteMapping getSoftDeleteMapping() {
+		return softDeleteMapping;
+	}
+
+	@Override
+	public TableDetails getSoftDeleteTableDetails() {
+		return getIdentifierTableDetails();
+	}
+
+	@Override
 	public AttributeMappingsList getAttributeMappings() {
 		if ( attributeMappings == null ) {
 			int sizeHint = declaredAttributeMappings.size();
@@ -6307,7 +6377,7 @@ public abstract class AbstractEntityPersister
 	/**
 	 * Generate the SQL that deletes a row by id (and version)
 	 *
-	 * @deprecated No longer used.  See {@link DeleteCoordinator}
+	 * @deprecated No longer used.  See {@link DeleteCoordinatorStandard}
 	 */
 	@Deprecated(forRemoval = true)
 	@Remove

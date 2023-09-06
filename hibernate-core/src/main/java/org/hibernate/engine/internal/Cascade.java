@@ -87,11 +87,16 @@ public final class Cascade {
 				LOG.tracev( "Processing cascade {0} for: {1}", action, persister.getEntityName() );
 			}
 			final PersistenceContext persistenceContext = eventSource.getPersistenceContextInternal();
-
+			final EntityEntry entry = persistenceContext.getEntry( parent );
+			if ( entry != null && entry.getLoadedState() == null && entry.getStatus() == Status.MANAGED && persister.getBytecodeEnhancementMetadata()
+					.isEnhancedForLazyLoading() ) {
+				return;
+			}
 			final Type[] types = persister.getPropertyTypes();
 			final String[] propertyNames = persister.getPropertyNames();
 			final CascadeStyle[] cascadeStyles = persister.getPropertyCascadeStyles();
 			final boolean hasUninitializedLazyProperties = persister.hasUninitializedLazyProperties( parent );
+
 			for ( int i = 0; i < types.length; i++) {
 				final CascadeStyle style = cascadeStyles[ i ];
 				final String propertyName = propertyNames[ i ];
@@ -109,7 +114,7 @@ public final class Cascade {
 						// If parent is a detached entity being merged,
 						// then parent will not be in the PersistenceContext
 						// (so lazy attributes must not be initialized).
-						if ( persistenceContext.getEntry( parent ) == null ) {
+						if ( entry == null ) {
 							// parent was not in the PersistenceContext
 							continue;
 						}

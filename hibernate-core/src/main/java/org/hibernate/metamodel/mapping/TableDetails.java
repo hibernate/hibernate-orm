@@ -60,7 +60,7 @@ public interface TableDetails {
 	/**
 	 * Details about a column within the key group
 	 */
-	interface KeyColumn {
+	interface KeyColumn extends SelectableMapping {
 		/**
 		 * The name of the column
 		 */

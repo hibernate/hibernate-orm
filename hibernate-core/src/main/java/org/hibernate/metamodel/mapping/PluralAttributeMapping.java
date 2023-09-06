@@ -33,7 +33,7 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
  * @author Steve Ebersole
  */
 public interface PluralAttributeMapping
-		extends AttributeMapping, TableGroupJoinProducer, FetchableContainer, Loadable, Restrictable {
+		extends AttributeMapping, TableGroupJoinProducer, FetchableContainer, Loadable, Restrictable, SoftDeletableModelPart {
 
 	CollectionPersister getCollectionDescriptor();
 
@@ -55,6 +55,13 @@ public interface PluralAttributeMapping
 	CollectionPart getElementDescriptor();
 
 	CollectionIdentifierDescriptor getIdentifierDescriptor();
+
+	/**
+	 * Mapping for soft-delete support, or {@code null} if soft-delete not defined
+	 */
+	default SoftDeleteMapping getSoftDeleteMapping() {
+		return null;
+	}
 
 	OrderByFragment getOrderByFragment();
 	OrderByFragment getManyToManyOrderByFragment();

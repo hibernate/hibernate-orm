@@ -71,6 +71,7 @@ import org.hibernate.annotations.SQLOrder;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SortComparator;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Synchronize;
@@ -94,6 +95,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.Backref;
+import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.CheckConstraint;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
@@ -170,6 +172,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
 import static org.hibernate.boot.model.internal.GeneratorBinder.buildGenerators;
 import static org.hibernate.boot.model.internal.PropertyHolderBuilder.buildPropertyHolder;
+import static org.hibernate.boot.model.internal.BinderHelper.extractFromPackage;
 import static org.hibernate.boot.model.source.internal.hbm.ModelBinder.useEntityWhereClauseForCollections;
 import static org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle.fromResultCheckStyle;
 import static org.hibernate.internal.util.StringHelper.getNonEmptyOrConjunctionIfBothNonEmpty;
@@ -2475,6 +2478,7 @@ public abstract class CollectionBinder {
 		final Table collectionTable = tableBinder.bind();
 		collection.setCollectionTable( collectionTable );
 		handleCheckConstraints( collectionTable );
+		processSoftDeletes();
 	}
 
 	private void handleCheckConstraints(Table collectionTable) {
@@ -2498,6 +2502,40 @@ public abstract class CollectionBinder {
 		collectionTable.addCheck( name.isEmpty()
 				? new CheckConstraint( constraint )
 				: new CheckConstraint( name, constraint ) );
+	}
+
+	private void processSoftDeletes() {
+		// only needed if we have an element-collection or many-to-many
+		final Value elementValue = collection.getElement();
+		final boolean isElementCollection = elementValue instanceof BasicValue
+				|| elementValue instanceof Component;
+		final boolean isManyToManyCollection = !(elementValue instanceof org.hibernate.mapping.OneToMany);
+		if ( !isElementCollection && !isManyToManyCollection ) {
+			return;
+		}
+
+		assert collection.getCollectionTable() != null;
+
+		final SoftDelete softDelete = extractSoftDelete( property, propertyHolder, buildingContext );
+		if ( softDelete == null ) {
+			return;
+		}
+
+		SoftDeleteHelper.bindSoftDeleteIndicator(
+				softDelete,
+				collection,
+				collection.getCollectionTable(),
+				buildingContext
+		);
+	}
+
+	private static SoftDelete extractSoftDelete(XProperty property, PropertyHolder propertyHolder, MetadataBuildingContext context) {
+		final SoftDelete fromProperty = property.getAnnotation( SoftDelete.class );
+		if ( fromProperty != null ) {
+			return fromProperty;
+		}
+
+		return extractFromPackage( SoftDelete.class, property.getDeclaringClass(), context );
 	}
 
 	private void handleUnownedManyToMany(
@@ -2528,6 +2566,7 @@ public abstract class CollectionBinder {
 				// this is a ToOne with a @JoinTable or a regular property
 				: otherSidePropertyValue.getTable();
 		collection.setCollectionTable( table );
+		processSoftDeletes();
 
 		if ( property.isAnnotationPresent( Checks.class )
 				|| property.isAnnotationPresent( Check.class ) ) {

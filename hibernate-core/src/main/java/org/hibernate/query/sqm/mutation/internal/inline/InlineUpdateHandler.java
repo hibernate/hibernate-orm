@@ -18,6 +18,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -28,6 +29,7 @@ import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Joinable;
@@ -166,7 +168,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 
 		final TableGroup updatingTableGroup = converterDelegate.getMutatingTableGroup();
 
-		final TableReference hierarchyRootTableReference = updatingTableGroup.resolveTableReference(
+		final NamedTableReference hierarchyRootTableReference = (NamedTableReference) updatingTableGroup.resolveTableReference(
 				updatingTableGroup.getNavigablePath(),
 				hierarchyRootTableName
 		);
@@ -207,7 +209,16 @@ public class InlineUpdateHandler implements UpdateHandler {
 		final Predicate providedPredicate;
 		final SqmWhereClause whereClause = sqmUpdate.getWhereClause();
 		if ( whereClause == null || whereClause.getPredicate() == null ) {
-			providedPredicate = null;
+			final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
+			if ( softDeleteMapping != null ) {
+				providedPredicate = SoftDeleteHelper.createNonSoftDeletedRestriction(
+						hierarchyRootTableReference,
+						softDeleteMapping
+				);
+			}
+			else {
+				providedPredicate = null;
+			}
 		}
 		else {
 			providedPredicate = converterDelegate.visitWhereClause(

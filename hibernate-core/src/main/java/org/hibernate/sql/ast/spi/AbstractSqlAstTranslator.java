@@ -6127,7 +6127,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitTableReferenceJoin(TableReferenceJoin tableReferenceJoin) {
-		// nothing to do... handled within TableGroup#render
+		// nothing to do... handled within TableGroupTableGroup#render
 	}
 
 

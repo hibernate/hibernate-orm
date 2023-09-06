@@ -674,7 +674,8 @@ public class MappingModelCreationHelper {
 				style,
 				cascadeStyle,
 				declaringType,
-				collectionDescriptor
+				collectionDescriptor,
+				creationProcess
 		) );
 
 		creationProcess.registerInitializationCallback(

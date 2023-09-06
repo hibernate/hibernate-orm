@@ -100,6 +100,8 @@ public interface RestrictedTableMutationBuilder<O extends MutationOperation, M e
 	 */
 	void addOptimisticLockRestriction(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping);
 
+	void addLiteralRestriction(String columnName, String sqlLiteralText, JdbcMapping jdbcMapping);
+
 	ColumnValueBindingList getKeyRestrictionBindings();
 
 	ColumnValueBindingList getOptimisticLockBindings();

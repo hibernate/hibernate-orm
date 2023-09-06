@@ -103,8 +103,8 @@ class ColumnDefinitions {
 			SqlStringGenerationContext context) {
 		statement.append( column.getQuotedName( dialect ) );
 		appendColumnDefinition( statement, column, table, metadata, dialect );
-		appendConstraints( statement, column, table, dialect, context );
 		appendComment( statement, column, dialect );
+		appendConstraints( statement, column, table, dialect, context );
 	}
 
 	private static void appendConstraints(

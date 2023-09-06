@@ -7,16 +7,18 @@
 package org.hibernate.query.sqm.mutation.internal.inline;
 
 import java.sql.PreparedStatement;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.MutableInteger;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
+import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
@@ -28,11 +30,17 @@ import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.StatementCreatorHelper;
+
+import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
+import static org.hibernate.boot.model.internal.SoftDeleteHelper.createSoftDeleteAssignment;
 
 /**
  * DeleteHandler for the in-line strategy
@@ -128,9 +136,18 @@ public class InlineDeleteHandler implements DeleteHandler {
 				}
 		);
 
-		entityDescriptor.visitConstraintOrderedTables(
-				(tableExpression, tableKeyColumnsVisitationSupplier) -> {
-					executeDelete(
+		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
+		if ( softDeleteMapping != null ) {
+			performSoftDelete(
+					entityDescriptor,
+					idsAndFks,
+					jdbcParameterBindings,
+					executionContext
+			);
+		}
+		else {
+			entityDescriptor.visitConstraintOrderedTables(
+					(tableExpression, tableKeyColumnsVisitationSupplier) -> executeDelete(
 							tableExpression,
 							entityDescriptor,
 							tableKeyColumnsVisitationSupplier,
@@ -139,11 +156,69 @@ public class InlineDeleteHandler implements DeleteHandler {
 							null,
 							jdbcParameterBindings,
 							executionContext
-					);
-				}
-		);
+					)
+			);
+		}
 
 		return idsAndFks.size();
+	}
+
+	/**
+	 * Perform a soft-delete, which just needs to update the root table
+	 */
+	private void performSoftDelete(
+			EntityMappingType entityDescriptor,
+			List<Object> idsAndFks,
+			JdbcParameterBindings jdbcParameterBindings,
+			DomainQueryExecutionContext executionContext) {
+		final TableDetails softDeleteTable = entityDescriptor.getSoftDeleteTableDetails();
+		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
+		assert softDeleteMapping != null;
+
+		final NamedTableReference targetTableReference = new NamedTableReference(
+				softDeleteTable.getTableName(),
+				DeleteStatement.DEFAULT_ALIAS
+		);
+
+		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext );
+
+		final Predicate matchingIdsPredicate = matchingIdsPredicateProducer.produceRestriction(
+				idsAndFks,
+				entityDescriptor,
+				0,
+				entityDescriptor.getIdentifierMapping(),
+				targetTableReference,
+				null,
+				executionContextAdapter
+		);
+
+		final Predicate predicate = Predicate.combinePredicates(
+				matchingIdsPredicate,
+				createNonSoftDeletedRestriction( targetTableReference, softDeleteMapping )
+		);
+
+		final Assignment softDeleteAssignment = createSoftDeleteAssignment(
+				targetTableReference,
+				softDeleteMapping
+		);
+
+		final UpdateStatement updateStatement = new UpdateStatement(
+				targetTableReference,
+				Collections.singletonList( softDeleteAssignment ),
+				predicate
+		);
+
+		final JdbcOperationQueryUpdate jdbcOperation = sqlAstTranslatorFactory
+				.buildUpdateTranslator( sessionFactory, updateStatement )
+				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
+
+		jdbcMutationExecutor.execute(
+				jdbcOperation,
+				jdbcParameterBindings,
+				this::prepareQueryStatement,
+				(integer, preparedStatement) -> {},
+				executionContextAdapter
+		);
 	}
 
 	private void executeDelete(

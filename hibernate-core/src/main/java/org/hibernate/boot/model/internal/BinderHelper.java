@@ -36,12 +36,15 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.SqlFragmentAlias;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.XPackage;
 import org.hibernate.annotations.common.reflection.XProperty;
+import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Any;
 import org.hibernate.mapping.AttributeContainer;
 import org.hibernate.mapping.BasicValue;
@@ -69,6 +72,7 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnOrFor
 import static org.hibernate.boot.model.internal.HCANNHelper.findAnnotation;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
+import static org.hibernate.internal.util.StringHelper.qualifier;
 import static org.hibernate.internal.util.StringHelper.qualify;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.EMBEDDED;
 import static org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies.NOOP;
@@ -1120,4 +1124,41 @@ public class BinderHelper {
 		return false;
 	}
 
+	/**
+	 * Extract an annotation from the package-info for the package the given class is defined in
+	 *
+	 * @param annotationType The type of annotation to return
+	 * @param xClass The class in the package
+	 * @param context The processing context
+	 *
+	 * @return The annotation or {@code null}
+	 */
+	public static <A extends Annotation> A extractFromPackage(
+			Class<A> annotationType,
+			XClass xClass,
+			MetadataBuildingContext context) {
+
+// todo (soft-delete) : or if we want caching of this per package
+//  +
+//				final SoftDelete fromPackage = context.getMetadataCollector().resolvePackageAnnotation( packageName, SoftDelete.class );
+//  +
+//		where context.getMetadataCollector() can cache some of this - either the annotations themselves
+//		or even just the XPackage resolutions
+
+		final String declaringClassName = xClass.getName();
+		final String packageName = qualifier( declaringClassName );
+		if ( isNotEmpty( packageName ) ) {
+			final ClassLoaderService classLoaderService = context.getBootstrapContext()
+					.getServiceRegistry()
+					.getService( ClassLoaderService.class );
+			assert classLoaderService != null;
+			final Package declaringClassPackage = classLoaderService.packageForNameOrNull( packageName );
+			if ( declaringClassPackage != null ) {
+				// will be null when there is no `package-info.class`
+				final XPackage xPackage = context.getBootstrapContext().getReflectionManager().toXPackage( declaringClassPackage );
+				return xPackage.getAnnotation( annotationType );
+			}
+		}
+		return null;
+	}
 }

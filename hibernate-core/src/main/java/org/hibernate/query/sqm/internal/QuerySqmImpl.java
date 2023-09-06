@@ -759,12 +759,17 @@ public class QuerySqmImpl<R>
 	private NonSelectQueryPlan buildConcreteDeleteQueryPlan(@SuppressWarnings("rawtypes") SqmDeleteStatement sqmDelete) {
 		final EntityDomainType<?> entityDomainType = sqmDelete.getTarget().getModel();
 		final String entityNameToDelete = entityDomainType.getHibernateEntityName();
-		final EntityPersister persister =
-				getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityNameToDelete );
+		final EntityPersister persister = getSessionFactory().getMappingMetamodel().getEntityDescriptor( entityNameToDelete );
 		final SqmMultiTableMutationStrategy multiTableStrategy = persister.getSqmMultiTableMutationStrategy();
-		return multiTableStrategy == null
-				? new SimpleDeleteQueryPlan( persister, sqmDelete, domainParameterXref )
-				: new MultiTableDeleteQueryPlan( sqmDelete, domainParameterXref, multiTableStrategy );
+		if ( multiTableStrategy != null ) {
+			// NOTE : MultiTableDeleteQueryPlan and SqmMultiTableMutationStrategy already handle soft-deletes internally
+			return new MultiTableDeleteQueryPlan( sqmDelete, domainParameterXref, multiTableStrategy );
+		}
+		else {
+			return persister.getSoftDeleteMapping() != null
+					? new SoftDeleteQueryPlan( persister, sqmDelete, domainParameterXref )
+					: new SimpleDeleteQueryPlan( persister, sqmDelete, domainParameterXref );
+		}
 	}
 
 	private NonSelectQueryPlan buildAggregatedDeleteQueryPlan(@SuppressWarnings("rawtypes") SqmDeleteStatement[] concreteSqmStatements) {

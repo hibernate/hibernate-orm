@@ -438,6 +438,26 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 		return column;
 	}
 
+	static AnnotatedJoinColumn buildExplicitJoinTableJoinFormula(
+			AnnotatedJoinColumns parent,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			JoinFormula joinFormula) {
+		final AnnotatedJoinColumn column = new AnnotatedJoinColumn();
+		column.setImplicit( true );
+//		column.setPropertyHolder( propertyHolder );
+//		column.setPropertyName( getRelativePath( propertyHolder, propertyName ) );
+//		column.setJoins( secondaryTables );
+//		column.setContext( context );
+		column.setNullable( false ); //I break the spec, but it's for good
+		//done after the annotation to override it
+		column.setParent( parent );
+		column.setFormula( joinFormula.value() );
+		column.setReferencedColumn( joinFormula.referencedColumnName() );
+		column.bind();
+		return column;
+	}
+
 	@Override
 	public String toString() {
 		final StringBuilder string = new StringBuilder();

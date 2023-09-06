@@ -209,6 +209,26 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		return parent;
 	}
 
+	/**
+	 * Called for join tables in {@link jakarta.persistence.ManyToMany} associations.
+	 */
+	public static AnnotatedJoinColumns buildJoinTableJoinFormula(
+			JoinFormula joinFormula,
+			Map<String, Join> secondaryTables,
+			PropertyHolder propertyHolder,
+			PropertyData inferredData,
+			String mappedBy,
+			MetadataBuildingContext context) {
+		final AnnotatedJoinColumns parent = new AnnotatedJoinColumns();
+		parent.setBuildingContext( context );
+		parent.setJoins( secondaryTables );
+		parent.setPropertyHolder( propertyHolder );
+		parent.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
+		parent.setMappedBy( mappedBy );
+		AnnotatedJoinColumn.buildExplicitJoinTableJoinFormula( parent, propertyHolder, inferredData, joinFormula );
+		return parent;
+	}
+
 	public List<AnnotatedJoinColumn> getJoinColumns() {
 		return columns;
 	}

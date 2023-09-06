@@ -42,6 +42,7 @@ import org.hibernate.annotations.Filters;
 import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.Immutable;
+import org.hibernate.annotations.JoinFormula;
 import org.hibernate.annotations.LazyCollection;
 import org.hibernate.annotations.LazyCollectionOption;
 import org.hibernate.annotations.LazyGroup;
@@ -156,6 +157,7 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnsFrom
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinColumnsWithDefaultColumnSuffix;
 import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinColumns;
+import static org.hibernate.boot.model.internal.AnnotatedJoinColumns.buildJoinTableJoinFormula;
 import static org.hibernate.boot.model.internal.BinderHelper.buildAnyValue;
 import static org.hibernate.boot.model.internal.BinderHelper.checkMappedByType;
 import static org.hibernate.boot.model.internal.BinderHelper.createSyntheticPropertyReference;
@@ -663,6 +665,7 @@ public abstract class CollectionBinder {
 		final CollectionTable collectionTable = property.getAnnotation( CollectionTable.class );
 		final JoinColumn[] annJoins;
 		final JoinColumn[] annInverseJoins;
+		final JoinFormula annJoinFormula;
 		if ( assocTable != null || collectionTable != null ) {
 
 			final String catalog;
@@ -711,10 +714,25 @@ public abstract class CollectionBinder {
 			//set check constraint in the second pass
 			annJoins = joins.length == 0 ? null : joins;
 			annInverseJoins = inverseJoins == null || inverseJoins.length == 0 ? null : inverseJoins;
+			annJoinFormula = null;
 		}
 		else {
+			if ( property.isAnnotationPresent(JoinFormula.class) ) {
+				annJoinFormula = property.getAnnotation(JoinFormula.class);
+			}
+			else {
+				annJoinFormula = null;
+			}
+			if ( property.isAnnotationPresent(JoinColumns.class) ) {
+				annInverseJoins = property.getAnnotation(JoinColumns.class).value();
+			}
+			else if ( property.isAnnotationPresent(JoinColumn.class) ) {
+				annInverseJoins = new JoinColumn[] {  property.getAnnotation(JoinColumn.class) };
+			}
+			else {
+				annInverseJoins = null;
+			}
 			annJoins = null;
-			annInverseJoins = null;
 		}
 		associationTableBinder.setBuildingContext( buildingContext );
 		collectionBinder.setTableBinder( associationTableBinder );
@@ -726,14 +744,26 @@ public abstract class CollectionBinder {
 				mappedBy,
 				buildingContext
 		) );
-		collectionBinder.setInverseJoinColumns( buildJoinTableJoinColumns(
-				annInverseJoins,
-				entityBinder.getSecondaryTables(),
-				propertyHolder,
-				inferredData,
-				mappedBy,
-				buildingContext
-		) );
+		if ( annJoinFormula != null ) {
+			collectionBinder.setInverseJoinColumns( buildJoinTableJoinFormula(
+					annJoinFormula,
+					entityBinder.getSecondaryTables(),
+					propertyHolder,
+					inferredData,
+					mappedBy,
+					buildingContext
+			) );
+		}
+		else {
+			collectionBinder.setInverseJoinColumns( buildJoinTableJoinColumns(
+					annInverseJoins,
+					entityBinder.getSecondaryTables(),
+					propertyHolder,
+					inferredData,
+					mappedBy,
+					buildingContext
+			) );
+		}
 	}
 
 	protected MetadataBuildingContext getBuildingContext() {

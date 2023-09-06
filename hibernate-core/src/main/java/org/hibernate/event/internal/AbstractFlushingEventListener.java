@@ -148,9 +148,9 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 	private static boolean flushable(EntityEntry entry) {
 		final Status status = entry.getStatus();
-		return ( status == Status.MANAGED && entry.getLoadedState() != null )
-				|| status == Status.SAVING
-				|| status == Status.READ_ONLY;
+		return status == Status.MANAGED
+			|| status == Status.SAVING
+			|| status == Status.READ_ONLY;
 	}
 
 	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, PersistContext anything)

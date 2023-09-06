@@ -41,7 +41,7 @@ public class Route {
 		this.name = name;
 	}
 
-	protected Set getNodes() {
+	public Set getNodes() {
 		return nodes;
 	}
 

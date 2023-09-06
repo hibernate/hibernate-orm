@@ -228,6 +228,8 @@ public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctiona
 	@Test
 	@SkipForDialect(value = CockroachDialect.class,
 			comment = "requires serial_normalization=sql_sequence setting")
+	@SkipForDialect(value = OracleDialect.class,
+			comment = "Oracle does not support identity key generation")
 	public void testAuditJoinTable() throws Exception {
 		List<AuditJoinTableInfo> mceRe1AuditJoinTableInfos = getAuditJoinTableRows(
 				"MCE_RE1_AUD", "MCE_ID",

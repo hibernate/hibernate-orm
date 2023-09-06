@@ -10,9 +10,11 @@
     <package>org.hibernate.orm.test.boot.jaxb.mapping</package>
     <entity class="HibernateOrmSpecificAttributesMappingTest$MyEntity">
         <attributes>
-            <id name="id">
+            <!-- 1 == CHAR -->
+            <id name="id" jdbc-type-code="1">
                 <uuid-generator style="time"/>
             </id>
+            <!-- 2005 == CLOB -->
             <basic name="name" jdbc-type-code="2005"/>
             <basic name="tags">
                 <type value="org.hibernate.orm.test.boot.jaxb.mapping.HibernateOrmSpecificAttributesMappingTest$DelimitedStringsJavaType"/>

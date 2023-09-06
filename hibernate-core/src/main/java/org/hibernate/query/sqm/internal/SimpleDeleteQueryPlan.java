@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.action.internal.BulkOperationCleanupAction;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -144,7 +145,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 					attributeMapping.applyBaseRestrictions(
 							p -> additionalPredicate.set( Predicate.combinePredicates( additionalPredicate.get(), p ) ),
 							collectionTableGroup,
-							false,
+							factory.getJdbcServices().getDialect().getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.TABLE_ALIAS,
 							executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
 							null,
 							null

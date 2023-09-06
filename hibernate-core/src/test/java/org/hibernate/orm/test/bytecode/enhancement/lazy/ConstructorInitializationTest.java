@@ -15,6 +15,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -281,6 +282,7 @@ public class ConstructorInitializationTest extends BaseCoreFunctionalTestCase {
 		@GeneratedValue
 		private long id;
 
+		@Column(name = "is_open")
 		private boolean open = false;
 	}
 

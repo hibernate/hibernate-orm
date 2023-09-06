@@ -57,6 +57,10 @@ gradlePlugin {
 	}
 }
 
+tasks.withType(AbstractArchiveTask).configureEach {
+	preserveFileTimestamps = false
+	reproducibleFileOrder = true
+}
 
 test {
 	useJUnitPlatform()

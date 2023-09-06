@@ -57,6 +57,15 @@ if ( !project.description ) {
 	project.description = "The Hibernate ORM $project.name module"
 }
 
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Reproducible Builds
+
+// https://docs.gradle.org/current/userguide/working_with_files.html#sec:reproducible_archives
+// Configure archive tasks to produce reproducible archives:
+tasks.withType(AbstractArchiveTask).configureEach {
+	preserveFileTimestamps = false
+	reproducibleFileOrder = true
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Configurations and Dependencies

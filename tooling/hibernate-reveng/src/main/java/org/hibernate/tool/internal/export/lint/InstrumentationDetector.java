@@ -2,8 +2,8 @@ package org.hibernate.tool.internal.export.lint;
 
 import org.hibernate.MappingException;
 import org.hibernate.boot.Metadata;
+import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.bytecode.spi.BytecodeProvider;
-import org.hibernate.cfg.Environment;
 import org.hibernate.engine.spi.Managed;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -18,10 +18,14 @@ public class InstrumentationDetector extends EntityModelDetector {
 	
 	public void initialize(Metadata metadata) {
 		super.initialize(metadata);	
-		BytecodeProvider bytecodeProvider = Environment.buildBytecodeProvider(Environment.getProperties());
-		if(bytecodeProvider != null 
-				&& !(bytecodeProvider instanceof org.hibernate.bytecode.internal.none.BytecodeProviderImpl)) {
-			enhanceEnabled = true;
+		if (metadata instanceof MetadataImplementor) {
+			final BytecodeProvider bytecodeProvider =
+					((MetadataImplementor)metadata).getMetadataBuildingOptions().getServiceRegistry()
+							.getService( BytecodeProvider.class );
+			if(bytecodeProvider != null 
+					&& !(bytecodeProvider instanceof org.hibernate.bytecode.internal.none.BytecodeProviderImpl)) {
+				enhanceEnabled = true;
+			}
 		}
 	}
 	

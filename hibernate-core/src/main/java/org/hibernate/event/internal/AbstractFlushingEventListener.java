@@ -139,9 +139,8 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 		//safe from concurrent modification because of how concurrentEntries() is implemented on IdentityMap
 		for ( Map.Entry<Object,EntityEntry> me : persistenceContext.reentrantSafeEntityEntries() ) {
 //		for ( Map.Entry me : IdentityMap.concurrentEntries( persistenceContext.getEntityEntries() ) ) {
-			EntityEntry entry = me.getValue();
-			Status status = entry.getStatus();
-			if ( status == Status.MANAGED || status == Status.SAVING || status == Status.READ_ONLY ) {
+			final EntityEntry entry = me.getValue();
+			if ( flushable( entry ) ) {
 				cascadeOnFlush( session, entry.getPersister(), me.getKey(), context );
 			}
 		}
@@ -149,9 +148,9 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 
 	private static boolean flushable(EntityEntry entry) {
 		final Status status = entry.getStatus();
-		return ( status == Status.MANAGED && entry.getLoadedState() != null )
-				|| status == Status.SAVING
-				|| status == Status.READ_ONLY;
+		return status == Status.MANAGED
+			|| status == Status.SAVING
+			|| status == Status.READ_ONLY;
 	}
 
 	private void cascadeOnFlush(EventSource session, EntityPersister persister, Object object, PersistContext anything)

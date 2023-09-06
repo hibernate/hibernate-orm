@@ -49,7 +49,6 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
-import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
@@ -58,7 +57,6 @@ import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
@@ -1089,13 +1087,16 @@ public class PropertyBinder {
 			);
 		}
 		else if ( propertyBinder.isId() ) {
+			if ( isIdentifierMapper ) {
+				throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
+						+ "' belongs to an '@IdClass' and may not be annotated '@Id' or '@EmbeddedId'" );
+			}
 			//components and regular basic types create SimpleValue objects
 			processId(
 					propertyHolder,
 					inferredData,
 					(SimpleValue) propertyBinder.getValue(),
 					classGenerators,
-					isIdentifierMapper,
 					context
 			);
 		}
@@ -1296,12 +1297,7 @@ public class PropertyBinder {
 			PropertyData inferredData,
 			SimpleValue idValue,
 			Map<String, IdentifierGeneratorDefinition> classGenerators,
-			boolean isIdentifierMapper,
 			MetadataBuildingContext context) {
-		if ( isIdentifierMapper ) {
-			throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
-					+ "' belongs to an '@IdClass' and may not be annotated '@Id' or '@EmbeddedId'" );
-		}
 		final XProperty idProperty = inferredData.getProperty();
 		final List<Annotation> idGeneratorAnnotations = findContainingAnnotations( idProperty, IdGeneratorType.class );
 		final List<Annotation> generatorAnnotations = findContainingAnnotations( idProperty, ValueGenerationType.class );

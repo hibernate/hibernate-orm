@@ -9,7 +9,6 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -17,6 +16,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.boot.model.relational.Database;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -469,9 +469,16 @@ public class Property implements Serializable, MetaAttributable {
 		this.returnedClassName = returnedClassName;
 	}
 
+	@Internal
 	public Generator createGenerator(RuntimeModelCreationContext context) {
 		return generatorCreator == null ? null :
 				generatorCreator.createGenerator( new PropertyGeneratorCreationContext( context ) );
+	}
+
+	@Internal
+	public Generator createGenerator(MetadataBuildingContext context) {
+		return generatorCreator == null ? null :
+				generatorCreator.createGenerator( new EarlyGeneratorCreationContext( context) );
 	}
 
 	public Property copy() {
@@ -524,6 +531,44 @@ public class Property implements Serializable, MetaAttributable {
 		@Override
 		public String getDefaultSchema() {
 			return context.getSessionFactoryOptions().getDefaultSchema();
+		}
+
+		@Override
+		public PersistentClass getPersistentClass() {
+			return persistentClass;
+		}
+
+		@Override
+		public Property getProperty() {
+			return Property.this;
+		}
+	}
+
+	private class EarlyGeneratorCreationContext implements GeneratorCreationContext {
+		private final MetadataBuildingContext context;
+
+		public EarlyGeneratorCreationContext(MetadataBuildingContext context) {
+			this.context = context;
+		}
+
+		@Override
+		public Database getDatabase() {
+			return context.getMetadataCollector().getDatabase();
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return context.getBootstrapContext().getServiceRegistry();
+		}
+
+		@Override
+		public String getDefaultCatalog() {
+			return null;
+		}
+
+		@Override
+		public String getDefaultSchema() {
+			return null;
 		}
 
 		@Override

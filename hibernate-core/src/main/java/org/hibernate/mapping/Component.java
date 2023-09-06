@@ -534,11 +534,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			Dialect dialect,
 			RootClass rootClass) throws MappingException {
 		if ( builtIdentifierGenerator == null ) {
-			builtIdentifierGenerator = buildIdentifierGenerator(
-					identifierGeneratorFactory,
-					dialect,
-					rootClass
-			);
+			builtIdentifierGenerator = buildIdentifierGenerator( identifierGeneratorFactory, dialect, rootClass );
 		}
 		return builtIdentifierGenerator;
 	}
@@ -547,51 +543,80 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			RootClass rootClass) throws MappingException {
-		final boolean hasCustomGenerator = ! DEFAULT_ID_GEN_STRATEGY.equals( getIdentifierGeneratorStrategy() );
+		final boolean hasCustomGenerator = !DEFAULT_ID_GEN_STRATEGY.equals( getIdentifierGeneratorStrategy() );
 		if ( hasCustomGenerator ) {
 			return super.createGenerator( identifierGeneratorFactory, dialect, rootClass );
 		}
+		else {
+			final Class<?> attributeDeclarer = getAttributeDeclarer( rootClass );
+			final CompositeNestedGeneratedValueGenerator generator =
+					new CompositeNestedGeneratedValueGenerator( new StandardGenerationContextLocator( rootClass.getEntityName() ) );
+			for ( Property property : getProperties() ) {
+				if ( property.getValue().isSimpleValue() ) {
+					addSubgenerator( identifierGeneratorFactory, dialect, rootClass, property, attributeDeclarer, generator,
+							(SimpleValue) property.getValue() );
+				}
+			}
+			return generator;
+		}
+	}
 
+	private void addSubgenerator(
+			IdentifierGeneratorFactory identifierGeneratorFactory,
+			Dialect dialect,
+			RootClass rootClass,
+			Property property,
+			Class<?> attributeDeclarer,
+			CompositeNestedGeneratedValueGenerator generator,
+			SimpleValue value) {
+		if ( property.getValueGeneratorCreator() != null ) {
+			final Generator subgenerator = property.createGenerator( getBuildingContext() );
+			addSubgenerator( property, attributeDeclarer, generator, subgenerator );
+		}
+		else if ( !DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
+			// skip any 'assigned' generators, they would have been
+			// handled by the StandardGenerationContextLocator
+			final Generator subgenerator = value.createGenerator( identifierGeneratorFactory, dialect, rootClass );
+			addSubgenerator( property, attributeDeclarer, generator, subgenerator );
+		}
+	}
+
+	/**
+	 * Return the class that declares the composite pk attributes,
+	 * which might be an {@code @IdClass}, an {@code @EmbeddedId},
+	 * of the entity class itself.
+ 	 */
+	private Class<?> getAttributeDeclarer(RootClass rootClass) {
 		final Class<?> entityClass = rootClass.getMappedClass();
-		final Class<?> attributeDeclarer; // what class is the declarer of the composite pk attributes
-		// IMPL NOTE : See the javadoc discussion on CompositeNestedGeneratedValueGenerator wrt the
-		//		various scenarios for which we need to account here
+		// See the javadoc discussion on CompositeNestedGeneratedValueGenerator
+		// for the various scenarios we need to account for here
 		if ( rootClass.getIdentifierMapper() != null ) {
 			// we have the @IdClass / <composite-id mapped="true"/> case
-			attributeDeclarer = resolveComponentClass();
+			return resolveComponentClass();
 		}
 		else if ( rootClass.getIdentifierProperty() != null ) {
 			// we have the "@EmbeddedId" / <composite-id name="idName"/> case
-			attributeDeclarer = resolveComponentClass();
+			return resolveComponentClass();
 		}
 		else {
-			// we have the "straight up" embedded (again the Hibernate term) component identifier
-			attributeDeclarer = entityClass;
+			// we have the "straight up" embedded (again the Hibernate term)
+			// component identifier: the entity class itself is the id class
+			return entityClass;
 		}
-
-		final CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
-				new StandardGenerationContextLocator( rootClass.getEntityName() );
-		final CompositeNestedGeneratedValueGenerator generator = new CompositeNestedGeneratedValueGenerator( locator );
-
-		for ( Property property : getProperties() ) {
-			if ( property.getValue().isSimpleValue() ) {
-				final SimpleValue value = (SimpleValue) property.getValue();
-
-				if ( !DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
-					// skip any 'assigned' generators, they would have been handled by
-					// the StandardGenerationContextLocator
-					Generator subgenerator = value.createGenerator( identifierGeneratorFactory, dialect, rootClass );
-					generator.addGeneratedValuePlan( new ValueGenerationPlan(
-							subgenerator,
-							injector( property, attributeDeclarer ) )
-					);
-				}
-			}
-		}
-		return generator;
 	}
 
-	private Setter injector(Property property, Class<?> attributeDeclarer) {
+	private static void addSubgenerator(
+			Property property,
+			Class<?> attributeDeclarer,
+			CompositeNestedGeneratedValueGenerator generator,
+			Generator subgenerator) {
+		generator.addGeneratedValuePlan( new ValueGenerationPlan(
+				subgenerator,
+				injector( property, attributeDeclarer )
+		) );
+	}
+
+	private static Setter injector(Property property, Class<?> attributeDeclarer) {
 		return property.getPropertyAccessStrategy( attributeDeclarer )
 				.buildPropertyAccess( attributeDeclarer, property.getName(), true )
 				.getSetter();

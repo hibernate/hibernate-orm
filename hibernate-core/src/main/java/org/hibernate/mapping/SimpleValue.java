@@ -1075,7 +1075,10 @@ public abstract class SimpleValue implements KeyValue {
 		private final String defaultSchema;
 		private final RootClass rootClass;
 
-		public IdGeneratorCreationContext(IdentifierGeneratorFactory identifierGeneratorFactory, String defaultCatalog, String defaultSchema, RootClass rootClass) {
+		public IdGeneratorCreationContext(
+				IdentifierGeneratorFactory identifierGeneratorFactory,
+				String defaultCatalog, String defaultSchema,
+				RootClass rootClass) {
 			this.identifierGeneratorFactory = identifierGeneratorFactory;
 			this.defaultCatalog = defaultCatalog;
 			this.defaultSchema = defaultSchema;

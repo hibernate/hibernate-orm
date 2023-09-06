@@ -35,9 +35,14 @@ public class HibernateOrmSpecificAttributesMappingTest {
 	@Test
 	public void verifyMapping(DomainModelScope scope) {
 		scope.withHierarchy( HibernateOrmSpecificAttributesMappingTest.MyEntity.class, (entityDescriptor) -> {
-			Generator generator = entityDescriptor.getIdentifierProperty().createGenerator( null );
+			Property identifierProperty = entityDescriptor.getIdentifierProperty();
+			Generator generator = identifierProperty.createGenerator( null );
 			assertThat( generator )
 					.isInstanceOf( UuidGenerator.class );
+			assertThat( identifierProperty.getValue() )
+					.isInstanceOf( BasicValue.class );
+			assertThat( ( (BasicValue) identifierProperty.getValue() ).getExplicitJdbcTypeCode() )
+					.isEqualTo( SqlTypes.CHAR );
 
 			Property name = entityDescriptor.getProperty( "name" );
 			assertThat( name.getValue() )

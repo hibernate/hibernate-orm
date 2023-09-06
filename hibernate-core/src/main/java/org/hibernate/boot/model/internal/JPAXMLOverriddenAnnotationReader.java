@@ -1768,6 +1768,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				annotationList.add( AnnotationFactory.create( id ) );
 				getAccessType( annotationList, element.getAccess() );
 				getType( annotationList, element.getType() );
+				getJdbcTypeCode( annotationList, element.getJdbcTypeCode() );
 				getUuidGenerator( annotationList, element.getUuidGenerator() );
 			}
 		}

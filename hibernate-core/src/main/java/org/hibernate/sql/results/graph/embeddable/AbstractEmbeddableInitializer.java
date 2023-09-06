@@ -267,6 +267,10 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				// parent instance is null;
 				return State.NULL;
 			}
+			else if ( !entityInitializer.getConcreteDescriptor().isTypeOrSuperType( embedded.findContainingEntityMapping() ) ) {
+				// parent instance is of a supertype which doesn't contain this embeddable
+				return State.NULL;
+			}
 			else if ( entityInitializer.isEntityInitialized() ) {
 				// parent instance has been initialized, we do not need to inject the state
 				return State.INJECTED;

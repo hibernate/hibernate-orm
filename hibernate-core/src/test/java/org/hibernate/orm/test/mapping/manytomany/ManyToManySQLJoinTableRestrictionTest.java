@@ -147,8 +147,8 @@ public class ManyToManySQLJoinTableRestrictionTest {
 				joinColumns = { @JoinColumn( name = "project_id" ) },
 				inverseJoinColumns = { @JoinColumn( name = "user_id" ) }
 		)
-		@SQLJoinTableRestriction( "role = 'manager'" )
-		@SQLInsert( sql = "insert into project_users (project_id, user_id, role) values (?, ?, 'manager')" )
+		@SQLJoinTableRestriction( "role_name = 'manager'" )
+		@SQLInsert( sql = "insert into project_users (project_id, user_id, role_name) values (?, ?, 'manager')" )
 		private Set<User> managers = new HashSet<>();
 
 		@ManyToMany
@@ -157,8 +157,8 @@ public class ManyToManySQLJoinTableRestrictionTest {
 				joinColumns = { @JoinColumn( name = "project_id" ) },
 				inverseJoinColumns = { @JoinColumn( name = "user_id" ) }
 		)
-		@SQLJoinTableRestriction( "role = 'member'" )
-		@SQLInsert( sql = "insert into project_users (project_id, user_id, role) values (?, ?, 'member')" )
+		@SQLJoinTableRestriction( "role_name = 'member'" )
+		@SQLInsert( sql = "insert into project_users (project_id, user_id, role_name) values (?, ?, 'member')" )
 		private Set<User> members = new HashSet<>();
 
 		@ManyToMany
@@ -207,7 +207,7 @@ public class ManyToManySQLJoinTableRestrictionTest {
 		private String userId;
 
 		@Id
-		@Column( name = "role" )
+		@Column( name = "role_name" )
 		private String role;
 	}
 
@@ -218,11 +218,11 @@ public class ManyToManySQLJoinTableRestrictionTest {
 		private String name;
 
 		@ManyToMany( mappedBy = "managers" )
-		@SQLJoinTableRestriction( "role = 'manager'" )
+		@SQLJoinTableRestriction( "role_name = 'manager'" )
 		private Set<Project> managedProjects = new HashSet<>();
 
 		@ManyToMany( mappedBy = "members" )
-		@SQLJoinTableRestriction( "role = 'member'" )
+		@SQLJoinTableRestriction( "role_name = 'member'" )
 		private Set<Project> otherProjects = new HashSet<>();
 
 		public User() {

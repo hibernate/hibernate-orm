@@ -129,9 +129,11 @@ public final class Helper {
 		if ( methodSingularAnn != null ) {
 			collection.add( methodSingularAnn );
 		}
-		final S classSingularAnn = testClass.getAnnotation( singularAnnotationClass );
-		if ( classSingularAnn != null ) {
-			collection.add( classSingularAnn );
+		else {
+			final S classSingularAnn = testClass.getAnnotation( singularAnnotationClass );
+			if ( classSingularAnn != null ) {
+				collection.add( classSingularAnn );
+			}
 		}
 		final P methodPluralAnn = frameworkMethod.getAnnotation( pluralAnnotationClass );
 		if ( methodPluralAnn != null ) {
@@ -142,13 +144,15 @@ public final class Helper {
 				throw new RuntimeException( e );
 			}
 		}
-		final P classPluralAnn = testClass.getAnnotation( pluralAnnotationClass );
-		if ( classPluralAnn != null ) {
-			try {
-				collection.addAll( Arrays.asList( (S[]) pluralAnnotationClass.getDeclaredMethods()[0].invoke( classPluralAnn ) ) );
-			}
-			catch (Exception e) {
-				throw new RuntimeException( e );
+		else {
+			final P classPluralAnn = testClass.getAnnotation( pluralAnnotationClass );
+			if ( classPluralAnn != null ) {
+				try {
+					collection.addAll( Arrays.asList( (S[]) pluralAnnotationClass.getDeclaredMethods()[0].invoke( classPluralAnn ) ) );
+				}
+				catch (Exception e) {
+					throw new RuntimeException( e );
+				}
 			}
 		}
 		return collection;

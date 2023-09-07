@@ -177,7 +177,7 @@ class ColumnsBuilder {
 			);
 		}
 		else {
-			OneToOne oneToOneAnn = property.getAnnotation( OneToOne.class );
+			final OneToOne oneToOneAnn = property.getAnnotation( OneToOne.class );
 			return AnnotatedJoinColumns.buildJoinColumns(
 					null,
 //					comment,

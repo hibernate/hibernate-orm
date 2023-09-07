@@ -173,12 +173,12 @@ public class ${declarationName}Home {
             ${pojo.importType("jakarta.persistence.criteria.Root")}<${declarationName}> root = criteriaQuery.from(${declarationName}.class);
             criteriaQuery.where(
 <#assign notFirst = false/>
-<#foreach property in pojo.getAllPropertiesIterator()>
+<#list pojo.getAllPropertiesIterator() as property>
 <#if property.isNaturalIdentifier()>
                     <#if notFirst>,</#if>criteriaBuilder.equal(root.get("${property.name}"), ${property.name})
 <#assign notFirst = true/>
 </#if>
-</#foreach>
+</#list>
             );
             ${declarationName} instance = sessionFactory
                     .getCurrentSession()
@@ -232,7 +232,7 @@ TODO:
 **/ 
 </#if>   
     
-<#foreach query in daoHelper.getNamedHqlQueryDefinitions(md)>
+<#list daoHelper.getNamedHqlQueryDefinitions(md) as query>
 <#assign queryName = query.registrationName>
 <#if queryName.startsWith(clazz.entityName + ".")>
 <#assign methname = c2j.unqualify(queryName)>
@@ -256,7 +256,7 @@ TODO:
 </#if>
     }
 </#if>
-</#foreach></#if>
+</#list></#if>
 }
 </#assign>
 

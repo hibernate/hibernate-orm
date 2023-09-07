@@ -298,6 +298,17 @@ public class Table implements Serializable, ContributableDatabaseObject {
 		}
 	}
 
+	@Internal
+	public void columnRenamed(Column column) {
+		for ( Map.Entry<String, Column> entry : columns.entrySet() ) {
+			if ( entry.getValue() == column ) {
+				columns.remove( entry.getKey() );
+				columns.put( column.getCanonicalName(), column );
+				break;
+			}
+		}
+	}
+
 	public int getColumnSpan() {
 		return columns.size();
 	}

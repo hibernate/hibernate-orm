@@ -5,7 +5,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToMany;
@@ -120,8 +119,8 @@ public class MapsIdTest {
         private int exExtensionDays;
 
         @ManyToOne
-        @MapsId
-        @JoinColumn(name = "EX_LOAN_ID")
+        @MapsId("exLoanId")
+//        @JoinColumn(name = "EX_LOAN_ID")
         private Loan loan;
     }
 }

@@ -205,11 +205,14 @@ public class ToOneBinder {
 		}
 
 		if ( property.isAnnotationPresent( MapsId.class ) ) {
+			final MapsId mapsId = property.getAnnotation(MapsId.class);
+			final List<AnnotatedJoinColumn> joinColumnList = joinColumns.getJoinColumns();
 			//read only
-			for ( AnnotatedJoinColumn column : joinColumns.getJoinColumns() ) {
+			for ( AnnotatedJoinColumn column : joinColumnList ) {
 				column.setInsertable( false );
 				column.setUpdatable( false );
 			}
+			joinColumns.setMapsId( mapsId.value() );
 		}
 
 		boolean hasSpecjManyToOne = handleSpecjSyntax( joinColumns, inferredData, context, property );

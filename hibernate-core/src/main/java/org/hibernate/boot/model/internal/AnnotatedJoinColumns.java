@@ -31,7 +31,9 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.cfg.RecoverableException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -64,9 +66,10 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	private String propertyName; // this is really a .-separated property path
 
 	private String mappedBy;
-    //property name on the owning side if any
+	private String mapsId;
+	//property name on the owning side if any
 	private String mappedByPropertyName;
-    //table name on the mapped by side if any
+	//table name on the mapped by side if any
 	private String mappedByTableName;
 	private String mappedByEntityName;
 	private boolean elementCollection;
@@ -116,7 +119,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 
 	public static AnnotatedJoinColumns buildJoinColumns(
 			JoinColumn[] joinColumns,
-//			Comment comment,
+//            Comment comment,
 			String mappedBy,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
@@ -124,7 +127,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			MetadataBuildingContext buildingContext) {
 		return buildJoinColumnsWithDefaultColumnSuffix(
 				joinColumns,
-//				comment,
+//                comment,
 				mappedBy,
 				joins,
 				propertyHolder,
@@ -136,7 +139,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 
 	public static AnnotatedJoinColumns buildJoinColumnsWithDefaultColumnSuffix(
 			JoinColumn[] joinColumns,
-//			Comment comment,
+//            Comment comment,
 			String mappedBy,
 			Map<String, Join> joins,
 			PropertyHolder propertyHolder,
@@ -157,7 +160,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		if ( actualColumns == null || actualColumns.length == 0 ) {
 			AnnotatedJoinColumn.buildJoinColumn(
 					null,
-//					comment,
+//                    comment,
 					mappedBy,
 					parent,
 					propertyHolder,
@@ -170,7 +173,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			for ( JoinColumn actualColumn : actualColumns ) {
 				AnnotatedJoinColumn.buildJoinColumn(
 						actualColumn,
-//						comment,
+//                        comment,
 						mappedBy,
 						parent,
 						propertyHolder,
@@ -209,6 +212,27 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		return parent;
 	}
 
+	Property resolveMapsId() {
+		final PersistentClass persistentClass = getPropertyHolder().getPersistentClass();
+		final KeyValue identifier = persistentClass.getIdentifier();
+		try {
+			if ( identifier instanceof Component) {
+				// an @EmbeddedId
+				final Component embeddedIdType = (Component) identifier;
+				return embeddedIdType.getProperty( getMapsId() );
+			}
+			else {
+				// a simple id or an @IdClass
+				return persistentClass.getProperty( getMapsId() );
+			}
+		}
+		catch (MappingException me) {
+			throw new AnnotationException( "Identifier field '" + getMapsId()
+					+ "' named in '@MapsId' does not exist in entity '" + persistentClass.getEntityName() + "'",
+					me );
+		}
+	}
+
 	public List<AnnotatedJoinColumn> getJoinColumns() {
 		return columns;
 	}
@@ -237,8 +261,8 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	/**
 	 * @return true if the association mapping annotation did specify
 	 *        {@link jakarta.persistence.OneToMany#mappedBy() mappedBy},
-	 * 		meaning that this {@code @JoinColumn} mapping belongs to an
-	 * 		unowned many-valued association.
+	 *         meaning that this {@code @JoinColumn} mapping belongs to an
+	 *         unowned many-valued association.
 	 */
 	public boolean hasMappedBy() {
 		return mappedBy != null;
@@ -304,7 +328,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			}
 		}
 		final Table table = table( columnOwner );
-//		final List<Selectable> keyColumns = referencedEntity.getKey().getSelectables();
+//        final List<Selectable> keyColumns = referencedEntity.getKey().getSelectables();
 		final List<? extends Selectable> keyColumns = table.getPrimaryKey() == null
 				? referencedEntity.getKey().getSelectables()
 				: table.getPrimaryKey().getColumns();
@@ -364,9 +388,9 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		Identifier columnIdentifier;
 		if ( mappedBySide ) {
 			// NOTE : While it is completely misleading here to allow for the combination
-			//		of a "JPA ElementCollection" to be mappedBy, the code that uses this
-			// 		class relies on this behavior for handling the inverse side of
-			// 		many-to-many mappings
+			//        of a "JPA ElementCollection" to be mappedBy, the code that uses this
+			//         class relies on this behavior for handling the inverse side of
+			//         many-to-many mappings
 			columnIdentifier = implicitNamingStrategy.determineJoinColumnName(
 					new UnownedImplicitJoinColumnNameSource( referencedEntity, logicalReferencedColumn )
 			);
@@ -454,6 +478,18 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		else {
 			return ImplicitJoinColumnNameSource.Nature.ENTITY_COLLECTION;
 		}
+	}
+
+	public boolean hasMapsId() {
+		return mapsId != null;
+	}
+
+	public String getMapsId() {
+		return mapsId;
+	}
+
+	public void setMapsId(String mapsId) {
+		this.mapsId = nullIfEmpty( mapsId );
 	}
 
 	private class UnownedImplicitJoinColumnNameSource implements ImplicitJoinColumnNameSource {

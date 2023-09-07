@@ -310,7 +310,7 @@ public class TableBinder {
 
 		final Identifier logicalName;
 		if ( isJPA2ElementCollection ) {
-			logicalName	= buildingContext.getBuildingOptions().getImplicitNamingStrategy().determineCollectionTableName(
+			logicalName    = buildingContext.getBuildingOptions().getImplicitNamingStrategy().determineCollectionTableName(
 					new ImplicitCollectionTableNameSource() {
 						private final EntityNaming owningEntityNaming = new EntityNaming() {
 							@Override
@@ -746,9 +746,10 @@ public class TableBinder {
 		final List<Column> idColumns = referencedEntity instanceof JoinedSubclass
 				? referencedEntity.getKey().getColumns()
 				: referencedEntity.getIdentifier().getColumns();
-		for ( Column column: idColumns ) {
+		for ( int i = 0; i < idColumns.size(); i++ ) {
+			final Column column = idColumns.get(i);
 			final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
-			firstColumn.linkValueUsingDefaultColumnNaming( column, referencedEntity, value);
+			firstColumn.linkValueUsingDefaultColumnNaming( i, column, referencedEntity, value );
 			firstColumn.overrideFromReferencedColumnIfNecessary( column );
 		}
 	}
@@ -788,8 +789,21 @@ public class TableBinder {
 			SimpleValue simpleValue) {
 		final List<Column> valueColumns = value.getColumns();
 		final List<AnnotatedJoinColumn> columns = joinColumns.getJoinColumns();
+		final boolean mapsId = joinColumns.hasMapsId();
+		final List<Column> idColumns = mapsId ? joinColumns.resolveMapsId().getColumns() : null;
 		for ( int i = 0; i < columns.size(); i++ ) {
 			final AnnotatedJoinColumn joinColumn = columns.get(i);
+			if ( mapsId ) {
+				// infer the names of the primary key column
+				// from the join column of the association
+				// as (sorta) required by the JPA spec
+				final Column column = idColumns.get(i);
+				final String logicalColumnName = joinColumn.getLogicalColumnName();
+				if ( logicalColumnName != null ) {
+					column.setName( logicalColumnName );
+					simpleValue.getTable().columnRenamed( column);
+				}
+			}
 			final Column synthCol = valueColumns.get(i);
 			if ( joinColumn.isNameDeferred() ) {
 				//this has to be the default value

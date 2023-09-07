@@ -28,6 +28,7 @@ import org.hibernate.sql.model.ast.MutationGroup;
 import org.hibernate.sql.model.ast.TableMutation;
 import org.hibernate.sql.model.ast.builder.ColumnValuesTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
+import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 
 /**
@@ -163,6 +164,53 @@ public abstract class AbstractMutationCoordinator {
 					);
 				}
 			}
+		}
+	}
+
+	protected static boolean needsRowId(AbstractEntityPersister entityPersister, EntityTableMapping tableMapping) {
+		return entityPersister.getRowIdMapping() != null && tableMapping.isIdentifierTable();
+	}
+
+	protected static void applyKeyRestriction(
+			Object rowId,
+			AbstractEntityPersister entityPersister,
+			RestrictedTableMutationBuilder<?, ?> tableMutationBuilder,
+			EntityTableMapping tableMapping) {
+		if ( rowId != null && needsRowId( entityPersister, tableMapping ) ) {
+			tableMutationBuilder.addKeyRestrictionLeniently( entityPersister.getRowIdMapping() );
+		}
+		else {
+			tableMutationBuilder.addKeyRestrictions( tableMapping.getKeyMapping() );
+		}
+	}
+
+	protected void breakDownKeyJdbcValues(
+			Object id,
+			Object rowId,
+			SharedSessionContractImplementor session,
+			JdbcValueBindings jdbcValueBindings,
+			EntityTableMapping tableMapping) {
+		if ( rowId != null && needsRowId( entityPersister(), tableMapping ) ) {
+			jdbcValueBindings.bindValue(
+					rowId,
+					tableMapping.getTableName(),
+					entityPersister().getRowIdMapping().getRowIdName(),
+					ParameterUsage.RESTRICT
+			);
+		}
+		else {
+			tableMapping.getKeyMapping().breakDownKeyJdbcValues(
+					id,
+					(jdbcValue, columnMapping) -> {
+						jdbcValueBindings.bindValue(
+								jdbcValue,
+								tableMapping.getTableName(),
+								columnMapping.getColumnName(),
+								ParameterUsage.RESTRICT
+						);
+					},
+					session
+			);
 		}
 	}
 }

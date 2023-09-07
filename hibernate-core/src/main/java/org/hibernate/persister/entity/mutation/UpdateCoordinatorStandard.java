@@ -7,10 +7,8 @@
 package org.hibernate.persister.entity.mutation;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -22,7 +20,6 @@ import org.hibernate.engine.jdbc.batch.spi.BatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.internal.NoBatchKeyAccess;
 import org.hibernate.engine.jdbc.mutation.spi.BatchKeyAccess;
@@ -37,7 +34,6 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
-import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
@@ -53,6 +49,7 @@ import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
@@ -874,38 +871,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		} );
 	}
 
-	private void breakDownKeyJdbcValues(
-			Object id,
-			Object rowId,
-			SharedSessionContractImplementor session,
-			JdbcValueBindings jdbcValueBindings,
-			EntityTableMapping tableMapping) {
-		// if the mutation is against the identifier table and we need to use row-id...
-		if ( tableMapping.isIdentifierTable() && entityPersister().hasRowId() && rowId != null ) {
-			// todo (mutation) : make sure the SQL uses row-id in this case
-			jdbcValueBindings.bindValue(
-					rowId,
-					tableMapping.getTableName(),
-					entityPersister().getRowIdMapping().getRowIdName(),
-					ParameterUsage.RESTRICT
-			);
-		}
-		else {
-			tableMapping.getKeyMapping().breakDownKeyJdbcValues(
-					id,
-					(jdbcValue, columnMapping) -> {
-						jdbcValueBindings.bindValue(
-								jdbcValue,
-								tableMapping.getTableName(),
-								columnMapping.getColumnName(),
-								ParameterUsage.RESTRICT
-						);
-					},
-					session
-			);
-		}
-	}
-
 	private static void decomposeAttributeMapping(
 			SharedSessionContractImplementor session,
 			JdbcValueBindings jdbcValueBindings,
@@ -1100,7 +1065,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			DirtinessChecker dirtinessChecker,
 			SharedSessionContractImplementor session) {
 		final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
-		final EntityRowIdMapping rowIdMapping = entityPersister().getRowIdMapping();
 		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
 		final boolean[] versionability = entityPersister().getPropertyVersionability();
 		final OptimisticLockStyle optimisticLockStyle = entityPersister().optimisticLockStyle();
@@ -1155,7 +1119,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		updateGroupBuilder.forEachTableMutationBuilder( (builder) -> {
 			final EntityTableMapping tableMapping = (EntityTableMapping) builder.getMutatingTable().getTableMapping();
 			final TableUpdateBuilder<?> tableUpdateBuilder = (TableUpdateBuilder<?>) builder;
-			applyKeyRestriction( rowId, rowIdMapping, tableUpdateBuilder, tableMapping );
+			applyKeyRestriction( rowId, entityPersister(), tableUpdateBuilder, tableMapping );
 			applyPartitionKeyRestriction( tableUpdateBuilder );
 		} );
 	}
@@ -1174,19 +1138,6 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					}
 				}
 			}
-		}
-	}
-
-	private static void applyKeyRestriction(
-			Object rowId,
-			EntityRowIdMapping rowIdMapping,
-			TableUpdateBuilder<?> tableUpdateBuilder,
-			EntityTableMapping tableMapping) {
-		if ( rowIdMapping != null && rowId != null && tableMapping.isIdentifierTable() ) {
-			tableUpdateBuilder.addKeyRestrictionLeniently( rowIdMapping );
-		}
-		else {
-			tableUpdateBuilder.addKeyRestrictions( tableMapping.getKeyMapping() );
 		}
 	}
 
@@ -1344,7 +1295,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 								|| entityPersister().optimisticLockStyle() == DIRTY ) {
 							tablesNeedingDynamicUpdate.add( tableMapping );
 						}
-						else if ( rowId == null && entityPersister().getRowIdMapping() != null && tableMapping.isIdentifierTable() ) {
+						else if ( rowId == null && needsRowId( entityPersister(), tableMapping ) ) {
 							tablesNeedingDynamicUpdate.add( tableMapping );
 						}
 					}

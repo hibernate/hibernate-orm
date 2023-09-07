@@ -98,7 +98,6 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 		else {
 			entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
 			state = State.KEY_RESOLVED;
-			registerResolutionListener();
 		}
 	}
 
@@ -117,6 +116,17 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 		else if ( isInitialized( instance ) ) {
 			return instance;
 		}
+		else {
+			// the instance is not initialized but there is another initialzier that is loading it
+			final LoadingEntityEntry loadingEntityEntry = persistenceContext
+					.getLoadContexts().findLoadingEntityEntry( entityKey );
+			if ( loadingEntityEntry != null ) {
+				return loadingEntityEntry.getEntityInstance();
+			}
+		}
+		// we need to register a resolution listener only if there is not an already initialized instance
+		// or an instance that another initialzier is loading
+		registerResolutionListener();
 		return null;
 	}
 

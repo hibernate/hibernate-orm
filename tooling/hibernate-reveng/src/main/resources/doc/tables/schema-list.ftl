@@ -16,9 +16,9 @@
 		</p>
 
 		<p>
-			<#foreach schema in schemaList>
+			<#list schemaList as schema>
 				<a href="${docFileManager.getRef(docFile, docFileManager.getSchemaTableListDocFile(schema))}" target="tablesFrame">${schema}</a><br/>
-			</#foreach>
+			</#list>
 		</p>
 
 	</body>

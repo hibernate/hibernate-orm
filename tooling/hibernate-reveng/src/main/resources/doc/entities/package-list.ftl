@@ -15,9 +15,9 @@
 			Packages
 		</p>
 		<p>
-			<#foreach package in packageList>
+			<#list packageList as package>
 				<a href="${docFileManager.getRef(docFile, docFileManager.getPackageEntityListDocFile(package))}" target="entitiesFrame">${package}</a><br/>
-			</#foreach>
+			</#list>
 		</p>
 		
 	</body>

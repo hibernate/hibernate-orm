@@ -8,10 +8,14 @@ package org.hibernate.testing.junit4;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -119,43 +123,74 @@ public final class Helper {
 	 * @return Collection of all singular annotations or an empty list.
 	 */
 	@SuppressWarnings("unchecked")
-	public static <S extends Annotation, P extends Annotation> List<S> collectAnnotations(
+	public static <S extends Annotation, P extends Annotation> Collection<S> collectAnnotations(
 			Class<S> singularAnnotationClass,
 			Class<P> pluralAnnotationClass,
 			FrameworkMethod frameworkMethod,
 			TestClass testClass) {
-		final List<S> collection = new LinkedList<S>();
+		return collectAnnotations(
+				singularAnnotationClass,
+				pluralAnnotationClass,
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+					final List<S> list = new ArrayList<>();
+					if ( methodAnnotation != null ) {
+						list.add( methodAnnotation );
+					}
+					else if ( classAnnotation != null ) {
+						list.add( classAnnotation );
+					}
+					if ( methodAnnotations != null ) {
+						list.addAll( Arrays.asList( methodAnnotations ) );
+					}
+					else if ( classAnnotations != null ) {
+						list.addAll( Arrays.asList( classAnnotations ) );
+					}
+					return list;
+				},
+				frameworkMethod,
+				testClass
+		);
+	}
+
+	public static <S extends Annotation, P extends Annotation> Collection<S> collectAnnotations(
+			Class<S> singularAnnotationClass,
+			Class<P> pluralAnnotationClass,
+			TestAnnotationCollector<S> collector,
+			FrameworkMethod frameworkMethod,
+			TestClass testClass) {
 		final S methodSingularAnn = frameworkMethod.getAnnotation( singularAnnotationClass );
-		if ( methodSingularAnn != null ) {
-			collection.add( methodSingularAnn );
-		}
-		else {
-			final S classSingularAnn = testClass.getAnnotation( singularAnnotationClass );
-			if ( classSingularAnn != null ) {
-				collection.add( classSingularAnn );
-			}
-		}
+		final S classSingularAnn = testClass.getAnnotation( singularAnnotationClass );
 		final P methodPluralAnn = frameworkMethod.getAnnotation( pluralAnnotationClass );
+		final P classPluralAnn = testClass.getAnnotation( pluralAnnotationClass );
+		final S[] methodAnnotations;
+		final S[] classAnnotations;
 		if ( methodPluralAnn != null ) {
 			try {
-				collection.addAll( Arrays.asList( (S[]) pluralAnnotationClass.getDeclaredMethods()[0].invoke( methodPluralAnn ) ) );
+				methodAnnotations = (S[]) pluralAnnotationClass.getDeclaredMethods()[0].invoke( methodPluralAnn );
 			}
 			catch (Exception e) {
 				throw new RuntimeException( e );
 			}
 		}
 		else {
-			final P classPluralAnn = testClass.getAnnotation( pluralAnnotationClass );
-			if ( classPluralAnn != null ) {
-				try {
-					collection.addAll( Arrays.asList( (S[]) pluralAnnotationClass.getDeclaredMethods()[0].invoke( classPluralAnn ) ) );
-				}
-				catch (Exception e) {
-					throw new RuntimeException( e );
-				}
+			methodAnnotations = null;
+		}
+		if ( classPluralAnn != null ) {
+			try {
+				classAnnotations = (S[]) pluralAnnotationClass.getDeclaredMethods()[0].invoke( classPluralAnn );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
 			}
 		}
-		return collection;
+		else {
+			classAnnotations = null;
+		}
+		return collector.collect( methodSingularAnn, methodAnnotations, classSingularAnn, classAnnotations );
+	}
+
+	public interface TestAnnotationCollector<S> {
+		Collection<S> collect(S methodAnnotation, S[] methodAnnotations, S classAnnotation, S[] classAnnotations);
 	}
 
 	public static String extractMessage(FailureExpected failureExpected) {

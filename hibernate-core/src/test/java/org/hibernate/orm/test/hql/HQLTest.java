@@ -1798,7 +1798,10 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect({H2Dialect.class, MySQLDialect.class, PostgreSQLDialect.class, OracleDialect.class})
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(MySQLDialect.class)
+	@RequiresDialect(PostgreSQLDialect.class)
+	@RequiresDialect(OracleDialect.class)
 	public void test_hql_bit_length_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-native-function-example[]

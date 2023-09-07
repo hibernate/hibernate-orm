@@ -2847,7 +2847,8 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = { MySQLDialect.class, DB2Dialect.class } )
+	@SkipForDialect( MySQLDialect.class )
+	@SkipForDialect( DB2Dialect.class )
 	public void testCast() {
 		Session session = openSession();
 		Transaction txn = session.beginTransaction();

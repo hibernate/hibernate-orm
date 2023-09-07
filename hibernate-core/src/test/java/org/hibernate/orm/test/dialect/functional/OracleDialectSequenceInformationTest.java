@@ -30,7 +30,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInAutoCommit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@RequiresDialect(value = { OracleDialect.class })
+@RequiresDialect(OracleDialect.class)
 @TestForIssue(jiraKey = "HHH-13694")
 public class OracleDialectSequenceInformationTest extends BaseNonConfigCoreFunctionalTestCase {
 

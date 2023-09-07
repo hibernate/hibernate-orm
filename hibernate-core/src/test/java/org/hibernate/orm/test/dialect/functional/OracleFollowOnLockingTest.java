@@ -45,7 +45,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = { OracleDialect.class })
+@RequiresDialect(OracleDialect.class)
 @TestForIssue(jiraKey = "HHH-9486")
 public class OracleFollowOnLockingTest extends
 		BaseNonConfigCoreFunctionalTestCase {

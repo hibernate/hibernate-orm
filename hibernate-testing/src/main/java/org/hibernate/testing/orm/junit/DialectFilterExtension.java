@@ -6,7 +6,8 @@
  */
 package org.hibernate.testing.orm.junit;
 
-import java.util.List;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.Locale;
 
 import org.hibernate.dialect.Dialect;
@@ -35,10 +36,30 @@ public class DialectFilterExtension implements ExecutionCondition {
 
 		log.debugf( "Checking Dialect [%s] - context = %s", dialect, context.getDisplayName() );
 
-		final List<RequiresDialect> effectiveRequiresDialects = TestingUtil.findEffectiveRepeatingAnnotation(
+		final Collection<RequiresDialect> effectiveRequiresDialects = TestingUtil.collectAnnotations(
 				context,
 				RequiresDialect.class,
-				RequiresDialects.class
+				RequiresDialects.class,
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+					final LinkedHashMap<Class<?>, RequiresDialect> map = new LinkedHashMap<>();
+					if ( classAnnotation != null ) {
+						map.put( classAnnotation.value(), classAnnotation );
+					}
+					if ( classAnnotations != null ) {
+						for ( RequiresDialect annotation : classAnnotations ) {
+							map.put( annotation.value(), annotation );
+						}
+					}
+					if ( methodAnnotation != null ) {
+						map.put( methodAnnotation.value(), methodAnnotation );
+					}
+					if ( methodAnnotations != null ) {
+						for ( RequiresDialect annotation : methodAnnotations ) {
+							map.put( annotation.value(), annotation );
+						}
+					}
+					return map.values();
+				}
 		);
 
 		if ( !effectiveRequiresDialects.isEmpty() ) {
@@ -138,10 +159,30 @@ public class DialectFilterExtension implements ExecutionCondition {
 	}
 
 	private ConditionEvaluationResult evaluateSkipConditions(ExtensionContext context, Dialect dialect, String enabledResult) {
-		final List<SkipForDialect> effectiveSkips = TestingUtil.findEffectiveRepeatingAnnotation(
+		final Collection<SkipForDialect> effectiveSkips = TestingUtil.collectAnnotations(
 				context,
 				SkipForDialect.class,
-				SkipForDialectGroup.class
+				SkipForDialectGroup.class,
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+					final LinkedHashMap<Class<?>, SkipForDialect> map = new LinkedHashMap<>();
+					if ( classAnnotation != null ) {
+						map.put( classAnnotation.dialectClass(), classAnnotation );
+					}
+					if ( classAnnotations != null ) {
+						for ( SkipForDialect annotation : classAnnotations ) {
+							map.put( annotation.dialectClass(), annotation );
+						}
+					}
+					if ( methodAnnotation != null ) {
+						map.put( methodAnnotation.dialectClass(), methodAnnotation );
+					}
+					if ( methodAnnotations != null ) {
+						for ( SkipForDialect annotation : methodAnnotations ) {
+							map.put( annotation.dialectClass(), annotation );
+						}
+					}
+					return map.values();
+				}
 		);
 
 		for ( SkipForDialect effectiveSkipForDialect : effectiveSkips ) {
@@ -184,7 +225,7 @@ public class DialectFilterExtension implements ExecutionCondition {
 			}
 		}
 
-		List<RequiresDialectFeature> effectiveRequiresDialectFeatures = TestingUtil.findEffectiveRepeatingAnnotation(
+		Collection<RequiresDialectFeature> effectiveRequiresDialectFeatures = TestingUtil.collectAnnotations(
 				context,
 				RequiresDialectFeature.class,
 				RequiresDialectFeatureGroup.class

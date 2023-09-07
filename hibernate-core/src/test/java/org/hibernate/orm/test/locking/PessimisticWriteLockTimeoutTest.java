@@ -52,7 +52,9 @@ public class PessimisticWriteLockTimeoutTest
 	}
 
 	@Test
-	@RequiresDialect({ OracleDialect.class, PostgreSQLDialect.class, SQLServerDialect.class } )
+	@RequiresDialect(OracleDialect.class)
+	@RequiresDialect(PostgreSQLDialect.class)
+	@RequiresDialect(SQLServerDialect.class)
 	public void testNoWait()
 			throws NoSuchFieldException, IllegalAccessException {
 
@@ -77,7 +79,8 @@ public class PessimisticWriteLockTimeoutTest
 	}
 
 	@Test
-	@RequiresDialect({ OracleDialect.class, PostgreSQLDialect.class })
+	@RequiresDialect(OracleDialect.class)
+	@RequiresDialect(PostgreSQLDialect.class)
 	public void testSkipLocked()
 			throws NoSuchFieldException, IllegalAccessException {
 

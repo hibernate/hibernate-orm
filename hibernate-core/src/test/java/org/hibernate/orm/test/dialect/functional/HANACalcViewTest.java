@@ -27,7 +27,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Test;
 
-@RequiresDialect(value = { AbstractHANADialect.class })
+@RequiresDialect(AbstractHANADialect.class)
 public class HANACalcViewTest extends BaseCoreFunctionalTestCase {
 
 	private static final String CALC_VIEW_NAME = "DUMMY_CV_VIEW";

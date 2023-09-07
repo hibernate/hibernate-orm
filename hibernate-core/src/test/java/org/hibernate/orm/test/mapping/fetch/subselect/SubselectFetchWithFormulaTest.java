@@ -26,7 +26,9 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 import static org.junit.Assert.assertThat;
 
-@SkipForDialect({SQLServerDialect.class, SybaseDialect.class, FirebirdDialect.class})
+@SkipForDialect(SQLServerDialect.class)
+@SkipForDialect(SybaseDialect.class)
+@SkipForDialect(FirebirdDialect.class)
 public class SubselectFetchWithFormulaTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected String getBaseForMappings() {

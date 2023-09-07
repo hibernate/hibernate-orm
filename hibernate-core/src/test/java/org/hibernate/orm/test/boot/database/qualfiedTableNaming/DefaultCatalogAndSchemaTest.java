@@ -308,7 +308,12 @@ public class DefaultCatalogAndSchemaTest {
 	}
 
 	@Test
-	@SkipForDialect(value = { SQLServerDialect.class, SybaseDialect.class },
+	@SkipForDialect(value = SQLServerDialect.class,
+			comment = "SQL Server and Sybase support catalogs but their implementation of DatabaseMetaData"
+					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
+					+ " which results in nasty errors when generating an update script"
+					+ " and some catalogs don't exist.")
+	@SkipForDialect(value = SybaseDialect.class,
 			comment = "SQL Server and Sybase support catalogs but their implementation of DatabaseMetaData"
 					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
 					+ " which results in nasty errors when generating an update script"

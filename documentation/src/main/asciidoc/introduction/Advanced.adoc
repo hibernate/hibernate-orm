@@ -974,7 +974,7 @@ class Book {
     @FetchProfileOverride(profile = Book_.PROFILE_EAGER_BOOK, mode = JOIN)
     Set<Author> authors;
 
-	...
+    ...
 }
 ----
 [source,java]
@@ -1013,7 +1013,7 @@ class Book {
                           mode = SUBSELECT)
     Set<Author> authors;
 
-	...
+    ...
 }
 ----
 
@@ -1045,6 +1045,7 @@ But Hibernate offers alternatives that we think are more compelling most of the 
 The one and only advantage unique to fetch profiles is that they let us very selectively request subselect fetching.
 We can't do that with entity graphs, and we can't do it with HQL.
 
+[%unbreakable]
 [TIP]
 ====
 There's a special built-in fetch profile named `org.hibernate.defaultProfile` which is defined as the profile with `@FetchProfileOverride(mode=JOIN)` applied to every eager `@ManyToOne` or `@OneToOne` association.

@@ -76,7 +76,7 @@
 				<tbody>
 					<#if dochelper.getComponentPOJO(propertyIdentifier)?exists>
 						<#assign compoclass = dochelper.getComponentPOJO(propertyIdentifier)>
-						<#foreach property in compoclass.allPropertiesIterator>
+						<#list compoclass.allPropertiesIterator as property>
 							<#assign columnIterator = property.getValue().columnIterator>
 							<#assign rowspan = property.getValue().getColumnSpan()>
 							<tr>
@@ -125,7 +125,7 @@
 							</tr>
 							
 							<#if (rowspan > 1)>
-								<#foreach column in columnIterator>
+								<#list columnIterator as column>
 									<tr>
 										<td>
 											<a href="#property_summary">
@@ -133,9 +133,9 @@
 											</a>
 										</td>
 									</tr>
-								</#foreach>
+								</#list>
 							</#if>
-						</#foreach>	
+						</#list>	
 					<#else>
 						<tr>
 							<td>
@@ -286,7 +286,7 @@
 				</thead>
 				<tbody>
 	
-					<#foreach property in properties>
+					<#list properties as property>
 						<#assign columnIterator = property.getValue().columnIterator>
 						<#assign rowspan = property.getValue().getColumnSpan()>
 						<tr>
@@ -338,7 +338,7 @@
 							</td>
 						</tr>
 						<#if (rowspan > 1)>
-							<#foreach column in columnIterator>
+							<#list columnIterator as column>
 								<tr>
 									<td>
 										<a href="#property_summary">
@@ -346,9 +346,9 @@
 										</a>
 									</td>
 								</tr>
-							</#foreach>
+							</#list>
 						</#if>
-					</#foreach>
+					</#list>
 	
 				</tbody>
 			</table>
@@ -389,9 +389,9 @@
 			</p>
 			<#if dochelper.getComponentPOJO(identifier)?exists>
 				<#assign identifierClass = dochelper.getComponentPOJO(identifier)>
-				<#foreach property in identifierClass.allPropertiesIterator>
+				<#list identifierClass.allPropertiesIterator as property>
 					<h3 id="identifier_detail_${property.name}">${property.name}</h3>
-				</#foreach>
+				</#list>
 			<#else>
 				<h3 id="identifier_detail_${identifier.name}">${identifier.name}</h3>
 			</#if>

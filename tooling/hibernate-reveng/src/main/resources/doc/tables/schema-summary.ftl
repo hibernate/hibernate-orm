@@ -22,7 +22,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<#foreach table in dochelper.tablesBySchema.get(schema)>
+				<#list dochelper.tablesBySchema.get(schema) as table>
 					<tr>
 						<td>
 							<a href="${docFileManager.getRef(docFile, docFileManager.getTableDocFile(table))}" target="generalFrame">
@@ -30,7 +30,7 @@
 							</a>
 						</td>
 					</tr>
-				</#foreach>
+				</#list>
 			</tbody>
 		</table>
 

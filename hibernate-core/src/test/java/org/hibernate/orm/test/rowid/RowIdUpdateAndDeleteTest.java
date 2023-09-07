@@ -30,15 +30,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Marco Belladelli
  */
-@DomainModel( annotatedClasses = { RowIdUpdateTest.SimpleEntity.class, RowIdUpdateTest.ParentEntity.class } )
+@DomainModel( annotatedClasses = {
+		RowIdUpdateAndDeleteTest.SimpleEntity.class,
+		RowIdUpdateAndDeleteTest.ParentEntity.class
+} )
 @SessionFactory( useCollectingStatementInspector = true )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17045" )
-public class RowIdUpdateTest {
+@Jira( "https://hibernate.atlassian.net/browse/HHH-17167" )
+public class RowIdUpdateAndDeleteTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			session.persist( new SimpleEntity( 1L, "initial_status" ) );
 			session.persist( new ParentEntity( 2L, new SimpleEntity( 2L, "initial_status" ) ) );
+			session.persist( new SimpleEntity( 11L, "to_delete" ) );
+			session.persist( new ParentEntity( 12L, new SimpleEntity( 12L, "to_delete" ) ) );
 		} );
 	}
 
@@ -66,6 +72,22 @@ public class RowIdUpdateTest {
 		scope.inTransaction( session -> assertThat(
 				session.find( SimpleEntity.class, 3L ).getStatus()
 		).isEqualTo( "new_status" ) );
+	}
+
+	@Test
+	public void testSimpleDeleteSameTransaction(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		inspector.clear();
+		scope.inTransaction( session -> {
+			final SimpleEntity simpleEntity = new SimpleEntity( 13L, "to_delete" );
+			session.persist( simpleEntity );
+			session.flush();
+			session.remove( simpleEntity );
+			inspector.clear();
+		} );
+		// the update should have used the primary key, as the row-id value is not available
+		checkUpdateQuery( inspector, true );
+		scope.inTransaction( session -> assertThat( session.find( SimpleEntity.class, 13L ) ).isNull() );
 	}
 
 	@Test
@@ -105,6 +127,19 @@ public class RowIdUpdateTest {
 		scope.inTransaction( session -> assertThat(
 				session.find( SimpleEntity.class, 1L ).getStatus()
 		).isEqualTo( "new_status" ) );
+	}
+
+	@Test
+	public void testSimpleDeleteDifferentTransaction(SessionFactoryScope scope) {
+		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
+		scope.inTransaction( session -> {
+			final SimpleEntity simpleEntity = session.find( SimpleEntity.class, 11L );
+			session.remove( simpleEntity );
+			inspector.clear();
+		} );
+		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
+		checkUpdateQuery( inspector, dialect.rowId( "" ) == null );
+		scope.inTransaction( session -> assertThat( session.find( SimpleEntity.class, 11L ) ).isNull() );
 	}
 
 	@Test

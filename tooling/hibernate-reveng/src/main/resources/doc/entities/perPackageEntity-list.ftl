@@ -14,9 +14,9 @@
 		<#if (classList.size() > 0)>
 			<p>
 				Entities<br/>
-				<#foreach class in classList>
+				<#list classList as class>
 					<a href="${docFileManager.getRef(docFile, docFileManager.getEntityDocFile(class))}" target="generalFrame">${class.declarationName}</a><br/>
-				</#foreach>
+				</#list>
 			</p>
 		</#if>
 

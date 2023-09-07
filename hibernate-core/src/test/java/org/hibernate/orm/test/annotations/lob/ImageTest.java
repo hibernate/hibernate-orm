@@ -27,7 +27,8 @@ import junit.framework.AssertionFailedError;
  *
  * @author Gail Badner
  */
-@RequiresDialect( { SQLServerDialect.class, SybaseDialect.class })
+@RequiresDialect(SQLServerDialect.class)
+@RequiresDialect(SybaseDialect.class)
 public class ImageTest extends BaseCoreFunctionalTestCase {
 	private static final int ARRAY_SIZE = 10000;
 

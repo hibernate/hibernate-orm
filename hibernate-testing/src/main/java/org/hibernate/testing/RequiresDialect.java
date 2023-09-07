@@ -33,7 +33,7 @@ public @interface RequiresDialect {
 	 *
 	 * @return The dialects
 	 */
-	Class<? extends Dialect>[] value();
+	Class<? extends Dialect> value();
 
 	/**
 	 * Used to indicate if the dialects should be matched strictly (classes equal) or

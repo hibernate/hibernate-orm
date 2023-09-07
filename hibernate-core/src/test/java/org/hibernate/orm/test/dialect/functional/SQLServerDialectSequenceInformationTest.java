@@ -41,7 +41,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Frank Doherty
  */
-@RequiresDialect(value = { SQLServerDialect.class })
+@RequiresDialect(SQLServerDialect.class)
 @TestForIssue(jiraKey = "HHH-13141")
 public class SQLServerDialectSequenceInformationTest extends BaseUnitTestCase {
 

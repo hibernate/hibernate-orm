@@ -584,7 +584,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(HSQLDialect.class)
 	// ASE15.5 will generate select...holdlock and fail at this test, but ASE15.7 passes it. Skip it for ASE15.5
 	// only.
-	@SkipForDialect(value = { SQLServerDialect.class })
+	@SkipForDialect(SQLServerDialect.class)
 	@SkipForDialect(DerbyDialect.class)
 	public void testContendedPessimisticLock() throws Exception {
 		final CountDownLatch latch = new CountDownLatch( 1 );
@@ -843,7 +843,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect( { OracleDialect.class, PostgreSQLDialect.class })
+	@RequiresDialect(OracleDialect.class)
+	@RequiresDialect(PostgreSQLDialect.class)
     @RequiresDialectFeature( DialectChecks.SupportsLockTimeouts.class )
 	public void testContendedPessimisticWriteLockNoWait() throws Exception {
 
@@ -1176,10 +1177,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test(timeout = 70 * 1000) //70 seconds
 	@TestForIssue( jiraKey = "HHH-13135" )
-	@SkipForDialect(value = {
-			MySQLDialect.class,
-			MariaDBDialect.class
-	}, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
+	@SkipForDialect(value = MySQLDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
+	@SkipForDialect(value = MariaDBDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
@@ -1216,10 +1215,8 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Test(timeout = 70 * 1000) //70 seconds
 	@TestForIssue( jiraKey = "HHH-13135" )
-	@SkipForDialect(value = {
-			MySQLDialect.class,
-			MariaDBDialect.class
-	}, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
+	@SkipForDialect(value = MySQLDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
+	@SkipForDialect(value = MariaDBDialect.class, strictMatching = true, comment = "With InnoDB, a FK constraint check acquires a shared lock that isn't compatible with an exclusive lock")
 	@SkipForDialect(value = HSQLDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")

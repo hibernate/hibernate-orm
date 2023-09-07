@@ -34,7 +34,7 @@ import jakarta.persistence.Version;
  * @author Zhenlei Huang
  */
 @TestForIssue(jiraKey = "HHH-10649")
-@RequiresDialect(value = {H2Dialect.class})
+@RequiresDialect(value = H2Dialect.class)
 public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 
 	@Override

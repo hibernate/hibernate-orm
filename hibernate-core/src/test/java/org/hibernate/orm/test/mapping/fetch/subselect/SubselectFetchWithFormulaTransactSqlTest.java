@@ -23,7 +23,8 @@ import org.junit.Test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
-@RequiresDialect({SQLServerDialect.class,SybaseDialect.class})
+@RequiresDialect(SQLServerDialect.class)
+@RequiresDialect(SybaseDialect.class)
 public class SubselectFetchWithFormulaTransactSqlTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected String getBaseForMappings() {

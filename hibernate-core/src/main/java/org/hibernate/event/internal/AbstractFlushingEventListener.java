@@ -122,7 +122,7 @@ public abstract class AbstractFlushingEventListener implements JpaBootstrapSensi
 				persistenceContext.getCollectionEntriesSize()
 		);
 		new EntityPrinter( session.getFactory() ).toString(
-				persistenceContext.getEntitiesByKey().entrySet()
+				persistenceContext.getEntityHoldersByKey().entrySet()
 		);
 	}
 

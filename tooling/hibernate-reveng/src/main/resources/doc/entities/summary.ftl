@@ -31,13 +31,13 @@
 				</tr>
 			</thead>
 			<tbody>
-				<#foreach package in packageList>
+				<#list packageList as package>
 				<tr>
 					<td>
 						<a href="${docFileManager.getRef(docFile, docFileManager.getPackageSummaryDocFile(package))}" target="generalFrame">${package}</a>
 					</td>
 				</tr>
-				</#foreach>
+				</#list>
 			</tbody>
 		</table>
 

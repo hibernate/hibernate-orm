@@ -23,7 +23,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					<#foreach class in classList>
+					<#list classList as class>
 						<tr>
 							<td style="width: 15%">
 								<a href="${docFileManager.getRef(docFile, docFileManager.getEntityDocFile(class))}" target="generalFrame">
@@ -34,7 +34,7 @@
 								${class.getMetaAsString("class-description")?default("&nbsp;")}
 							</td>
 						</tr>
-					</#foreach>
+					</#list>
 				</tbody>
 			</table>
 		</#if>

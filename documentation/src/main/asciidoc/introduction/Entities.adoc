@@ -1047,6 +1047,8 @@ The `Publisher.books` field is called the _unowned_ side of the association.
 Now, we passionately _hate_ the stringly-typed `mappedBy` reference to the owning side of the association.
 Thankfully, the <<metamodel-generator, Metamodel Generator>> gives us a way to make it a
 bit more typesafe:
+
+[[mapped-by-metamodel]]
 [source,java]
 ----
 @OneToMany(mappedBy=Book_.PUBLISHER)  // get used to doing it this way!

@@ -11,6 +11,7 @@ import org.hibernate.engine.internal.Cascade;
 import org.hibernate.engine.internal.CascadePoint;
 import org.hibernate.engine.spi.CascadingActions;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.EventSource;
@@ -57,9 +58,9 @@ public class DefaultEvictEventListener implements EvictEventListener {
 					.getMappingMetamodel()
 					.getEntityDescriptor( lazyInitializer.getEntityName() );
 			final EntityKey key = source.generateEntityKey( id, persister );
-			persistenceContext.removeProxy( key );
+			final EntityHolder holder = persistenceContext.removeEntityHolder( key );
 			if ( !lazyInitializer.isUninitialized() ) {
-				final Object entity = persistenceContext.removeEntity( key );
+				final Object entity = holder.getEntity();
 				if ( entity != null ) {
 					EntityEntry entry = persistenceContext.removeEntry( entity );
 					doEvict( entity, key, entry.getPersister(), event.getSession() );

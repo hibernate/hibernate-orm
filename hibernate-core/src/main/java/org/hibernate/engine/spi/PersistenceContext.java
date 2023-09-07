@@ -482,11 +482,23 @@ public interface PersistenceContext {
 //	@Deprecated
 //	HashSet getNullifiableEntityKeys();
 
+	EntityHolder getEntityHolder(EntityKey key);
+
+	boolean containsEntityHolder(EntityKey key);
+
+	EntityHolder removeEntityHolder(EntityKey key);
+
 	/**
 	 * Doubly internal
 	 */
 	@Internal
 	Map<EntityKey,Object> getEntitiesByKey();
+
+	/**
+	 * Doubly internal
+	 */
+	@Internal
+	Map<EntityKey,EntityHolder> getEntityHoldersByKey();
 
 	/**
 	 * Provides access to the entity/EntityEntry combos associated with the persistence context in a manner that

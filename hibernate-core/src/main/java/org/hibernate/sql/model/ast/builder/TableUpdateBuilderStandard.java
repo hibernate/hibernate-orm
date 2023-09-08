@@ -54,6 +54,10 @@ public class TableUpdateBuilderStandard<O extends MutationOperation> extends Abs
 		this.whereFragment = whereFragment;
 	}
 
+	public String getWhereFragment() {
+		return whereFragment;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public RestrictedTableMutation<O> buildMutation() {

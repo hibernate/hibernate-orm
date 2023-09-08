@@ -21,16 +21,16 @@ digraph EntityGraph {
        fillcolor="#D4E5FE", 
        style="solid,filled"];
 
-<#foreach entity in md.entityBindings> 
+<#list md.entityBindings as entity>
   /* Node ${entity.entityName} */
   <@nodeName entity.entityName/> [ label = "<@propertyLabels name=entity.entityName properties=entity.propertyIterator/>", URL="${entity.entityName?replace(".","/")}.html" ]
   /* Subclass edges for ${entity.entityName} */
-  <#foreach subclass in entity.getDirectSubclasses()>
+  <#list entity.getDirectSubclasses() as subclass>
      <@nodeName subclass.entityName/> -> <@nodeName entity.entityName/>  [ weight="10", arrowhead="onormal"  ]
-  </#foreach>
+  </#list>
   
   <@propertyEdges root=entity.entityName?replace(".","_dot_") properties=entity.propertyIterator/>     
-</#foreach>
+</#list>
 
 }
 
@@ -40,11 +40,11 @@ digraph EntityGraph {
 <@compress single_line=true>
              { 
                 ${name?replace(".","\\.")}|
-                <#foreach p in properties>
-                 <#if p.value.isSimpleValue()> 
+                <#list properties as p>
+                  <#if p.value.isSimpleValue()> 
                    ${p.name}\l
                  </#if>
-                </#foreach>
+                </#list>
               }</@compress></#macro>
 
 <#macro dumpComponent compProperty>
@@ -58,7 +58,7 @@ digraph EntityGraph {
 
 <#macro propertyEdges root properties>
   /* Property edges/nodes for ${root} */
-  <#foreach property in properties>
+  <#list properties as property>
      <#if c2h.getSafeHibernateTypeName(property)?exists>
      ${root} -> ${c2h.getHibernateTypeName(property)?replace(".","_dot_")} [ 
         label="${property.name}" 
@@ -71,5 +71,5 @@ digraph EntityGraph {
      <@dumpComponent property/>
      </#if>
      
-  </#foreach>
+  </#list>
 </#macro>

@@ -10,6 +10,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -209,30 +210,25 @@ public class IdClassEmbeddable extends AbstractEmbeddableMapping implements Iden
 		virtualIdEmbeddable.forEachAttribute(
 				(position, virtualIdAttribute) -> {
 					final AttributeMapping idClassAttribute = attributeMappings.get( position );
-					final Object o = idClassAttribute.getPropertyAccess().getGetter().get( id );
+					Object o = idClassAttribute.getPropertyAccess().getGetter().get( id );
 					if ( virtualIdAttribute instanceof ToOneAttributeMapping && !( idClassAttribute instanceof ToOneAttributeMapping ) ) {
 						final ToOneAttributeMapping toOneAttributeMapping = (ToOneAttributeMapping) virtualIdAttribute;
 						final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType()
 								.getEntityPersister();
 						final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
 						final PersistenceContext persistenceContext = session.getPersistenceContext();
-						// it is conceivable there is a proxy, so check that first
-						propertyValues[position] = persistenceContext.getProxy( entityKey );
-						if ( propertyValues[position] == null ) {
-							// otherwise look for an initialized version
-							propertyValues[position] = persistenceContext.getEntity( entityKey );
-							if ( propertyValues[position] == null ) {
-								// get the association out of the entity itself
-								propertyValues[position] = entityDescriptor.getPropertyValue(
-										entity,
-										toOneAttributeMapping.getAttributeName()
-								);
-							}
+						final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+						// use the managed object i.e. proxy or initialized entity
+						o = holder == null ? null : holder.getManagedObject();
+						if ( o == null ) {
+							// get the association out of the entity itself
+							o = entityDescriptor.getPropertyValue(
+									entity,
+									toOneAttributeMapping.getAttributeName()
+							);
 						}
 					}
-					else {
-						propertyValues[position] = o;
-					}
+					propertyValues[position] = o;
 				}
 		);
 

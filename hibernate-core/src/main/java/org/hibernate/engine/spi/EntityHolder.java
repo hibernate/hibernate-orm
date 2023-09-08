@@ -9,4 +9,9 @@ package org.hibernate.engine.spi;
 public interface EntityHolder {
 	Object getEntity();
 	Object getProxy();
+
+	default Object getManagedObject() {
+		final Object proxy = getProxy();
+		return proxy == null ? getEntity() : proxy;
+	}
 }

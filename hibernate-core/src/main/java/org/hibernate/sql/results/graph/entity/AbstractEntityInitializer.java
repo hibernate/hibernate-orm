@@ -19,6 +19,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -40,6 +41,7 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -497,9 +499,13 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 
 		final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
-		final Object proxy = getProxy( persistenceContext );
+		final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+		final Object proxy = holder == null ? null : holder.getProxy();
+		final boolean unwrapProxy = proxy != null && referencedModelPart instanceof ToOneAttributeMapping
+				&& ( (ToOneAttributeMapping) referencedModelPart ).isUnwrapProxy()
+				&& getConcreteDescriptor().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
 		final Object entityInstanceFromExecutionContext = getEntityInstanceFromExecutionContext( rowProcessingState );
-		if ( isProxyInstance( proxy ) ) {
+		if ( !unwrapProxy && isProxyInstance( proxy ) ) {
 			if ( entityInstanceFromExecutionContext != null ) {
 				entityInstance = entityInstanceFromExecutionContext;
 				registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
@@ -509,7 +515,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			}
 		}
 		else {
-			final Object existingEntity = persistenceContext.getEntity( entityKey );
+			final Object existingEntity = holder == null ? null : holder.getEntity();
 			if ( existingEntity != null ) {
 				entityInstance = existingEntity;
 				if ( existingLoadingEntry == null ) {
@@ -606,10 +612,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			}
 		}
 
-	}
-
-	protected Object getProxy(PersistenceContext persistenceContext) {
-		return persistenceContext.getProxy( entityKey );
 	}
 
 	private void setIsOwningInitializer(Object entityIdentifier,LoadingEntityEntry existingLoadingEntry) {
@@ -820,8 +822,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final PersistenceContext persistenceContextInternal =
 				rowProcessingState.getSession().getPersistenceContextInternal();
 		// Only call PersistenceContext#getEntity within the assert expression, as it is costly
-		return !persistenceContextInternal.containsEntity( entityKey )
-			|| persistenceContextInternal.getEntity( entityKey ) == toInitialize;
+		final Object entity = persistenceContextInternal.getEntity( entityKey );
+		return entity == null || entity == toInitialize;
 	}
 
 	private void initializeEntityInstance(Object toInitialize, RowProcessingState rowProcessingState) {

@@ -342,6 +342,13 @@ public interface PersistenceContext {
 	Object proxyFor(Object impl);
 
 	/**
+	 * Return the existing proxy associated with the given {@code EntityKey}, or the
+	 * argument (the entity associated with the key) if no proxy exists.
+	 * (slower than the form above)
+	 */
+	Object proxyFor(EntityHolder holder);
+
+	/**
 	 * Cross between {@link #addEntity(EntityKey, Object)} and {@link #addProxy(EntityKey, Object)}
 	 * for use with enhancement-as-proxy
 	 */

@@ -9,10 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.LockMode;
 import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.internal.log.LoggingHelper;
-import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -32,7 +29,6 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 
 	private final DomainResultAssembler<?> keyAssembler;
 	private final EntityValuedFetchable referencedFetchable;
-	private final boolean isEnhancedForLazyLoading;
 	private final NotFoundAction notFoundAction;
 
 	public EntityJoinedFetchInitializer(
@@ -59,15 +55,6 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 		this.notFoundAction = notFoundAction;
 
 		this.keyAssembler = keyResult == null ? null : keyResult.createResultAssembler( this, creationState );
-
-		if ( getConcreteDescriptor() != null ) {
-			this.isEnhancedForLazyLoading = getConcreteDescriptor()
-					.getBytecodeEnhancementMetadata()
-					.isEnhancedForLazyLoading();
-		}
-		else {
-			this.isEnhancedForLazyLoading = false;
-		}
 	}
 
 	@Override
@@ -104,19 +91,6 @@ public class EntityJoinedFetchInitializer extends AbstractEntityInitializer {
 		}
 	}
 
-
-
-	@Override
-	protected Object getProxy(PersistenceContext persistenceContext) {
-		ModelPart referencedModelPart = getInitializedPart();
-		if ( referencedModelPart instanceof ToOneAttributeMapping ) {
-			final boolean unwrapProxy = ( (ToOneAttributeMapping) referencedModelPart ).isUnwrapProxy() && isEnhancedForLazyLoading;
-			if ( unwrapProxy ) {
-				return null;
-			}
-		}
-		return super.getProxy( persistenceContext );
-	}
 
 	@Override
 	protected void registerLoadingEntityInstanceFromExecutionContext(RowProcessingState rowProcessingState, Object instance) {

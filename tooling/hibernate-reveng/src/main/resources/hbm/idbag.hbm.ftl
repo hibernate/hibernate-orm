@@ -20,9 +20,9 @@
 	 		<generator class="${value.identifier.identifierGeneratorStrategy}"/>
 	 	</collection-id>
  		<key> 
-        	<#foreach column in keyValue.columnIterator>
+        	<#list keyValue.columns as column>
           		<#include "column.hbm.ftl">
-        	</#foreach>
+        	</#list>
         	</key>
 		<#include "${elementTag}-element.hbm.ftl">
      	</idbag>

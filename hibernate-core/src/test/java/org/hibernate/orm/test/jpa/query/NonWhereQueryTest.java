@@ -8,6 +8,9 @@ package org.hibernate.orm.test.jpa.query;
 
 import java.util.Objects;
 import java.util.UUID;
+
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -104,7 +107,7 @@ public class NonWhereQueryTest {
 
 		public AbstractEntity() {
 			super();
-			this.uuid = UUID.randomUUID();
+			this.uuid = SafeRandomUUIDGenerator.safeRandomUUID();
 		}
 
 		@Override

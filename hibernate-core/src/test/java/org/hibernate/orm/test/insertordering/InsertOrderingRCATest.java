@@ -8,10 +8,12 @@ package org.hibernate.orm.test.insertordering;
 
 import org.hibernate.cfg.Environment;
 import org.hibernate.testing.DialectChecks;
-import org.hibernate.testing.RequiresDialectFeature;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
+import org.hibernate.testing.orm.junit.DialectFeatureCheck;
+import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.junit.Test;
 
 import jakarta.persistence.CascadeType;
@@ -34,13 +36,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
-import static org.mockito.Mockito.verify;
 
-@TestForIssue(jiraKey = "HHH-16485")
-@RequiresDialectFeature(DialectChecks.SupportsJdbcDriverProxying.class)
+@JiraKey(value = "HHH-16485")
+@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJdbcDriverProxying.class)
 public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
 
     private PreparedStatementSpyConnectionProvider connectionProvider = new PreparedStatementSpyConnectionProvider();
@@ -1306,16 +1306,16 @@ public class InsertOrderingRCATest extends BaseNonConfigCoreFunctionalTestCase {
     }
     @MappedSuperclass
     public static abstract class BaseEntity implements Serializable {
-        private UUID id;
+        private Long id;
 
         @Id
         @Column(name = "f_id")
         @GeneratedValue
-        public UUID getId() {
+        public Long getId() {
             return id;
         }
 
-        public void setId(UUID id) {
+        public void setId(Long id) {
             this.id = id;
         }
 

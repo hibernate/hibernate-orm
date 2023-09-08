@@ -27,6 +27,8 @@ import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import static org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator.safeRandomUUID;
+
 @DomainModel(
 		annotatedClasses = {
 				UUIDTypeConverterTest.Image.class,
@@ -65,7 +67,7 @@ public class UUIDTypeConverterTest {
 		);
 		scope.inTransaction(
 				session -> {
-					image.setThumbId( UUID.randomUUID() );
+					image.setThumbId( safeRandomUUID() );
 					session.merge( image );
 					session.flush();
 				}
@@ -77,7 +79,7 @@ public class UUIDTypeConverterTest {
 		scope.inTransaction(
 				session -> {
 					Image image = session.merge( new Image() );
-					image.setThumbId( UUID.randomUUID() );
+					image.setThumbId( safeRandomUUID() );
 					session.merge( image );
 					session.flush();
 				}
@@ -91,7 +93,7 @@ public class UUIDTypeConverterTest {
 					MarbleBox marbleBox = new MarbleBox( List.of( new Marble() ) );
 
 					MarbleBox saved = session.merge( marbleBox );
-					saved.getMarbles().get( 0 ).setMaterialId( UUID.randomUUID() );
+					saved.getMarbles().get( 0 ).setMaterialId( safeRandomUUID() );
 					session.merge( saved );
 				}
 		);
@@ -110,7 +112,7 @@ public class UUIDTypeConverterTest {
 
 		scope.inTransaction(
 				session -> {
-					marbleBox.getMarbles().get( 0 ).setMaterialId( UUID.randomUUID() );
+					marbleBox.getMarbles().get( 0 ).setMaterialId( safeRandomUUID() );
 					session.merge( marbleBox );
 				}
 		);
@@ -121,7 +123,7 @@ public class UUIDTypeConverterTest {
 		@Column(unique = true, length = 16, nullable = false)
 		@jakarta.persistence.Id
 		@Convert(converter = UuidBase64TypeConverter.class)
-		private UUID id = UUID.randomUUID();
+		private UUID id = safeRandomUUID();
 	}
 
 	@Entity(name = "Image")
@@ -130,7 +132,7 @@ public class UUIDTypeConverterTest {
 
 		@Column(unique = true, length = 16, nullable = false)
 		@Convert(converter = UuidBase64TypeConverter.class)
-		private UUID thumbId = UUID.randomUUID();
+		private UUID thumbId = safeRandomUUID();
 
 		private int position;
 

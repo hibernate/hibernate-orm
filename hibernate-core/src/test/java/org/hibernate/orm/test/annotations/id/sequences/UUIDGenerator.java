@@ -12,6 +12,7 @@ import java.util.UUID;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
 /**
  * Unlike Hibernate's UUID generator.  This avoids 
@@ -24,7 +25,7 @@ import org.hibernate.id.IdentifierGenerator;
 public class UUIDGenerator implements IdentifierGenerator {
     @Override
     public Object generate(SharedSessionContractImplementor session, Object entity) throws HibernateException {
-        UUID uuid = UUID.randomUUID();
+        UUID uuid = SafeRandomUUIDGenerator.safeRandomUUID();
         String sud = uuid.toString();
         System.out.println("uuid="+uuid);
         sud = sud.replaceAll("-", "");

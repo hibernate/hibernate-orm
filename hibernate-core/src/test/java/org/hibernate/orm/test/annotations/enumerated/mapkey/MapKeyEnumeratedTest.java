@@ -25,7 +25,7 @@ public class MapKeyEnumeratedTest extends BaseCoreFunctionalTestCase {
 	public void testMapKeyEnumerated() {
 		Session s = openSession();
 		s.beginTransaction();
-		User user = new User(SocialNetwork.STUB_NETWORK_NAME, "facebookId");
+		User user = new User("User1", SocialNetwork.STUB_NETWORK_NAME, "facebookId");
 		s.save( user );
 		s.getTransaction().commit();
 		s.close();

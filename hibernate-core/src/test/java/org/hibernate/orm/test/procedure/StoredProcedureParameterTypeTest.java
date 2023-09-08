@@ -24,11 +24,11 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.Locale;
 import java.util.TimeZone;
-import java.util.UUID;
 import jakarta.persistence.ParameterMode;
 import javax.sql.rowset.serial.SerialBlob;
 import javax.sql.rowset.serial.SerialClob;
 
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.TypedParameterValue;
 import org.hibernate.type.NumericBooleanConverter;
@@ -399,7 +399,7 @@ public class StoredProcedureParameterTypeTest {
 		scope.inTransaction(
 				session -> session.createStoredProcedureQuery("test")
 							.registerStoredProcedureParameter( 1, StandardBasicTypes.UUID_BINARY, ParameterMode.IN)
-							.setParameter( 1, UUID.randomUUID())
+							.setParameter( 1, SafeRandomUUIDGenerator.safeRandomUUID())
 		);
 	}
 

@@ -8,7 +8,9 @@ package org.hibernate.orm.test.annotations.cascade.circle.identity;
 
 import java.io.Serializable;
 import java.util.Date;
-import java.util.UUID;
+
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.GeneratedValue;
@@ -32,7 +34,7 @@ public abstract class AbstractEntity implements Serializable {
 
 	public AbstractEntity() {
 		super();
-		uuid = UUID.randomUUID().toString();
+		uuid = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 		created = new Date();
 	}
 

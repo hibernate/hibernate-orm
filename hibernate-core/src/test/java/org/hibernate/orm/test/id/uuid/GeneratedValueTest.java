@@ -20,12 +20,14 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 
 import org.hibernate.testing.orm.junit.BaseUnitTest;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.orm.junit.ExtraAssertions.assertTyping;
@@ -38,6 +40,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * @author Steve Ebersole
  */
 @BaseUnitTest
+@SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Skipped for Sybase to avoid problems with UUIDs potentially ending with a trailing 0 byte")
 public class GeneratedValueTest {
 	@Test
 	public void testGeneratedUuidId() throws Exception {

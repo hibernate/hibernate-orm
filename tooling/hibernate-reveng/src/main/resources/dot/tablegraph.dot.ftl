@@ -24,14 +24,14 @@ digraph TableGraph {
        style="solid,filled"];
 
 /* TODO: multi schema tables */
-<#foreach table in tables> 
+<#list tables as table>
   <#if table.isPhysicalTable()>
   /* Node ${table.name} */
   <@nodeName table/> [ label = "<@columnLabels name=table.name columns=table.columnIterator/>" ]  
   
   <@propertyEdges root=table.name?replace(".","_dot_") foreignKeys=table.foreignKeyIterator/>     
   </#if>
-</#foreach>
+</#list>
 
 }
 
@@ -41,17 +41,17 @@ digraph TableGraph {
 <@compress single_line=true>
              { 
                 ${name?replace(".","\\.")}|
-                <#foreach p in columns>
+                <#list columns as p>
                    <${p.name}>${p.name}\l
                    <#if p_has_next>|</#if>
-                </#foreach>
+                </#list>
               }</@compress></#macro>
 
 <#macro propertyEdges root foreignKeys>
   /* edges/nodes for ${root} */
-  <#foreach fk in foreignKeys>
+  <#list foreignKeys as fk>
      ${root} -> <@nodeName fk.referencedTable/> [ 
         label="${fk.name}" 
         ]
-  </#foreach>
+  </#list>
 </#macro>

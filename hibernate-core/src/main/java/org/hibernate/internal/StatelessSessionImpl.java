@@ -23,6 +23,7 @@ import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.spi.EffectiveEntityGraph;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -350,11 +351,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 
 		// first, try to load it from the temp PC associated to this SS
 		final PersistenceContext persistenceContext = getPersistenceContext();
-		final Object loaded = persistenceContext.getEntity( entityKey );
-		if ( loaded != null ) {
+		final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+		if ( holder != null && holder.getEntity() != null ) {
 			// we found it in the temp PC.  Should indicate we are in the midst of processing a result set
 			// containing eager fetches via join fetch
-			return loaded;
+			return holder.getEntity();
 		}
 
 		if ( !eager ) {
@@ -370,7 +371,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 				// if the entity defines a HibernateProxy factory, see if there is an
 				// existing proxy associated with the PC - and if so, use it
 				if ( persister.getRepresentationStrategy().getProxyFactory() != null ) {
-					final Object proxy = persistenceContext.getProxy( entityKey );
+					final Object proxy = holder == null ? null : holder.getProxy();
 
 					if ( proxy != null ) {
 						if ( LOG.isTraceEnabled() ) {
@@ -400,7 +401,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 			}
 			else {
 				if ( persister.hasProxy() ) {
-					final Object existingProxy = persistenceContext.getProxy( entityKey );
+					final Object existingProxy = holder == null ? null : holder.getProxy();
 					if ( existingProxy != null ) {
 						return persistenceContext.narrowProxy( existingProxy, persister, entityKey, null );
 					}

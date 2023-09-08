@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -107,9 +108,9 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 					entityInstance = loadingEntityLocally.getEntityInstance();
 				}
 				if ( entityInstance == null ) {
-					entityInstance = persistenceContext.getEntity( entityKey );
-					if ( entityInstance != null ) {
-						entityInstance = persistenceContext.proxyFor( entityInstance );
+					final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+					if ( holder != null && holder.getEntity() != null ) {
+						entityInstance = persistenceContext.proxyFor( holder );
 					}
 				}
 			}

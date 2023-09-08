@@ -9,6 +9,7 @@ package org.hibernate.sql.results.internal.domain;
 import org.hibernate.LockMode;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -160,13 +161,16 @@ public class CircularBiDirectionalFetchImpl implements BiDirectionalFetch {
 					}
 					else {
 						final EntityKey entityKey = new EntityKey( key, entityPersister );
-
-						final Object proxy = persistenceContext.getProxy( entityKey );
+						final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+						if ( holder == null ) {
+							return null;
+						}
+						final Object proxy = holder.getProxy();
 						// it is conceivable there is a proxy, so check that first
 						if ( proxy == null || !( proxy.getClass()
 								.isAssignableFrom( javaType.getJavaTypeClass() ) ) ) {
 							// otherwise look for an initialized version
-							return persistenceContext.getEntity( entityKey );
+							return holder.getEntity();
 						}
 						return proxy;
 					}

@@ -790,6 +790,18 @@ public class StatefulPersistenceContext implements PersistenceContext {
 	}
 
 	@Override
+	public Object proxyFor(EntityHolder holder) throws HibernateException {
+		final Object entity = holder.getEntity();
+		final EntityEntry e = getEntry( entity );
+		final EntityPersister persister;
+		if ( e == null || !( persister = e.getPersister() ).hasProxy() ) {
+			return entity;
+		}
+		final Object proxy = holder.getProxy();
+		return proxy != null? narrowProxy( proxy, persister, e.getEntityKey(), entity ) : entity;
+	}
+
+	@Override
 	public void addEnhancedProxy(EntityKey key, PersistentAttributeInterceptable entity) {
 		final EntityHolderImpl holder = getOrInitializeEntitiesByKey().putIfAbsent( key, EntityHolderImpl.forEntity( entity ) );
 		if ( holder != null ) {

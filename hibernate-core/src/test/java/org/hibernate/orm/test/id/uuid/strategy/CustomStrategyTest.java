@@ -13,10 +13,12 @@ import jakarta.persistence.Id;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.Parameter;
+import org.hibernate.dialect.SybaseDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -32,6 +34,8 @@ import static org.hamcrest.MatcherAssert.assertThat;
 		annotatedClasses = CustomStrategyTest.Node.class
 )
 @SessionFactory
+@SkipForDialect( dialectClass = SybaseDialect.class, matchSubTypes = true,
+		reason = "Skipped for Sybase to avoid problems with UUIDs potentially ending with a trailing 0 byte")
 public class CustomStrategyTest {
 
 	@Test

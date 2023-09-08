@@ -1,8 +1,8 @@
 <#list md.filterDefinitions.keySet() as filterKey>
 <#assign filterDef = md.filterDefinitions.get(filterKey)>
     <filter-def name="filterKey">
-    <#foreach filterParaName in filterDef.parameterNames>
+    <#list filterDef.parameterNames as filterParaName>
 	    <filter-param name="${filterParaName}" type="${filterDef.getParameterType(filterParaName).name}" />
-    </#foreach>
+    </#list>
     </filter-def>    
 </#list>

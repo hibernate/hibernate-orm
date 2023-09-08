@@ -12,9 +12,9 @@
 		</p>
 		
 		<p>
-			<#foreach table in tableList>
+			<#list tableList as table>
 				<a href="${docFileManager.getRef(docFile, docFileManager.getTableDocFile(table))}" target="generalFrame">${table.name}</a><br/>
-			</#foreach>
+			</#list>
 		</p>
 
 	</body>

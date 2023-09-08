@@ -1839,7 +1839,7 @@ public abstract class AbstractEntityPersister
 
 		final String[] columnAliases = getSubclassColumnAliasClosure();
 		final String[] formulaAliases = getSubclassFormulaAliasClosure();
-		int columnIndex = 0;
+		int columnIndex =0;
 		int formulaIndex = 0;
 		for ( ; i < sqlSelections.size(); i++ ) {
 			final SqlSelection sqlSelection = sqlSelections.get( i );

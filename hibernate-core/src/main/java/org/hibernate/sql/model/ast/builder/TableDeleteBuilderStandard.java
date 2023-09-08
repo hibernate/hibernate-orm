@@ -67,6 +67,10 @@ public class TableDeleteBuilderStandard
 		this.sqlComment = sqlComment;
 	}
 
+	public String getWhereFragment() {
+		return whereFragment;
+	}
+
 	@Override
 	public void setWhere(String fragment) {
 		if ( isCustomSql && fragment != null ) {

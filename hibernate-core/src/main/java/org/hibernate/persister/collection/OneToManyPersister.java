@@ -20,7 +20,6 @@ import org.hibernate.engine.jdbc.batch.internal.BasicBatchKey;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
 import org.hibernate.engine.jdbc.mutation.ParameterUsage;
-import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.engine.jdbc.mutation.internal.MutationQueryOptions;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -38,7 +37,6 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.metamodel.mapping.internal.OneToManyCollectionPart;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
-import org.hibernate.persister.collection.mutation.CollectionTableMapping;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorStandard;
@@ -74,11 +72,11 @@ import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableUpdate;
+import org.hibernate.sql.model.ast.builder.CollectionRowDeleteByUpdateSetNullBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.model.internal.MutationOperationGroupFactory;
 import org.hibernate.sql.model.internal.TableUpdateStandard;
-import org.hibernate.sql.model.jdbc.JdbcDeleteMutation;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
-import org.hibernate.sql.model.jdbc.JdbcUpdateMutation;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -522,41 +520,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	private JdbcMutationOperation generateDeleteRowOperation(MutatingTableReference tableReference) {
-		if ( getIdentifierTableMapping().getDeleteRowDetails().getCustomSql() != null ) {
-			return buildCustomSqlDeleteRowOperation( tableReference );
-		}
-
-		return buildGeneratedDeleteRowOperation( tableReference );
-	}
-
-	private JdbcMutationOperation buildCustomSqlDeleteRowOperation(MutatingTableReference tableReference) {
-		final PluralAttributeMapping attribute = getAttributeMapping();
-		assert attribute != null;
-
-		final ForeignKeyDescriptor foreignKey = attribute.getKeyDescriptor();
-		assert foreignKey != null;
-
-		final CollectionTableMapping tableMapping = (CollectionTableMapping) tableReference.getTableMapping();
-
-		final int keyColumnCount = foreignKey.getJdbcTypeCount();
-		final ColumnValueParameterList parameterBinders = new ColumnValueParameterList(
-				tableReference,
-				ParameterUsage.RESTRICT,
-				keyColumnCount
-		);
-		foreignKey.getKeyPart().forEachSelectable( parameterBinders );
-
-		return new JdbcDeleteMutation(
-				tableMapping,
-				this,
-				tableMapping.getDeleteDetails().getCustomSql(),
-				tableMapping.getDeleteDetails().isCallable(),
-				tableMapping.getDeleteDetails().getExpectation(),
-				parameterBinders
-		);
-	}
-
-	private JdbcMutationOperation buildGeneratedDeleteRowOperation(MutatingTableReference tableReference) {
 		final RestrictedTableMutation<JdbcMutationOperation> sqlAst = generateDeleteRowAst( tableReference );
 
 		final SqlAstTranslator<JdbcMutationOperation> translator = getFactory().getJdbcServices()
@@ -568,7 +531,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 	}
 
 	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteRowAst(MutatingTableReference tableReference) {
-		final TableUpdateBuilderStandard<MutationOperation> updateBuilder = new TableUpdateBuilderStandard<>(
+		// note that custom sql delete row details are handled by CollectionRowUpdateBuilder
+		final CollectionRowDeleteByUpdateSetNullBuilder<MutationOperation> updateBuilder = new CollectionRowDeleteByUpdateSetNullBuilder<>(
 				this,
 				tableReference,
 				getFactory(),
@@ -736,41 +700,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 
 	private JdbcMutationOperation generateWriteIndexOperation(MutatingTableReference tableReference) {
-		if ( getIdentifierTableMapping().getUpdateDetails().getCustomSql() != null ) {
-			return buildCustomSqlWriteIndexOperation( tableReference );
-		}
-
-		return buildGeneratedWriteIndexOperation( tableReference );
-	}
-
-	private JdbcMutationOperation buildCustomSqlWriteIndexOperation(MutatingTableReference tableReference) {
-		final PluralAttributeMapping attribute = getAttributeMapping();
-		assert attribute != null;
-
-		final ForeignKeyDescriptor foreignKey = attribute.getKeyDescriptor();
-		assert foreignKey != null;
-
-		final CollectionTableMapping tableMapping = (CollectionTableMapping) tableReference.getTableMapping();
-
-		final int keyColumnCount = foreignKey.getJdbcTypeCount();
-		final ColumnValueParameterList parameterBinders = new ColumnValueParameterList(
-				tableReference,
-				ParameterUsage.RESTRICT,
-				keyColumnCount
-		);
-		foreignKey.getKeyPart().forEachSelectable( parameterBinders );
-
-		return new JdbcUpdateMutation(
-				tableMapping,
-				this,
-				tableMapping.getUpdateDetails().getCustomSql(),
-				tableMapping.getUpdateDetails().isCallable(),
-				tableMapping.getUpdateDetails().getExpectation(),
-				parameterBinders
-		);
-	}
-
-	private JdbcMutationOperation buildGeneratedWriteIndexOperation(MutatingTableReference tableReference) {
+		// note that custom sql update details are handled by TableUpdateBuilderStandard
 		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>(
 				this,
 				tableReference,

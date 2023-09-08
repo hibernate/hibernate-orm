@@ -2,7 +2,7 @@
 		<#if property.value.referencedPropertyName?exists> 
         property-ref="${property.value.referencedPropertyName}"
 </#if>> 
-   		<#foreach column in keyValue.columnIterator>
+   		<#list keyValue.columns as column>
    			<#include "column.hbm.ftl">
-   		</#foreach>
+   		</#list>
 		</key>

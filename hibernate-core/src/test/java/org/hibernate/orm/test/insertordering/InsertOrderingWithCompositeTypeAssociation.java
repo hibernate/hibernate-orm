@@ -6,7 +6,6 @@
  */
 package org.hibernate.orm.test.insertordering;
 
-import java.util.UUID;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
@@ -20,6 +19,7 @@ import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -55,10 +55,10 @@ public class InsertOrderingWithCompositeTypeAssociation {
 		// entity associated in the embeddable takes insert priority over the parent Book entity.
 		scope.inTransaction( entityManager -> {
 			Book bookNoComment = new Book();
-			bookNoComment.setId( UUID.randomUUID().toString() );
+			bookNoComment.setId( SafeRandomUUIDGenerator.safeRandomUUIDAsString() );
 
 			Book bookWithComment = new Book();
-			bookWithComment.setId( UUID.randomUUID().toString() );
+			bookWithComment.setId( SafeRandomUUIDGenerator.safeRandomUUIDAsString() );
 			bookWithComment.setIntermediateObject( new IntermediateObject( new Comment( "This is a comment" ) ) );
 
 			entityManager.persist( bookNoComment );
@@ -114,7 +114,7 @@ public class InsertOrderingWithCompositeTypeAssociation {
 		}
 
 		Comment(String comment) {
-			this.id = UUID.randomUUID().toString();
+			this.id = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
 			this.comment = comment;
 		}
 

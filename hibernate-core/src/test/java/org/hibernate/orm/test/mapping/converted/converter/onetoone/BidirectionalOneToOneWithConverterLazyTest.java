@@ -7,7 +7,8 @@
 package org.hibernate.orm.test.mapping.converted.converter.onetoone;
 
 import java.io.Serializable;
-import java.util.UUID;
+
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -45,11 +46,11 @@ public class BidirectionalOneToOneWithConverterLazyTest {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			BarEntity bar = new BarEntity();
-			bar.setBusinessId( new BusinessId( UUID.randomUUID().toString() ) );
+			bar.setBusinessId( new BusinessId( SafeRandomUUIDGenerator.safeRandomUUIDAsString() ) );
 			bar.setaDouble( 0.5 );
 
 			FooEntity foo = new FooEntity();
-			foo.setBusinessId( new BusinessId( UUID.randomUUID().toString() ) );
+			foo.setBusinessId( new BusinessId( SafeRandomUUIDGenerator.safeRandomUUIDAsString() ) );
 			foo.setName( "foo_name" );
 
 			foo.setBar( bar );

@@ -11,11 +11,10 @@ import java.math.BigDecimal;
 
 import org.hibernate.ScrollMode;
 import org.hibernate.ScrollableResults;
-import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.cfg.Environment;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -27,7 +26,6 @@ import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -38,7 +36,7 @@ import jakarta.persistence.ManyToOne;
  *
  * @author dcebotarenco
  */
-@TestForIssue(jiraKey = "HHH-2558")
+@JiraKey(value = "HHH-2558")
 @DomainModel(
 		annotatedClasses = {
 				JoinedSubclassBatchingTest.Person.class,
@@ -90,7 +88,7 @@ public class JoinedSubclassBatchingTest {
 		scope.inTransaction( s -> {
 			for ( int i = 0; i < nEntities; i++ ) {
 				Employee e = new Employee();
-				e.getId();
+				e.setId( "Employee " + i );
 				e.setName( "Mark" );
 				e.setTitle( "internal sales" );
 				e.setSex( 'M' );
@@ -240,8 +238,6 @@ public class JoinedSubclassBatchingTest {
 	public static class Person {
 
 		@Id
-		@GeneratedValue(generator = "system-uuid")
-		@GenericGenerator(name = "system-uuid", strategy = "uuid2")
 		private String id;
 
 		@Column(nullable = false, length = 80)

@@ -29,7 +29,6 @@ import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -1804,6 +1803,9 @@ public abstract class AbstractEntityPersister
 		final SelectClause selectClause = rootQuerySpec.getSelectClause();
 		final List<SqlSelection> sqlSelections = selectClause.getSqlSelections();
 		int i = 0;
+		int columnIndex = 0;
+		final String[] columnAliases = getSubclassColumnAliasClosure();
+		final int columnAliasesSize = columnAliases.length;
 		for ( String identifierAlias : identifierAliases ) {
 			sqlSelections.set(
 					i,
@@ -1812,6 +1814,9 @@ public abstract class AbstractEntityPersister
 							new AliasedExpression( sqlSelections.get( i ).getExpression(), identifierAlias + suffix )
 					)
 			);
+			if ( i < columnAliasesSize && columnAliases[i].equals( identifierAlias ) ) {
+				columnIndex++;
+			}
 			i++;
 		}
 
@@ -1837,9 +1842,7 @@ public abstract class AbstractEntityPersister
 			i++;
 		}
 
-		final String[] columnAliases = getSubclassColumnAliasClosure();
 		final String[] formulaAliases = getSubclassFormulaAliasClosure();
-		int columnIndex =0;
 		int formulaIndex = 0;
 		for ( ; i < sqlSelections.size(); i++ ) {
 			final SqlSelection sqlSelection = sqlSelections.get( i );

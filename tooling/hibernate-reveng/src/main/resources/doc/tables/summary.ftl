@@ -31,7 +31,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				<#foreach schema in dochelper.tablesBySchema.keySet()>
+				<#list dochelper.tablesBySchema.keySet() as schema>
 					<tr>
 						<td>
 							<a href="${docFileManager.getRef(docFile, docFileManager.getSchemaSummaryDocFile(schema))}" target="generalFrame">
@@ -39,7 +39,7 @@
 							</a>
 						</td>
 					</tr>
-				</#foreach>
+				</#list>
 			</tbody>
 		</table>
 		

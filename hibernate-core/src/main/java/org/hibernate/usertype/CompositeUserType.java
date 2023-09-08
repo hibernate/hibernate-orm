@@ -60,8 +60,8 @@ import org.hibernate.metamodel.spi.ValueAccess;
  *
  *    &#64;Override
  *    public MonetaryAmount instantiate(ValueAccess valueAccess, SessionFactoryImplementor sessionFactory) {
- *         final BigDecimal value = valueAccess.getValue(0, BigDecimal.class);
- *         final Currency currency = valueAccess.getValue(1, Currency.class);
+ *         final Currency currency = valueAccess.getValue(0, Currency.class);
+ *         final BigDecimal value = valueAccess.getValue(1, BigDecimal.class);
  *
  *         if ( value == null &amp;&amp; currency == null ) {
  *             return null;

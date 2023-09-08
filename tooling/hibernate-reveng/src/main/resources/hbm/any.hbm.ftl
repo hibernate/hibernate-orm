@@ -11,12 +11,12 @@
 	    	<#assign metaattributable=property>
 		<#include "meta.hbm.ftl">
 		<#if value.metaValues?exists>
-		 <#foreach entry in value.metaValues.entrySet()>
+		    <#list value.metaValues.entrySet() as entry>
               		<meta-value value="${entry.key}" class="${entry.value}"/>
-           	</#foreach>
-           	</#if>
-           	<#foreach column in property.columnIterator>
-              		<#include "column.hbm.ftl">
-          	 </#foreach>
+           	</#list>
+        </#if>
+        <#list property.columnIterator as column>
+            <#include "column.hbm.ftl">
+        </#list>
 	</any>
 	

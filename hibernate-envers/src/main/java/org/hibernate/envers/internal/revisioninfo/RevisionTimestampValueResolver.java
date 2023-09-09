@@ -69,7 +69,7 @@ public class RevisionTimestampValueResolver {
 				return localDateTime;
 			}
 			else {
-				return localDateTime.atZone( ZoneId.systemDefault() ).toInstant().getEpochSecond();
+				return localDateTime.atZone( ZoneId.systemDefault() ).toInstant().toEpochMilli();
 			}
 		}
 		return null;

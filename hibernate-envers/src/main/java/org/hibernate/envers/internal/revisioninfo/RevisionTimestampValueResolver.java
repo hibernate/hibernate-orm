@@ -6,8 +6,10 @@
  */
 package org.hibernate.envers.internal.revisioninfo;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.temporal.ChronoUnit;
 import java.util.Date;
 
 import org.hibernate.envers.internal.entities.RevisionTimestampData;
@@ -38,7 +40,12 @@ public class RevisionTimestampValueResolver {
 			revisionTimestampSetter.set( object, new Date() );
 		}
 		else if ( timestampData.isTimestampLocalDateTime() ) {
-			revisionTimestampSetter.set(object, LocalDateTime.now() );
+			revisionTimestampSetter.set( object, LocalDateTime.now() );
+		}
+		else if ( timestampData.isInstant() ) {
+			// HHH-17139 truncated to milliseconds to allow Date-based AuditReader functions to
+			// continue to work with the same precision level.
+			revisionTimestampSetter.set( object, Instant.now().truncatedTo( ChronoUnit.MILLIS ) );
 		}
 		else {
 			revisionTimestampSetter.set( object, System.currentTimeMillis() );
@@ -52,6 +59,9 @@ public class RevisionTimestampValueResolver {
 			}
 			else if ( timestampData.isTimestampLocalDateTime() ) {
 				return LocalDateTime.ofInstant( date.toInstant(), ZoneId.systemDefault() );
+			}
+			else if ( timestampData.isInstant() ) {
+				return date.toInstant();
 			}
 			else {
 				return date.getTime();
@@ -68,10 +78,31 @@ public class RevisionTimestampValueResolver {
 			else if ( timestampData.isTimestampLocalDateTime() ) {
 				return localDateTime;
 			}
+			else if ( timestampData.isInstant() ) {
+				return localDateTime.atZone( ZoneId.systemDefault() ).toInstant();
+			}
 			else {
 				return localDateTime.atZone( ZoneId.systemDefault() ).toInstant().toEpochMilli();
 			}
 		}
 		return null;
-	}    
+	}
+
+	public Object resolveByValue(Instant instant) {
+		if ( instant != null ) {
+			if ( timestampData.isTimestampDate() ) {
+				return Date.from( instant );
+			}
+			else if ( timestampData.isTimestampLocalDateTime() ) {
+				return LocalDateTime.ofInstant( instant, ZoneId.systemDefault() );
+			}
+			else if ( timestampData.isInstant() ) {
+				return instant;
+			}
+			else {
+				return instant.getEpochSecond();
+			}
+		}
+		return null;
+	}
 }

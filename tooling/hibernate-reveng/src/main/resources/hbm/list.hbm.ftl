@@ -18,9 +18,9 @@
 		<#include "meta.hbm.ftl">
 		<#include "key.hbm.ftl">		
     		<list-index>
-    			<#foreach column in indexValue.columnIterator>
+    			<#list indexValue.columns as column>
     			<#include "column.hbm.ftl">
-			</#foreach>  
+			</#list>  
     		</list-index>
     		<#include "${elementTag}-element.hbm.ftl">
 	</list>

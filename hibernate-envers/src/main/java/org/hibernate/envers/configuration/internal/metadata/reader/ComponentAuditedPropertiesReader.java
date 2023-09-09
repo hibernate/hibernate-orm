@@ -114,6 +114,11 @@ public class ComponentAuditedPropertiesReader extends AuditedPropertiesReader {
 				return true;
 			}
 
+			// make sure that if a component is annotated with audited, it is honored.
+			if ( allClassAudited != null ) {
+				return true;
+			}
+
 			// assumption here is if a component reader is looking at a @MappedSuperclass, it should be treated
 			// as not being audited if we have reached htis point; allowing components and any @Embeddable
 			// class being audited by default.

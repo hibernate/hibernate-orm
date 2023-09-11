@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToMany;
@@ -12,7 +13,6 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
-
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -108,7 +108,6 @@ public class MapsIdTest {
     @IdClass(ExtensionId.class)
     static class Extension {
         @Id
-        @Column(name = "EX_LOAN_ID") //TODO: this should really cause an error
         private Long exLoanId;
 
         @Id
@@ -120,7 +119,7 @@ public class MapsIdTest {
 
         @ManyToOne
         @MapsId("exLoanId")
-//        @JoinColumn(name = "EX_LOAN_ID")
+        @JoinColumn(name = "EX_LOAN_ID")
         private Loan loan;
     }
 }

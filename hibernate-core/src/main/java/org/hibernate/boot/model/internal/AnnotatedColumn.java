@@ -280,6 +280,7 @@ public class AnnotatedColumn {
 		}
 		else {
 			mappingColumn = new Column();
+			mappingColumn.setExplicit( !isImplicit );
 			redefineColumnName( columnName, propertyName, applyNamingStrategy );
 			mappingColumn.setLength( length );
 			if ( precision != null && precision > 0 ) {  //relevant precision

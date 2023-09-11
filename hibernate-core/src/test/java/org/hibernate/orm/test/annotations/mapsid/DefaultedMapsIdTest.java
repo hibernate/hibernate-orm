@@ -13,6 +13,7 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -107,7 +108,6 @@ public class DefaultedMapsIdTest {
     @IdClass(ExtensionId.class)
     static class Extension {
         @Id
-//        @Column(name = "EX_LOAN_ID")
         private Long exLoanId;
 
         @Id
@@ -119,7 +119,6 @@ public class DefaultedMapsIdTest {
 
         @ManyToOne
         @MapsId("exLoanId")
-//        @JoinColumn(name = "EX_LOAN_ID")
         private Loan loan;
     }
 }

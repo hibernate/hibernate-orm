@@ -1,10 +1,12 @@
 package org.hibernate.orm.test.annotations.mapsid;
 
+import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.IdClass;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
@@ -23,27 +25,27 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SessionFactory
-@DomainModel(annotatedClasses = {MapsIdSpecTest.Loan.class, MapsIdSpecTest.Extension.class})
-public class MapsIdSpecTest {
+@DomainModel(annotatedClasses = {MapsEmbeddedIdWithOverrideTest.Loan.class, MapsEmbeddedIdWithOverrideTest.ExtensionId.class, MapsEmbeddedIdWithOverrideTest.Extension.class})
+public class MapsEmbeddedIdWithOverrideTest {
 
     @Test void test(SessionFactoryScope scope) {
         ExtensionId eid = scope.fromTransaction( s -> {
             Loan loan = new Loan();
             loan.id = 999L;
+            ExtensionId exid = new ExtensionId(loan.id, 1);
             Extension extension = new Extension();
-            extension.exLoanId = loan.id;
+            extension.id = exid;
             extension.loan = loan;
-            extension.exNo = 1;
             extension.exExtensionDays = 30;
             loan.extensions.add(extension);
+            exid = new ExtensionId(loan.id, 2);
             extension = new Extension();
-            extension.exLoanId = loan.id;
+            extension.id = exid;
             extension.loan = loan;
-            extension.exNo = 2;
             extension.exExtensionDays = 14;
             loan.extensions.add(extension);
             s.persist(loan);
-            return new ExtensionId(extension.exLoanId, extension.exNo );
+            return exid;
         });
         scope.inSession( s -> {
             List<Extension> extensions = s.createQuery("from Extension", Extension.class).getResultList();
@@ -52,16 +54,16 @@ public class MapsIdSpecTest {
         scope.inSession( s -> {
             Extension extension = s.find(Extension.class, eid);
             assertEquals(14, extension.exExtensionDays);
-            assertEquals(2, extension.exNo);
-            assertEquals(999L, extension.exLoanId);
+            assertEquals(2, extension.id.exNo);
+            assertEquals(999L, extension.id.exLoanId);
             assertNotNull( extension.loan );
         });
         scope.inSession( s -> {
             Loan loan = s.find(Loan.class, eid.exLoanId);
             Extension extension = loan.extensions.get(0);
-            assertEquals(1, extension.exNo);
+            assertEquals(1, extension.id.exNo);
             assertEquals(30, extension.exExtensionDays);
-            assertEquals(999L, extension.exLoanId);
+            assertEquals(999L, extension.id.exLoanId);
             assertEquals(loan, extension.loan);
         });
     }
@@ -78,8 +80,11 @@ public class MapsIdSpecTest {
         private List<Extension> extensions = new ArrayList<>();
     }
 
-    static class ExtensionId {
+    @Embeddable
+    public static class ExtensionId {
+
         private Long exLoanId;
+
         private int exNo;
 
         public ExtensionId(Long exLoanId, int exNo) {
@@ -105,15 +110,11 @@ public class MapsIdSpecTest {
     }
 
     @Entity(name = "Extension")
-    @IdClass(ExtensionId.class)
     static class Extension {
-        @Id
-//        @Column(name = "EX_LOAN_ID")
-        private Long exLoanId;
 
-        @Id
-        @Column(name = "EX_NO")
-        private int exNo;
+        @EmbeddedId
+        @AttributeOverride(name = "exNo", column = @Column(name="EX_NO"))
+        private ExtensionId id;
 
         @Column(name = "EX_EXTENSION_DAYS")
         private int exExtensionDays;

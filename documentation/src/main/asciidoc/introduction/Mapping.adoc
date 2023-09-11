@@ -863,10 +863,12 @@ class Parent {
 }
 ----
 
+The `parentId` field holds the primary key of the `Parent` table, which will also form part of the composite primary key of every `Child` belonging to the `Parent`.
+
 [discrete]
 ==== First way
 
-In the first, slightly simpler approach, we define an `@IdClass`:
+In the first, slightly simpler approach, we define an `@IdClass` to represent the primary key of `Child`:
 
 [source,java]
 ----

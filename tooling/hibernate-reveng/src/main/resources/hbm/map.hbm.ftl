@@ -25,9 +25,9 @@
     		</map-key-many-to-many>
     		<#else>
     		<map-key type="${indexValue.typeName}">
-    			<#foreach column in indexValue.columnIterator>
+    			<#list indexValue.selectables as column>
     			<#include "column.hbm.ftl">
-			</#foreach> 
+			</#list> 
 		</map-key>
     		</#if>
     		<#include "${elementTag}-element.hbm.ftl">

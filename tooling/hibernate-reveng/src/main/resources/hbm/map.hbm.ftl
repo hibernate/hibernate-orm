@@ -19,9 +19,9 @@
     		<#include "key.hbm.ftl">
     		<#if c2h.isManyToOne(indexValue)>
     		<map-key-many-to-many class="${indexValue.getReferencedEntityName()}">
-    			<#foreach column in indexValue.columnIterator>
-    			<#include "column.hbm.ftl">
-			</#foreach>  
+    			<#list indexValue.selectables as column>
+     			<#include "column.hbm.ftl">
+			</#list>  
     		</map-key-many-to-many>
     		<#else>
     		<map-key type="${indexValue.typeName}">

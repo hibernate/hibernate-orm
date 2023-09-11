@@ -2,7 +2,7 @@
 <#if property.value.referencedPropertyName?exists>
         property-ref="${property.value.referencedPropertyName}"
 </#if>>
-  <#foreach column in elementValue.columnIterator>
+  <#list elementValue.selectables as column>
         <#include "column.hbm.ftl">
-  </#foreach>
+  </#list>
 </many-to-many>

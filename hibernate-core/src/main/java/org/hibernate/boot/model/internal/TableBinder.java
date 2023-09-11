@@ -310,7 +310,7 @@ public class TableBinder {
 
 		final Identifier logicalName;
 		if ( isJPA2ElementCollection ) {
-			logicalName    = buildingContext.getBuildingOptions().getImplicitNamingStrategy().determineCollectionTableName(
+			logicalName = buildingContext.getBuildingOptions().getImplicitNamingStrategy().determineCollectionTableName(
 					new ImplicitCollectionTableNameSource() {
 						private final EntityNaming owningEntityNaming = new EntityNaming() {
 							@Override

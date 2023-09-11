@@ -1045,6 +1045,32 @@ So it might be better to keep the definition of indexes in a SQL DDL script that
 <<automatic-schema-export,Remember>>, we can ask Hibernate to execute a DDL script using the property `javax.persistence.schema-generation.create-script-source`.
 ====
 
+[[denomalized-date]]
+=== Dealing with denormalized data
+
+A typical relational database table in a well-normalized schema has a relatively small number of columns, and so there's little to be gained by selectively querying columns and populating only certain fields of an entity class.
+
+But occasionally, we hear from someone asking how to map a table with a hundred columns or more!
+This situation can arise when:
+
+- data is intentionally denormalized for performance,
+- the results of a complicated analytic query are exposed via a view, or
+- someone has done something crazy and wrong.
+
+Let's suppose that we're _not_ dealing with the last possibility.
+Then we would like to be able to query the monster table without returning all of its columns.
+At first glance, Hibernate doesn't offer a perfect bottled solution to this problem.
+This first impression is misleading.
+Actually, Hibernate features more than one way to deal with this situation, and the real problem is deciding between the ways.
+We could:
+
+1. map multiple entity classes to the same table or view, being careful about "overlaps" where a mutable column is mapped to more than one of the entities,
+2. use <<hql-queries,HQL>> or <<native-queries,native SQL>> queries returning <<projection-lists,results into record types>> instead of retrieving entity instances, or
+3. use the <<bytecode-enhancer,bytecode enhancer>> and link:{doc-javadoc-url}org/hibernate/annotations/LazyGroup.html[`@LazyGroup`] for attribute-level lazy fetching.
+
+Some other ORM solutions push the third option as the recommended way to handle huge tables, but this has never been the preference of the Hibernate team or Hibernate community.
+It's much more typesafe to use one of the first two options.
+
 [[hibernate-reactive]]
 === Reactive programming with Hibernate
 

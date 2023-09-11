@@ -27,7 +27,7 @@
     >
     <#assign metaattributable=property>
 	<#include "meta.hbm.ftl">    
-<#foreach column in property.columnIterator>
+<#list property.columns as column>
         <#include "column.hbm.ftl">
-</#foreach>	
+</#list>	
    </many-to-one>

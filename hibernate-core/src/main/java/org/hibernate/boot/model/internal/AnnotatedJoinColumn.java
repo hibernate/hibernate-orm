@@ -335,19 +335,19 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 
 	private String defaultColumnName(int columnIndex, PersistentClass referencedEntity, String logicalReferencedColumn) {
 		final AnnotatedJoinColumns parent = getParent();
-		if ( parent.hasMapsId() ) {
-			// infer the join column of the association
-			// from the name of the mapped primary key
-			// column (this is not required by the JPA
-			// spec) and is arguably backwards, given
-			// the name of the @MapsId annotation, but
-			// it's better than just having two different
-			// column names which disagree
-			return parent.resolveMapsId().getValue().getColumns().get( columnIndex ).getQuotedName();
-		}
-		else {
+//		if ( parent.hasMapsId() ) {
+//			// infer the join column of the association
+//			// from the name of the mapped primary key
+//			// column (this is not required by the JPA
+//			// spec) and is arguably backwards, given
+//			// the name of the @MapsId annotation, but
+//			// it's better than just having two different
+//			// column names which disagree
+//			return parent.resolveMapsId().getValue().getColumns().get( columnIndex ).getQuotedName();
+//		}
+//		else {
 			return parent.buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
-		}
+//		}
 	}
 
 	public void addDefaultJoinColumnName(PersistentClass referencedEntity, String logicalReferencedColumn) {

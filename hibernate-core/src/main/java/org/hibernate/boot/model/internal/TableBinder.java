@@ -751,6 +751,21 @@ public class TableBinder {
 			final AnnotatedJoinColumn firstColumn = joinColumns.getJoinColumns().get(0);
 			firstColumn.linkValueUsingDefaultColumnNaming( i, column, referencedEntity, value );
 			firstColumn.overrideFromReferencedColumnIfNecessary( column );
+			final Column createdColumn = firstColumn.getMappingColumn();
+			if ( createdColumn != null ) {
+				final String logicalColumnName = createdColumn.getQuotedName();
+				if ( logicalColumnName != null && joinColumns.hasMapsId() ) {
+					final Value idValue = joinColumns.resolveMapsId().getValue();
+					final Column idColumn = idValue.getColumns().get(i);
+					// infer the names of the primary key column
+					// from the join column of the association
+					// as (sorta) required by the JPA spec
+					if ( !idColumn.getQuotedName().equals(logicalColumnName) ) {
+						idColumn.setName( logicalColumnName );
+						idValue.getTable().columnRenamed( idColumn);
+					}
+				}
+			}
 		}
 	}
 

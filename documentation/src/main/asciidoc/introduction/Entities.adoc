@@ -468,8 +468,8 @@ Version attributes are automatically assigned by Hibernate when an entity is mad
 // .Optimistic locking in Hibernate
 ====
 If an entity doesn't have a version number, which often happens when mapping legacy data, we can still do optimistic locking.
-The `@OptimisticLocking` annotation lets us specify that optimistic locks should be checked by validating the values of `ALL` fields, or only the `DIRTY` fields of the entity.
-And the `@OptimisticLock` annotation lets us selectively exclude certain fields from optimistic locking.
+The link:{doc-javadoc-url}org/hibernate/annotations/OptimisticLocking.html[`@OptimisticLocking`] annotation lets us specify that optimistic locks should be checked by validating the values of `ALL` fields, or only the `DIRTY` fields of the entity.
+And the link:{doc-javadoc-url}org/hibernate/annotations/OptimisticLock.html[`@OptimisticLock`] annotation lets us selectively exclude certain fields from optimistic locking.
 ====
 
 The `@Id` and `@Version` attributes we've already seen are just specialized examples of _basic attributes_.
@@ -490,7 +490,7 @@ If an entity doesn't have a meaningful unique key, then it's impossible to say w
 ====
 
 Since it's _extremely_ common to retrieve an entity based on its natural key, Hibernate has a way to mark the attributes of the entity which make up its natural key.
-Each attribute must be annotated `@NaturalId`.
+Each attribute must be annotated link:{doc-javadoc-url}org/hibernate/annotations/NaturalId.html[`@NaturalId`].
 
 [source,java]
 ----

@@ -170,8 +170,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 		boolean useRawName = name.length() + suffix.length() <= dialect.getMaxAliasLength()
 				&& !quoted
-				// TODO: get the row id name from the Dialect
-				&& !name.equalsIgnoreCase( "rowid" );
+				&& !name.equalsIgnoreCase( dialect.rowId(null) );
 		if ( !useRawName ) {
 			if ( suffix.length() >= dialect.getMaxAliasLength() ) {
 				throw new MappingException(
@@ -243,7 +242,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	public int getSqlTypeCode(Mapping mapping) throws MappingException {
 		if ( sqlTypeCode == null ) {
 			final Type type = getValue().getType();
-			int[] sqlTypeCodes;
+			final int[] sqlTypeCodes;
 			try {
 				sqlTypeCodes = type.getSqlTypeCodes( mapping );
 			}
@@ -301,8 +300,9 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	private static Type getUnderlyingType(Mapping mapping, Type type, int typeIndex) {
 		if ( type.isComponentType() ) {
+			final ComponentType componentType = (ComponentType) type;
 			int cols = 0;
-			for ( Type subtype : ((ComponentType) type).getSubtypes() ) {
+			for ( Type subtype : componentType.getSubtypes() ) {
 				int columnSpan = subtype.getColumnSpan( mapping );
 				if ( cols+columnSpan > typeIndex ) {
 					return getUnderlyingType( mapping, subtype, typeIndex-cols );
@@ -312,7 +312,8 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			throw new IndexOutOfBoundsException();
 		}
 		else if ( type.isEntityType() ) {
-			Type idType = ((EntityType) type).getIdentifierOrUniqueKeyType(mapping);
+			final EntityType entityType = (EntityType) type;
+			final Type idType = entityType.getIdentifierOrUniqueKeyType( mapping );
 			return getUnderlyingType( mapping, idType, typeIndex );
 		}
 		else {

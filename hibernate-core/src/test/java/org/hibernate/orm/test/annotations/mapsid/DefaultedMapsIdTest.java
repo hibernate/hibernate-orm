@@ -13,7 +13,6 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +22,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SessionFactory
-@DomainModel(annotatedClasses = {MapsIdTest.Loan.class, MapsIdTest.Extension.class})
-public class MapsIdTest {
+@DomainModel(annotatedClasses = {DefaultedMapsIdTest.Loan.class, DefaultedMapsIdTest.Extension.class})
+public class DefaultedMapsIdTest {
 
     @Test void test(SessionFactoryScope scope) {
         ExtensionId eid = scope.fromTransaction( s -> {
@@ -108,7 +107,7 @@ public class MapsIdTest {
     @IdClass(ExtensionId.class)
     static class Extension {
         @Id
-        @Column(name = "EX_LOAN_ID") //TODO: this should really cause an error
+//        @Column(name = "EX_LOAN_ID")
         private Long exLoanId;
 
         @Id

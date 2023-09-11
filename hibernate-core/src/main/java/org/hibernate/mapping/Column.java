@@ -57,6 +57,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private String sqlTypeName;
 	private Integer sqlTypeCode;
 	private boolean quoted;
+	private boolean explicit;
 	int uniqueInteger;
 	private String comment;
 	private String defaultValue;
@@ -115,6 +116,14 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		else {
 			this.name = name;
 		}
+	}
+
+	public boolean isExplicit() {
+		return explicit;
+	}
+
+	public void setExplicit(boolean explicit) {
+		this.explicit = explicit;
 	}
 
 	private static boolean isQuoted(String name) {

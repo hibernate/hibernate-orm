@@ -969,7 +969,9 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( entityMetamodel.isDynamicUpdate() ) {
-			return false;
+			// if the unversioned entity has dynamic updates
+			// there is a risk of concurrent updates
+			return true;
 		}
 
 		// We need to check whether the user may have circumvented this logic (JPA TCK)

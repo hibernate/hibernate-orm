@@ -79,35 +79,35 @@
  	 	    name="${clazz.entityName}Id"
         	class="${clazz.identifier.getComponentClassName()}"
         	<#if clazz.identifierMapper?exists>mapped="true"</#if>>
-        	<#foreach property in clazz.identifier.propertyIterator>
+        	<#list clazz.identifier.properties as property>
         		<key-property name="${property.name}">
-        		<#foreach column in property.value.columnIterator>
-        		<#include "column.hbm.ftl">
- 			</#foreach>
+        		<#list property.value.selectables as column>
+         		<#include "column.hbm.ftl">
+ 			</#list>
  			</key-property>
- 		</#foreach>
+ 		</#list>
         	</composite-id>
  	<#else>
  		 <id type="${clazz.identifier.typeName}">
-		 <#foreach column in clazz.identifier.columnIterator>
+		 <#list class.identifier.columns as column>
         	<#include "column.hbm.ftl">
- 		</#foreach>
+ 		</#list>
  		</id>
  	</#if>
  </#if>
 <#elseif c2h.isJoinedSubclass(clazz)>
  <key>
-       <#foreach column in clazz.key.columnIterator>
+       <#list clazz.key.columns as column>
                 <#include "column.hbm.ftl">
-       </#foreach>
+       </#list>
  </key>
 </#if>
 
 <#if c2h.needsDiscriminatorElement(clazz)>
     <discriminator type="${clazz.discriminator.typeName}">
-    	<#foreach column in clazz.discriminator.columnIterator>
+    	<#list clazz.discriminator.selectables as column>
         	<#include "column.hbm.ftl">
-  	</#foreach>
+  	</#list>
     </discriminator>
 </#if>
 
@@ -118,13 +118,13 @@
 <#include "${c2h.getTag(property)}.hbm.ftl"/>
 </#if>
 
-<#foreach property in c2h.getProperties(clazz)>
+<#list c2h.getProperties(clazz) as property>
 <#if c2h.getTag(property)!="version" && c2h.getTag(property)!="timestamp">
 <#include "${c2h.getTag(property)}.hbm.ftl"/>
 </#if>
-</#foreach>
+</#list>
 
-<#foreach join in clazz.joinIterator>
+<#list clazz.joins as join>
  <join
  <#if join.table.name?exists>
      table="${join.table.name}"
@@ -133,14 +133,14 @@
    <comment>${comment}</comment>
  </#if>
    <key>
- <#foreach column in join.key.columnIterator>
+ <#list join.key.selectables as column>
   <#include "column.hbm.ftl">
- </#foreach>
+ </#list>
    </key>
- <#foreach property in join.propertyIterator>
+ <#list join.properties as property>
   <#include "${c2h.getTag(property)}.hbm.ftl"/>
- </#foreach>
+ </#list>
   </join>
-</#foreach>
+</#list>
 
 </${c2h.getTag(clazz)}>

@@ -27,16 +27,16 @@
     >
   <#assign metaattributable=property>
   <#include "meta.hbm.ftl">
-  <#foreach column in property.columnIterator>
+  <#list property.selectables as column>
      <#if !column.isFormula()>
         <#include "column.hbm.ftl">
      </#if>
-  </#foreach>	
+  </#list>	
   <#if property.value.typeParameters?exists>
   <type name="${property.value.typeName}">
-  		<#foreach entry in property.value.typeParameters.entrySet()>
+  		<#list property.value.typeParameters.entrySet() as entry>
               		<param name="${entry.key}">${entry.value}</param>
-        </#foreach>  	  
+        </#list>  	  
   </type>
   </#if>
   </property>

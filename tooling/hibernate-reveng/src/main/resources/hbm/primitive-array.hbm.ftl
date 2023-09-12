@@ -9,18 +9,18 @@
  <#assign metaattributable=property>
  <#include "meta.hbm.ftl">
  <key>
-       <#foreach column in dependentValue.getColumnIterator()>
-        <#include "column.hbm.ftl">
-       </#foreach>
+       <#list dependentValue.selectables as column>
+         <#include "column.hbm.ftl">
+       </#list>
  </key>
  <index>
-       <#foreach column in value.getIndex().getColumnIterator()>
+       <#list value.index.selectables as column>
          <#include "column.hbm.ftl">   
-       </#foreach>
+       </#list>
  </index>
  <element type="${value.getElementClass()}" >
-       <#foreach column in value.getElement().getColumnIterator()>         
+       <#list value.element.selectables as column>
          <#include "column.hbm.ftl">   
-       </#foreach>
+       </#list>
  </element>
 </primitive-array>

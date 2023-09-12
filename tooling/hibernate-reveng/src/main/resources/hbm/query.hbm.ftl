@@ -1,4 +1,4 @@
-<#foreach queryDef in md.namedQueryDefinitions>
+<#list md.namedQueryDefinitions as queryDef>
     <query 
         name="${queryDef.name}"
 <#if queryDef.flushMode?exists>
@@ -18,4 +18,4 @@
 </#if>    >
         <![CDATA[${queryDef.queryString.trim()}]]>
     </query> 
-</#foreach>
+</#list>

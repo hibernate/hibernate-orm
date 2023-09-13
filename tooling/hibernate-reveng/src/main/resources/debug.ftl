@@ -20,15 +20,15 @@
 <#macro dump var>
    <#if var?is_hash>
    {
-     <#foreach key in var?keys>
+     <#list var?keys as key>
         ${key}:< <at> dump var[key]/>,
-     </#foreach>
+     </#list>
    }
    <#elseif var?is_sequence>
    [
-     <#foreach elem in sequence>
+     <#list sequence as elem>
        < <at> dump elem/>,
-     </#foreach>
+     </#list>
    ]
    <#else>
      ${var}

@@ -12,7 +12,7 @@
    public int hashCode() {
          int result = 17;
          
-<#foreach property in pojo.getAllPropertiesIterator()>         ${pojo.generateHashCode(property, "result", "this", jdk5)}
-</#foreach>         return result;
+<#list pojo.getAllPropertiesIterator() as property>        ${pojo.generateHashCode(property, "result", "this", jdk5)}
+</#list>         return result;
    }   
 </#if>

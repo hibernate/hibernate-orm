@@ -19,8 +19,8 @@
 <#if pojo.isSubclass() && !pojo.getPropertyClosureForSuperclassFullConstructor().isEmpty()>
         super(${c2j.asArgumentList(pojo.getPropertyClosureForSuperclassFullConstructor())});        
 </#if>
-<#foreach field in pojo.getPropertiesForFullConstructor()> 
+<#list pojo.getPropertiesForFullConstructor() as field>
        this.${c2j.keyWordCheck(field.name)} = ${c2j.keyWordCheck(field.name)};
-</#foreach>
+</#list>
     }
 </#if>    

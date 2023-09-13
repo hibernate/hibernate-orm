@@ -12,7 +12,9 @@ import org.hibernate.testing.hamcrest.CollectionMatchers;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
 import org.hibernate.testing.orm.domain.gambit.EntityWithAggregateId;
+import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryFunctionalTesting;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -40,6 +42,18 @@ public class MultiIdEntityLoadTests {
 				session -> {
 					final List<BasicEntity> results = session.byMultipleIds( BasicEntity.class ).multiLoad( 1, 3 );
 					assertThat( results.size(), is( 2 ) );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey( "HHH-17201" )
+	public void testSimpleEntityUnOrderedMultiLoad(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					List<Integer> idList = List.of( 0, 1 );
+					session.byMultipleIds( SimpleEntity.class )
+							.enableOrderedReturn( false ).multiLoad( idList );
 				}
 		);
 	}

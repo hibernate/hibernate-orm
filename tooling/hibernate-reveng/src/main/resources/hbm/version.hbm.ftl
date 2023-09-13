@@ -3,8 +3,8 @@
         type="${property.value.typeName}"
 <#if !property.basicPropertyAccessor>        access="${property.propertyAccessorName}"
 </#if>    >
-<#foreach column in property.columnIterator> 
+<#list property.columns as column>
        <#include "column.hbm.ftl">
-</#foreach>
+</#list>
 	</version>
 

@@ -8,9 +8,9 @@
 <#if pojo.isSubclass() && !pojo.getPropertyClosureForSuperclassMinimalConstructor().isEmpty()>
         super(${c2j.asArgumentList(pojo.getPropertyClosureForSuperclassMinimalConstructor())});        
 </#if>
-<#foreach field in pojo.getPropertiesForMinimalConstructor()>
+<#list pojo.getPropertiesForMinimalConstructor() as field>
         this.${c2j.keyWordCheck(field.name)} = ${c2j.keyWordCheck(field.name)};
-</#foreach>
+</#list>
     }
 </#if>    
 <#if pojo.needsFullConstructor()>

@@ -1,3 +1,3 @@
-<#foreach issue in lintissues>
+<#list lintissues as issue>
 ${issue}
-</#foreach>
+</#list>

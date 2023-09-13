@@ -6,8 +6,8 @@
 	  StringBuffer buffer = new StringBuffer();
 
       buffer.append(getClass().getName()).append("@").append(Integer.toHexString(hashCode())).append(" [");
-<#foreach property in pojo.getToStringPropertiesIterator()>      buffer.append("${property.getName()}").append("='").append(${pojo.getGetterSignature(property)}()).append("' ");			
-</#foreach>      buffer.append("]");
+<#list pojo.getToStringPropertiesIterator() as property>      buffer.append("${property.getName()}").append("='").append(${pojo.getGetterSignature(property)}()).append("' ");			
+</#list>      buffer.append("]");
       
       return buffer.toString();
      }

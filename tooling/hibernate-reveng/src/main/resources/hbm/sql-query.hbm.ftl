@@ -1,4 +1,4 @@
-<#foreach queryDef in md.namedNativeQueryDefinitions>
+<#list md.namedNativeQueryDefinitions as queryDef>
     <sql-query 
         name="${queryDef.name}"
 <#if queryDef.flushMode?exists>
@@ -18,12 +18,12 @@
 </#if>    
 >
 <#if queryDef.querySpaces?exists>
-<#foreach tableName in queryDef.querySpaces>
+<#list queryDef.querySpaces as tableName>
 	    <synchronize table="${tableName}" />
-</#foreach>
+</#list>
 </#if>
 <#if queryDef.queryReturns?exists>
-<#foreach returnDef in queryDef.queryReturns>
+<#list queryDef.queryReturns as returnDef>
 <#assign returnTag = c2h.getNamedSQLReturnTag(returnDef)>
 	    <${returnTag}
              alias="${returnDef.alias}"
@@ -37,9 +37,9 @@
 <#if returnDef.lockMode?exists>
              lock-mode="${returnDef.lockMode.toString().toLowerCase()}"
 </#if>	    />
-</#foreach>     
+</#list>     
 </#if>   
       <![CDATA[${queryDef.queryString.trim()}]]>
     </sql-query>
     
-</#foreach>
+</#list>

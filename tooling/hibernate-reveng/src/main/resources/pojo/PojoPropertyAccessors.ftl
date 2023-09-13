@@ -1,5 +1,5 @@
 <#-- // Property accessors -->
-<#foreach property in pojo.getAllPropertiesIterator()>
+<#list pojo.getAllPropertiesIterator() as property>
 <#if pojo.getMetaAttribAsBool(property, "gen-property", true)>
  <#if pojo.hasFieldJavaDoc(property)>    
     /**       
@@ -15,4 +15,4 @@
         this.${c2j.keyWordCheck(property.name)} = ${c2j.keyWordCheck(property.name)};
     }
 </#if>
-</#foreach>
+</#list>

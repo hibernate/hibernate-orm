@@ -208,7 +208,7 @@
 		</#if>
 		
 		<#-- SHOW THE TABLE INDEXES -->
-		<#if table.indexIterator.hasNext()>
+		<#if !table.indexes.isEmpty()>
 			<table id="indexes">
 				<thead>
 					<tr>
@@ -244,7 +244,7 @@
 			</table>
 		</#if>
 		
-		<#if table.columnIterator.hasNext()>
+		<#if !table.columns.isEmpty()>
 			<p id="column_detail" class="MainTableHeading">
 				Column Detail
 			</p>

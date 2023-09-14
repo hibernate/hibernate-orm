@@ -77,7 +77,7 @@
 					<#if dochelper.getComponentPOJO(propertyIdentifier)?exists>
 						<#assign compoclass = dochelper.getComponentPOJO(propertyIdentifier)>
 						<#list compoclass.allPropertiesIterator as property>
-							<#assign columnIterator = property.getValue().columnIterator>
+							<#assign columnIterator = property.getValue().selectables.iterator()>
 							<#assign rowspan = property.getValue().getColumnSpan()>
 							<tr>
 								<td <#if (rowspan>0)>rowspan="${rowspan}"</#if>>
@@ -287,7 +287,7 @@
 				<tbody>
 	
 					<#list properties as property>
-						<#assign columnIterator = property.getValue().columnIterator>
+						<#assign columnIterator = property.getValue().selectables.iterator()>
 						<#assign rowspan = property.getValue().getColumnSpan()>
 						<tr>
 							<td <#if (rowspan > 0)>rowspan="${rowspan}"</#if>>

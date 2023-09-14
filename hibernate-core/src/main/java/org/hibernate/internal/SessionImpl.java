@@ -69,6 +69,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
+import org.hibernate.event.jfr.SessionClosedEvent;
+import org.hibernate.event.jfr.SessionOpenEvent;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEvent;
@@ -228,6 +230,11 @@ public class SessionImpl
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
+		final SessionOpenEvent sessionOpenEvent = new SessionOpenEvent();
+		if ( sessionOpenEvent.isEnabled() ) {
+			sessionOpenEvent.begin();
+		}
+
 		persistenceContext = createPersistenceContext();
 		actionQueue = createActionQueue();
 
@@ -271,6 +278,14 @@ public class SessionImpl
 
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), currentTimeMillis() );
+		}
+
+		if ( sessionOpenEvent.isEnabled() ) {
+			sessionOpenEvent.end();
+			if ( sessionOpenEvent.shouldCommit() ) {
+				sessionOpenEvent.sessionIdentifier = getSessionIdentifier().toString();
+				sessionOpenEvent.commit();
+			}
 		}
 	}
 
@@ -413,6 +428,11 @@ public class SessionImpl
 			log.tracef( "Closing session [%s]", getSessionIdentifier() );
 		}
 
+		final SessionClosedEvent sessionClosedEvent = new SessionClosedEvent();
+		if ( sessionClosedEvent.isEnabled() ) {
+			sessionClosedEvent.begin();
+		}
+
 		// todo : we want this check if usage is JPA, but not native Hibernate usage
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
 		if ( sessionFactory.getSessionFactoryOptions().isJpaBootstrap() ) {
@@ -434,6 +454,14 @@ public class SessionImpl
 		final StatisticsImplementor statistics = sessionFactory.getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			statistics.closeSession();
+		}
+
+		if ( sessionClosedEvent.isEnabled() ) {
+			sessionClosedEvent.end();
+			if ( sessionClosedEvent.shouldCommit() ) {
+				sessionClosedEvent.sessionIdentifier = getSessionIdentifier().toString();
+				sessionClosedEvent.commit();
+			}
 		}
 	}
 

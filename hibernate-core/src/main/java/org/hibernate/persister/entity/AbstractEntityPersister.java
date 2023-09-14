@@ -1051,6 +1051,11 @@ public abstract class AbstractEntityPersister
 		return deleteCoordinator;
 	}
 
+	@Internal
+	public UpdateCoordinator getMergeCoordinator() {
+		return mergeCoordinator;
+	}
+
 	public String getVersionSelectString() {
 		return sqlVersionSelectString;
 	}

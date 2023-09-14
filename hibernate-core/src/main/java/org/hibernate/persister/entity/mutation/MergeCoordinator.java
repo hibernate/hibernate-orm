@@ -24,7 +24,7 @@ public class MergeCoordinator extends UpdateCoordinatorStandard {
 	}
 
 	@Override
-	<O extends MutationOperation> AbstractTableUpdateBuilder<O> newTableUpdateBuilder(EntityTableMapping tableMapping) {
+	protected <O extends MutationOperation> AbstractTableUpdateBuilder<O> newTableUpdateBuilder(EntityTableMapping tableMapping) {
 		return new TableMergeBuilder<>( entityPersister(), tableMapping, factory() );
 	}
 

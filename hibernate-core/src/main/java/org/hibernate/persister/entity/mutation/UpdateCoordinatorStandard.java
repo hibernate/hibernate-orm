@@ -1088,7 +1088,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		return createOperationGroup( valuesAnalysis, updateGroupBuilder.buildMutationGroup() );
 	}
 
-	<O extends MutationOperation> AbstractTableUpdateBuilder<O> newTableUpdateBuilder(EntityTableMapping tableMapping) {
+	protected <O extends MutationOperation> AbstractTableUpdateBuilder<O> newTableUpdateBuilder(EntityTableMapping tableMapping) {
 		return new TableUpdateBuilderStandard<>( entityPersister(), tableMapping, factory() );
 	}
 

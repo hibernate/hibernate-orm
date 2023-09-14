@@ -15,7 +15,7 @@
               		<meta-value value="${entry.key}" class="${entry.value}"/>
            	</#list>
         </#if>
-        <#list property.columnIterator as column>
+        <#list property.columns as column>
             <#include "column.hbm.ftl">
         </#list>
 	</any>

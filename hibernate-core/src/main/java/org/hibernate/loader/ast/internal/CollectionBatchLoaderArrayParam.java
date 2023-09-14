@@ -19,7 +19,10 @@ import org.hibernate.loader.ast.spi.CollectionBatchLoader;
 import org.hibernate.loader.ast.spi.SqlArrayMultiKeyLoader;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -45,6 +48,7 @@ import static org.hibernate.loader.ast.internal.MultiKeyLoadLogging.MULTI_KEY_LO
 public class CollectionBatchLoaderArrayParam
 		extends AbstractCollectionBatchLoader
 		implements SqlArrayMultiKeyLoader {
+	private final Class<?> keyDomainType;
 	private final JdbcMapping arrayJdbcMapping;
 	private final JdbcParameter jdbcParameter;
 	private final SelectStatement sqlSelect;
@@ -66,16 +70,18 @@ public class CollectionBatchLoaderArrayParam
 		}
 
 		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
-		final Class<?> keyType = keyDescriptor.getJavaType().getJavaTypeClass();
-		final Class<?> arrayClass = Array.newInstance( keyType, 0 ).getClass();
+		final JdbcMapping jdbcMapping = keyDescriptor.getSingleJdbcMapping();
+		final Class<?> jdbcArrayClass = Array.newInstance( jdbcMapping.getJdbcJavaType().getJavaTypeClass(), 0 )
+				.getClass();
+		keyDomainType = getKeyType( keyDescriptor.getKeyPart() );
 
 		final BasicType<?> arrayBasicType = getSessionFactory().getTypeConfiguration()
 				.getBasicTypeRegistry()
-				.getRegisteredType( arrayClass );
+				.getRegisteredType( jdbcArrayClass );
 		arrayJdbcMapping = MultiKeyLoadHelper.resolveArrayJdbcMapping(
 				arrayBasicType,
-				keyDescriptor.getSingleJdbcMapping(),
-				arrayClass,
+				jdbcMapping,
+				jdbcArrayClass,
 				getSessionFactory()
 		);
 
@@ -95,7 +101,6 @@ public class CollectionBatchLoaderArrayParam
 				.buildSelectTranslator( getSessionFactory(), sqlSelect )
 				.translate( JdbcParameterBindings.NO_BINDINGS, QueryOptions.NONE );
 	}
-
 	@Override
 	public PersistentCollection<?> load(Object keyBeingLoaded, SharedSessionContractImplementor session) {
 		final ForeignKeyDescriptor keyDescriptor = getLoadable().getKeyDescriptor();
@@ -122,13 +127,14 @@ public class CollectionBatchLoaderArrayParam
 
 		final int length = getDomainBatchSize();
 		final Object[] keysToInitialize = (Object[]) Array.newInstance(
-				keyDescriptor.getSingleJdbcMapping().getJdbcJavaType().getJavaTypeClass(),
+				jdbcParameter.getExpressionType()
+						.getSingleJdbcMapping()
+						.getJdbcJavaType()
+						.getJavaTypeClass()
+						.getComponentType(),
 				length
 		);
-		final Object[] embeddedKeys = (Object[]) Array.newInstance(
-				keyDescriptor.getJavaType().getJavaTypeClass(),
-				length
-		);
+		final Object[] embeddedKeys = (Object[]) Array.newInstance( keyDomainType, length );
 		session.getPersistenceContextInternal().getBatchFetchQueue()
 				.collectBatchLoadableCollectionKeys(
 						length,
@@ -157,7 +163,7 @@ public class CollectionBatchLoaderArrayParam
 		}
 		final CollectionKey collectionKey = new CollectionKey(
 				getLoadable().getCollectionDescriptor(),
-				keysToInitialize
+				keyBeingLoaded
 		);
 		return session.getPersistenceContext().getCollection( collectionKey );
 	}

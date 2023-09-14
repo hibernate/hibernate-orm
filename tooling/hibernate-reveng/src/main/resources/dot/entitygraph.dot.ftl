@@ -23,13 +23,13 @@ digraph EntityGraph {
 
 <#list md.entityBindings as entity>
   /* Node ${entity.entityName} */
-  <@nodeName entity.entityName/> [ label = "<@propertyLabels name=entity.entityName properties=entity.propertyIterator/>", URL="${entity.entityName?replace(".","/")}.html" ]
+  <@nodeName entity.entityName/> [ label = "<@propertyLabels name=entity.entityName properties=entity.properties/>", URL="${entity.entityName?replace(".","/")}.html" ]
   /* Subclass edges for ${entity.entityName} */
   <#list entity.getDirectSubclasses() as subclass>
      <@nodeName subclass.entityName/> -> <@nodeName entity.entityName/>  [ weight="10", arrowhead="onormal"  ]
   </#list>
   
-  <@propertyEdges root=entity.entityName?replace(".","_dot_") properties=entity.propertyIterator/>     
+  <@propertyEdges root=entity.entityName?replace(".","_dot_") properties=entity.properties/>     
 </#list>
 
 }
@@ -51,9 +51,9 @@ digraph EntityGraph {
       <#assign component=compProperty.value>
       /* Node component ${component} */
       ${c2h.getHibernateTypeName(compProperty)?replace(".","_dot_")} [ 
-        label = "<@propertyLabels name=component.componentClassName properties=component.propertyIterator/>"
+        label = "<@propertyLabels name=component.componentClassName properties=component.properties/>"
            ]
-      <@propertyEdges root=component.componentClassName?replace(".","_dot_") properties=component.propertyIterator/>   
+      <@propertyEdges root=component.componentClassName?replace(".","_dot_") properties=component.properties/>   
 </#macro>
 
 <#macro propertyEdges root properties>

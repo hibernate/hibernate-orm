@@ -89,7 +89,7 @@
         	</composite-id>
  	<#else>
  		 <id type="${clazz.identifier.typeName}">
-		 <#list class.identifier.columns as column>
+		 <#list clazz.identifier.selectables as column>
         	<#include "column.hbm.ftl">
  		</#list>
  		</id>

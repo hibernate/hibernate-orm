@@ -172,6 +172,8 @@ dependencyResolutionManagement {
             def wildFlyTxnClientVersion = version "wildFlyTxnClient", "2.0.0.Final"
             def xapoolVersion = version "xapool", "1.5.0"
 
+            def jfrUnitVersion = version "jfrUnit", "1.0.0.Alpha2"
+
             library( "junit5Api", "org.junit.jupiter", "junit-jupiter-api" ).versionRef( junit5Version )
             library( "junit5Engine", "org.junit.jupiter", "junit-jupiter-engine" ).versionRef( junit5Version )
             library( "junit5Params", "org.junit.jupiter", "junit-jupiter-params" ).versionRef( junit5Version )
@@ -201,6 +203,8 @@ dependencyResolutionManagement {
             library( "wildFlyTxnClient", "org.wildfly.transaction", "wildfly-transaction-client-jakarta" ).versionRef( wildFlyTxnClientVersion )
 
             library( "weld", "org.jboss.weld.se", "weld-se-shaded" ).versionRef( weldVersion )
+
+            library( "jfrUnit", "org.moditect.jfrunit", "jfrunit-core" ).versionRef( jfrUnitVersion )
         }
         dbLibs {
             def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.2.220" )

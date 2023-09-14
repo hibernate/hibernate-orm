@@ -17,8 +17,6 @@ import org.hibernate.Session;
 import org.hibernate.StatelessSession;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.query.Query;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
@@ -77,18 +75,7 @@ public class QueryScrollingWithInheritanceProxyTest extends BaseNonConfigCoreFun
 					"select distinct e from Employee e left join fetch e.otherEntities order by e.dept",
 					Employee.class
 			);
-			if ( getDialect() instanceof DB2Dialect || getDialect() instanceof DerbyDialect ) {
-				/*
-					FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
-					but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
-					set type of TYPE_FORWARD_ONLY and db2 does not support it.
-			 	*/
-				scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
-			}
-			else {
-				scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-			}
-
+			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
 			while ( scrollableResults.next() ) {
 				final Employee employee = (Employee) scrollableResults.get();
 				assertThat( Hibernate.isPropertyInitialized( employee, "otherEntities" ), is( true ) );
@@ -141,18 +128,7 @@ public class QueryScrollingWithInheritanceProxyTest extends BaseNonConfigCoreFun
 					"select distinct e from Employee e left join fetch e.otherEntities order by e.dept",
 					Employee.class
 			);
-			if ( getDialect() instanceof DB2Dialect || getDialect() instanceof DerbyDialect ) {
-				/*
-					FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
-					but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
-					set type of TYPE_FORWARD_ONLY and db2 does not support it.
-			 	*/
-				scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
-			}
-			else {
-				scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
-			}
-
+			scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY );
 			while ( scrollableResults.next() ) {
 				final Employee employee = (Employee) scrollableResults.get();
 				assertThat( Hibernate.isPropertyInitialized( employee, "otherEntities" ), is( true ) );

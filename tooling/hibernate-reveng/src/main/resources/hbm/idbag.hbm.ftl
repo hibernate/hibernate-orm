@@ -16,7 +16,7 @@
 	 <#assign metaattributable=property>
 	 	<#include "meta.hbm.ftl">
 	 	<collection-id type="${value.identifier.typeName}" 
-	 		column="${value.getIdentifier().getColumnIterator().next().getQuotedName()}">
+	 		column="${value.getIdentifier().getColumns().iterator().next().getQuotedName()}">
 	 		<generator class="${value.identifier.identifierGeneratorStrategy}"/>
 	 	</collection-id>
  		<key> 

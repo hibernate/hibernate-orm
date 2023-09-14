@@ -12,6 +12,7 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.PostgreSQL81Dialect;
 
+import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.util.ReflectionUtil;
 
@@ -23,7 +24,12 @@ public class PostgreSQLSkipAutoCommitTest extends AbstractSkipAutoCommitTest {
 
 	@Override
 	protected DataSource dataSource() {
-		DataSource dataSource = ReflectionUtil.newInstance( "org.postgresql.ds.PGSimpleDataSource" );
+		DataSource dataSource = null;
+		if (getDialect() instanceof PostgresPlusDialect) {
+			dataSource = ReflectionUtil.newInstance("com.edb.ds.PGSimpleDataSource");
+		} else if (getDialect() instanceof PostgreSQL81Dialect) {
+			dataSource = ReflectionUtil.newInstance("org.postgresql.ds.PGSimpleDataSource");
+		}
 		ReflectionUtil.setProperty( dataSource, "url", Environment.getProperties().getProperty( AvailableSettings.URL ) );
 		ReflectionUtil.setProperty( dataSource, "user", Environment.getProperties().getProperty( AvailableSettings.USER ) );
 		ReflectionUtil.setProperty( dataSource, "password", Environment.getProperties().getProperty( AvailableSettings.PASS ) );

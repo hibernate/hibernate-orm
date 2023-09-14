@@ -14,7 +14,10 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.CollectionBatchLoader;
+import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
+import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
 import org.hibernate.sql.results.internal.ResultsHelper;
 
 import java.lang.reflect.Array;
@@ -127,8 +130,10 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 
 	Object[] resolveKeysToInitialize(Object keyBeingLoaded, SharedSessionContractImplementor session) {
 		final int length = getDomainBatchSize();
-		final Class<?> keyType = getLoadable().getKeyDescriptor().getJavaType().getJavaTypeClass();
-		final Object[] keysToInitialize = (Object[]) Array.newInstance( keyType, length );
+		final Object[] keysToInitialize = (Object[]) Array.newInstance(
+				getKeyType( getLoadable().getKeyDescriptor().getKeyPart() ),
+				length
+		);
 		session.getPersistenceContextInternal().getBatchFetchQueue()
 				.collectBatchLoadableCollectionKeys(
 						length,
@@ -139,5 +144,16 @@ public abstract class AbstractCollectionBatchLoader implements CollectionBatchLo
 		// now trim down the array to the number of keys we found
 		return trimIdBatch( length, keysToInitialize );
 	}
+
+	protected Class<?> getKeyType(ValuedModelPart keyPart) {
+		if ( keyPart instanceof NonAggregatedIdentifierMapping ) {
+			final IdClassEmbeddable idClassEmbeddable = ( (NonAggregatedIdentifierMapping) keyPart ).getIdClassEmbeddable();
+			if ( idClassEmbeddable != null ) {
+				return idClassEmbeddable.getMappedJavaType().getJavaTypeClass();
+			}
+		}
+		return keyPart.getJavaType().getJavaTypeClass();
+	}
+
 
 }

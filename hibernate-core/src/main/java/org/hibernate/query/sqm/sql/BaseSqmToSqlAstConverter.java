@@ -870,7 +870,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private static void verifyManipulationImplicitJoin(TableGroup tableGroup) {
 		//noinspection StatementWithEmptyBody
-		if ( !tableGroup.isInitialized() || tableGroup instanceof VirtualTableGroup ) {
+		if ( !tableGroup.isInitialized() || tableGroup.isVirtual() ) {
 			// this is fine
 		}
 		else {
@@ -1243,6 +1243,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
 			if ( !joinedGroup.isInitialized() ) {
 				continue;
+			}
+			else if ( joinedGroup.isVirtual() ) {
+				return hasJoins( joinedGroup );
 			}
 			return true;
 		}

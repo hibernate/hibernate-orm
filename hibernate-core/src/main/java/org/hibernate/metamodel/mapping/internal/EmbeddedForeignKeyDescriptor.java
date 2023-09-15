@@ -336,7 +336,7 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 	}
 
 	private static TableGroup getUnderlyingTableGroup(TableGroup tableGroup) {
-		if ( tableGroup instanceof VirtualTableGroup ) {
+		if ( tableGroup.isVirtual() ) {
 			tableGroup = getUnderlyingTableGroup( ( (VirtualTableGroup) tableGroup ).getUnderlyingTableGroup() );
 		}
 		return tableGroup;

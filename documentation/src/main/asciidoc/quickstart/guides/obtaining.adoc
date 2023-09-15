@@ -53,7 +53,7 @@ In Gradle we would have:
 
 [source,groovy]
 ----
-implementation 'org.hibernate.orm:hibernate-core:6.3.0.Final'
+implementation 'org.hibernate.orm:hibernate-core:6.2.0.Final'
 ----
 
 Or in Maven:
@@ -63,7 +63,7 @@ Or in Maven:
 <dependency>
     <groupId>org.hibernate.org</groupId>
     <artifactId>hibernate-core</artifactId>
-    <version>6.3.0.Final</version>
+    <version>6.2.0.Final</version>
 </dependency>
 ----
 

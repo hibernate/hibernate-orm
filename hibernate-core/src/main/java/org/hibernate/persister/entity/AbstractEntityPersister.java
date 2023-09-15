@@ -850,7 +850,7 @@ public abstract class AbstractEntityPersister
 
 	private MultiIdEntityLoader<Object> buildMultiIdLoader(PersistentClass persistentClass) {
 		if ( persistentClass.getIdentifier() instanceof BasicValue
-				&& MultiKeyLoadHelper.supportsSqlArrayType( factory.getServiceRegistry().getService( JdbcServices.class ).getDialect() ) ) {
+				&& MultiKeyLoadHelper.supportsSqlArrayType( factory.getFastSessionServices().dialect ) ) {
 			return new MultiIdEntityLoaderArrayParam<>( this, factory );
 		}
 		return new MultiIdEntityLoaderStandard<>( this, persistentClass, factory );

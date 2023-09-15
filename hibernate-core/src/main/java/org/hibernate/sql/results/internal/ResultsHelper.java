@@ -6,9 +6,7 @@
  */
 package org.hibernate.sql.results.internal;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 
 import org.hibernate.CacheMode;
@@ -70,7 +68,8 @@ public class ResultsHelper {
 			JdbcValuesMapping jdbcValuesMapping) {
 		final SessionFactoryImplementor sessionFactory = executionContext.getSession().getFactory();
 
-		final Map<NavigablePath, Initializer> initializerMap = new LinkedHashMap<>();
+		//custom Map<NavigablePath, Initializer>
+		final NavigablePathMapToInitializer initializerMap = new NavigablePathMapToInitializer();
 		final InitializersList.Builder initializersBuilder = new InitializersList.Builder();
 
 		final List<DomainResultAssembler<?>> assemblers = jdbcValuesMapping.resolveAssemblers(
@@ -138,28 +137,11 @@ public class ResultsHelper {
 				}
 		);
 
-		logInitializers( initializerMap );
+		initializerMap.logInitializers();
 
 		final InitializersList initializersList = initializersBuilder.build( initializerMap );
 
 		return new StandardRowReader<>( assemblers, initializersList, rowTransformer, transformedResultJavaType );
-	}
-
-	private static void logInitializers(Map<NavigablePath, Initializer> initializerMap) {
-		if ( ! ResultsLogger.RESULTS_MESSAGE_LOGGER.isDebugEnabled() ) {
-			return;
-		}
-
-		ResultsLogger.RESULTS_MESSAGE_LOGGER.debug( "Initializer list" );
-		initializerMap.forEach( (navigablePath, initializer) -> {
-			ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf(
-					"    %s -> %s@%s (%s)",
-					navigablePath,
-					initializer,
-					initializer.hashCode(),
-					initializer.getInitializedPart()
-			);
-		} );
 	}
 
 	public static void finalizeCollectionLoading(

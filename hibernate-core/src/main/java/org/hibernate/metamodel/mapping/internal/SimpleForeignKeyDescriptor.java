@@ -315,7 +315,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	private static TableGroup getUnderlyingTableGroup(TableGroup tableGroup) {
-		if ( tableGroup instanceof VirtualTableGroup ) {
+		if ( tableGroup.isVirtual() ) {
 			tableGroup = getUnderlyingTableGroup( ( (VirtualTableGroup) tableGroup ).getUnderlyingTableGroup() );
 		}
 		return tableGroup;

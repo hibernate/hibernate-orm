@@ -17,7 +17,8 @@ import java.util.Properties;
 
 import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
-import org.hibernate.cfg.Environment;
+import org.hibernate.cfg.JdbcSettings;
+import org.hibernate.cfg.ProxoolSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.util.StringHelper;
@@ -110,19 +111,19 @@ public class ProxoolConnectionProvider
 	@Override
 	public void configure(Map<String, Object> props) {
 		// Get the configurator files (if available)
-		final String jaxpFile = (String) props.get( Environment.PROXOOL_XML );
-		final String propFile = (String) props.get( Environment.PROXOOL_PROPERTIES );
-		final String externalConfig = (String) props.get( Environment.PROXOOL_EXISTING_POOL );
+		final String jaxpFile = (String) props.get( ProxoolSettings.PROXOOL_XML );
+		final String propFile = (String) props.get( ProxoolSettings.PROXOOL_PROPERTIES );
+		final String externalConfig = (String) props.get( ProxoolSettings.PROXOOL_EXISTING_POOL );
 
 		// Default the Proxool alias setting
-		proxoolAlias = (String) props.get( Environment.PROXOOL_POOL_ALIAS );
+		proxoolAlias = (String) props.get( ProxoolSettings.PROXOOL_POOL_ALIAS );
 
 		// Configured outside of Hibernate (i.e. Servlet container, or Java Bean Container
 		// already has Proxool pools running, and this provider is to just borrow one of these
 		if ( "true".equals( externalConfig ) ) {
 			// Validate that an alias name was provided to determine which pool to use
 			if ( !StringHelper.isNotEmpty( proxoolAlias ) ) {
-				final String msg = PROXOOL_MESSAGE_LOGGER.unableToConfigureProxoolProviderToUseExistingInMemoryPool( Environment.PROXOOL_POOL_ALIAS );
+				final String msg = PROXOOL_MESSAGE_LOGGER.unableToConfigureProxoolProviderToUseExistingInMemoryPool( ProxoolSettings.PROXOOL_POOL_ALIAS );
 				PROXOOL_LOGGER.error( msg );
 				throw new HibernateException( msg );
 			}
@@ -141,7 +142,7 @@ public class ProxoolConnectionProvider
 
 			// Validate that an alias name was provided to determine which pool to use
 			if ( !StringHelper.isNotEmpty( proxoolAlias ) ) {
-				final String msg = PROXOOL_MESSAGE_LOGGER.unableToConfigureProxoolProviderToUseJaxp( Environment.PROXOOL_POOL_ALIAS );
+				final String msg = PROXOOL_MESSAGE_LOGGER.unableToConfigureProxoolProviderToUseJaxp( ProxoolSettings.PROXOOL_POOL_ALIAS );
 				PROXOOL_LOGGER.error( msg );
 				throw new HibernateException( msg );
 			}
@@ -166,7 +167,7 @@ public class ProxoolConnectionProvider
 
 			// Validate that an alias name was provided to determine which pool to use
 			if ( !StringHelper.isNotEmpty( proxoolAlias ) ) {
-				final String msg = PROXOOL_MESSAGE_LOGGER.unableToConfigureProxoolProviderToUsePropertiesFile( Environment.PROXOOL_POOL_ALIAS );
+				final String msg = PROXOOL_MESSAGE_LOGGER.unableToConfigureProxoolProviderToUsePropertiesFile( ProxoolSettings.PROXOOL_POOL_ALIAS );
 				PROXOOL_LOGGER.error( msg );
 				throw new HibernateException( msg );
 			}
@@ -189,7 +190,7 @@ public class ProxoolConnectionProvider
 		isolation = ConnectionProviderInitiator.extractIsolation( props );
 		PROXOOL_MESSAGE_LOGGER.jdbcIsolationLevel( ConnectionProviderInitiator.toIsolationNiceName( isolation ) );
 
-		autocommit = ConfigurationHelper.getBoolean( Environment.AUTOCOMMIT, props );
+		autocommit = ConfigurationHelper.getBoolean( JdbcSettings.AUTOCOMMIT, props );
 		PROXOOL_MESSAGE_LOGGER.autoCommitMode( autocommit );
 	}
 

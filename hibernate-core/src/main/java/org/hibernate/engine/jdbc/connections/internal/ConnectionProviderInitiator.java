@@ -20,6 +20,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.C3p0Settings;
+import org.hibernate.cfg.ProxoolSettings;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -77,7 +79,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	// mapping from legacy connection provider name to actual
 	// connection provider that will be used
-	private static final Map<String,String> LEGACY_CONNECTION_PROVIDER_MAPPING = Map.of(
+	private static final Map<String, String> LEGACY_CONNECTION_PROVIDER_MAPPING = Map.of(
 			"org.hibernate.connection.DatasourceConnectionProvider",
 			DatasourceConnectionProviderImpl.class.getName(),
 
@@ -94,7 +96,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	}
 
 	@Override
-	public ConnectionProvider initiateService(Map<String, Object> configurationValues, ServiceRegistryImplementor registry) {
+	public ConnectionProvider initiateService(
+			Map<String, Object> configurationValues,
+			ServiceRegistryImplementor registry) {
 		if ( isMultiTenancyEnabled( registry ) ) {
 			// nothing to do, but given the separate hierarchies have to handle this here.
 			return null;
@@ -148,7 +152,8 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 		ConnectionProvider connectionProvider = null;
 
-		final Class<? extends ConnectionProvider> singleRegisteredProvider = getSingleRegisteredProvider( strategySelector );
+		final Class<? extends ConnectionProvider> singleRegisteredProvider = getSingleRegisteredProvider(
+				strategySelector );
 		if ( singleRegisteredProvider != null ) {
 			try {
 				connectionProvider = singleRegisteredProvider.newInstance();
@@ -200,7 +205,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 
 
-		final Map<?,?> injectionData = (Map<?,?>) configurationValues.get( INJECTION_DATA );
+		final Map<?, ?> injectionData = (Map<?, ?>) configurationValues.get( INJECTION_DATA );
 		if ( injectionData != null && injectionData.size() > 0 ) {
 			final ConnectionProvider theConnectionProvider = connectionProvider;
 			new BeanInfoHelper( connectionProvider.getClass() ).applyToBeanInfo(
@@ -244,7 +249,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	private static boolean c3p0ConfigDefined(Map<String, Object> configValues) {
 		for ( String key : configValues.keySet() ) {
-			if ( key.startsWith( AvailableSettings.C3P0_CONFIG_PREFIX ) ) {
+			if ( key.startsWith( C3p0Settings.C3P0_CONFIG_PREFIX + "." ) ) {
 				return true;
 			}
 		}
@@ -255,7 +260,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		try {
 			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, C3P0_STRATEGY ).newInstance();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			LOG.c3p0ProviderClassNotFound( C3P0_STRATEGY );
 			return null;
 		}
@@ -263,7 +268,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	private static boolean proxoolConfigDefined(Map<String, Object> configValues) {
 		for ( String key : configValues.keySet() ) {
-			if ( key.startsWith( AvailableSettings.PROXOOL_CONFIG_PREFIX ) ) {
+			if ( key.startsWith( ProxoolSettings.PROXOOL_CONFIG_PREFIX ) ) {
 				return true;
 			}
 		}
@@ -274,7 +279,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		try {
 			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, PROXOOL_STRATEGY ).newInstance();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			LOG.proxoolProviderClassNotFound( PROXOOL_STRATEGY );
 			return null;
 		}
@@ -293,7 +298,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		try {
 			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, HIKARI_STRATEGY ).newInstance();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			LOG.hikariProviderClassNotFound();
 			return null;
 		}
@@ -322,7 +327,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		try {
 			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, VIBUR_STRATEGY ).newInstance();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			LOG.viburProviderClassNotFound();
 			return null;
 		}
@@ -332,7 +337,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		try {
 			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, AGROAL_STRATEGY ).newInstance();
 		}
-		catch ( Exception e ) {
+		catch (Exception e) {
 			LOG.agroalProviderClassNotFound();
 			return null;
 		}
@@ -349,10 +354,10 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	 *
 	 * @return The connection properties.
 	 */
-	public static Properties getConnectionProperties(Map<String,Object> properties) {
+	public static Properties getConnectionProperties(Map<String, Object> properties) {
 		final Properties result = new Properties();
-		for ( Map.Entry<?,?> entry : properties.entrySet() ) {
-			if ( !(entry.getKey() instanceof String) || !(entry.getValue() instanceof String) ) {
+		for ( Map.Entry<?, ?> entry : properties.entrySet() ) {
+			if ( !( entry.getKey() instanceof String ) || !( entry.getValue() instanceof String ) ) {
 				continue;
 			}
 			final String key = (String) entry.getKey();
@@ -379,7 +384,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 
 	private static final Set<String> SPECIAL_PROPERTIES;
 
-	private static final Map<String,Integer> ISOLATION_VALUE_MAP;
+	private static final Map<String, Integer> ISOLATION_VALUE_MAP;
 	private static final Map<Integer, String> ISOLATION_VALUE_CONSTANT_NAME_MAP;
 	private static final Map<Integer, String> ISOLATION_VALUE_NICE_NAME_MAP;
 
@@ -502,5 +507,28 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			name = "<unknown>";
 		}
 		return name;
+	}
+
+	public static String extractSetting(Map<String, Object> settings, String... names) {
+		for ( int i = 0; i < names.length; i++ ) {
+			if ( settings.containsKey( names[i] ) ) {
+				return (String) settings.get( names[i] );
+			}
+		}
+		return null;
+	}
+
+	@FunctionalInterface
+	public interface SettingConsumer {
+		void consumeSetting(String name, String value);
+	}
+
+	public static void consumeSetting(Map<String, Object> settings, SettingConsumer consumer, String... names) {
+		for ( int i = 0; i < names.length; i++ ) {
+			if ( settings.containsKey( names[i] ) ) {
+				consumer.consumeSetting( names[i], (String) settings.get( names[i] ) );
+				return;
+			}
+		}
 	}
 }

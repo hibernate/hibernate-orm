@@ -39,17 +39,13 @@ include::chapters/beans/Beans.adoc[]
 include::chapters/portability/Portability.adoc[]
 include::chapters/statistics/Statistics.adoc[]
 include::chapters/tooling/Tooling.adoc[]
-
-include::appendices/Configurations.adoc[]
-include::appendices/Annotations.adoc[]
 include::appendices/BestPractices.adoc[]
-include::appendices/Legacy_Bootstrap.adoc[]
-include::appendices/Legacy_DomainModel.adoc[]
-include::appendices/LegacyBasicTypeResolution.adoc[]
-include::appendices/Legacy_Native_Queries.adoc[]
 
 include::Credits.adoc[]
 
-include::ConfigPropertyList.adoc[]
+include::appendices/SettingsReference.adoc[]
+include::appendices/LegacyBasicTypeResolution.adoc[]
+include::appendices/Legacy_Native_Queries.adoc[]
+
 include::Bibliography.adoc[]
 

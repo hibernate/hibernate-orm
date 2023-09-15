@@ -10,7 +10,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 import org.hibernate.orm.env.EnvironmentProjectPlugin;
-import org.hibernate.orm.env.HibernateVersion;
 
 import static org.hibernate.orm.properties.SettingsDocExtension.EXTENSION_NAME;
 import static org.hibernate.orm.properties.SettingsDocGenerationTask.TASK_NAME;

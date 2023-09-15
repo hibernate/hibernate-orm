@@ -258,8 +258,3 @@ For this reason, `NONSTRICT_READ_WRITE` is not very suitable if entities are cha
 When using clustering, the second-level cache entries are spread across multiple nodes.
 When using https://infinispan.org/blog/2015/10/01/hibernate-second-level-cache/[Infinispan distributed cache], only `READ_WRITE` and `NONSTRICT_READ_WRITE` are available for read-write caches.
 Bear in mind that `NONSTRICT_READ_WRITE` offers a weaker consistency guarantee since stale updates are possible.
-
-[NOTE]
-====
-For more about Hibernate Performance Tuning, check out the https://www.youtube.com/watch?v=BTdTEe9QL5k&amp;t=1s[High-Performance Hibernate] presentation from Devoxx France.
-====

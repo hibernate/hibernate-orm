@@ -1,5 +1,5 @@
-:family: 6.3
-:version: 6.3.0.Final
+:family: 6.2
+:version: 6.2.0.Final
 
 = Hibernate {version}
 Steve Ebersole

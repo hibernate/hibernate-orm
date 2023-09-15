@@ -6,23 +6,88 @@
  */
 package org.hibernate.orm.properties;
 
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
-
-import static java.util.Comparator.comparing;
+import org.gradle.api.tasks.Optional;
 
 /**
  * DSL extension for defining a section in the settings appendix in the User Guide.
- * <p/>
- * Specifies the settings class to match, and identifies which module (by name) the
- * settings class from.
  *
  * @author Steve Ebersole
  */
 public class SettingsDocSection {
-	public static final Comparator<SettingsDocSection> BY_NAME = comparing( SettingsDocSection::getName );
+	private final String name;
+
+	private Integer explicitPosition;
+	private String summary;
+	private String description;
+	private List<String> settingsClassNames = new ArrayList<>();
+
+	public SettingsDocSection(String name) {
+		this.name = name;
+	}
+
+	private SettingsDocSection(
+			String name,
+			Integer explicitPosition) {
+		this.name = name;
+		this.explicitPosition = explicitPosition;
+	}
+
+	@Internal
+	public String getName() {
+		return name;
+	}
+
+	@Optional
+	@Input
+	public Integer getExplicitPosition() {
+		return explicitPosition;
+	}
+
+	public void setExplicitPosition(Integer explicitPosition) {
+		this.explicitPosition = explicitPosition;
+	}
+
+	@Input
+	public List<String> getSettingsClassNames() {
+		return settingsClassNames;
+	}
+
+	public void setSettingsClassNames(List<String> settingsClassNames) {
+		this.settingsClassNames = settingsClassNames;
+	}
+
+	public void settingsClassName(String name) {
+		settingsClassNames.add( name );
+	}
+
+	@Input
+	public String getSummary() {
+		return summary;
+	}
+
+	public void setSummary(String summary) {
+		this.summary = summary;
+	}
+
+	@Input
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
+	}
+
+	@Override
+	public String toString() {
+		return "SettingsDocSection(" + name + " [" + explicitPosition + "])";
+	}
 
 	/**
 	 * Factory for SettingsDocSection instances
@@ -31,36 +96,22 @@ public class SettingsDocSection {
 		return new SettingsDocSection( name );
 	}
 
-	private final String name;
+	private static final Comparator<Integer> nullsLastInComparator = Comparator.nullsLast( Integer::compare );
+	private static final Comparator<SettingsDocSection> nameComparator = Comparator.comparing( SettingsDocSection::getName );
 
-	// todo : do we ever care about multiple settings-classes for a single project?
-	private String projectPath;
-	private String settingsClassName;
+	public static int compare(SettingsDocSection section1, SettingsDocSection section2) {
+		// todo (settings-doc) : add support for negative-as-last?
+		//		- as a means to easily sort "less used" values at the end (EnvironmentSettings, etc)
 
-	public SettingsDocSection(String name) {
-		this.name = name;
-	}
+		final Integer explicitPosition1 = section1.getExplicitPosition();
+		final Integer explicitPosition2 = section2.getExplicitPosition();
 
-	@Internal
-	public String getName() {
-		return name;
-	}
+		final int positionComparison = nullsLastInComparator.compare( explicitPosition1, explicitPosition2 );
 
-	@Input
-	public String getProjectPath() {
-		return projectPath;
-	}
+		if ( positionComparison != 0 ) {
+			return positionComparison;
+		}
 
-	public void setProjectPath(String projectPath) {
-		this.projectPath = projectPath;
-	}
-
-	@Input
-	public String getSettingsClassName() {
-		return settingsClassName;
-	}
-
-	public void setSettingsClassName(String settingsClassName) {
-		this.settingsClassName = settingsClassName;
+		return nameComparator.compare( section1, section2 );
 	}
 }

@@ -15,12 +15,14 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.IgnoreEmptyDirectories;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
 import org.hibernate.orm.env.HibernateVersion;
+import org.hibernate.orm.properties.jdk11.SettingsCollector;
 
 import static org.hibernate.orm.properties.SettingsDocumentationPlugin.TASK_GROUP_NAME;
 
@@ -34,7 +36,7 @@ public class SettingsDocGenerationTask extends DefaultTask {
 
 	private final DirectoryProperty javadocDirectory;
 	private final Property<String> publishedDocsUrl;
-
+	private final Property<String> anchorNameBase;
 	private final NamedDomainObjectContainer<SettingsDocSection> sections;
 
 	private final RegularFileProperty outputFile;
@@ -53,6 +55,9 @@ public class SettingsDocGenerationTask extends DefaultTask {
 		publishedDocsUrl = project.getObjects().property( String.class );
 		publishedDocsUrl.convention( dslExtension.getPublishedDocsUrl() );
 
+		anchorNameBase = project.getObjects().property( String.class );
+		anchorNameBase.convention( dslExtension.getAnchorNameBase() );
+
 		sections = dslExtension.getSections();
 
 		outputFile = project.getObjects().fileProperty();
@@ -63,6 +68,16 @@ public class SettingsDocGenerationTask extends DefaultTask {
 	@IgnoreEmptyDirectories
 	public DirectoryProperty getJavadocDirectory() {
 		return javadocDirectory;
+	}
+
+	@Input
+	public Property<String> getPublishedDocsUrl() {
+		return publishedDocsUrl;
+	}
+
+	@Input
+	public Property<String> getAnchorNameBase() {
+		return anchorNameBase;
 	}
 
 	@Nested
@@ -83,6 +98,7 @@ public class SettingsDocGenerationTask extends DefaultTask {
 				+ "/javadocs/";
 
 		AsciiDocWriter.writeToFile(
+				anchorNameBase.get(),
 				SettingsCollector.collectSettingDescriptors(
 						javadocDirectory.get(),
 						sections.getAsMap(),

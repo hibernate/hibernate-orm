@@ -124,6 +124,9 @@ import static org.hibernate.cfg.AvailableSettings.TC_CLASSLOADER;
 import static org.hibernate.cfg.AvailableSettings.TRANSACTION_COORDINATOR_STRATEGY;
 import static org.hibernate.cfg.AvailableSettings.URL;
 import static org.hibernate.cfg.AvailableSettings.USER;
+import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT;
+import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_DIRTY_TRACKING;
+import static org.hibernate.cfg.BytecodeSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION;
 import static org.hibernate.internal.HEMLogging.messageLogger;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 
@@ -307,7 +310,7 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 			// container situations, calling back into PersistenceUnitInfo#addClassTransformer
 
 			final boolean dirtyTrackingEnabled;
-			Object propertyValue = configurationValues.remove( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING );
+			Object propertyValue = configurationValues.remove( ENHANCER_ENABLE_DIRTY_TRACKING );
 			if ( propertyValue != null ) {
 				dirtyTrackingEnabled = Boolean.parseBoolean( propertyValue.toString() );
 			}
@@ -315,19 +318,19 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 				dirtyTrackingEnabled = true;
 			}
 			final boolean lazyInitializationEnabled;
-			propertyValue = configurationValues.remove( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION );
+			propertyValue = configurationValues.remove( ENHANCER_ENABLE_LAZY_INITIALIZATION );
 			if ( propertyValue != null ) {
 				lazyInitializationEnabled = Boolean.parseBoolean( propertyValue.toString() );
 			}
 			else {
 				lazyInitializationEnabled = true;
 			}
-			final boolean associationManagementEnabled = readBooleanConfigurationValue( AvailableSettings.ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT );
+			final boolean associationManagementEnabled = readBooleanConfigurationValue( ENHANCER_ENABLE_ASSOCIATION_MANAGEMENT );
 			if ( !lazyInitializationEnabled ) {
-				DEPRECATION_LOGGER.deprecatedSettingForRemoval( AvailableSettings.ENHANCER_ENABLE_LAZY_INITIALIZATION, "true" );
+				DEPRECATION_LOGGER.deprecatedSettingForRemoval( ENHANCER_ENABLE_LAZY_INITIALIZATION, "true" );
 			}
 			if ( !dirtyTrackingEnabled ) {
-				DEPRECATION_LOGGER.deprecatedSettingForRemoval( AvailableSettings.ENHANCER_ENABLE_DIRTY_TRACKING, "true" );
+				DEPRECATION_LOGGER.deprecatedSettingForRemoval( ENHANCER_ENABLE_DIRTY_TRACKING, "true" );
 			}
 
 			if ( dirtyTrackingEnabled || lazyInitializationEnabled || associationManagementEnabled ) {

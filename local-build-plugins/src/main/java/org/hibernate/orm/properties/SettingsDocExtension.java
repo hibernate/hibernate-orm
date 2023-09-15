@@ -16,8 +16,6 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.util.internal.ConfigureUtil;
 
-import org.hibernate.orm.env.HibernateVersion;
-
 import groovy.lang.Closure;
 
 /**
@@ -30,6 +28,7 @@ public class SettingsDocExtension {
 
 	private final DirectoryProperty javadocDirectory;
 	private final Property<String> publishedDocsUrl;
+	private final Property<String> anchorNameBase;
 	private final NamedDomainObjectContainer<SettingsDocSection> sections;
 
 	private final RegularFileProperty outputFile;
@@ -38,6 +37,7 @@ public class SettingsDocExtension {
 	public SettingsDocExtension(Project project) {
 		javadocDirectory = project.getObjects().directoryProperty();
 		publishedDocsUrl = project.getObjects().property( String.class );
+		anchorNameBase = project.getObjects().property( String.class );
 		sections = project.getObjects().domainObjectContainer( SettingsDocSection.class, SettingsDocSection::create );
 
 		outputFile = project.getObjects().fileProperty();
@@ -60,6 +60,14 @@ public class SettingsDocExtension {
 	 */
 	public Property<String> getPublishedDocsUrl() {
 		return publishedDocsUrl;
+	}
+
+	public Property<String> getAnchorNameBase() {
+		return anchorNameBase;
+	}
+
+	public void setAnchorNameBase(String base) {
+		anchorNameBase.set( base );
 	}
 
 	/**

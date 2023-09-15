@@ -1,0 +1,9 @@
+[[credits]]
+== Credits
+
+The full list of contributors to Hibernate ORM can be found on the
+https://github.com/hibernate/hibernate-orm/graphs/contributors[GitHub repository].
+
+The following contributors were involved in this documentation:
+
+* Gavin King

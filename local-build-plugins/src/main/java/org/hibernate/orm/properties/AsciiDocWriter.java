@@ -12,8 +12,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.file.Files;
+import java.util.Locale;
 import java.util.Map;
-import java.util.SortedMap;
 import java.util.SortedSet;
 
 import org.gradle.api.Project;
@@ -23,11 +23,10 @@ import org.gradle.api.file.RegularFile;
  * @author Marko Bekhta
  */
 public class AsciiDocWriter {
-	public static final String ANCHOR_BASE = "settings-";
-	public static final String ANCHOR_START = "[[" + ANCHOR_BASE;
 
 	public static void writeToFile(
-			SortedMap<SettingsDocSection, SortedSet<SettingDescriptor>> settingDescriptorMap,
+			String anchorNameBase,
+			Map<SettingsDocSection, SortedSet<SettingDescriptor>> settingDescriptorMap,
 			RegularFile outputFile,
 			Project project) {
 		final File outputFileAsFile = outputFile.getAsFile();
@@ -39,7 +38,7 @@ public class AsciiDocWriter {
 		}
 
 		try ( FileWriter fileWriter = new FileWriter( outputFileAsFile ) ) {
-			write( settingDescriptorMap, fileWriter, project );
+			write( anchorNameBase, settingDescriptorMap, fileWriter, project );
 		}
 		catch (IOException e) {
 			throw new RuntimeException( "Failed to produce asciidoc output for collected properties", e );
@@ -47,30 +46,35 @@ public class AsciiDocWriter {
 	}
 
 	private static void write(
-			SortedMap<SettingsDocSection, SortedSet<SettingDescriptor>> settingDescriptorMap,
+			String anchorNameBase,
+			Map<SettingsDocSection, SortedSet<SettingDescriptor>> settingDescriptorMap,
 			FileWriter writer,
 			Project project) throws IOException {
 		for ( Map.Entry<SettingsDocSection, SortedSet<SettingDescriptor>> entry : settingDescriptorMap.entrySet() ) {
 			final SettingsDocSection sectionDescriptor = entry.getKey();
 			final SortedSet<SettingDescriptor> sectionSettingDescriptors = entry.getValue();
+			if ( sectionSettingDescriptors.isEmpty() ) {
+				continue;
+			}
 
-			final Project sourceProject = project.getRootProject().project( sectionDescriptor.getProjectPath() );
+			final String sectionName = sectionDescriptor.getName();
 
-			// write an anchor in the form `[[settings-{moduleName}]]`, e.g. `[[settings-hibernate-core]]`
-			tryToWriteLine( writer, ANCHOR_START, sourceProject.getName(), "]]" );
-			tryToWriteLine( writer, "=== ", "(", sourceProject.getName(), ") ", sourceProject.getDescription() );
+			// write an anchor in the form `[[{anchorNameBase}-{sectionName}]]`
+			tryToWriteLine( writer, "[[", anchorNameBase, "-", sectionName, "]]" );
+			tryToWriteLine( writer, "=== ", sectionDescriptor.getSummary() );
 
 			writer.write( '\n' );
 
 			for ( SettingDescriptor settingDescriptor : sectionSettingDescriptors ) {
-				writeSettingAnchor( settingDescriptor, writer );
+				// write an anchor in the form `[[{anchorNameBase}-{settingName}]]`
+				tryToWriteLine( writer, "[[", anchorNameBase, "-", settingDescriptor.getName(), "]]" );
 
 				writeSettingName( settingDescriptor, writer );
 				writer.write( "::\n" );
 
-				writeLifecycleNotes( settingDescriptor, writer );
+				writeMetadata( settingDescriptor, writer );
 
-				writer.write( settingDescriptor.getJavadoc() );
+				writer.write( settingDescriptor.getComment() );
 
 				writer.write( "\n\n'''\n" );
 			}
@@ -79,19 +83,54 @@ public class AsciiDocWriter {
 		}
 	}
 
-	private static void writeLifecycleNotes(SettingDescriptor settingDescriptor, FileWriter writer) throws IOException {
-		// NOTE : at the moment, there is at least one setting that is both which fundamentally seems wrong
-		if ( settingDescriptor.isIncubating() ) {
-			writer.write( "NOTE:: _This setting is considered incubating_\n\n" );
+	private static void writeMetadata(SettingDescriptor settingDescriptor, FileWriter writer) throws IOException {
+		if ( !settingDescriptor.hasMetadata() ) {
+			return;
 		}
-		if ( settingDescriptor.isDeprecated() ) {
-			writer.write( "WARN:: _This setting is considered deprecated_\n\n" );
+
+		writer.write( "+\n" );
+		writer.write( "****\n" );
+
+		writer.write(
+				String.format(
+						Locale.ROOT,
+						"**See:** %s[%s.%s]\n\n",
+						settingDescriptor.getPublishedJavadocLink(),
+						Utils.withoutPackagePrefix( settingDescriptor.getSettingsClassName() ),
+						settingDescriptor.getSettingFieldName()
+				)
+		);
+
+		// NOTE : Asciidoctor requires that italic always be the innermost formatting
+
+		final SettingDescriptor.LifecycleDetails lifecycleDetails = settingDescriptor.getLifecycleDetails();
+
+		// NOTE : at the moment, there is at least one setting that is incubating AND deprecated which fundamentally seems wrong
+		if ( lifecycleDetails.isIncubating() ) {
+			writer.write( "NOTE: *_This setting is considered incubating_*\n\n" );
 		}
+		if ( lifecycleDetails.isDeprecated() ) {
+			writer.write( "WARNING: *_This setting is considered deprecated_*\n\n" );
+		}
+
+		if ( lifecycleDetails.getSince() != null ) {
+			writer.write( "*_Since:_* _" + lifecycleDetails.getSince() + "_\n\n" );
+		}
+
+		if ( settingDescriptor.getDefaultValue() != null ) {
+			writer.write( "*_Default Value:_* " + settingDescriptor.getDefaultValue() + "\n\n" );
+		}
+
+		if ( settingDescriptor.getApiNote() != null ) {
+			writer.write( settingDescriptor.getApiNote() + "\n\n" );
+		}
+
+		writer.write( "****\n+\n" );
 	}
 
 	private static void writeSettingName(SettingDescriptor settingDescriptor, FileWriter writer) throws IOException {
 		writer.write( "`" );
-		if ( settingDescriptor.isDeprecated() ) {
+		if ( settingDescriptor.getLifecycleDetails().isDeprecated() ) {
 			writer.write( "[.line-through]#" );
 		}
 		else {
@@ -100,19 +139,13 @@ public class AsciiDocWriter {
 
 		writer.write( settingDescriptor.getName() );
 
-		if ( settingDescriptor.isDeprecated() ) {
+		if ( settingDescriptor.getLifecycleDetails().isDeprecated() ) {
 			writer.write( '#' );
 		}
 		else {
 			writer.write( '*' );
 		}
 		writer.write( '`' );
-	}
-
-	private static void writeSettingAnchor(SettingDescriptor settingDescriptor, Writer writer) throws IOException {
-		writer.write( ANCHOR_START );
-		writer.write( settingDescriptor.getName() );
-		writer.write( "]] " );
 	}
 
 	private static void tryToWriteLine(Writer writer, String prefix, String value, String... other) {

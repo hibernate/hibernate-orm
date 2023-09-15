@@ -17,7 +17,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.jboss.logging.Logger;
 
-import static org.hibernate.cfg.AvailableSettings.BYTECODE_PROVIDER;
+import static org.hibernate.cfg.BytecodeSettings.BYTECODE_PROVIDER;
 
 public final class BytecodeProviderInitiator implements StandardServiceInitiator<BytecodeProvider> {
 

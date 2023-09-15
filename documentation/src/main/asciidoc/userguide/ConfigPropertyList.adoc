@@ -1,7 +1,0 @@
-:documentation-project-dir: ../../../..
-:root-project-dir: {documentation-project-dir}/..
-
-[[settings-ref]]
-== List of all available configuration settings
-
-include::{documentation-project-dir}/target/asciidoc/fragments/config-settings.adoc[]

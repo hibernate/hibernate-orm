@@ -6,36 +6,58 @@
  */
 package org.hibernate.orm.properties;
 
-import java.util.Comparator;
-
-import static java.util.Comparator.comparing;
-
 /**
  * @author Steve Ebersole
  */
 public class SettingDescriptor {
-	public static final Comparator<SettingDescriptor> BY_NAME = comparing( SettingDescriptor::getName );
-
 	private final String name;
 	private final String settingsClassName;
 	private final String settingFieldName;
-	private final String javadoc;
-	private final boolean deprecated;
-	private final boolean incubating;
+	private final String publishedJavadocLink;
+	private final String comment;
+	private final String defaultValue;
+	private final String apiNote;
+	private final LifecycleDetails lifecycleDetails;
 
 	public SettingDescriptor(
 			String name,
 			String settingsClassName,
 			String settingFieldName,
-			String javadoc,
-			boolean deprecated,
-			boolean incubating) {
+			String publishedJavadocLink,
+			String comment,
+			String defaultValue,
+			String apiNote,
+			LifecycleDetails lifecycleDetails) {
 		this.name = name;
 		this.settingsClassName = settingsClassName;
 		this.settingFieldName = settingFieldName;
-		this.javadoc = javadoc;
-		this.deprecated = deprecated;
-		this.incubating = incubating;
+		this.comment = comment;
+		this.publishedJavadocLink = publishedJavadocLink;
+		this.defaultValue = defaultValue;
+		this.apiNote = apiNote;
+		this.lifecycleDetails = lifecycleDetails;
+	}
+
+	public SettingDescriptor(
+			String name,
+			String settingsClassName,
+			String settingFieldName,
+			String publishedJavadocLink,
+			String comment,
+			String defaultValue,
+			String apiNote,
+			String since,
+			boolean deprecated,
+			boolean incubating) {
+		this(
+				name,
+				settingsClassName,
+				settingFieldName,
+				publishedJavadocLink, comment,
+				defaultValue,
+				apiNote,
+				new LifecycleDetails( since, deprecated, incubating )
+		);
 	}
 
 	/**
@@ -48,8 +70,26 @@ public class SettingDescriptor {
 	/**
 	 * The Javadoc content
 	 */
-	public String getJavadoc() {
-		return javadoc;
+	public String getComment() {
+		return comment;
+	}
+
+	public String getPublishedJavadocLink() {
+		return publishedJavadocLink;
+	}
+
+	/**
+	 * The setting's default value
+	 */
+	public String getDefaultValue() {
+		return defaultValue;
+	}
+
+	/**
+	 * {@code @apiNote} defined on the setting field
+	 */
+	public String getApiNote() {
+		return apiNote;
 	}
 
 	public String getSettingsClassName() {
@@ -60,11 +100,60 @@ public class SettingDescriptor {
 		return settingFieldName;
 	}
 
-	public boolean isDeprecated() {
-		return deprecated;
+	public LifecycleDetails getLifecycleDetails() {
+		return lifecycleDetails;
 	}
 
-	public boolean isIncubating() {
-		return incubating;
+	public boolean hasMetadata() {
+		return defaultValue != null
+				|| apiNote != null
+				|| lifecycleDetails.since != null
+				|| lifecycleDetails.incubating
+				|| lifecycleDetails.deprecated;
+	}
+
+	@Override
+	public String toString() {
+		return "setting(" + name + ") {\n" +
+				"   settingsClassName = `" + settingsClassName + "`,\n" +
+				"   settingFieldName = `" + settingFieldName + "`,\n" +
+				"   lifecycle = " + lifecycleDetails + ",\n" +
+				"   defaultValue = `" + defaultValue + "`,\n" +
+				"   apiNote = `" + apiNote + "`,\n" +
+				"   javadoc = ```\n" + comment + "\n```\n" +
+				"}";
+	}
+
+	public static class LifecycleDetails {
+		private final String since;
+		private final boolean incubating;
+		private final boolean deprecated;
+
+		public LifecycleDetails(String since, boolean deprecated, boolean incubating) {
+			this.since = since;
+			this.deprecated = deprecated;
+			this.incubating = incubating;
+		}
+
+		public String getSince() {
+			return since;
+		}
+
+		public boolean isDeprecated() {
+			return deprecated;
+		}
+
+		public boolean isIncubating() {
+			return incubating;
+		}
+
+		@Override
+		public String toString() {
+			return "{\n" +
+					"      since = `" + since + "`,\n" +
+					"      incubating = `" + incubating + "`,\n" +
+					"      deprecated = `" + deprecated + "`\n" +
+					"   }";
+		}
 	}
 }

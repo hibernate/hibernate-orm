@@ -6,8 +6,7 @@
  */
 package org.hibernate.orm.test.jpa.transaction.batch;
 
-import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.engine.jdbc.batch.internal.BatchBuilderInitiator;
+import org.hibernate.cfg.BatchSettings;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
@@ -30,11 +29,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 				FailingAddToBatchTest.MyEntity.class
 		},
 		integrationSettings = {
-				@Setting(name = AvailableSettings.STATEMENT_BATCH_SIZE, value = "50")
+				@Setting(name = BatchSettings.STATEMENT_BATCH_SIZE, value = "50")
 		},
 		settingProviders = {
 				@SettingProvider(
-						settingName = BatchBuilderInitiator.BUILDER,
+						settingName = BatchSettings.BUILDER,
 						provider = AbstractBatchingTest.ErrorBatch2BuilderSettingProvider.class
 				)
 		}

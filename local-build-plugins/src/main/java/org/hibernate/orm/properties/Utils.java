@@ -7,6 +7,12 @@
 package org.hibernate.orm.properties;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.SortedSet;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * @author Steve Ebersole
@@ -24,5 +30,13 @@ public class Utils {
 
 	public static String packagePrefix(String className) {
 		return className.substring( 0, className.lastIndexOf( '.' ) );
+	}
+
+	public static Map<SettingsDocSection, SortedSet<SettingDescriptor>> createResultMap(Map<String, SettingsDocSection> sections) {
+		final TreeMap<SettingsDocSection, SortedSet<SettingDescriptor>> map = new TreeMap<>( SettingsDocSection::compare );
+		sections.forEach( (name, descriptor) -> {
+			map.put( descriptor, new TreeSet<>( SettingDescriptorComparator.INSTANCE ) );
+		} );
+		return map;
 	}
 }

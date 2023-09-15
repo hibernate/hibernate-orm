@@ -23,7 +23,6 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.engine.jdbc.internal.FormatStyle;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -120,8 +119,7 @@ public class TableStructure implements DatabaseStructure {
 
 	@Override
 	public AccessCallback buildCallback(final SharedSessionContractImplementor session) {
-		final SqlStatementLogger statementLogger = session.getFactory().getServiceRegistry()
-				.getService( JdbcServices.class )
+		final SqlStatementLogger statementLogger = session.getFactory().getJdbcServices()
 				.getSqlStatementLogger();
 		if ( selectQuery == null || updateQuery == null ) {
 			throw new AssertionFailure( "SequenceStyleGenerator's TableStructure was not properly initialized" );

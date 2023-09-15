@@ -139,6 +139,13 @@ else {
 						 " Using the JDK that runs Gradle for Groovy compilation." )
 }
 
+tasks.named( "javadoc", Javadoc ) {
+	configure( options ) {
+		windowTitle = "Hibernate Javadocs ($project.name)"
+		docTitle = "Hibernate Javadocs ($project.name : $project.version)"
+	}
+}
+
 checkstyle {
 	sourceSets = [ project.sourceSets.main ]
 	configFile = rootProject.file( 'shared/config/checkstyle/checkstyle.xml' )

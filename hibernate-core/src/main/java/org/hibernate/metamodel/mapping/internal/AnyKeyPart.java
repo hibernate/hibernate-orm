@@ -33,6 +33,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
+import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -322,8 +323,13 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			TableGroup tableGroup,
 			String resultVariable,
 			DomainResultCreationState creationState) {
-		// todo (6.2) : how is this correct?
-		return anyPart.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
+		final SqlSelection sqlSelection = resolveSqlSelection( navigablePath, tableGroup, creationState );
+		return new BasicResult<>(
+				sqlSelection.getValuesArrayPosition(),
+				resultVariable,
+				jdbcMapping,
+				navigablePath
+		);
 	}
 
 	@Override
@@ -331,8 +337,7 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			NavigablePath navigablePath,
 			TableGroup tableGroup,
 			DomainResultCreationState creationState) {
-		// todo (6.2) : how is this correct?
-		anyPart.applySqlSelections( navigablePath, tableGroup, creationState );
+		resolveSqlSelection( navigablePath, tableGroup, creationState );
 	}
 
 	@Override
@@ -341,7 +346,27 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 			TableGroup tableGroup,
 			DomainResultCreationState creationState,
 			BiConsumer<SqlSelection, JdbcMapping> selectionConsumer) {
-		// todo (6.2) : how is this correct?
-		anyPart.applySqlSelections( navigablePath, tableGroup, creationState, selectionConsumer );
+		selectionConsumer.accept( resolveSqlSelection( navigablePath, tableGroup, creationState ), getJdbcMapping() );
+	}
+
+	private SqlSelection resolveSqlSelection(
+			NavigablePath navigablePath,
+			TableGroup tableGroup,
+			DomainResultCreationState creationState) {
+		final TableReference tableReference = tableGroup.resolveTableReference(
+				navigablePath,
+				this,
+				getContainingTableExpression()
+		);
+		final SqlExpressionResolver expressionResolver = creationState.getSqlAstCreationState().getSqlExpressionResolver();
+		return expressionResolver.resolveSqlSelection(
+				expressionResolver.resolveSqlExpression(
+						tableReference,
+						this
+				),
+				jdbcMapping.getJdbcJavaType(),
+				null,
+				creationState.getSqlAstCreationState().getCreationContext().getSessionFactory().getTypeConfiguration()
+		);
 	}
 }

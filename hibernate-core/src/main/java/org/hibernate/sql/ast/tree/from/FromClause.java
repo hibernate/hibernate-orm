@@ -264,7 +264,7 @@ public class FromClause implements SqlAstNode {
 	private boolean hasJoins(List<TableGroupJoin> tableGroupJoins) {
 		for ( TableGroupJoin tableGroupJoin : tableGroupJoins ) {
 			final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
-			if ( joinedGroup instanceof VirtualTableGroup ) {
+			if ( joinedGroup.isVirtual() ) {
 				if ( hasJoins( joinedGroup.getTableGroupJoins() ) ) {
 					return true;
 				}

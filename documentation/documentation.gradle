@@ -190,66 +190,52 @@ else {
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// aggregated JavaDoc
+// aggregated Javadoc
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def aggregateJavadocsTask = tasks.register( "aggregateJavadocs", Javadoc ) {
+def aggregateJavadocsTask = tasks.register( "javadoc", Javadoc ) {
 	group = "documentation"
-	description = 'Builds an aggregated JavaDoc across all ORM sub-projects'
-
-	inputs.property "ormVersion", project.ormVersion
+	description = 'Builds JavaDoc aggregated across all ORM sub-projects'
 
 	destinationDir = mkdir( layout.buildDirectory.file( 'javadocs' ) )
+	source = configurations.javadocSources
+	classpath = configurations.javadocClasspath
 
-	source configurations.javadocSources
-	classpath += configurations.javadocClasspath
-
-	// exclude any generated sources and internal packages
-	exclude '**/generated-src/**'
-	exclude '**/internal/**'
-	include '**/*.java'
-
-
-	final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
-
-	// apply standard config
-	maxMemory = '512m'
 	configure( options ) {
-		overview = 'src/javadoc/overview.html'
-		stylesheetFile = project.file( 'src/javadoc/stylesheet.css' )
-		windowTitle = 'Hibernate JavaDocs'
-		docTitle = "Hibernate JavaDoc ($project.version)"
-		bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
-		use = true
-		options.encoding = 'UTF-8'
-
-		links = [
-				'https://docs.oracle.com/en/java/javase/11/docs/api/',
-				'https://jakarta.ee/specifications/bean-validation/3.0/apidocs/',
-				'https://jakarta.ee/specifications/cdi/4.0/apidocs/',
-				'https://jakarta.ee/specifications/platform/9/apidocs/',
-				'https://www.javadoc.io/doc/javax.cache/cache-api/1.0.0/'
-		]
-
-		options.addStringOption( 'Xdoclint:none', '-quiet' )
-
-		if ( jdkVersions.explicit ) {
-			options.setJFlags(
-					getProperty( 'toolchain.javadoc.jvmargs' ).toString().
-							split( ' ' ).toList().findAll( { !it.isEmpty() } )
-			)
-		}
+		overview = rootProject.file( "shared/javadoc/overview.html" )
+		windowTitle = 'Hibernate Javadocs'
+		docTitle = "Hibernate Javadoc ($project.version)"
 	}
 
 	if ( jdkVersions.explicit ) {
+//			setJFlags(
+//					getProperty( 'toolchain.javadoc.jvmargs' ).toString().
+//							split( ' ' ).toList().findAll( { !it.isEmpty() } )
+//			)
+
 		// Display version of Java tools
 		doFirst {
 			if ( javadocTool.present ) {
-				logger.lifecycle "Aggregating javadoc with '${javadocTool.get().metadata.installationPath}'"
+				logger.lifecycle "Building aggregated javadoc with '${javadocTool.get().metadata.installationPath}'"
 			}
 		}
 	}
+
+	doFirst {
+		def javaLanguageVersion = javadocTool.present
+				? javadocTool.get().metadata.languageVersion
+				: JavaLanguageVersion.of( JavaVersion.current().name )
+
+		if ( javaLanguageVersion.asInt() > 11 ) {
+			println "Aggregated Javadocs are bing built` using a JDK newer than version 11: \n" +
+							"\t* `stylesheet.css` will not be compatible\n" +
+							"\t* generating the User Guide settings fragment will not succeed"
+		}
+	}
 }
+
+apply from: rootProject.file( 'gradle/javadoc.gradle' )
+
 
 asciidoctorj {
 	requires 'rouge'
@@ -477,139 +463,122 @@ def renderQueryLanguageGuidesTask = tasks.register( 'renderQueryLanguageGuides' 
 }
 
 
-// Introduction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-tasks.register('renderIntroductionPdf', AsciidoctorPdfTask) {task->
-	group = "Documentation"
-	description = 'Renders the Introduction in PDF format using Asciidoctor.'
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
-	inputs.property "hibernate-version", project.ormVersion
-
-	sourceDir = file( 'src/main/asciidoc/introduction' )
-	baseDir = file( 'src/main/asciidoc/introduction' )
-	sources {
-		include 'Hibernate_Introduction.adoc'
-	}
-	outputDir = "$buildDir/asciidoc/introduction/pdf"
-
-	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
-}
-
-tasks.register('renderIntroduction', AsciidoctorTask) {task->
-	group = "Documentation"
-	description = 'Renders the Introduction in HTML format using Asciidoctor.'
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
-	inputs.property "hibernate-version", project.ormVersion
-
-	sourceDir = file( 'src/main/asciidoc/introduction' )
-	sources {
-		include 'Hibernate_Introduction.adoc'
-	}
-	outputDir = "$buildDir/asciidoc/introduction/html_single"
-
-	attributes linkcss: true,
-			stylesheet: "css/hibernate.css",
-			docinfo: 'private',
-			jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
-
-	resources {
-		from('src/main/asciidoc/introduction/') {
-			include 'images/**'
-		}
-		from('src/main/style/asciidoctor') {
-			include 'images/**'
-		}
-		from('src/main/style/asciidoctor') {
-			include 'css/**'
-		}
-		from('src/main/style/asciidoctor') {
-			include 'js/**'
-		}
-	}
-}
-
-// HQL Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-tasks.register('renderQLPdf', AsciidoctorPdfTask) {task->
-	group = "Documentation"
-	description = 'Renders the Query Language document in PDF format using Asciidoctor.'
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
-	inputs.property "hibernate-version", project.ormVersion
-
-	sourceDir = file( 'src/main/asciidoc/querylanguage' )
-	baseDir = file( 'src/main/asciidoc/querylanguage' )
-	sources {
-		include 'Hibernate_Query_Language.adoc'
-	}
-	outputDir = "$buildDir/asciidoc/querylanguage/pdf"
-
-	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
-}
-
-tasks.register('renderQL', AsciidoctorTask) {task->
-	group = "Documentation"
-	description = 'Renders the Query Language document in HTML format using Asciidoctor.'
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
-	inputs.property "hibernate-version", project.ormVersion
-
-	sourceDir = file( 'src/main/asciidoc/querylanguage' )
-	sources {
-		include 'Hibernate_Query_Language.adoc'
-	}
-	outputDir = "$buildDir/asciidoc/querylanguage/html_single"
-
-	attributes linkcss: true,
-			stylesheet: "css/hibernate.css",
-			docinfo: 'private',
-			jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
-
-	resources {
-		from('src/main/asciidoc/querylanguage/') {
-			include 'images/**'
-		}
-		from('src/main/style/asciidoctor') {
-			include 'images/**'
-		}
-		from('src/main/style/asciidoctor') {
-			include 'css/**'
-		}
-		from('src/main/style/asciidoctor') {
-			include 'js/**'
-		}
-	}
-}
-
 // User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 settingsDocumentation {
+	anchorNameBase = "settings"
 	sections {
-		core {
-			settingsClassName = "org.hibernate.cfg.AvailableSettings"
-			projectPath = ":hibernate-core"
+		compliance {
+			explicitPosition = 1
+			summary = "Jakarta Persistence Compliance Settings"
+			description = "Settings which control various aspects of compliance with the Jakarta Persistence specification "
+			settingsClassName "org.hibernate.cfg.JpaComplianceSettings"
+		}
+		persistence {
+			explicitPosition = 2
+			summary = "Persistence Unit Settings"
+			description = "Settings related to the creation and configuration of a persistence-unit - SessionFactory and EntityManagerFactory"
+			settingsClassName "org.hibernate.cfg.PersistenceSettings"
+		}
+		jdbc {
+			explicitPosition = 3
+			summary = "JDBC Settings"
+			description = "Settings which control various aspects of how Hibernate interacts with JDBC"
+			settingsClassName "org.hibernate.cfg.JdbcSettings"
+		}
+		c3p0 {
+			explicitPosition = 4
+			summary = "C3P0 Connection Pool Settings"
+			description = "Settings related to integrating with the C3P0 Connection pool"
+			settingsClassName "org.hibernate.cfg.C3p0Settings"
+		}
+		proxool {
+			explicitPosition = 5
+			summary = "Proxool Connection Pool Settings"
+			description = "Settings related to integrating with the Proxool Connection pool"
+			settingsClassName "org.hibernate.cfg.ProxoolSettings"
+		}
+		mapping {
+			explicitPosition = 6
+			summary = "Domain Mapping Settings"
+			description = "Settings which control how domain mappings are handled"
+			settingsClassName "org.hibernate.cfg.MappingSettings"
+		}
+		environment {
+			summary = "Runtime Environment Settings"
+			description = "Settings related to JNDI and ClassLoaders"
+			settingsClassName "org.hibernate.cfg.EnvironmentSettings"
+		}
+		schema {
+			summary = "Schema Tooling Settings"
+			description = "Settings which control the creation, dropping, update and validation of database schemas"
+			settingsClassName "org.hibernate.cfg.SchemaToolingSettings"
+		}
+		bytecode {
+			summary = "Bytecode Manipulation Settings"
+			description = "Settings which control Hibernate's BytecodeProvider used for bytecode manipulation"
+			settingsClassName "org.hibernate.cfg.BytecodeSettings"
+		}
+		cache {
+			summary = "Second-level Cache Settings"
+			description = "Settings which control Hibernate's second-level caching"
+			settingsClassName "org.hibernate.cfg.CacheSettings"
+			settingsClassName "org.hibernate.cache.jcache.ConfigSettings"
+		}
+		query {
+			summary = "Query Settings"
+			description = "Settings which control various parts of Hibernate's Query handling"
+			settingsClassName "org.hibernate.cfg.QuerySettings"
+		}
+		stats {
+			summary = "Statistics Settings"
+			description = "Settings which control the collection of statistics"
+			settingsClassName "org.hibernate.cfg.StatisticsSettings"
+		}
+		validation {
+			summary = "Jakarta Validation Integeration Settings"
+			description = "Settings used in the integration of Jakarta Validation"
+			settingsClassName "org.hibernate.cfg.ValidationSettings"
 		}
 		envers {
-			settingsClassName = "org.hibernate.envers.configuration.EnversSettings"
-			projectPath = ":hibernate-envers"
+			summary = "Audit/History Settings"
+			description = "Settings which control Hibernate's audit/history support (hibernate-envers)"
+			settingsClassName "org.hibernate.envers.configuration.EnversSettings"
 		}
-		jcache {
-			settingsClassName = "org.hibernate.cache.jcache.ConfigSettings"
-			projectPath = ":hibernate-jcache"
+		spatial {
+			summary = "Hibernate Spatial Settings"
+			description = "Settings which control Hibernate's support for spatial data (hibernate-spatial)"
+			settingsClassName "org.hibernate.spatial.HibernateSpatialConfigurationSettings"
+			settingsClassName "org.hibernate.spatial.integration.SpatialService"
+		}
+		misc {
+			summary = "Miscellaneous Settings"
+			description = "Miscellaneous Settings"
+			settingsClassName "org.hibernate.cfg.AvailableSettings"
 		}
 	}
 }
 
 def generateSettingsDocTask = tasks.named( "generateSettingsDoc" ) {
 	dependsOn aggregateJavadocsTask
+
+	doFirst {
+		def javadoc = aggregateJavadocsTask.get()
+		def javaLanguageVersion = javadoc.javadocTool.present
+				? javadoc.javadocTool.get().metadata.languageVersion
+				: JavaLanguageVersion.of( JavaVersion.current().name )
+
+		if ( javaLanguageVersion.asInt() > 11 ) {
+			println "Aggregated Javadocs was built using a JDK newer than version 11; generating the settings User Guide fragment will not succeed"
+		}
+	}
 }
 
 def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', AsciidoctorTask ) { task ->
 	group = "Documentation"
 	description = 'Renders the User Guides in HTML format using Asciidoctor.'
 	inputs.property "hibernate-version", project.ormVersion
+	inputs.file( generateSettingsDocTask.get().outputFile )
 
 	dependsOn generateSettingsDocTask
 

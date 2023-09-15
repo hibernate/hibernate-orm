@@ -5,16 +5,20 @@
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
 
-// make sure Java plugin is applied
-apply plugin : 'java'
-
 apply from: rootProject.file( 'gradle/base-information.gradle' )
 
-javadoc {
-    exclude( "**/internal/*" )
-    exclude( "**/generated-src/**" )
+tasks.named( "javadoc", Javadoc ) {
+    def currentYear = new GregorianCalendar().get( Calendar.YEAR )
 
-    final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
+    inputs.property "ormVersion", project.ormVersion
+    inputs.property "currentYear", currentYear
+
+    // exclude any generated sources and internal packages
+    exclude '**/generated-src/**'
+    exclude '**/internal/**'
+    include '**/*.java'
+
+    maxMemory = '512m'
 
     configure( options ) {
         // this is the config needed to use asciidoclet for Javadoc rendering.  It relies on a build from John's PR @ https://github.com/asciidoctor/asciidoclet/pull/91
@@ -25,25 +29,30 @@ javadoc {
         // Travis CI JDK 11 build did not like this
 //		docletpath = configurations.asciidoclet.files.asType(List)
 //		doclet = 'org.asciidoctor.Asciidoclet'
-        windowTitle = "$project.name JavaDocs"
-        docTitle = "$project.name JavaDocs ($project.version)"
-        bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+
         use = true
         encoding = 'UTF-8'
-        links += [
-                'https://docs.oracle.com/en/java/javase/11/docs/api/',
-                'https://jakarta.ee/specifications/platform/9/apidocs/'
-        ]
-        tags = [ "apiNote", 'implSpec', 'implNote', 'todo' ]
 
-        addStringOption( 'Xdoclint:none', '-quiet' )
+        stylesheetFile = rootProject.file( "shared/javadoc/stylesheet.css" )
+        bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
+
+        links = [
+                'https://docs.oracle.com/en/java/javase/11/docs/api/',
+                'https://jakarta.ee/specifications/bean-validation/3.0/apidocs/',
+                'https://jakarta.ee/specifications/cdi/4.0/apidocs/',
+                'https://jakarta.ee/specifications/platform/9/apidocs/',
+                'https://www.javadoc.io/doc/javax.cache/cache-api/1.0.0/'
+        ]
 
         tags(
-                'todo:X"',
-                'apiNote:a:"API Note:"',
-                'implSpec:a:"Implementation Specification:"',
-                'implNote:a:"Implementation Note:"'
+                'todo:X',
+                'apiNote:a:API Note:',
+                'implSpec:a:Implementation Specification:',
+                'implNote:a:Implementation Note:',
+                'settingDefault:f:Default Value:'
         )
+
+        addStringOption( 'Xdoclint:none', '-quiet' )
     }
 }
 

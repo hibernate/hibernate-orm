@@ -313,10 +313,9 @@ if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
     check.dependsOn testJava17
 }
 
-javadoc {
+tasks.named( "javadoc", Javadoc ) {
     configure(options) {
-        overview = 'src/main/javadoc/overview.html'
-        stylesheetFile = new File(projectDir, 'src/main/javadoc/stylesheet.css')
+        overview = rootProject.file( "shared/javadoc/overview.html" )
     }
 }
 

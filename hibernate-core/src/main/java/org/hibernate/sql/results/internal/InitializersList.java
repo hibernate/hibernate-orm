@@ -9,7 +9,6 @@ package org.hibernate.sql.results.internal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -36,14 +35,14 @@ public final class InitializersList {
 	private final Initializer[] sortedNonCollectionsFirst;
 	private final Initializer[] sortedForResolveInstance;
 	private final boolean hasCollectionInitializers;
-	private final Map<NavigablePath, Initializer> initializerMap;
+	private final NavigablePathMapToInitializer initializerMap;
 
 	private InitializersList(
 			Initializer[] initializers,
 			Initializer[] sortedNonCollectionsFirst,
 			Initializer[] sortedForResolveInstance,
 			boolean hasCollectionInitializers,
-			Map<NavigablePath, Initializer> initializerMap) {
+			NavigablePathMapToInitializer initializerMap) {
 		this.initializers = initializers;
 		this.sortedNonCollectionsFirst = sortedNonCollectionsFirst;
 		this.sortedForResolveInstance = sortedForResolveInstance;
@@ -123,7 +122,7 @@ public final class InitializersList {
 					&& !(initializer instanceof AbstractBatchEntitySelectFetchInitializer );
 		}
 
-		InitializersList build(final Map<NavigablePath, Initializer> initializerMap) {
+		InitializersList build(final NavigablePathMapToInitializer initializerMap) {
 			final int size = initializers.size();
 			final Initializer[] sortedNonCollectionsFirst = new Initializer[size];
 			final Initializer[] sortedForResolveInstance = new Initializer[size];

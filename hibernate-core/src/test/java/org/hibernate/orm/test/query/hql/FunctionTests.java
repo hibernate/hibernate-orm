@@ -2113,4 +2113,49 @@ public class FunctionTests {
 				}
 		);
 	}
+
+	@Test
+	public void testTupleComparison(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(List.of(1),
+							session.createSelectionQuery("select 1 from EntityOfBasics where (theInt, theDouble) = (5, 1.0)", Integer.class)
+									.getResultList());
+					assertEquals(List.of(),
+							session.createSelectionQuery("select 1 from EntityOfBasics where (theInt, theDouble) = (1, 1.0)", Integer.class)
+									.getResultList());
+					assertEquals(List.of(1),
+							session.createSelectionQuery("select 1 from EntityOfBasics where (theInt, theDouble) > (1, 1.0)", Integer.class)
+									.getResultList());
+					assertEquals(List.of(),
+							session.createSelectionQuery("select 1 from EntityOfBasics where (theInt, theDouble) > (5, 1.0)", Integer.class)
+									.getResultList());
+				}
+		);
+	}
+
+	@Test
+	public void testTupleInSubqueryResult(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(List.of(true),
+							session.createSelectionQuery("select (5, 1.0) in (select theInt, theDouble from EntityOfBasics)", Boolean.class)
+									.getResultList());
+					assertEquals(List.of(false),
+							session.createSelectionQuery("select (5, 1.1) in (select theInt, theDouble from EntityOfBasics)", Boolean.class)
+									.getResultList());
+				}
+		);
+	}
+
+	@Test
+	public void testTupleInSelect(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertArrayEquals(new Object[]{5, 1.0},
+							(Object[]) session.createSelectionQuery("select (5, 1.0)", Object.class)
+									.getSingleResult());
+				}
+		);
+	}
 }

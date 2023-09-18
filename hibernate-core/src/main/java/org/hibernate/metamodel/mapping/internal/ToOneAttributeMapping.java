@@ -1725,6 +1725,9 @@ public class ToOneAttributeMapping
 	}
 
 	private boolean isSelectByUniqueKey(ForeignKeyDescriptor.Nature side) {
+		if ( referencedPropertyName == null ) {
+			return false;
+		}
 		if ( side == ForeignKeyDescriptor.Nature.KEY ) {
 			// case 1.2
 			return !foreignKeyDescriptor.getNavigableRole()

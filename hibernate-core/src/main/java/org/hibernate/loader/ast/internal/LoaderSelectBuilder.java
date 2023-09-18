@@ -1148,8 +1148,7 @@ public class LoaderSelectBuilder {
 
 		final Expression fkExpression;
 
-		final int jdbcTypeCount = fkDescriptor.getJdbcTypeCount();
-		if ( jdbcTypeCount == 1 ) {
+		if ( !fkDescriptor.isEmbedded() ) {
 			assert fkDescriptor instanceof SimpleForeignKeyDescriptor;
 			final SimpleForeignKeyDescriptor simpleFkDescriptor = (SimpleForeignKeyDescriptor) fkDescriptor;
 			final TableReference tableReference = rootTableGroup.resolveTableReference(
@@ -1163,7 +1162,7 @@ public class LoaderSelectBuilder {
 			);
 		}
 		else {
-			final List<ColumnReference> columnReferences = new ArrayList<>( jdbcTypeCount );
+			final List<ColumnReference> columnReferences = new ArrayList<>( fkDescriptor.getJdbcTypeCount() );
 			fkDescriptor.forEachSelectable(
 					(columnIndex, selection) -> {
 						final TableReference tableReference = rootTableGroup.resolveTableReference(

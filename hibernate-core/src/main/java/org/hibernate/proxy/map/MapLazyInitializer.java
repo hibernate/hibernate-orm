@@ -48,4 +48,9 @@ public class MapLazyInitializer extends AbstractLazyInitializer implements Seria
 	protected String getSessionFactoryUuid() {
 		return super.getSessionFactoryUuid();
 	}
+
+	@Override
+	protected String getSessionFactoryName() {
+		return super.getSessionFactoryName();
+	}
 }

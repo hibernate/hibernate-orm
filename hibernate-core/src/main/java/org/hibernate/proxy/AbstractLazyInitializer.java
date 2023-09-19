@@ -41,6 +41,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private Boolean readOnlyBeforeAttachedToSession;
 
 	private String sessionFactoryUuid;
+	private String sessionFactoryName;
 	private boolean allowLoadOutsideTransaction;
 
 	/**
@@ -277,6 +278,9 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				// such configuration, so to know if such operation isn't allowed or configured otherwise.
 				sessionFactoryUuid = session.getFactory().getUuid();
 			}
+			if ( sessionFactoryName == null ) {
+				sessionFactoryName = session.getFactory().getName();
+			}
 		}
 	}
 
@@ -428,6 +432,18 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	}
 
 	/**
+	 * Get the session factory name.
+	 *
+	 * This method should only be called during serialization,
+	 * and only makes sense after a call to {@link #prepareForPossibleLoadingOutsideTransaction()}.
+	 *
+	 * @return the session factory name.
+	 */
+	protected String getSessionFactoryName() {
+		return sessionFactoryName;
+	}
+
+	/**
 	 * Restore settings that are not passed to the constructor,
 	 * but are still preserved during serialization.
 	 *
@@ -444,7 +460,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	 */
 	/* package-private */
 	final void afterDeserialization(Boolean readOnlyBeforeAttachedToSession,
-			String sessionFactoryUuid, boolean allowLoadOutsideTransaction) {
+			String sessionFactoryUuid, String sessionFactoryName, boolean allowLoadOutsideTransaction) {
 		if ( isReadOnlySettingAvailable() ) {
 			throw new IllegalStateException(
 					"Cannot call afterDeserialization when isReadOnlySettingAvailable == true [" + entityName + "#" + id + "]"
@@ -453,6 +469,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 		this.readOnlyBeforeAttachedToSession = readOnlyBeforeAttachedToSession;
 
 		this.sessionFactoryUuid = sessionFactoryUuid;
+		this.sessionFactoryName = sessionFactoryName;
 		this.allowLoadOutsideTransaction = allowLoadOutsideTransaction;
 	}
 

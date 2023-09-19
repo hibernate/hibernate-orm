@@ -3,6 +3,22 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.9.Final (September 19, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32192
+
+** Bug
+    * [HHH-17221] - AssertionError initializing a collection with FetchMode.SUBSELECT and IdClass having only one field
+    * [HHH-17202] - ArrayStoreException for single field id class entity collection batch loading
+    * [HHH-17201] - Unexpected value type exception for unordered multi id Load with ordered return disable
+    * [HHH-17173] - Getting one-to-one association through a referenece to a bytecode enhanced entity fails
+    * [HHH-17159] - java.lang.StackOverflowError during Update on Entity with Embeddable and JSON
+    * [HHH-17156] - NPE when an Embeddable column is reused in another class related by inheritance
+    * [HHH-17080] - [Envers] AuditReader.getRevisionNumberForDate(LocalDateTime) uses Epoch Seconds instead of Epoch Millis
+    * [HHH-17079] - NPE when using CompositeUserType with generic fields in Hibernate 6
+
+
 Changes in 6.2.8.Final (August 31, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

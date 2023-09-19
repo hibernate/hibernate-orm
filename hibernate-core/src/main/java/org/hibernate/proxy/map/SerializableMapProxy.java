@@ -15,8 +15,9 @@ public final class SerializableMapProxy extends AbstractSerializableProxy {
 			Object id,
 			Boolean readOnly,
 			String sessionFactoryUuid,
+			String sessionFactoryName,
 			boolean allowLoadOutsideTransaction) {
-		super( entityName, id, readOnly, sessionFactoryUuid, allowLoadOutsideTransaction );
+		super( entityName, id, readOnly, sessionFactoryUuid, sessionFactoryName, allowLoadOutsideTransaction );
 	}
 
 	private Object readResolve() {

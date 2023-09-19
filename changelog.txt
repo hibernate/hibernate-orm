@@ -3,6 +3,50 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.3.1.Final (September 19, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32188
+
+** Bug
+    * [HHH-17221] - AssertionError initializing a collection with FetchMode.SUBSELECT and IdClass having only one field
+    * [HHH-17203] - ElementCollection doesn't consider @Where annotation on delete of elements
+    * [HHH-17202] - ArrayStoreException for single field id class entity collection batch loading
+    * [HHH-17201] - Unexpected value type exception for unordered multi id Load with ordered return disable
+    * [HHH-17189] - Audited annotations are ignored on embeddable super types
+    * [HHH-17177] - JDBC type code is ignored in XML mapping for an id attribute
+    * [HHH-17173] - Getting one-to-one association through a referenece to a bytecode enhanced entity fails
+    * [HHH-17168] - Investigate failures on db10_5 and Cockrachdb of FunctionTests.testCastBinaryWithLength
+    * [HHH-17167] - Unable to locate parameter for RESTRICT - DELETE error when removing entity with RowId
+    * [HHH-17166] - query methods returning primitive types incorrectly inferred to be mutation query methods
+    * [HHH-17165] - short method names in metamodel generator cause SIOBE
+    * [HHH-17163] - persist() should throw JPA's EntityExistsException if passed detached instance
+    * [HHH-17159] - java.lang.StackOverflowError during Update on Entity with Embeddable and JSON
+    * [HHH-17156] - NPE when an Embeddable column is reused in another class related by inheritance
+    * [HHH-17154] - NullPointerException is thrown when constructing EntityManagerFactoryBuilderImpl
+    * [HHH-17135] - CriteriaQuery error passing nullLiteral with entity type class
+    * [HHH-17131] - Regression in entity streams with associated collections resulting in result duplication
+    * [HHH-17105] - SQL clause from @WhereJoinTable is no longer used for DELETE queries (6.2 regression)
+    * [HHH-17104] - Bug with max() request inside projection
+    * [HHH-17100] - CustomType wrongly calls UserType#disassemble
+    * [HHH-17080] - [Envers] AuditReader.getRevisionNumberForDate(LocalDateTime) uses Epoch Seconds instead of Epoch Millis
+    * [HHH-17079] - NPE when using CompositeUserType with generic fields in Hibernate 6
+    * [HHH-17049] - Bytecode Enhancement, extra records created for associations created in constructor
+    * [HHH-16945] - CTE query cycle attribute evaluated incorrectly on MSSQL using collation "Latin1_General_CI_AS"
+    * [HHH-15968] - Sporadic ClassCastException when querying for Set<Enum>.
+
+** Improvement
+    * [HHH-17220] - Avoid runtime lookups of JdbcService from TableGenerator and TableStructure
+    * [HHH-17171] - JPA and multiple query roots
+    * [HHH-16768] - HQL parsed predicates don't validate type comparability
+
+** Task
+    * [HHH-17204] - Relax visibility of some methods for reactive upsert() support
+    * [HHH-17187] - Avoid 0 byte trailing UUID's in tests
+    * [HHH-17160] - Gradle 8.3 upgrade
+    * [HHH-17087] - Update container images to the latest version
+
+
 Changes in 6.3.0.Final (August 31, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

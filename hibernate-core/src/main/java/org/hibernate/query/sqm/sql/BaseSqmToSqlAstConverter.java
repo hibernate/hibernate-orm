@@ -3043,6 +3043,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	public boolean supportsEntityNameUsage() {
+		return true;
+	}
+
+	@Override
 	public void registerEntityNameUsage(
 			TableGroup tableGroup,
 			EntityNameUse entityNameUse,

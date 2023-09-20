@@ -517,6 +517,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						this.isInitialized = true;
 						registerReloadedEntity( rowProcessingState, existingEntity );
 						notifyResolutionListeners( entityInstance );
+						if ( rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
+							// We still need to read result set values to correctly populate the query cache
+							resolveState( rowProcessingState );
+						}
 					}
 					else {
 						registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
@@ -1055,6 +1059,14 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			values[i] = assembler == null ? UNFETCHED_PROPERTY : assembler.assemble( rowProcessingState );
 		}
 		return values;
+	}
+
+	private void resolveState(RowProcessingState rowProcessingState) {
+		for ( final DomainResultAssembler<?> assembler : assemblers[concreteDescriptor.getSubclassId()] ) {
+			if ( assembler != null ) {
+				assembler.resolveState( rowProcessingState );
+			}
+		}
 	}
 
 	protected boolean skipInitialization(Object toInitialize, RowProcessingState rowProcessingState) {

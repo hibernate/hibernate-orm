@@ -325,6 +325,15 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		state = stateAllNull ? State.NULL : State.EXTRACTED;
 	}
 
+	@Override
+	public void resolveState(RowProcessingState rowProcessingState) {
+		if ( determinInitialState() == State.INITIAL ) {
+			for ( final DomainResultAssembler<?> assembler : assemblers ) {
+				assembler.resolveState( rowProcessingState );
+			}
+		}
+	}
+
 	private Object createCompositeInstance(NavigablePath navigablePath, SessionFactoryImplementor sessionFactory) {
 		if ( state == State.NULL ) {
 			// todo (6.0) : should we initialize the composite instance if it has a parent attribute?

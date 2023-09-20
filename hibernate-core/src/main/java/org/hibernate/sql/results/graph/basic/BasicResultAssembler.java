@@ -85,6 +85,11 @@ public class BasicResultAssembler<J> implements DomainResultAssembler<J> {
 	}
 
 	@Override
+	public void resolveState(RowProcessingState rowProcessingState) {
+		extractRawValue( rowProcessingState );
+	}
+
+	@Override
 	public JavaType<J> getAssembledJavaType() {
 		if ( valueConverter != null ) {
 			return valueConverter.getDomainJavaType();

@@ -1978,6 +1978,13 @@ public class ToOneAttributeMapping
 							true,
 							creationState
 					);
+					if ( getAssociatedEntityMappingType().getSuperMappingType() != null && !creationState.supportsEntityNameUsage() ) {
+						getAssociatedEntityMappingType().applyDiscriminator(
+								join::applyPredicate,
+								sideNature == ForeignKeyDescriptor.Nature.TARGET ? keyTableReference.getIdentificationVariable() : targetTableReference.getIdentificationVariable(),
+								tableGroup,
+								creationState );
+					}
 				}
 		);
 

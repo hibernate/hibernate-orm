@@ -38,4 +38,12 @@ public interface DomainResultAssembler<J> {
 	 * assembles.
 	 */
 	JavaType<J> getAssembledJavaType();
+
+	/**
+	 * This method is used to resolve the assembler's state, i.e. reading the result values,
+	 * with some performance optimization when we don't need the result object itself
+	 */
+	default void resolveState(RowProcessingState rowProcessingState) {
+		assemble( rowProcessingState );
+	}
 }

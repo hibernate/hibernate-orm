@@ -1525,6 +1525,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 //			|| isIntegral(typeCode1) && isIntegral(typeCode2)
 			|| isFloatOrRealOrDouble(typeCode1) && isFloatOrRealOrDouble(typeCode2)
 			|| isVarcharType(typeCode1) && isVarcharType(typeCode2)
+			|| isCharacterType(typeCode1) && isCharacterType(typeCode2)
 			|| isVarbinaryType(typeCode1) && isVarbinaryType(typeCode2)
 			|| sameColumnType(typeCode1, typeCode2);
 	}

@@ -14,6 +14,7 @@ import javax.money.Monetary;
 
 import org.hibernate.SimpleNaturalIdLoadAccess;
 import org.hibernate.NaturalIdMultiLoadAccess;
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.MappingMetamodel;
@@ -41,7 +42,7 @@ import static org.hamcrest.Matchers.notNullValue;
 @DomainModel( standardModels = StandardDomainModel.RETAIL )
 @SessionFactory
 public class SimpleNaturalIdTests {
-	private static final UUID uuid = UUID.randomUUID();
+	private static final UUID uuid = SafeRandomUUIDGenerator.safeRandomUUID();
 
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {

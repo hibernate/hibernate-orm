@@ -46,7 +46,6 @@ import org.hibernate.engine.internal.NonNullableTransientDependencies;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.persister.entity.EntityPersister;
@@ -56,6 +55,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.ForeignKeyDirection;
 import org.hibernate.type.Type;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -511,7 +512,7 @@ public class ActionQueue {
 		prepareActions( collectionQueuedOps );
 	}
 
-	private void prepareActions(ExecutableList<?> queue) throws HibernateException {
+	private void prepareActions(@Nullable ExecutableList<?> queue) throws HibernateException {
 		if ( queue == null ) {
 			return;
 		}
@@ -583,7 +584,7 @@ public class ActionQueue {
 		return areTablesToBeUpdated( unresolvedInsertions, tables );
 	}
 
-	private static boolean areTablesToBeUpdated(ExecutableList<?> actions, Set<? extends Serializable> tableSpaces) {
+	private static boolean areTablesToBeUpdated(@Nullable ExecutableList<?> actions, Set<? extends Serializable> tableSpaces) {
 		if ( actions == null || actions.isEmpty() ) {
 			return false;
 		}
@@ -617,7 +618,7 @@ public class ActionQueue {
 	 * @param list The list of Executable elements to be performed
 	 *
 	 */
-	private <E extends ComparableExecutable> void executeActions(ExecutableList<E> list)
+	private <E extends ComparableExecutable> void executeActions(@Nullable ExecutableList<E> list)
 			throws HibernateException {
 		if ( list == null || list.isEmpty() ) {
 			return;
@@ -651,8 +652,10 @@ public class ActionQueue {
 				// Strictly speaking, only a subset of the list may have been processed if a RuntimeException occurs.
 				// We still invalidate all spaces. I don't see this as a big deal - after all, RuntimeExceptions are
 				// unexpected.
-				invalidateSpaces( list.getQuerySpaces().toArray(StringHelper.EMPTY_STRINGS) );
+				invalidateSpaces( list.getQuerySpaces().toArray(new String[0]) );
 			}
+			// @NonNull String @Nullable [] - array nullable, elements not
+			// @Nullable String @NonNull [] - elements nullable, array not
 		}
 
 		list.clear();
@@ -676,7 +679,7 @@ public class ActionQueue {
 	 *
 	 * @param spaces The spaces to invalidate
 	 */
-	private void invalidateSpaces(String[] spaces) {
+	private void invalidateSpaces(String @Nullable [] spaces) {
 		if ( spaces != null && spaces.length > 0 ) {
 			for ( String space : spaces ) {
 				if ( afterTransactionProcesses == null ) {
@@ -708,7 +711,7 @@ public class ActionQueue {
 				+ "]";
 	}
 
-	private static String toString(ExecutableList<?> q) {
+	private static String toString(@Nullable ExecutableList<?> q) {
 		return q == null ? "ExecutableList{size=0}" : q.toString();
 	}
 
@@ -858,7 +861,7 @@ public class ActionQueue {
 			|| nonempty( collectionCreations );
 	}
 
-	private boolean nonempty(ExecutableList<?> list) {
+	private boolean nonempty(@Nullable ExecutableList<?> list) {
 		return list != null && !list.isEmpty();
 	}
 
@@ -984,7 +987,7 @@ public class ActionQueue {
 			this.session = session;
 		}
 
-		public void register(T process) {
+		public void register(@Nullable T process) {
 			if ( process != null ) {
 				processes.add( process );
 			}
@@ -1051,7 +1054,7 @@ public class ActionQueue {
 
 			if ( session.getFactory().getSessionFactoryOptions().isQueryCacheEnabled() ) {
 				session.getFactory().getCache().getTimestampsCache().invalidate(
-						querySpacesToInvalidate.toArray(StringHelper.EMPTY_STRINGS),
+						querySpacesToInvalidate.toArray(new String[0]),
 						session
 				);
 			}
@@ -1149,7 +1152,7 @@ public class ActionQueue {
 				}
 			}
 
-			private void addDirectDependency(Type type, Object value, IdentityHashMap<Object, InsertInfo> insertInfosByEntity) {
+			private void addDirectDependency(Type type, @Nullable Object value, IdentityHashMap<Object, InsertInfo> insertInfosByEntity) {
 				if ( type.isEntityType() && value != null ) {
 					final EntityType entityType = (EntityType) type;
 					final InsertInfo insertInfo = insertInfosByEntity.get( value );
@@ -1209,7 +1212,7 @@ public class ActionQueue {
 			}
 
 			@Override
-			public boolean equals(Object o) {
+			public boolean equals(@Nullable Object o) {
 				if ( this == o )  {
 					return true;
 				}
@@ -1305,7 +1308,7 @@ public class ActionQueue {
 			}
 		}
 
-		private int schedule(InsertInfo[] insertInfos, List<InsertInfo> insertInfosToSchedule, int schedulePosition) {
+		private int schedule(InsertInfo [] insertInfos, List<InsertInfo> insertInfosToSchedule, int schedulePosition) {
 			final InsertInfo[] newInsertInfos = new InsertInfo[insertInfos.length];
 			// The bitset is there to quickly query if an index is already scheduled
 			final BitSet bitSet = new BitSet(insertInfos.length);

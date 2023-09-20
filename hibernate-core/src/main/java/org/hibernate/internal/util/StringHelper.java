@@ -42,7 +42,7 @@ public final class StringHelper {
 		return string.length() - 1;
 	}
 
-	public static String join(String seperator, String[] strings) {
+	public static String join(String separator, String[] strings) {
 		int length = strings.length;
 		if ( length == 0 ) {
 			return "";
@@ -54,7 +54,7 @@ public final class StringHelper {
 		StringBuilder buf = new StringBuilder( length * firstStringLength )
 				.append( strings[0] );
 		for ( int i = 1; i < length; i++ ) {
-			buf.append( seperator ).append( strings[i] );
+			buf.append( separator ).append( strings[i] );
 		}
 		return buf.toString();
 	}

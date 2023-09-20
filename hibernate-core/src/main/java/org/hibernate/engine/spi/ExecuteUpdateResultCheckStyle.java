@@ -8,6 +8,8 @@ package org.hibernate.engine.spi;
 
 import org.hibernate.annotations.ResultCheckStyle;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * For persistence operations (INSERT, UPDATE, DELETE) what style of
  * determining results (success/failure) is to be used.
@@ -54,7 +56,7 @@ public enum ExecuteUpdateResultCheckStyle {
 		return name;
 	}
 
-	public static ExecuteUpdateResultCheckStyle fromResultCheckStyle(ResultCheckStyle style) {
+	public static @Nullable ExecuteUpdateResultCheckStyle fromResultCheckStyle(ResultCheckStyle style) {
 		switch (style) {
 			case NONE:
 				return NONE;
@@ -67,7 +69,7 @@ public enum ExecuteUpdateResultCheckStyle {
 		}
 	}
 
-	public static ExecuteUpdateResultCheckStyle fromExternalName(String name) {
+	public static @Nullable ExecuteUpdateResultCheckStyle fromExternalName(String name) {
 		if ( name.equalsIgnoreCase( NONE.name ) ) {
 			return NONE;
 		}
@@ -82,7 +84,7 @@ public enum ExecuteUpdateResultCheckStyle {
 		}
 	}
 
-	public static ExecuteUpdateResultCheckStyle determineDefault(String customSql, boolean callable) {
+	public static ExecuteUpdateResultCheckStyle determineDefault(@Nullable String customSql, boolean callable) {
 		return customSql != null && callable ? PARAM : COUNT;
 	}
 }

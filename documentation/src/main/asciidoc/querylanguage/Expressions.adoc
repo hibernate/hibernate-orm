@@ -446,6 +446,23 @@ from Author as author
 
 A `case` expression may contain complex expression, including operator expressions.
 
+[[tuple-instantiation]]
+=== Tuples
+
+A _tuple instantiation_ is an expression like `(1, 'hello')`, and may be used to "vectorize" comparison expressions.
+
+[[tuple-comparison]]
+[source,hql]
+----
+from Person where (firstName, lastName) = ('Ludwig', 'Boltzmann')
+----
+[source,hql]
+----
+from Event where (year, day) > (year(local date), day(local date))
+----
+
+This syntax may be used even when the underlying SQL dialect does _not_ support so-called "row value" constructors.
+
 [[exp-functions]]
 === Functions
 
@@ -1310,17 +1327,7 @@ from Book as book
 where :edition in elements(book.editions)
 ----
 
-The next example doesn't work on every database:
-
-[%unbreakable]
-[source, hql]
-----
-from Author as author
-where (author.person.name, author.person.birthdate)
-    in (select name, birthdate from OldAuthorData)
-----
-
-Here we used a "row value" constructor, a seemingly pretty basic feature which is surprisingly-poorly supported.
+It's quite common to have a parameterized list of values.
 
 [%unbreakable]
 [TIP]
@@ -1334,6 +1341,16 @@ List<Book> books =
             .getResultList();
 ----
 ====
+
+We may even "vectorize" an `in` predicate, using a tuple constructor and a subquery with multiple selection items:
+
+[%unbreakable]
+[source, hql]
+----
+from Author as author
+where (author.person.name, author.person.birthdate)
+    in (select name, birthdate from OldAuthorData)
+----
 
 [[relational-comparisons-subqueries]]
 ==== Comparison operators and subqueries

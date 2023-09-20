@@ -1,13 +1,12 @@
 package org.hibernate.orm.test.entitygraph;
 
 import java.util.List;
-import java.util.UUID;
 
 import org.hibernate.Hibernate;
 import org.hibernate.jpa.SpecHints;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,7 +38,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 				DiscriminatorColumnFetchGraphTest.Behaviour.class
 		}
 )
-@TestForIssue(jiraKey = "HHH-15622")
+@JiraKey(value = "HHH-15622")
 public class DiscriminatorColumnFetchGraphTest {
 
 	@BeforeEach
@@ -84,7 +83,7 @@ public class DiscriminatorColumnFetchGraphTest {
 
 		@Id
 		@GeneratedValue(strategy = AUTO)
-		private UUID id;
+		private Long id;
 
 		@MapsId
 		@OneToOne(fetch = FetchType.LAZY, optional = false)
@@ -123,7 +122,7 @@ public class DiscriminatorColumnFetchGraphTest {
 
 		@Id
 		@GeneratedValue(strategy = AUTO)
-		private UUID id;
+		private Long id;
 
 		@OneToOne(mappedBy = "behaviour", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
 		private Animal animal;

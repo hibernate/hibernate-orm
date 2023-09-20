@@ -8,7 +8,18 @@ public final class Method extends Executable {
     void invoke(@Nullable Object obj, @Nullable Object @Nullable ... args);
 }
 
-public final
-class Field extends AccessibleObject implements Member {
+public final class Field extends AccessibleObject implements Member {
     public void set(Object obj, @Nullable Object value);
+}
+
+package java.util;
+
+
+public interface Queue<E> extends Collection<E> {
+    @Override
+    @EnsuresNonNullIf(expression="poll()", result=false)
+    @EnsuresNonNullIf(expression="peek()", result=false)
+    boolean isEmpty();
+    E poll();
+    E peek();
 }

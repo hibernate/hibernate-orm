@@ -165,6 +165,15 @@ Constructing a query by concatenating HQL fragments with user input is extremely
 
 Some of the syntax for literal values also departs from the standard syntax in ANSI SQL, especially in the area of date/time literals, but we'll discuss all that later, in <<literals>>.
 
+[[syntax]]
+=== Syntax
+
+We'll describe the syntax of the language as we go along, sometimes displaying fragments of the grammar in an ANTLR-like BNF form.
+(Occasionally we'll simplify these snippets for readability, so please don't take them as canonical.)
+
+The full canonical grammar for HQL can be found in link:https://github.com/hibernate/hibernate-orm/blob/main/hibernate-core/src/main/antlr/org/hibernate/grammars/hql/HqlParser.g4[the github project].
+
+The grammar for JPQL may be found in chapter 4 of the JPA specification.
 
 [[type-system]]
 === Type system

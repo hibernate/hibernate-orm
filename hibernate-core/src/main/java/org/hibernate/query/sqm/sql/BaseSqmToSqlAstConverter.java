@@ -430,6 +430,7 @@ import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.query.sqm.UnaryArithmeticOperator.UNARY_MINUS;
+import static org.hibernate.query.sqm.internal.SqmUtil.getActualTableGroup;
 import static org.hibernate.sql.ast.spi.SqlAstTreeHelper.combinePredicates;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;
 
@@ -2823,9 +2824,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private void registerSqmFromTableGroup(SqmFrom<?, ?> sqmFrom, TableGroup tableGroup) {
 		getFromClauseIndex().register( sqmFrom, tableGroup );
 		// We also need to register the table group for the treats
-		if ( tableGroup instanceof PluralTableGroup ) {
-			final PluralTableGroup pluralTableGroup = (PluralTableGroup) tableGroup;
-			for ( SqmFrom<?, ?> sqmTreat : sqmFrom.getSqmTreats() ) {
+		final PluralTableGroup pluralTableGroup = tableGroup instanceof PluralTableGroup ?
+				(PluralTableGroup) tableGroup :
+				null;
+		for ( SqmFrom<?, ?> sqmTreat : sqmFrom.getSqmTreats() ) {
+			getFromClauseAccess().registerTableGroup( sqmTreat.getNavigablePath(), tableGroup );
+			if ( pluralTableGroup != null ) {
 				if ( pluralTableGroup.getElementTableGroup() != null ) {
 					getFromClauseAccess().registerTableGroup(
 							sqmTreat.getNavigablePath().append( CollectionPart.Nature.ELEMENT.getName() ),
@@ -2838,11 +2842,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							pluralTableGroup.getIndexTableGroup()
 					);
 				}
-			}
-		}
-		else {
-			for ( SqmFrom<?, ?> sqmTreat : sqmFrom.getSqmTreats() ) {
-				getFromClauseAccess().registerTableGroup( sqmTreat.getNavigablePath(), tableGroup );
 			}
 		}
 	}
@@ -3256,23 +3255,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			throw new InterpretationException( "Could not resolve SqmJoin [" + sqmJoin.getNavigablePath() + "] to TableGroupJoin" );
 		}
-	}
-
-	private TableGroup getActualTableGroup(TableGroup lhsTableGroup, SqmPath<?> path) {
-		// The actual table group in case of PluralTableGroups usually is the element table group,
-		// but if the SqmPath is a SqmPluralPartJoin e.g. `join key(mapAlias) k`
-		// or the SqmPath is a simple path for the key e.g. `select key(mapAlias)`,
-		// then we want to return the PluralTableGroup instead
-		if ( lhsTableGroup instanceof PluralTableGroup
-				&& !( path instanceof SqmPluralPartJoin<?, ?> )
-				&& CollectionPart.Nature.fromName( path.getNavigablePath().getLocalName() ) == null ) {
-			final TableGroup elementTableGroup = ( (PluralTableGroup) lhsTableGroup ).getElementTableGroup();
-			// The element table group could be null for basic collections
-			if ( elementTableGroup != null ) {
-				return elementTableGroup;
-			}
-		}
-		return lhsTableGroup;
 	}
 
 	private TableGroup consumeAttributeJoin(

@@ -24,6 +24,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityAssociationMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -45,6 +46,7 @@ import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAliasedNodeRef;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
@@ -57,6 +59,7 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.from.PluralTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -118,6 +121,23 @@ public class SqmUtil {
 				hqlString,
 				null
 		);
+	}
+
+	public static TableGroup getActualTableGroup(TableGroup lhsTableGroup, SqmPath<?> path) {
+		// The actual table group in case of PluralTableGroups usually is the element table group,
+		// but if the SqmPath is a SqmPluralPartJoin e.g. `join key(mapAlias) k`
+		// or the SqmPath is a simple path for the key e.g. `select key(mapAlias)`,
+		// then we want to return the PluralTableGroup instead
+		if ( lhsTableGroup instanceof PluralTableGroup
+				&& !( path instanceof SqmPluralPartJoin<?, ?> )
+				&& CollectionPart.Nature.fromName( path.getNavigablePath().getLocalName() ) == null ) {
+			final TableGroup elementTableGroup = ( (PluralTableGroup) lhsTableGroup ).getElementTableGroup();
+			// The element table group could be null for basic collections
+			if ( elementTableGroup != null ) {
+				return elementTableGroup;
+			}
+		}
+		return lhsTableGroup;
 	}
 
 	public static Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> generateJdbcParamsXref(

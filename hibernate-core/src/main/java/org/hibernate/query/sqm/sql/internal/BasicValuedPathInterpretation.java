@@ -39,6 +39,8 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
+import static org.hibernate.query.sqm.internal.SqmUtil.getActualTableGroup;
+
 /**
  * @author Steve Ebersole
  */
@@ -51,7 +53,10 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			SqmToSqlAstConverter sqlAstCreationState,
 			boolean jpaQueryComplianceEnabled) {
 		final SqmPath<?> lhs = sqmPath.getLhs();
-		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( lhs.getNavigablePath() );
+		final TableGroup tableGroup = getActualTableGroup(
+				sqlAstCreationState.getFromClauseAccess().getTableGroup( lhs.getNavigablePath() ),
+				sqmPath
+		);
 		EntityMappingType treatTarget = null;
 		final ModelPartContainer modelPartContainer;
 		if ( lhs instanceof SqmTreatedPath<?, ?> ) {

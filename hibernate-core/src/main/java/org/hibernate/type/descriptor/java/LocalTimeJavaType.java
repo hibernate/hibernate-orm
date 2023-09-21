@@ -132,9 +132,12 @@ public class LocalTimeJavaType extends AbstractTemporalJavaType<LocalTime> {
 		if (value instanceof Time) {
 			final Time time = (Time) value;
 			final LocalTime localTime = time.toLocalTime();
-			final long millis = time.getTime() % 1000;
+			long millis = time.getTime() % 1000;
 			if ( millis == 0 ) {
 				return localTime;
+			}
+			if ( millis < 0 ) {
+				millis = millis + 1000;
 			}
 			return localTime.with( ChronoField.NANO_OF_SECOND, millis * 1_000_000L );
 		}

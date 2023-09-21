@@ -1,0 +1,17 @@
+module:jakarta.cdi
+jakarta.decorator
+jakarta.enterprise.context
+jakarta.enterprise.context.control
+jakarta.enterprise.context.spi
+jakarta.enterprise.event
+jakarta.enterprise.inject
+jakarta.enterprise.inject.build.compatible.spi
+jakarta.enterprise.inject.literal
+jakarta.enterprise.inject.se
+jakarta.enterprise.inject.spi
+jakarta.enterprise.inject.spi.configurator
+jakarta.enterprise.util
+module:jakarta.cdi.lang.model
+jakarta.enterprise.lang.model
+jakarta.enterprise.lang.model.declarations
+jakarta.enterprise.lang.model.types

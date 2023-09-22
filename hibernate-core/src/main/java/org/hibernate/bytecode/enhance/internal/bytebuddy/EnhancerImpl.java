@@ -15,6 +15,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 import org.hibernate.Version;
 import org.hibernate.bytecode.enhance.VersionMismatchException;
@@ -145,12 +147,14 @@ public class EnhancerImpl implements Enhancer {
 	public byte[] enhance(String className, byte[] originalBytes) throws EnhancementException {
 		//Classpool#describe does not accept '/' in the description name as it expects a class name. See HHH-12545
 		final String safeClassName = className.replace( '/', '.' );
-		classFileLocator.setClassNameAndBytes( safeClassName, originalBytes );
+		classFileLocator.registerClassNameAndBytes( safeClassName, originalBytes );
 		try {
 			final TypeDescription typeDescription = typePool.describe( safeClassName ).resolve();
 
 			return byteBuddyState.rewrite( typePool, safeClassName, byteBuddy -> doEnhance(
-					byteBuddy.ignore( isDefaultFinalizer() ).redefine( typeDescription, ClassFileLocator.Simple.of( safeClassName, originalBytes ) ),
+					() -> byteBuddy.ignore( isDefaultFinalizer() )
+							.redefine( typeDescription, ClassFileLocator.Simple.of( safeClassName, originalBytes ) )
+							.annotateType( HIBERNATE_VERSION_ANNOTATION ),
 					typeDescription
 			) );
 		}
@@ -160,12 +164,15 @@ public class EnhancerImpl implements Enhancer {
 		catch (RuntimeException e) {
 			throw new EnhancementException( "Failed to enhance class " + className, e );
 		}
+		finally {
+			classFileLocator.deregisterClassNameAndBytes( safeClassName );
+		}
 	}
 
 	@Override
 	public void discoverTypes(String className, byte[] originalBytes) {
 		if ( originalBytes != null ) {
-			classFileLocator.setClassNameAndBytes( className, originalBytes );
+			classFileLocator.registerClassNameAndBytes( className, originalBytes );
 		}
 		try {
 			final TypeDescription typeDescription = typePool.describe( className ).resolve();
@@ -175,13 +182,16 @@ public class EnhancerImpl implements Enhancer {
 		catch (RuntimeException e) {
 			throw new EnhancementException( "Failed to discover types for class " + className, e );
 		}
+		finally {
+			classFileLocator.deregisterClassNameAndBytes( className );
+		}
 	}
 
 	private TypePool buildTypePool(final ClassFileLocator classFileLocator) {
 		return TypePool.Default.WithLazyResolution.of( classFileLocator );
 	}
 
-	private DynamicType.Builder<?> doEnhance(DynamicType.Builder<?> builder, TypeDescription managedCtClass) {
+	private DynamicType.Builder<?> doEnhance(Supplier<DynamicType.Builder<?>> builderSupplier, TypeDescription managedCtClass) {
 		// can't effectively enhance interfaces
 		if ( managedCtClass.isInterface() ) {
 			log.debugf( "Skipping enhancement of [%s]: it's an interface", managedCtClass.getName() );
@@ -202,10 +212,9 @@ public class EnhancerImpl implements Enhancer {
 			return null;
 		}
 
-		builder = builder.annotateType( HIBERNATE_VERSION_ANNOTATION );
-
 		if ( enhancementContext.isEntityClass( managedCtClass ) ) {
 			log.debugf( "Enhancing [%s] as Entity", managedCtClass.getName() );
+			DynamicType.Builder<?> builder = builderSupplier.get();
 			builder = builder.implement( ManagedEntity.class )
 					.defineMethod( EnhancerConstants.ENTITY_INSTANCE_GETTER_NAME, Object.class, Visibility.PUBLIC )
 					.intercept( FixedValue.self() );
@@ -357,6 +366,7 @@ public class EnhancerImpl implements Enhancer {
 		else if ( enhancementContext.isCompositeClass( managedCtClass ) ) {
 			log.debugf( "Enhancing [%s] as Composite", managedCtClass.getName() );
 
+			DynamicType.Builder<?> builder = builderSupplier.get();
 			builder = builder.implement( ManagedComposite.class );
 			builder = addInterceptorHandling( builder, managedCtClass );
 
@@ -390,12 +400,13 @@ public class EnhancerImpl implements Enhancer {
 		else if ( enhancementContext.isMappedSuperclassClass( managedCtClass ) ) {
 			log.debugf( "Enhancing [%s] as MappedSuperclass", managedCtClass.getName() );
 
+			DynamicType.Builder<?> builder = builderSupplier.get();
 			builder = builder.implement( ManagedMappedSuperclass.class );
 			return createTransformer( managedCtClass ).applyTo( builder );
 		}
 		else if ( enhancementContext.doExtendedEnhancement( managedCtClass ) ) {
 			log.debugf( "Extended enhancement of [%s]", managedCtClass.getName() );
-			return createTransformer( managedCtClass ).applyExtended( builder );
+			return createTransformer( managedCtClass ).applyExtended( builderSupplier.get() );
 		}
 		else {
 			log.debugf( "Skipping enhancement of [%s]: not entity or composite", managedCtClass.getName() );
@@ -634,11 +645,7 @@ public class EnhancerImpl implements Enhancer {
 	}
 
 	private static class EnhancerClassFileLocator extends ClassFileLocator.ForClassLoader {
-
-		// The name of the class to (possibly be) transformed.
-		private String className;
-		// The explicitly resolved Resolution for the class to (possibly be) transformed.
-		private Resolution resolution;
+		private final ConcurrentHashMap<String, Resolution> resolutions = new ConcurrentHashMap<>();
 
 		/**
 		 * Creates a new class file locator for the given class loader.
@@ -652,7 +659,8 @@ public class EnhancerImpl implements Enhancer {
 		@Override
 		public Resolution locate(String className) throws IOException {
 			assert className != null;
-			if ( className.equals( this.className ) ) {
+			final Resolution resolution = resolutions.get( className );
+			if ( resolution != null ) {
 				return resolution;
 			}
 			else {
@@ -660,11 +668,14 @@ public class EnhancerImpl implements Enhancer {
 			}
 		}
 
-		void setClassNameAndBytes(String className, byte[] bytes) {
+		void registerClassNameAndBytes(String className, byte[] bytes) {
 			assert className != null;
 			assert bytes != null;
-			this.className = className;
-			this.resolution = new Resolution.Explicit( bytes);
+			resolutions.put( className, new Resolution.Explicit( bytes ) );
+		}
+
+		void deregisterClassNameAndBytes(String className) {
+			resolutions.remove( className );
 		}
 	}
 

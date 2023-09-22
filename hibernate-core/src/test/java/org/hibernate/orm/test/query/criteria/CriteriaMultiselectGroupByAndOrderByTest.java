@@ -10,10 +10,17 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.dialect.SybaseASEDialect;
+import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaDerivedRoot;
+import org.hibernate.query.criteria.JpaSubQuery;
+
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -26,7 +33,9 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Root;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -39,7 +48,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 		CriteriaMultiselectGroupByAndOrderByTest.Secondary.class,
 } )
 @SessionFactory
-@Jira( "https://hibernate.atlassian.net/browse/HHH-17085" )
 public class CriteriaMultiselectGroupByAndOrderByTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
@@ -72,30 +80,103 @@ public class CriteriaMultiselectGroupByAndOrderByTest {
 	}
 
 	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17085" )
 	public void testCriteriaGroupBy(SessionFactoryScope scope) {
-		executeQuery( scope, false );
+		executeQuery( scope, false, false );
 	}
 
 	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17085" )
 	public void testCriteriaGroupByAndOrderBy(SessionFactoryScope scope) {
-		executeQuery( scope, true );
+		executeQuery( scope, true, false );
 	}
 
-	private void executeQuery(SessionFactoryScope scope, boolean order) {
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17085" )
+	public void testCriteriaGroupByAndOrderByAndHaving(SessionFactoryScope scope) {
+		executeQuery( scope, true, true );
+	}
+
+	private void executeQuery(SessionFactoryScope scope, boolean order, boolean having) {
 		scope.inTransaction( session -> {
 			final CriteriaBuilder cb = session.getCriteriaBuilder();
 			final CriteriaQuery<Tuple> query = cb.createQuery( Tuple.class );
 			final Root<Primary> root = query.from( Primary.class );
 			final Join<Primary, Secondary> join = root.join( "secondary" );
+			final Path<String> entityName = join.get( "entityName" );
+			final Expression<Number> sum = cb.sum( root.get( "amount" ) );
 			query.multiselect(
-					join.get( "entityName" ).alias( "secondary" ),
-					cb.sum( root.get( "amount" ) ).alias( "sum" )
+					entityName.alias( "secondary_name" ),
+					sum.alias( "amount_sum" )
 			).groupBy( join );
 			if ( order ) {
-				query.orderBy( cb.desc( join.get( "entityName" ) ) );
+				query.orderBy( cb.desc( entityName ) );
+			}
+			if ( having ) {
+				query.having( cb.and(
+						cb.equal( entityName, "a" ),
+						cb.gt( sum, 0 )
+				) );
 			}
 			final List<Tuple> resultList = session.createQuery( query ).getResultList();
-			assertThat( resultList ).hasSize( 3 );
+			assertThat( resultList ).hasSize( having ? 1 : 3 );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17231" )
+	public void testSubqueryGroupBy(SessionFactoryScope scope) {
+		executeSubquery( scope, false, false );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17231" )
+	@SkipForDialect( dialectClass = SybaseASEDialect.class, reason = "Sybase doesn't support order by + offset in subqueries")
+	public void testSubqueryGroupByAndOrderBy(SessionFactoryScope scope) {
+		executeSubquery( scope, true, false );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17231" )
+	@SkipForDialect( dialectClass = SybaseASEDialect.class, reason = "Sybase doesn't support order by + offset in subqueries")
+	public void testSubqueryGroupByAndOrderByAndHaving(SessionFactoryScope scope) {
+		executeSubquery( scope, true, true );
+	}
+
+	private void executeSubquery(SessionFactoryScope scope, boolean order, boolean having) {
+		scope.inTransaction( session -> {
+			final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> query = cb.createTupleQuery();
+
+			final JpaSubQuery<Tuple> subquery = query.subquery( Tuple.class );
+			final Root<Primary> sqRoot = subquery.from( Primary.class );
+			final Join<Object, Object> secondaryJoin = sqRoot.join( "secondary" );
+			final Path<String> entityName = secondaryJoin.get( "entityName" );
+			final Expression<Number> sum = cb.sum( sqRoot.get( "amount" ) );
+			subquery.multiselect(
+					entityName.alias( "secondary_name" ),
+					sum.alias( "amount_sum" )
+			).groupBy(
+					secondaryJoin
+			);
+			if ( order ) {
+				subquery.orderBy(
+						cb.desc( entityName )
+				).offset( 0 );
+			}
+			if ( having ) {
+				subquery.having( cb.and(
+						cb.equal( entityName, "a" ),
+						cb.gt( sum, 0 )
+				) );
+			}
+			final JpaDerivedRoot<Tuple> root = query.from( subquery );
+			query.multiselect(
+					root.get( "secondary_name" ),
+					root.get( "amount_sum" )
+			);
+			final List<Tuple> resultList = session.createQuery( query ).getResultList();
+			assertThat( resultList ).hasSize( having ? 1 : 3 );
 		} );
 	}
 

@@ -913,7 +913,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getColumnComment(String comment) {
-		return "comment '" + comment + "'";
+		return " comment '" + comment + "'";
 	}
 
 	@Override

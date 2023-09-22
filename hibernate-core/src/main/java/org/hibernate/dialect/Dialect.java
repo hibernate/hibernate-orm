@@ -1441,6 +1441,22 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @param temporalType The type of the temporal
 	 * @param intervalType The type of interval to add or null if it's not a native interval
 	 */
+	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType, boolean withTimeZone) {
+		return timestampaddPattern( unit, temporalType, intervalType );
+	}
+
+	/**
+	 * Obtain a pattern for the SQL equivalent to a
+	 * {@code timestampadd()} function call. The resulting
+	 * pattern must contain ?1, ?2, and ?3 placeholders
+	 * for the arguments.
+	 *
+	 * @param unit The unit to add to the temporal
+	 * @param temporalType The type of the temporal
+	 * @param intervalType The type of interval to add or null if it's not a native interval
+	 * @deprecated use {@link #timestampaddPattern(TemporalUnit, TemporalType, IntervalType, boolean)} instead
+	 */
+	@Deprecated
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		throw new UnsupportedOperationException( "`" + getClass().getName() + "` does not yet support #timestampaddPattern" );
 	}

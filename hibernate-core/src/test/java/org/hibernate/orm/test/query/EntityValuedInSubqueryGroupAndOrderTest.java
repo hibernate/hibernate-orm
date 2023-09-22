@@ -66,6 +66,22 @@ public class EntityValuedInSubqueryGroupAndOrderTest {
 	}
 
 	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17231" )
+	public void testInSubqueryGroupByProp(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final EntityB result = session.createQuery(
+					"select b from EntityB b " +
+							"where (b.entityA.name, b.amount) in " +
+							"	(select b2.entityA.name, max(b2.amount) from EntityB b2 " +
+							"	where b2.entityA.unlisted = false " +
+							"	group by b2.entityA)",
+					EntityB.class
+			).getSingleResult();
+			assertThat( result.getAmount() ).isEqualTo( 2 );
+		} );
+	}
+
+	@Test
 	public void testTopLevelSelect(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			// Here, the selection is top level so the entity valued path will be expanded

@@ -27,6 +27,7 @@ import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.TypeHelper;
 
 import static org.hibernate.LockMode.PESSIMISTIC_FORCE_INCREMENT;
 import static org.hibernate.engine.internal.AbstractEntityEntry.BooleanState.EXISTS_IN_DATABASE;
@@ -426,6 +427,13 @@ public abstract class AbstractEntityEntry implements Serializable, EntityEntry {
 				}
 				setStatus( MANAGED );
 				loadedState = persister.getValues( entity );
+				TypeHelper.deepCopy(
+						loadedState,
+						persister.getPropertyTypes(),
+						persister.getPropertyCheckability(),
+						loadedState,
+						getPersistenceContext().getSession()
+				);
 				if ( persister.hasNaturalIdentifier() ) {
 					getPersistenceContext().getNaturalIdResolutions().manageLocalResolution(
 							id,

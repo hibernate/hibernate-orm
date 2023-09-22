@@ -129,7 +129,7 @@ public class EntityUseSingleTableOptimizationTest {
 									"t1_0.name " +
 									"from Thing t1_0 " +
 									"where " +
-									"t1_0.DTYPE!='House'",
+									"t1_0.DTYPE<>'House'",
 							sqlStatementInterceptor.getSqlQueries().get( 0 )
 					);
 				}

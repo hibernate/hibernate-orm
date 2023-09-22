@@ -7084,12 +7084,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				this.queryPartForRowNumberingClauseDepth = -1;
 				this.needsSelectAliases = false;
 				queryPartStack.push( subQuery );
-				appendSql( "exists (select 1" );
-				visitFromClause( subQuery.getFromClause() );
-
+				appendSql( "exists (" );
 				if ( !subQuery.getGroupByClauseExpressions().isEmpty()
 						|| subQuery.getHavingClauseRestrictions() != null ) {
-					// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause
+					// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause.
+					// Also, we need to explicitly include the selections to avoid 'invalid HAVING clause' errors
+					visitSelectClause( subQuery.getSelectClause() );
+					visitFromClause( subQuery.getFromClause() );
 					visitWhereClause( subQuery.getWhereClauseRestrictions() );
 					visitGroupByClause( subQuery, SelectItemReferenceStrategy.EXPRESSION );
 
@@ -7114,6 +7115,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				else {
 					// If we have no group by or having clause, we can move the tuple comparison emulation to the WHERE clause
+					appendSql( "select 1" );
+					visitFromClause( subQuery.getFromClause() );
 					appendSql( " where " );
 					clauseStack.push( Clause.WHERE );
 					try {

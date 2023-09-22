@@ -473,8 +473,16 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
+		return timestampaddPattern( unit, temporalType, intervalType, false );
+	}
 
-		StringBuilder pattern = new StringBuilder();
+	@Override
+	public String timestampaddPattern(
+			TemporalUnit unit,
+			TemporalType temporalType,
+			IntervalType intervalType,
+			boolean hasTimeZone) {
+		final StringBuilder pattern = new StringBuilder();
 		switch ( unit ) {
 			case YEAR:
 				pattern.append( ADD_YEAR_EXPRESSION );
@@ -486,22 +494,32 @@ public class OracleLegacyDialect extends Dialect {
 				pattern.append( ADD_MONTH_EXPRESSION );
 				break;
 			case WEEK:
-				pattern.append("(?3+numtodsinterval((?2)*7,'day'))");
+				if ( hasTimeZone ) {
+					pattern.append( "(?3+numtodsinterval(?2*7,'day'))" );
+				}
+				else {
+					pattern.append( "(?3+?2" ).append( unit.conversionFactor( DAY, this ) ).append( ")" );
+				}
 				break;
 			case DAY:
 			case HOUR:
 			case MINUTE:
 			case SECOND:
-				pattern.append("(?3+numtodsinterval(?2,'?1'))");
+				if ( hasTimeZone ) {
+					pattern.append( "(?3+numtodsinterval(?2,'?1'))" );
+				}
+				else {
+					pattern.append( "(?3+?2" ).append( unit.conversionFactor( DAY, this ) ).append( ")" );
+				}
 				break;
 			case NANOSECOND:
-				pattern.append("(?3+numtodsinterval((?2)/1e9,'second'))");
+				pattern.append( "(?3+numtodsinterval((?2)/1e9,'second'))" );
 				break;
 			case NATIVE:
-				pattern.append("(?3+numtodsinterval(?2,'second'))");
+				pattern.append( "(?3+numtodsinterval(?2,'second'))" );
 				break;
 			default:
-				throw new SemanticException(unit + " is not a legal field");
+				throw new SemanticException( unit + " is not a legal field" );
 		}
 		return pattern.toString();
 	}
@@ -522,42 +540,51 @@ public class OracleLegacyDialect extends Dialect {
 				extractField( pattern, MONTH, unit );
 				pattern.append( ")" );
 				break;
-			case WEEK:
 			case DAY:
-				extractField( pattern, DAY, unit );
-				break;
-			case HOUR:
-				pattern.append( "(" );
-				extractField( pattern, DAY, unit );
 				if ( hasTimePart ) {
-					pattern.append( "+" );
-					extractField( pattern, HOUR, unit );
+					pattern.append( "(cast(?3 as date)-cast(?2 as date))" );
 				}
-				pattern.append( ")" );
+				else {
+					pattern.append( "(?3-?2)" );
+				}
 				break;
+			case WEEK:
 			case MINUTE:
-				pattern.append( "(" );
-				extractField( pattern, DAY, unit );
+			case SECOND:
+			case HOUR:
 				if ( hasTimePart ) {
-					pattern.append( "+" );
-					extractField( pattern, HOUR, unit );
-					pattern.append( "+" );
-					extractField( pattern, MINUTE, unit );
+					pattern.append( "((cast(?3 as date)-cast(?2 as date))" );
 				}
+				else {
+					pattern.append( "((?3-?2)" );
+				}
+				pattern.append( TemporalUnit.DAY.conversionFactor(unit ,this ) );
 				pattern.append( ")" );
 				break;
 			case NATIVE:
 			case NANOSECOND:
-			case SECOND:
-				pattern.append( "(" );
-				extractField( pattern, DAY, unit );
 				if ( hasTimePart ) {
-					pattern.append( "+" );
-					extractField( pattern, HOUR, unit );
-					pattern.append( "+" );
-					extractField( pattern, MINUTE, unit );
-					pattern.append( "+" );
-					extractField( pattern, SECOND, unit );
+					if ( supportsLateral() ) {
+						pattern.append( "(select extract(day from t.i)" ).append( TemporalUnit.DAY.conversionFactor( unit, this ) )
+								.append( "+extract(hour from t.i)" ).append( TemporalUnit.HOUR.conversionFactor( unit, this ) )
+								.append( "+extract(minute from t.i)" ).append( MINUTE.conversionFactor( unit, this ) )
+								.append( "+extract(second from t.i)" ).append( SECOND.conversionFactor( unit, this ) )
+								.append( " from(select ?3-?2 i from dual)t" );
+					}
+					else {
+						pattern.append( "(" );
+						extractField( pattern, DAY, unit );
+						pattern.append( "+" );
+						extractField( pattern, HOUR, unit );
+						pattern.append( "+" );
+						extractField( pattern, MINUTE, unit );
+						pattern.append( "+" );
+						extractField( pattern, SECOND, unit );
+					}
+				}
+				else {
+					pattern.append( "((?3-?2)" );
+					pattern.append( TemporalUnit.DAY.conversionFactor( unit, this ) );
 				}
 				pattern.append( ")" );
 				break;
@@ -570,17 +597,16 @@ public class OracleLegacyDialect extends Dialect {
 	private void extractField(StringBuilder pattern, TemporalUnit unit, TemporalUnit toUnit) {
 		pattern.append( "extract(" );
 		pattern.append( translateExtractField( unit ) );
-		pattern.append( " from (?3-?2) " );
+		pattern.append( " from (?3-?2)" );
 		switch ( unit ) {
 			case YEAR:
 			case MONTH:
-				pattern.append( "year to month" );
+				pattern.append( " year(9) to month" );
 				break;
 			case DAY:
 			case HOUR:
 			case MINUTE:
 			case SECOND:
-				pattern.append( "day to second" );
 				break;
 			default:
 				throw new SemanticException( unit + " is not a legal field" );

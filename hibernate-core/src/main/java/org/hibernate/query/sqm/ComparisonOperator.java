@@ -63,7 +63,7 @@ public enum ComparisonOperator {
 
 		@Override
 		public String sqlText() {
-			return "!=";
+			return "<>";
 		}
 	},
 	NOT_DISTINCT_FROM {

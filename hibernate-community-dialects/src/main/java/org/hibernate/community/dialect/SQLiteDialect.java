@@ -92,7 +92,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * An SQL dialect for SQLite.
  *
  * @author Christian Beikov
- * @author Vlad Mihalcea
  */
 public class SQLiteDialect extends Dialect {
 

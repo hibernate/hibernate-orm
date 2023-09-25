@@ -44,10 +44,8 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			SqmBasicValuedSimplePath<T> sqmPath,
 			SqmToSqlAstConverter sqlAstCreationState,
 			boolean jpaQueryComplianceEnabled) {
-		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-		final TableGroup tableGroup = fromClauseAccess.getTableGroup( sqmPath.getNavigablePath().getParent() );
-
 		final SqmPath<?> lhs = sqmPath.getLhs();
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( lhs.getNavigablePath() );
 		EntityMappingType treatTarget = null;
 		final ModelPartContainer modelPartContainer;
 		if ( lhs instanceof SqmTreatedPath<?, ?> ) {
@@ -87,7 +85,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		final Clause currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
 		final SqmQueryPart<?> sqmQueryPart = sqlAstCreationState.getCurrentSqmQueryPart();
 		if ( ( currentClause == Clause.GROUP || currentClause == Clause.SELECT || currentClause == Clause.ORDER || currentClause == Clause.HAVING )
-				&& sqmPath.getLhs() instanceof SqmFrom<?, ?>
+				&& lhs instanceof SqmFrom<?, ?>
 				&& modelPartContainer.getPartMappingType() instanceof ManagedMappingType
 				&& sqmQueryPart.isSimpleQueryPart()
 				&& sqmQueryPart.getFirstQuerySpec().groupByClauseContains( sqmPath.getNavigablePath() ) ) {

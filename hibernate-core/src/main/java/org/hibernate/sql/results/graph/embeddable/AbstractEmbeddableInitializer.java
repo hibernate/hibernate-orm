@@ -8,14 +8,12 @@ package org.hibernate.sql.results.graph.embeddable;
 
 import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metamodel.internal.AbstractCompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
-import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.metamodel.mapping.internal.EmbeddedIdentifierMappingImpl;
+import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
@@ -271,7 +269,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				// parent instance is of a supertype which doesn't contain this embeddable
 				return State.NULL;
 			}
-			else if ( entityInitializer.isEntityInitialized() ) {
+			else if ( entityInitializer.isEntityInitialized() && !(embedded instanceof EmbeddedCollectionPart )) {
 				// parent instance has been initialized, we do not need to inject the state
 				return State.INJECTED;
 			}

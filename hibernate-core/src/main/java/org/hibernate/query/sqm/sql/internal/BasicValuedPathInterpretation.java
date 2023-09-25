@@ -6,6 +6,10 @@
  */
 package org.hibernate.query.sqm.sql.internal;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
+
 import org.hibernate.metamodel.MappingMetamodel;
 import org.hibernate.metamodel.mapping.*;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -16,10 +20,7 @@ import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -28,9 +29,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.update.Assignable;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Consumer;
+import static org.hibernate.query.sqm.internal.SqmUtil.needsTargetTableMapping;
 
 /**
  * @author Steve Ebersole
@@ -78,16 +77,10 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		}
 
 		final BasicValuedModelPart mapping;
-		// In the select, group by, order by and having clause we have to make sure we render the column of the target table,
-		// never the FK column, if the lhs is a SqmFrom i.e. something explicitly queried/joined
-		// and if this basic path is part of the group by clause
-		final Clause currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
-		final SqmQueryPart<?> sqmQueryPart = sqlAstCreationState.getCurrentSqmQueryPart();
-		if ( ( currentClause == Clause.GROUP || currentClause == Clause.SELECT || currentClause == Clause.ORDER || currentClause == Clause.HAVING )
-				&& lhs instanceof SqmFrom<?, ?>
-				&& modelPartContainer.getPartMappingType() instanceof ManagedMappingType
-				&& sqmQueryPart.isSimpleQueryPart()
-				&& sqmQueryPart.getFirstQuerySpec().groupByClauseContains( sqmPath.getNavigablePath() ) ) {
+		if ( needsTargetTableMapping( sqmPath, modelPartContainer, sqlAstCreationState ) ) {
+			// In the select, group by, order by and having clause we have to make sure we render
+			// the column of the target table, never the FK column, if the lhs is a join type that
+			// requires it (right, full) or if this path is contained in group by clause
 			mapping = (BasicValuedModelPart) ( (ManagedMappingType) modelPartContainer.getPartMappingType() ).findSubPart(
 					sqmPath.getReferencedPathSource().getPathName(),
 					treatTarget

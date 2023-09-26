@@ -6,35 +6,15 @@
  */
 package org.hibernate.query.sqm.sql;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
-
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.engine.FetchStyle;
@@ -79,6 +59,7 @@ import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -105,8 +86,8 @@ import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.AnyDiscriminatorSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.CompositeSqmPathSource;
-import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
+import org.hibernate.metamodel.model.domain.internal.EntityDiscriminatorSqmPath;
 import org.hibernate.metamodel.model.domain.internal.EntityTypeImpl;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.AbstractEntityPersister;
@@ -117,6 +98,7 @@ import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSearchOrder;
@@ -134,7 +116,6 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.DynamicInstantiationNature;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.InterpretationException;
-import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -412,12 +393,30 @@ import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserVersionType;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
-
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.metamodel.SingularAttribute;
-import jakarta.persistence.metamodel.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.util.Collections.singletonList;
 import static org.hibernate.generator.EventType.INSERT;
@@ -7962,6 +7961,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		boolean explicitFetch = false;
 		EntityGraphTraversalState.TraversalResult traversalResult = null;
 
+		TableGroup joinedTableGroup = null;
+
 		if ( fetchedJoin != null ) {
 			fetchablePath = fetchedJoin.getNavigablePath();
 			// there was an explicit fetch in the SQM
@@ -8043,7 +8044,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 
 			if ( joined && fetchable instanceof TableGroupJoinProducer ) {
-				fromClauseIndex.resolveTableGroup(
+				joinedTableGroup = fromClauseIndex.resolveTableGroup(
 						fetchablePath,
 						np -> {
 							// generate the join
@@ -8099,22 +8100,40 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sqlSelectionsToTrack.getValue().addAll( selections.subList( sqlSelectionStartIndexForFetch, selections.size() ) );
 			}
 
-			if ( fetch != null ) {
-				if ( fetch.getTiming() == FetchTiming.IMMEDIATE && fetchable instanceof PluralAttributeMapping ) {
-					final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
-					final CollectionClassification collectionClassification = pluralAttributeMapping.getMappedType()
-							.getCollectionSemantics()
-							.getCollectionClassification();
-					if ( collectionClassification == CollectionClassification.BAG ) {
-						if ( currentBagRole != null ) {
-							throw new MultipleBagFetchException(
-									Arrays.asList(
-											currentBagRole,
-											fetchable.getNavigableRole().getNavigableName()
-									)
+			if ( fetch != null && fetch.getTiming() == FetchTiming.IMMEDIATE ) {
+				if ( fetchable instanceof TableGroupJoinProducer ) {
+					if ( joinedTableGroup != null ) {
+						final TableGroup actualTableGroup = joinedTableGroup instanceof PluralTableGroup ?
+								( (PluralTableGroup) joinedTableGroup ).getElementTableGroup() :
+								joinedTableGroup;
+						final MappingType entityMappingType = actualTableGroup == null
+								? null
+								: actualTableGroup.getModelPart().getPartMappingType();
+						if ( entityMappingType instanceof EntityMappingType ) {
+							registerEntityNameUsage(
+									actualTableGroup,
+									EntityNameUse.PROJECTION,
+									( (EntityMappingType) entityMappingType ).getEntityName(),
+									true
 							);
 						}
-						currentBagRole = fetchable.getNavigableRole().getNavigableName();
+					}
+					if ( fetchable instanceof PluralAttributeMapping ) {
+						final PluralAttributeMapping pluralAttributeMapping = (PluralAttributeMapping) fetchable;
+						final CollectionClassification collectionClassification = pluralAttributeMapping.getMappedType()
+								.getCollectionSemantics()
+								.getCollectionClassification();
+						if ( collectionClassification == CollectionClassification.BAG ) {
+							if ( currentBagRole != null ) {
+								throw new MultipleBagFetchException(
+										Arrays.asList(
+												currentBagRole,
+												fetchable.getNavigableRole().getNavigableName()
+										)
+								);
+							}
+							currentBagRole = fetchable.getNavigableRole().getNavigableName();
+						}
 					}
 				}
 			}

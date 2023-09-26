@@ -40,6 +40,7 @@ import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -55,8 +56,8 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 	@Override
 	protected Class<?>[] getAnnotatedClasses() {
 		return new Class[] {
-				Foo.class, Bar.class, Baz.class, Author.class, Book.class, Prize.class,
-				Company.class, Employee.class, Manager.class, Location.class, Animal.class, Dog.class, Cat.class
+				Foo.class, Bar.class, Baz.class, Author.class, Book.class, Prize.class, Company.class,
+				Employee.class, Manager.class, Location.class, AnimalOwner.class, Animal.class, Dog.class, Cat.class
 		};
 	}
 
@@ -454,6 +455,36 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
+	@Test
+	@JiraKey("HHH-17192")
+	public void joinedInheritanceWithSubEntityAttributeFiltering() {
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		Dog dog = new Dog();
+		em.persist( dog );
+		AnimalOwner animalOwner = new AnimalOwner();
+		animalOwner.animal = dog;
+		em.persist( animalOwner );
+		em.flush();
+		em.clear();
+
+		EntityGraph<AnimalOwner> entityGraph = em.createEntityGraph( AnimalOwner.class );
+		entityGraph.addAttributeNodes( "animal" );
+		CriteriaBuilder cb = em.getCriteriaBuilder();
+		CriteriaQuery<AnimalOwner> query = cb.createQuery( AnimalOwner.class );
+		Root<AnimalOwner> root = query.from( AnimalOwner.class );
+		query.where( cb.equal( root.get( "animal" ).get( "id" ), dog.id ) );
+		AnimalOwner owner = em.createQuery( query )
+				.setHint( "jakarta.persistence.loadgraph", entityGraph )
+				.getResultList()
+				.get( 0 );
+		assertTrue( Hibernate.isInitialized( owner.animal ) );
+		assertTrue( owner.animal instanceof Dog );
+
+		em.getTransaction().commit();
+		em.close();
+	}
+
     @Entity
 	@Table(name = "foo")
     public static class Foo {
@@ -555,6 +586,16 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		public Author(String name) {
 			this.name = name;
 		}
+	}
+
+	@Entity
+	public static class AnimalOwner {
+		@Id
+		@GeneratedValue
+		public Integer id;
+
+		@ManyToOne(fetch = FetchType.LAZY)
+		public Animal animal;
 	}
 
 	@Entity

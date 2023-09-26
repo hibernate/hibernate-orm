@@ -66,6 +66,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	private final boolean isKey;
 	private boolean hasNotNullProperty;
 	private final CompositeUserType<Object> compositeUserType;
+	private boolean hasNullProperty;
 
 	private EmbeddableValuedModelPart mappingModelPart;
 
@@ -91,8 +92,11 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			this.propertyNullability[i] = property.isOptional();
 			this.cascade[i] = property.getCascadeStyle();
 			this.joinedFetch[i] = property.getValue().getFetchMode();
-			if ( !propertyNullability[i] ) {
+			if ( !property.isOptional() ) {
 				hasNotNullProperty = true;
+			}
+			else {
+				hasNullProperty = true;
 			}
 			i++;
 		}
@@ -812,6 +816,11 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 	@Override
 	public boolean hasNotNullProperty() {
 		return hasNotNullProperty;
+	}
+
+	@Override
+	public boolean hasNullProperty() {
+		return hasNullProperty;
 	}
 
 	@Override

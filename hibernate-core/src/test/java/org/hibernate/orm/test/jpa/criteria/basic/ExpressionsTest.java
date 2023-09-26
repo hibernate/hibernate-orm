@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.Session;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
@@ -23,15 +24,20 @@ import org.hibernate.orm.test.jpa.metamodel.Phone;
 import org.hibernate.orm.test.jpa.metamodel.Product;
 import org.hibernate.orm.test.jpa.metamodel.Product_;
 import org.hibernate.query.Query;
-
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaDerivedRoot;
+import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.sqm.TemporalUnit;
+
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Tuple;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -255,6 +261,47 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 					);
 					Number result = entityManager.createQuery( criteria ).getSingleResult();
 					assertEquals( 0.5d, result.doubleValue(), 0.1d );
+				}
+		);
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17223" )
+	public void testSumWithCoalesce() {
+		doInJPA(
+				this::entityManagerFactory,
+				entityManager -> {
+					final CriteriaQuery<Integer> criteria = builder.createQuery( Integer.class );
+					final Root<Product> root = criteria.from( Product.class );
+					criteria.select(
+							builder.sum(
+									builder.coalesce( root.get( "quantity" ), 5 )
+							)
+					).groupBy( root.get( "id" ) );
+					final Integer result = entityManager.createQuery( criteria ).getSingleResult();
+					assertEquals( 2, result );
+				}
+		);
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17260" )
+	public void testSumWithSubqueryPath() {
+		doInJPA(
+				this::entityManagerFactory,
+				entityManager -> {
+					final HibernateCriteriaBuilder cb =  entityManager.unwrap( Session.class ).getCriteriaBuilder();
+					final JpaCriteriaQuery<Integer> criteria = cb.createQuery( Integer.class );
+					final JpaSubQuery<Tuple> subquery = criteria.subquery( Tuple.class );
+					final Root<Product> product = subquery.from( Product.class );
+					subquery.multiselect(
+							product.get( "id" ).alias( "id" ),
+							product.get( "quantity" ).alias( "quantity" )
+					);
+					final JpaDerivedRoot<Tuple> root = criteria.from( subquery );
+					criteria.select( cb.sum( root.get( "quantity" ) ) );
+					final Integer result = entityManager.createQuery( criteria ).getSingleResult();
+					assertEquals( 2, result );
 				}
 		);
 	}

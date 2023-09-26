@@ -20,6 +20,7 @@ import org.hibernate.tool.schema.extract.spi.ColumnInformation;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.util.List;
+import java.util.Locale;
 
 import static org.hibernate.type.SqlTypes.isNumericOrDecimal;
 import static org.hibernate.type.SqlTypes.isStringType;
@@ -28,7 +29,7 @@ class ColumnDefinitions {
 
 	static boolean hasMatchingType(Column column, ColumnInformation columnInformation, Metadata metadata, Dialect dialect) {
 		boolean typesMatch = dialect.equivalentTypes( column.getSqlTypeCode(metadata), columnInformation.getTypeCode() )
-				|| stripArgs( column.getSqlType( metadata ) ).equalsIgnoreCase( columnInformation.getTypeName() );
+				|| normalize( stripArgs( column.getSqlType( metadata ) ) ).equals( normalize( columnInformation.getTypeName() ) );
 		if ( typesMatch ) {
 			return true;
 		}
@@ -235,8 +236,32 @@ class ColumnDefinitions {
 					);
 	}
 
-	private static String stripArgs(String string) {
-		int i = string.indexOf('(');
-		return i>0 ? string.substring(0,i).trim() : string;
+	private static String normalize(String typeName) {
+		if ( typeName == null ) {
+			return null;
+		}
+		else {
+			final String lowerCaseTypName = typeName.toLowerCase(Locale.ROOT);
+			switch (lowerCaseTypName) {
+				case "character":
+					return "char";
+				case "character varying":
+					return "varchar";
+				case "binary varying":
+					return "varbinary";
+				default:
+					return lowerCaseTypName;
+			}
+		}
+	}
+
+	private static String stripArgs(String typeExpression) {
+		if ( typeExpression == null ) {
+			return null;
+		}
+		else {
+			int i = typeExpression.indexOf('(');
+			return i>0 ? typeExpression.substring(0,i).trim() : typeExpression;
+		}
 	}
 }

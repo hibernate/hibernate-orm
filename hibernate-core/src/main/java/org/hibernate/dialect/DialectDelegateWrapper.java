@@ -301,15 +301,6 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
-	public String timestampaddPattern(
-			TemporalUnit unit,
-			TemporalType temporalType,
-			IntervalType intervalType,
-			boolean withTimeZone) {
-		return wrapped.timestampaddPattern( unit, temporalType, intervalType, withTimeZone );
-	}
-
-	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
 		return wrapped.timestampaddPattern( unit, temporalType, intervalType );
 	}
@@ -1640,15 +1631,5 @@ public class DialectDelegateWrapper extends Dialect {
 	@Override
 	public String getRowIdColumnString(String rowId) {
 		return wrapped.getRowIdColumnString( rowId );
-	}
-
-	@Override
-	public boolean useArrayForMultiValuedParameters() {
-		return wrapped.useArrayForMultiValuedParameters();
-	}
-
-	@Override
-	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
-		return wrapped.getDmlTargetColumnQualifierSupport();
 	}
 }

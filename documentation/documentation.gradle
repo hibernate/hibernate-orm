@@ -248,7 +248,10 @@ asciidoctorj {
 			experimental: true,
 			'source-highlighter': 'rouge',
 			majorMinorVersion: rootProject.ormVersion.family,
-			fullVersion: rootProject.ormVersion.fullName
+			fullVersion: rootProject.ormVersion.fullName,
+			javaCompatibleVersions: jdks.versions.compatible.get(),
+			jakartaJpaVersion: rootProject.jakartaJpaVersion,
+			jdbcVersion: jdks.versions.jdbc.get()
 
 	options logDocuments: true
 }
@@ -581,7 +584,7 @@ def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', Asciidoctor
 	inputs.property "hibernate-version", project.ormVersion
 	inputs.file( generateSettingsDocTask.get().outputFile )
 
-	dependsOn generateSettingsDocTask
+	dependsOn generateSettingsDocTask, generateDialectTableReport
 
 	sourceDir = file( 'src/main/asciidoc/userguide' )
 	sources {
@@ -592,7 +595,8 @@ def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', Asciidoctor
 	attributes linkcss: true,
 			   stylesheet: "css/hibernate.css",
 			   docinfo: 'private',
-			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/",
+			   'generated-report-dir': layout.buildDirectory.dir( 'orm/generated' )
 
 	resources {
 		from( 'src/main/asciidoc/userguide/' ) {

@@ -67,6 +67,7 @@ dependencies {
 	annotationProcessor( libraries.logging_annotations )
 
 	testCompile( libraries.junit )
+	testCompile( libraries.assertj )
 	testCompile( libraries.byteman )
 	testCompile( libraries.byteman_install )
 	testCompile( libraries.byteman_bmunit )

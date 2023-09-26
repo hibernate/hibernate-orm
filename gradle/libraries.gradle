@@ -13,6 +13,7 @@ ext {
     h2Version = '1.4.196'
     bytemanVersion = '4.0.16' //Compatible with JDK 17
     jnpVersion = '5.0.6.CR1'
+    assertjVersion = "3.22.0"
 
     hibernateValidatorVersion = '6.0.22.Final'
     hibernateCommonsVersion = '5.0.5.Final'
@@ -103,6 +104,7 @@ ext {
 
             log4j2:          "org.apache.logging.log4j:log4j-core:2.17.1",
             junit:           "junit:junit:${junitVersion}",
+            assertj:         "org.assertj:assertj-core:${assertjVersion}",
             byteman:         "org.jboss.byteman:byteman:${bytemanVersion}",
             byteman_install: "org.jboss.byteman:byteman-install:${bytemanVersion}",
             byteman_bmunit:  "org.jboss.byteman:byteman-bmunit:${bytemanVersion}",

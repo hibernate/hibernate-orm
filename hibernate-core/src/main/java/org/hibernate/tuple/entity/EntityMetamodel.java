@@ -19,8 +19,6 @@ import java.util.Set;
 import org.hibernate.EntityMode;
 import org.hibernate.HibernateException;
 import org.hibernate.MappingException;
-import org.hibernate.annotations.NotFoundAction;
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementHelper;
 import org.hibernate.bytecode.spi.BytecodeEnhancementMetadata;
 import org.hibernate.cfg.NotYetImplementedException;
@@ -32,15 +30,10 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.mapping.Component;
-import org.hibernate.mapping.GeneratorCreator;
 import org.hibernate.mapping.ManyToOne;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
-import org.hibernate.mapping.Subclass;
-import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
-import org.hibernate.metamodel.mapping.EntityMappingType;
-import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.tuple.GenerationTiming;
 import org.hibernate.tuple.IdentifierProperty;
@@ -240,7 +233,7 @@ public class EntityMetamodel implements Serializable {
 			}
 
 			if ( prop.isNaturalIdentifier() ) {
-				verifyNaturalIdProperty( property );
+				verifyNaturalIdProperty( prop );
 				naturalIdNumbers.add( i );
 				if ( prop.isUpdateable() ) {
 					foundUpdateableNaturalIdProperty = true;
@@ -672,7 +665,7 @@ public class EntityMetamodel implements Serializable {
 		final Value value = property.getValue();
 		if ( value instanceof ManyToOne ) {
 			final ManyToOne toOne = (ManyToOne) value;
-			if ( toOne.getNotFoundAction() == NotFoundAction.IGNORE ) {
+			if ( toOne.isIgnoreNotFound() ) {
 				throw new MappingException(
 						"Attribute marked as natural-id can not also be a not-found association - "
 								+ propertyName( property )
@@ -681,8 +674,10 @@ public class EntityMetamodel implements Serializable {
 		}
 		else if ( value instanceof Component ) {
 			final Component component = (Component) value;
-			for ( Property componentProperty : component.getProperties() ) {
-				verifyNaturalIdProperty( componentProperty );
+			//noinspection unchecked
+			final Iterator<Property> properties = component.getPropertyIterator();
+			while ( properties.hasNext() ) {
+				verifyNaturalIdProperty( properties.next() );
 			}
 		}
 	}

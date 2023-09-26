@@ -4,7 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.orm.test.mapping.naturalid;
+package org.hibernate.test.naturalid;
+
+import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 import org.hibernate.MappingException;
 import org.hibernate.SessionFactory;
@@ -12,31 +19,20 @@ import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.registry.StandardServiceRegistry;
 
-import org.hibernate.testing.orm.junit.ServiceRegistry;
-import org.hibernate.testing.orm.junit.ServiceRegistryScope;
-import org.junit.jupiter.api.Test;
-
-import jakarta.persistence.Embeddable;
-import jakarta.persistence.Embedded;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.Assert.fail;
 
 /**
  * @author Steve Ebersole
  */
-@ServiceRegistry
-public class ValidationTests {
+public class ValidationTests extends BaseUnitTestCase {
 	@Test
-	void checkManyToOne(ServiceRegistryScope registryScope) {
-		final StandardServiceRegistry registry = registryScope.getRegistry();
-		final MetadataSources metadataSources = new MetadataSources( registry )
+	public void checkManyToOne() {
+		final MetadataSources metadataSources = new MetadataSources()
 				.addAnnotatedClass( Thing1.class )
 				.addAnnotatedClass( Thing2.class );
 		try (final SessionFactory sessionFactory = metadataSources.buildMetadata().buildSessionFactory(); ) {
@@ -49,9 +45,8 @@ public class ValidationTests {
 	}
 
 	@Test
-	void checkEmbeddable(ServiceRegistryScope registryScope) {
-		final StandardServiceRegistry registry = registryScope.getRegistry();
-		final MetadataSources metadataSources = new MetadataSources( registry )
+	public void checkEmbeddable() {
+		final MetadataSources metadataSources = new MetadataSources()
 				.addAnnotatedClass( Thing1.class )
 				.addAnnotatedClass( Thing3.class )
 				.addAnnotatedClass( Container.class );

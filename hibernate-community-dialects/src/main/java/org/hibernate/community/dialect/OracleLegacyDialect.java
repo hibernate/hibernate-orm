@@ -473,15 +473,6 @@ public class OracleLegacyDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		return timestampaddPattern( unit, temporalType, intervalType, false );
-	}
-
-	@Override
-	public String timestampaddPattern(
-			TemporalUnit unit,
-			TemporalType temporalType,
-			IntervalType intervalType,
-			boolean hasTimeZone) {
 		final StringBuilder pattern = new StringBuilder();
 		switch ( unit ) {
 			case YEAR:
@@ -494,23 +485,22 @@ public class OracleLegacyDialect extends Dialect {
 				pattern.append( ADD_MONTH_EXPRESSION );
 				break;
 			case WEEK:
-				if ( hasTimeZone ) {
-					pattern.append( "(?3+numtodsinterval(?2*7,'day'))" );
+				if ( temporalType != TemporalType.DATE ) {
+					pattern.append( "(?3+numtodsinterval((?2)*7,'day'))" );
 				}
 				else {
-					pattern.append( "(?3+?2" ).append( unit.conversionFactor( DAY, this ) ).append( ")" );
+					pattern.append( "(?3+(?2)" ).append( unit.conversionFactor( DAY, this ) ).append( ")" );
 				}
 				break;
 			case DAY:
+				if ( temporalType == TemporalType.DATE ) {
+					pattern.append( "(?3+(?2))" );
+					break;
+				}
 			case HOUR:
 			case MINUTE:
 			case SECOND:
-				if ( hasTimeZone ) {
-					pattern.append( "(?3+numtodsinterval(?2,'?1'))" );
-				}
-				else {
-					pattern.append( "(?3+?2" ).append( unit.conversionFactor( DAY, this ) ).append( ")" );
-				}
+				pattern.append( "(?3+numtodsinterval(?2,'?1'))" );
 				break;
 			case NANOSECOND:
 				pattern.append( "(?3+numtodsinterval((?2)/1e9,'second'))" );

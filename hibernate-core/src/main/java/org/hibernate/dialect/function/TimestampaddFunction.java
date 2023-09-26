@@ -23,7 +23,6 @@ import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.DurationUnit;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import java.util.List;
@@ -39,7 +38,7 @@ import static org.hibernate.type.spi.TypeConfiguration.getSqlTemporalType;
  * The {@code timestampadd()} or {@code dateadd()} function has a funny
  * syntax which accepts a {@link TemporalUnit} as the first argument,
  * and the actual set of accepted units varies widely. This class uses
- * {@link Dialect#timestampaddPattern(TemporalUnit, TemporalType, IntervalType, boolean)}
+ * {@link Dialect#timestampaddPattern(TemporalUnit, TemporalType, IntervalType)}
  * to abstract these differences.
  *
  * @author Gavin King
@@ -78,19 +77,7 @@ public class TimestampaddFunction
 	PatternRenderer patternRenderer(TemporalUnit unit, Expression interval, Expression to) {
 		TemporalType temporalType = getSqlTemporalType( to.getExpressionType() );
 		IntervalType intervalType = getSqlIntervalType( interval.getExpressionType().getSingleJdbcMapping() );
-		boolean withTimeZone = hasTimeZone( to.getExpressionType().getSingleJdbcMapping().getJdbcType().getDefaultSqlTypeCode() );
-		return new PatternRenderer( dialect.timestampaddPattern( unit, temporalType, intervalType, withTimeZone ) );
-	}
-
-	private boolean hasTimeZone(int sqlTypeCode) {
-		switch ( sqlTypeCode ) {
-			case SqlTypes.TIME_UTC:
-			case SqlTypes.TIME_WITH_TIMEZONE:
-			case SqlTypes.TIMESTAMP_UTC:
-			case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
-				return true;
-		}
-		return false;
+		return new PatternRenderer( dialect.timestampaddPattern( unit, temporalType, intervalType ) );
 	}
 
 //	@Override

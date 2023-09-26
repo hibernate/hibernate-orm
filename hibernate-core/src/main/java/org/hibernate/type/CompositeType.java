@@ -159,6 +159,22 @@ public interface CompositeType extends Type {
 	boolean hasNotNullProperty();
 
 	/**
+	 * Convenience method to quickly check if {@link #getPropertyNullability} contains a nullable sub-properties.
+	 *
+	 * @return {@code true} if any of the properties are nullable as indicated by {@link #getPropertyNullability},
+	 * {@code false} otherwise.
+	 */
+	default boolean hasNullProperty() {
+		final boolean[] propertyNullability = getPropertyNullability();
+		for ( int i = 0; i < propertyNullability.length; i++ ) {
+			if ( propertyNullability[i] ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
 	 * Convenience method for locating the property index for a given property name.
 	 *
 	 * @param propertyName The (sub-)property name to find.

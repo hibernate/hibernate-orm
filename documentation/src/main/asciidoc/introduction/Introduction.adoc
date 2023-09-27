@@ -500,13 +500,11 @@ This is an example of a _query method_, a function which accepts arguments to th
 And that's all it does; it doesn't orchestrate additional program logic, and it doesn't perform transaction or session management.
 
 It's even better to specify the query string using the `@NamedQuery` annotation, so that Hibernate can validate the query it at startup time, that is, when the `SessionFactory` is created, instead of when the query is first executed.
-Indeed, since we included the <<metamodel-generator,Metamodel Generator>> in our <<build-gradle,Gradle build>>, the query can even be validated at _compile time_.
 
 We need a place to put the annotation, so lets move our query method to a new class:
 
 [source,java]
 ----
-@CheckHQL // validate named queries at compile time
 @NamedQuery(name="findBooksByTitle",
             query="from Book where title like :title order by title")
 class Queries {

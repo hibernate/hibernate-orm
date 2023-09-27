@@ -225,7 +225,6 @@ Both batch fetching and subselect fetching are disabled by default, but we may e
 | Configuration property name | Property value | Alternatives
 
 | `hibernate.default_batch_fetch_size` | A sensible batch size `>1` to enable batch fetching | `@BatchSize()`, `setFetchBatchSize()`
-| `hibernate.use_subselect_fetch` | `true` to enable subselect fetching | `@Fetch(SUBSELECT)`, `setSubselectFetchingEnabled()`
 |===
 
 Alternatively, we can enable one or the other in a given session:
@@ -233,7 +232,6 @@ Alternatively, we can enable one or the other in a given session:
 [source,java]
 ----
 session.setFetchBatchSize(5);
-session.setSubselectFetchingEnabled(true);
 ----
 
 [%unbreakable]

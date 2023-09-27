@@ -173,9 +173,9 @@ public class SingularAttributeImpl<D,J>
 					"LHS cannot be null for a sub-navigable reference - " + getName()
 			);
 		}
-		final SqmPathSource<?> parentPathSource = parent.getResolvedModel();
+		final SqmPathSource<?> parentPathSource = parent.getReferencedPathSource();
 		NavigablePath navigablePath = parent.getNavigablePath();
-		if ( parentPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) {
+		if ( parent.getResolvedModel() instanceof PluralPersistentAttribute<?, ?, ?> ) {
 			navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
 		}
 		final DomainType<?> parentType = parentPathSource.getSqmPathType();
@@ -224,7 +224,7 @@ public class SingularAttributeImpl<D,J>
 				);
 			}
 			NavigablePath navigablePath = parent.getNavigablePath();
-			if ( parent.getResolvedModel() instanceof PluralPersistentAttribute<?, ?, ?> ) {
+			if ( parent.getReferencedPathSource() instanceof PluralPersistentAttribute<?, ?, ?> ) {
 				navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
 			}
 			if ( getDeclaringType() instanceof IdentifiableDomainType<?> ) {

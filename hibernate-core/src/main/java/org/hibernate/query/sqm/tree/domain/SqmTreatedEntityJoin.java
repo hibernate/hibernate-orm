@@ -78,11 +78,6 @@ public class SqmTreatedEntityJoin<T, S extends T> extends SqmEntityJoin<S> imple
 	}
 
 	@Override
-	public EntityDomainType<S> getModel() {
-		return getTreatTarget();
-	}
-
-	@Override
 	public SqmPath<T> getWrappedPath() {
 		return wrappedPath;
 	}

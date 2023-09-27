@@ -170,9 +170,9 @@ public abstract class AbstractPluralAttribute<D, C, E>
 					"`lhs` cannot be null for a sub-navigable reference - " + getName()
 			);
 		}
-		final SqmPathSource<?> parentPathSource = parent.getResolvedModel();
+		final SqmPathSource<?> parentPathSource = parent.getReferencedPathSource();
 		NavigablePath navigablePath = parent.getNavigablePath();
-		if ( parentPathSource instanceof PluralPersistentAttribute<?, ?, ?> ) {
+		if ( parent.getResolvedModel() instanceof PluralPersistentAttribute<?, ?, ?> ) {
 			navigablePath = navigablePath.append( CollectionPart.Nature.ELEMENT.getName() );
 		}
 		final DomainType<?> parentType = parentPathSource.getSqmPathType();

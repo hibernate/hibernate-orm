@@ -104,11 +104,6 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
-		return treatTarget;
-	}
-
-	@Override
 	public SqmAttributeJoin<O, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmTreatedBagJoin<>( wrappedPath, treatTarget, getAlias() );
 	}

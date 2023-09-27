@@ -101,11 +101,6 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
-		return treatTarget;
-	}
-
-	@Override
 	public SqmAttributeJoin<O, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmTreatedSingularJoin<>( wrappedPath, treatTarget, getAlias() );
 	}

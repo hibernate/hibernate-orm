@@ -97,11 +97,6 @@ public class SqmTreatedPluralPartJoin<O,T, S extends T> extends SqmPluralPartJoi
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
-		return treatTarget;
-	}
-
-	@Override
 	public void appendHqlString(StringBuilder sb) {
 		sb.append( "treat(" );
 		wrappedPath.appendHqlString( sb );

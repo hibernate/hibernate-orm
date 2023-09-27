@@ -99,11 +99,6 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 	}
 
 	@Override
-	public SqmPathSource<?> getResolvedModel() {
-		return treatTarget;
-	}
-
-	@Override
 	public SqmMapJoin<O, K, S> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmTreatedMapJoin<>(
 				wrappedPath,

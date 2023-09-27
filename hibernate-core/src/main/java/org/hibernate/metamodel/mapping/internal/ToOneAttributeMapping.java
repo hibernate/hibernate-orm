@@ -1991,22 +1991,6 @@ public class ToOneAttributeMapping
 		return join;
 	}
 
-	private SqlAstJoinType determineSqlJoinType(TableGroup lhs, SqlAstJoinType requestedJoinType, boolean fetched) {
-		final SqlAstJoinType joinType;
-		if ( requestedJoinType == null ) {
-			if ( fetched ) {
-				joinType = getDefaultSqlAstJoinType( lhs );
-			}
-			else {
-				joinType = SqlAstJoinType.INNER;
-			}
-		}
-		else {
-			joinType = requestedJoinType;
-		}
-		return joinType;
-	}
-
 	@Override
 	public LazyTableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,

@@ -52,6 +52,9 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 	private static final AggregateSupport V12_INSTANCE = new OracleAggregateSupport( false, JsonSupport.QUERY );
 	private static final AggregateSupport LEGACY_INSTANCE = new OracleAggregateSupport( false, JsonSupport.NONE );
 
+	private static final String JSON_QUERY_START = "json_query(";
+	private static final String JSON_QUERY_END = "')";
+
 	private final boolean checkConstraintSupport;
 	private final JsonSupport jsonSupport;
 
@@ -97,82 +100,22 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 				switch ( jsonSupport ) {
 					case OSON:
 					case MERGEPATCH:
-						switch ( columnType.getTypeCode() ) {
-							case BOOLEAN:
-								if ( columnType.getTypeName().toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
-									return template.replace(
-											placeholder,
-											"decode(" + aggregateParentReadExpression + "." + column + ".boolean(),'true',1,'false',0,null)"
-									);
-								}
-							case TINYINT:
-							case SMALLINT:
-							case INTEGER:
-							case BIGINT:
-								return template.replace(
-										placeholder,
-										aggregateParentReadExpression + "." + column + ".number()"
-								);
-							case DATE:
-								return template.replace(
-										placeholder,
-										aggregateParentReadExpression + "." + column + ".date()"
-								);
-							case TIME:
-							case TIME_WITH_TIMEZONE:
-							case TIME_UTC:
-								return template.replace(
-										placeholder,
-										"to_timestamp(" + aggregateParentReadExpression + "." + column + ".string(),'hh24:mi:ss')"
-								);
-							case TIMESTAMP:
-								return template.replace(
-										placeholder,
-										// Don't use .timestamp() directly because that is limited to precision 6
-										"to_timestamp(" + aggregateParentReadExpression + "." + column + ".string(),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9')"
-								);
-							case TIMESTAMP_WITH_TIMEZONE:
-							case TIMESTAMP_UTC:
-								return template.replace(
-										placeholder,
-										// Don't use .timestamp() directly because that is limited to precision 6
-										"to_timestamp_tz(" + aggregateParentReadExpression + "." + column + ".string(),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9TZH:TZM')"
-								);
-							case BINARY:
-							case VARBINARY:
-							case LONG32VARBINARY:
-								// We encode binary data as hex, so we have to decode here
-								return template.replace(
-										placeholder,
-										"hextoraw(" + aggregateParentReadExpression + "." + column + ".string())"
-								);
-							case CLOB:
-							case NCLOB:
-							case BLOB:
-								// We encode binary data as hex, so we have to decode here
-								return template.replace(
-										placeholder,
-										"(select * from json_table(" + aggregateParentReadExpression + ",'$' columns (" + column + " " + columnType.getTypeName() + " path '$." + column + "')))"
-								);
-							case JSON:
-								return template.replace(
-										placeholder,
-										aggregateParentReadExpression + "." + column
-								);
-							default:
-								return template.replace(
-										placeholder,
-										"cast(" + aggregateParentReadExpression + "." + column + ".string() as " + columnType.getTypeName() + ')'
-								);
-						}
 					case QUERY_AND_PATH:
 					case QUERY:
+						final String parentPartExpression;
+						if ( aggregateParentReadExpression.startsWith( JSON_QUERY_START )
+								&& aggregateParentReadExpression.endsWith( JSON_QUERY_END ) ) {
+							parentPartExpression = aggregateParentReadExpression.substring( JSON_QUERY_START.length(), aggregateParentReadExpression.length() - JSON_QUERY_END.length() ) + ".";
+						}
+						else {
+							parentPartExpression = aggregateParentReadExpression + ",'$.";
+						}
 						switch ( columnType.getTypeCode() ) {
 							case BOOLEAN:
 								if ( columnType.getTypeName().toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
 									return template.replace(
 											placeholder,
-											"decode(json_value(" + aggregateParentReadExpression + ",'$." + column + "'),'true',1,'false',0,null)"
+											"decode(json_value(" + parentPartExpression + column + "'),'true',1,'false',0,null)"
 									);
 								}
 							case TINYINT:
@@ -181,28 +124,28 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							case BIGINT:
 								return template.replace(
 										placeholder,
-										"json_value(" + aggregateParentReadExpression + ",'$." + column + "' returning " + columnType.getTypeName() + ')'
+										"json_value(" + parentPartExpression + column + "' returning " + columnType.getTypeName() + ')'
 								);
 							case DATE:
 								return template.replace(
 										placeholder,
-										"to_date(json_value(" + aggregateParentReadExpression + ",'$." + column + "'),'YYYY-MM-DD')"
+										"to_date(json_value(" + parentPartExpression + column + "'),'YYYY-MM-DD')"
 								);
 							case TIME:
 								return template.replace(
 										placeholder,
-										"to_timestamp(json_value(" + aggregateParentReadExpression + ",'$." + column + "'),'hh24:mi:ss')"
+										"to_timestamp(json_value(" + parentPartExpression + column + "'),'hh24:mi:ss')"
 								);
 							case TIMESTAMP:
 								return template.replace(
 										placeholder,
-										"to_timestamp(json_value(" + aggregateParentReadExpression + ",'$." + column + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9')"
+										"to_timestamp(json_value(" + parentPartExpression + column + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9')"
 								);
 							case TIMESTAMP_WITH_TIMEZONE:
 							case TIMESTAMP_UTC:
 								return template.replace(
 										placeholder,
-										"to_timestamp_tz(json_value(" + aggregateParentReadExpression + ",'$." + column + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9TZH:TZM')"
+										"to_timestamp_tz(json_value(" + parentPartExpression + column + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9TZH:TZM')"
 								);
 							case BINARY:
 							case VARBINARY:
@@ -210,7 +153,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								// We encode binary data as hex, so we have to decode here
 								return template.replace(
 										placeholder,
-										"hextoraw(json_value(" + aggregateParentReadExpression + ",'$." + column + "'))"
+										"hextoraw(json_value(" + parentPartExpression + column + "'))"
 								);
 							case CLOB:
 							case NCLOB:
@@ -223,12 +166,12 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							case JSON:
 								return template.replace(
 										placeholder,
-										"json_value(" + aggregateParentReadExpression + ",'$." + column + "')"
+										"json_query(" + parentPartExpression + column + "')"
 								);
 							default:
 								return template.replace(
 										placeholder,
-										"cast(json_value(" + aggregateParentReadExpression + ",'$." + column + "') as " + columnType.getTypeName() + ')'
+										"cast(json_value(" + parentPartExpression + column + "') as " + columnType.getTypeName() + ')'
 								);
 						}
 					case NONE:

@@ -444,7 +444,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			if ( nullable ) {
 				sqlAppender.append( "coalesce(" );
 				sqlAppender.append( basePath );
-				sqlAppender.append( ",cast('{}' as " );
+				sqlAppender.append( ",json_object(returning " );
 				sqlAppender.append( ddlTypeName );
 				sqlAppender.append( "))" );
 			}

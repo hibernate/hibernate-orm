@@ -3,6 +3,20 @@ Hibernate 5 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 5.3.32.Final (September 27, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32183
+
+** Bug
+    * [HHH-17196] - Documentation for @NaturalId should be more explicit about non-nullability
+    * [HHH-14676] - PostgreSQLSkipAutoCommitTest ends up with a NPE on PostgreSQL Plus 13.1 
+    * [HHH-14669] - CriteriaLiteralWithSingleQuoteTest: SAP ASE16.0 does not support grouping by column heading or alias
+
+** Task
+    * [HHH-17197] - Add check for illegal combo of to-one + natural-id + not-found
+
+
 Changes in 5.3.31.Final (August 07, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

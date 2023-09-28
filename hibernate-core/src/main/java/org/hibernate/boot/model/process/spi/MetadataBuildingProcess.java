@@ -672,7 +672,7 @@ public class MetadataBuildingProcess {
 					jdbcTypeRegistry,
 					preferredSqlTypeCodeForDuration,
 					Duration.class,
-					Duration.class.getSimpleName(), Duration.class.getName()
+					StandardBasicTypes.DURATION.getName()
 			);
 		}
 		else {

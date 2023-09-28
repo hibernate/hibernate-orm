@@ -74,6 +74,8 @@ public class ElementCollectionAllNonOptionalPropertyUpdateTest {
 		@Id
 		private Long id;
 
+		private String name;
+
 		@ElementCollection(fetch = FetchType.EAGER)
 		private Set<MyEmbeddable> elementCollection;
 

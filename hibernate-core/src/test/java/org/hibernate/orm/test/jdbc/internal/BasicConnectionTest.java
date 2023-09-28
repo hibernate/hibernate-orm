@@ -38,9 +38,10 @@ public class BasicConnectionTest extends BaseCoreFunctionalTestCase {
 		SessionImplementor sessionImpl = (SessionImplementor) session;
 		boolean caught = false;
 		try {
+			String sql = "select count(*) from NON_EXISTENT";
 			PreparedStatement ps = sessionImpl.getJdbcCoordinator().getStatementPreparer()
-					.prepareStatement( "select count(*) from NON_EXISTENT" );
-			sessionImpl.getJdbcCoordinator().getResultSetReturn().execute( ps );
+					.prepareStatement( sql );
+			sessionImpl.getJdbcCoordinator().getResultSetReturn().execute( ps, sql );
 		}
 		catch ( JDBCException ok ) {
 			caught = true;

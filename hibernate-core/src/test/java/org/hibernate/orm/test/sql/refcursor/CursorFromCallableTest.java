@@ -116,7 +116,7 @@ public class CursorFromCallableTest extends BaseCoreFunctionalTestCase {
 				PreparedStatement preparedStatement = null;
 				try {
 					preparedStatement = statementPreparer.prepareStatement( sql );
-					resultSetReturn.execute( preparedStatement );
+					resultSetReturn.execute( preparedStatement, sql );
 				}
 				finally {
 					if ( preparedStatement != null ) {

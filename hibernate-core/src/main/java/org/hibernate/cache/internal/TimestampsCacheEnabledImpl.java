@@ -14,6 +14,9 @@ import org.hibernate.cache.spi.TimestampsRegion;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.jfr.CacheGetEvent;
+import org.hibernate.event.jfr.CachePutEvent;
+import org.hibernate.event.jfr.internal.JfrEventManager;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
@@ -58,7 +61,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			if ( debugEnabled ) {
 				log.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
 			}
-
+			final CachePutEvent cachePutEvent = JfrEventManager.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 
@@ -67,6 +70,13 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 				timestampsRegion.putIntoCache( space, ts, session );
 			}
 			finally {
+				JfrEventManager.completeCachePutEvent(
+						cachePutEvent,
+						session,
+						timestampsRegion,
+						true,
+						JfrEventManager.CacheActionDescription.TIMESTAMP_PRE_INVALIDATE
+				);
 				eventListenerManager.cachePutEnd();
 			}
 
@@ -92,11 +102,19 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 			}
 
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+			final CachePutEvent cachePutEvent = JfrEventManager.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 				timestampsRegion.putIntoCache( space, ts, session );
 			}
 			finally {
+				JfrEventManager.completeCachePutEvent(
+						cachePutEvent,
+						session,
+						timestampsRegion,
+						true,
+						JfrEventManager.CacheActionDescription.TIMESTAMP_INVALIDATE
+				);
 				eventListenerManager.cachePutEnd();
 
 				if ( stats ) {
@@ -175,11 +193,18 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 
 	private Long getLastUpdateTimestampForSpace(String space, SharedSessionContractImplementor session) {
 		Long ts = null;
+		final CacheGetEvent cacheGetEvent = JfrEventManager.beginCacheGetEvent();
 		try {
 			session.getEventListenerManager().cacheGetStart();
 			ts = (Long) timestampsRegion.getFromCache( space, session );
 		}
 		finally {
+			JfrEventManager.completeCacheGetEvent(
+					cacheGetEvent,
+					session,
+					timestampsRegion,
+					ts != null
+			);
 			session.getEventListenerManager().cacheGetEnd( ts != null );
 		}
 		return ts;

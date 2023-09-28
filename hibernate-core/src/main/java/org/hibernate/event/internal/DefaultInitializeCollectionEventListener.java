@@ -127,7 +127,7 @@ public class DefaultInitializeCollectionEventListener implements InitializeColle
 		final SessionFactoryImplementor factory = source.getFactory();
 		final CollectionDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
 		final Object ck = cacheAccessStrategy.generateCacheKey( id, persister, factory, source.getTenantIdentifier() );
-		final Object ce = CacheHelper.fromSharedCache( source, ck, cacheAccessStrategy );
+		final Object ce = CacheHelper.fromSharedCache( source, ck, persister, cacheAccessStrategy );
 
 		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {

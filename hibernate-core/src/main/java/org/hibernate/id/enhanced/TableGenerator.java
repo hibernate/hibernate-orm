@@ -34,6 +34,9 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.jfr.JdbcPreparedStatementExecutionEvent;
+import org.hibernate.event.jfr.internal.JfrEventManager;
+import org.hibernate.event.jfr.JdbcPreparedStatementCreationEvent;
 import org.hibernate.id.ExportableColumn;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -593,7 +596,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 
 			try ( PreparedStatement selectPS = prepareStatement( connection, selectQuery, logger, listener ) ) {
 				selectPS.setString( 1, segmentValue );
-				final ResultSet selectRS = executeQuery( selectPS, listener );
+				final ResultSet selectRS = executeQuery( selectPS, listener, selectQuery );
 				if ( !selectRS.next() ) {
 					long initializationValue;
 					if ( storeLastUsedValue ) {
@@ -608,7 +611,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 						LOG.tracef( "binding parameter [%s] - [%s]", 1, segmentValue );
 						statement.setString( 1, segmentValue );
 						value.bind( statement, 2 );
-						executeUpdate( statement, listener);
+						executeUpdate( statement, listener, insertQuery);
 					}
 				}
 				else {
@@ -640,7 +643,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 				updateValue.bind( statement, 1 );
 				value.bind( statement, 2 );
 				statement.setString( 3, segmentValue );
-				rows = executeUpdate( statement, listener );
+				rows = executeUpdate( statement, listener, updateQuery );
 			}
 			catch (SQLException e) {
 				LOG.unableToUpdateQueryHiValue( physicalTableName.render(), e );
@@ -664,32 +667,37 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			SqlStatementLogger logger,
 			SessionEventListenerManager listener) throws SQLException {
 		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
+		final JdbcPreparedStatementCreationEvent jdbcPreparedStatementCreation = JfrEventManager.beginJdbcPreparedStatementCreationEvent();
 		try {
 			listener.jdbcPrepareStatementStart();
 			return connection.prepareStatement( sql );
 		}
 		finally {
+			JfrEventManager.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
 			listener.jdbcPrepareStatementEnd();
 		}
 	}
 
-	private int executeUpdate(PreparedStatement ps, SessionEventListenerManager listener) throws SQLException {
+	private int executeUpdate(PreparedStatement ps, SessionEventListenerManager listener, String sql ) throws SQLException {
+		final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			listener.jdbcExecuteStatementStart();
 			return ps.executeUpdate();
 		}
 		finally {
+			JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 			listener.jdbcExecuteStatementEnd();
 		}
-
 	}
 
-	private ResultSet executeQuery(PreparedStatement ps, SessionEventListenerManager listener) throws SQLException {
+	private ResultSet executeQuery(PreparedStatement ps, SessionEventListenerManager listener, String sql ) throws SQLException {
+		final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			listener.jdbcExecuteStatementStart();
 			return ps.executeQuery();
 		}
 		finally {
+			JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 			listener.jdbcExecuteStatementEnd();
 		}
 	}

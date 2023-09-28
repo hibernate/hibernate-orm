@@ -18,7 +18,6 @@ import java.sql.Connection;
 import java.sql.NClob;
 import java.sql.SQLException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -69,6 +68,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
+import org.hibernate.event.jfr.internal.JfrEventManager;
 import org.hibernate.event.jfr.SessionClosedEvent;
 import org.hibernate.event.jfr.SessionOpenEvent;
 import org.hibernate.event.spi.AutoFlushEvent;
@@ -108,9 +108,7 @@ import org.hibernate.event.spi.ResolveNaturalIdEventListener;
 import org.hibernate.event.spi.SaveOrUpdateEvent;
 import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.GraphSemantic;
-import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
-import org.hibernate.internal.build.AllowNonPortable;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.jpa.internal.LegacySpecHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -141,7 +139,6 @@ import org.hibernate.type.descriptor.WrapperOptions;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.persistence.FlushModeType;
@@ -228,14 +225,10 @@ public class SessionImpl
 	// TODO: this is unused and can be removed
 	private transient boolean isEnforcingFetchGraph;
 
-	@AllowNonPortable
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
-		final SessionOpenEvent sessionOpenEvent = new SessionOpenEvent();
-		if ( sessionOpenEvent.isEnabled() ) {
-			sessionOpenEvent.begin();
-		}
+		final SessionOpenEvent sessionOpenEvent = JfrEventManager.beginSessionOpenEvent();
 
 		persistenceContext = createPersistenceContext();
 		actionQueue = createActionQueue();
@@ -282,13 +275,7 @@ public class SessionImpl
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), currentTimeMillis() );
 		}
 
-		if ( sessionOpenEvent.isEnabled() ) {
-			sessionOpenEvent.end();
-			if ( sessionOpenEvent.shouldCommit() ) {
-				sessionOpenEvent.sessionIdentifier = getSessionIdentifier().toString();
-				sessionOpenEvent.commit();
-			}
-		}
+		JfrEventManager.completeSessionOpenEvent( sessionOpenEvent, this );
 	}
 
 	private FlushMode getInitialFlushMode() {
@@ -425,16 +412,12 @@ public class SessionImpl
 		closeWithoutOpenChecks();
 	}
 
-	@AllowNonPortable
 	public void closeWithoutOpenChecks() throws HibernateException {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Closing session [%s]", getSessionIdentifier() );
 		}
 
-		final SessionClosedEvent sessionClosedEvent = new SessionClosedEvent();
-		if ( sessionClosedEvent.isEnabled() ) {
-			sessionClosedEvent.begin();
-		}
+		final SessionClosedEvent sessionClosedEvent = JfrEventManager.beginSessionClosedEvent();
 
 		// todo : we want this check if usage is JPA, but not native Hibernate usage
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
@@ -459,13 +442,7 @@ public class SessionImpl
 			statistics.closeSession();
 		}
 
-		if ( sessionClosedEvent.isEnabled() ) {
-			sessionClosedEvent.end();
-			if ( sessionClosedEvent.shouldCommit() ) {
-				sessionClosedEvent.sessionIdentifier = getSessionIdentifier().toString();
-				sessionClosedEvent.commit();
-			}
-		}
+		JfrEventManager.completeSessionClosedEvent( sessionClosedEvent, this );
 	}
 
 	private boolean isTransactionInProgressAndNotMarkedForRollback() {

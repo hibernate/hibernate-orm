@@ -12,7 +12,11 @@ import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.jfr.CacheGetEvent;
+import org.hibernate.event.jfr.internal.JfrEventManager;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.persister.collection.CollectionPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -28,14 +32,58 @@ public final class CacheHelper {
 	public static Object fromSharedCache(
 			SharedSessionContractImplementor session,
 			Object cacheKey,
+			EntityPersister persister,
+			CachedDomainDataAccess cacheAccess) {
+		return fromSharedCache( session, cacheKey, persister, false, cacheAccess );
+	}
+
+	public static Object fromSharedCache(
+			SharedSessionContractImplementor session,
+			Object cacheKey,
+			EntityPersister persister,
+			boolean isNaturalKey,
 			CachedDomainDataAccess cacheAccess) {
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		Object cachedValue = null;
 		eventListenerManager.cacheGetStart();
+		final CacheGetEvent cacheGetEvent = JfrEventManager.beginCacheGetEvent();
 		try {
 			cachedValue = cacheAccess.get( session, cacheKey );
 		}
 		finally {
+			JfrEventManager.completeCacheGetEvent(
+					cacheGetEvent,
+					session,
+					cacheAccess.getRegion(),
+					persister,
+					isNaturalKey,
+					cachedValue != null
+			);
+			eventListenerManager.cacheGetEnd( cachedValue != null );
+		}
+		return cachedValue;
+	}
+
+	public static Object fromSharedCache(
+			SharedSessionContractImplementor session,
+			Object cacheKey,
+			CollectionPersister persister,
+			CachedDomainDataAccess cacheAccess) {
+		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+		Object cachedValue = null;
+		eventListenerManager.cacheGetStart();
+		final CacheGetEvent cacheGetEvent = JfrEventManager.beginCacheGetEvent();
+		try {
+			cachedValue = cacheAccess.get( session, cacheKey );
+		}
+		finally {
+			JfrEventManager.completeCacheGetEvent(
+					cacheGetEvent,
+					session,
+					cacheAccess.getRegion(),
+					persister,
+					cachedValue != null
+			);
 			eventListenerManager.cacheGetEnd( cachedValue != null );
 		}
 		return cachedValue;

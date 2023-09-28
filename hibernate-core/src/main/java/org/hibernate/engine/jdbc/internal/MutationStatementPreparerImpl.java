@@ -14,6 +14,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
+import org.hibernate.event.jfr.internal.JfrEventManager;
+import org.hibernate.event.jfr.JdbcPreparedStatementCreationEvent;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -95,12 +97,14 @@ public class MutationStatementPreparerImpl implements MutationStatementPreparer 
 				final JdbcObserver observer = jdbcCoordinator.getJdbcSessionOwner()
 						.getJdbcSessionContext()
 						.getObserver();
+				final JdbcPreparedStatementCreationEvent jdbcPreparedStatementCreation = JfrEventManager.beginJdbcPreparedStatementCreationEvent();
 				try {
 					observer.jdbcPrepareStatementStart();
 					preparedStatement = doPrepare();
 					setStatementTimeout( preparedStatement );
 				}
 				finally {
+					JfrEventManager.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
 					observer.jdbcPrepareStatementEnd();
 				}
 				postProcess( preparedStatement );

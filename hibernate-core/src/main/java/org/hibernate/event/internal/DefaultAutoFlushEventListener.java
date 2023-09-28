@@ -11,6 +11,8 @@ import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.ActionQueue;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
+import org.hibernate.event.jfr.PartialFlushEvent;
+import org.hibernate.event.jfr.internal.JfrEventManager;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.EventSource;
@@ -37,6 +39,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 	public void onAutoFlush(AutoFlushEvent event) throws HibernateException {
 		final EventSource source = event.getSession();
 		final SessionEventListenerManager eventListenerManager = source.getEventListenerManager();
+		final PartialFlushEvent partialFlushEvent = JfrEventManager.beginPartialFlushEvent();
 		try {
 			eventListenerManager.partialFlushStart();
 
@@ -52,11 +55,16 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 
 					// note: performExecutions() clears all collectionXxxxtion
 					// collections (the collection actions) in the session
-					performExecutions( source );
-					postFlush( source );
+					final org.hibernate.event.jfr.FlushEvent jfrFlushEvent = JfrEventManager.beginFlushEvent();
+					try {
+						performExecutions( source );
+						postFlush( source );
 
-					postPostFlush( source );
-
+						postPostFlush( source );
+					}
+					finally {
+						JfrEventManager.completeFlushEvent( jfrFlushEvent, event, true );
+					}
 					final StatisticsImplementor statistics = source.getFactory().getStatistics();
 					if ( statistics.isStatisticsEnabled() ) {
 						statistics.flush();
@@ -70,6 +78,7 @@ public class DefaultAutoFlushEventListener extends AbstractFlushingEventListener
 			}
 		}
 		finally {
+			JfrEventManager.completePartialFlushEvent( partialFlushEvent, event );
 			eventListenerManager.partialFlushEnd(
 					event.getNumberOfEntitiesProcessed(),
 					event.getNumberOfEntitiesProcessed()

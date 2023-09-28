@@ -273,7 +273,7 @@ public class CacheEntityLoaderHelper {
 				source.getTenantIdentifier()
 		);
 
-		final Object ce = CacheHelper.fromSharedCache( source, ck, persister.getCacheAccessStrategy() );
+		final Object ce = CacheHelper.fromSharedCache( source, ck, persister, persister.getCacheAccessStrategy() );
 		final StatisticsImplementor statistics = factory.getStatistics();
 		if ( statistics.isStatisticsEnabled() ) {
 			if ( ce == null ) {

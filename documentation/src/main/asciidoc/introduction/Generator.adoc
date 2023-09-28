@@ -38,6 +38,7 @@ Now, you still don't have to use the Metamodel Generator with Hibernate—the AP
 [TIP]
 ====
 We've already seen how to set up the annotation processor in the <<hello-hibernate,Gradle build>> we saw earlier.
+For more details on how to integrate the Metamodel Generator, check out the {generator-guide}[Static Metamodel Generator] section in the User Guide.
 ====
 
 Here's an example of the sort of code that's generated for an entity class, as mandated by the JPA specification:

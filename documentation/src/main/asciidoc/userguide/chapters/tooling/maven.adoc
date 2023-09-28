@@ -1,16 +1,34 @@
 [[tooling-maven]]
-=== Maven Plugin
+=== Maven
+
+The following sections illustrate how both <<tooling-maven-enhancement,bytecode enhancement>> and <<tooling-maven-modelgen,metamodel generation>> capabilities can be integrated into Maven builds.
+
+[[tooling-maven-enhancement]]
+==== Bytecode Enhancement
 
 Hibernate provides a https://maven.apache.org/[Maven] plugin capable of providing
 build-time enhancement of the domain model as they are compiled as part of a Maven
-build.  See the section on the <<tooling-gradle>> for details
+build.  See the section on <<BytecodeEnhancement>> for details
 on the configuration settings.  By default, all enhancements are disabled.
 
 
-.Apply the Maven plugin
+.Apply the Bytecode Enhancement plugin
 ====
 [source,xml]
 ----
 include::extras/maven-example.pom[]
+----
+====
+
+[[tooling-maven-modelgen]]
+==== Static Metamodel Generation
+
+The recommended way to integrate the metamodel generation into a maven project is through the annotation processor paths of the maven compiler plugin (roughly equivalent to how the generator is integrated in a gradle project).
+
+.Integrate the metamodel generator
+====
+[source,xml]
+----
+include::extras/maven-example-metamodel.pom[]
 ----
 ====

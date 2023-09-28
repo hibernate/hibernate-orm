@@ -14,7 +14,7 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath 'de.thetaphi:forbiddenapis:3.2'
+		classpath 'de.thetaphi:forbiddenapis:3.5.1'
 	}
 }
 
@@ -516,6 +516,7 @@ task forbiddenApisUnsafe(type: CheckForbiddenApis, dependsOn: compileJava) {
 
 task forbiddenApisNonPortable(type: CheckForbiddenApis, dependsOn: compileJava) {
 	bundledSignatures += 'jdk-non-portable'
+	suppressAnnotations += ['org.hibernate.internal.build.AllowNonPortable']
 }
 
 task forbiddenApis {

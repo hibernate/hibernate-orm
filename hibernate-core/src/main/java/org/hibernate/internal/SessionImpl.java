@@ -110,6 +110,7 @@ import org.hibernate.event.spi.SaveOrUpdateEventListener;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
+import org.hibernate.internal.build.AllowNonPortable;
 import org.hibernate.internal.util.ExceptionHelper;
 import org.hibernate.jpa.internal.LegacySpecHelper;
 import org.hibernate.jpa.internal.util.ConfigurationHelper;
@@ -227,6 +228,7 @@ public class SessionImpl
 	// TODO: this is unused and can be removed
 	private transient boolean isEnforcingFetchGraph;
 
+	@AllowNonPortable
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
@@ -423,6 +425,7 @@ public class SessionImpl
 		closeWithoutOpenChecks();
 	}
 
+	@AllowNonPortable
 	public void closeWithoutOpenChecks() throws HibernateException {
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Closing session [%s]", getSessionIdentifier() );

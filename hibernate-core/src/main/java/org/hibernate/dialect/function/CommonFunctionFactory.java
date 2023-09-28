@@ -12,6 +12,11 @@ import java.util.Arrays;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.Dialect;
 
+import org.hibernate.dialect.function.array.ArrayAggFunction;
+import org.hibernate.dialect.function.array.ArrayConstructorFunction;
+import org.hibernate.dialect.function.array.CastingArrayConstructorFunction;
+import org.hibernate.dialect.function.array.OracleArrayAggEmulation;
+import org.hibernate.dialect.function.array.OracleArrayConstructorFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -2532,5 +2537,47 @@ public class CommonFunctionFactory {
 				.setParameterTypes( TEMPORAL_UNIT, TEMPORAL )
 				.setArgumentListSignature( "(TEMPORAL_UNIT field, TEMPORAL datetime)" )
 				.register();
+	}
+
+	/**
+	 * H2, HSQL array() constructor function
+	 */
+	public void array() {
+		functionRegistry.register( "array", new ArrayConstructorFunction( true ) );
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array() constructor function
+	 */
+	public void array_casting() {
+		functionRegistry.register( "array", new CastingArrayConstructorFunction() );
+	}
+
+	/**
+	 * Google Spanner array() constructor function
+	 */
+	public void array_withoutKeyword() {
+		functionRegistry.register( "array", new ArrayConstructorFunction( false ) );
+	}
+
+	/**
+	 * Oracle array() constructor function
+	 */
+	public void array_oracle() {
+		functionRegistry.register( "array", new OracleArrayConstructorFunction() );
+	}
+
+	/**
+	 * H2, HSQL, CockroachDB and PostgreSQL array_agg() function
+	 */
+	public void arrayAggregate() {
+		functionRegistry.register( ArrayAggFunction.FUNCTION_NAME, new ArrayAggFunction( "array_agg", false, true ) );
+	}
+
+	/**
+	 * Oracle array_agg() function
+	 */
+	public void arrayAggregate_jsonArrayagg() {
+		functionRegistry.register( ArrayAggFunction.FUNCTION_NAME, new OracleArrayAggEmulation() );
 	}
 }

@@ -84,6 +84,7 @@ import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.Scale6IntervalSecondDdlType;
@@ -227,6 +228,9 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	protected void registerColumnTypes(TypeContributions typeContributions, ServiceRegistry serviceRegistry) {
 		super.registerColumnTypes( typeContributions, serviceRegistry );
 		final DdlTypeRegistry ddlTypeRegistry = typeContributions.getTypeConfiguration().getDdlTypeRegistry();
+
+		// We need to configure that the array type uses the raw element type for casts
+		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, true ) );
 
 		// Register this type to be able to support Float[]
 		// The issue is that the JDBC driver can't handle createArrayOf( "float(24)", ... )
@@ -577,6 +581,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.locate_positionSubstring();
 		functionFactory.windowFunctions();
 		functionFactory.listagg_stringAgg( "varchar" );
+		functionFactory.array_casting();
+		functionFactory.arrayAggregate();
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 			functionFactory.makeDateTimeTimestamp();

@@ -247,6 +247,8 @@ public class HSQLLegacyDialect extends Dialect {
 			functionFactory.rownum();
 		}
 		functionFactory.listagg_groupConcat();
+		functionFactory.array();
+		functionFactory.arrayAggregate();
 	}
 
 	@Override

@@ -366,10 +366,12 @@ public class H2LegacyDialect extends Dialect {
 		functionFactory.rownum();
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
 			functionFactory.windowFunctions();
+			functionFactory.inverseDistributionOrderedSetAggregates();
+			functionFactory.hypotheticalOrderedSetAggregates();
 			if ( getVersion().isSameOrAfter( 2 ) ) {
 				functionFactory.listagg( null );
-				functionFactory.inverseDistributionOrderedSetAggregates();
-				functionFactory.hypotheticalOrderedSetAggregates();
+				functionFactory.array();
+				functionFactory.arrayAggregate();
 			}
 			else {
 				// Use group_concat until 2.x as listagg was buggy

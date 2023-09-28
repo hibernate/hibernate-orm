@@ -61,6 +61,10 @@ public class OracleArrayJdbcType implements JdbcType {
 		return elementJdbcType;
 	}
 
+	public String getTypeName() {
+		return typeName;
+	}
+
 	@Override
 	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
 			Integer precision,
@@ -184,7 +188,7 @@ public class OracleArrayJdbcType implements JdbcType {
 		final Dialect dialect = database.getDialect();
 		final BasicPluralJavaType<?> pluralJavaType = (BasicPluralJavaType<?>) javaType;
 		final JavaType<?> elementJavaType = pluralJavaType.getElementJavaType();
-		final String elementTypeName = typeName==null ? getTypeName( elementJavaType, dialect ) : typeName;
+		final String arrayTypeName = typeName == null ? getTypeName( elementJavaType, dialect ) : typeName;
 		final String elementType =
 				typeConfiguration.getDdlTypeRegistry().getTypeName(
 						getElementJdbcType().getDdlTypeCode(),
@@ -200,25 +204,59 @@ public class OracleArrayJdbcType implements JdbcType {
 		int arrayLength = columnSize.getArrayLength() == null ? 127 : columnSize.getArrayLength();
 		database.addAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
-						elementTypeName,
+						arrayTypeName,
 						database.getDefaultNamespace(),
-						getCreateArrayTypeCommand( elementTypeName, arrayLength, elementType ),
-						getDropArrayTypeCommand( elementTypeName ),
+						new String[]{
+								"create or replace type " + arrayTypeName
+										+ " as varying array(" + arrayLength + ") of " + elementType
+						},
+						new String[] { "drop type " + arrayTypeName + " force" },
 						emptySet(),
 						true
 				)
 		);
-	}
-
-	String[] getCreateArrayTypeCommand(String elementTypeName, int length, String elementType) {
-		return new String[]{
-				"create or replace type " + elementTypeName
-						+ " as varying array(" + length + ") of " + elementType
-		};
-	}
-
-	String[] getDropArrayTypeCommand(String elementTypeName) {
-		return EMPTY_STRING_ARRAY; //new String[] { "drop type " + elementTypeName + " force" };
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_cmp",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_cmp(a in " + arrayTypeName +
+										", b in " + arrayTypeName + ") return number deterministic is begin " +
+										"if a is null or b is null then return null; end if; " +
+										"for i in 1 .. least(a.count,b.count) loop " +
+										"if a(i) is null or b(i) is null then return null;" +
+										"elsif a(i)>b(i) then return 1;" +
+										"elsif a(i)<b(i) then return -1; " +
+										"end if; " +
+										"end loop; " +
+										"if a.count=b.count then return 0; elsif a.count>b.count then return 1; else return -1; end if; " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_cmp" },
+						emptySet(),
+						false
+				)
+		);
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_distinct",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_distinct(a in " + arrayTypeName +
+										", b in " + arrayTypeName + ") return number deterministic is begin " +
+										"if a is null and b is null then return 0; end if; " +
+										"if a is null or b is null or a.count <> b.count then return 1; end if; " +
+										"for i in 1 .. a.count loop " +
+										"if (a(i) is null)<>(b(i) is null) or a(i)<>b(i) then return 1; end if; " +
+										"end loop; " +
+										"return 0; " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_distinct" },
+						emptySet(),
+						false
+				)
+		);
 	}
 
 	@Override

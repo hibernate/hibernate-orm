@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.ast.tree.expression;
 
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstWalker;
@@ -61,5 +62,13 @@ public class CastTarget implements Expression, SqlAstNode {
 	@Override
 	public void accept(SqlAstWalker sqlTreeWalker) {
 		sqlTreeWalker.visitCastTarget( this );
+	}
+
+	public Size toSize() {
+		final Size size = new Size();
+		size.setLength( length );
+		size.setPrecision( precision );
+		size.setScale( scale );
+		return size;
 	}
 }

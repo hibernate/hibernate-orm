@@ -64,7 +64,7 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 		}
 		final BasicValueConverter<E, ?> valueConverter = elementType.getValueConverter();
 		return valueConverter == null
-				? createType( typeConfiguration, dialect, this, elementType, columnTypeInformation, stdIndicators )
+				? resolveType( typeConfiguration, dialect, this, elementType, columnTypeInformation, stdIndicators )
 				: createTypeUsingConverter( typeConfiguration, dialect, elementType, columnTypeInformation, stdIndicators, valueConverter );
 	}
 
@@ -92,40 +92,52 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 		);
 	}
 
-	BasicType<T> createType(
+	BasicType<T> resolveType(
 			TypeConfiguration typeConfiguration,
 			Dialect dialect,
 			AbstractArrayJavaType<T,E> arrayJavaType,
 			BasicType<E> elementType,
 			ColumnTypeInformation columnTypeInformation,
 			JdbcTypeIndicators stdIndicators) {
-		return typeConfiguration.getBasicTypeRegistry().getRegisteredType( elementType.getName() ) == elementType
-				? typeConfiguration.standardBasicTypeForJavaType(
-						arrayJavaType.getJavaType(),
-						javaType -> basicArrayType( typeConfiguration, dialect, elementType, columnTypeInformation, stdIndicators, arrayJavaType )
-				)
-				: basicArrayType( typeConfiguration, dialect, elementType, columnTypeInformation, stdIndicators, arrayJavaType );
+		final JdbcType arrayJdbcType = getArrayJdbcType(
+				typeConfiguration,
+				dialect,
+				stdIndicators.getExplicitJdbcTypeCode(),
+				elementType,
+				columnTypeInformation
+		);
+		return typeConfiguration.getBasicTypeRegistry().resolve(
+				arrayJavaType,
+				arrayJdbcType,
+				() -> new BasicArrayType<>( elementType, arrayJdbcType, arrayJavaType )
+		);
+//		return typeConfiguration.getBasicTypeRegistry().getRegisteredType( elementType.getName() ) == elementType
+//				? typeConfiguration.standardBasicTypeForJavaType(
+//						arrayJavaType.getJavaType(),
+//						javaType -> basicArrayType( typeConfiguration, dialect, elementType, columnTypeInformation, stdIndicators, arrayJavaType )
+//				)
+//				: basicArrayType( typeConfiguration, dialect, elementType, columnTypeInformation, stdIndicators, arrayJavaType );
 	}
 
-	BasicType<T> basicArrayType(
-			TypeConfiguration typeConfiguration,
-			Dialect dialect,
-			BasicType<E> elementType,
-			ColumnTypeInformation columnTypeInformation,
-			JdbcTypeIndicators stdIndicators,
-			JavaType<T> javaType) {
-		return new BasicArrayType<>(
-				elementType,
-				getArrayJdbcType(
-						typeConfiguration,
-						dialect,
-						stdIndicators.getExplicitJdbcTypeCode(),
-						elementType,
-						columnTypeInformation
-				),
-				javaType
-		);
-	}
+//	BasicType<T> basicArrayType(
+//			TypeConfiguration typeConfiguration,
+//			Dialect dialect,
+//			BasicType<E> elementType,
+//			ColumnTypeInformation columnTypeInformation,
+//			JdbcTypeIndicators stdIndicators,
+//			JavaType<T> javaType) {
+//		return new BasicArrayType<>(
+//				elementType,
+//				getArrayJdbcType(
+//						typeConfiguration,
+//						dialect,
+//						stdIndicators.getExplicitJdbcTypeCode(),
+//						elementType,
+//						columnTypeInformation
+//				),
+//				javaType
+//		);
+//	}
 
 	static JdbcType getArrayJdbcType(
 			TypeConfiguration typeConfiguration,

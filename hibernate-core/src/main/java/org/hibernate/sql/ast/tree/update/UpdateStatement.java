@@ -7,6 +7,7 @@
 package org.hibernate.sql.ast.tree.update;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +33,7 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 			NamedTableReference targetTable,
 			List<Assignment> assignments,
 			Predicate restriction) {
-		this( targetTable, new FromClause(), assignments, restriction );
+		this( null, targetTable, new FromClause(), assignments, restriction, Collections.emptyList() );
 	}
 
 	public UpdateStatement(
@@ -40,7 +41,7 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 			List<Assignment> assignments,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		this( targetTable, new FromClause(), assignments, restriction, returningColumns );
+		this( null, targetTable, new FromClause(), assignments, restriction, returningColumns );
 	}
 
 	public UpdateStatement(
@@ -48,8 +49,7 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 			FromClause fromClause,
 			List<Assignment> assignments,
 			Predicate restriction) {
-		super( targetTable, fromClause, restriction );
-		this.assignments = assignments;
+		this( null, targetTable, fromClause, assignments, restriction, Collections.emptyList() );
 	}
 
 	public UpdateStatement(
@@ -58,8 +58,7 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 			List<Assignment> assignments,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		super( targetTable, fromClause, restriction, returningColumns );
-		this.assignments = assignments;
+		this( null, targetTable, fromClause, assignments, restriction, returningColumns );
 	}
 
 	public UpdateStatement(
@@ -69,24 +68,7 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 			List<Assignment> assignments,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		this(
-				cteContainer.getCteStatements(),
-				targetTable,
-				fromClause,
-				assignments,
-				restriction,
-				returningColumns
-		);
-	}
-
-	public UpdateStatement(
-			Map<String, CteStatement> cteStatements,
-			NamedTableReference targetTable,
-			FromClause fromClause,
-			List<Assignment> assignments,
-			Predicate restriction,
-			List<ColumnReference> returningColumns) {
-		super( cteStatements, targetTable, fromClause, restriction, returningColumns );
+		super( cteContainer, targetTable, fromClause, restriction, returningColumns );
 		this.assignments = assignments;
 	}
 

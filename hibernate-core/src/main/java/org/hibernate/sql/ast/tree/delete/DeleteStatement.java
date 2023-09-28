@@ -6,14 +6,13 @@
  */
 package org.hibernate.sql.ast.tree.delete;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlAstHelper;
 import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -28,18 +27,18 @@ public class DeleteStatement extends AbstractUpdateOrDeleteStatement {
 	public static final String DEFAULT_ALIAS = "to_delete_";
 
 	public DeleteStatement(NamedTableReference targetTable, Predicate restriction) {
-		this( targetTable, new FromClause(), restriction );
+		this( null, targetTable, new FromClause(), restriction, Collections.emptyList() );
 	}
 
 	public DeleteStatement(
 			NamedTableReference targetTable,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		this( targetTable, new FromClause(), restriction, returningColumns );
+		this( null, targetTable, new FromClause(), restriction, returningColumns );
 	}
 
 	public DeleteStatement(NamedTableReference targetTable, FromClause fromClause, Predicate restriction) {
-		super( targetTable, fromClause, restriction );
+		this( null, targetTable, fromClause, restriction, Collections.emptyList() );
 	}
 
 	public DeleteStatement(
@@ -47,7 +46,7 @@ public class DeleteStatement extends AbstractUpdateOrDeleteStatement {
 			FromClause fromClause,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		super( targetTable, fromClause, restriction, returningColumns );
+		this( null, targetTable, fromClause, restriction, returningColumns );
 	}
 
 	public DeleteStatement(
@@ -56,22 +55,7 @@ public class DeleteStatement extends AbstractUpdateOrDeleteStatement {
 			FromClause fromClause,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		this(
-				cteContainer.getCteStatements(),
-				targetTable,
-				fromClause,
-				restriction,
-				returningColumns
-		);
-	}
-
-	public DeleteStatement(
-			Map<String, CteStatement> cteStatements,
-			NamedTableReference targetTable,
-			FromClause fromClause,
-			Predicate restriction,
-			List<ColumnReference> returningColumns) {
-		super( cteStatements, targetTable, fromClause, restriction, returningColumns );
+		super( cteContainer, targetTable, fromClause, restriction, returningColumns );
 	}
 
 	public static class DeleteStatementBuilder {

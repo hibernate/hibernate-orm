@@ -6,12 +6,10 @@
  */
 package org.hibernate.sql.ast.tree;
 
-import java.util.LinkedHashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -25,9 +23,7 @@ public abstract class AbstractUpdateOrDeleteStatement extends AbstractMutationSt
 			NamedTableReference targetTable,
 			FromClause fromClause,
 			Predicate restriction) {
-		super( targetTable );
-		this.fromClause = fromClause;
-		this.restriction = restriction;
+		this( null, targetTable, fromClause, restriction, Collections.emptyList() );
 	}
 
 	public AbstractUpdateOrDeleteStatement(
@@ -35,9 +31,7 @@ public abstract class AbstractUpdateOrDeleteStatement extends AbstractMutationSt
 			FromClause fromClause,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		super( new LinkedHashMap<>(), targetTable, returningColumns );
-		this.fromClause = fromClause;
-		this.restriction = restriction;
+		this( null, targetTable, fromClause, restriction, returningColumns );
 	}
 
 	public AbstractUpdateOrDeleteStatement(
@@ -46,22 +40,7 @@ public abstract class AbstractUpdateOrDeleteStatement extends AbstractMutationSt
 			FromClause fromClause,
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
-		this(
-				cteContainer.getCteStatements(),
-				targetTable,
-				fromClause,
-				restriction,
-				returningColumns
-		);
-	}
-
-	public AbstractUpdateOrDeleteStatement(
-			Map<String, CteStatement> cteStatements,
-			NamedTableReference targetTable,
-			FromClause fromClause,
-			Predicate restriction,
-			List<ColumnReference> returningColumns) {
-		super( cteStatements, targetTable, returningColumns );
+		super( cteContainer, targetTable, returningColumns );
 		this.fromClause = fromClause;
 		this.restriction = restriction;
 	}

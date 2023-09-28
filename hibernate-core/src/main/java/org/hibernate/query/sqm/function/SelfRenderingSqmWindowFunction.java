@@ -82,9 +82,7 @@ public class SelfRenderingSqmWindowFunction<T> extends SelfRenderingSqmFunction<
 
 	@Override
 	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
-		final ReturnableType<?> resultType = resolveResultType(
-				walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-		);
+		final ReturnableType<?> resultType = resolveResultType( walker );
 
 		List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 		ArgumentsValidator argumentsValidator = getArgumentsValidator();

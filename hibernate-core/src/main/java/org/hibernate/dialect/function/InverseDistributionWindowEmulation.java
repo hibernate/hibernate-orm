@@ -67,9 +67,7 @@ public class InverseDistributionWindowEmulation extends InverseDistributionFunct
 				else if ( currentClause != Clause.SELECT ) {
 					throw new IllegalArgumentException( "Can't emulate [" + getName() + "] in clause " + currentClause + ". Only the SELECT clause is supported" );
 				}
-				final ReturnableType<?> resultType = resolveResultType(
-						walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-				);
+				final ReturnableType<?> resultType = resolveResultType( walker );
 
 				List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 				ArgumentsValidator argumentsValidator = getArgumentsValidator();

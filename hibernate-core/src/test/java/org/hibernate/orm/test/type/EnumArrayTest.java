@@ -6,6 +6,9 @@
  */
 package org.hibernate.orm.test.type;
 
+import java.util.Map;
+
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
@@ -43,6 +46,14 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	@Override
 	protected Class[] getAnnotatedClasses() {
 		return new Class[]{ TableWithEnumArrays.class };
+	}
+
+	@Override
+	protected void addSettings(Map<String, Object> settings) {
+		// Make sure this stuff runs on a dedicated connection pool,
+		// otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		// because the JDBC connection or database session caches something that should have been invalidated
+		settings.put( AvailableSettings.CONNECTION_PROVIDER, "" );
 	}
 
 	public void startUp() {

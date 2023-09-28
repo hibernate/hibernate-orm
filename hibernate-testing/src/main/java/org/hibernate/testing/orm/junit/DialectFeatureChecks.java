@@ -672,4 +672,10 @@ abstract public class DialectFeatureChecks {
 			return dialect.supportsCommentOn();
 		}
 	}
+
+	public static class SupportsStructuralArrays implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.getPreferredSqlTypeCodeForArray() != SqlTypes.VARBINARY;
+		}
+	}
 }

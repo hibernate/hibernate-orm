@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.produce.function;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -31,11 +32,34 @@ public interface FunctionReturnTypeResolver {
 	 * of `some_function`.
 	 *
 	 * @return The resolved type.
+	 * @deprecated Use {@link #resolveFunctionReturnType(ReturnableType, Supplier, List, TypeConfiguration)} instead
 	 */
-	ReturnableType<?> resolveFunctionReturnType(
+	@Deprecated(forRemoval = true)
+	default ReturnableType<?> resolveFunctionReturnType(
 			ReturnableType<?> impliedType,
 			List<? extends SqmTypedNode<?>> arguments,
-			TypeConfiguration typeConfiguration);
+			TypeConfiguration typeConfiguration) {
+		throw new UnsupportedOperationException( "Not implemented for " + getClass().getName() );
+	}
+
+	/**
+	 * Resolve the return type for a function given its context-implied type and
+	 * the arguments to this call.
+	 * <p>
+	 * The <em>context-implied</em> type is the type implied by where the function
+	 * occurs in the query.  E.g., for an equality predicate (`something = some_function`)
+	 * the implied type of the return from `some_function` would be defined by the type
+	 * of `some_function`.
+	 *
+	 * @return The resolved type.
+	 */
+	default ReturnableType<?> resolveFunctionReturnType(
+			ReturnableType<?> impliedType,
+			Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+			List<? extends SqmTypedNode<?>> arguments,
+			TypeConfiguration typeConfiguration) {
+		return resolveFunctionReturnType( impliedType, arguments, typeConfiguration );
+	}
 
 	/**
 	 * Resolve the return type for a function given its context-implied type and

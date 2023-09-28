@@ -8,6 +8,7 @@ package org.hibernate.dialect.function;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
@@ -154,7 +155,9 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 		}
 
 		@Override
-		protected ReturnableType<?> resolveResultType(TypeConfiguration typeConfiguration) {
+		protected ReturnableType<?> resolveResultType(
+				Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+				TypeConfiguration typeConfiguration) {
 			return (ReturnableType<?>)
 					getWithinGroup().getSortSpecifications().get( 0 )
 							.getSortExpression()

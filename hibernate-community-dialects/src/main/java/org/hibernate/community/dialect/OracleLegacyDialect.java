@@ -105,12 +105,14 @@ import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
+import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static java.util.regex.Pattern.CASE_INSENSITIVE;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.HOUR;
@@ -124,6 +126,8 @@ import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
 import static org.hibernate.type.SqlTypes.DATE;
 import static org.hibernate.type.SqlTypes.DECIMAL;
+import static org.hibernate.type.SqlTypes.DOUBLE;
+import static org.hibernate.type.SqlTypes.FLOAT;
 import static org.hibernate.type.SqlTypes.GEOMETRY;
 import static org.hibernate.type.SqlTypes.INTEGER;
 import static org.hibernate.type.SqlTypes.JSON;
@@ -133,6 +137,7 @@ import static org.hibernate.type.SqlTypes.REAL;
 import static org.hibernate.type.SqlTypes.SMALLINT;
 import static org.hibernate.type.SqlTypes.SQLXML;
 import static org.hibernate.type.SqlTypes.STRUCT;
+import static org.hibernate.type.SqlTypes.TABLE;
 import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
@@ -150,17 +155,20 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  */
 public class OracleLegacyDialect extends Dialect {
 
-	private static final Pattern DISTINCT_KEYWORD_PATTERN = Pattern.compile( "\\bdistinct\\b" );
-	private static final Pattern GROUP_BY_KEYWORD_PATTERN = Pattern.compile( "\\bgroup\\sby\\b" );
-	private static final Pattern ORDER_BY_KEYWORD_PATTERN = Pattern.compile( "\\border\\sby\\b" );
-	private static final Pattern UNION_KEYWORD_PATTERN = Pattern.compile( "\\bunion\\b" );
-	private static final Pattern SQL_STATEMENT_TYPE_PATTERN = Pattern.compile("^(?:/\\*.*?\\*/)?\\s*(select|insert|update|delete)\\s+.*?", Pattern.CASE_INSENSITIVE);
+	private static final Pattern DISTINCT_KEYWORD_PATTERN = Pattern.compile( "\\bdistinct\\b", CASE_INSENSITIVE );
+	private static final Pattern GROUP_BY_KEYWORD_PATTERN = Pattern.compile( "\\bgroup\\s+by\\b", CASE_INSENSITIVE );
+	private static final Pattern ORDER_BY_KEYWORD_PATTERN = Pattern.compile( "\\border\\s+by\\b", CASE_INSENSITIVE );
+	private static final Pattern UNION_KEYWORD_PATTERN = Pattern.compile( "\\bunion\\b", CASE_INSENSITIVE );
+
+	private static final Pattern SQL_STATEMENT_TYPE_PATTERN =
+			Pattern.compile( "^(?:/\\*.*?\\*/)?\\s*(select|insert|update|delete)\\s+.*?", CASE_INSENSITIVE );
+
 	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
 
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
 	private static final String yqmSelect =
-			"( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') + ( LEAST( EXTRACT( DAY FROM %2$s ), EXTRACT( DAY FROM LAST_DAY( TRUNC(%2$s, 'MONTH') + NUMTOYMINTERVAL(%1$s, 'MONTH') ) ) ) - 1 ) )";
+			"(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH') + (least(extract(day from %2$s), extract(day from last_day(trunc(%2$s, 'MONTH') + numtoyminterval(%1$s, 'MONTH')))) - 1))";
 
 	private static final String ADD_YEAR_EXPRESSION = String.format( yqmSelect, "?2*12", "?3" );
 	private static final String ADD_QUARTER_EXPRESSION = String.format( yqmSelect, "?2*3", "?3" );
@@ -220,6 +228,7 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.addMonths();
 		functionFactory.monthsBetween();
 		functionFactory.everyAny_minMaxCase();
+		functionFactory.repeat_rpad();
 
 		functionFactory.radians_acos();
 		functionFactory.degrees_acos();
@@ -273,6 +282,9 @@ public class OracleLegacyDialect extends Dialect {
 				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+
+		functionFactory.array_oracle();
+		functionFactory.arrayAggregate_jsonArrayagg();
 	}
 
 	@Override
@@ -625,6 +637,10 @@ public class OracleLegacyDialect extends Dialect {
 			case REAL:
 				// Oracle's 'real' type is actually double precision
 				return "float(24)";
+			case DOUBLE:
+				// Oracle's 'double precision' means float(126), and
+				// we never need 126 bits (38 decimal digits)
+				return "float(53)";
 
 			case NUMERIC:
 			case DECIMAL:
@@ -670,6 +686,9 @@ public class OracleLegacyDialect extends Dialect {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "blob", this ) );
 			}
 		}
+
+		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );
+		ddlTypeRegistry.addDescriptor( TABLE, new ArrayDdlTypeImpl( this, false ) );
 	}
 
 	@Override
@@ -736,13 +755,20 @@ public class OracleLegacyDialect extends Dialect {
 				}
 				break;
 			case Types.NUMERIC:
-				if ( scale == -127 ) {
-					// For some reason, the Oracle JDBC driver reports FLOAT
-					// as NUMERIC with scale -127
-					if ( precision <= getFloatPrecision() ) {
-						return jdbcTypeRegistry.getDescriptor( Types.FLOAT );
+				if ( precision > 8 // precision of 0 means something funny
+						// For some reason, the Oracle JDBC driver reports
+						// FLOAT or DOUBLE as NUMERIC with scale -127
+						// (but note that expressions with unknown type
+						//  also get reported this way, so take care)
+						&& scale == -127 ) {
+					if ( precision <= 24 ) {
+						// Can be represented as a Java float
+						return jdbcTypeRegistry.getDescriptor( FLOAT );
 					}
-					return jdbcTypeRegistry.getDescriptor( Types.DOUBLE );
+					else if ( precision <= 53 ) {
+						// Can be represented as a Java double
+						return jdbcTypeRegistry.getDescriptor( DOUBLE );
+					}
 				}
 				//intentional fall-through:
 			case Types.DECIMAL:
@@ -825,6 +851,7 @@ public class OracleLegacyDialect extends Dialect {
 
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
 			typeContributions.contributeJdbcTypeConstructor( OracleJdbcHelper.getArrayJdbcTypeConstructor( serviceRegistry ) );
+			typeContributions.contributeJdbcTypeConstructor( OracleJdbcHelper.getNestedTableJdbcTypeConstructor( serviceRegistry ) );
 		}
 		else {
 			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );

@@ -6,6 +6,8 @@
  */
 package org.hibernate.event.jfr;
 
+import org.hibernate.internal.build.AllowNonPortable;
+
 import jdk.jfr.Category;
 import jdk.jfr.Description;
 import jdk.jfr.Event;
@@ -21,6 +23,7 @@ import jdk.jfr.StackTrace;
 @Category("Hibernate ORM")
 @Description("Hibernate Session opened")
 @StackTrace(false)
+@AllowNonPortable
 public class SessionOpenEvent extends Event {
 	public static final String NAME = "org.hibernate.orm.SessionOpened";
 

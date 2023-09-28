@@ -1,0 +1,27 @@
+<build>
+    <plugins>
+        [...]
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>...</version>
+            <configuration>
+                <annotationProcessorPaths>
+                    <path>
+                        <groupId>org.hibernate.orm</groupId>
+                        <artifactId>hibernate-jpamodelgen</artifactId>
+                        <version>$currentHibernateVersion</version>
+                        <!-- Optionally exclude transitive dependencies -->
+                        <exclusions>
+                            <exclusion>
+                                <groupId>org.sample</groupId>
+                                <artifactId>sample-dependency</artifactId>
+                            </exclusion>
+                        </exclusions>
+                    </path>
+                </annotationProcessorPaths>
+            </configuration>
+        </plugin>
+        [...]
+    </plugins>
+</build>

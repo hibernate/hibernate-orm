@@ -15,10 +15,10 @@ static metamodel classes.
 
 See <<criteria>> for discussion of Jakarta Persistence criteria queries.
 
-The Hibernate Static Metamodel Generator is defined by the published `org.hibernate.orm:metamodel-generator`
+The Hibernate Static Metamodel Generator is defined by the published `org.hibernate.orm:hibernate-jpamodelgen`
 artifact.  As it is defined as an
 https://docs.oracle.com/en/java/javase/11/tools/javac.html#GUID-082C33A5-CBCA-471A-845E-E77F79B7B049[annotation processor],
-it is usable anytime `javac` is used.  See the tool-specific discussions (<<tooling-gradle,Gradle>>, <<tooling-maven,Maven>>
+it is usable anytime `javac` is used.  See the tool-specific discussions (<<tooling-gradle-modelgen,Gradle>>, <<tooling-maven-modelgen,Maven>>
 and <<tooling-ant,Ant>>) for details on integrating the generator into those environments.
 
 NOTE:: The fully qualified name of the processor class is `org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor`.

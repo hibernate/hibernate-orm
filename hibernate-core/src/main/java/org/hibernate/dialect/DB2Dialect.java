@@ -37,6 +37,7 @@ import org.hibernate.dialect.sequence.DB2SequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.AlterTableUniqueIndexDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -249,7 +250,8 @@ public class DB2Dialect extends Dialect {
 	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
 		super.initializeFunctionRegistry(functionContributions);
 
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final DdlTypeRegistry ddlTypeRegistry = functionContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 		// AVG by default uses the input type, so we possibly need to cast the argument type, hence a special function
 		functionFactory.avg_castingNonDoubleArguments( this, SqlAstNodeRenderingMode.DEFAULT );
 
@@ -351,14 +353,13 @@ public class DB2Dialect extends Dialect {
 						functionContributions.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.DEFAULT,
 						"||",
-						functionContributions.getTypeConfiguration().getDdlTypeRegistry().getDescriptor( VARCHAR )
+						ddlTypeRegistry.getDescriptor( VARCHAR )
 								.getCastTypeName(
+										Size.nil(),
 										functionContributions.getTypeConfiguration()
 												.getBasicTypeRegistry()
 												.resolve( StandardBasicTypes.STRING ),
-										null,
-										null,
-										null
+										ddlTypeRegistry
 								),
 						true
 				)

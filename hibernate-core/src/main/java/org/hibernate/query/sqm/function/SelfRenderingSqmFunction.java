@@ -136,9 +136,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 
 	@Override
 	public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
-		final ReturnableType<?> resultType = resolveResultType(
-				walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-		);
+		final ReturnableType<?> resultType = resolveResultType( walker );
 
 		List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
 		if ( argumentsValidator != null ) {
@@ -163,11 +161,28 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	}
 
 	protected ReturnableType<?> resolveResultType(TypeConfiguration typeConfiguration) {
+		return resolveResultType( () -> null, typeConfiguration );
+	}
+
+	protected ReturnableType<?> resolveResultType(SqmToSqlAstConverter walker) {
+		if ( resultType == null ) {
+			return resolveResultType(
+					walker::resolveFunctionImpliedReturnType,
+					walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
+			);
+		}
+		return resultType;
+	}
+
+	protected ReturnableType<?> resolveResultType(
+			Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+			TypeConfiguration typeConfiguration) {
 		if ( resultType == null ) {
 			resultType = returnTypeResolver.resolveFunctionReturnType(
-				impliedResultType,
-				getArguments(),
-				typeConfiguration
+					impliedResultType,
+					inferredTypeSupplier,
+					getArguments(),
+					typeConfiguration
 			);
 			setExpressibleType( resultType );
 		}

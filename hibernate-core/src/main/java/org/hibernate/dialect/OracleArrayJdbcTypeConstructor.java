@@ -27,7 +27,7 @@ public class OracleArrayJdbcTypeConstructor implements JdbcTypeConstructor {
 			TypeConfiguration typeConfiguration,
 			Dialect dialect, BasicType<?> elementType,
 			ColumnTypeInformation columnTypeInformation) {
-		String typeName = columnTypeInformation.getTypeName();
+		String typeName = columnTypeInformation == null ? null : columnTypeInformation.getTypeName();
 		if ( typeName == null || typeName.isBlank() ) {
 			typeName = OracleArrayJdbcType.getTypeName( elementType.getJavaTypeDescriptor(), dialect );
 		}
@@ -46,7 +46,10 @@ public class OracleArrayJdbcTypeConstructor implements JdbcTypeConstructor {
 			JdbcType elementType,
 			ColumnTypeInformation columnTypeInformation) {
 		// a bit wrong, since columnTypeInformation.getTypeName() is typically null!
-		return new OracleArrayJdbcType( elementType, columnTypeInformation.getTypeName() );
+		return new OracleArrayJdbcType(
+				elementType,
+				columnTypeInformation == null ? null : columnTypeInformation.getTypeName()
+		);
 	}
 
 	@Override

@@ -444,7 +444,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32VARBINARY ) );
 
 		if ( supportsStandardArrays() ) {
-			ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this ) );
+			ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );
 		}
 		if ( rowId( null ) != null ) {
 			ddlTypeRegistry.addDescriptor( simpleSqlType( ROWID ) );

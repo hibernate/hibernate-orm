@@ -19,6 +19,7 @@ import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.FrameExclusion;
 import org.hibernate.query.sqm.FrameKind;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
@@ -50,6 +51,8 @@ import org.hibernate.sql.model.ast.ColumnValueBinding;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 /**
  * A SQL AST translator for Oracle.
@@ -402,7 +405,8 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			renderComparisonEmulateDecode( lhs, operator, rhs );
 			return;
 		}
-		switch ( lhsExpressionType.getSingleJdbcMapping().getJdbcType().getDdlTypeCode() ) {
+		final JdbcType jdbcType = lhsExpressionType.getSingleJdbcMapping().getJdbcType();
+		switch ( jdbcType.getDdlTypeCode() ) {
 			case SqlTypes.SQLXML:
 				// In Oracle, XMLTYPE is not "comparable", so we have to use the xmldiff function for this purpose
 				switch ( operator ) {
@@ -447,40 +451,57 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 				appendSql( ')' );
 				break;
 			case SqlTypes.ARRAY:
+				final String arrayTypeName = ( (OracleArrayJdbcType) jdbcType ).getTypeName();
 				switch ( operator ) {
 					case DISTINCT_FROM:
-						appendSql( "decode(" );
-						arrayToString( lhs );
-						appendSql( ',' );
-						arrayToString( rhs );
-						appendSql( ",0,1)=1" );
-						break;
 					case NOT_DISTINCT_FROM:
-						appendSql( "decode(" );
-						arrayToString( lhs );
+						appendSql( arrayTypeName );
+						appendSql( "_distinct(" );
+						visitSqlSelectExpression( lhs );
 						appendSql( ',' );
-						arrayToString( rhs );
-						appendSql( ",0,1)=0" );
+						visitSqlSelectExpression( rhs );
+						appendSql( ")" );
 						break;
 					default:
-						arrayToString( lhs );
-						appendSql( operator.sqlText() );
-						arrayToString( rhs );
+						appendSql( arrayTypeName );
+						appendSql( "_cmp(" );
+						visitSqlSelectExpression( lhs );
+						appendSql( ',' );
+						visitSqlSelectExpression( rhs );
+						appendSql( ")" );
+						break;
+				}
+				switch ( operator ) {
+					case DISTINCT_FROM:
+						appendSql( "=1" );
+						break;
+					case NOT_DISTINCT_FROM:
+						appendSql( "=0" );
+						break;
+					case EQUAL:
+						appendSql( "=0" );
+						break;
+					case NOT_EQUAL:
+						appendSql( "<>0" );
+						break;
+					case LESS_THAN:
+						appendSql( "=-1" );
+						break;
+					case GREATER_THAN:
+						appendSql( "=1" );
+						break;
+					case LESS_THAN_OR_EQUAL:
+						appendSql( "<=0" );
+						break;
+					case GREATER_THAN_OR_EQUAL:
+						appendSql( ">=0" );
+						break;
 				}
 				break;
 			default:
 				renderComparisonEmulateDecode( lhs, operator, rhs );
 				break;
 		}
-	}
-
-	private void arrayToString(Expression expression) {
-		appendSql("case when ");
-		expression.accept( this );
-		appendSql(" is not null then (select listagg(column_value||',')");
-		appendSql("||';' from table(");
-		expression.accept( this );
-		appendSql(")) else null end");
 	}
 
 	@Override

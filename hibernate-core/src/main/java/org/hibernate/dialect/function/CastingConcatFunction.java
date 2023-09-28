@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -56,10 +57,9 @@ public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescr
 		this.argumentRenderingMode = argumentRenderingMode;
 		this.concatArgumentCastType = typeConfiguration.getDdlTypeRegistry().getDescriptor( SqlTypes.VARCHAR )
 				.getCastTypeName(
+						Size.nil(),
 						typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.STRING ),
-						null,
-						null,
-						null
+						typeConfiguration.getDdlTypeRegistry()
 				);
 	}
 

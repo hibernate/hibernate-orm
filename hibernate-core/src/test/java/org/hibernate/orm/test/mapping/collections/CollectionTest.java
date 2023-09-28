@@ -8,7 +8,9 @@ package org.hibernate.orm.test.mapping.collections;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
@@ -28,6 +30,14 @@ public class CollectionTest extends BaseEntityManagerFunctionalTestCase {
 		return new Class<?>[] {
 				Person.class
 		};
+	}
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		// Make sure this stuff runs on a dedicated connection pool,
+		// otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		// because the JDBC connection or database session caches something that should have been invalidated
+		options.put( AvailableSettings.CONNECTION_PROVIDER, "" );
 	}
 
 	@Test

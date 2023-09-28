@@ -12,6 +12,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -20,8 +21,10 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,6 +41,10 @@ import static org.hamcrest.Matchers.equalTo;
  */
 @DomainModel(annotatedClasses = BasicCollectionMappingTests.EntityOfCollections.class)
 @SessionFactory( useCollectingStatementInspector = true )
+// Make sure this stuff runs on a dedicated connection pool,
+// otherwise we might run into ORA-21700: object does not exist or is marked for delete
+// because the JDBC connection or database session caches something that should have been invalidated
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = ""))
 public class BasicCollectionMappingTests {
 
 	@Test

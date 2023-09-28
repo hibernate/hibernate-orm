@@ -310,6 +310,9 @@ public class OracleDialect extends Dialect {
 				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+
+		functionFactory.array_oracle();
+		functionFactory.arrayAggregate_jsonArrayagg();
 	}
 
 	@Override
@@ -707,8 +710,8 @@ public class OracleDialect extends Dialect {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "blob", this ) );
 		}
 
-		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this ) );
-		ddlTypeRegistry.addDescriptor( TABLE, new ArrayDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );
+		ddlTypeRegistry.addDescriptor( TABLE, new ArrayDdlTypeImpl( this, false ) );
 	}
 
 	@Override

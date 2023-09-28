@@ -187,6 +187,8 @@ public class HSQLDialect extends Dialect {
 		// from v. 2.2.0 ROWNUM() is supported in all modes as the equivalent of Oracle ROWNUM
 		functionFactory.rownum();
 		functionFactory.listagg_groupConcat();
+		functionFactory.array();
+		functionFactory.arrayAggregate();
 	}
 
 	@Override

@@ -310,6 +310,8 @@ public class H2Dialect extends Dialect {
 		functionFactory.listagg( null );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates();
+		functionFactory.array();
+		functionFactory.arrayAggregate();
 	}
 
 	@Override

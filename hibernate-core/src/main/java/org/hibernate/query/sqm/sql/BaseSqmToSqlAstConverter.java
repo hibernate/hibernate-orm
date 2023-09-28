@@ -283,6 +283,7 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
+import org.hibernate.sql.ast.tree.cte.CteObject;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.CteTable;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
@@ -8480,10 +8481,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private static class CteContainerImpl implements CteContainer {
 		private final CteContainer parent;
 		private final Map<String, CteStatement> cteStatements;
+		private final Map<String, CteObject> cteObjects;
 
 		public CteContainerImpl(CteContainer parent) {
 			this.parent = parent;
 			this.cteStatements = new LinkedHashMap<>();
+			this.cteObjects = new LinkedHashMap<>();
 		}
 
 		@Override
@@ -8502,7 +8505,30 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		@Override
 		public void addCteStatement(CteStatement cteStatement) {
-			cteStatements.put( cteStatement.getCteTable().getTableExpression(), cteStatement );
+			if ( cteStatements.putIfAbsent( cteStatement.getCteTable().getTableExpression(), cteStatement ) != null ) {
+				throw new IllegalArgumentException( "A CTE with the label " + cteStatement.getCteTable().getTableExpression() + " already exists" );
+			}
+		}
+
+		@Override
+		public Map<String, CteObject> getCteObjects() {
+			return cteObjects;
+		}
+
+		@Override
+		public CteObject getCteObject(String cteObjectName) {
+			final CteObject cteObject = cteObjects.get( cteObjectName );
+			if ( cteObject == null && parent != null ) {
+				return parent.getCteObject( cteObjectName );
+			}
+			return cteObject;
+		}
+
+		@Override
+		public void addCteObject(CteObject cteObject) {
+			if ( cteObjects.putIfAbsent( cteObject.getName(), cteObject ) != null ) {
+				throw new IllegalArgumentException( "A CTE object with the name " + cteObject.getName() + " already exists" );
+			}
 		}
 	}
 

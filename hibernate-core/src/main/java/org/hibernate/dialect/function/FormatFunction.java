@@ -197,9 +197,7 @@ public class FormatFunction extends AbstractSqmFunctionDescriptor implements Fun
 		@Override
 		public Expression convertToSqlAst(SqmToSqlAstConverter walker) {
 			final List<SqlAstNode> arguments = resolveSqlAstArguments( getArguments(), walker );
-			final ReturnableType<?> resultType = resolveResultType(
-					walker.getCreationContext().getMappingMetamodel().getTypeConfiguration()
-			);
+			final ReturnableType<?> resultType = resolveResultType( walker );
 			final MappingModelExpressible<?> mappingModelExpressible = resultType == null ? null : getMappingModelExpressible(
 					walker,
 					resultType,

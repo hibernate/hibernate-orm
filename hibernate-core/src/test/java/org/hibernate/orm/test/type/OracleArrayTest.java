@@ -6,14 +6,18 @@
  */
 package org.hibernate.orm.test.type;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Configuration;
 import org.hibernate.dialect.OracleDialect;
+
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.junit.Assert;
 import org.junit.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 
@@ -21,6 +25,13 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
 @TestForIssue( jiraKey = "HHH-10999")
 public class OracleArrayTest extends BaseCoreFunctionalTestCase {
 
+	@Override
+	protected void configure(Configuration configuration) {
+		// Make sure this stuff runs on a dedicated connection pool,
+		// otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		// because the JDBC connection or database session caches something that should have been invalidated
+		configuration.setProperty( AvailableSettings.CONNECTION_PROVIDER, "" );
+	}
 
 	@Test
 	public void test() {

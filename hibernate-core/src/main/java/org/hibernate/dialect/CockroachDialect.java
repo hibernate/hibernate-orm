@@ -448,6 +448,8 @@ public class CockroachDialect extends Dialect {
 		functionFactory.listagg_stringAgg( "string" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+		functionFactory.array_casting();
+		functionFactory.arrayAggregate();
 
 		functionContributions.getFunctionRegistry().register(
 				"trunc",

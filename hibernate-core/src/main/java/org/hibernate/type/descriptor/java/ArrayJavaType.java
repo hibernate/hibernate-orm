@@ -82,7 +82,7 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 		}
 		final BasicValueConverter<T, ?> valueConverter = elementType.getValueConverter();
 		return valueConverter == null
-				? createType( typeConfiguration, dialect, arrayJavaType, elementType, columnTypeInformation, stdIndicators )
+				? resolveType( typeConfiguration, dialect, arrayJavaType, elementType, columnTypeInformation, stdIndicators )
 				: createTypeUsingConverter( typeConfiguration, dialect, elementType, columnTypeInformation, stdIndicators, valueConverter );
 	}
 

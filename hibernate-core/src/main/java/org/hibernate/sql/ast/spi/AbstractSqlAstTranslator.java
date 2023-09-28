@@ -32,6 +32,7 @@ import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.AbstractDelegatingWrapperOptions;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -95,10 +96,12 @@ import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteColumn;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
+import org.hibernate.sql.ast.tree.cte.CteObject;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
 import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
 import org.hibernate.sql.ast.tree.cte.SearchClauseSpecification;
+import org.hibernate.sql.ast.tree.cte.SelfRenderingCteObject;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.AggregateColumnWriteExpression;
 import org.hibernate.sql.ast.tree.expression.Any;
@@ -1596,11 +1599,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			cteStatements = originalCteStatements;
 		}
-		if ( cteStatements.isEmpty() ) {
+		final Collection<CteObject> cteObjects = cteContainer.getCteObjects().values();
+		if ( cteStatements.isEmpty() && cteObjects.isEmpty() ) {
 			return;
 		}
 		if ( !supportsWithClause() ) {
-			if ( isRecursive( cteStatements ) ) {
+			if ( isRecursive( cteStatements ) && cteObjects.isEmpty() ) {
 				throw new UnsupportedOperationException( "Can't emulate recursive CTEs!" );
 			}
 			// This should be unreachable, because #needsCteInlining() must return true if #supportsWithClause() returns false,
@@ -1642,6 +1646,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		String mainSeparator = "";
 		if ( isTopLevel ) {
 			topLevelWithClauseIndex = sqlBuffer.length();
+			for ( CteObject cte : cteObjects ) {
+				visitCteObject( cte );
+				topLevelWithClauseIndex = sqlBuffer.length();
+			}
 			for ( CteStatement cte : cteStatements ) {
 				appendSql( mainSeparator );
 				visitCteStatement( cte );
@@ -1688,6 +1696,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				// This is the case when there is an existing CTE, so we need a comma for the CTE that are about to render
 				mainSeparator = COMMA_SEPARATOR;
 			}
+			for ( CteObject cte : cteObjects ) {
+				visitCteObject( cte );
+				topLevelWithClauseIndex = sqlBuffer.length();
+			}
 			for ( CteStatement cte : cteStatements ) {
 				appendSql( mainSeparator );
 				visitCteStatement( cte );
@@ -1702,6 +1714,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			sqlBuffer.append( temporaryRest );
 		}
 		else {
+			for ( CteObject cte : cteObjects ) {
+				visitCteObject( cte );
+			}
 			for ( CteStatement cte : cteStatements ) {
 				appendSql( mainSeparator );
 				visitCteStatement( cte );
@@ -1737,6 +1752,15 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		renderSearchClause( cte );
 		renderCycleClause( cte );
+	}
+
+	protected void visitCteObject(CteObject cteObject) {
+		if ( cteObject instanceof SelfRenderingCteObject ) {
+			( (SelfRenderingCteObject) cteObject ).render( this, this, sessionFactory );
+		}
+		else {
+			throw new IllegalArgumentException( "Can't render CTE object " + cteObject.getName() + ": " + cteObject );
+		}
 	}
 
 	private boolean isRecursive(Collection<CteStatement> cteStatements) {
@@ -5763,7 +5787,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				queryParts.add( statement.getQueryPart() );
 				return new ExistsPredicate(
 						new SelectStatement(
-								statement.getCteStatements(),
+								statement,
 								new QueryGroup( false, SetOperator.INTERSECT, queryParts ),
 								Collections.emptyList()
 						),
@@ -5817,7 +5841,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 				return new ExistsPredicate(
 					new SelectStatement(
-							statement.getCteStatements(),
+							statement,
 							existsQuery,
 							Collections.emptyList()
 					),
@@ -5868,7 +5892,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 			final ExistsPredicate existsPredicate = new ExistsPredicate(
 					new SelectStatement(
-							statement.getCteStatements(),
+							statement,
 							existsQuery,
 							Collections.emptyList()
 					),
@@ -5995,7 +6019,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							existsPredicate,
 							new BetweenPredicate(
 									new SelectStatement(
-											statement.getCteStatements(),
+											statement,
 											countQuery,
 											Collections.emptyList()
 									),
@@ -6067,7 +6091,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private SelectStatement stripToSelectClause(SelectStatement statement) {
 		return new SelectStatement(
-				statement.getCteStatements(),
+				statement,
 				stripToSelectClause( statement.getQueryPart() ),
 				Collections.emptyList()
 		);
@@ -6247,18 +6271,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			return castTarget.getSqlType();
 		}
 		else {
+			final Size castTargetSize = castTarget.toSize();
+			final DdlTypeRegistry ddlTypeRegistry = factory.getTypeConfiguration().getDdlTypeRegistry();
 			final SqlExpressible expressionType = (SqlExpressible) castTarget.getExpressionType();
 			if ( expressionType instanceof BasicPluralType<?, ?> ) {
 				final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) expressionType;
 				final BasicPluralJavaType<?> javaTypeDescriptor = (BasicPluralJavaType<?>) containerType.getJavaTypeDescriptor();
 				final BasicType<?> elementType = containerType.getElementType();
-				final String elementTypeName = factory.getTypeConfiguration().getDdlTypeRegistry()
-						.getDescriptor( elementType.getJdbcType().getDdlTypeCode() )
+				final String elementTypeName = ddlTypeRegistry.getDescriptor( elementType.getJdbcType().getDdlTypeCode() )
 						.getCastTypeName(
+								castTargetSize,
 								elementType,
-								castTarget.getLength(),
-								castTarget.getPrecision(),
-								castTarget.getScale()
+								ddlTypeRegistry
 						);
 				final String arrayTypeName = factory.getJdbcServices().getDialect().getArrayTypeName(
 						javaTypeDescriptor.getElementJavaType().getJavaTypeClass().getSimpleName(),
@@ -6269,7 +6293,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					return arrayTypeName;
 				}
 			}
-			final DdlTypeRegistry ddlTypeRegistry = factory.getTypeConfiguration().getDdlTypeRegistry();
 			DdlType ddlType = ddlTypeRegistry
 					.getDescriptor( expressionType.getJdbcMapping().getJdbcType().getDdlTypeCode() );
 			if ( ddlType == null ) {
@@ -6279,10 +6302,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 
 			return ddlType.getCastTypeName(
+					castTargetSize,
 					expressionType,
-					castTarget.getLength(),
-					castTarget.getPrecision(),
-					castTarget.getScale()
+					ddlTypeRegistry
 			);
 		}
 	}

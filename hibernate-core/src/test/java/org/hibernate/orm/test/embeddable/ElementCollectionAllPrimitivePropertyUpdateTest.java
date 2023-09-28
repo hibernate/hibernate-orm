@@ -21,12 +21,12 @@ import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
 @DomainModel(
 		annotatedClasses = {
-				ElementCollectionOptionalPropertyUpdateTest.MyEntity.class
+				ElementCollectionAllPrimitivePropertyUpdateTest.MyEntity.class
 		}
 )
 @SessionFactory
 @JiraKey( "HHH-17257" )
-public class ElementCollectionOptionalPropertyUpdateTest {
+public class ElementCollectionAllPrimitivePropertyUpdateTest {
 
 	private static final Long ENTITY_ID = 1l;
 
@@ -35,8 +35,8 @@ public class ElementCollectionOptionalPropertyUpdateTest {
 		scope.inTransaction(
 				session -> {
 					MyEntity myEntity = new MyEntity( ENTITY_ID, Set.of(
-							new MyEmbeddable( "1", false ),
-							new MyEmbeddable( "2", false )
+							new MyEmbeddable( 1, false ),
+							new MyEmbeddable( 2, false )
 					) );
 					session.persist( myEntity );
 
@@ -53,7 +53,7 @@ public class ElementCollectionOptionalPropertyUpdateTest {
 					Set<MyEmbeddable> elementCollection = myEntity.getElementCollection();
 					assertThat( elementCollection ).hasSize( 2 );
 
-					elementCollection.stream().filter( it -> it.getStringField().equals( "1" ) ).forEach(
+					elementCollection.stream().filter( it -> it.getIntField() == 1 ).forEach(
 							it -> it.setBooleanField( true ) );
 				}
 		);
@@ -103,32 +103,34 @@ public class ElementCollectionOptionalPropertyUpdateTest {
 	@Embeddable
 	public static class MyEmbeddable {
 		@Column
-		private String stringField;
+		// the field is considered non-optional because of its primitive type
+		private int intField;
 
 		@Column
-		private Boolean booleanField;
+		// the field is considered non-optional because of its primitive type
+		private boolean booleanField;
 
 		public MyEmbeddable() {
 		}
 
-		public MyEmbeddable(String stringField, boolean booleanField) {
-			this.stringField = stringField;
+		public MyEmbeddable(int intField, boolean booleanField) {
+			this.intField = intField;
 			this.booleanField = booleanField;
 		}
 
-		public String getStringField() {
-			return stringField;
+		public int getIntField() {
+			return intField;
 		}
 
-		public void setStringField(String stringField) {
-			this.stringField = stringField;
+		public void setIntField(int intField) {
+			this.intField = intField;
 		}
 
-		public Boolean isBooleanField() {
+		public boolean isBooleanField() {
 			return booleanField;
 		}
 
-		public void setBooleanField(Boolean booleanField) {
+		public void setBooleanField(boolean booleanField) {
 			this.booleanField = booleanField;
 		}
 
@@ -141,12 +143,12 @@ public class ElementCollectionOptionalPropertyUpdateTest {
 				return false;
 			}
 			MyEmbeddable that = (MyEmbeddable) o;
-			return booleanField == that.booleanField && Objects.equals( stringField, that.stringField );
+			return booleanField == that.booleanField && Objects.equals( intField, that.intField );
 		}
 
 		@Override
 		public int hashCode() {
-			return Objects.hash( stringField, booleanField );
+			return Objects.hash( intField, booleanField );
 		}
 	}
 

@@ -42,6 +42,7 @@ import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.CHAR;
 import static org.hibernate.type.SqlTypes.CLOB;
 import static org.hibernate.type.SqlTypes.LONG32NVARCHAR;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
 import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NCLOB;
@@ -113,7 +114,15 @@ public class MimerSQLDialect extends Dialect {
 
 		//Mimer CHARs are ASCII!!
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( VARCHAR, columnType( LONG32VARCHAR ), "nvarchar(" + getMaxNVarcharLength() + ")", this )
+				CapacityDependentDdlType.builder(
+								VARCHAR,
+								isLob( LONG32VARCHAR ) ?
+										CapacityDependentDdlType.LobKind.BIGGEST_LOB :
+										CapacityDependentDdlType.LobKind.NONE,
+								columnType( LONG32VARCHAR ),
+								"nvarchar(" + getMaxNVarcharLength() + ")",
+								this
+						)
 						.withTypeCapacity( getMaxNVarcharLength(), columnType( VARCHAR ) )
 						.build()
 		);

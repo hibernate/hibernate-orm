@@ -299,7 +299,7 @@ public abstract class AbstractHANADialect extends Dialect {
 
 		// varbinary max length 5000
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BINARY, "blob", this )
+				CapacityDependentDdlType.builder( BINARY, CapacityDependentDdlType.LobKind.BIGGEST_LOB, "blob", this )
 						.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
 						.build()
 		);

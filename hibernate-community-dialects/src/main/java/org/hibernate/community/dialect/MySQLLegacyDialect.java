@@ -300,8 +300,14 @@ public class MySQLLegacyDialect extends Dialect {
 		final int maxMediumLobLen = 16_777_215;
 
 		final CapacityDependentDdlType.Builder varcharBuilder =
-				CapacityDependentDdlType.builder( VARCHAR,
-								columnType( CLOB ), columnType( CHAR ), castType( CHAR ), this )
+				CapacityDependentDdlType.builder(
+								VARCHAR,
+								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
+								columnType( CLOB ),
+								columnType( CHAR ),
+								castType( CHAR ),
+								this
+						)
 						.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
 						.withTypeCapacity( maxMediumLobLen, "mediumtext" );
 		if ( getMaxVarcharLength() < maxLobLen ) {
@@ -310,8 +316,14 @@ public class MySQLLegacyDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( varcharBuilder.build() );
 
 		final CapacityDependentDdlType.Builder nvarcharBuilder =
-				CapacityDependentDdlType.builder( NVARCHAR,
-								columnType( NCLOB ), columnType( NCHAR ), castType( NCHAR ), this )
+				CapacityDependentDdlType.builder(
+								NVARCHAR,
+								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
+								columnType( NCLOB ),
+								columnType( NCHAR ),
+								castType( NCHAR ),
+								this
+						)
 						.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
 						.withTypeCapacity( maxMediumLobLen, "mediumtext" );
 		if ( getMaxVarcharLength() < maxLobLen ) {
@@ -320,8 +332,14 @@ public class MySQLLegacyDialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
 
 		final CapacityDependentDdlType.Builder varbinaryBuilder =
-				CapacityDependentDdlType.builder( VARBINARY,
-								columnType( BLOB ), columnType( BINARY ), castType( BINARY ), this )
+				CapacityDependentDdlType.builder(
+								VARBINARY,
+								CapacityDependentDdlType.LobKind.BIGGEST_LOB,
+								columnType( BLOB ),
+								columnType( BINARY ),
+								castType( BINARY ),
+								this
+						)
 						.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
 						.withTypeCapacity( maxMediumLobLen, "mediumblob" );
 		if ( getMaxVarbinaryLength() < maxLobLen ) {

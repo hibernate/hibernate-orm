@@ -64,7 +64,7 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
-	public void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
+	public void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping, boolean isLob) {
 		// nothing to do
 	}
 

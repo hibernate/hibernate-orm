@@ -23,6 +23,7 @@ import org.hibernate.type.descriptor.sql.DdlType;
 public class DdlTypeImpl implements DdlType {
 
 	private final int sqlTypeCode;
+	private final boolean isLob;
 	private final String typeNamePattern;
 	private final String castTypeNamePattern;
 	private final String castTypeName;
@@ -43,11 +44,31 @@ public class DdlTypeImpl implements DdlType {
 
 	public DdlTypeImpl(
 			int sqlTypeCode,
+			boolean isLob,
+			String typeNamePattern,
+			String castTypeName,
+			Dialect dialect) {
+		this( sqlTypeCode, isLob, typeNamePattern, null, castTypeName, dialect );
+	}
+
+	public DdlTypeImpl(
+			int sqlTypeCode,
+			String typeNamePattern,
+			String castTypeNamePattern, //optional, usually null
+			String castTypeName,
+			Dialect dialect) {
+		this( sqlTypeCode, JdbcType.isLob( sqlTypeCode ), typeNamePattern, castTypeNamePattern, castTypeName, dialect );
+	}
+
+	public DdlTypeImpl(
+			int sqlTypeCode,
+			boolean isLob,
 			String typeNamePattern,
 			String castTypeNamePattern, //optional, usually null
 			String castTypeName,
 			Dialect dialect) {
 		this.sqlTypeCode = sqlTypeCode;
+		this.isLob = isLob;
 		this.typeNamePattern = typeNamePattern;
 		this.castTypeNamePattern = castTypeNamePattern;
 		this.castTypeName = castTypeName;
@@ -74,6 +95,11 @@ public class DdlTypeImpl implements DdlType {
 					: typeNamePattern.substring( 0, paren ) + typeNamePattern.substring( parenEnd + 1 );
 		}
 		return typeNamePattern;
+	}
+
+	@Override
+	public boolean isLob(Size size) {
+		return isLob;
 	}
 
 	@Override

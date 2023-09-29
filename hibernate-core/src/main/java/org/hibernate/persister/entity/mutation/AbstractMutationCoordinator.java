@@ -129,7 +129,8 @@ public abstract class AbstractMutationCoordinator {
 			tableUpdateBuilder.addValueColumn(
 					mapping.getSelectionExpression(),
 					writePropertyValue ? "?" : columnValues[j],
-					mapping.getJdbcMapping()
+					mapping.getJdbcMapping(),
+					mapping.isLob()
 			);
 		} );
 	}

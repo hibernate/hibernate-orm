@@ -31,6 +31,8 @@ import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.JdbcTypeNameMapper;
+import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -58,6 +60,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private boolean unique;
 	private String sqlTypeName;
 	private Integer sqlTypeCode;
+	private boolean sqlTypeLob;
 	private boolean quoted;
 	int uniqueInteger;
 	private String comment;
@@ -270,11 +273,34 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	private String getSqlTypeName(DdlTypeRegistry ddlTypeRegistry, Dialect dialect, Mapping mapping) {
 		if ( sqlTypeName == null ) {
+			final Type type = getValue().getType();
 			try {
-				final Type type = getValue().getType();
-				sqlTypeName = isArray( type )
-						? dialect.getArrayTypeName( getArrayElementTypeName( dialect, ddlTypeRegistry, getArrayElementType( type ) ) )
-						: ddlTypeRegistry.getTypeName( getSqlTypeCode( mapping ), getColumnSize( dialect, mapping ) );
+				if ( isArray( type ) ) {
+					sqlTypeName = dialect.getArrayTypeName( getArrayElementTypeName( dialect, ddlTypeRegistry, getArrayElementType( type ) ) );
+					sqlTypeLob = false;
+				}
+				else {
+					final int typeCode = getSqlTypeCode( mapping );
+					final DdlType descriptor = ddlTypeRegistry.getDescriptor( typeCode );
+					if ( descriptor == null ) {
+						throw new MappingException(
+								String.format(
+										Locale.ROOT,
+										"Unable to determine SQL type name for column '%s' of table '%s' because there is no type mapping for org.hibernate.type.SqlTypes code: %s (%s)",
+										getName(),
+										getValue().getTable().getName(),
+										typeCode,
+										JdbcTypeNameMapper.getTypeName( typeCode )
+								)
+						);
+					}
+					final Size size = getColumnSize( dialect, mapping );
+					sqlTypeName = ddlTypeRegistry.getTypeName( typeCode, size );
+					sqlTypeLob = descriptor.isLob( size );
+				}
+			}
+			catch ( MappingException cause ) {
+				throw cause;
 			}
 			catch ( Exception cause ) {
 				throw new MappingException(
@@ -465,6 +491,10 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			throw new AssertionFailure( "conflicting type names" );
 		}
 		sqlTypeName = typeName;
+	}
+
+	public boolean isSqlTypeLob() {
+		return sqlTypeLob;
 	}
 
 	public void setUnique(boolean unique) {

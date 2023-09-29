@@ -732,6 +732,7 @@ def renderDialectReportTask = tasks.register( 'renderDialectReport', Asciidoctor
 	task.group = "hibernate-reports"
 	task.description = 'Renders the supported Dialect report in HTML format using Asciidoctor.'
 	task.dependsOn "generateDialectReport"
+	task.dependsOn "generateDialectTableReport"
 
 	task.inputs.property "version", project.ormVersion
 

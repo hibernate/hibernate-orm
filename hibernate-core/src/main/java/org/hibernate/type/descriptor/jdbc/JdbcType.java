@@ -238,6 +238,24 @@ public interface JdbcType extends Serializable {
 		return false;
 	}
 
+	default boolean isLobOrLong() {
+		return isLobOrLong( getDdlTypeCode() );
+	}
+
+	static boolean isLobOrLong(int jdbcTypeCode) {
+		switch ( jdbcTypeCode ) {
+			case BLOB:
+			case CLOB:
+			case NCLOB:
+			case LONG32VARBINARY:
+			case LONG32VARCHAR:
+			case LONG32NVARCHAR: {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	default boolean isNationalized() {
 		return isNationalized( getDdlTypeCode() );
 	}

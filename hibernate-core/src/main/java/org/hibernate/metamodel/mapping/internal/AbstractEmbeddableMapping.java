@@ -283,14 +283,16 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final Long length;
 				final Integer precision;
 				final Integer scale;
+				final boolean isLob;
 				final boolean nullable;
 				if ( selectable instanceof Column ) {
 					final Column column = (Column) selectable;
-					columnDefinition = column.getSqlType();
+					columnDefinition = column.getSqlType( creationProcess.getCreationContext().getMetadata() );
 					length = column.getLength();
 					precision = column.getPrecision();
 					scale = column.getScale();
 					nullable = column.isNullable();
+					isLob = column.isSqlTypeLob();
 					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
 				}
 				else {
@@ -299,6 +301,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 					precision = null;
 					scale = null;
 					nullable = true;
+					isLob = false;
 					selectablePath = basicValue.createSelectablePath( bootPropertyDescriptor.getName() );
 				}
 
@@ -320,6 +323,7 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 						length,
 						precision,
 						scale,
+						isLob,
 						nullable,
 						value.isColumnInsertable( 0 ),
 						value.isColumnUpdateable( 0 ),

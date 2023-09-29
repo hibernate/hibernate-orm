@@ -311,7 +311,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 		final CapacityDependentDdlType.Builder varcharBuilder = CapacityDependentDdlType.builder(
 						VARCHAR,
-						columnType( CLOB ),
+						CapacityDependentDdlType.LobKind.BIGGEST_LOB,columnType( CLOB ),
 						"char",
 						this
 				)
@@ -324,7 +324,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 		final CapacityDependentDdlType.Builder nvarcharBuilder = CapacityDependentDdlType.builder(
 						NVARCHAR,
-						columnType( NCLOB ),
+						CapacityDependentDdlType.LobKind.BIGGEST_LOB,columnType( NCLOB ),
 						"char",
 						this
 				)
@@ -337,7 +337,7 @@ public class MySQLLegacyDialect extends Dialect {
 
 		final CapacityDependentDdlType.Builder varbinaryBuilder = CapacityDependentDdlType.builder(
 						VARBINARY,
-						columnType( BLOB ),
+						CapacityDependentDdlType.LobKind.BIGGEST_LOB,columnType( BLOB ),
 						"binary",
 						this
 				)

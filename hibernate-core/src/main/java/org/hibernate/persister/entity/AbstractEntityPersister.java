@@ -5202,7 +5202,7 @@ public abstract class AbstractEntityPersister
 					scale = null;
 				}
 				else {
-					columnDefinition = column.getSqlType();
+					columnDefinition = column.getSqlType( modelCreationProcess.getCreationContext().getMetadata() );
 					length = column.getLength();
 					precision = column.getPrecision();
 					scale = column.getScale();
@@ -5379,7 +5379,7 @@ public abstract class AbstractEntityPersister
 		}
 		else {
 			Column column = bootEntityDescriptor.getIdentifier().getColumns().get( 0 );
-			columnDefinition = column.getSqlType();
+			columnDefinition = column.getSqlType( creationProcess.getCreationContext().getMetadata() );
 			length = column.getLength();
 			precision = column.getPrecision();
 			scale = column.getScale();
@@ -5438,7 +5438,7 @@ public abstract class AbstractEntityPersister
 				bootModelRootEntityDescriptor.getVersion().getName(),
 				entityPersister.getTableName(),
 				column.getText( dialect ),
-				column.getSqlType(),
+				column.getSqlType( creationProcess.getCreationContext().getMetadata() ),
 				column.getLength(),
 				column.getPrecision(),
 				column.getScale(),
@@ -5483,10 +5483,11 @@ public abstract class AbstractEntityPersister
 					false,
 					null,
 					"?",
-					column.getSqlType(),
+					column.getSqlType( creationProcess.getCreationContext().getMetadata() ),
 					column.getLength(),
 					column.getPrecision(),
 					column.getScale(),
+					column.isSqlTypeLob(),
 					column.isNullable(),
 					value.isColumnInsertable( 0 ),
 					value.isColumnUpdateable( 0 ),
@@ -5505,6 +5506,7 @@ public abstract class AbstractEntityPersister
 			final Long length;
 			final Integer precision;
 			final Integer scale;
+			final boolean isLob;
 			final boolean nullable;
 
 			if ( value instanceof DependantValue ) {
@@ -5513,10 +5515,11 @@ public abstract class AbstractEntityPersister
 				customReadExpr = null;
 				customWriteExpr = "?";
 				Column column = value.getColumns().get( 0 );
-				columnDefinition = column.getSqlType();
+				columnDefinition = column.getSqlType( creationProcess.getCreationContext().getMetadata() );
 				length = column.getLength();
 				precision = column.getPrecision();
 				scale = column.getScale();
+				isLob = column.isSqlTypeLob();
 				nullable = column.isNullable();
 			}
 			else {
@@ -5539,11 +5542,12 @@ public abstract class AbstractEntityPersister
 					);
 					customWriteExpr = selectable.getWriteExpr( (JdbcMapping) attrType, creationContext.getDialect() );
 					Column column = value.getColumns().get( 0 );
-					columnDefinition = column.getSqlType();
+					columnDefinition = column.getSqlType( creationContext.getMetadata() );
 					length = column.getLength();
 					precision = column.getPrecision();
 					scale = column.getScale();
 					nullable = column.isNullable();
+					isLob = column.isSqlTypeLob();
 				}
 				else {
 					final String[] attrColumnFormulaTemplate = propertyColumnFormulaTemplates[ propertyIndex ];
@@ -5556,6 +5560,7 @@ public abstract class AbstractEntityPersister
 					precision = null;
 					scale = null;
 					nullable = true;
+					isLob = false;
 				}
 			}
 
@@ -5577,6 +5582,7 @@ public abstract class AbstractEntityPersister
 					length,
 					precision,
 					scale,
+					isLob,
 					nullable,
 					value.isColumnInsertable( 0 ),
 					value.isColumnUpdateable( 0 ),

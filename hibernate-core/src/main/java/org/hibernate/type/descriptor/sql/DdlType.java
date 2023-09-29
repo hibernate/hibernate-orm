@@ -89,6 +89,11 @@ public interface DdlType extends Serializable {
 	@Deprecated(since = "6.3")
 	String getTypeName(Long size, Integer precision, Integer scale);
 
+	default boolean isLob(Size size) {
+		// Let's be defensive and assume that LONG32 are LOBs as well
+		return JdbcType.isLobOrLong( getSqlTypeCode() );
+	}
+
 	/**
 	 * Return the database type corresponding to the given {@link JdbcType}
 	 * that may be used as a target type in casting operations using the SQL

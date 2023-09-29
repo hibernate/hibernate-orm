@@ -555,7 +555,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				updateBuilder.addValueColumn(
 						selectable.getSelectionExpression(),
 						NULL,
-						selectable.getJdbcMapping()
+						selectable.getJdbcMapping(),
+						selectable.isLob()
 				);
 			}
 
@@ -578,7 +579,8 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 				updateBuilder.addValueColumn(
 						selectable.getSelectionExpression(),
 						NULL,
-						selectable.getJdbcMapping()
+						selectable.getJdbcMapping(),
+						selectable.isLob()
 				);
 			}
 		}

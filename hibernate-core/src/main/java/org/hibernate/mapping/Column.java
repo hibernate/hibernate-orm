@@ -28,6 +28,8 @@ import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.JdbcTypeNameMapper;
+import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -56,6 +58,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private boolean unique;
 	private String sqlTypeName;
 	private Integer sqlTypeCode;
+	private boolean sqlTypeLob;
 	private boolean quoted;
 	private boolean explicit;
 	int uniqueInteger;
@@ -284,12 +287,28 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	private String getSqlTypeName(DdlTypeRegistry ddlTypeRegistry, Dialect dialect, Mapping mapping) {
 		if ( sqlTypeName == null ) {
-			try {
-				sqlTypeName = ddlTypeRegistry.getTypeName(
-						getSqlTypeCode( mapping ),
-						getColumnSize( dialect, mapping ),
-						getUnderlyingType( mapping, getValue().getType(), typeIndex )
+			final int typeCode = getSqlTypeCode( mapping );
+			final DdlType descriptor = ddlTypeRegistry.getDescriptor( getSqlTypeCode( mapping ) );
+			if ( descriptor == null ) {
+				throw new MappingException(
+						String.format(
+								Locale.ROOT,
+								"Unable to determine SQL type name for column '%s' of table '%s' because there is no type mapping for org.hibernate.type.SqlTypes code: %s (%s)",
+								getName(),
+								getValue().getTable().getName(),
+								typeCode,
+								JdbcTypeNameMapper.getTypeName( typeCode )
+						)
 				);
+			}
+			try {
+				final Size size = getColumnSize( dialect, mapping );
+				sqlTypeName = descriptor.getTypeName(
+						size,
+						getUnderlyingType( mapping, getValue().getType(), typeIndex ),
+						ddlTypeRegistry
+				);
+				sqlTypeLob = descriptor.isLob( size );
 			}
 			catch ( Exception cause ) {
 				throw new MappingException(
@@ -487,6 +506,10 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 			throw new AssertionFailure( "conflicting type names" );
 		}
 		sqlTypeName = typeName;
+	}
+
+	public boolean isSqlTypeLob() {
+		return sqlTypeLob;
 	}
 
 	public void setUnique(boolean unique) {

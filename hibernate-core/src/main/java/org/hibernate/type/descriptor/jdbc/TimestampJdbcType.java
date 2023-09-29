@@ -12,6 +12,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.time.LocalDateTime;
 import java.util.Calendar;
 
 import jakarta.persistence.TemporalType;
@@ -72,30 +73,36 @@ public class TimestampJdbcType implements JdbcType {
 		return new BasicBinder<>( javaType, this ) {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, options );
 				if ( value instanceof Calendar ) {
+					final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, options );
 					st.setTimestamp( index, timestamp, (Calendar) value );
 				}
 				else if ( options.getJdbcTimeZone() != null ) {
+					final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, options );
 					st.setTimestamp( index, timestamp, Calendar.getInstance( options.getJdbcTimeZone() ) );
 				}
 				else {
-					st.setTimestamp( index, timestamp );
+					final LocalDateTime localDateTime = javaType.unwrap( value, LocalDateTime.class, options );
+					st.setObject( index, localDateTime );
+//					st.setTimestamp( index, timestamp );
 				}
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, options );
 				if ( value instanceof Calendar ) {
+					final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, options );
 					st.setTimestamp( name, timestamp, (Calendar) value );
 				}
 				else if ( options.getJdbcTimeZone() != null ) {
+					final Timestamp timestamp = javaType.unwrap( value, Timestamp.class, options );
 					st.setTimestamp( name, timestamp, Calendar.getInstance( options.getJdbcTimeZone() ) );
 				}
 				else {
-					st.setTimestamp( name, timestamp );
+					final LocalDateTime localDateTime = javaType.unwrap( value, LocalDateTime.class, options );
+					st.setObject( name, localDateTime );
+//					st.setTimestamp( name, timestamp );
 				}
 			}
 		};
@@ -108,21 +115,21 @@ public class TimestampJdbcType implements JdbcType {
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
 				return options.getJdbcTimeZone() != null ?
 					javaType.wrap( rs.getTimestamp( paramIndex, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
-					javaType.wrap( rs.getTimestamp( paramIndex ), options );
+					javaType.wrap( rs.getObject( paramIndex, LocalDateTime.class ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
 				return options.getJdbcTimeZone() != null ?
 						javaType.wrap( statement.getTimestamp( index, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
-						javaType.wrap( statement.getTimestamp( index ), options );
+						javaType.wrap( statement.getObject( index, LocalDateTime.class ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
 				return options.getJdbcTimeZone() != null ?
 						javaType.wrap( statement.getTimestamp( name, Calendar.getInstance( options.getJdbcTimeZone() ) ), options ) :
-						javaType.wrap( statement.getTimestamp( name ), options );
+						javaType.wrap( statement.getObject( name, LocalDateTime.class ), options );
 			}
 		};
 	}

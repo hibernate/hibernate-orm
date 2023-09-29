@@ -20,6 +20,8 @@ import org.hibernate.dialect.pagination.NoopLimitHandler;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.jfr.JdbcPreparedStatementExecutionEvent;
+import org.hibernate.event.jfr.internal.JfrEventManager;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.spi.Limit;
@@ -235,11 +237,13 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			if ( sqlStatementLogger.getLogSlowQuery() > 0 ) {
 				executeStartNanos = System.nanoTime();
 			}
+			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				eventListenerManager.jdbcExecuteStatementStart();
 				resultSet = wrapResultSet( preparedStatement.executeQuery() );
 			}
 			finally {
+				JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
 				eventListenerManager.jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( finalSql, executeStartNanos, context() );
 			}

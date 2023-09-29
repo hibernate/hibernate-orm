@@ -27,6 +27,8 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.jfr.CachePutEvent;
+import org.hibernate.event.jfr.internal.JfrEventManager;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.StringHelper;
@@ -994,19 +996,35 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		//
 		// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
 		if ( persistenceContext.wasInsertedDuringTransaction( concreteDescriptor, entityIdentifier) ) {
-			cacheAccess.update(
-					session,
-					cacheKey,
-					concreteDescriptor.getCacheEntryStructure().structure( cacheEntry ),
-					version,
-					version
-			);
+			boolean update = false;
+			final CachePutEvent cachePutEvent = JfrEventManager.beginCachePutEvent();
+			try {
+				update = cacheAccess.update(
+						session,
+						cacheKey,
+						concreteDescriptor.getCacheEntryStructure().structure( cacheEntry ),
+						version,
+						version
+				);
+			}
+			finally {
+				JfrEventManager.completeCachePutEvent(
+						cachePutEvent,
+						session,
+						cacheAccess,
+						concreteDescriptor,
+						update,
+						JfrEventManager.CacheActionDescription.ENTITY_UPDATE
+				);
+			}
 		}
 		else {
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+			boolean put = false;
+			final CachePutEvent cachePutEvent = JfrEventManager.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
-				final boolean put = cacheAccess.putFromLoad(
+				put = cacheAccess.putFromLoad(
 						session,
 						cacheKey,
 						concreteDescriptor.getCacheEntryStructure().structure( cacheEntry ),
@@ -1014,13 +1032,20 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						//useMinimalPuts( session, entityEntry )
 						false
 				);
-
+			}
+			finally {
+				JfrEventManager.completeCachePutEvent(
+						cachePutEvent,
+						session,
+						cacheAccess,
+						concreteDescriptor,
+						put,
+						JfrEventManager.CacheActionDescription.ENTITY_LOAD
+				);
 				final StatisticsImplementor statistics = factory.getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {
 					statistics.entityCachePut( rootEntityDescriptor.getNavigableRole(), cacheAccess.getRegion().getName() );
 				}
-			}
-			finally {
 				eventListenerManager.cachePutEnd();
 			}
 		}

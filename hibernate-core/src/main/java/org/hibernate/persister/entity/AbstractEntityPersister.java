@@ -1528,7 +1528,7 @@ public abstract class AbstractEntityPersister
 		if ( session.getCacheMode().isGetEnabled() && canReadFromCache() && isLazyPropertiesCacheable() ) {
 			final EntityDataAccess cacheAccess = getCacheAccessStrategy();
 			final Object cacheKey = cacheAccess.generateCacheKey(id, this, session.getFactory(), session.getTenantIdentifier() );
-			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, cacheAccess );
+			final Object ce = CacheHelper.fromSharedCache( session, cacheKey, this, cacheAccess );
 			if ( ce != null ) {
 				final CacheEntry cacheEntry = (CacheEntry) getCacheEntryStructure().destructure( ce, factory );
 				final Object initializedValue = initializeLazyPropertiesFromCache( fieldName, entity, session, entry, cacheEntry );
@@ -4104,7 +4104,7 @@ public abstract class AbstractEntityPersister
 			final EntityDataAccess cache = getCacheAccessStrategy();
 			final String tenantId = session.getTenantIdentifier();
 			final Object ck = cache.generateCacheKey( id, this, session.getFactory(), tenantId );
-			final Object ce = CacheHelper.fromSharedCache( session, ck, getCacheAccessStrategy() );
+			final Object ce = CacheHelper.fromSharedCache( session, ck, this, getCacheAccessStrategy() );
 			if ( ce != null ) {
 				return false;
 			}

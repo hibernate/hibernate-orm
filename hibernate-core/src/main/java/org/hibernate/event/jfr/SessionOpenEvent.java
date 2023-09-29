@@ -25,7 +25,7 @@ import jdk.jfr.StackTrace;
 @StackTrace(false)
 @AllowNonPortable
 public class SessionOpenEvent extends Event {
-	public static final String NAME = "org.hibernate.orm.SessionOpened";
+	public static final String NAME = "org.hibernate.orm.SessionOpen";
 
 	@Label("Session Identifier" )
 	public String sessionIdentifier;

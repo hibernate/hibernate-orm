@@ -16,9 +16,6 @@ import org.hibernate.ResourceClosedException;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
-import org.hibernate.event.jfr.JDBCConnectionAcquisitionEvent;
-import org.hibernate.event.jfr.JDBCConnectionReleaseEvent;
-import org.hibernate.internal.build.AllowNonPortable;
 import org.hibernate.resource.jdbc.ResourceRegistry;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
@@ -109,7 +106,6 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		this.closed = closed;
 	}
 
-	@AllowNonPortable
 	private Connection acquireConnectionIfNeeded() {
 		if ( physicalConnection == null ) {
 			// todo : is this the right place for these observer calls?
@@ -120,19 +116,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 				throw sqlExceptionHelper.convert( e, "Unable to acquire JDBC Connection" );
 			}
 			finally {
-				final JDBCConnectionAcquisitionEvent jdbcConnectionAcquisitionEvent = new JDBCConnectionAcquisitionEvent();
-				if ( jdbcConnectionAcquisitionEvent.isEnabled() ) {
-					jdbcConnectionAcquisitionEvent.begin();
-				}
-
 				observer.jdbcConnectionAcquisitionEnd( physicalConnection );
-
-				if ( jdbcConnectionAcquisitionEvent.isEnabled() ) {
-					jdbcConnectionAcquisitionEvent.end();
-					if ( jdbcConnectionAcquisitionEvent.shouldCommit() ) {
-						jdbcConnectionAcquisitionEvent.commit();
-					}
-				}
 			}
 		}
 		return physicalConnection;
@@ -216,7 +200,6 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 		throw new IllegalStateException( "Cannot manually reconnect unless Connection was originally supplied by user" );
 	}
 
-	@AllowNonPortable
 	private void releaseConnection() {
 		final Connection localVariableConnection = this.physicalConnection;
 		if ( localVariableConnection == null ) {
@@ -238,19 +221,7 @@ public class LogicalConnectionManagedImpl extends AbstractLogicalConnectionImple
 				}
 			}
 			finally {
-				final JDBCConnectionReleaseEvent jdbcConnectionReleaseEvent = new JDBCConnectionReleaseEvent();
-				if ( jdbcConnectionReleaseEvent.isEnabled() ) {
-					jdbcConnectionReleaseEvent.begin();
-				}
-
 				jdbcConnectionAccess.releaseConnection( localVariableConnection );
-
-				if ( jdbcConnectionReleaseEvent.isEnabled() ) {
-					jdbcConnectionReleaseEvent.end();
-					if ( jdbcConnectionReleaseEvent.shouldCommit() ) {
-						jdbcConnectionReleaseEvent.commit();
-					}
-				}
 			}
 		}
 		catch (SQLException e) {

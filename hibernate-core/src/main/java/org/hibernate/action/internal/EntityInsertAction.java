@@ -17,6 +17,9 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.jfr.CachePutEvent;
+import org.hibernate.event.jfr.internal.JfrEventManager;
+import org.hibernate.event.jfr.internal.JfrEventManager.CacheActionDescription;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
@@ -161,11 +164,23 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 
 	protected boolean cacheInsert(EntityPersister persister, Object ck) {
 		SharedSessionContractImplementor session = getSession();
+		final CachePutEvent cachePutEvent = JfrEventManager.beginCachePutEvent();
+		final EntityDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
+		boolean insert = false;
 		try {
 			session.getEventListenerManager().cachePutStart();
-			return persister.getCacheAccessStrategy().insert( session, ck, cacheEntry, version );
+			insert = cacheAccessStrategy.insert( session, ck, cacheEntry, version );
+			return insert;
 		}
 		finally {
+			JfrEventManager.completeCachePutEvent(
+					cachePutEvent,
+					session,
+					cacheAccessStrategy,
+					getPersister(),
+					insert,
+					CacheActionDescription.ENTITY_INSERT
+			);
 			session.getEventListenerManager().cachePutEnd();
 		}
 	}
@@ -240,11 +255,22 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	protected boolean cacheAfterInsert(EntityDataAccess cache, Object ck) {
 		SharedSessionContractImplementor session = getSession();
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+		final CachePutEvent cachePutEvent = JfrEventManager.beginCachePutEvent();
+		boolean afterInsert = false;
 		try {
 			eventListenerManager.cachePutStart();
-			return cache.afterInsert( session, ck, cacheEntry, version );
+			afterInsert = cache.afterInsert( session, ck, cacheEntry, version );
+			return afterInsert;
 		}
 		finally {
+			JfrEventManager.completeCachePutEvent(
+					cachePutEvent,
+					session,
+					cache,
+					getPersister(),
+					afterInsert,
+					CacheActionDescription.ENTITY_AFTER_INSERT
+			);
 			eventListenerManager.cachePutEnd();
 		}
 	}

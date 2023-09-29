@@ -18,6 +18,8 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.event.jfr.JdbcPreparedStatementExecutionEvent;
+import org.hibernate.event.jfr.internal.JfrEventManager;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 
 /**
@@ -53,11 +55,13 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			final ResultSet rs;
+			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				rs = statement.executeQuery();
 			}
 			finally {
+				JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, statement );
 				jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( statement, executeStartNanos, context() );
 			}
@@ -78,11 +82,13 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			final ResultSet rs;
+			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				rs = statement.executeQuery();
 			}
 			finally {
+				JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 				jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
 			}
@@ -115,11 +121,13 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			final ResultSet rs;
+			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				rs = dialect.getResultSet( callableStatement );
 			}
 			finally {
+				JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, callableStatement );
 				jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( callableStatement, executeStartNanos, context() );
 			}
@@ -140,11 +148,13 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			final ResultSet rs;
+			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				rs = statement.executeQuery( sql );
 			}
 			finally {
+				JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 				jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
 			}
@@ -165,6 +175,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			final ResultSet rs;
+			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				if ( !statement.execute() ) {
@@ -175,6 +186,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				rs = statement.getResultSet();
 			}
 			finally {
+				JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, statement );
 				jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( statement, executeStartNanos, context() );
 			}
@@ -195,6 +207,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			final ResultSet rs;
+			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				if ( !statement.execute() ) {
@@ -205,6 +218,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				rs = statement.getResultSet();
 			}
 			finally {
+				JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 				jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
 			}
@@ -225,6 +239,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		try {
 			final ResultSet rs;
+			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				if ( !statement.execute( sql ) ) {
@@ -235,6 +250,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 				rs = statement.getResultSet();
 			}
 			finally {
+				JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 				jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
 			}
@@ -254,6 +270,8 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
 			executeStartNanos = System.nanoTime();
 		}
+		final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
+
 		try {
 			jdbcExecuteStatementStart();
 			return statement.executeUpdate();
@@ -262,6 +280,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			throw sqlExceptionHelper.convert( e, "could not execute statement" );
 		}
 		finally {
+			JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, statement );
 			jdbcExecuteStatementEnd();
 			sqlStatementLogger.logSlowQuery( statement, executeStartNanos, context() );
 		}
@@ -275,6 +294,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
 			executeStartNanos = System.nanoTime();
 		}
+		final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			jdbcExecuteStatementStart();
 			return statement.executeUpdate();
@@ -283,6 +303,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 		finally {
+			JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 			jdbcExecuteStatementEnd();
 			sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
 		}
@@ -295,6 +316,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
 			executeStartNanos = System.nanoTime();
 		}
+		final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			jdbcExecuteStatementStart();
 			return statement.executeUpdate( sql );
@@ -303,6 +325,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
 		}
 		finally {
+			JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 			jdbcExecuteStatementEnd();
 			sqlStatementLogger.logSlowQuery( sql, executeStartNanos, context() );
 		}

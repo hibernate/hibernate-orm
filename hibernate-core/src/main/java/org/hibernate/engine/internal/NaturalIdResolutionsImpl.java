@@ -23,6 +23,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.Resolution;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.jfr.CachePutEvent;
+import org.hibernate.event.jfr.internal.JfrEventManager;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdLogging;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -268,32 +270,63 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 		switch ( source ) {
 			case LOAD: {
-				if ( CacheHelper.fromSharedCache( s, cacheKey, cacheAccess ) != null ) {
+				if ( CacheHelper.fromSharedCache( s, cacheKey, persister, cacheAccess ) != null ) {
 					// prevent identical re-cachings
 					return;
 				}
-				final boolean put = cacheAccess.putFromLoad(
-						s,
-						cacheKey,
-						id,
-						null
-				);
+				boolean put = false;
+				final CachePutEvent cachePutEvent = JfrEventManager.beginCachePutEvent();
+				try {
+					put = cacheAccess.putFromLoad(
+							s,
+							cacheKey,
+							id,
+							null
+					);
 
-				if ( put && statistics.isStatisticsEnabled() ) {
-					statistics.naturalIdCachePut(
-							rootEntityDescriptor.getNavigableRole(),
-							cacheAccess.getRegion().getName()
+					if ( put && statistics.isStatisticsEnabled() ) {
+						statistics.naturalIdCachePut(
+								rootEntityDescriptor.getNavigableRole(),
+								cacheAccess.getRegion().getName()
+						);
+					}
+				}
+				finally {
+					JfrEventManager.completeCachePutEvent(
+							cachePutEvent,
+							session(),
+							cacheAccess,
+							rootEntityPersister,
+							put,
+							true,
+							JfrEventManager.CacheActionDescription.ENTITY_LOAD
 					);
 				}
 
 				break;
 			}
 			case INSERT: {
-				final boolean put = cacheAccess.insert( s, cacheKey, id );
-				if ( put && statistics.isStatisticsEnabled() ) {
-					statistics.naturalIdCachePut(
-							rootEntityDescriptor.getNavigableRole(),
-							cacheAccess.getRegion().getName()
+				boolean put = false;
+				final CachePutEvent cachePutEvent = JfrEventManager.beginCachePutEvent();
+
+				try {
+					put = cacheAccess.insert( s, cacheKey, id );
+					if ( put && statistics.isStatisticsEnabled() ) {
+						statistics.naturalIdCachePut(
+								rootEntityDescriptor.getNavigableRole(),
+								cacheAccess.getRegion().getName()
+						);
+					}
+				}
+				finally {
+					JfrEventManager.completeCachePutEvent(
+							cachePutEvent,
+							session(),
+							cacheAccess,
+							rootEntityPersister,
+							put,
+							true,
+							JfrEventManager.CacheActionDescription.ENTITY_INSERT
 					);
 				}
 
@@ -326,11 +359,26 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 				cacheAccess.remove( s, previousCacheKey);
 
 				final SoftLock lock = cacheAccess.lockItem( s, cacheKey, null );
-				final boolean put = cacheAccess.update( s, cacheKey, id );
-				if ( put && statistics.isStatisticsEnabled() ) {
-					statistics.naturalIdCachePut(
-							rootEntityDescriptor.getNavigableRole(),
-							cacheAccess.getRegion().getName()
+				boolean put = false;
+				final CachePutEvent cachePutEvent = JfrEventManager.beginCachePutEvent();
+				try {
+					put = cacheAccess.update( s, cacheKey, id );
+					if ( put && statistics.isStatisticsEnabled() ) {
+						statistics.naturalIdCachePut(
+								rootEntityDescriptor.getNavigableRole(),
+								cacheAccess.getRegion().getName()
+						);
+					}
+				}
+				finally {
+					JfrEventManager.completeCachePutEvent(
+							cachePutEvent,
+							session(),
+							cacheAccess,
+							rootEntityPersister,
+							put,
+							true,
+							JfrEventManager.CacheActionDescription.ENTITY_UPDATE
 					);
 				}
 
@@ -338,17 +386,32 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 						(success, session) -> {
 							cacheAccess.unlockItem( s, previousCacheKey, removalLock );
 							if (success) {
-								final boolean put12 = cacheAccess.afterUpdate(
-										s,
-										cacheKey,
-										id,
-										lock
-								);
+								boolean putAfterUpdate = false;
+								final CachePutEvent cachePutEventAfterUpdate = JfrEventManager.beginCachePutEvent();
+								try {
+									putAfterUpdate = cacheAccess.afterUpdate(
+											s,
+											cacheKey,
+											id,
+											lock
+									);
 
-								if ( put12 && statistics.isStatisticsEnabled() ) {
-									statistics.naturalIdCachePut(
-											rootEntityDescriptor.getNavigableRole(),
-											cacheAccess.getRegion().getName()
+									if ( putAfterUpdate && statistics.isStatisticsEnabled() ) {
+										statistics.naturalIdCachePut(
+												rootEntityDescriptor.getNavigableRole(),
+												cacheAccess.getRegion().getName()
+										);
+									}
+								}
+								finally {
+									JfrEventManager.completeCachePutEvent(
+											cachePutEventAfterUpdate,
+											session(),
+											cacheAccess,
+											rootEntityPersister,
+											putAfterUpdate,
+											true,
+											JfrEventManager.CacheActionDescription.ENTITY_AFTER_UPDATE
 									);
 								}
 							}
@@ -567,7 +630,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 		final SharedSessionContractImplementor session = session();
 		final Object naturalIdCacheKey = naturalIdCacheAccessStrategy.generateCacheKey( naturalId, persister, session );
 
-		pk = CacheHelper.fromSharedCache( session, naturalIdCacheKey, naturalIdCacheAccessStrategy );
+		pk = CacheHelper.fromSharedCache( session, naturalIdCacheKey, persister, true, naturalIdCacheAccessStrategy );
 
 		// Found in second-level cache, store in session cache
 		final SessionFactoryImplementor factory = session.getFactory();

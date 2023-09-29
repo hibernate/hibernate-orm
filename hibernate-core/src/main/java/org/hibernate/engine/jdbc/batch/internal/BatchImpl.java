@@ -22,6 +22,8 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
+import org.hibernate.event.jfr.JdbcBatchExecutionEvent;
+import org.hibernate.event.jfr.internal.JfrEventManager;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 
 import static org.hibernate.engine.jdbc.JdbcLogging.JDBC_MESSAGE_LOGGER;
@@ -268,11 +270,13 @@ public class BatchImpl implements Batch {
 				try {
 					if ( statementDetails.getMutatingTableDetails().isIdentifierTable() ) {
 						final int[] rowCounts;
+						final JdbcBatchExecutionEvent jdbcBatchExecutionEvent = JfrEventManager.beginJdbcBatchExecutionEvent();
 						try {
 							observer.jdbcExecuteBatchStart();
 							rowCounts = statement.executeBatch();
 						}
 						finally {
+							JfrEventManager.completeJdbcBatchExecutionEvent( jdbcBatchExecutionEvent, sql );
 							observer.jdbcExecuteBatchEnd();
 						}
 						checkRowCounts( rowCounts, statementDetails );

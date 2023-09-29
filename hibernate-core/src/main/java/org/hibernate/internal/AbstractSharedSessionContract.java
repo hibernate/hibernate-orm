@@ -602,14 +602,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			if ( ! fastSessionServices.requiresMultiTenantConnectionProvider ) {
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
 						getEventListenerManager(),
-						fastSessionServices.connectionProvider
+						fastSessionServices.connectionProvider,
+						this
 				);
 			}
 			else {
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
 						getTenantIdentifier(),
 						getEventListenerManager(),
-						fastSessionServices.multiTenantConnectionProvider
+						fastSessionServices.multiTenantConnectionProvider,
+						this
 				);
 			}
 		}

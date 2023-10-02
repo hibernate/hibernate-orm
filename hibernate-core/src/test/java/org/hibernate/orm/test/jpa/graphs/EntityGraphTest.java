@@ -485,7 +485,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		em.close();
 	}
 
-    @Entity
+    @Entity(name = "Foo")
 	@Table(name = "foo")
     public static class Foo {
 
@@ -500,7 +500,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		public Baz baz;
 	}
 
-	@Entity
+	@Entity(name = "Bar")
 	@Table(name = "bar")
 	public static class Bar {
 
@@ -512,7 +512,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
         public Set<Foo> foos = new HashSet<Foo>();
 	}
 
-	@Entity
+	@Entity(name = "Baz")
 	@Table(name = "baz")
     public static class Baz {
 
@@ -525,7 +525,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	}
 
-	@Entity
+	@Entity(name = "Book")
 	@Table(name = "book")
 	public static class Book {
 		@Id
@@ -544,7 +544,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Prize")
 	public static class Prize {
 		@Id
 		@GeneratedValue
@@ -563,7 +563,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 
 	}
 
-	@Entity
+	@Entity(name = "Author")
 	@Table(name = "author")
 	public static class Author {
 		@Id
@@ -588,7 +588,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "AnimalOwner")
 	public static class AnimalOwner {
 		@Id
 		@GeneratedValue
@@ -598,7 +598,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		public Animal animal;
 	}
 
-	@Entity
+	@Entity(name = "Animal")
 	@Inheritance(strategy = InheritanceType.JOINED)
 	public static abstract class Animal {
 		@Id
@@ -608,7 +608,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		public String name;
 	}
 
-	@Entity
+	@Entity(name = "Dog")
 	@DiscriminatorValue("DOG")
 	public static class Dog extends Animal {
 
@@ -619,7 +619,7 @@ public class EntityGraphTest extends BaseEntityManagerFunctionalTestCase {
 		}
 	}
 
-	@Entity
+	@Entity(name = "Cat")
 	@DiscriminatorValue("CAT")
 	public static class Cat extends Animal {
 

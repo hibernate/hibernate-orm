@@ -17,11 +17,9 @@ elif [ "$RDBMS" == "postgresql" ] || [ "$RDBMS" == "postgresql_11" ]; then
 elif [ "$RDBMS" == "edb" ] || [ "$RDBMS" == "edb_11" ]; then
   goal="-Pdb=edb_ci -DdbHost=localhost:5444"
 elif [ "$RDBMS" == "oracle" ]; then
-  # I have no idea why, but these tests don't seem to work on CI...
   goal="-Pdb=oracle_ci"
 elif [ "$RDBMS" == "oracle_11_2" ]; then
-  # I have no idea why, but these tests don't seem to work on CI...
-  goal="-Pdb=oracle_legacy_ci -PexcludeTests=**.LockTest.testQueryTimeout*"
+  goal="-Pdb=oracle_legacy_ci
 elif [ "$RDBMS" == "db2" ]; then
   goal="-Pdb=db2_ci"
 elif [ "$RDBMS" == "db2_10_5" ]; then

@@ -100,9 +100,6 @@ dependencies {
 	testRuntimeOnly dbLibs.mssql
 	testRuntimeOnly dbLibs.informix
 	testRuntimeOnly dbLibs.cockroachdb
-	testRuntimeOnly dbLibs.oracle
-	testRuntimeOnly dbLibs.oracleXml
-	testRuntimeOnly dbLibs.oracleXmlParser
 	testRuntimeOnly dbLibs.sybase
 	testRuntimeOnly rootProject.fileTree(dir: 'drivers', include: '*.jar')
 
@@ -123,6 +120,18 @@ dependencies {
 	}
 	else if ( db.startsWith( 'firebird' ) ) {
 		testRuntimeOnly dbLibs.firebird
+	}
+	else if ( db.startsWith( 'oracle' ) ) {
+		if ( db.startsWith( 'oracle_legacy' ) ) {
+			testRuntimeOnly dbLibs.oracleLegacy
+			testRuntimeOnly dbLibs.oracleLegacyXml
+			testRuntimeOnly dbLibs.oracleLegacyXmlParser
+		}
+		else {
+			testRuntimeOnly dbLibs.oracle
+			testRuntimeOnly dbLibs.oracleXml
+			testRuntimeOnly dbLibs.oracleXmlParser
+		}
 	}
 
 	annotationProcessor libs.loggingProcessor

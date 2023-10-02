@@ -256,7 +256,10 @@ public class EntityUpdateAction extends EntityAction {
 		}
 	}
 
-	private void handleDeleted(EntityEntry entry) {
+	/*
+	 * Used by Hibernate Reactive
+	 */
+	protected void handleDeleted(EntityEntry entry) {
 		if ( entry.getStatus() == Status.DELETED ) {
 			final EntityMetamodel entityMetamodel = getPersister().getEntityMetamodel();
 			final boolean isImpliedOptimisticLocking = !entityMetamodel.isVersioned()

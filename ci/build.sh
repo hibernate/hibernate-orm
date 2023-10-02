@@ -19,7 +19,7 @@ elif [ "$RDBMS" == "edb" ] || [ "$RDBMS" == "edb_11" ]; then
 elif [ "$RDBMS" == "oracle" ]; then
   goal="-Pdb=oracle_ci"
 elif [ "$RDBMS" == "oracle_11_2" ]; then
-  goal="-Pdb=oracle_legacy_ci
+  goal="-Pdb=oracle_legacy_ci"
 elif [ "$RDBMS" == "db2" ]; then
   goal="-Pdb=db2_ci"
 elif [ "$RDBMS" == "db2_10_5" ]; then

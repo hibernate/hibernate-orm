@@ -55,15 +55,15 @@ import static org.junit.Assert.assertNotNull;
 public class SecondLevelCacheTest {
 	private final Logger log = Logger.getLogger( SecondLevelCacheTest.class );
 
-    @Test
-    public void testCache(EntityManagerFactoryScope scope) {
-        scope.inTransaction( entityManager -> {
-            entityManager.persist(new Person());
+	@Test
+	public void testCache(EntityManagerFactoryScope scope) {
+		scope.inTransaction( entityManager -> {
+			entityManager.persist(new Person());
 			Person aPerson= new Person();
 			aPerson.setName("John Doe");
 			aPerson.setCode("unique-code");
-            entityManager.persist(aPerson);
-        });
+			entityManager.persist(aPerson);
+		});
 
 		scope.inTransaction( entityManager -> {
 			log.info("Jpa load by id");
@@ -249,13 +249,13 @@ public class SecondLevelCacheTest {
 	@Entity(name = "Person")
 	@Cacheable
 	@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
-    public static class Person {
+	public static class Person {
 
-        @Id
-        @GeneratedValue(strategy = GenerationType.AUTO)
-        private Long id;
+		@Id
+		@GeneratedValue(strategy = GenerationType.AUTO)
+		private Long id;
 
-        private String name;
+		private String name;
 
 		@NaturalId
 		@Column(name = "code", unique = true)
@@ -267,21 +267,21 @@ public class SecondLevelCacheTest {
 
 		public Person() {}
 
-        public Person(String name) {
-            this.name = name;
-        }
+		public Person(String name) {
+			this.name = name;
+		}
 
-        public Long getId() {
-            return id;
-        }
+		public Long getId() {
+			return id;
+		}
 
-        public String getName() {
-            return name;
-        }
+		public String getName() {
+			return name;
+		}
 
-        public void setName(String name) {
-            this.name = name;
-        }
+		public void setName(String name) {
+			this.name = name;
+		}
 
 		public String getCode() {
 			return code;

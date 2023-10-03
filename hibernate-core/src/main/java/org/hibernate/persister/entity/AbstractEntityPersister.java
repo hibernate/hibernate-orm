@@ -1887,10 +1887,9 @@ public abstract class AbstractEntityPersister
 			final Fetchable fetchable = fetchableContainer.getFetchable( i );
 			// Ignore plural attributes
 			if ( !( fetchable instanceof PluralAttributeMapping ) ) {
-				final FetchTiming fetchTiming;
+				final FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 				if ( fetchable instanceof BasicValuedModelPart ) {
 					// Ignore lazy basic columns
-					fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 					if ( fetchTiming == FetchTiming.DELAYED ) {
 						continue;
 					}
@@ -1905,10 +1904,6 @@ public abstract class AbstractEntityPersister
 					if ( !getRootTableName().equals( association.getForeignKeyDescriptor().getKeyTable() ) ) {
 						continue;
 					}
-					fetchTiming = FetchTiming.DELAYED;
-				}
-				else {
-					fetchTiming = fetchable.getMappedFetchOptions().getTiming();
 				}
 
 				if ( fetchTiming == null ) {
@@ -1920,7 +1915,7 @@ public abstract class AbstractEntityPersister
 							fetchable,
 							fetchParent.resolveNavigablePath( fetchable ),
 							fetchTiming,
-							true,
+							false,
 							null,
 							creationState
 					);

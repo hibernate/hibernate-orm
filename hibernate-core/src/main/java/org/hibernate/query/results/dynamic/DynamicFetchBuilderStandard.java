@@ -142,7 +142,7 @@ public class DynamicFetchBuilderStandard
 			return parent.generateFetchableFetch(
 					attributeMapping,
 					fetchPath,
-					FetchTiming.DELAYED,
+					attributeMapping.getMappedFetchOptions().getTiming(),
 					false,
 					null,
 					creationStateImpl
@@ -165,7 +165,7 @@ public class DynamicFetchBuilderStandard
 			return parent.generateFetchableFetch(
 					attributeMapping,
 					fetchPath,
-					FetchTiming.DELAYED,
+					attributeMapping.getMappedFetchOptions().getTiming(),
 					false,
 					null,
 					creationStateImpl

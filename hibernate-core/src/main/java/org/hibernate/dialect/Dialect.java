@@ -827,6 +827,23 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		return check.append( ')' ).toString();
 	}
 
+	/**
+	 * Render a SQL check condition for a column that represents an enumerated value
+	 * by its {@linkplain jakarta.persistence.EnumType#ORDINAL ordinal representation}.
+	 *
+	 * @return a SQL expression that will occur in a {@code check} constraint
+	 */
+	public String getCheckCondition(String columnName, Number[] values) {
+		StringBuilder check = new StringBuilder();
+		check.append( columnName ).append( " in (" );
+		String separator = "";
+		for ( Number value : values ) {
+			check.append( separator ).append( value );
+			separator = ",";
+		}
+		return check.append( ')' ).toString();
+	}
+
 	@Override
 	public void contributeFunctions(FunctionContributions functionContributions) {
 		initializeFunctionRegistry( functionContributions );

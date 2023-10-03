@@ -199,9 +199,9 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 				@SuppressWarnings("unchecked")
 				BasicValueConverter<Boolean, ? extends Number> numericConverter =
 						(BasicValueConverter<Boolean, ? extends Number>) converter;
-				long[] values = new long[] {
-						numericConverter.toRelationalValue(false).longValue(),
-						numericConverter.toRelationalValue(true).longValue()
+				Number[] values = new Number[] {
+						numericConverter.toRelationalValue(false),
+						numericConverter.toRelationalValue(true)
 				};
 				return dialect.getCheckCondition( columnName, values );
 			}

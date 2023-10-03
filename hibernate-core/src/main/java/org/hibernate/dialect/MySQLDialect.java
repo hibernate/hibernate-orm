@@ -297,13 +297,14 @@ public class MySQLDialect extends Dialect {
 				//the default scale is 0 (no decimal places)
 				return "decimal($p,$s)";
 			case CHAR:
-			case NCHAR:
 			case VARCHAR:
-			case NVARCHAR:
 			case LONG32VARCHAR:
-			case LONG32NVARCHAR:
 				//MySQL doesn't let you cast to TEXT/LONGTEXT
 				return "char";
+			case NCHAR:
+			case NVARCHAR:
+			case LONG32NVARCHAR:
+				return "char character set utf8";
 			case BINARY:
 			case VARBINARY:
 			case LONG32VARBINARY:
@@ -332,14 +333,11 @@ public class MySQLDialect extends Dialect {
 		final int maxLobLen = 65_535;
 		final int maxMediumLobLen = 16_777_215;
 
-		final CapacityDependentDdlType.Builder varcharBuilder = CapacityDependentDdlType.builder(
-						VARCHAR,
-						columnType( CLOB ),
-						"char",
-						this
-				)
-				.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
-				.withTypeCapacity( maxMediumLobLen, "mediumtext" );
+		final CapacityDependentDdlType.Builder varcharBuilder =
+				CapacityDependentDdlType.builder( VARCHAR,
+								columnType( CLOB ), columnType( CHAR ), castType( CHAR ), this )
+						.withTypeCapacity( getMaxVarcharLength(), "varchar($l)" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext" );
 		if ( getMaxVarcharLength() < maxLobLen ) {
 			varcharBuilder.withTypeCapacity( maxLobLen, "text" );
 		}
@@ -347,38 +345,36 @@ public class MySQLDialect extends Dialect {
 
 		// do not use nchar/nvarchar/ntext because these
 		// types use a deprecated character set on MySQL 8
-		final CapacityDependentDdlType.Builder nvarcharBuilder = CapacityDependentDdlType.builder(
-						NVARCHAR,
-						columnType( NCLOB ),
-						"char character set utf8",
-						this
-				)
-				.withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8" )
-				.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" );
+		final CapacityDependentDdlType.Builder nvarcharBuilder =
+				CapacityDependentDdlType.builder( NVARCHAR,
+								columnType( NCLOB ), columnType( NCHAR ), castType( NCHAR ), this )
+						.withTypeCapacity( getMaxVarcharLength(), "varchar($l) character set utf8" )
+						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" );
 		if ( getMaxVarcharLength() < maxLobLen ) {
 			nvarcharBuilder.withTypeCapacity( maxLobLen, "text character set utf8" );
 		}
 		ddlTypeRegistry.addDescriptor( nvarcharBuilder.build() );
 
-		final CapacityDependentDdlType.Builder varbinaryBuilder = CapacityDependentDdlType.builder(
-						VARBINARY,
-						columnType( BLOB ),
-						"binary",
-						this
-				)
-				.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
-				.withTypeCapacity( maxMediumLobLen, "mediumblob" );
+		final CapacityDependentDdlType.Builder varbinaryBuilder =
+				CapacityDependentDdlType.builder( VARBINARY,
+								columnType( BLOB ), columnType( BINARY ), castType( BINARY ), this )
+						.withTypeCapacity( getMaxVarbinaryLength(), "varbinary($l)" )
+						.withTypeCapacity( maxMediumLobLen, "mediumblob" );
 		if ( getMaxVarbinaryLength() < maxLobLen ) {
 			varbinaryBuilder.withTypeCapacity( maxLobLen, "blob" );
 		}
 		ddlTypeRegistry.addDescriptor( varbinaryBuilder.build() );
 
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARBINARY, columnType( BLOB ), "binary", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARCHAR, columnType( CLOB ), "char", this ) );
-		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32NVARCHAR, columnType( CLOB ), "char", this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARBINARY,
+				columnType( BLOB ), castType( BINARY ), this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32VARCHAR,
+				columnType( CLOB ), castType( CHAR ), this ) );
+		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( LONG32NVARCHAR,
+				columnType( CLOB ), castType( CHAR ), this ) );
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( BLOB, columnType( BLOB ), "binary", this )
+				CapacityDependentDdlType.builder( BLOB,
+								columnType( BLOB ), castType( BINARY ), this )
 						.withTypeCapacity( maxTinyLobLen, "tinyblob" )
 						.withTypeCapacity( maxMediumLobLen, "mediumblob" )
 						.withTypeCapacity( maxLobLen, "blob" )
@@ -386,7 +382,8 @@ public class MySQLDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( CLOB, columnType( CLOB ), "char", this )
+				CapacityDependentDdlType.builder( CLOB,
+								columnType( CLOB ), castType( CHAR ), this )
 						.withTypeCapacity( maxTinyLobLen, "tinytext" )
 						.withTypeCapacity( maxMediumLobLen, "mediumtext" )
 						.withTypeCapacity( maxLobLen, "text" )
@@ -394,7 +391,8 @@ public class MySQLDialect extends Dialect {
 		);
 
 		ddlTypeRegistry.addDescriptor(
-				CapacityDependentDdlType.builder( NCLOB, columnType( NCLOB ), "char character set utf8", this )
+				CapacityDependentDdlType.builder( NCLOB,
+								columnType( NCLOB ), castType( NCHAR ), this )
 						.withTypeCapacity( maxTinyLobLen, "tinytext character set utf8" )
 						.withTypeCapacity( maxMediumLobLen, "mediumtext character set utf8" )
 						.withTypeCapacity( maxLobLen, "text character set utf8" )
@@ -1361,7 +1359,7 @@ public class MySQLDialect extends Dialect {
 			case LockOptions.WAIT_FOREVER:
 				return lockString;
 			default:
-				return supportsWait() ? lockString + " wait " + timeout : lockString;
+				return supportsWait() ? lockString + " wait " + getTimeoutInSeconds( timeout ) : lockString;
 		}
 	}
 

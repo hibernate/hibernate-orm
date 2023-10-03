@@ -6,7 +6,6 @@
  */
 package org.hibernate.persister.collection;
 
-import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
@@ -255,7 +254,7 @@ public interface CollectionPersister extends Restrictable {
 	/**
 	 * Get the "space" that holds the persistent state
 	 */
-	Serializable[] getCollectionSpaces();
+	String[] getCollectionSpaces();
 
 	/**
 	 * Get the user-visible metadata for the collection (optional operation)

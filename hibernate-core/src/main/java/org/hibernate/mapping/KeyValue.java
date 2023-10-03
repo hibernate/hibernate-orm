@@ -36,6 +36,9 @@ public interface KeyValue extends Value {
 
 	/**
 	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
+	 *
+	 * @return {@code null} if the {@code Generator} returned by {@link #createGenerator} is not an instance
+	 *         of {@link IdentifierGenerator}.
 	 */
 	@Deprecated(since="6.2")
 	default IdentifierGenerator createIdentifierGenerator(
@@ -44,18 +47,23 @@ public interface KeyValue extends Value {
 			String defaultCatalog,
 			String defaultSchema,
 			RootClass rootClass) {
-		return (IdentifierGenerator) createGenerator( identifierGeneratorFactory, dialect, rootClass );
+		final Generator generator = createGenerator( identifierGeneratorFactory, dialect, rootClass );
+		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 	}
 
 	/**
 	 * @deprecated Use {@link #createGenerator(IdentifierGeneratorFactory, Dialect, RootClass)} instead.
+	 *
+	 * @return {@code null} if the {@code Generator} returned by {@link #createGenerator} is not an instance
+	 *         of {@link IdentifierGenerator}.
 	 */
 	@Deprecated(since="6.2")
 	default IdentifierGenerator createIdentifierGenerator(
 			IdentifierGeneratorFactory identifierGeneratorFactory,
 			Dialect dialect,
 			RootClass rootClass) {
-		return (IdentifierGenerator) createGenerator( identifierGeneratorFactory, dialect, rootClass );
+		final Generator generator = createGenerator( identifierGeneratorFactory, dialect, rootClass );
+		return generator instanceof IdentifierGenerator ? (IdentifierGenerator) generator : null;
 	}
 
 	/**

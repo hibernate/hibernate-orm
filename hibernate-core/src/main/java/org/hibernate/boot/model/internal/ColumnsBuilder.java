@@ -33,7 +33,6 @@ import static org.hibernate.boot.model.internal.AnnotatedColumn.buildFormulaFrom
 import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.getPropertyOverriddenByMapperOrMapsId;
-import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
 
 /**
@@ -167,13 +166,6 @@ class ColumnsBuilder {
 		final JoinTable joinTableAnn = propertyHolder.getJoinTable( property );
 //		final Comment comment = property.getAnnotation(Comment.class);
 		if ( joinTableAnn != null ) {
-			if ( isEmpty( joinTableAnn.name() ) ) {
-				//TODO: I don't see why this restriction makes sense (use the same defaulting rule as for many-valued)
-				throw new AnnotationException(
-						"Single-valued association " + getPath( propertyHolder, inferredData )
-								+ " has a '@JoinTable' annotation with no explicit 'name'"
-				);
-			}
 			return AnnotatedJoinColumns.buildJoinColumns(
 					joinTableAnn.inverseJoinColumns(),
 //					comment,
@@ -185,7 +177,7 @@ class ColumnsBuilder {
 			);
 		}
 		else {
-			OneToOne oneToOneAnn = property.getAnnotation( OneToOne.class );
+			final OneToOne oneToOneAnn = property.getAnnotation( OneToOne.class );
 			return AnnotatedJoinColumns.buildJoinColumns(
 					null,
 //					comment,

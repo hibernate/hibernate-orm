@@ -18,7 +18,7 @@ ext {
                         'jdbc.driver': 'org.h2.Driver',
                         'jdbc.user'  : 'sa',
                         'jdbc.pass'  : '',
-                        'jdbc.url'   : 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000',
+                        'jdbc.url'   : 'jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE',
                         'connection.init_sql' : '',
                         'hibernate.dialect.native_param_markers' : 'true'
                 ],
@@ -35,7 +35,7 @@ ext {
                         'jdbc.driver': 'org.apache.derby.iapi.jdbc.AutoloadedDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:derby:target/tmp/derby/hibernate_orm_test;databaseName=hibernate_orm_test;create=true',
+                        'jdbc.url'   : 'jdbc:derby:memory:;databaseName=hibernate_orm_test;create=true',
                         'connection.init_sql' : ''
                 ],
                 derby_old : [
@@ -43,7 +43,7 @@ ext {
                         'jdbc.driver': 'org.apache.derby.jdbc.EmbeddedDriver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:derby:target/tmp/derby/hibernate_orm_test;databaseName=hibernate_orm_test;create=true',
+                        'jdbc.url'   : 'jdbc:derby:memory:;databaseName=hibernate_orm_test;create=true',
                         'connection.init_sql' : ''
                 ],
                 pgsql : [
@@ -88,7 +88,7 @@ ext {
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
                         // Disable prepared statement caching to avoid issues with changing schemas
-                        'jdbc.url'   : 'jdbc:sybase:Tds:' + dbHost + ':5000/hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:sybase:Tds:' + dbHost + ':9000/hibernate_orm_test',
                         'connection.init_sql' : 'set ansinull on set quoted_identifier on'
                 ],
                 mysql : [
@@ -128,7 +128,7 @@ ext {
                         'jdbc.driver': 'com.mysql.jdbc.Driver',
                         'jdbc.user'  : 'hibernate_orm_test',
                         'jdbc.pass'  : 'hibernate_orm_test',
-                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + '/hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:mysql://' + dbHost + ':4000/hibernate_orm_test',
                         'connection.init_sql' : ''
                 ],
                 oracle : [

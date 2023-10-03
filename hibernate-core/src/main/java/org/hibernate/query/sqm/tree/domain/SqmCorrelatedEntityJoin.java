@@ -69,6 +69,11 @@ public class SqmCorrelatedEntityJoin<T> extends SqmEntityJoin<T> implements SqmC
 	}
 
 	@Override
+	public SqmRoot<?> findRoot() {
+		return getCorrelatedRoot();
+	}
+
+	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedEntityJoin(this);
 	}

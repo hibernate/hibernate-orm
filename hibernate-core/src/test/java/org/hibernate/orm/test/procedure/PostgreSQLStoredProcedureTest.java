@@ -24,14 +24,16 @@ import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
+import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.type.StandardBasicTypes;
 
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.TestForIssue;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -44,7 +46,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Vlad Mihalcea
  */
-@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 11, comment = "Stored procedures are only supported since version 11")
+@RequiresDialect(value = PostgreSQLDialect.class)
 public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override
@@ -65,7 +67,7 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 						namespace,
 						"CREATE OR REPLACE PROCEDURE sp_count_phones( " +
 								"   IN personId bigint, " +
-								"   OUT phoneCount bigint) " +
+								"   INOUT phoneCount bigint) " +
 								"   AS " +
 								"$BODY$ " +
 								"    BEGIN " +
@@ -83,7 +85,7 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 				new NamedAuxiliaryDatabaseObject(
 						"sp_phones",
 						namespace,
-						"CREATE OR REPLACE PROCEDURE sp_phones(IN personId BIGINT, OUT phones REFCURSOR) " +
+						"CREATE OR REPLACE PROCEDURE sp_phones(IN personId BIGINT, INOUT phones REFCURSOR) " +
 								"    AS " +
 								"$BODY$ " +
 								"    BEGIN " +
@@ -102,7 +104,7 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 				new NamedAuxiliaryDatabaseObject(
 						"singleRefCursor",
 						namespace,
-						"CREATE OR REPLACE PROCEDURE singleRefCursor(OUT p_recordset REFCURSOR) " +
+						"CREATE OR REPLACE PROCEDURE singleRefCursor(INOUT p_recordset REFCURSOR) " +
 								"   AS " +
 								"$BODY$ " +
 								"    BEGIN " +
@@ -120,7 +122,7 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 						namespace,
 						"CREATE OR REPLACE PROCEDURE sp_is_null( " +
 								"   IN param varchar(255), " +
-								"   OUT result boolean) " +
+								"   INOUT result boolean) " +
 								"   AS " +
 								"$BODY$ " +
 								"    BEGIN " +
@@ -162,9 +164,10 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_count_phones" );
 			query.registerStoredProcedureParameter( "personId", Long.class, ParameterMode.IN );
-			query.registerStoredProcedureParameter( "phoneCount", Long.class, ParameterMode.OUT );
+			query.registerStoredProcedureParameter( "phoneCount", Long.class, ParameterMode.INOUT );
 
 			query.setParameter( "personId", 1L );
+			query.setParameter( "phoneCount", null );
 
 			query.execute();
 			Long phoneCount = (Long) query.getOutputParameterValue( "phoneCount" );
@@ -173,6 +176,7 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test
+	@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 14, comment = "Stored procedure OUT parameters are only supported since version 14")
 	public void testStoredProcedureRefCursor() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			StoredProcedureQuery query = entityManager.createStoredProcedureQuery( "sp_phones" );
@@ -196,6 +200,7 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 					procedure = connection.prepareCall( "{ call sp_count_phones(?,?) }" );
 					procedure.registerOutParameter( 2, Types.BIGINT );
 					procedure.setLong( 1, 1L );
+					procedure.setNull( 2, Types.BIGINT );
 					procedure.execute();
 					return procedure.getLong( 2 );
 				}
@@ -238,7 +243,8 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-11863")
+	@JiraKey("HHH-11863")
+	@RequiresDialect(value = PostgreSQLDialect.class, majorVersion = 14, comment = "Stored procedure OUT parameters are only supported since version 14")
 	public void testSysRefCursorAsOutParameter() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
@@ -249,7 +255,7 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 			try (ResultSet resultSet = session.doReturningWork( connection -> {
 				CallableStatement procedure = null;
 				try {
-					procedure = connection.prepareCall( "{ call singleRefCursor(?) }" );
+					procedure = connection.prepareCall( "call singleRefCursor(?)" );
 					procedure.registerOutParameter( 1, Types.REF_CURSOR );
 					procedure.execute();
 					return (ResultSet) procedure.getObject( 1 );
@@ -292,15 +298,16 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12905")
+	@JiraKey("HHH-12905")
 	public void testStoredProcedureNullParameterHibernate() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "sp_is_null" );
 			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
-			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT );
+			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.INOUT );
 			procedureCall.setParameter( 1, null );
+			procedureCall.setParameter( 2, null );
 
 			Boolean result = (Boolean) procedureCall.getOutputParameterValue( 2 );
 
@@ -311,8 +318,9 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "sp_is_null" );
 			procedureCall.registerParameter( 1, StandardBasicTypes.STRING, ParameterMode.IN );
-			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.OUT );
+			procedureCall.registerParameter( 2, Boolean.class, ParameterMode.INOUT );
 			procedureCall.setParameter( 1, "test" );
+			procedureCall.setParameter( 2, null );
 
 			Boolean result = (Boolean) procedureCall.getOutputParameterValue( 2 );
 
@@ -321,15 +329,16 @@ public class PostgreSQLStoredProcedureTest extends BaseEntityManagerFunctionalTe
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-12905")
+	@JiraKey("HHH-12905")
 	public void testStoredProcedureNullParameterHibernateWithoutEnablePassingNulls() {
 
 		doInJPA( this::entityManagerFactory, entityManager -> {
 			ProcedureCall procedureCall = entityManager.unwrap( Session.class )
 					.createStoredProcedureCall( "sp_is_null" );
 			procedureCall.registerParameter( "param", StandardBasicTypes.STRING, ParameterMode.IN );
-			procedureCall.registerParameter( "result", Boolean.class, ParameterMode.OUT );
+			procedureCall.registerParameter( "result", Boolean.class, ParameterMode.INOUT );
 			procedureCall.setParameter( "param", null );
+			procedureCall.setParameter( "result", null );
 
 			procedureCall.getOutputParameterValue( "result" );
 		} );

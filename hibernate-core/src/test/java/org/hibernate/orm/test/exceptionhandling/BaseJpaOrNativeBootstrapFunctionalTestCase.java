@@ -9,6 +9,8 @@ package org.hibernate.orm.test.exceptionhandling;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,6 +24,7 @@ import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.registry.internal.StandardServiceRegistryImpl;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.spi.ClassTransformer;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
@@ -40,6 +43,7 @@ import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.cache.CachingRegionFactory;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.testing.orm.junit.DialectContext;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 
 import jakarta.persistence.EntityManager;
@@ -124,6 +128,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 
 		classes.addAll( Arrays.asList( getAnnotatedClasses() ) );
 		properties.put( org.hibernate.cfg.AvailableSettings.LOADED_CLASSES, classes );
+		ServiceRegistryUtil.applySettings( properties );
 
 		sessionFactory =  Bootstrap.getEntityManagerFactoryBuilder(
 				buildPersistenceUnitDescriptor(),
@@ -248,6 +253,11 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 		@Override
 		public void pushClassTransformer(EnhancementContext enhancementContext) {
 		}
+
+		@Override
+		public ClassTransformer getClassTransformer() {
+			return null;
+		}
 	}
 
 	private BootstrapServiceRegistry buildBootstrapServiceRegistry() {
@@ -269,6 +279,7 @@ public abstract class BaseJpaOrNativeBootstrapFunctionalTestCase extends BaseUni
 
 		StandardServiceRegistryBuilder registryBuilder = new StandardServiceRegistryBuilder( bootRegistry, cfgRegistryBuilder.getAggregatedCfgXml() )
 				.applySettings( properties );
+		ServiceRegistryUtil.applySettings( registryBuilder );
 
 		return (StandardServiceRegistryImpl) registryBuilder.build();
 	}

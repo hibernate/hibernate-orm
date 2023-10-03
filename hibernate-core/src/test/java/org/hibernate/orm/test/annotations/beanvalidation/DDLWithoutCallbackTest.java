@@ -95,7 +95,7 @@ public class DDLWithoutCallbackTest extends BaseNonConfigCoreFunctionalTestCase 
 	@Test
 	public void testDDLEnabled() {
 		PersistentClass classMapping = metadata().getEntityBinding( Address.class.getName() );
-		Column countryColumn = (Column) classMapping.getProperty( "country" ).getColumnIterator().next();
+		Column countryColumn = (Column) classMapping.getProperty( "country" ).getSelectables().get( 0 );
 		assertFalse( "DDL constraints are not applied", countryColumn.isNullable() );
 	}
 

@@ -862,7 +862,7 @@ public class DB2Dialect extends Dialect {
 
 	@Override
 	public boolean supportsIsTrue() {
-		return true;
+		return getDB2Version().isSameOrAfter( 11 );
 	}
 
 	@Override

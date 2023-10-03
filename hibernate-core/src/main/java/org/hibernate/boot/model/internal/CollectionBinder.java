@@ -413,21 +413,34 @@ public abstract class CollectionBinder {
 			PropertyHolder propertyHolder,
 			PropertyData inferredData,
 			XProperty property,
-			OneToMany oneToManyAnn,
-			ManyToMany manyToManyAnn,
-			ElementCollection elementCollectionAnn) {
-		if ( ( oneToManyAnn != null || manyToManyAnn != null || elementCollectionAnn != null )
-				&& isToManyAssociationWithinEmbeddableCollection(propertyHolder) ) {
-			String ann = oneToManyAnn != null ? "'@OneToMany'" : manyToManyAnn !=null ? "'@ManyToMany'" : "'@ElementCollection'";
-			throw new AnnotationException( "Property '" + getPath(propertyHolder, inferredData) +
-					"' belongs to an '@Embeddable' class that is contained in an '@ElementCollection' and may not be a " + ann );
+			OneToMany oneToMany,
+			ManyToMany manyToMany,
+			ElementCollection elementCollection) {
+		if ( ( oneToMany != null || manyToMany != null || elementCollection != null )
+				&& isToManyAssociationWithinEmbeddableCollection( propertyHolder ) ) {
+			throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData ) +
+					"' belongs to an '@Embeddable' class that is contained in an '@ElementCollection' and may not be a "
+					+ annotationName( oneToMany, manyToMany, elementCollection ));
 		}
 
 		if ( property.isAnnotationPresent( OrderColumn.class )
-				&& manyToManyAnn != null && !manyToManyAnn.mappedBy().isEmpty() ) {
-			throw new AnnotationException("Collection '" + getPath(propertyHolder, inferredData) +
+				&& manyToMany != null && !manyToMany.mappedBy().isEmpty() ) {
+			throw new AnnotationException("Collection '" + getPath( propertyHolder, inferredData ) +
 					"' is the unowned side of a bidirectional '@ManyToMany' and may not have an '@OrderColumn'");
 		}
+
+		if ( manyToMany != null || elementCollection != null ) {
+			if ( property.isAnnotationPresent( JoinColumn.class ) || property.isAnnotationPresent( JoinColumns.class ) ) {
+				throw new AnnotationException( "Property '" + getPath( propertyHolder, inferredData )
+						+ "' is a " + annotationName( oneToMany, manyToMany, elementCollection )
+						+ " and is directly annotated '@JoinColumn'"
+						+ " (specify '@JoinColumn' inside '@JoinTable' or '@CollectionTable')" );
+			}
+		}
+	}
+
+	private static String annotationName(OneToMany oneToMany, ManyToMany manyToMany, ElementCollection elementCollection) {
+		return oneToMany != null ? "'@OneToMany'" : manyToMany != null ? "'@ManyToMany'" : "'@ElementCollection'";
 	}
 
 	private static IndexColumn getIndexColumn(
@@ -1287,6 +1300,7 @@ public abstract class CollectionBinder {
 		binder.setProperty( property );
 		binder.setInsertable( insertable );
 		binder.setUpdatable( updatable );
+		binder.setBuildingContext( buildingContext );
 		Property prop = binder.makeProperty();
 		//we don't care about the join stuffs because the column is on the association table.
 		if ( !declaringClassSet ) {
@@ -1658,7 +1672,12 @@ public abstract class CollectionBinder {
 				inheritanceStatePerClass
 		) );
 		foreignJoinColumns.setJoins( joins );
-		collection.setCollectionTable( foreignJoinColumns.getTable() );
+		if ( foreignJoinColumns.hasMappedBy() ) {
+			collection.setCollectionTable( associatedClass.getRecursiveProperty( foreignJoinColumns.getMappedBy() ).getValue().getTable() );
+		}
+		else {
+			collection.setCollectionTable( foreignJoinColumns.getTable() );
+		}
 		if ( LOG.isDebugEnabled() ) {
 			LOG.debugf( "Mapping collection: %s -> %s", collection.getRole(), collection.getCollectionTable().getName() );
 		}
@@ -2426,9 +2445,7 @@ public abstract class CollectionBinder {
 		}
 	}
 
-	private void handleOwnedManyToMany(
-			PersistentClass collectionEntity,
-			boolean isCollectionOfEntities) {
+	private void handleOwnedManyToMany(PersistentClass collectionEntity, boolean isCollectionOfEntities) {
 		//TODO: only for implicit columns?
 		//FIXME NamingStrategy
 		final InFlightMetadataCollector collector = buildingContext.getMetadataCollector();
@@ -2455,7 +2472,7 @@ public abstract class CollectionBinder {
 		tableBinder.setJPA2ElementCollection(
 				!isCollectionOfEntities && property.isAnnotationPresent( ElementCollection.class )
 		);
-		Table collectionTable = tableBinder.bind();
+		final Table collectionTable = tableBinder.bind();
 		collection.setCollectionTable( collectionTable );
 		handleCheckConstraints( collectionTable );
 	}

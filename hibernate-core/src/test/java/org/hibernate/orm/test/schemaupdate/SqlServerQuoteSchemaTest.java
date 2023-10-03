@@ -28,6 +28,7 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.hamcrest.core.Is.is;
@@ -96,7 +97,7 @@ public class SqlServerQuoteSchemaTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void test() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder()
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE.toString() )
 				.build();
 
@@ -130,7 +131,7 @@ public class SqlServerQuoteSchemaTest extends BaseCoreFunctionalTestCase {
 			fail(e.getMessage());
 		}
 
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.GLOBALLY_QUOTED_IDENTIFIERS, Boolean.TRUE.toString() )
 				.build();
 		try {

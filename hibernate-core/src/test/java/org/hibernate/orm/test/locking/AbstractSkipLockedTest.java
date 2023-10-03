@@ -38,7 +38,7 @@ public abstract class AbstractSkipLockedTest
 
 
 	@Test
-	@RequiresDialect({ SQLServerDialect.class })
+	@RequiresDialect(SQLServerDialect.class)
 	@RequiresDialectFeature(DialectChecks.SupportsSkipLocked.class)
 	public void testSQLServerSkipLocked() {
 
@@ -72,7 +72,7 @@ public abstract class AbstractSkipLockedTest
 	}
 
 	@Test
-	@RequiresDialect({ PostgreSQLDialect.class })
+	@RequiresDialect(PostgreSQLDialect.class)
 	@RequiresDialectFeature(DialectChecks.SupportsSkipLocked.class)
 	public void testPostgreSQLSkipLocked() {
 
@@ -112,7 +112,7 @@ public abstract class AbstractSkipLockedTest
 	}
 
 	@Test
-	@RequiresDialect({ OracleDialect.class })
+	@RequiresDialect(OracleDialect.class)
 	@RequiresDialectFeature(DialectChecks.SupportsSkipLocked.class)
 	public void testOracleSkipLocked() {
 
@@ -148,7 +148,7 @@ public abstract class AbstractSkipLockedTest
 	}
 
 	@Test
-	@RequiresDialect({ MySQLDialect.class })
+	@RequiresDialect(MySQLDialect.class)
 	@RequiresDialectFeature(DialectChecks.SupportsSkipLocked.class)
 	public void testMySQLSkipLocked() {
 

@@ -55,9 +55,10 @@ public class ScrollableResultsObjectArrayCastingTest {
 		scope.inTransaction(
 				(entityManager) -> {
 					TypedQuery<byte[]> typedQuery = entityManager.createQuery( "select p.binaryValue from Product p", byte[].class );
-					Stream<byte[]> stream = typedQuery.getResultStream();
-					//noinspection ResultOfMethodCallIgnored
-					stream.findFirst();
+					try (Stream<byte[]> stream = typedQuery.getResultStream()) {
+						//noinspection ResultOfMethodCallIgnored
+						stream.findFirst();
+					}
 				}
 		);
 	}

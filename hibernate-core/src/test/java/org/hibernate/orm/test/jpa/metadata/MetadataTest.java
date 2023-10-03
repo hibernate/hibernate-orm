@@ -30,6 +30,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jpa;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -105,7 +106,7 @@ public class MetadataTest {
 
     @Test
     public void testBuildingMetamodelWithParameterizedCollection() {
-        Metadata metadata = new MetadataSources()
+        Metadata metadata = new MetadataSources( ServiceRegistryUtil.serviceRegistry() )
                 .addAnnotatedClass(WithGenericCollection.class)
                 .buildMetadata();
         SessionFactoryImplementor sfi = (SessionFactoryImplementor) metadata.buildSessionFactory();

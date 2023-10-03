@@ -72,8 +72,9 @@ public class RemoveAndOrderUpdateTest {
 	@Entity(name = "Form")
 	public static class Form {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		protected Long id;
+		protected String name;
 
 		public Long getId() {
 			return id;
@@ -88,7 +89,7 @@ public class RemoveAndOrderUpdateTest {
 	@Entity(name = "FormInput")
 	public static class FormInput {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		private Long id;
 
 		@ManyToOne(optional = false, fetch = FetchType.EAGER)

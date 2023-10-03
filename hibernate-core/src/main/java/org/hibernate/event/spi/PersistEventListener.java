@@ -6,8 +6,6 @@
  */
 package org.hibernate.event.spi;
 
-import java.util.Map;
-
 import org.hibernate.HibernateException;
 
 /**

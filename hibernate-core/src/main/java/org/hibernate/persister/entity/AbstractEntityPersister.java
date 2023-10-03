@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -28,6 +29,7 @@ import java.util.TreeMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
@@ -78,7 +80,6 @@ import org.hibernate.engine.internal.MutableEntityEntryFactory;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
-import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.profile.internal.FetchProfileAffectee;
 import org.hibernate.engine.spi.CachedNaturalIdValueSource;
 import org.hibernate.engine.spi.CascadeStyle;
@@ -831,7 +832,19 @@ public abstract class AbstractEntityPersister
 		return memento;
 	}
 
-	private SingleIdEntityLoader<?> createSingleIdEntityLoader(LoadQueryInfluencers loadQueryInfluencers) {
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected SingleIdEntityLoader<?> buildSingleIdEntityLoader() {
+		if ( hasNamedQueryLoader() ) {
+			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
+			final NamedQueryMemento memento = getNamedQueryMemento( null );
+			return new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
+		}
+		return buildSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
+	}
+
+	private SingleIdEntityLoader<?> buildSingleIdEntityLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return factory.getServiceRegistry()
@@ -864,7 +877,7 @@ public abstract class AbstractEntityPersister
 		return entityNameByTableNameMap;
 	}
 
-	private MultiIdEntityLoader<Object> buildMultiIdLoader() {
+	protected MultiIdEntityLoader<Object> buildMultiIdLoader() {
 		if ( getIdentifierType() instanceof BasicType
 				&& supportsSqlArrayType( factory.getJdbcServices().getDialect() ) ) {
 			return new MultiIdEntityLoaderArrayParam<>( this, factory );
@@ -1036,6 +1049,11 @@ public abstract class AbstractEntityPersister
 	@Internal
 	public DeleteCoordinator getDeleteCoordinator() {
 		return deleteCoordinator;
+	}
+
+	@Internal
+	public UpdateCoordinator getMergeCoordinator() {
+		return mergeCoordinator;
 	}
 
 	public String getVersionSelectString() {
@@ -1992,32 +2010,7 @@ public abstract class AbstractEntityPersister
 			return superMappingType.getEntityPersister().forceVersionIncrement( id, currentVersion, session );
 		}
 
-		if ( !isVersioned() ) {
-			throw new AssertionFailure( "cannot force version increment on non-versioned entity" );
-		}
-
-		if ( isVersionGeneratedOnExecution() ) {
-			// the difficulty here is exactly what we update in order to
-			// force the version to be incremented in the db...
-			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
-
-		}
-
-		final EntityVersionMapping versionMapping = getVersionMapping();
-		final Object nextVersion = getVersionJavaType().next(
-				currentVersion,
-				versionMapping.getLength(),
-				versionMapping.getPrecision(),
-				versionMapping.getScale(),
-				session
-		);
-		if ( LOG.isTraceEnabled() ) {
-			LOG.trace(
-					"Forcing version increment [" + infoString( this, id, getFactory() ) + "; "
-							+ getVersionType().toLoggableString( currentVersion, getFactory() ) + " -> "
-							+ getVersionType().toLoggableString( nextVersion, getFactory() ) + "]"
-			);
-		}
+		final Object nextVersion = calculateNextVersion( id, currentVersion, session );
 
 		updateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, session );
 
@@ -2055,7 +2048,53 @@ public abstract class AbstractEntityPersister
 		return nextVersion;
 	}
 
-//	private String generateVersionIncrementUpdateString() {
+	@Override
+	public Object forceVersionIncrement(
+			Object id,
+			Object currentVersion,
+			boolean batching,
+			SharedSessionContractImplementor session) throws HibernateException {
+		if ( superMappingType != null ) {
+			return superMappingType.getEntityPersister().forceVersionIncrement( id, currentVersion, session );
+		}
+
+		final Object nextVersion = calculateNextVersion( id, currentVersion, session );
+
+		updateCoordinator.forceVersionIncrement( id, currentVersion, nextVersion, batching, session );
+		return nextVersion;
+	}
+
+	private Object calculateNextVersion(Object id, Object currentVersion, SharedSessionContractImplementor session) {
+		if ( !isVersioned() ) {
+			throw new AssertionFailure( "cannot force version increment on non-versioned entity" );
+		}
+
+		if ( isVersionGeneratedOnExecution() ) {
+			// the difficulty here is exactly what we update in order to
+			// force the version to be incremented in the db...
+			throw new HibernateException( "LockMode.FORCE is currently not supported for generated version properties" );
+
+		}
+
+		final EntityVersionMapping versionMapping = getVersionMapping();
+		final Object nextVersion = getVersionJavaType().next(
+				currentVersion,
+				versionMapping.getLength(),
+				versionMapping.getPrecision(),
+				versionMapping.getScale(),
+				session
+		);
+		if ( LOG.isTraceEnabled() ) {
+			LOG.trace(
+					"Forcing version increment [" + infoString( this, id, getFactory() ) + "; "
+							+ getVersionType().toLoggableString( currentVersion, getFactory() ) + " -> "
+							+ getVersionType().toLoggableString( nextVersion, getFactory() ) + "]"
+			);
+		}
+		return nextVersion;
+	}
+
+	//	private String generateVersionIncrementUpdateString() {
 //		final Update update = new Update( getFactory().getJdbcServices().getDialect() ).setTableName( getTableName( 0 ) );
 //		if ( getFactory().getSessionFactoryOptions().isCommentsEnabled() ) {
 //			update.setComment( "forced version increment" );
@@ -3071,7 +3110,7 @@ public abstract class AbstractEntityPersister
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
 		if ( needsDiscriminator() ) {
-			predicateConsumer.accept( createDiscriminatorPredicate( alias, tableGroup, creationState ) );
+			pruneForSubclasses( tableGroup, Collections.singletonMap( getEntityName(), EntityNameUse.TREAT ) );
 		}
 	}
 
@@ -3197,21 +3236,26 @@ public abstract class AbstractEntityPersister
 		}
 
 		if ( containsNotNull ) {
-			final StringBuilder sb = new StringBuilder();
-			String lhs;
+			final String lhs;
 			if ( isDiscriminatorFormula() ) {
 				lhs = StringHelper.replace( getDiscriminatorFormulaTemplate(), Template.TEMPLATE, alias );
 			}
 			else {
 				lhs = qualifyConditionally( alias, getDiscriminatorColumnName() );
 			}
-			sb.append( " or " ).append( lhs ).append( " is not in (" );
-			for ( Object discriminatorSQLValue : discriminatorSQLValues ) {
-				if ( !frag.getValues().contains( discriminatorSQLValue ) ) {
-					sb.append( lhs ).append( discriminatorSQLValue );
+			final List<String> actualDiscriminatorSQLValues = new ArrayList<>( discriminatorSQLValues.size() );
+			for ( String value : discriminatorSQLValues ) {
+				if ( !frag.getValues().contains( value ) && !InFragment.NULL.equals( value ) ) {
+					actualDiscriminatorSQLValues.add( value );
 				}
 			}
-			sb.append( ") and " ).append( lhs ).append( " is not null" );
+			final StringBuilder sb = new StringBuilder( 70 + actualDiscriminatorSQLValues.size() * 10 ).append( " or " );
+			if ( !actualDiscriminatorSQLValues.isEmpty() ) {
+				sb.append( lhs ).append( " is not in (" );
+				sb.append( String.join( ",", actualDiscriminatorSQLValues ) );
+				sb.append( ") and " );
+			}
+			sb.append( lhs ).append( " is not null" );
 			frag.getValues().remove( InFragment.NOT_NULL );
 			return frag.toFragmentString() + sb;
 		}
@@ -3588,14 +3632,8 @@ public abstract class AbstractEntityPersister
 	@Override
 	public final void postInstantiate() throws MappingException {
 		doLateInit();
-		if ( hasNamedQueryLoader() ) {
-			// We must resolve the named query on-demand through the boot model because it isn't initialized yet
-			final NamedQueryMemento memento = getNamedQueryMemento( null );
-			singleIdLoader = new SingleIdEntityLoaderProvidedQueryImpl<>( this, memento );
-		}
-		else {
-			singleIdLoader = createSingleIdEntityLoader( new LoadQueryInfluencers( factory ) );
-		}
+		// Hibernate Reactive needs to override the loaders
+		singleIdLoader = buildSingleIdEntityLoader();
 		multiIdLoader = buildMultiIdLoader();
 	}
 
@@ -3644,7 +3682,7 @@ public abstract class AbstractEntityPersister
 			final LoadQueryInfluencers influencers = session.getLoadQueryInfluencers();
 			// no subselect fetching for entities for now
 			return isAffectedByInfluencers( influencers )
-					? createSingleIdEntityLoader( influencers )
+					? buildSingleIdEntityLoader( influencers )
 					: getSingleIdLoader();
 		}
 	}

@@ -8,6 +8,7 @@ package org.hibernate.orm.test.locking.jpa;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -20,6 +21,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockTimeoutException;
@@ -40,10 +42,12 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 public class FollowOnLockingTest {
 
 	@Test
+	@Timeout(value = 2, unit = TimeUnit.MINUTES)
 	public void testQueryLockingWithoutFollowOn(SessionFactoryScope scope) {
 		testQueryLocking( scope, false );
 	}
 	@Test
+	@Timeout(value = 2, unit = TimeUnit.MINUTES)
 	public void testQueryLockingWithFollowOn(SessionFactoryScope scope) {
 		testQueryLocking( scope, true );
 	}

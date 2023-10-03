@@ -26,22 +26,28 @@ public class SqmCaseSimple<T, R>
 		extends AbstractSqmExpression<R>
 		implements JpaSimpleCase<T, R> {
 	private final SqmExpression<T> fixture;
-	private final List<WhenFragment<T, R>> whenFragments;
-	private SqmExpression<R> otherwise;
+	private final List<WhenFragment<? extends T, ? extends R>> whenFragments;
+	private SqmExpression<? extends R> otherwise;
 
 	public SqmCaseSimple(SqmExpression<T> fixture, NodeBuilder nodeBuilder) {
-		this( fixture, null, nodeBuilder );
+		this( fixture, null, 10, nodeBuilder );
+	}
+
+	public SqmCaseSimple(SqmExpression<T> fixture, int estimatedWhenSize, NodeBuilder nodeBuilder) {
+		this( fixture, null, estimatedWhenSize, nodeBuilder );
 	}
 
 	public SqmCaseSimple(SqmExpression<T> fixture, SqmExpressible<R> inherentType, NodeBuilder nodeBuilder) {
-		super( inherentType, nodeBuilder );
-		this.whenFragments = new ArrayList<>( );
-		this.fixture = fixture;
+		this( fixture, inherentType, 10, nodeBuilder );
 	}
 
-	public SqmCaseSimple(SqmExpression<T> fixture, SqmExpressible<R> inherentType, int estimateWhenSize, NodeBuilder nodeBuilder) {
+	private SqmCaseSimple(
+			SqmExpression<T> fixture,
+			SqmExpressible<R> inherentType,
+			int estimatedWhenSize,
+			NodeBuilder nodeBuilder) {
 		super( inherentType, nodeBuilder );
-		this.whenFragments = new ArrayList<>( estimateWhenSize );
+		this.whenFragments = new ArrayList<>( estimatedWhenSize );
 		this.fixture = fixture;
 	}
 
@@ -53,14 +59,9 @@ public class SqmCaseSimple<T, R>
 		}
 		final SqmCaseSimple<T, R> caseSearched = context.registerCopy(
 				this,
-				new SqmCaseSimple<>(
-						fixture.copy( context ),
-						getNodeType(),
-						whenFragments.size(),
-						nodeBuilder()
-				)
+				new SqmCaseSimple<>( fixture.copy( context ), getNodeType(), whenFragments.size(), nodeBuilder() )
 		);
-		for ( SqmCaseSimple.WhenFragment<T, R> whenFragment : whenFragments ) {
+		for ( WhenFragment<? extends T, ? extends R> whenFragment : whenFragments ) {
 			caseSearched.whenFragments.add(
 					new SqmCaseSimple.WhenFragment<>(
 							whenFragment.checkValue.copy( context ),
@@ -79,41 +80,41 @@ public class SqmCaseSimple<T, R>
 		return fixture;
 	}
 
-	public List<WhenFragment<T,R>> getWhenFragments() {
+	public List<WhenFragment<? extends T,? extends R>> getWhenFragments() {
 		return whenFragments;
 	}
 
-	public SqmExpression<R> getOtherwise() {
+	public SqmExpression<? extends R> getOtherwise() {
 		return otherwise;
 	}
 
-	public void otherwise(SqmExpression<R> otherwiseExpression) {
+	public void otherwise(SqmExpression<? extends R> otherwiseExpression) {
 		this.otherwise = otherwiseExpression;
 
 		applyInferableResultType( otherwiseExpression.getNodeType() );
 	}
 
-	public void when(SqmExpression<T> test, SqmExpression<R> result) {
+	public void when(SqmExpression<? extends T> test, SqmExpression<? extends R> result) {
 		whenFragments.add( new WhenFragment<>( test, result ) );
+
+		// TODO: currently does nothing, but it would be nice if it worked!
+		test.applyInferableType( fixture.getNodeType() );
 
 		applyInferableResultType( result.getNodeType() );
 	}
 
 	private void applyInferableResultType(SqmExpressible<?> type) {
-		if ( type == null ) {
-			return;
-		}
-
-		final SqmExpressible<?> oldType = getExpressible();
-
-		final SqmExpressible<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
-		if ( newType != null && newType != oldType ) {
-			internalApplyInferableType( newType );
+		if ( type != null ) {
+			final SqmExpressible<?> oldType = getExpressible();
+			final SqmExpressible<?> newType = QueryHelper.highestPrecedenceType2( oldType, type );
+			if ( newType != null && newType != oldType ) {
+				internalApplyInferableType( newType );
+			}
 		}
 	}
 
 	@Override
-	protected void internalApplyInferableType(SqmExpressible newType) {
+	protected void internalApplyInferableType(SqmExpressible<?> newType) {
 		super.internalApplyInferableType( newType );
 
 		if ( otherwise != null ) {
@@ -121,9 +122,7 @@ public class SqmCaseSimple<T, R>
 		}
 
 		if ( whenFragments != null ) {
-			whenFragments.forEach(
-					whenFragment -> whenFragment.getResult().applyInferableType( newType )
-			);
+			whenFragments.forEach( whenFragment -> whenFragment.getResult().applyInferableType( newType ) );
 		}
 	}
 
@@ -146,11 +145,6 @@ public class SqmCaseSimple<T, R>
 			this.result = result;
 		}
 
-		private WhenFragment(WhenFragment<T, R> original, SqmCopyContext context) {
-			this.checkValue = original.checkValue.copy( context );
-			this.result = original.result.copy( context );
-		}
-
 		public SqmExpression<T> getCheckValue() {
 			return checkValue;
 		}
@@ -164,7 +158,7 @@ public class SqmCaseSimple<T, R>
 	public void appendHqlString(StringBuilder sb) {
 		sb.append( "case " );
 		fixture.appendHqlString( sb );
-		for ( WhenFragment<T, R> whenFragment : whenFragments ) {
+		for ( WhenFragment<? extends T, ? extends R> whenFragment : whenFragments ) {
 			sb.append( " when " );
 			whenFragment.checkValue.appendHqlString( sb );
 			sb.append( " then " );
@@ -195,8 +189,7 @@ public class SqmCaseSimple<T, R>
 
 	@Override
 	public JpaSimpleCase<T, R> when(T condition, Expression<? extends R> result) {
-		//noinspection unchecked
-		when( nodeBuilder().value( condition, fixture ), (SqmExpression<R>) result );
+		when( nodeBuilder().value( condition, fixture ), (SqmExpression<? extends R>) result );
 		return this;
 	}
 
@@ -208,8 +201,7 @@ public class SqmCaseSimple<T, R>
 
 	@Override
 	public JpaSimpleCase<T, R> when(Expression<? extends T> condition, Expression<? extends R> result) {
-		//noinspection unchecked
-		when( (SqmExpression<T>) condition, (SqmExpression<R>) result );
+		when( (SqmExpression<? extends T>) condition, (SqmExpression<? extends R>) result );
 		return this;
 	}
 
@@ -221,8 +213,7 @@ public class SqmCaseSimple<T, R>
 
 	@Override
 	public JpaSimpleCase<T, R> otherwise(Expression<? extends R> result) {
-		//noinspection unchecked
-		otherwise( (SqmExpression<R>) result );
+		otherwise( (SqmExpression<? extends R>) result );
 		return this;
 	}
 

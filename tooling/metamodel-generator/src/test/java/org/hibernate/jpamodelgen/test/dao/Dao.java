@@ -5,8 +5,12 @@ import jakarta.persistence.TypedQuery;
 import org.hibernate.annotations.processing.Find;
 import org.hibernate.annotations.processing.HQL;
 import org.hibernate.annotations.processing.SQL;
+import org.hibernate.query.Order;
+import org.hibernate.query.Page;
 import org.hibernate.query.SelectionQuery;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface Dao {
@@ -35,7 +39,13 @@ public interface Dao {
     List<Book> getBooksFetching(String title);
 
     @Find
+    List<Book> getBooks(String title, Page page, Order<Book> order);
+
+    @Find
     SelectionQuery<Book> createBooksSelectionQuery(String title);
+
+    @HQL("where title like ?1")
+    List<Book> findBooksByTitle(String title);
 
     @HQL("from Book where title like ?1")
     TypedQuery<Book> findByTitle(String title);
@@ -55,6 +65,24 @@ public interface Dao {
 //    @HQL("from Book where title like :title")
 //    SelectionQuery<Book> findByTitleWithOrderingByVarargs(String title, Order<? super Book>... order);
 
+    @HQL("select count(*) from Book")
+    long countBooks();
+
+    @HQL("select count(*)>1 from Book")
+    boolean booksExist();
+
+    @HQL("delete from Book")
+    int deleteBooks();
+
+    @HQL("select count(*), count(*)>1 from Book")
+    Object[] funnyQueryReturningArray();
+
+    class Record {
+        Record(Long count, Boolean exists) {}
+    }
+    @HQL("select count(*), count(*)>1 from Book")
+    Record funnyQueryReturningRecord();
+
     @HQL("from Book where isbn = :isbn")
     Book findByIsbn(String isbn);
 
@@ -66,4 +94,19 @@ public interface Dao {
 
     @Find
     List<Bean> beansForText(String text);
+
+    @HQL("where isbn = ?1")
+    List<Book> sortedBooksForIsbn(String isbn, Order<? super Book>... order);
+
+    @Find
+    List<Book> sortedBooks(String isbn, Order<? super Book>... order);
+
+    @HQL("select local date")
+    LocalDate localDate();
+
+    @HQL("select local datetime")
+    LocalDateTime localDatetime();
+
+    @HQL("select avg(pages) from Book")
+    double averagePageCount();
 }

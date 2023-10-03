@@ -1,0 +1,76 @@
+[[compatibility]]
+== Compatibility
+
+[[compatibility-dependencies]]
+=== [[system-requirements]] Dependencies
+
+Hibernate {fullVersion} requires the following dependencies (among others):
+
+.Compatible versions of dependencies
+[cols="h,^1", stripes=none]
+|===============
+| h|Version
+|Java Runtime
+|{javaCompatibleVersions}
+|https://jakarta.ee/specifications/persistence/[Jakarta Persistence]
+|{jakartaJpaVersion}
+|JDBC (bundled with the Java Runtime)
+|{jdbcVersion}
+|===============
+
+[TIP]
+====
+Find more information for all versions of Hibernate on our
+https://hibernate.org/orm/releases/#compatibility-matrix[compatibility matrix].
+
+The https://hibernate.org/community/compatibility-policy/[compatibility policy] may also be of interest.
+====
+
+If you get Hibernate from Maven Central, it is recommended to import Hibernate Platform
+as part of your dependency management to keep all its artifact versions aligned.
+
+Gradle::
+[source, groovy, subs="+attributes"]
+----
+dependencies {
+  implementation platform "org.hibernate.orm:hibernate-platform:{fullVersion}"
+
+  // use the versions from the platform
+  implementation "org.hibernate.orm:hibernate-core"
+  implementation "jakarta.transaction:jakarta.transaction-api"
+}
+----
+Maven::
+[source, XML, subs="+attributes"]
+----
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.hibernate.search</groupId>
+            <artifactId>hibernate-platform</artifactId>
+            <version>{fullVersion}</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+<!-- use the versions from the platform -->
+<dependencies>
+    <dependency>
+        <groupId>org.hibernate.orm</groupId>
+        <artifactId>hibernate-core</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>jakarta.transaction</groupId>
+        <artifactId>jakarta.transaction-api</artifactId>
+    </dependency>
+</dependencies>
+----
+
+[[compatibility-database]]
+=== Database
+
+Hibernate {fullVersion} is compatible with the following database versions,
+provided you use the corresponding <<database-dialect,dialects>>:
+
+include::{generated-report-dir}/dialect/dialect-table.adoc[]

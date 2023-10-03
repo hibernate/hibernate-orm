@@ -30,7 +30,6 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
@@ -56,8 +55,8 @@ import org.hibernate.testing.BeforeClassOnce;
 import org.hibernate.testing.OnExpectedFailure;
 import org.hibernate.testing.OnFailure;
 import org.hibernate.testing.cache.CachingRegionFactory;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.transaction.TransactionUtil2;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 
@@ -177,15 +176,9 @@ public class BaseNonConfigCoreFunctionalTestCase extends BaseUnitTestCase {
 		settings.put( PersistentTableStrategy.DROP_ID_TABLES, "true" );
 		settings.put( GlobalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
 		settings.put( LocalTemporaryTableMutationStrategy.DROP_ID_TABLES, "true" );
-		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			settings.put(
-					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
-			);
-		}
 		addSettings( settings );
 
-		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder( bsr );
+		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder( bsr );
 		initialize( ssrb );
 		ssrb.applySettings( settings );
 		configureStandardServiceRegistryBuilder( ssrb );

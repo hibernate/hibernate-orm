@@ -39,6 +39,8 @@ import org.hibernate.tool.schema.TargetType;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,8 +66,7 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-5538" )
 	public void test() {
-		StandardServiceRegistry ssr1 = new StandardServiceRegistryBuilder()
-			.build();
+		StandardServiceRegistry ssr1 = ServiceRegistryUtil.serviceRegistry();
 
 		final String extraSchemaName = "extra_schema_sequence_validation";
 
@@ -105,7 +106,7 @@ public class PostgreSQLMultipleSchemaSequenceTest extends BaseUnitTestCase {
 				else {
 					existingUrl += "&";
 				}
-				StandardServiceRegistry ssr2 = new StandardServiceRegistryBuilder()
+				StandardServiceRegistry ssr2 = ServiceRegistryUtil.serviceRegistryBuilder()
 						.applySetting( AvailableSettings.URL, existingUrl + "currentSchema=" + extraSchemaName )
 						.build();
 

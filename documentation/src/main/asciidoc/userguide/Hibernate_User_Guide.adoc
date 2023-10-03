@@ -1,14 +1,20 @@
-= Hibernate ORM {fullVersion} User Guide
+:shared-attributes-dir: ../shared/
+
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
+= Hibernate ORM User Guide
 :toc2:
 :toclevels: 3
 :sectanchors:
-:root-project-dir: ../../../../../../..
-
 
 include::Preface.adoc[]
 
 :numbered:
 
+include::chapters/compatibility/Compatibility.adoc[]
 include::chapters/architecture/Architecture.adoc[]
 include::chapters/domain/DomainModel.adoc[]
 include::chapters/bootstrap/Bootstrap.adoc[]
@@ -34,17 +40,13 @@ include::chapters/beans/Beans.adoc[]
 include::chapters/portability/Portability.adoc[]
 include::chapters/statistics/Statistics.adoc[]
 include::chapters/tooling/Tooling.adoc[]
-
-include::appendices/Configurations.adoc[]
-include::appendices/Annotations.adoc[]
 include::appendices/BestPractices.adoc[]
-include::appendices/Legacy_Bootstrap.adoc[]
-include::appendices/Legacy_DomainModel.adoc[]
-include::appendices/LegacyBasicTypeResolution.adoc[]
-include::appendices/Legacy_Native_Queries.adoc[]
 
 include::Credits.adoc[]
 
-include::ConfigPropertyList.adoc[]
+include::appendices/SettingsReference.adoc[]
+include::appendices/LegacyBasicTypeResolution.adoc[]
+include::appendices/Legacy_Native_Queries.adoc[]
+
 include::Bibliography.adoc[]
 

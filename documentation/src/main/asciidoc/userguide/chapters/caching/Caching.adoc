@@ -76,7 +76,7 @@ Besides provider specific configuration, there are a number of configurations op
     (incl. its configuration) guarantees that different entity types are stored separately and multi-tenancy is not
     used, you can omit this wrapping to achieve better performance. Currently, this property is only supported when
     Infinispan is configured as the second-level cache implementation. Valid values are:
-* `default` (wraps identitifers in the tuple)
+* `default` (wraps identifiers in the tuple)
 * `simple` (uses identifiers as keys without any wrapping)
 * fully qualified class name that implements `org.hibernate.cache.spi.CacheKeysFactory`
 

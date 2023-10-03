@@ -10,6 +10,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
@@ -22,6 +23,7 @@ import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.type.format.FormatMapper;
 
 /**
  * The contract for building a {@link SessionFactory} given a number of options.
@@ -706,6 +708,30 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#JPA_CLOSED_COMPLIANCE
 	 */
 	SessionFactoryBuilder enableJpaClosedCompliance(boolean enabled);
+
+	/**
+	 * Specifies a {@link FormatMapper format mapper} to use for serialization/deserialization of JSON properties.
+	 *
+	 * @param jsonFormatMapper The {@link FormatMapper} to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#JSON_FORMAT_MAPPER
+	 */
+	@Incubating
+	SessionFactoryBuilder applyJsonFormatMapper(FormatMapper jsonFormatMapper);
+
+	/**
+	 * Specifies a {@link FormatMapper format mapper} to use for serialization/deserialization of XML properties.
+	 *
+	 * @param xmlFormatMapper The {@link FormatMapper} to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#XML_FORMAT_MAPPER
+	 */
+	@Incubating
+	SessionFactoryBuilder applyXmlFormatMapper(FormatMapper xmlFormatMapper);
 
 	/**
 	 * After all options have been set, build the SessionFactory.

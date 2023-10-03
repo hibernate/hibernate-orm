@@ -231,7 +231,7 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 		assert auditClass != null;
 
 		@SuppressWarnings("unchecked")
-		Iterator<Column> columns = auditClass.getTable().getColumnIterator();
+		Iterator<Column> columns = auditClass.getTable().getColumns().iterator();
 
 		boolean id1Found = false;
 		boolean id2Found = false;
@@ -258,7 +258,7 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 		assert auditClass != null;
 
 		@SuppressWarnings("unchecked")
-		Iterator<Column> columns = auditClass.getTable().getColumnIterator();
+		Iterator<Column> columns = auditClass.getTable().getColumns().iterator();
 
 		boolean id1Found = false;
 		boolean id2Found = false;
@@ -291,7 +291,7 @@ public class VersionsJoinTableRangeComponentNamingTest extends
 		assert auditClass != null;
 
 		@SuppressWarnings("unchecked")
-		Iterator<Column> columns = auditClass.getTable().getColumnIterator();
+		Iterator<Column> columns = auditClass.getTable().getColumns().iterator();
 
 		boolean auditColumn1Found = false;
 		boolean auditColumn2Found = false;

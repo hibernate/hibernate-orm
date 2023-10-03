@@ -62,6 +62,11 @@ public class SqmCteJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements Jpa
 	}
 
 	@Override
+	public boolean isImplicitlySelectable() {
+		return false;
+	}
+
+	@Override
 	public SqmCteJoin<T> copy(SqmCopyContext context) {
 		final SqmCteJoin<T> existing = context.getCopy( this );
 		if ( existing != null ) {

@@ -7,7 +7,9 @@
 package org.hibernate.orm.test.cfg.cache;
 
 import org.hibernate.cfg.Configuration;
+
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -22,6 +24,7 @@ public class CacheConfigurationTest extends BaseUnitTestCase {
 	public void testCacheConfiguration() throws Exception {
 		// we only care if the SF builds successfully.
 		Configuration cfg = new Configuration().configure(CFG_XML);
+		ServiceRegistryUtil.applySettings( cfg.getStandardServiceRegistryBuilder() );
 		cfg.buildSessionFactory().close();
 	}
 }

@@ -28,6 +28,7 @@ import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.RequiresDialects;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.transaction.TransactionUtil;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -64,7 +65,7 @@ public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testSynonymUsingGroupedSchemaValidator() {
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
@@ -85,7 +86,7 @@ public class ViewValidationTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	public void testSynonymUsingIndividuallySchemaValidator() {
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,

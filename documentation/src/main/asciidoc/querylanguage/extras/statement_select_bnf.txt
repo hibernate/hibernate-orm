@@ -10,6 +10,7 @@ orderedQuery
 query
 	: selectClause fromClause? whereClause? (groupByClause havingClause?)?
 	| fromClause whereClause? (groupByClause havingClause?)? selectClause?
+	| whereClause
 
 queryOrder
 	: orderByClause limitClause? offsetClause? fetchClause?

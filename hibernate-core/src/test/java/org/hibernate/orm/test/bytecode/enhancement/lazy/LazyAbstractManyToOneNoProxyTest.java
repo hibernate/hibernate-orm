@@ -20,6 +20,7 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -95,7 +96,8 @@ public class LazyAbstractManyToOneNoProxyTest extends BaseCoreFunctionalTestCase
 		);
 	}
 
-	@Entity
+	@Entity(name = "User")
+	@Table(name = "usr_tbl")
 	@Proxy(lazy = false)
 	public static class User {
 		@Id
@@ -129,7 +131,7 @@ public class LazyAbstractManyToOneNoProxyTest extends BaseCoreFunctionalTestCase
 		}
 	}
 
-	@Entity
+	@Entity(name = "ActorGroup")
 	@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 	@DiscriminatorColumn(name = "TYPE")
 	@Proxy(lazy = false)
@@ -145,7 +147,7 @@ public class LazyAbstractManyToOneNoProxyTest extends BaseCoreFunctionalTestCase
 		}
 	}
 
-	@Entity
+	@Entity(name = "UserGroup")
 	@Proxy(lazy = false)
 	@DiscriminatorValue("USERS")
 	public static class UserGroup extends ActorGroup {

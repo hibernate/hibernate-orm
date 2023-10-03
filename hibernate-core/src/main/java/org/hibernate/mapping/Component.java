@@ -26,6 +26,7 @@ import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.source.internal.hbm.MappingDocument;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.Mapping;
@@ -37,17 +38,21 @@ import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.internal.util.collections.JoinedIterator;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
+import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
+import org.hibernate.type.UserComponentType;
+import org.hibernate.usertype.CompositeUserType;
 
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication;
 
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
@@ -117,7 +122,7 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private Component(Component original) {
 		super( original );
 		this.properties.addAll( original.properties );
-		this.originalPropertyOrder = original.originalPropertyOrder.clone();
+		this.originalPropertyOrder = original.originalPropertyOrder == null ? null : original.originalPropertyOrder.clone();
 		this.componentClassName = original.componentClassName;
 		this.embedded = original.embedded;
 		this.parentProperty = original.parentProperty;
@@ -165,22 +170,6 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	@Override
-	public int getColumnSpan() {
-		return getSelectables().size();
-	}
-
-	@Override @Deprecated @SuppressWarnings("deprecation")
-	public Iterator<Selectable> getColumnIterator() {
-		@SuppressWarnings("unchecked")
-		Iterator<Selectable>[] iters = new Iterator[ getPropertySpan() ];
-		int i = 0;
-		for ( Property property : getProperties() ) {
-			iters[i++] = property.getColumnIterator();
-		}
-		return new JoinedIterator<>( iters );
-	}
-
-	@Override
 	public List<Selectable> getSelectables() {
 		if ( cachedSelectables == null ) {
 			cachedSelectables = properties.stream()
@@ -214,6 +203,11 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	public void setAggregateColumn(AggregateColumn aggregateColumn) {
 		this.aggregateColumn = aggregateColumn;
 		notifyPropertiesAboutAggregateColumn( aggregateColumn, this );
+	}
+
+	@Override
+	public int getColumnSpan() {
+		return getSelectables().size();
 	}
 
 	public List<Column> getAggregatedColumns() {
@@ -278,47 +272,14 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.structName = structName;
 	}
 
-	protected void checkColumnDuplication() throws MappingException {
-		checkPropertyColumnDuplication( new HashSet<>(), getProperties() );
-	}
-	protected void checkColumnDuplication(java.util.Set<String> distinctColumns, Value value)
-			throws MappingException {
-		if ( value != null ) {
-			for ( Selectable columnOrFormula : value.getSelectables() ) {
-				if ( !columnOrFormula.isFormula() ) {
-					final Column col = (Column) columnOrFormula;
-					if ( !distinctColumns.add( col.getName() ) ) {
-						throw new MappingException(
-								"Column '" + col.getName()
-										+ "' is duplicated in mapping for component '" + getRoleName()
-										+ "' (use '@Column(insertable=false, updatable=false)' when mapping multiple properties to the same column)"
-						);
-					}
-				}
-			}
+	@Override
+	public void checkColumnDuplication(Set<String> distinctColumns, String owner) {
+		if ( aggregateColumn == null ) {
+			checkPropertyColumnDuplication( distinctColumns, getProperties(), owner );
 		}
-	}
-
-	protected void checkPropertyColumnDuplication(Set<String> distinctColumns, List<Property> properties)
-			throws MappingException {
-		for ( Property prop : properties ) {
-			Value value = prop.getValue();
-			if ( value instanceof Component ) {
-				Component component = (Component) value;
-				AggregateColumn aggregateColumn = component.getAggregateColumn();
-				if ( aggregateColumn == null ) {
-					checkPropertyColumnDuplication( distinctColumns, component.getProperties() );
-				}
-				else {
-					component.checkColumnDuplication();
-					checkColumnDuplication( distinctColumns, aggregateColumn.getValue() );
-				}
-			}
-			else {
-				if ( prop.isUpdateable() || prop.isInsertable() ) {
-					checkColumnDuplication( distinctColumns, value);
-				}
-			}
+		else {
+			checkPropertyColumnDuplication( new HashSet<>(), getProperties(), "component '" + getRoleName() + "'" );
+			aggregateColumn.getValue().checkColumnDuplication( distinctColumns, owner );
 		}
 	}
 
@@ -327,15 +288,20 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	}
 
 	public Class<?> getComponentClass() throws MappingException {
-		final ClassLoaderService classLoaderService = getMetadata()
-				.getMetadataBuildingOptions()
-				.getServiceRegistry()
-				.getService( ClassLoaderService.class );
-		try {
-			return classLoaderService.classForName( componentClassName );
+		if ( componentClassName == null ) {
+			return null;
 		}
-		catch (ClassLoadingException e) {
-			throw new MappingException("component class not found: " + componentClassName, e);
+		else {
+			final ClassLoaderService classLoaderService = getMetadata()
+					.getMetadataBuildingOptions()
+					.getServiceRegistry()
+					.getService( ClassLoaderService.class );
+			try {
+				return classLoaderService.classForName( componentClassName );
+			}
+			catch (ClassLoadingException e) {
+				throw new MappingException("component class not found: " + componentClassName, e);
+			}
 		}
 	}
 
@@ -371,12 +337,22 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		this.dynamic = dynamic;
 	}
 
+	private CompositeUserType<?> createCompositeUserType(Component component) {
+		final BootstrapContext bootstrapContext = getBuildingContext().getBootstrapContext();
+		final Class<CompositeUserType<?>> customTypeClass =
+				bootstrapContext.getClassLoaderAccess().classForName( component.getTypeName() );
+		return getBuildingContext().getBuildingOptions().disallowExtensionsInCdi()
+				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( customTypeClass )
+				: bootstrapContext.getServiceRegistry().requireService( ManagedBeanRegistry.class )
+				.getBean( customTypeClass ).getBeanInstance();
+	}
+
 	@Override
 	public CompositeType getType() throws MappingException {
 		// Resolve the type of the value once and for all as this operation generates a proxy class
 		// for each invocation.
-		// Unfortunately, there's no better way of doing that as none of the classes are immutable and
-		// we can't know for sure the current state of the property or the value.
+		// Unfortunately, there's no better way of doing that as none of the classes are immutable,
+		// and we can't know for sure the current state of the property or the value.
 		CompositeType localType = type;
 
 		if ( localType == null ) {
@@ -387,11 +363,18 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 					// Other components should be sorted already
 					sortProperties( true );
 
-					localType = isEmbedded()
-							? new EmbeddedComponentType( this, originalPropertyOrder, getBuildingContext() )
-							: new ComponentType( this, originalPropertyOrder, getBuildingContext() );
+					final String typeName = getTypeName();
+					if ( typeName == null ) {
+						localType = isEmbedded()
+								? new EmbeddedComponentType( this, originalPropertyOrder )
+								: new ComponentType( this, originalPropertyOrder );
+					}
+					else {
+						final CompositeUserType<?> compositeUserType = createCompositeUserType( this );
+						localType = new UserComponentType<>( this, originalPropertyOrder, compositeUserType );
+					}
 
-					this.type = localType;
+					type = localType;
 				}
 			}
 		}

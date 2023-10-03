@@ -1,0 +1,12 @@
+:shared-attributes-dir: ../../shared/
+
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+
+[[preface]]
+== Preface
+
+Hibernate is an _Object/Relational Mapping_ (ORM) solution for programs written in Java and other JVM
+languages.
+
+include::{shared-attributes-dir}/background.adoc[]

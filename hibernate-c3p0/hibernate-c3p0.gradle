@@ -16,9 +16,5 @@ dependencies {
     testImplementation project( ':hibernate-testing' )
     testImplementation libs.validator
     testRuntimeOnly jakartaLibs.el
-
-    if ( db.equalsIgnoreCase( 'oracle' ) ) {
-        testRuntimeOnly dbLibs.oracle
-    }
 }
 

@@ -168,7 +168,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	private final transient Map<String,Object> settings;
 
 	private final transient SessionFactoryServiceRegistry serviceRegistry;
-	private final transient EventEngine eventEngine;
+	private final transient EventEngine eventEngine;//Needs to be closed!
 	private final transient JdbcServices jdbcServices;
 	private final transient SqlStringGenerationContext sqlStringGenerationContext;
 
@@ -269,6 +269,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			runtimeMetamodels = runtimeMetamodelsImpl;
 			final MappingMetamodelImpl mappingMetamodelImpl = new MappingMetamodelImpl( typeConfiguration, serviceRegistry );
 			runtimeMetamodelsImpl.setMappingMetamodel( mappingMetamodelImpl );
+			fastSessionServices = new FastSessionServices( this );
 			initializeMappingModel( mappingMetamodelImpl, bootstrapContext, bootMetamodel, options );
 			runtimeMetamodelsImpl.setJpaMetamodel( mappingMetamodelImpl.getJpaMetamodel() );
 
@@ -279,7 +280,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			defaultSessionOpenOptions = createDefaultSessionOpenOptionsIfPossible();
 			temporarySessionOpenOptions = defaultSessionOpenOptions == null ? null : buildTemporarySessionOpenOptions();
 			defaultStatelessOptions = defaultSessionOpenOptions == null ? null : withStatelessOptions();
-			fastSessionServices = new FastSessionServices( this );
+
 			wrapperOptions = new SessionFactoryBasedWrapperOptions( this );
 
 			currentSessionContext = buildCurrentSessionContext();
@@ -895,6 +896,9 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 			if ( queryEngine != null ) {
 				queryEngine.close();
+			}
+			if ( eventEngine != null ) {
+				eventEngine.stop();
 			}
 		}
 		finally {

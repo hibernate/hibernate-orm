@@ -19,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.DuplicateMappingException;
 import org.hibernate.HibernateException;
@@ -47,16 +46,14 @@ import org.hibernate.boot.model.internal.AnnotatedClassType;
 import org.hibernate.boot.model.internal.CreateKeySecondPass;
 import org.hibernate.boot.model.internal.FkSecondPass;
 import org.hibernate.boot.model.internal.IdGeneratorResolverSecondPass;
-import org.hibernate.boot.model.internal.JPAIndexHolder;
+import org.hibernate.boot.model.internal.ImplicitToOneJoinTableSecondPass;
+import org.hibernate.boot.model.internal.OptionalDeterminationSecondPass;
 import org.hibernate.boot.model.internal.QuerySecondPass;
 import org.hibernate.boot.model.internal.SecondaryTableFromAnnotationSecondPass;
 import org.hibernate.boot.model.internal.SecondaryTableSecondPass;
 import org.hibernate.boot.model.internal.SetBasicValueTypeSecondPass;
-import org.hibernate.boot.model.internal.UniqueConstraintHolder;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ImplicitForeignKeyNameSource;
-import org.hibernate.boot.model.naming.ImplicitIndexNameSource;
-import org.hibernate.boot.model.naming.ImplicitUniqueKeyNameSource;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.ExportableProducer;
@@ -90,7 +87,6 @@ import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.FetchProfile;
 import org.hibernate.mapping.ForeignKey;
 import org.hibernate.mapping.IdentifierCollection;
-import org.hibernate.mapping.Index;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
@@ -99,7 +95,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
-import org.hibernate.mapping.UniqueKey;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.query.named.NamedObjectRepository;
@@ -175,8 +170,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private Map<String, String> mappedByResolver;
 	private Map<String, String> propertyRefResolver;
 	private Set<DelayedPropertyReferenceHandler> delayedPropertyReferenceHandlers;
-	private Map<Table, List<UniqueConstraintHolder>> uniqueConstraintHoldersByTable;
-	private Map<Table, List<JPAIndexHolder>> jpaIndexHoldersByTable;
 	private List<Function<MetadataBuildingContext, Boolean>> valueResolvers;
 
 	public InFlightMetadataCollectorImpl(
@@ -1432,63 +1425,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		);
 	}
 
-	@Override @Deprecated(forRemoval = true)
-	public void addUniqueConstraints(Table table, List<String[]> uniqueConstraints) {
-		List<UniqueConstraintHolder> constraintHolders = new ArrayList<>( uniqueConstraints.size() );
-
-		int keyNameBase = determineCurrentNumberOfUniqueConstraintHolders( table );
-		for ( String[] columns : uniqueConstraints ) {
-			final String keyName = "key" + keyNameBase++;
-			constraintHolders.add(
-					new UniqueConstraintHolder().setName( keyName ).setColumns( columns )
-			);
-		}
-		addUniqueConstraintHolders( table, constraintHolders );
-	}
-
-	private int determineCurrentNumberOfUniqueConstraintHolders(Table table) {
-		List currentHolders = uniqueConstraintHoldersByTable == null ? null : uniqueConstraintHoldersByTable.get( table );
-		return currentHolders == null ? 0 : currentHolders.size();
-	}
-
-	@Override
-	public void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraintHolders) {
-		List<UniqueConstraintHolder> holderList = null;
-
-		if ( uniqueConstraintHoldersByTable == null ) {
-			uniqueConstraintHoldersByTable = new HashMap<>();
-		}
-		else {
-			holderList = uniqueConstraintHoldersByTable.get( table );
-		}
-
-		if ( holderList == null ) {
-			holderList = new ArrayList<>();
-			uniqueConstraintHoldersByTable.put( table, holderList );
-		}
-
-		holderList.addAll( uniqueConstraintHolders );
-	}
-
-	@Override
-	public void addJpaIndexHolders(Table table, List<JPAIndexHolder> holders) {
-		List<JPAIndexHolder> holderList = null;
-
-		if ( jpaIndexHoldersByTable == null ) {
-			jpaIndexHoldersByTable = new HashMap<>();
-		}
-		else {
-			holderList = jpaIndexHoldersByTable.get( table );
-		}
-
-		if ( holderList == null ) {
-			holderList = new ArrayList<>();
-			jpaIndexHoldersByTable.put( table, holderList );
-		}
-
-		holderList.addAll( holders );
-	}
-
 	private final Map<String,EntityTableXrefImpl> entityTableXrefMap = new HashMap<>();
 
 	@Override
@@ -1661,13 +1597,15 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	private ArrayList<SetBasicValueTypeSecondPass> setBasicValueTypeSecondPassList;
 	private ArrayList<AggregateComponentSecondPass> aggregateComponentSecondPassList;
 	private ArrayList<FkSecondPass> fkSecondPassList;
-	private ArrayList<CreateKeySecondPass> createKeySecondPasList;
+	private ArrayList<CreateKeySecondPass> createKeySecondPassList;
+	private ArrayList<ImplicitToOneJoinTableSecondPass> toOneJoinTableSecondPassList;
 	private ArrayList<SecondaryTableSecondPass> secondaryTableSecondPassList;
 	private ArrayList<SecondaryTableFromAnnotationSecondPass> secondaryTableFromAnnotationSecondPassesList;
 	private ArrayList<QuerySecondPass> querySecondPassList;
 	private ArrayList<ImplicitColumnNamingSecondPass> implicitColumnNamingSecondPassList;
 
 	private ArrayList<SecondPass> generalSecondPassList;
+	private ArrayList<OptionalDeterminationSecondPass> optionalDeterminationSecondPassList;
 
 	@Override
 	public void addSecondPass(SecondPass secondPass) {
@@ -1691,6 +1629,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		else if ( secondPass instanceof CreateKeySecondPass ) {
 			addCreateKeySecondPass( (CreateKeySecondPass) secondPass, onTopOfTheQueue );
 		}
+		else if ( secondPass instanceof ImplicitToOneJoinTableSecondPass ) {
+			addImplicitToOneJoinTableSecondPass( (ImplicitToOneJoinTableSecondPass) secondPass );
+		}
 		else if ( secondPass instanceof SecondaryTableSecondPass ) {
 			addSecondaryTableSecondPass( (SecondaryTableSecondPass) secondPass, onTopOfTheQueue );
 		}
@@ -1705,6 +1646,9 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 		else if ( secondPass instanceof ImplicitColumnNamingSecondPass ) {
 			addImplicitColumnNamingSecondPass( (ImplicitColumnNamingSecondPass) secondPass );
+		}
+		else if ( secondPass instanceof OptionalDeterminationSecondPass ) {
+			addOptionalDeterminationSecondPass( (OptionalDeterminationSecondPass) secondPass );
 		}
 		else {
 			// add to the general SecondPass list
@@ -1753,10 +1697,17 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 	}
 
 	private void addCreateKeySecondPass(CreateKeySecondPass secondPass, boolean onTopOfTheQueue) {
-		if ( createKeySecondPasList == null ) {
-			createKeySecondPasList = new ArrayList<>();
+		if ( createKeySecondPassList == null ) {
+			createKeySecondPassList = new ArrayList<>();
 		}
-		addSecondPass( secondPass, createKeySecondPasList, onTopOfTheQueue );
+		addSecondPass( secondPass, createKeySecondPassList, onTopOfTheQueue );
+	}
+
+	private void addImplicitToOneJoinTableSecondPass(ImplicitToOneJoinTableSecondPass secondPass) {
+		if ( toOneJoinTableSecondPassList == null ) {
+			toOneJoinTableSecondPassList = new ArrayList<>();
+		}
+		toOneJoinTableSecondPassList.add( secondPass );
 	}
 
 	private void addSecondaryTableSecondPass(SecondaryTableSecondPass secondPass, boolean onTopOfTheQueue) {
@@ -1787,6 +1738,13 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		implicitColumnNamingSecondPassList.add( secondPass );
 	}
 
+	private void addOptionalDeterminationSecondPass(OptionalDeterminationSecondPass secondPass) {
+		if ( optionalDeterminationSecondPassList == null ) {
+			optionalDeterminationSecondPassList = new ArrayList<>();
+		}
+		optionalDeterminationSecondPassList.add( secondPass );
+	}
+
 
 	private boolean inSecondPass = false;
 
@@ -1803,23 +1761,22 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			processSecondPasses( implicitColumnNamingSecondPassList );
 			processSecondPasses( setBasicValueTypeSecondPassList );
 			processSecondPasses( aggregateComponentSecondPassList );
+			processSecondPasses( toOneJoinTableSecondPassList );
 
 			composites.forEach( Component::sortProperties );
 
 			processFkSecondPassesInOrder();
 
-			processSecondPasses( createKeySecondPasList );
+			processSecondPasses(createKeySecondPassList);
 			processSecondPasses( secondaryTableSecondPassList );
 
 			processSecondPasses( querySecondPassList );
 			processSecondPasses( generalSecondPassList );
+			processSecondPasses( optionalDeterminationSecondPassList );
 
 			processPropertyReferences();
 
 			secondPassCompileForeignKeys( buildingContext );
-
-			processUniqueConstraintHolders( buildingContext );
-			processJPAIndexHolders( buildingContext );
 
 			processNaturalIdUniqueKeyBinders();
 
@@ -2014,18 +1971,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 	}
 
-	private List<Identifier> toIdentifiers(String[] names) {
-		if ( names == null ) {
-			return emptyList();
-		}
-
-		final List<Identifier> columnNames = arrayList( names.length );
-		for ( String name : names ) {
-			columnNames.add( getDatabase().toIdentifier( name ) );
-		}
-		return columnNames;
-	}
-
 	private List<Identifier> extractColumnNames(List<Column> columns) {
 		if ( columns == null || columns.isEmpty() ) {
 			return emptyList();
@@ -2050,190 +1995,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		}
 
 		delayedPropertyReferenceHandlers.clear();
-	}
-
-	private void processUniqueConstraintHolders(MetadataBuildingContext buildingContext) {
-		if ( uniqueConstraintHoldersByTable == null ) {
-			return;
-		}
-
-		for ( Map.Entry<Table, List<UniqueConstraintHolder>> tableListEntry : uniqueConstraintHoldersByTable.entrySet() ) {
-			final Table table = tableListEntry.getKey();
-			final List<UniqueConstraintHolder> uniqueConstraints = tableListEntry.getValue();
-			for ( UniqueConstraintHolder holder : uniqueConstraints ) {
-				buildUniqueKeyFromColumnNames( table, holder.getName(), holder.isNameExplicit(), holder.getColumns(), buildingContext );
-			}
-		}
-
-		uniqueConstraintHoldersByTable.clear();
-	}
-
-	private void buildUniqueKeyFromColumnNames(
-			Table table,
-			String keyName,
-			boolean nameExplicit,
-			String[] columnNames,
-			MetadataBuildingContext buildingContext) {
-		buildUniqueKeyFromColumnNames( table, keyName, nameExplicit, columnNames, null, true, buildingContext );
-	}
-
-	private void buildUniqueKeyFromColumnNames(
-			final Table table,
-			String keyName,
-			boolean nameExplicit,
-			final String[] columnNames,
-			String[] orderings,
-			boolean unique,
-			final MetadataBuildingContext buildingContext) {
-		int size = columnNames.length;
-		Column[] columns = new Column[size];
-		Set<Column> unbound = new HashSet<>();
-		Set<Column> unboundNoLogical = new HashSet<>();
-		for ( int index = 0; index < size; index++ ) {
-			final String logicalColumnName = columnNames[index];
-			try {
-				Column column = table.getColumn( buildingContext.getMetadataCollector(), logicalColumnName );
-				if ( column == null ) {
-					throw new AnnotationException(
-							"Table '" + table.getName() + "' has no column named '" + logicalColumnName
-									+ "' matching the column specified in '@UniqueConstraint'"
-					);
-				}
-				columns[index] = column;
-				unbound.add( column );
-				//column equals and hashcode is based on column name
-			}
-			catch ( MappingException e ) {
-				// If at least 1 columnName does exist, 'columns' will contain a mix of Columns and nulls.
-				// In order to exhaustively report all the unbound columns at once, w/o an NPE in
-				// Constraint#generateName's array sorting, simply create a fake Column.
-				columns[index] = new Column( logicalColumnName );
-				unboundNoLogical.add( columns[index] );
-			}
-		}
-
-		createIndexOrUniqueKey( table, keyName, nameExplicit, columnNames, orderings, unique, buildingContext, columns, unbound );
-
-		if ( unbound.size() > 0 || unboundNoLogical.size() > 0 ) {
-			throwUnableToCreateConstraint( table, columnNames, unique, unbound, unboundNoLogical );
-		}
-	}
-
-	private void createIndexOrUniqueKey(
-			Table table,
-			String originalKeyName,
-			boolean nameExplicit,
-			String[] columnNames,
-			String[] orderings,
-			boolean unique,
-			MetadataBuildingContext buildingContext,
-			Column[] columns,
-			Set<Column> unbound) {
-		if (unique) {
-			createUniqueKey( table, originalKeyName, nameExplicit, columnNames, orderings, buildingContext, columns, unbound );
-		}
-		else {
-			createIndex( table, originalKeyName, columnNames, orderings, buildingContext, columns, unbound );
-		}
-	}
-
-	private void createIndex(
-			Table table,
-			String originalKeyName,
-			String[] columnNames,
-			String[] orderings,
-			MetadataBuildingContext buildingContext,
-			Column[] columns,
-			Set<Column> unbound) {
-		final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy()
-				.determineIndexName( new IndexOrUniqueKeyNameSource( buildingContext, table, columnNames, originalKeyName ) );
-		final String keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
-
-		final Index index = table.getOrCreateIndex( keyName );
-		for (int i = 0; i < columns.length; i++ ) {
-			Column column = columns[i];
-			String order = orderings != null ? orderings[i] : null;
-			if ( table.containsColumn( column ) ) {
-				index.addColumn( column, order );
-				unbound.remove( column );
-			}
-		}
-	}
-
-	private void createUniqueKey(
-			Table table,
-			String originalKeyName,
-			boolean nameExplicit,
-			String[] columnNames,
-			String[] orderings,
-			MetadataBuildingContext buildingContext,
-			Column[] columns,
-			Set<Column> unbound) {
-		final Identifier keyNameIdentifier = getMetadataBuildingOptions().getImplicitNamingStrategy()
-				.determineUniqueKeyName( new IndexOrUniqueKeyNameSource( buildingContext, table, columnNames, originalKeyName ) );
-		final String keyName = keyNameIdentifier.render( getDatabase().getJdbcEnvironment().getDialect() );
-
-		final UniqueKey uk = table.getOrCreateUniqueKey( keyName );
-		uk.setNameExplicit(nameExplicit);
-		for (int i = 0; i < columns.length; i++ ) {
-			Column column = columns[i];
-			String order = orderings != null ? orderings[i] : null;
-			if ( table.containsColumn( column ) ) {
-				uk.addColumn( column, order );
-				unbound.remove( column );
-			}
-		}
-	}
-
-	private static void throwUnableToCreateConstraint(
-			Table table,
-			String[] columnNames,
-			boolean unique,
-			Set<Column> unbound,
-			Set<Column> unboundNoLogical) {
-		final StringBuilder message = new StringBuilder( "Unable to create " );
-		if (unique) {
-			message.append( "unique key constraint (" );
-		}
-		else {
-			message.append( "index (" );
-		}
-		for ( String columnName : columnNames) {
-			message.append( columnName ).append( ", " );
-		}
-		message.setLength( message.length() - 2 );
-		message.append( ") on table '" ).append( table.getName() ).append( "' since the column " );
-		for ( Column column : unbound) {
-			message.append("'").append( column.getName() ).append( "', " );
-		}
-		for ( Column column : unboundNoLogical) {
-			message.append("'").append( column.getName() ).append( "', " );
-		}
-		message.setLength( message.length() - 2 );
-		message.append( " was not found (specify the correct column name, which depends on the naming strategy, and may not be the same as the entity property name)" );
-		throw new AnnotationException( message.toString() );
-	}
-
-	private void processJPAIndexHolders(MetadataBuildingContext buildingContext) {
-		if ( jpaIndexHoldersByTable == null ) {
-			return;
-		}
-
-		for ( Map.Entry<Table, List<JPAIndexHolder>> entry : jpaIndexHoldersByTable.entrySet() ) {
-			final Table table = entry.getKey();
-			final List<JPAIndexHolder> jpaIndexHolders = entry.getValue();
-			for ( JPAIndexHolder holder : jpaIndexHolders ) {
-				buildUniqueKeyFromColumnNames(
-						table,
-						holder.getName(),
-						!holder.getName().isEmpty(),
-						holder.getColumns(),
-						holder.getOrdering(),
-						holder.isUnique(),
-						buildingContext
-				);
-			}
-		}
 	}
 
 	private Map<String,NaturalIdUniqueKeyBinder> naturalIdUniqueKeyBinderMap;
@@ -2354,6 +2115,12 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 		final Dialect dialect = getDatabase().getJdbcEnvironment().getDialect();
 
 		for ( PersistentClass entityBinding : entityBindingMap.values() ) {
+			entityBinding.assignCheckConstraintsToTable(
+					dialect,
+					bootstrapContext.getTypeConfiguration(),
+					bootstrapContext.getFunctionRegistry()
+			);
+
 			if ( entityBinding.isInherited() ) {
 				continue;
 			}
@@ -2363,6 +2130,7 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 					dialect,
 					(RootClass) entityBinding
 			);
+
 		}
 
 		for ( Collection collection : collectionBindingMap.values() ) {
@@ -2403,46 +2171,6 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector,
 			// try to build a SF.  Here, just building the Metadata, it is "ok" for an
 			// exception to occur, the same exception will happen later as we build the SF.
 			log.debugf( "Ignoring exception thrown when trying to build IdentifierGenerator as part of Metadata building", e );
-		}
-	}
-
-	private class IndexOrUniqueKeyNameSource implements ImplicitIndexNameSource, ImplicitUniqueKeyNameSource {
-		private final MetadataBuildingContext buildingContext;
-		private final Table table;
-		private final String[] columnNames;
-		private final String originalKeyName;
-
-		public IndexOrUniqueKeyNameSource(MetadataBuildingContext buildingContext, Table table, String[] columnNames, String originalKeyName) {
-			this.buildingContext = buildingContext;
-			this.table = table;
-			this.columnNames = columnNames;
-			this.originalKeyName = originalKeyName;
-		}
-
-		@Override
-		public MetadataBuildingContext getBuildingContext() {
-			return buildingContext;
-		}
-
-		@Override
-		public Identifier getTableName() {
-			return table.getNameIdentifier();
-		}
-
-		private List<Identifier> columnNameIdentifiers;
-
-		@Override
-		public List<Identifier> getColumnNames() {
-			// be lazy about building these
-			if ( columnNameIdentifiers == null ) {
-				columnNameIdentifiers = toIdentifiers(columnNames);
-			}
-			return columnNameIdentifiers;
-		}
-
-		@Override
-		public Identifier getUserProvidedIdentifier() {
-			return originalKeyName != null ? Identifier.toIdentifier(originalKeyName) : null;
 		}
 	}
 

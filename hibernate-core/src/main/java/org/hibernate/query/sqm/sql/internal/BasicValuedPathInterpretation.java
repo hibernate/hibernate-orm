@@ -27,11 +27,9 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
-import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.SqlSelectionExpression;
@@ -50,10 +48,8 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 			SqmBasicValuedSimplePath<T> sqmPath,
 			SqmToSqlAstConverter sqlAstCreationState,
 			boolean jpaQueryComplianceEnabled) {
-		final FromClauseAccess fromClauseAccess = sqlAstCreationState.getFromClauseAccess();
-		final TableGroup tableGroup = fromClauseAccess.getTableGroup( sqmPath.getNavigablePath().getParent() );
-
 		final SqmPath<?> lhs = sqmPath.getLhs();
+		final TableGroup tableGroup = sqlAstCreationState.getFromClauseAccess().getTableGroup( lhs.getNavigablePath() );
 		EntityMappingType treatTarget = null;
 		final ModelPartContainer modelPartContainer;
 		if ( lhs instanceof SqmTreatedPath<?, ?> ) {
@@ -93,7 +89,7 @@ public class BasicValuedPathInterpretation<T> extends AbstractSqmPathInterpretat
 		final Clause currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
 		final SqmQueryPart<?> sqmQueryPart = sqlAstCreationState.getCurrentSqmQueryPart();
 		if ( ( currentClause == Clause.GROUP || currentClause == Clause.SELECT || currentClause == Clause.ORDER || currentClause == Clause.HAVING )
-				&& sqmPath.getLhs() instanceof SqmFrom<?, ?>
+				&& lhs instanceof SqmFrom<?, ?>
 				&& modelPartContainer.getPartMappingType() instanceof ManagedMappingType
 				&& sqmQueryPart.isSimpleQueryPart()
 				&& sqmQueryPart.getFirstQuerySpec().groupByClauseContains( sqmPath.getNavigablePath() ) ) {

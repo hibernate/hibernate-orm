@@ -45,6 +45,8 @@ import org.hibernate.tool.schema.internal.exec.GenerationTargetToDatabase;
 import org.hibernate.testing.AfterClassOnce;
 import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
+
 import org.hibernate.orm.test.util.DdlTransactionIsolatorTestingImpl;
 import org.junit.Test;
 
@@ -218,7 +220,7 @@ public class DatabaseTimeZoneMultiTenancyTest extends BaseUnitTestCase {
 
     protected SessionFactory sessionFactory(Map<String, Object> settings) {
 
-        ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) new StandardServiceRegistryBuilder()
+        ServiceRegistryImplementor serviceRegistry = (ServiceRegistryImplementor) ServiceRegistryUtil.serviceRegistryBuilder()
                 .applySettings(settings)
                 .build();
 

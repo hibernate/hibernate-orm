@@ -75,6 +75,7 @@ import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import org.hibernate.testing.orm.jpa.PersistenceUnitDescriptorAdapter;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -91,6 +92,7 @@ public class PersisterClassProviderTest {
 				PersisterClassResolverInitiator.IMPL_NAME, GoofyPersisterClassProvider.class,
 				AvailableSettings.LOADED_CLASSES, Arrays.asList( Bell.class )
 		);
+		ServiceRegistryUtil.applySettings( settings );
 		try {
 			EntityManagerFactory entityManagerFactory = Bootstrap.getEntityManagerFactoryBuilder(
 					new PersistenceUnitDescriptorAdapter(),
@@ -277,8 +279,8 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public Serializable[] getPropertySpaces() {
-			return new Serializable[0];
+		public String[] getPropertySpaces() {
+			return new String[0];
 		}
 
 		@Override

@@ -26,6 +26,7 @@ import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.source.spi.AttributePath;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.internal.CoreMessageLogger;
@@ -279,6 +280,7 @@ public class AnnotatedColumn {
 		}
 		else {
 			mappingColumn = new Column();
+			mappingColumn.setExplicit( !isImplicit );
 			redefineColumnName( columnName, propertyName, applyNamingStrategy );
 			mappingColumn.setLength( length );
 			if ( precision != null && precision > 0 ) {  //relevant precision
@@ -433,17 +435,14 @@ public class AnnotatedColumn {
 
 	protected void addColumnBinding(SimpleValue value) {
 		final String logicalColumnName;
+		final MetadataBuildingContext context = getBuildingContext();
+		final InFlightMetadataCollector collector = context.getMetadataCollector();
 		if ( isNotEmpty( this.logicalColumnName ) ) {
 			logicalColumnName = this.logicalColumnName;
 		}
 		else {
-			final ObjectNameNormalizer normalizer = getBuildingContext().getObjectNameNormalizer();
-			final Database database = getBuildingContext().getMetadataCollector().getDatabase();
-			final ImplicitNamingStrategy implicitNamingStrategy = getBuildingContext().getBuildingOptions()
-					.getImplicitNamingStrategy();
-
-			final Identifier implicitName = normalizer.normalizeIdentifierQuoting(
-					implicitNamingStrategy.determineBasicColumnName(
+			final Identifier implicitName = context.getObjectNameNormalizer().normalizeIdentifierQuoting(
+					context.getBuildingOptions().getImplicitNamingStrategy().determineBasicColumnName(
 							new ImplicitBasicColumnNameSource() {
 								@Override
 								public AttributePath getAttributePath() {
@@ -457,14 +456,14 @@ public class AnnotatedColumn {
 
 								@Override
 								public MetadataBuildingContext getBuildingContext() {
-									return AnnotatedColumn.this.getBuildingContext();
+									return context;
 								}
 							}
 					)
 			);
-			logicalColumnName = implicitName.render( database.getDialect() );
+			logicalColumnName = implicitName.render( collector.getDatabase().getDialect() );
 		}
-		getBuildingContext().getMetadataCollector().addColumnNameBinding( value.getTable(), logicalColumnName, getMappingColumn() );
+		collector.addColumnNameBinding( value.getTable(), logicalColumnName, getMappingColumn() );
 	}
 
 	public void forceNotNull() {

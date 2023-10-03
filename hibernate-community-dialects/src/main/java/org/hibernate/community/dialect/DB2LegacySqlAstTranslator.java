@@ -420,7 +420,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 						break;
 				}
 			}
-			renderComparisonEmulateDecode( lhs, operator, rhs );
+			renderComparisonEmulateDecode( lhs, operator, rhs, SqlAstNodeRenderingMode.NO_UNTYPED );
 		}
 	}
 

@@ -832,23 +832,19 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 		final JavaTypeRegistry javaTypeRegistry = getTypeConfiguration().getJavaTypeRegistry();
 		final JavaType<T> javaType = javaTypeRegistry.findDescriptor( javaClass );
 		if ( javaType != null ) {
-			final JdbcType recommendedJdbcType = javaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
+			final JdbcType recommendedJdbcType =
+					javaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
 			if ( recommendedJdbcType != null ) {
-				return getTypeConfiguration().getBasicTypeRegistry().resolve(
-						javaType,
-						recommendedJdbcType
-				);
+				return getTypeConfiguration().getBasicTypeRegistry().resolve( javaType, recommendedJdbcType );
 			}
 		}
 
 		if ( javaClass.isArray() && javaTypeRegistry.findDescriptor( javaClass.getComponentType() ) != null ) {
 			final JavaType<T> resolvedJavaType = javaTypeRegistry.resolveDescriptor( javaClass );
-			final JdbcType recommendedJdbcType = resolvedJavaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
+			final JdbcType recommendedJdbcType =
+					resolvedJavaType.getRecommendedJdbcType( getTypeConfiguration().getCurrentBaseSqlTypeIndicators() );
 			if ( recommendedJdbcType != null ) {
-				return getTypeConfiguration().getBasicTypeRegistry().resolve(
-						resolvedJavaType,
-						recommendedJdbcType
-				);
+				return getTypeConfiguration().getBasicTypeRegistry().resolve( resolvedJavaType, recommendedJdbcType );
 			}
 		}
 

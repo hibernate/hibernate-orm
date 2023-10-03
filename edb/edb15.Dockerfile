@@ -1,4 +1,4 @@
-FROM quay.io/enterprisedb/edb-postgres-advanced:15.2-3.3-postgis
+FROM quay.io/enterprisedb/edb-postgres-advanced:15.4-3.3-postgis
 USER root
 # this 777 will be replaced by 700 at runtime (allows semi-arbitrary "--user" values)
 RUN chown -R postgres:postgres /var/lib/edb && chmod 777 /var/lib/edb && rm /docker-entrypoint-initdb.d/10_postgis.sh

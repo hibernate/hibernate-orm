@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.BagPersistentAttribute;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
@@ -28,10 +29,9 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
-				wrappedPath.getNavigablePath().treatAs(
-						treatTarget.getHibernateEntityName(),
-						alias
-				),
+				wrappedPath.getNavigablePath()
+						.append( CollectionPart.Nature.ELEMENT.getName() )
+						.treatAs( treatTarget.getHibernateEntityName(), alias ),
 				(BagPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
@@ -100,6 +100,11 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 
 	@Override
 	public EntityDomainType<S> getReferencedPathSource() {
+		return treatTarget;
+	}
+
+	@Override
+	public SqmPathSource<?> getResolvedModel() {
 		return treatTarget;
 	}
 

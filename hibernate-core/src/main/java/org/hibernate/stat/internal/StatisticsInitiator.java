@@ -22,6 +22,8 @@ import org.jboss.logging.Logger;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import static org.hibernate.cfg.StatisticsSettings.STATS_BUILDER;
+
 /**
  * @author Steve Ebersole
  */
@@ -29,12 +31,6 @@ public class StatisticsInitiator implements SessionFactoryServiceInitiator<Stati
 	private static final CoreMessageLogger LOG = Logger.getMessageLogger( CoreMessageLogger.class, StatisticsInitiator.class.getName() );
 
 	public static final StatisticsInitiator INSTANCE = new StatisticsInitiator();
-
-	/**
-	 * Names the {@link StatisticsFactory} to use.  Recognizes both a class name as well as an instance of
-	 * {@link StatisticsFactory}.
-	 */
-	public static final String STATS_BUILDER = "hibernate.stats.factory";
 
 	@Override
 	public Class<StatisticsImplementor> getServiceInitiated() {

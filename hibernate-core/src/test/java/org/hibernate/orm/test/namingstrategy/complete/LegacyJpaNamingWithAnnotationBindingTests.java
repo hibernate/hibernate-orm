@@ -52,7 +52,7 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 	@Override
 	protected void validateCustomerHqAddressComponent(Component component) {
 		assertEquals( 3, component.getColumnSpan() );
-		Iterator<Selectable> selectables = component.getColumnIterator();
+		Iterator<Selectable> selectables = component.getSelectables().iterator();
 		int pass = 1;
 		while ( selectables.hasNext() ) {
 			final Column column = assertTyping( Column.class, selectables.next() );
@@ -156,7 +156,7 @@ public class LegacyJpaNamingWithAnnotationBindingTests extends BaseAnnotationBin
 	@Override
 	protected void validateCustomerAddressesElementComponent(Component component) {
 		assertEquals( 3, component.getColumnSpan() );
-		Iterator<Selectable> selectables = component.getColumnIterator();
+		Iterator<Selectable> selectables = component.getSelectables().iterator();
 		int pass = 1;
 		while ( selectables.hasNext() ) {
 			final Column column = assertTyping( Column.class, selectables.next() );

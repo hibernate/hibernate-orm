@@ -14,7 +14,7 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Specifies that a {@code rowid}-like column or pseudo-column should be
- * used as the row locator in SQL {@code update} statements for an entity,
+ * used as the row locator in CRUD operations for an entity,
  * instead of the primary key of the table.
  * <p>
  * If the {@linkplain org.hibernate.dialect.Dialect SQL dialect} does

@@ -152,6 +152,7 @@ queryExpression
 orderedQuery
 	: query queryOrder?										# QuerySpecExpression
 	| LEFT_PAREN queryExpression RIGHT_PAREN queryOrder?	# NestedQueryExpression
+	| queryOrder											# QueryOrderExpression
 	;
 
 /**
@@ -180,6 +181,7 @@ query
 // TODO: add with clause
 	: selectClause fromClause? whereClause? (groupByClause havingClause?)?
 	| fromClause whereClause? (groupByClause havingClause?)? selectClause?
+	| whereClause
 	;
 
 
@@ -609,6 +611,7 @@ parameterOrIntegerLiteral
 parameterOrNumberLiteral
 	: parameter
 	| INTEGER_LITERAL
+	| LONG_LITERAL
 	| FLOAT_LITERAL
 	| DOUBLE_LITERAL
 	;
@@ -1004,7 +1007,7 @@ month: INTEGER_LITERAL;
 day: INTEGER_LITERAL;
 hour: INTEGER_LITERAL;
 minute: INTEGER_LITERAL;
-second: INTEGER_LITERAL | FLOAT_LITERAL;
+second: INTEGER_LITERAL | DOUBLE_LITERAL;
 zoneId
 	: IDENTIFIER (SLASH IDENTIFIER)?
 	| STRING_LITERAL;

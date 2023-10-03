@@ -6,15 +6,16 @@
  */
 package org.hibernate.boot.model;
 
+import org.hibernate.InstantiationException;
+import org.hibernate.Internal;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.resource.beans.spi.BeanInstanceProducer;
+import org.hibernate.type.spi.TypeBootstrapContext;
+
 import java.lang.reflect.Constructor;
 import java.util.Map;
 
-import org.hibernate.Internal;
-import org.hibernate.MappingException;
-import org.hibernate.engine.config.spi.ConfigurationService;
-import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.resource.beans.spi.BeanInstanceProducer;
-import org.hibernate.type.spi.TypeBootstrapContext;
+import static org.hibernate.internal.util.ReflectHelper.getConstructor;
 
 /**
  * {@link BeanInstanceProducer} implementation for building beans related to custom types.
@@ -31,20 +32,29 @@ public class TypeBeanInstanceProducer implements BeanInstanceProducer, TypeBoots
 
 	@Override
 	public <B> B produceBeanInstance(Class<B> beanType) {
-		try {
-			final Constructor<B> bootstrapContextAwareTypeConstructor = ReflectHelper.getConstructor(
-					beanType,
-					TypeBootstrapContext.class
-			);
-			if ( bootstrapContextAwareTypeConstructor != null ) {
-				return bootstrapContextAwareTypeConstructor.newInstance( this );
+		final Constructor<B> bootstrapContextAwareConstructor =
+				getConstructor( beanType, TypeBootstrapContext.class );
+		if ( bootstrapContextAwareConstructor != null ) {
+			try {
+				return bootstrapContextAwareConstructor.newInstance( this );
 			}
-			else {
-				return beanType.newInstance();
+			catch ( Exception e ) {
+				throw new InstantiationException( "Could not instantiate type", beanType, e );
 			}
 		}
-		catch ( Exception e ) {
-			throw new MappingException( "Could not instantiate Type: " + beanType.getName(), e );
+		else {
+			final Constructor<B> constructor = getConstructor( beanType );
+			if ( constructor != null ) {
+				try {
+					return constructor.newInstance();
+				}
+				catch ( Exception e ) {
+					throw new InstantiationException( "Could not instantiate type", beanType, e );
+				}
+			}
+			else {
+				throw new InstantiationException( "No appropriate constructor for type", beanType );
+			}
 		}
 	}
 

@@ -94,6 +94,7 @@ public class AnyBinder {
 		}
 
 		final boolean lazy = any.fetch() == FetchType.LAZY;
+		final boolean optional = any.optional();
 		final Any value = BinderHelper.buildAnyValue(
 				property.getAnnotation( Column.class ),
 				getOverridableAnnotation( property, Formula.class, context ),
@@ -104,7 +105,7 @@ public class AnyBinder {
 				nullability,
 				propertyHolder,
 				entityBinder,
-				any.optional(),
+				optional,
 				context
 		);
 
@@ -119,7 +120,9 @@ public class AnyBinder {
 		}
 		binder.setAccessType( inferredData.getDefaultAccess() );
 		binder.setCascade( cascadeStrategy );
+		binder.setBuildingContext( context );
 		Property prop = binder.makeProperty();
+		prop.setOptional( optional && value.isNullable() );
 		//composite FK columns are in the same table, so it's OK
 		propertyHolder.addProperty( prop, columns, inferredData.getDeclaringClass() );
 	}

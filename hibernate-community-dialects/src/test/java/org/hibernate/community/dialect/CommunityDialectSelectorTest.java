@@ -54,6 +54,7 @@ public class CommunityDialectSelectorTest {
 		testDialectNamingResolution( PostgreSQL93Dialect.class );
 		testDialectNamingResolution( PostgreSQL94Dialect.class );
 		testDialectNamingResolution( PostgreSQL95Dialect.class );
+		testDialectNamingResolution( PostgreSQL10Dialect.class );
 
 		testDialectNamingResolution( SAPDBDialect.class );
 

@@ -60,7 +60,6 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.stat.spi.StatisticsImplementor;
-import org.hibernate.type.AssociationType;
 import org.hibernate.type.Type;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
@@ -173,7 +172,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					: fetch.createAssembler( this, creationState );
 
 			final int stateArrayPosition = attributeMapping.getStateArrayPosition();
-			final EntityMappingType declaringType = (EntityMappingType) attributeMapping.getDeclaringType();
+			final EntityMappingType declaringType = attributeMapping.getDeclaringType().asEntityMappingType();
+
 			assemblers[declaringType.getSubclassId()][stateArrayPosition] = stateAssembler;
 			for ( EntityMappingType subMappingType : declaringType.getSubMappingTypes() ) {
 				assemblers[subMappingType.getSubclassId()][stateArrayPosition] = stateAssembler;
@@ -273,7 +273,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		//			AbstractEntityPersister#getSequentialSelect in 5.2
 
 		if ( entityKey == null ) {
-			if ( EntityLoadingLogging.TRACE_ENABLED ) {
+			if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isTraceEnabled() ) {
 				EntityLoadingLogging.ENTITY_LOADING_LOGGER.tracef(
 						"(%s) Beginning Initializer#resolveKey process for entity : %s",
 						StringHelper.collapse( this.getClass().getName() ),
@@ -296,7 +296,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					assert missing;
 				}
 				else {
-					if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+					if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 						EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 								"(%s) Hydrated EntityKey (%s): %s",
 								getSimpleConcreteImplName(),
@@ -351,16 +351,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			else {
 				// 2) build the EntityKey
 				entityKey = new EntityKey( id, concreteDescriptor );
-				// 3) schedule the EntityKey for batch loading, if possible
-
-				final SharedSessionContractImplementor session = rowProcessingState.getSession();
-				if ( session.getLoadQueryInfluencers().effectivelyBatchLoadable( concreteDescriptor ) ) {
-					final PersistenceContext persistenceContext =
-							session.getPersistenceContextInternal();
-					if ( !persistenceContext.containsEntity( entityKey ) ) {
-						persistenceContext.getBatchFetchQueue().addBatchLoadableEntityKey( entityKey );
-					}
-				}
 			}
 		}
 	}
@@ -429,7 +419,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						.getEntityMetamodel()
 						.isPolymorphic() ) {
 					parentInitializer.resolveKey( rowProcessingState );
-					return isReferencedModelPartInConcreteParent(
+					return !isReferencedModelPartInConcreteParent(
 							modelPart,
 							currentNavigablePath,
 							parentInitializer
@@ -447,7 +437,13 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final EntityPersister parentConcreteDescriptor = parentInitializer.asEntityInitializer()
 				.getConcreteDescriptor();
 		if ( parentConcreteDescriptor != null && parentConcreteDescriptor.getEntityMetamodel().isPolymorphic() ) {
-			final ModelPart concreteModelPart = parentConcreteDescriptor.findByPath( partNavigablePath.getLocalName() );
+			final EntityMappingType entityType = modelPart.asAttributeMapping() != null ?
+					modelPart.asAttributeMapping().getDeclaringType().findContainingEntityMapping() :
+					modelPart.asEntityMappingType();
+			final ModelPart concreteModelPart = parentConcreteDescriptor.findSubPart(
+					partNavigablePath.getLocalName(),
+					entityType
+			);
 			if ( concreteModelPart == null
 					|| !modelPart.getJavaType().getJavaTypeClass()
 					.isAssignableFrom( concreteModelPart.getJavaType().getJavaTypeClass() ) ) {
@@ -480,10 +476,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			and for AddressB skip resolving the EntityJoinedFetchInitializer of UserA
 
 		 */
-				return true;
+				return false;
 			}
 		}
-		return false;
+		return true;
 	}
 
 	protected void resolveEntityInstance(
@@ -491,7 +487,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			LoadingEntityEntry existingLoadingEntry,
 			Object entityIdentifier) {
 
-		if ( EntityLoadingLogging.TRACE_ENABLED ) {
+		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isTraceEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.tracef(
 					"(%s) Beginning Initializer#resolveInstance process for entity (%s) : %s",
 					StringHelper.collapse( this.getClass().getName() ),
@@ -516,10 +512,19 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			final Object existingEntity = persistenceContext.getEntity( entityKey );
 			if ( existingEntity != null ) {
 				entityInstance = existingEntity;
-				if ( existingLoadingEntry == null && isExistingEntityInitialized( existingEntity ) ) {
-					this.isInitialized = true;
-					registerReloadedEntity( rowProcessingState, existingEntity );
-					notifyResolutionListeners( entityInstance );
+				if ( existingLoadingEntry == null ) {
+					if ( isExistingEntityInitialized( existingEntity ) ) {
+						this.isInitialized = true;
+						registerReloadedEntity( rowProcessingState, existingEntity );
+						notifyResolutionListeners( entityInstance );
+						if ( rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
+							// We still need to read result set values to correctly populate the query cache
+							resolveState( rowProcessingState );
+						}
+					}
+					else {
+						registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
+					}
 				}
 			}
 			else if ( entityInstanceFromExecutionContext != null ) {
@@ -609,7 +614,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	private void setIsOwningInitializer(Object entityIdentifier,LoadingEntityEntry existingLoadingEntry) {
 		if ( existingLoadingEntry != null ) {
-			if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+			if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 						"(%s) Found existing loading entry [%s] - using loading instance",
 						getSimpleConcreteImplName(),
@@ -618,6 +623,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			}
 			if ( existingLoadingEntry.getEntityInitializer() == this ) {
 				isOwningInitializer = true;
+			}
+			else {
+				isInitialized = true;
 			}
 		}
 		else {
@@ -639,7 +647,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 		else {
 			// the entity is already being loaded elsewhere
-			if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+			if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 						"(%s) Entity [%s] being loaded by another initializer [%s] - skipping processing",
 						getSimpleConcreteImplName(),
@@ -677,7 +685,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	protected Object instantiateEntity(Object entityIdentifier, SharedSessionContractImplementor session) {
 		final Object instance = session.instantiate( concreteDescriptor, entityKey.getIdentifier() );
-		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%s) Created new entity instance [%s] : %s",
 					getSimpleConcreteImplName(),
@@ -727,7 +735,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	protected void registerReloadedEntity(RowProcessingState rowProcessingState, Object instance) {
-		if ( rowProcessingState.getCallback() != null ) {
+		if ( rowProcessingState.hasCallbackActions() ) {
 			// This is only needed for follow-on locking, so skip registering the entity if there is no callback
 			rowProcessingState.getJdbcValuesSourceProcessingState()
 					.registerReloadedEntity(
@@ -821,7 +829,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final SharedSessionContractImplementor session = rowProcessingState.getSession();
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 
-		if ( EntityLoadingLogging.TRACE_ENABLED ) {
+		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isTraceEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.tracef(
 					"(%s) Beginning Initializer#initializeInstance process for entity %s",
 					getSimpleConcreteImplName(),
@@ -877,7 +885,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		concreteDescriptor.afterInitialize( toInitialize, session );
 
-		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%s) Done materializing entityInstance : %s",
 					getSimpleConcreteImplName(),
@@ -963,7 +971,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			EntityDataAccess cacheAccess) {
 		final SessionFactoryImplementor factory = session.getFactory();
 
-		if ( EntityLoadingLogging.DEBUG_ENABLED ) {
+		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 					"(%S) Adding entityInstance to second-level cache: %s",
 					getSimpleConcreteImplName(),
@@ -1053,7 +1061,18 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		return values;
 	}
 
+	private void resolveState(RowProcessingState rowProcessingState) {
+		for ( final DomainResultAssembler<?> assembler : assemblers[concreteDescriptor.getSubclassId()] ) {
+			if ( assembler != null ) {
+				assembler.resolveState( rowProcessingState );
+			}
+		}
+	}
+
 	protected boolean skipInitialization(Object toInitialize, RowProcessingState rowProcessingState) {
+		if ( !isOwningInitializer ) {
+			return true;
+		}
 		final EntityEntry entry =
 				rowProcessingState.getSession().getPersistenceContextInternal().getEntry( toInitialize );
 		if ( entry == null ) {
@@ -1063,7 +1082,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		else if ( entry.getStatus().isDeletedOrGone() ) {
 			return true;
 		}
-		else if ( isOwningInitializer ) {
+		else {
 			if ( isPersistentAttributeInterceptable( toInitialize ) ) {
 				final PersistentAttributeInterceptor interceptor =
 						asPersistentAttributeInterceptable( toInitialize ).$$_hibernate_getInterceptor();
@@ -1086,9 +1105,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			else {
 				return false;
 			}
-		}
-		else {
-			return true;
 		}
 	}
 

@@ -78,7 +78,7 @@ public class SelectOnlyArrayPropertyTest extends BaseEntityManagerFunctionalTest
 		} );
 	}
 
-	@Entity
+	@Entity(name = "EntityWithIdAndIntegerArray")
 	public static class EntityWithIdAndIntegerArray {
 
 		@Id

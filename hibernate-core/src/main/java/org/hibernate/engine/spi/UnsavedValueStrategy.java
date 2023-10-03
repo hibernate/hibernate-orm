@@ -6,6 +6,8 @@
  */
 package org.hibernate.engine.spi;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * The base contract for determining transient status versus detached status.
  *
@@ -21,7 +23,7 @@ public interface UnsavedValueStrategy {
 	 * indicates the value does not corresponds to unsaved data (aka, detached state); {@code null} indicates that
 	 * this strategy was not able to determine conclusively.
 	 */
-	Boolean isUnsaved(Object test);
+	@Nullable Boolean isUnsaved(@Nullable Object test);
 
 	/**
 	 * Get a default value meant to indicate transience.
@@ -30,5 +32,5 @@ public interface UnsavedValueStrategy {
 	 *
 	 * @return The default transience value.
 	 */
-	Object getDefaultValue(Object currentValue);
+	@Nullable Object getDefaultValue(@Nullable Object currentValue);
 }

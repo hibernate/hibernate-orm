@@ -14,11 +14,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-
-import org.hibernate.orm.test.jpa.emops.Competitor;
 
 /**
  * @author Emmanuel Bernard
@@ -32,7 +29,6 @@ public class Competition {
 	@ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE },
 			fetch = FetchType.LAZY)
 	@JoinTable(name="competition_competitor")
-	@JoinColumn
 	private List<Competitor> competitors = new ArrayList<Competitor>();
 
 

@@ -44,6 +44,7 @@ import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -231,6 +232,11 @@ public class ExpressionReplacementWalker implements SqlAstWalker {
 	@Override
 	public void visitQueryLiteral(QueryLiteral<?> queryLiteral) {
 		doReplaceExpression( queryLiteral );
+	}
+
+	@Override
+	public <N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal) {
+		doReplaceExpression( literal );
 	}
 
 	@Override

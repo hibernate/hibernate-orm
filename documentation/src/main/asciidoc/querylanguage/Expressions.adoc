@@ -358,8 +358,12 @@ Here we list the basic operations.
 
 | `-` | Difference between two dates | `your.birthday - local date` | year-day duration
 | `-` | Difference between two datetimes | `local datetime - record.lastUpdated` | week-nanosecond duration
+| `-` | Difference of a date and a year-day duration | `local date - 1 day` | date
+| `-` | Difference of a datetime and a week-nanosecond duration | `record.lastUpdated - 1 minute` | datetime
+| `-` | Difference between two durations | `1 week - 1 day` | duration
 | `+` | Sum of a date and a year-day duration | `local date + 1 week` | date
 | `+` | Sum of a datetime and a week-nanosecond duration | `record.lastUpdated + 1 second` | datetime
+| `+` | Sum of two durations | `1 day + 4 hour` | duration
 | `*` | Product of an integer and a duration | `billing.cycles * 30 day` | duration
 | `by unit` | Convert a duration to an integer | `(1 year) by day` | integer
 |===
@@ -441,6 +445,23 @@ from Author as author
 ----
 
 A `case` expression may contain complex expression, including operator expressions.
+
+[[tuple-instantiation]]
+=== Tuples
+
+A _tuple instantiation_ is an expression like `(1, 'hello')`, and may be used to "vectorize" comparison expressions.
+
+[[tuple-comparison]]
+[source,hql]
+----
+from Person where (firstName, lastName) = ('Ludwig', 'Boltzmann')
+----
+[source,hql]
+----
+from Event where (year, day) > (year(local date), day(local date))
+----
+
+This syntax may be used even when the underlying SQL dialect does _not_ support so-called "row value" constructors.
 
 [[exp-functions]]
 === Functions
@@ -774,7 +795,9 @@ Unsurprisingly, `substring()` returns a substring of the given string.
 
 [source, hql]
 ----
-select substring(title, 0, position(' for Dummies')) from Book
+select substring(title, 1, position(' for Dummies' in title)) from Book         /* JPQL-style */
+
+select substring(title from 1 for position(' for Dummies' in title)) from Book  /* ANSI SQL-style */
 ----
 
 [discrete]
@@ -795,10 +818,27 @@ Its BNF is funky:
 
 [source, antlrv4]
 ----
-trimFunction
-    : "TRIM" "(" trimSpecification? trimCharacter? "FROM"? expression ")" ;
-trimSpecification
-    : "LEADING" | "TRAILING" | "BOTH" ;
+"TRIM" "(" (("LEADING" | "TRAILING" | "BOTH")? trimCharacter? "FROM")? expression ")" ;
+----
+
+[discrete]
+===== Padding strings
+The `pad()` function has a syntax inspired by `trim()`.
+
+[source,hql]
+----
+select concat(pad(b.title with 40 trailing '.'),
+              pad(a.firstName with 10 leading),
+              pad(a.lastName with 10 leading))
+from Book as b
+    join b.authors as a
+----
+
+Its BNF is given by:
+
+[source, antlrv4]
+----
+"PAD" "(" expression "WITH" expression ("LEADING" | "TRAILING") padCharacter? ")"
 ----
 
 [discrete]
@@ -1173,7 +1213,7 @@ For _logical_ operations on <<conditional-expressions,predicates>>, see <<logica
 | `is false` | `is not false` | Binary | `true` if the value to the left is `false`, or `false` otherwise
 |===
 
-[[null-predicate-example]]
+[[boolean-predicate-example]]
 [source, hql]
 ----
 from Book where discontinued is not true
@@ -1287,17 +1327,7 @@ from Book as book
 where :edition in elements(book.editions)
 ----
 
-The next example doesn't work on every database:
-
-[%unbreakable]
-[source, hql]
-----
-from Author as author
-where (author.person.name, author.person.birthdate)
-    in (select name, birthdate from OldAuthorData)
-----
-
-Here we used a "row value" constructor, a seemingly pretty basic feature which is surprisingly-poorly supported.
+It's quite common to have a parameterized list of values.
 
 [%unbreakable]
 [TIP]
@@ -1311,6 +1341,16 @@ List<Book> books =
             .getResultList();
 ----
 ====
+
+We may even "vectorize" an `in` predicate, using a tuple constructor and a subquery with multiple selection items:
+
+[%unbreakable]
+[source, hql]
+----
+from Author as author
+where (author.person.name, author.person.birthdate)
+    in (select name, birthdate from OldAuthorData)
+----
 
 [[relational-comparisons-subqueries]]
 ==== Comparison operators and subqueries
@@ -1357,7 +1397,7 @@ As you can surely guess, `not exists` evaluates to true if the thing to the righ
 [[collection-expressions-exists-example]]
 [source, hql]
 ----
-from Author where exists element(books)
+from Author where exists elements(books)
 ----
 [source, hql]
 ----

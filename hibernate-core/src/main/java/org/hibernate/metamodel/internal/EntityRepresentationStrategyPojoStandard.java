@@ -18,7 +18,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
 import org.hibernate.bytecode.spi.ReflectionOptimizer.InstantiationOptimizer;
-import org.hibernate.cfg.Environment;
 import org.hibernate.classic.Lifecycle;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -287,9 +286,6 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 	}
 
 	private ReflectionOptimizer resolveReflectionOptimizer(BytecodeProvider bytecodeProvider) {
-		if ( ! Environment.useReflectionOptimizer() ) {
-			return null;
-		}
 		return bytecodeProvider.getReflectionOptimizer(
 				mappedJtd.getJavaTypeClass(),
 				propertyAccessMap

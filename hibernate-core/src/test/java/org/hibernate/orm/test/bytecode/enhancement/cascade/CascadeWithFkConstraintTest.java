@@ -21,7 +21,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
+
+import org.hibernate.testing.util.uuid.SafeRandomUUIDGenerator;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 
@@ -95,7 +96,7 @@ public class CascadeWithFkConstraintTest extends BaseCoreFunctionalTestCase {
         Set<Car> cars = new HashSet<>();
 
         Garage() {
-            id = UUID.randomUUID().toString();
+            id = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
         }
 
         void insert(Car aCar) {
@@ -111,7 +112,7 @@ public class CascadeWithFkConstraintTest extends BaseCoreFunctionalTestCase {
         String id;
 
         Car() {
-            id = UUID.randomUUID().toString();
+            id = SafeRandomUUIDGenerator.safeRandomUUIDAsString();
         }
     }
 }

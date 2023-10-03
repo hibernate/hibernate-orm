@@ -14,6 +14,7 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -753,20 +754,23 @@ public class CockroachDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		if ( intervalType != null ) {
-			return "(?2+?3)";
-		}
-		switch ( unit ) {
+		return intervalType != null
+				? "(?2+?3)"
+				: "cast(?3+" + intervalPattern( unit ) + " as " + temporalType.name().toLowerCase() + ")";
+	}
+
+	private static String intervalPattern(TemporalUnit unit) {
+		switch (unit) {
 			case NANOSECOND:
-				return "(?3+(?2)/1e3*interval '1 microsecond')";
+				return "(?2)/1e3*interval '1 microsecond'";
 			case NATIVE:
-				return "(?3+(?2)*interval '1 microsecond')";
+				return "(?2)*interval '1 second'";
 			case QUARTER: //quarter is not supported in interval literals
-				return "(?3+(?2)*interval '3 month')";
+				return "(?2)*interval '3 month'";
 			case WEEK: //week is not supported in interval literals
-				return "(?3+(?2)*interval '7 day')";
+				return "(?2)*interval '7 day'";
 			default:
-				return "(?3+(?2)*interval '1 ?1')";
+				return "(?2)*interval '1 " + unit + "'";
 		}
 	}
 
@@ -1075,6 +1079,33 @@ public class CockroachDialect extends Dialect {
 			}
 		};
 	}
+
+	/**
+	 * Applies the hints to the query string.
+	 *
+	 * The hints can be <a href="https://www.cockroachlabs.com/docs/v23.1/table-expressions#force-index-selection">index selection hints</a>
+	 * or <a href="https://www.cockroachlabs.com/docs/stable/sql-grammar#opt_join_hint">join hints</a>.
+	 * <p>
+	 * For index selection hints, use the format {@code <tablename>@{FORCE_INDEX=<index>[,<DIRECTION>]}}
+	 * where the optional DIRECTION is either ASC (ascending) or DESC (descending). Multiple index hints can be provided.
+	 * The effect is that in the final SQL statement the hint is added to the table name mentioned in the hint.
+	 *<p>
+	 * For join hints, use the format {@code "<MERGE|HASH|LOOKUP|INVERTED> JOIN"}. Only one join hint will be added. It is
+	 * applied to all join statements in the SQL statement.
+	 * <p>
+	 * Hints are only added to select statements.
+	 *
+	 * @param query The query to which to apply the hint.
+	 * @param hintList The hints to apply
+	 *
+	 * @return the query with hints added
+	 */
+	@Override
+	public String getQueryHintString(String query, List<String> hintList) {
+		return new CockroachDialectQueryHints(query, hintList).getQueryHintString();
+	}
+
+
 
 // CockroachDB doesn't support this by default. See sql.multiple_modifications_of_table.enabled
 //

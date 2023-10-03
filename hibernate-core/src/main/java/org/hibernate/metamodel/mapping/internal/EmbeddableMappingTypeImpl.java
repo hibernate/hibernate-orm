@@ -385,7 +385,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					length = column.getLength();
 					precision = column.getPrecision();
 					scale = column.getScale();
-					nullable = column.isNullable();
+					nullable = bootPropertyDescriptor.isOptional() && column.isNullable() ;
 					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
 				}
 				else {
@@ -393,7 +393,7 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 					length = null;
 					precision = null;
 					scale = null;
-					nullable = true;
+					nullable = bootPropertyDescriptor.isOptional();
 					selectablePath = basicValue.createSelectablePath( bootPropertyDescriptor.getName() );
 				}
 				attributeMapping = MappingModelCreationHelper.buildBasicAttributeMapping(

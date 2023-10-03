@@ -13,7 +13,7 @@ The process is very different for each.
 
 [TIP]
 ====
-During the bootstrap process, you might want to customize Hibernate behavior so make sure you check the <<appendices/Configurations.adoc#configurations,Configurations>> section as well.
+During the bootstrap process, you might want to customize Hibernate behavior so make sure you check the <<appendices/SettingsReference.adoc#settings>> section as well.
 ====
 
 [[bootstrap-native]]

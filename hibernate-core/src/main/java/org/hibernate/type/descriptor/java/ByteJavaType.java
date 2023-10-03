@@ -35,6 +35,7 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 	public String toString(Byte value) {
 		return value == null ? null : value.toString();
 	}
+
 	@Override
 	public Byte fromString(CharSequence string) {
 		return Byte.valueOf( string.toString() );
@@ -175,6 +176,7 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 				)
 		);
 	}
+
 	@Override
 	public Byte next(
 			Byte current,
@@ -188,7 +190,9 @@ public class ByteJavaType extends AbstractClassJavaType<Byte>
 	@Override
 	public Byte seed(
 			Long length,
-			Integer precision, Integer scale, SharedSessionContractImplementor session) {
+			Integer precision,
+			Integer scale,
+			SharedSessionContractImplementor session) {
 		return ZERO;
 	}
 

@@ -14,7 +14,7 @@ Hibernate makes *relational data* visible to a program written in Java, in a *na
 ****
 
 Here the relational data is the focus, along with the importance of typesafety.
-The goal of _Object/relational mapping_ (ORM) is to eliminate fragile and untypesafe code, and make large programs easier to maintain in the long run.
+The goal of _object/relational mapping_ (ORM) is to eliminate fragile and untypesafe code, and make large programs easier to maintain in the long run.
 
 ORM takes the pain out of persistence by relieving the developer of the need to hand-write tedious, repetitive, and fragile code for flattening graphs of objects to database tables and rebuilding graphs of objects from flat SQL query result sets.
 Even better, ORM makes it much easier to tune performance later, after the basic persistence logic has already been written.
@@ -54,8 +54,8 @@ We're all especially grateful to Steve, who has led the project for many years, 
 We can think of the API of Hibernate in terms of three basic elements:
 
 - an implementation of the JPA-defined APIs, most importantly, of the interfaces `EntityManagerFactory` and `EntityManager`, and of the JPA-defined O/R mapping annotations,
-- a _native API_ exposing the full set of available functionality, centered around the interfaces `SessionFactory`, which extends `EntityManagerFactory`, and `Session`, which extends `EntityManager`, and
-- a set of _mapping annotations_ which augment the O/R mapping annotations defined by JPA, and which may be used with the JPA-defined interfaces, or with the native API.
+- a _native API_ exposing the full set of available functionality, centered around the interfaces link:{doc-javadoc-url}org/hibernate/SessionFactory.html[`SessionFactory`], which extends `EntityManagerFactory`, and link:{doc-javadoc-url}org/hibernate/Session.html[`Session`], which extends `EntityManager`, and
+- a set of link:{doc-javadoc-url}org/hibernate/annotations/package-summary.html[_mapping annotations_] which augment the O/R mapping annotations defined by JPA, and which may be used with the JPA-defined interfaces, or with the native API.
 
 Hibernate also offers a range of SPIs for frameworks and libraries which extend or integrate with Hibernate, but we're not interested in any of that stuff here.
 
@@ -154,21 +154,21 @@ repositories {
 
 dependencies {
     // the GOAT ORM
-    implementation 'org.hibernate.orm:hibernate-core:6.2.2.Final'
+    implementation 'org.hibernate.orm:hibernate-core:6.3.0.Final'
 
     // Hibernate Validator
     implementation 'org.hibernate.validator:hibernate-validator:8.0.0.Final'
     implementation 'org.glassfish:jakarta.el:4.0.2'
 
     // Agroal connection pool
-    implementation 'org.hibernate.orm:hibernate-agroal:6.2.2.Final'
+    implementation 'org.hibernate.orm:hibernate-agroal:6.3.0.Final'
     implementation 'io.agroal:agroal-pool:2.1'
 
     // logging via Log4j
     implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
 
     // JPA Metamodel Generator
-    annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.2.2.Final'
+    annotationProcessor 'org.hibernate.orm:hibernate-jpamodelgen:6.3.0.Final'
 
     // Compile-time checking for HQL
     //implementation 'org.hibernate:query-validator:2.0-SNAPSHOT'
@@ -448,7 +448,7 @@ public class BookResource {
 Indeed, we might also _finish_ with something like that—it's quite hard to identify anything concretely wrong with the code above, and for such a simple case it seems really difficult to justify making this code more complicated by introducing additional objects.
 
 One very nice aspect of this code, which we wish to draw your attention to, is that session and transaction management is handled by generic "framework" code, just as we already recommended above.
-In this case, we're using the `fromTransaction()` method, which happens to come built in to Hibernate.
+In this case, we're using the link:{doc-javadoc-url}org/hibernate/SessionFactory.html#fromTransaction(java.util.function.Function)[`fromTransaction()`] method, which happens to come built in to Hibernate.
 But you might prefer to use something else, for example:
 
 - in a container environment like Jakarta EE or Quarkus, _container-managed transactions_ and _container-managed persistence contexts_, or
@@ -467,7 +467,7 @@ public class BookResource {
     @GET @Path("books/{titlePattern}/{page:\\d+}")
     public List<Book> findBooks(String titlePattern, int page) {
         var books = sessionFactory.fromTransaction(session -> {
-            return entityManager.createQuery("from Book where title like ?1 order by title", Book.class)
+            return session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
                     .setParameter(1, titlePattern)
                     .setPage(Page.page(RESULTS_PER_PAGE, page))
                     .getResultList();
@@ -485,9 +485,9 @@ Let's hit the code with our favorite thing, the Extract Method refactoring. We o
 
 [source,java]
 ----
-static List<Book> findBooksByTitleWithPagination(EntityManager entityManager,
+static List<Book> findBooksByTitleWithPagination(Session session,
                                                  String titlePattern, Page page) {
-    return entityManager.createQuery("from Book where title like ?1 order by title", Book.class)
+    return session.createSelectionQuery("from Book where title like ?1 order by title", Book.class)
             .setParameter(1, titlePattern)
             .setPage(page)
             .getResultList();
@@ -509,9 +509,9 @@ We need a place to put the annotation, so lets move our query method to a new cl
             query="from Book where title like :title order by title")
 class Queries {
 
-    static List<Book> findBooksByTitleWithPagination(EntityManager entityManager,
+    static List<Book> findBooksByTitleWithPagination(Session session,
                                                      String titlePattern, Page page) {
-        return entityManager.createNamedQuery("findBooksByTitle", Book.class)
+        return session.createNamedQuery("findBooksByTitle", Book.class)
                 .setParameter("title", titlePattern)
                 .setPage(page)
                 .getResultList();
@@ -554,7 +554,7 @@ Suppose we simplify `Queries` to just the following:
 [source,java]
 ----
 interface Queries {
-    @HQL("from Book where title like :title order by title")
+    @HQL("where title like :title order by title")
     List<Book> findBooksByTitleWithPagination(String title, Page page);
 }
 ----
@@ -625,7 +625,7 @@ configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_DATABASE_ACTION,
                           Action.SPEC_ACTION_DROP_AND_CREATE);
 ----
 
-Alternatively, in Hibernate 6, we may use the new `SchemaManager` API to export the schema, just as we did <<main-hibernate,above>>.
+Alternatively, in Hibernate 6, we may use the new link:{doc-javadoc-url}org/hibernate/relational/SchemaManager.html[`SchemaManager`] API to export the schema, just as we did <<main-hibernate,above>>.
 
 [source,java]
 ----
@@ -648,6 +648,7 @@ sessionFactory.getSchemaManager().truncateMappedObjects();
 After truncating tables, we might need to initialize our test data.
 We may specify test data in a SQL script, for example:
 
+[[import.sql]]
 [source,sql]
 ./import.sql
 ----
@@ -658,12 +659,12 @@ insert into Books (isbn, title) values ('9781617290459', 'Java Persistence with 
 
 If we name this file `import.sql`, and place it in the root classpath, that's all we need to do.
 
-Otherwise, we need to specify the file in the <<automatic-schema-export,configuration property>> `jakarta.persistence.schema-generation.create-script-source`.
+Otherwise, we need to specify the file in the <<automatic-schema-export,configuration property>> `jakarta.persistence.sql-load-script-source`.
 If we're using `Configuration` to configure Hibernate, we could write:
 
 [source,java]
 ----
-configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCRIPT_SOURCE,
+configuration.setProperty(AvailableSettings.JAKARTA_HBM2DDL_LOAD_SCRIPT_SOURCE,
                           "/org/example/test-data.sql");
 ----
 
@@ -803,7 +804,7 @@ And, on the contrary, a layer is only easily replaceable if it has a very _narro
 [TIP]
 ====
 Some people do indeed use mock repositories for testing, but we really struggle to see any value in this.
-If you don't want to run your tests against our real database, it's usually very easy to "mock" the database itself by running tests against an in-memory Java database like H2.
+If we don't want to run our tests against our real database, it's usually very easy to "mock" the database itself by running tests against an in-memory Java database like H2.
 This works even better in Hibernate 6 than in older versions of Hibernate, since HQL is now _much_ more portable between platforms.
 ====
 

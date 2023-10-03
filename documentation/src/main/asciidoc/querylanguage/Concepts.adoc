@@ -1,12 +1,12 @@
 [[basic-concepts]]
 == Basic concepts
 
-This document describes Hibernate Query Language (HQL), which is, I suppose we could say, a dialect of the Java (now Jakarta) Persistence Query Language (JPQL).
-
-Or is it the other way around?
+This document describes Hibernate Query Language (HQL), which is, I suppose we could say, a "dialect" of the Java (now Jakarta) Persistence Query Language (JPQL).
 
 [NOTE]
 ====
+Or is it the other way around?
+
 JPQL was inspired by early versions of HQL, and is a proper subset of modern HQL.
 Here we focus on describing the complete, more powerful HQL language as it exists today.
 
@@ -95,7 +95,7 @@ In hindsight, it might have been better to define the whole language as case-sen
 [%unbreakable]
 [NOTE]
 ====
-Incidentally, it's standard practice to use lowercase keywords in HQL and JPQL.
+Incidentally, it's standard practice to use lowercase keywords in HQL.
 
 The use of uppercase keywords indicates an endearing but unhealthy attachment to the culture of the 1970's.
 ====
@@ -165,6 +165,15 @@ Constructing a query by concatenating HQL fragments with user input is extremely
 
 Some of the syntax for literal values also departs from the standard syntax in ANSI SQL, especially in the area of date/time literals, but we'll discuss all that later, in <<literals>>.
 
+[[syntax]]
+=== Syntax
+
+We'll describe the syntax of the language as we go along, sometimes displaying fragments of the grammar in an ANTLR-like BNF form.
+(Occasionally we'll simplify these snippets for readability, so please don't take them as canonical.)
+
+The full canonical grammar for HQL can be found in link:https://github.com/hibernate/hibernate-orm/blob/main/hibernate-core/src/main/antlr/org/hibernate/grammars/hql/HqlParser.g4[the github project].
+
+The grammar for JPQL may be found in chapter 4 of the JPA specification.
 
 [[type-system]]
 === Type system
@@ -207,8 +216,8 @@ This rule is the source of the famous (and controversial) _ternary logic_ of SQL
 A logical expression like `firstName='Gavin' and team='Hibernate'` isn't restricted to the values `true` and `false`.
 It may also be `null`.
 
-This can in principle lead to some quite unintuitive results: we can't use the law of the excluded middle to reason about logical expressions in SQL!
-But in practice, we've once never run into a case where this caused us problems.
+This can, in principle, lead to some quite unintuitive results: we can't use the law of the excluded middle to reason about logical expressions in SQL!
+But in practice, we've never once run into a case where this caused us problems.
 
 As you probably know, when a logical predicate occurs as a <<where-clause,restriction>>, rows for which the predicate evaluates to `null` are _excluded_ from the result set.
 That is, in this context at least, a logical null is interpreted as "effectively false".
@@ -325,7 +334,7 @@ For example:
 delete Author author where is empty author.books
 ----
 
-As in SQL, the presence or absence of the `from` keyword has absolutely no effect on the semantics of the `update` statement.
+As in SQL, the presence or absence of the `from` keyword has absolutely no effect on the semantics of the `delete` statement.
 
 Just like update statements, delete statements are polymorphic, and affect mapped subclasses of the given entity class.
 Therefore, a single HQL `delete` statement might result in multiple SQL delete statements executed against the database.
@@ -489,7 +498,7 @@ But when there's no explicit `select` clause, the select list is implied by the 
 List<Book> books =
         session.createQuery("from Book join authors", Book.class)
             .getResultList();
-for (Person person: persons) {
+for (Book book: books) {
     ...
 }
 ----
@@ -544,6 +553,23 @@ Indeed, a fairly innocent-looking HQL query can easily translate to a SQL statem
 We need to be a _bit_ careful about that, but actually it's usually a good thing.
 HQL makes it very easy to fetch all the data we need in a single trip to the database, and that's absolutely key to achieving high performance in data access code.
 Typically, it's much worse to fetch exactly the data we need, but in many round trips to the database server, than it is to fetch just a bit more data than what we're going to need, all a single SQL query.
+====
+
+When there's no explicit `select` clause, a further abbreviation is sometimes possible.
+
+[TIP]
+====
+When the result type of a `select` query is an entity type, and we specify the type explicitly by passing the entity class to `createQuery()` or `createSelectionQuery()`, we're sometimes allowed to omit the `from` clause, for example:
+
+[source, java]
+[%unbreakable]
+----
+// explicit result type Book, so 'from Book' is inferred
+List<Book> books =
+        session.createQuery("where title like :title", Book.class)
+            .setParameter("title", title)
+            .getResultList();
+----
 ====
 
 [[returning-to-java]]
@@ -691,7 +717,7 @@ But at least we don't have to write them explicitly.
 [[select-new]]
 ==== Instantiation
 
-In JPA, and in older versions of Hibernate, this functionality required more ceremony.
+In JPQL, and in older versions of Hibernate, this functionality required more ceremony.
 
 [cols="25,~,~,^15"]
 |===

@@ -1380,10 +1380,6 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Don't use old DTDs, read the Hibernate 3.x Migration Guide", id = 404)
 	void usingOldDtd();
 
-	@LogMessage(level = INFO)
-	@Message(value = "Using bytecode reflection optimizer", id = 406)
-	void usingReflectionOptimizer();
-
 //	@LogMessage(level = INFO)
 //	@Message(value = "Using java.io streams to persist binary types", id = 407)
 //	void usingStreams();
@@ -1864,5 +1860,10 @@ public interface CoreMessageLogger extends BasicLogger {
 	@Message(value = "Can't retrieve the generated identity value, because the dialect does not support selecting the last generated identity and 'hibernate.jdbc.use_get_generated_keys' was disabled",
 			id = 515)
 	HibernateException nullIdentitySelectString();
+
+	@LogMessage(level = WARN)
+	@Message(value = "Failed to discover types for enhancement from class: %s",
+			id = 516)
+	void enhancementDiscoveryFailed(String className, @Cause Throwable cause);
 
 }

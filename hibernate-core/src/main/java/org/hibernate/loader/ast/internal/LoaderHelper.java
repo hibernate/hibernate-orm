@@ -7,7 +7,6 @@
 package org.hibernate.loader.ast.internal;
 
 import java.lang.reflect.Array;
-import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.LockMode;
@@ -64,7 +63,7 @@ public class LoaderHelper {
 
 			final EntityPersister persister = entry.getPersister();
 
-			if ( LoaderLogging.TRACE_ENABLED ) {
+			if ( LoaderLogging.LOADER_LOGGER.isTraceEnabled() ) {
 				LoaderLogging.LOADER_LOGGER.tracef(
 						"Locking `%s( %s )` in `%s` lock-mode",
 						persister.getEntityName(),
@@ -86,7 +85,7 @@ public class LoaderHelper {
 				if ( persister.isVersioned() && requestedLockMode == LockMode.PESSIMISTIC_FORCE_INCREMENT  ) {
 					// todo : should we check the current isolation mode explicitly?
 					Object nextVersion = persister.forceVersionIncrement(
-							entry.getId(), entry.getVersion(), session
+							entry.getId(), entry.getVersion(), false, session
 					);
 					entry.forceLocked( object, nextVersion );
 				}

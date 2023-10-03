@@ -113,7 +113,7 @@ public class JoinNaming extends BaseEnversJPAFunctionalTestCase {
 	public void testJoinColumnName() {
 		Iterator<Selectable> columns = metadata().getEntityBinding(
 				"org.hibernate.orm.test.envers.integration.naming.JoinNamingRefIngEntity_AUD"
-		).getProperty( "reference_id" ).getColumnIterator();
+		).getProperty( "reference_id" ).getSelectables().iterator();
 		assertTrue( columns.hasNext() );
 		assertEquals( "jnree_column_reference", columns.next().getText() );
 		assertFalse( columns.hasNext() );

@@ -81,7 +81,7 @@ public final class ByteBuddyState {
 	private final TypeCache<TypeCache.SimpleKey> proxyCache;
 	private final TypeCache<TypeCache.SimpleKey> basicProxyCache;
 
-	ByteBuddyState() {
+	public ByteBuddyState() {
 		this( ClassFileVersion.ofThisVm( ClassFileVersion.JAVA_V11 ) );
 	}
 

@@ -392,52 +392,19 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 		checkColumnDuplication();
 	}
 
-	private void checkColumnDuplication(java.util.Set<String> distinctColumns, Value value)
-			throws MappingException {
-		final boolean[] insertability = value.getColumnInsertability();
-		final boolean[] updatability = value.getColumnUpdateability();
-		int i = 0;
-		for ( Selectable selectable : value.getSelectables() ) {
-			// exclude formulas and columns that are not insertable or updatable
-			// since these values can be repeated (HHH-5393)
-			if ( !selectable.isFormula() && ( insertability[i] || updatability[i] ) ) {
-				Column col = (Column) selectable;
-				if ( !distinctColumns.add( col.getName() ) ) {
-					throw new MappingException(
-							"Repeated column in mapping for collection: "
-									+ getRole()
-									+ " column: "
-									+ col.getName()
-					);
-				}
-			}
-			i++;
-		}
-	}
-
 	private void checkColumnDuplication() throws MappingException {
+		final String owner = "collection '" + getReferencedPropertyName() + "'";
 		final HashSet<String> cols = new HashSet<>();
-		checkColumnDuplication( cols, getKey() );
+		getKey().checkColumnDuplication( cols, owner );
 		if ( isIndexed() ) {
-			checkColumnDuplication(
-					cols,
-					( (IndexedCollection) this ).getIndex()
-			);
+			( (IndexedCollection) this ).getIndex().checkColumnDuplication( cols, owner );
 		}
 		if ( isIdentified() ) {
-			checkColumnDuplication(
-					cols,
-					( (IdentifierCollection) this ).getIdentifier()
-			);
+			( (IdentifierCollection) this ).getIdentifier().checkColumnDuplication( cols, owner );
 		}
 		if ( !isOneToMany() ) {
-			checkColumnDuplication( cols, getElement() );
+			getElement().checkColumnDuplication( cols, owner );
 		}
-	}
-
-	@Deprecated
-	public Iterator<Selectable> getColumnIterator() {
-		return Collections.emptyIterator();
 	}
 
 	@Override

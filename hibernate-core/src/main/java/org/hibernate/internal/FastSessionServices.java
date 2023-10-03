@@ -68,6 +68,7 @@ import org.hibernate.jpa.internal.util.LockOptionsHelper;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
 import org.hibernate.type.format.FormatMapper;
 
 import jakarta.persistence.CacheRetrieveMode;
@@ -182,6 +183,7 @@ public final class FastSessionServices {
 	private final FormatMapper jsonFormatMapper;
 	private final FormatMapper xmlFormatMapper;
 	private final MutationExecutorService mutationExecutorService;
+	private final JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
 
 	FastSessionServices(SessionFactoryImplementor sessionFactory) {
 		Objects.requireNonNull( sessionFactory );
@@ -250,6 +252,8 @@ public final class FastSessionServices {
 		this.transactionCoordinatorBuilder = serviceRegistry.getService( TransactionCoordinatorBuilder.class );
 		this.jdbcServices = serviceRegistry.getService( JdbcServices.class );
 		this.entityCopyObserverFactory = serviceRegistry.getService( EntityCopyObserverFactory.class );
+		this.jdbcValuesMappingProducerProvider = serviceRegistry.getService( JdbcValuesMappingProducerProvider.class );
+
 
 		this.isJtaTransactionAccessible = isTransactionAccessible( sessionFactory, transactionCoordinatorBuilder );
 
@@ -367,6 +371,10 @@ public final class FastSessionServices {
 
 	public ConnectionObserverStatsBridge getDefaultJdbcObserver() {
 		return defaultJdbcObservers;
+	}
+
+	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {
+		return this.jdbcValuesMappingProducerProvider;
 	}
 
 	public boolean useStreamForLobBinding() {

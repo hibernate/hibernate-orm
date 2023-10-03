@@ -29,7 +29,6 @@ import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.sql.Types;
-import java.time.Duration;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Date;
@@ -878,11 +877,10 @@ public abstract class AbstractHANADialect extends Dialect {
 
 	@Override
 	public String getWriteLockString(int timeout) {
-		long timeoutInSeconds = getLockWaitTimeoutInSeconds( timeout );
-		if ( timeoutInSeconds > 0 ) {
-			return getForUpdateString() + " wait " + timeoutInSeconds;
+		if ( timeout > 0 ) {
+			return getForUpdateString() + " wait " + getTimeoutInSeconds( timeout );
 		}
-		else if ( timeoutInSeconds == 0 ) {
+		else if ( timeout == 0 ) {
 			return getForUpdateNowaitString();
 		}
 		else {
@@ -893,7 +891,7 @@ public abstract class AbstractHANADialect extends Dialect {
 	@Override
 	public String getWriteLockString(String aliases, int timeout) {
 		if ( timeout > 0 ) {
-			return getForUpdateString( aliases ) + " wait " + getLockWaitTimeoutInSeconds( timeout );
+			return getForUpdateString( aliases ) + " wait " + getTimeoutInSeconds( timeout );
 		}
 		else if ( timeout == 0 ) {
 			return getForUpdateNowaitString( aliases );
@@ -901,16 +899,6 @@ public abstract class AbstractHANADialect extends Dialect {
 		else {
 			return getForUpdateString( aliases );
 		}
-	}
-
-	private long getLockWaitTimeoutInSeconds(int timeoutInMilliseconds) {
-		Duration duration = Duration.ofMillis( timeoutInMilliseconds );
-		long timeoutInSeconds = duration.getSeconds();
-		if ( duration.getNano() != 0 && LOG.isInfoEnabled() ) {
-			LOG.info( "Changing the query timeout from " + timeoutInMilliseconds + " ms to " + timeoutInSeconds
-					+ " s, because HANA requires the timeout in seconds" );
-		}
-		return timeoutInSeconds;
 	}
 
 	@Override

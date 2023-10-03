@@ -86,22 +86,26 @@ public class SqmDerivedJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements
 	}
 
 	@Override
+	public boolean isImplicitlySelectable() {
+		return false;
+	}
+
+	@Override
 	public SqmDerivedJoin<T> copy(SqmCopyContext context) {
 		final SqmDerivedJoin<T> existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmRoot<?> rootCopy = findRoot().copy( context );
 		final SqmDerivedJoin<T> path = context.registerCopy(
 				this,
 				new SqmDerivedJoin<>(
-						getNavigablePathCopy( rootCopy ),
+						getNavigablePath(),
 						subQuery,
 						lateral,
 						getReferencedPathSource(),
 						getExplicitAlias(),
 						getSqmJoinType(),
-						rootCopy
+						findRoot().copy( context )
 				)
 		);
 		copyTo( path, context );

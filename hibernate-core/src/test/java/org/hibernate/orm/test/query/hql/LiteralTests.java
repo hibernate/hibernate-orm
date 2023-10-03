@@ -9,6 +9,7 @@ package org.hibernate.orm.test.query.hql;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.animal.Classification;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -56,6 +57,27 @@ public class LiteralTests {
 					assertThat( PrimitiveByteArrayJavaType.INSTANCE.toString( bytes3), is( "deadbeef") );
 					byte[] bytes4 = (byte[]) session.createQuery( "select {0xde, 0xad, 0xbe, 0xef}" ).getSingleResult();
 					assertThat( PrimitiveByteArrayJavaType.INSTANCE.toString( bytes4), is( "deadbeef") );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-16737")
+	public void testUntypedIntegralLiteral(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "select 1 from Human h where h.bigIntegerValue = 9876543210" ).getResultList();
+					session.createQuery( "select 1 from Human h where h.bigIntegerValue = 98765432109876543210" ).getResultList();
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-16737")
+	public void testUntypedDecimalLiteral(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery( "select 1 from Human h where h.bigDecimalValue = 199999.99f" ).getResultList();
 				}
 		);
 	}
@@ -275,6 +297,16 @@ public class LiteralTests {
 	}
 
 	@Test
+	public void testOctalLiteral(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery( "select 015053" )
+							.getSingleResult(), is(6699) );
+				}
+		);
+	}
+
+	@Test
 	public void testBigLiterals(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -304,6 +336,19 @@ public class LiteralTests {
 					assertThat( session.createQuery( "select 1" ).getSingleResult(), is( 1 ) );
 					assertThat( session.createQuery( "select 1_000_000" ).getSingleResult(), is( 1_000_000 ) );
 					assertThat( session.createQuery( "select 1_000_000L" ).getSingleResult(), is( 1_000_000L ) );
+				}
+		);
+	}
+
+	@Test
+	public void testFloatingPointLiteralInSelect(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery( "select 1.0" ).getSingleResult(), is( 1.0 ) );
+					assertThat( session.createQuery( "select 123.456" ).getSingleResult(), is( 123.456 ) );
+					assertThat( session.createQuery( "select 123.456F" ).getSingleResult(), is( 123.456F ) );
+					assertThat( session.createQuery( "select 123.456D" ).getSingleResult(), is( 123.456D ) );
+					assertThat( session.createQuery( "select 1.23e45" ).getSingleResult(), is( 1.23e45 ) );
 				}
 		);
 	}

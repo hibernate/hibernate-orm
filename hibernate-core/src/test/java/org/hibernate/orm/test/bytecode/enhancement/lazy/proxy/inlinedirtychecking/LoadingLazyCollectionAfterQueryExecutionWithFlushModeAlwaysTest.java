@@ -12,6 +12,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 
 import org.hibernate.FlushMode;
+import org.hibernate.bytecode.internal.BytecodeProviderInitiator;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Environment;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
@@ -49,7 +50,7 @@ public class LoadingLazyCollectionAfterQueryExecutionWithFlushModeAlwaysTest
 	protected void addMappings(Map settings) {
 		String byteCodeProvider = Environment.getProperties().getProperty( AvailableSettings.BYTECODE_PROVIDER );
 		settings.put( AvailableSettings.FLUSH_MODE, FlushMode.ALWAYS );
-		if ( byteCodeProvider != null && !Environment.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
+		if ( byteCodeProvider != null && !BytecodeProviderInitiator.BYTECODE_PROVIDER_NAME_BYTEBUDDY.equals( byteCodeProvider ) ) {
 			// skip the test if the bytecode provider is Javassist
 			skipTest = true;
 		}

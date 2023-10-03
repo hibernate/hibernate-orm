@@ -8,8 +8,9 @@ package org.hibernate.testing.orm.junit;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -49,42 +50,73 @@ public class TestingUtil {
 		return Optional.empty();
 	}
 
-	public static <A extends Annotation> List<A> findEffectiveRepeatingAnnotation(
+	public static <A extends Annotation> Collection<A> collectAnnotations(
 			ExtensionContext context,
 			Class<A> annotationType,
 			Class<? extends Annotation> groupAnnotationType) {
+		return collectAnnotations(
+				context,
+				annotationType,
+				groupAnnotationType,
+				(methodAnnotation, methodAnnotations, classAnnotation, classAnnotations) -> {
+					final List<A> list = new ArrayList<>();
+					if ( methodAnnotation != null ) {
+						list.add( methodAnnotation );
+					}
+					else if ( classAnnotation != null ) {
+						list.add( classAnnotation );
+					}
+					if ( methodAnnotations != null ) {
+						list.addAll( Arrays.asList( methodAnnotations ) );
+					}
+					else if ( classAnnotations != null ) {
+						list.addAll( Arrays.asList( classAnnotations ) );
+					}
+					return list;
+				}
+		);
+	}
+
+	public static <A extends Annotation> Collection<A> collectAnnotations(
+			ExtensionContext context,
+			Class<A> annotationType,
+			Class<? extends Annotation> groupAnnotationType,
+			TestAnnotationCollector<A> collector) {
 		if ( !context.getElement().isPresent() ) {
 			return Collections.emptyList();
 		}
 
-		final Optional<A> effectiveAnnotation = findEffectiveAnnotation( context, annotationType );
-		final Optional<? extends Annotation> effectiveGroupingAnnotation = findEffectiveAnnotation(
-				context,
-				groupAnnotationType
-		);
-
-		if ( effectiveAnnotation.isPresent() || effectiveGroupingAnnotation.isPresent() ) {
-			if ( !effectiveGroupingAnnotation.isPresent() ) {
-				return Collections.singletonList( effectiveAnnotation.get() );
-			}
-
-			final List<A> list = new ArrayList<>();
-			effectiveAnnotation.ifPresent( list::add );
-
-			final Method valueMethod;
+		final AnnotatedElement annotatedElement = context.getElement().get();
+		final A methodAnnotation = annotatedElement.getAnnotation( annotationType );
+		final A classAnnotation = context.getTestInstance().map( i -> i.getClass().getAnnotation( annotationType ) ).orElse( null );
+		final Annotation methodPluralAnn = annotatedElement.getAnnotation( groupAnnotationType );
+		final Annotation classPluralAnn = context.getTestInstance().map( i -> i.getClass().getAnnotation( groupAnnotationType ) ).orElse( null );
+		final A[] methodAnnotations;
+		final A[] classAnnotations;
+		if ( methodPluralAnn != null ) {
 			try {
-				valueMethod = groupAnnotationType.getDeclaredMethod( "value", null );
-
-				Collections.addAll( list, (A[]) valueMethod.invoke( effectiveGroupingAnnotation.get() ) );
+				methodAnnotations = (A[]) groupAnnotationType.getDeclaredMethod( "value", null ).invoke( methodPluralAnn );
 			}
 			catch (Exception e) {
-				throw new RuntimeException( "Could not locate repeated/grouped annotations", e );
+				throw new RuntimeException( e );
 			}
-
-			return list;
+		}
+		else {
+			methodAnnotations = null;
+		}
+		if ( classPluralAnn != null ) {
+			try {
+				classAnnotations = (A[]) groupAnnotationType.getDeclaredMethod( "value", null ).invoke( classPluralAnn );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		}
+		else {
+			classAnnotations = null;
 		}
 
-		return Collections.emptyList();
+		return collector.collect( methodAnnotation, methodAnnotations, classAnnotation, classAnnotations );
 	}
 
 	public static <A extends Annotation> boolean hasEffectiveAnnotation(ExtensionContext context, Class<A> annotationType) {
@@ -95,5 +127,9 @@ public class TestingUtil {
 	public static <T> T cast(Object thing, Class<T> type) {
 		assertThat( thing, instanceOf( type ) );
 		return type.cast( thing );
+	}
+
+	public interface TestAnnotationCollector<S> {
+		Collection<S> collect(S methodAnnotation, S[] methodAnnotations, S classAnnotation, S[] classAnnotations);
 	}
 }

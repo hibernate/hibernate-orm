@@ -15,6 +15,8 @@ import org.hibernate.AssertionFailure;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Uniquely identifies of an entity instance in a particular Session by identifier.
  * Note that it's only safe to be used within the scope of a Session: it doesn't consider for example the tenantId
@@ -44,7 +46,7 @@ public final class EntityKey implements Serializable {
 	 * @param id The entity id
 	 * @param persister The entity persister
 	 */
-	public EntityKey(Object id, EntityPersister persister) {
+	public EntityKey(@Nullable Object id, EntityPersister persister) {
 		this.persister = persister;
 		if ( id == null ) {
 			throw new AssertionFailure( "null identifier (" + persister.getEntityName() + ")" );
@@ -82,7 +84,7 @@ public final class EntityKey implements Serializable {
 	}
 
 	@Override
-	public boolean equals(Object other) {
+	public boolean equals(@Nullable Object other) {
 		if ( this == other ) {
 			return true;
 		}

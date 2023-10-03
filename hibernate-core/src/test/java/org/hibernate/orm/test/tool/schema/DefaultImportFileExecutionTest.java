@@ -30,6 +30,7 @@ import org.hibernate.tool.schema.spi.ScriptTargetOutput;
 import org.hibernate.tool.schema.spi.SourceDescriptor;
 import org.hibernate.tool.schema.spi.TargetDescriptor;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -51,7 +52,7 @@ public class DefaultImportFileExecutionTest {
 	@BeforeEach
 	public void setUp() throws Exception {
 		defaultImportFile = createDefaultImportFile( "import.sql" );
-		serviceRegistry = new StandardServiceRegistryBuilder().build();
+		serviceRegistry = ServiceRegistryUtil.serviceRegistry();
 	}
 
 	@AfterEach

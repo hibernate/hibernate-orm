@@ -19,6 +19,8 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Base descriptor, within the mapping model, for any part of the
  * application's domain model: an attribute, an entity identifier,
@@ -142,6 +144,10 @@ public interface ModelPart extends MappingModelExpressible {
 		return null;
 	}
 
+	default EntityMappingType asEntityMappingType(){
+		return null;
+	}
+
 	/**
 	 * A short hand form of {@link #breakDownJdbcValues(Object, int, Object, Object, JdbcValueBiConsumer, SharedSessionContractImplementor)},
 	 * that passes 0 as offset and null for the two values {@code X} and {@code Y}.
@@ -196,7 +202,7 @@ public interface ModelPart extends MappingModelExpressible {
 
 	EntityMappingType findContainingEntityMapping();
 
-	default boolean areEqual(Object one, Object other, SharedSessionContractImplementor session) {
+	default boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
 		// NOTE : deepEquals to account for arrays (compound natural-id)
 		return Objects.deepEquals( one, other );
 	}

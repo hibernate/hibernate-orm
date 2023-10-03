@@ -36,7 +36,7 @@ public interface CallbackRegistry {
 
 	/**
 	 * Signals that the CallbackRegistry will no longer be used.
-	 * In particular it is important to release references to class types
+	 * In particular, it is important to release references to class types
 	 * to avoid classloader leaks.
 	 */
 	void release();

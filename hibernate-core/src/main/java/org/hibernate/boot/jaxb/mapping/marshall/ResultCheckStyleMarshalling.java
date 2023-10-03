@@ -15,10 +15,10 @@ import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
  */
 public class ResultCheckStyleMarshalling {
 	public static ExecuteUpdateResultCheckStyle fromXml(String name) {
-		return ExecuteUpdateResultCheckStyle.fromExternalName( name );
+		return name == null ? null : ExecuteUpdateResultCheckStyle.fromExternalName( name );
 	}
 
 	public static String toXml(ExecuteUpdateResultCheckStyle style) {
-		return style.externalName();
+		return style == null ? null : style.externalName();
 	}
 }

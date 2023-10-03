@@ -7,7 +7,6 @@
 package org.hibernate.boot.spi;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
@@ -27,8 +26,6 @@ import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.convert.spi.RegisteredConversion;
 import org.hibernate.boot.model.internal.AnnotatedClassType;
-import org.hibernate.boot.model.internal.JPAIndexHolder;
-import org.hibernate.boot.model.internal.UniqueConstraintHolder;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.QualifiedTableName;
@@ -352,15 +349,6 @@ public interface InFlightMetadataCollector extends MetadataImplementor {
 
 	void addMappedBy(String name, String mappedBy, String propertyName);
 	String getFromMappedBy(String ownerEntityName, String propertyName);
-
-	/**
-	 * @deprecated no longer used
-	 */
-	@Deprecated(forRemoval = true)
-	void addUniqueConstraints(Table table, List<String[]> uniqueConstraints);
-	void addUniqueConstraintHolders(Table table, List<UniqueConstraintHolder> uniqueConstraints);
-	void addJpaIndexHolders(Table table, List<JPAIndexHolder> jpaIndexHolders);
-
 
 	interface EntityTableXref {
 		void addSecondaryTable(LocalMetadataBuildingContext buildingContext, Identifier logicalName, Join secondaryTableJoin);

@@ -16,7 +16,6 @@ import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.bytecode.spi.BytecodeProvider;
 import org.hibernate.bytecode.spi.ProxyFactoryFactory;
 import org.hibernate.bytecode.spi.ReflectionOptimizer;
-import org.hibernate.cfg.Environment;
 import org.hibernate.internal.util.ReflectHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.Backref;
@@ -32,7 +31,6 @@ import org.hibernate.property.access.internal.PropertyAccessStrategyIndexBackRef
 import org.hibernate.property.access.spi.BuiltInPropertyAccessStrategies;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.property.access.spi.PropertyAccessStrategy;
-import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.internal.CompositeUserTypeJavaTypeWrapper;
@@ -171,10 +169,6 @@ public class EmbeddableRepresentationStrategyPojo extends AbstractEmbeddableRepr
 	private ReflectionOptimizer buildReflectionOptimizer(
 			Component bootDescriptor,
 			RuntimeModelCreationContext creationContext) {
-
-		if ( !Environment.useReflectionOptimizer() ) {
-			return null;
-		}
 
 		if ( hasCustomAccessors() || bootDescriptor.getCustomInstantiator() != null || bootDescriptor.getInstantiator() != null ) {
 			return null;

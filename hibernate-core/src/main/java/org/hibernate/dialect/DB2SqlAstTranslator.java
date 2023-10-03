@@ -444,7 +444,7 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 						break;
 				}
 			}
-			renderComparisonEmulateDecode( lhs, operator, rhs );
+			renderComparisonEmulateDecode( lhs, operator, rhs, SqlAstNodeRenderingMode.NO_UNTYPED );
 		}
 	}
 

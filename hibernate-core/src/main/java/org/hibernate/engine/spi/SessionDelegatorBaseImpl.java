@@ -68,6 +68,7 @@ import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.Metamodel;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A wrapper class that delegates all method invocations to a delegate instance of
@@ -165,7 +166,7 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public EntityPersister getEntityPersister(String entityName, Object object) throws HibernateException {
+	public EntityPersister getEntityPersister(@Nullable String entityName, Object object) throws HibernateException {
 		return delegate.getEntityPersister( entityName, object );
 	}
 
@@ -853,22 +854,22 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey) {
 		return delegate.find( entityClass, primaryKey );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, Map<String, Object> properties) {
 		return delegate.find( entityClass, primaryKey, properties );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode) {
 		return delegate.find( entityClass, primaryKey, lockMode );
 	}
 
 	@Override
-	public <T> T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
+	public <T> @Nullable T find(Class<T> entityClass, Object primaryKey, LockModeType lockMode, Map<String, Object> properties) {
 		return delegate.find( entityClass, primaryKey, lockMode, properties );
 	}
 

@@ -111,24 +111,24 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		// both scroll() and iterate() cause batching to hold on
 		// to resources, which should make aggressive-release not release
 		// the connection (and thus cause serialization to fail)
-		ScrollableResults sr = s.createQuery( "from Silly" ).scroll();
-		sr.next();
+		try (ScrollableResults sr = s.createQuery( "from Silly" ).scroll()) {
+			sr.next();
 
-		try {
-			SerializationHelper.serialize( s );
-			fail( "Serialization allowed on connected session; or aggressive release released connection with open resources" );
+			try {
+				SerializationHelper.serialize( s );
+				fail( "Serialization allowed on connected session; or aggressive release released connection with open resources" );
+			}
+			catch (IllegalStateException e) {
+				// expected behavior
+			}
+
+			// getting the first row only because SybaseASE15Dialect throws NullPointerException
+			// if data is not read before closing the ResultSet
+			sr.next();
+
+			// Closing the ScrollableResults does currently force batching to
+			// aggressively release the connection
 		}
-		catch( IllegalStateException e ) {
-			// expected behavior
-		}
-
-		// getting the first row only because SybaseASE15Dialect throws NullPointerException
-		// if data is not read before closing the ResultSet
-		sr.next();
-
-		// Closing the ScrollableResults does currently force batching to
-		// aggressively release the connection
-		sr.close();
 		SerializationHelper.serialize( s );
 
 		s.delete( silly );
@@ -146,22 +146,19 @@ public class AggressiveReleaseTest extends ConnectionManagementTestCase {
 		s.save( silly );
 		s.flush();
 
-		ScrollableResults sr = s.createQuery( "from Silly" ).scroll();
-		assertTrue( sr.next() );
-		Silly silly2 = ( Silly ) sr.get();
-		assertEquals( silly, silly2 );
-		sr.close();
+		try (ScrollableResults sr = s.createQuery( "from Silly" ).scroll()) {
+			assertTrue( sr.next() );
+			Silly silly2 = (Silly) sr.get();
+			assertEquals( silly, silly2 );
+		}
 
-		sr = s.createQuery( "from Silly" ).scroll();
-		ScrollableResults sr2 = s.createQuery( "from Silly where name = 'silly'" ).scroll();
-
-		assertTrue( sr.next() );
-		assertEquals( silly, sr.get() );
-		assertTrue( sr2.next() );
-		assertEquals( silly, sr2.get() );
-
-		sr.close();
-		sr2.close();
+		try (ScrollableResults sr = s.createQuery( "from Silly" ).scroll();
+			 ScrollableResults sr2 = s.createQuery( "from Silly where name = 'silly'" ).scroll()) {
+			assertTrue( sr.next() );
+			assertEquals( silly, sr.get() );
+			assertTrue( sr2.next() );
+			assertEquals( silly, sr2.get() );
+		}
 
 		s.delete( silly );
 		s.flush();

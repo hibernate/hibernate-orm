@@ -1,3 +1,7 @@
+:shared-attributes-dir: ../shared/
+
+include::{shared-attributes-dir}/url-attributes.adoc[]
+
 [[preface]]
 == Preface
 
@@ -11,5 +15,4 @@ At long last, HQL has a feature set to match that of modern dialects of SQL, and
 
 This document is a reference guide to the full feature set of the language, and is the only up-to-date source for those who wish to learn how to write HQL effectively in Hibernate 6.
 
-But if you don't already know Hibernate, don't start here.
-First, read _An introduction to Hibernate 6_, and then come back.
+If you are unfamiliar with Hibernate, be sure to first read  link:{doc-introduction-url}[Introduction to Hibernate] or check out the link:{doc-quick-start-url}[Quick Start].

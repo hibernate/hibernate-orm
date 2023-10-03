@@ -13,6 +13,7 @@ import java.util.Date;
 import java.util.TimeZone;
 
 import org.hibernate.ScrollMode;
+import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -37,6 +38,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.UniqueKey;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.dialect.NullOrdering;
@@ -90,7 +92,6 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * An SQL dialect for SQLite.
  *
  * @author Christian Beikov
- * @author Vlad Mihalcea
  */
 public class SQLiteDialect extends Dialect {
 
@@ -149,6 +150,19 @@ public class SQLiteDialect extends Dialect {
 		public String getColumnDefinitionUniquenessFragment(Column column, SqlStringGenerationContext context) {
 			return " unique";
 		}
+
+		/**
+		 * Alter table support in SQLite is very limited and does
+		 * not include adding a unique constraint (as of 9/2023).
+		 *
+		 * @return always empty String
+		 * @see <a href="https://www.sqlite.org/omitted.html">SQLite SQL omissions</a>
+		 */
+		@Override
+		public String getAlterTableToAddUniqueKeyCommand(UniqueKey uniqueKey, Metadata metadata, SqlStringGenerationContext context) {
+			return "";
+		}
+
 	}
 
 	@Override
@@ -400,6 +414,16 @@ public class SQLiteDialect extends Dialect {
 	@Override
 	public NullOrdering getNullOrdering() {
 		return NullOrdering.SMALLEST;
+	}
+
+	/**
+	 * Generated keys are not supported by the (standard) Xerial driver (9/2022).
+	 *
+	 * @return false
+	 */
+	@Override
+	public boolean getDefaultUseGetGeneratedKeys() {
+		return false;
 	}
 
 	@Override

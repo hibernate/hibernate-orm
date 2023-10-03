@@ -19,7 +19,6 @@ description = 'Hibernate\'s core ORM functionality'
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'org.hibernate.orm.antlr'
 apply plugin: 'org.hibernate.matrix-test'
-apply plugin: 'org.hibernate.orm.build.properties'
 
 configurations {
     tests {
@@ -245,13 +244,16 @@ tasks.withType( Test.class ).each { test ->
     test.jvmArgs( ['--add-opens', 'java.base/java.security=ALL-UNNAMED'] )
     test.jvmArgs( ['--add-opens', 'java.base/java.lang=ALL-UNNAMED'] )
 
+    //Avoid Log4J2 classloader leaks:
+    test.jvmArgs( ['-Dlog4j2.disableJmx=true'] )
+
     test.beforeTest { descriptor ->
         //println "Starting test: " + descriptor
     }
 }
 
 // Tests with records
-if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolchainEnabled ) {
+if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
 
     // Add a new source set, which contains tests that can run on JDK17+
     sourceSets {
@@ -261,7 +263,7 @@ if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolch
             }
             // Refer to the main test resources to avoid processing variables twice
             resources {
-                srcDir 'target/resources/test'
+                srcDirs tasks.processTestResources
             }
         }
     }
@@ -269,7 +271,7 @@ if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolch
     // For the new source set, we need to configure the source and target version to 17
     compileTestJava17Java {
         javaCompiler = javaToolchains.compilerFor {
-            languageVersion = gradle.ext.javaVersions.test.compiler
+            languageVersion = jdkVersions.test.compiler
         }
         sourceCompatibility = 17
         targetCompatibility = 17
@@ -293,13 +295,13 @@ if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolch
     // We execute the Java 17 tests in a custom test task
     task testJava17(type: Test) {
         javaLauncher = javaToolchains.launcherFor {
-            languageVersion = gradle.ext.javaVersions.test.launcher
+            languageVersion = jdkVersions.test.launcher
         }
         useJUnitPlatform()
         testClassesDirs = sourceSets.testJava17.output.classesDirs
         classpath = sourceSets.testJava17.runtimeClasspath
 
-        if ( gradle.ext.javaVersions.test.launcher.asInt() >= 19 ) {
+        if ( jdkVersions.test.launcher.asInt() >= 19 ) {
             logger.warn( "The version of Java bytecode that will be tested is not supported by Byte Buddy by default. " +
                                  " Setting 'net.bytebuddy.experimental=true'." )
             systemProperty 'net.bytebuddy.experimental', true
@@ -311,17 +313,13 @@ if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolch
     check.dependsOn testJava17
 }
 
-javadoc {
+tasks.named( "javadoc", Javadoc ) {
     configure(options) {
-        overview = 'src/main/javadoc/overview.html'
-        stylesheetFile = new File(projectDir, 'src/main/javadoc/stylesheet.css')
+        overview = rootProject.file( "shared/javadoc/overview.html" )
     }
 }
 
-task collectConfigProperties { task ->
-    description 'Collect config properties'
-
-    tasks.generateConfigsProperties.javadocsBaseLink = 'https://docs.jboss.org/hibernate/orm/' + rootProject.ormVersion.family + '/javadocs/'
-
-    dependsOn tasks.generateConfigsProperties
-}
+tasks.sourcesJar.dependsOn ':hibernate-core:generateGraphParser'
+tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
+tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
+tasks.sourcesJar.dependsOn ':hibernate-core:generateOrderingParser'

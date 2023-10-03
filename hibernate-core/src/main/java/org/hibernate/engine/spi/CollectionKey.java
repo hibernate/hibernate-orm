@@ -16,6 +16,8 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.type.Type;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Uniquely identifies a collection instance in a particular session.
  *
@@ -39,7 +41,7 @@ public final class CollectionKey implements Serializable {
 
 	private CollectionKey(
 			String role,
-			Object key,
+			@Nullable Object key,
 			Type keyType,
 			SessionFactoryImplementor factory) {
 		this.role = role;
@@ -77,7 +79,7 @@ public final class CollectionKey implements Serializable {
 	}
 
 	@Override
-	public boolean equals(final Object other) {
+	public boolean equals(final @Nullable Object other) {
 		if ( this == other ) {
 			return true;
 		}
@@ -127,7 +129,8 @@ public final class CollectionKey implements Serializable {
 				(String) ois.readObject(),
 				ois.readObject(),
 				(Type) ois.readObject(),
-				(session == null ? null : session.getFactory())
+				// Should never be able to be null
+				session.getFactory()
 		);
 	}
 }

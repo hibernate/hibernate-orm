@@ -68,7 +68,7 @@ include::{example-dir-doc-batch}/BatchTests.java[tags=batch-session-batch-exampl
 
 There are several problems associated with this example:
 
-. Hibernate caches all the newly inserted `Customer` instances in the session-level cache, so, when the transaction ends, 100 000 entities are managed by the persistence context.
+. Hibernate caches all the newly inserted `Person` instances in the session-level cache, so, when the transaction ends, 100 000 entities are managed by the persistence context.
   If the maximum memory allocated to the JVM is rather low, this example could fail with an `OutOfMemoryException`.
   The Java 1.8 JVM allocated either 1/4 of available RAM or 1Gb, which can easily accommodate 100 000 objects on the heap.
 . long-running transactions can deplete a connection pool so other transactions don't get a chance to proceed.
@@ -155,7 +155,7 @@ include::{example-dir-doc-batch}/BatchTests.java[tags=batch-stateless-session-ex
 ----
 ====
 
-The `Customer` instances returned by the query are immediately detached.
+The `Person` instances returned by the query are immediately detached.
 They are never associated with any persistence context.
 
 [NOTE]

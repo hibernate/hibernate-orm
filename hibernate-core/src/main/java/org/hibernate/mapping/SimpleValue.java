@@ -266,11 +266,6 @@ public abstract class SimpleValue implements KeyValue {
 		return columns.get( position );
 	}
 
-	@Override @Deprecated
-	public Iterator<Selectable> getColumnIterator() {
-		return columns.iterator();
-	}
-
 	@Override
 	public List<Selectable> getSelectables() {
 		return columns;
@@ -287,8 +282,12 @@ public abstract class SimpleValue implements KeyValue {
 		return (List) columns;
 	}
 
+	/**
+	 * @deprecated Use {@link #getSelectables()} instead
+	 */
+	@Deprecated(forRemoval = true, since = "6.3")
 	public Iterator<Selectable> getConstraintColumnIterator() {
-		return getColumnIterator();
+		return getSelectables().iterator();
 	}
 
 	public String getTypeName() {
@@ -957,6 +956,7 @@ public abstract class SimpleValue implements KeyValue {
 			throw new MappingException( "Could not create DynamicParameterizedType for type: " + typeName, e );
 		}
 	}
+
 	public DynamicParameterizedType.ParameterType makeParameterImpl() {
 		try {
 			final String[] columnNames = new String[ columns.size() ];

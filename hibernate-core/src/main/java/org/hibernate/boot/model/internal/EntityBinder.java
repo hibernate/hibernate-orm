@@ -644,21 +644,21 @@ public class EntityBinder {
 		final String schema;
 		final String table;
 		final String catalog;
-		final List<UniqueConstraintHolder> uniqueConstraints;
+		final UniqueConstraint[] uniqueConstraints;
 		boolean hasTableAnnotation = annotatedClass.isAnnotationPresent( jakarta.persistence.Table.class );
 		if ( hasTableAnnotation ) {
 			final jakarta.persistence.Table tableAnnotation = annotatedClass.getAnnotation( jakarta.persistence.Table.class );
 			table = tableAnnotation.name();
 			schema = tableAnnotation.schema();
 			catalog = tableAnnotation.catalog();
-			uniqueConstraints = TableBinder.buildUniqueConstraintHolders( tableAnnotation.uniqueConstraints() );
+			uniqueConstraints = tableAnnotation.uniqueConstraints();
 		}
 		else {
 			//might be no @Table annotation on the annotated class
 			schema = "";
 			table = "";
 			catalog = "";
-			uniqueConstraints = Collections.emptyList();
+			uniqueConstraints = new UniqueConstraint[0];
 		}
 
 		final InFlightMetadataCollector collector = context.getMetadataCollector();
@@ -684,7 +684,7 @@ public class EntityBinder {
 			String schema,
 			String table,
 			String catalog,
-			List<UniqueConstraintHolder> uniqueConstraints,
+			UniqueConstraint[] uniqueConstraints,
 			InFlightMetadataCollector collector) {
 		final RowId rowId = annotatedClass.getAnnotation( RowId.class );
 		final View view = annotatedClass.getAnnotation( View.class );
@@ -1485,20 +1485,18 @@ public class EntityBinder {
 		final Proxy proxy = annotatedClass.getAnnotation( Proxy.class );
 		if ( proxy != null ) {
 			lazy = proxy.lazy();
-			if ( !lazy ) {
-				proxyClass = null;
-			}
-			else {
-				final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
-				proxyClass = isDefault( reflectionManager.toXClass(proxy.proxyClass() ), context )
-						? annotatedClass
-						: reflectionManager.toXClass(proxy.proxyClass());
-			}
+			proxyClass = lazy ? proxyClass( proxy ) : null;
 		}
 		else {
 			lazy = true; //needed to allow association lazy loading.
 			proxyClass = annotatedClass;
 		}
+	}
+
+	private XClass proxyClass(Proxy proxy) {
+		final ReflectionManager reflectionManager = context.getBootstrapContext().getReflectionManager();
+		final XClass proxyClass = reflectionManager.toXClass( proxy.proxyClass() );
+		return isDefault( proxyClass, context ) ? annotatedClass : proxyClass;
 	}
 
 	public void bindWhere() {
@@ -1751,7 +1749,7 @@ public class EntityBinder {
 			String schema,
 			String catalog,
 			String tableName,
-			List<UniqueConstraintHolder> uniqueConstraints,
+			UniqueConstraint[] uniqueConstraints,
 			String rowId,
 			String viewQuery,
 			InFlightMetadataCollector.EntityTableXref denormalizedSuperTableXref) {
@@ -1895,7 +1893,6 @@ public class EntityBinder {
 	}
 
 	private void setForeignKeyNameIfDefined(Join join) {
-		// just awful..
 		final String tableName = join.getTable().getQuotedName();
 		final org.hibernate.annotations.Table matchingTable = findMatchingComplementaryTableAnnotation( tableName );
 		final SimpleValue key = (SimpleValue) join.getKey();
@@ -2043,7 +2040,7 @@ public class EntityBinder {
 	}
 
 	public Join addJoin(SecondaryTable secondaryTable, PropertyHolder holder, boolean noDelayInPkColumnCreation) {
-		Join join = addJoin(
+		final Join join = addJoin(
 				holder,
 				noDelayInPkColumnCreation,
 				true,
@@ -2053,7 +2050,8 @@ public class EntityBinder {
 				secondaryTable.pkJoinColumns(),
 				secondaryTable.uniqueConstraints()
 		);
-		TableBinder.addIndexes( join.getTable(), secondaryTable.indexes(), context );
+		final Table table = join.getTable();
+		new IndexBinder( context ).bindIndexes( table, secondaryTable.indexes() );
 		return join;
 	}
 
@@ -2086,13 +2084,13 @@ public class EntityBinder {
 						catalog,
 						logicalName.getTableName(),
 						false,
-						TableBinder.buildUniqueConstraintHolders( uniqueConstraints ),
+						uniqueConstraints,
 						context
 				)
 		);
 	}
 
-	private Join createJoin(
+	Join createJoin(
 			PropertyHolder propertyHolder,
 			boolean noDelayInPkColumnCreation,
 			boolean secondaryTable,
@@ -2240,7 +2238,7 @@ public class EntityBinder {
 
 	public void processComplementaryTableDefinitions(jakarta.persistence.Table table) {
 		if ( table != null ) {
-			TableBinder.addIndexes( persistentClass.getTable(), table.indexes(), context );
+			new IndexBinder( context ).bindIndexes( persistentClass.getTable(), table.indexes() );
 		}
 	}
 

@@ -62,6 +62,7 @@ import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SortDirection;
+import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -87,6 +88,7 @@ import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
+import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.Statement;
@@ -131,6 +133,7 @@ import org.hibernate.sql.ast.tree.expression.Star;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
 import org.hibernate.sql.ast.tree.expression.UnaryOperation;
+import org.hibernate.sql.ast.tree.expression.UnparsedNumericLiteral;
 import org.hibernate.sql.ast.tree.from.DerivedTableReference;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.FunctionTableReference;
@@ -870,8 +873,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	private JdbcValuesMappingProducer buildJdbcValuesMappingProducer(SelectStatement selectStatement) {
 		final JdbcValuesMappingProducerProvider producerProvider = getSessionFactory()
-				.getServiceRegistry()
-				.getService( JdbcValuesMappingProducerProvider.class );
+				.getFastSessionServices()
+				.getJdbcValuesMappingProducerProvider();
 		return producerProvider.buildMappingProducer( selectStatement, getSessionFactory() );
 	}
 
@@ -1052,7 +1055,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			clauseStack.pop();
 		}
 
-		visitWhereClause( statement.getRestriction() );
+		if ( statement.getFromClause().hasJoins() ) {
+			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement ) );
+		}
+		else {
+			visitWhereClause( statement.getRestriction() );
+		}
 		visitReturningColumns( statement.getReturningColumns() );
 	}
 
@@ -1069,8 +1077,51 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		renderSetClause( statement, clauseStack );
-		visitWhereClause( statement.getRestriction() );
+		if ( statement.getFromClause().hasJoins() ) {
+			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement ) );
+		}
+		else {
+			visitWhereClause( statement.getRestriction() );
+		}
 		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected Predicate determineWhereClauseRestrictionWithJoinEmulation(AbstractUpdateOrDeleteStatement statement) {
+		final QuerySpec querySpec = new QuerySpec( false );
+		querySpec.getSelectClause().addSqlSelection(
+				new SqlSelectionImpl( new QueryLiteral<>( 1, getIntegerType() ) )
+		);
+		for ( TableGroup root : statement.getFromClause().getRoots() ) {
+			if ( root.getPrimaryTableReference() == statement.getTargetTable() ) {
+				for ( TableReferenceJoin tableReferenceJoin : root.getTableReferenceJoins() ) {
+					assert tableReferenceJoin.getJoinType() == SqlAstJoinType.INNER;
+					querySpec.getFromClause().addRoot(
+							new TableGroupImpl(
+									root.getNavigablePath(),
+									null,
+									tableReferenceJoin.getJoinedTableReference(),
+									root.getModelPart()
+							)
+					);
+					querySpec.applyPredicate( tableReferenceJoin.getPredicate() );
+				}
+				for ( TableGroupJoin tableGroupJoin : root.getTableGroupJoins() ) {
+					assert tableGroupJoin.getJoinType() == SqlAstJoinType.INNER;
+					querySpec.getFromClause().addRoot( tableGroupJoin.getJoinedGroup() );
+					querySpec.applyPredicate( tableGroupJoin.getPredicate() );
+				}
+				for ( TableGroupJoin tableGroupJoin : root.getNestedTableGroupJoins() ) {
+					assert tableGroupJoin.getJoinType() == SqlAstJoinType.INNER;
+					querySpec.getFromClause().addRoot( tableGroupJoin.getJoinedGroup() );
+					querySpec.applyPredicate( tableGroupJoin.getPredicate() );
+				}
+			}
+			else {
+				querySpec.getFromClause().addRoot( root );
+			}
+		}
+		querySpec.applyPredicate( statement.getRestriction() );
+		return new ExistsPredicate( querySpec, false, getBooleanType() );
 	}
 
 	protected void renderSetClause(UpdateStatement statement, Stack<Clause> clauseStack) {
@@ -3625,17 +3676,25 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderComparisonEmulateDecode(Expression lhs, ComparisonOperator operator, Expression rhs) {
+		renderComparisonEmulateDecode( lhs, operator, rhs, SqlAstNodeRenderingMode.DEFAULT );
+	}
+
+	protected void renderComparisonEmulateDecode(
+			Expression lhs,
+			ComparisonOperator operator,
+			Expression rhs,
+			SqlAstNodeRenderingMode firstArgRenderingMode) {
 		switch ( operator ) {
 			case DISTINCT_FROM:
 				appendSql( "decode(" );
-				lhs.accept( this );
+				render( lhs, firstArgRenderingMode );
 				appendSql( ',' );
 				rhs.accept( this );
 				appendSql( ",0,1)=1" );
 				break;
 			case NOT_DISTINCT_FROM:
 				appendSql( "decode(" );
-				lhs.accept( this );
+				render( lhs, firstArgRenderingMode );
 				appendSql( ',' );
 				rhs.accept( this );
 				appendSql( ",0,1)=0" );
@@ -6617,6 +6676,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitLiteral( queryLiteral );
 	}
 
+	@Override
+	public <N extends Number> void visitUnparsedNumericLiteral(UnparsedNumericLiteral<N> literal) {
+		appendSql( literal.getUnparsedLiteralValue() );
+	}
+
 	private void visitLiteral(Literal literal) {
 		if ( literal.getLiteralValue() == null ) {
 			renderNull( literal );
@@ -6866,42 +6930,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		int bindValueCount = listExpressions.size();
-		int bindValueMaxCount = bindValueCount;
+		int bindValueCountWithPadding = bindValueCount;
 
 		int inExprLimit = dialect.getInExpressionCountLimit();
 
-		final boolean inClauseParameterPaddingEnabled = getSessionFactory().
-				getSessionFactoryOptions().inClauseParameterPaddingEnabled()
-				&& bindValueCount > 2;
-
-		if ( inClauseParameterPaddingEnabled ) {
-			// bindValueCount: 1005
-			// bindValuePaddingCount: 1024
-			int bindValuePaddingCount = MathHelper.ceilingPowerOfTwo( bindValueCount );
-
-			// inExprLimit: 1000
-			if ( inExprLimit > 0 ) {
-				if ( bindValuePaddingCount > inExprLimit ) {
-					// bindValueCount % inExprLimit: 5
-					// bindValuePaddingCount: 8
-					if ( bindValueCount < inExprLimit ) {
-						bindValueMaxCount = inExprLimit;
-					}
-					else {
-						bindValueMaxCount = MathHelper.ceilingPowerOfTwo( bindValueCount % inExprLimit );
-					}
-				}
-				else if ( bindValueCount < bindValuePaddingCount ) {
-					bindValueMaxCount = bindValuePaddingCount;
-				}
-			}
-			else if ( bindValueCount < bindValuePaddingCount ) {
-				bindValueMaxCount = bindValuePaddingCount;
-			}
+		if ( getSessionFactory().getSessionFactoryOptions().inClauseParameterPaddingEnabled() ) {
+			bindValueCountWithPadding = addPadding( bindValueCount, inExprLimit );
 		}
 
 		final boolean parenthesis = !inListPredicate.isNegated()
-				&& inExprLimit != 0 && listExpressions.size() > inExprLimit;
+				&& inExprLimit > 0 && listExpressions.size() > inExprLimit;
 		if ( parenthesis ) {
 			appendSql( OPEN_PARENTHESIS );
 		}
@@ -6914,69 +6952,60 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		String separator = NO_SEPARATOR;
 
 		final Iterator<Expression> iterator = listExpressions.iterator();
-		int itemNumber = 0;
-		while ( iterator.hasNext() && ( inExprLimit == 0 || itemNumber < inExprLimit ) ) {
-			final Expression listExpression = itemAccessor.apply( iterator.next() );
+		Expression listExpression = null;
+		int clauseItemNumber = 0;
+		for ( int i = 0; i < bindValueCountWithPadding; i++, clauseItemNumber++ ) {
+			if ( inExprLimit > 0 && inExprLimit == clauseItemNumber ) {
+				clauseItemNumber = 0;
+				appendInClauseSeparator( inListPredicate );
+				separator = NO_SEPARATOR;
+			}
+
+			if ( iterator.hasNext() ) { // If the iterator is exhausted, reuse the last expression for padding.
+				listExpression = itemAccessor.apply( iterator.next() );
+			}
+			// The only way for expression to be null is if listExpressions is empty,
+			// but if that is the case the code takes an early exit.
+			assert listExpression != null;
+
 			appendSql( separator );
 			listExpression.accept( this );
 			separator = COMMA_SEPARATOR;
-			itemNumber++;
-			// If we encounter an expression that is not a parameter or literal, we reset the inExprLimit and bindValueMaxCount
-			// and just render through the in list expressions as they are without padding/splitting
+
+			// If we encounter an expression that is not a parameter or literal, we reset the inExprLimit and
+			// bindValueMaxCount and just render through the in list expressions as they are without padding/splitting
 			if ( !( listExpression instanceof JdbcParameter || listExpression instanceof SqmParameterInterpretation || listExpression instanceof Literal ) ) {
 				inExprLimit = 0;
-				bindValueMaxCount = bindValueCount;
+				bindValueCountWithPadding = bindValueCount;
 			}
 		}
 
-		if ( itemNumber != inExprLimit && bindValueCount == bindValueMaxCount ) {
-			appendSql( CLOSE_PARENTHESIS );
-			return;
-		}
-
-		if ( inExprLimit > 0 && bindValueCount > inExprLimit ) {
-			do {
-				if ( inListPredicate.isNegated() ) {
-					append( ") and " );
-					inListPredicate.getTestExpression().accept( this );
-					appendSql( " not" );
-				}
-				else {
-					append( ") or " );
-					inListPredicate.getTestExpression().accept( this );
-				}
-				appendSql( " in (" );
-				separator = NO_SEPARATOR;
-				itemNumber = 0;
-				while ( iterator.hasNext() && itemNumber < inExprLimit ) {
-					final Expression listExpression = iterator.next();
-					appendSql( separator );
-					itemAccessor.apply( listExpression ).accept( this );
-					separator = COMMA_SEPARATOR;
-					itemNumber++;
-				}
-			} while ( iterator.hasNext() );
-		}
-
-		if ( inClauseParameterPaddingEnabled ) {
-			final Expression lastExpression = itemAccessor.apply( listExpressions.get( listExpressions.size() - 1 ) );
-			final int end;
-			if ( inExprLimit > 0 ) {
-				end = Math.min( bindValueMaxCount, inExprLimit );
-			}
-			else {
-				end = bindValueMaxCount;
-			}
-			for ( ; itemNumber < end; itemNumber++ ) {
-				appendSql( separator );
-				lastExpression.accept( this );
-				separator = COMMA_SEPARATOR;
-			}
-		}
 		appendSql( CLOSE_PARENTHESIS );
 		if ( parenthesis ) {
 			appendSql( CLOSE_PARENTHESIS );
 		}
+	}
+
+	private void appendInClauseSeparator(InListPredicate inListPredicate) {
+		appendSql( CLOSE_PARENTHESIS );
+		appendSql( inListPredicate.isNegated() ? " and " : " or " );
+		inListPredicate.getTestExpression().accept( this );
+		if ( inListPredicate.isNegated() ) {
+			appendSql( " not" );
+		}
+		appendSql( " in " );
+		appendSql( OPEN_PARENTHESIS );
+	}
+
+	private static int addPadding(int bindValueCount, int inExprLimit) {
+		int ceilingPowerOfTwo = MathHelper.ceilingPowerOfTwo( bindValueCount );
+		if ( inExprLimit <= 0 || ceilingPowerOfTwo <= inExprLimit ) {
+			return ceilingPowerOfTwo;
+		}
+
+		int numberOfInClauses = MathHelper.divideRoundingUp( bindValueCount, inExprLimit );
+		int numberOfInClausesWithPadding = MathHelper.ceilingPowerOfTwo( numberOfInClauses );
+		return numberOfInClausesWithPadding * inExprLimit;
 	}
 
 	@Override
@@ -7055,12 +7084,13 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				this.queryPartForRowNumberingClauseDepth = -1;
 				this.needsSelectAliases = false;
 				queryPartStack.push( subQuery );
-				appendSql( "exists (select 1" );
-				visitFromClause( subQuery.getFromClause() );
-
+				appendSql( "exists (" );
 				if ( !subQuery.getGroupByClauseExpressions().isEmpty()
 						|| subQuery.getHavingClauseRestrictions() != null ) {
-					// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause
+					// If we have a group by or having clause, we have to move the tuple comparison emulation to the HAVING clause.
+					// Also, we need to explicitly include the selections to avoid 'invalid HAVING clause' errors
+					visitSelectClause( subQuery.getSelectClause() );
+					visitFromClause( subQuery.getFromClause() );
 					visitWhereClause( subQuery.getWhereClauseRestrictions() );
 					visitGroupByClause( subQuery, SelectItemReferenceStrategy.EXPRESSION );
 
@@ -7085,6 +7115,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				else {
 					// If we have no group by or having clause, we can move the tuple comparison emulation to the WHERE clause
+					appendSql( "select 1" );
+					visitFromClause( subQuery.getFromClause() );
 					appendSql( " where " );
 					clauseStack.push( Clause.WHERE );
 					try {
@@ -8148,6 +8180,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							sqlBuffer.append( " and " );
 						}
 					} );
+				}
+
+				if ( tableDelete.getWhereFragment() != null ) {
+					sqlBuffer.append( " and (" ).append( tableDelete.getWhereFragment() ).append( ")" );
 				}
 			}
 			finally {

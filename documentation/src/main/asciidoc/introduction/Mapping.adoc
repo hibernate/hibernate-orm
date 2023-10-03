@@ -174,7 +174,7 @@ is a bad idea, since it's impossible to create a foreign key constraint that tar
 The following annotations specify exactly how elements of the domain model map to tables of the relational model:
 
 .Annotations for mapping tables
-[%autowidth.stretch]
+[%breakable,cols="25,~"]
 |===
 | Annotation | Purpose
 
@@ -334,7 +334,7 @@ To better understand these annotations, we must first discuss column mappings in
 These annotations specify how elements of the domain model map to columns of tables in the relational model:
 
 .Annotations for mapping columns
-[%autowidth.stretch]
+[%breakable,cols="25,~"]
 |===
 | Annotation | Purpose
 
@@ -574,7 +574,7 @@ class Book {
 Hibernate automatically adjusts the column type used in generated DDL based on the column length specified by the `@Column` annotation.
 So we don't usually need to explicitly specify that a column should be of type `TEXT` or `CLOB`—or worry about the parade of `TINYTEXT`, `MEDIUMTEXT`, `TEXT`, `LONGTEXT` types on MySQL—because Hibernate will automatically select one of those types if required to accommodate a string of the `length` we specify.
 
-The constant values defined in the class `org.hibernate.Length` are very helpful here:
+The constant values defined in the class link:{doc-javadoc-url}org/hibernate/Length.html[`Length`] are very helpful here:
 
 .Predefined column lengths
 [%breakable,cols="10,12,~"]
@@ -659,7 +659,7 @@ class Book {
 
 The advantage is that a `java.sql.Clob` or `java.sql.Blob` can in principle index up to 2^63^ characters or bytes, much more data than you can fit in a Java `String` or `byte[]` array (or in your computer).
 
-To assign a value to these fields, we'll need to use a `LobHelper`.
+To assign a value to these fields, we'll need to use a link:{doc-javadoc-url}org/hibernate/LobHelper.html[`LobHelper`].
 We can get one from the `Session`:
 
 [source,java]
@@ -834,4 +834,197 @@ class Order {
     BigDecimal totalWithTax;
     ...
 }
+----
+
+[[derived-identity]]
+=== Derived Identity
+
+An entity has a _derived identity_ if it inherits part of its primary key from an associated "parent" entity.
+We've already met a kind of degenerate case of _derived identity_ when we talked about <<one-to-one-pk,one-to-one associations with a shared primary key>>.
+
+But a `@ManyToOne` association may also form part of a derived identity.
+That is to say, there could be a foreign key column or columns included as part of the composite primary key.
+There's three different ways to represent this situation on the Java side of things:
+
+- using `@IdClass` without `@MapsId`,
+- using `@IdClass` with `@MapsId`, or
+- using `@EmbeddedId` with `@MapsId`.
+
+Let's suppose we have a `Parent` entity class defined as follows:
+
+[source,java]
+----
+@Entity
+class Parent {
+    @Id
+    Long parentId;
+
+    ...
+}
+----
+
+The `parentId` field holds the primary key of the `Parent` table, which will also form part of the composite primary key of every `Child` belonging to the `Parent`.
+
+[discrete]
+==== First way
+
+In the first, slightly simpler approach, we define an `@IdClass` to represent the primary key of `Child`:
+
+[source,java]
+----
+class DerivedId {
+    Long parent;
+    String childId;
+
+    // constructors, equals, hashcode, etc
+    ...
+}
+----
+
+And a `Child` entity class with a `@ManyToOne` association annotated `@Id`:
+
+[source,java]
+----
+@Entity
+@IdClass(DerivedId.class)
+class Child {
+    @Id
+    String childId;
+
+    @Id @ManyToOne
+    @JoinColumn(name="parentId")
+    Parent parent;
+
+    ...
+}
+----
+
+Then the primary key of the `Child` table comprises the columns `(childId,parentId)`.
+
+[discrete]
+==== Second way
+
+This is fine, but sometimes it's nice to have a field for each element of the primary key.
+We may use the `@MapsId` annotation we met <<one-to-one-pk,earlier>>:
+
+[source,java]
+----
+@Entity
+@IdClass(DerivedId.class)
+class Child {
+    @Id
+    Long parentId;
+    @Id
+    String childId;
+
+    @ManyToOne
+    @MapsId(Child_.PARENT_ID) // typesafe reference to Child.parentId
+    @JoinColumn(name="parentId")
+    Parent parent;
+
+    ...
+}
+----
+
+We're using the approach we saw <<mapped-by-metamodel,previously>> to refer to the `parentId` property of `Child` in a typesafe way.
+
+Note that we must place column mapping information on the association annotated `@MapsId`, not on the `@Id` field.
+
+We must slightly modify our `@IdClass` so that field names align:
+
+[source,java]
+----
+class DerivedId {
+    Long parentId;
+    String childId;
+
+    // constructors, equals, hashcode, etc
+    ...
+}
+----
+
+[discrete]
+==== Third way
+
+The third alternative is to redefine our `@IdClass` as an `@Embeddable`.
+We don't actually need to change the `DerivedId` class, but we do need to add the annotation.
+
+[source,java]
+----
+@Embeddable
+class DerivedId {
+    Long parentId;
+    String childId;
+
+    // constructors, equals, hashcode, etc
+    ...
+}
+----
+
+Then we may use `@EmbeddedId` in `Child`:
+
+[source,java]
+----
+@Entity
+class Child {
+    @EmbeddedId
+    DerivedId id;
+
+    @ManyToOne
+    @MapsId(DerivedId_.PARENT_ID) // typesafe reference to DerivedId.parentId
+    @JoinColumn(name="parentId")
+    Parent parent;
+
+    ...
+}
+----
+
+The <<composite-identifiers,choice>> between `@IdClass` and `@EmbeddedId` boils down to taste.
+The `@EmbeddedId` is perhaps a little DRYer.
+
+[[constraints]]
+=== Adding constraints
+
+Database constraints are important.
+Even if you're sure that your program has no bugs 🧐, it's probably not the only program with access to the database.
+Constraints help ensure that different programs (and human administrators) play nicely with each other.
+
+Hibernate adds certain constraints to generated DDL automatically: primary key constraints, foreign key constraints, and some unique constraints.
+But it's common to need to:
+
+- add additional unique constraints,
+- add check constraints, or
+- customize the name of a foreign key constraint.
+
+We've <<join-column-mappings,already seen>> how to use `@ForeignKey` to specify the name of a foreign key constraint.
+
+There's two ways to add a unique constraint to a table:
+
+- using `@Column(unique=true)` to indicate a single-column unique key, or
+- using the `@UniqueConstraint` annotation to define a uniqueness constraint on a combination of columns.
+
+[source,java]
+----
+@Entity
+@Table(uniqueConstraints=@UniqueConstraint(columnNames={"title", "year", "publisher_id"}))
+class Book { ... }
+----
+
+This annotation looks a bit ugly perhaps, but it's actually useful even as documentation.
+
+The `@Check` annotation adds a check constraint to the table.
+
+[source,java]
+----
+@Entity
+@Check(name="ValidISBN", constraints="length(isbn)=13")
+class Book { ... }
+----
+
+The `@Check` annotation is commonly used at the field level:
+
+[source,java]
+----
+@Id @Check(constraints="length(isbn)=13")
+String isbn;
 ----

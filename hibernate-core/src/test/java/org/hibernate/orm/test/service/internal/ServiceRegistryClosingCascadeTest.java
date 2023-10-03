@@ -15,6 +15,7 @@ import org.hibernate.boot.registry.internal.BootstrapServiceRegistryImpl;
 import org.hibernate.cfg.Configuration;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
@@ -27,7 +28,7 @@ public class ServiceRegistryClosingCascadeTest extends BaseUnitTestCase {
 	@Test
 	public void testSessionFactoryClosing() {
 		BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
-		StandardServiceRegistry sr = new StandardServiceRegistryBuilder(bsr).build();
+		StandardServiceRegistry sr = ServiceRegistryUtil.serviceRegistryBuilder( bsr ).build();
 		assertTrue( ( (BootstrapServiceRegistryImpl) bsr ).isActive() );
 		Configuration config = new Configuration();
 		try (SessionFactory sf = config.buildSessionFactory( sr )) {

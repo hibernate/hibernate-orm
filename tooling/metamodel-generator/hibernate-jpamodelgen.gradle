@@ -48,12 +48,12 @@ compileTestJava {
 
 
 // Tests with records
-if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolchainEnabled ) {
+if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
     // We need to configure the source and target version to 17
     //compileTestJava17Java {
     compileTestJava {
         javaCompiler = javaToolchains.compilerFor {
-            languageVersion = gradle.ext.javaVersions.test.compiler
+            languageVersion = jdkVersions.test.compile
         }
         sourceCompatibility = 17
         targetCompatibility = 17
@@ -61,10 +61,10 @@ if ( gradle.ext.javaVersions.test.release.asInt() >= 17 && gradle.ext.javaToolch
 
     test {
         javaLauncher = javaToolchains.launcherFor {
-            languageVersion = gradle.ext.javaVersions.test.launcher
+            languageVersion = jdkVersions.test.launcher
         }
 
-        if ( gradle.ext.javaVersions.test.launcher.asInt() >= 19 ) {
+        if ( jdkVersions.test.launcher.asInt() >= 19 ) {
             logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
                                  " Setting 'net.bytebuddy.experimental=true'." )
             systemProperty 'net.bytebuddy.experimental', true
@@ -104,6 +104,9 @@ task jaxb {
         }
     }
 }
+tasks.sourcesJar.dependsOn jaxb
+tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
+tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
 tasks.compileJava.dependsOn jaxb
 
 checkstyleMain.exclude '**/jaxb/**'

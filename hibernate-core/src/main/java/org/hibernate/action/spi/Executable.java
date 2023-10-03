@@ -6,8 +6,6 @@
  */
 package org.hibernate.action.spi;
 
-import java.io.Serializable;
-
 import org.hibernate.HibernateException;
 import org.hibernate.event.spi.EventSource;
 
@@ -27,7 +25,7 @@ public interface Executable {
 	 *
 	 * @return The spaces affected by this action.
 	 */
-	Serializable[] getPropertySpaces();
+	String[] getPropertySpaces();
 
 	/**
 	 * Called before executing any actions.  Gives actions a chance to perform any preparation.

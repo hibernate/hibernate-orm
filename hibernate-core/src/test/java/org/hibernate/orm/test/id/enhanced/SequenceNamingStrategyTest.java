@@ -32,6 +32,7 @@ import org.hibernate.service.ServiceRegistry;
 import org.hibernate.testing.orm.junit.BaseUnitTest;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -138,7 +139,7 @@ public class SequenceNamingStrategyTest {
 	}
 
 	private static void withMetadata(Class<?> entityClass, String namingStrategy, Consumer<MetadataImplementor> consumer) {
-		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder();
+		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder();
 		ssrb.applySetting( AvailableSettings.FORMAT_SQL, "false" );
 
 		if ( namingStrategy != null ) {

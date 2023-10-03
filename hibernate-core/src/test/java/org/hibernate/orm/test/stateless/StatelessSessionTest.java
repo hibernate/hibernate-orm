@@ -75,11 +75,11 @@ public class StatelessSessionTest {
 						assertEquals( "Blahs", doc2.getName() );
 						assertEquals( doc.getText(), doc2.getText() );
 
-						ScrollableResults sr = statelessSession.createQuery( "from Document where text is not null" )
-								.scroll( ScrollMode.FORWARD_ONLY );
-						sr.next();
-						doc2 = (Document) sr.get();
-						sr.close();
+						try (ScrollableResults sr = statelessSession.createQuery( "from Document where text is not null" )
+								.scroll( ScrollMode.FORWARD_ONLY )) {
+							sr.next();
+							doc2 = (Document) sr.get();
+						}
 						assertEquals( "Blahs", doc2.getName() );
 						assertEquals( doc.getText(), doc2.getText() );
 
@@ -100,10 +100,10 @@ public class StatelessSessionTest {
 						criteria = criteriaBuilder.createQuery( Document.class );
 						criteria.from( Document.class );
 
-						sr = statelessSession.createQuery( criteria ).scroll( ScrollMode.FORWARD_ONLY );
-						sr.next();
-						doc2 = (Document) sr.get();
-						sr.close();
+						try (ScrollableResults sr = statelessSession.createQuery( criteria ).scroll( ScrollMode.FORWARD_ONLY )) {
+							sr.next();
+							doc2 = (Document) sr.get();
+						}
 						assertEquals( "Blahs", doc2.getName() );
 						assertEquals( doc.getText(), doc2.getText() );
 

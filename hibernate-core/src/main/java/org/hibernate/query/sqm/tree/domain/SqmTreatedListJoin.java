@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
@@ -30,10 +31,9 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
-				wrappedPath.getNavigablePath().treatAs(
-						treatTarget.getHibernateEntityName(),
-						alias
-				),
+				wrappedPath.getNavigablePath()
+						.append( CollectionPart.Nature.ELEMENT.getName() )
+						.treatAs( treatTarget.getHibernateEntityName(), alias ),
 				(ListPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
@@ -99,6 +99,11 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 
 	@Override
 	public EntityDomainType<S> getReferencedPathSource() {
+		return treatTarget;
+	}
+
+	@Override
+	public SqmPathSource<?> getResolvedModel() {
 		return treatTarget;
 	}
 

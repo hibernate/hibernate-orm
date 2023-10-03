@@ -7,20 +7,15 @@
 package org.hibernate.query.derived;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Incubating;
 import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
-import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.SingleAttributeIdentifierMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -91,6 +86,11 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 	}
 
 	@Override
+	public EmbeddableMappingType getPartMappingType() {
+		return this;
+	}
+
+	@Override
 	public int compare(Object value1, Object value2) {
 		return super.compare( value1, value2 );
 	}
@@ -115,8 +115,4 @@ public class AnonymousTupleEmbeddedEntityIdentifierMapping extends AnonymousTupl
 		return this;
 	}
 
-	@Override
-	public EmbeddableMappingType getPartMappingType() {
-		return (EmbeddableMappingType) super.getPartMappingType();
-	}
 }

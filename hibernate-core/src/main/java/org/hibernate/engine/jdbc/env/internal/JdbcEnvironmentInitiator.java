@@ -9,27 +9,50 @@ package org.hibernate.engine.jdbc.env.internal;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.Map;
 
 import org.hibernate.boot.registry.StandardServiceInitiator;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
+import org.hibernate.engine.jdbc.batch.spi.BatchBuilder;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
+import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
+import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
+import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.jdbc.AbstractReturningWork;
+import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
+import org.hibernate.jpa.spi.JpaCompliance;
+import org.hibernate.resource.jdbc.spi.JdbcObserver;
+import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
+import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
+import org.hibernate.resource.transaction.spi.TransactionCoordinator;
+import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
+import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.cfg.AvailableSettings.CONNECTION_HANDLING;
 import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_MAJOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_MINOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.DIALECT_DB_NAME;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_MINOR_VERSION;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_HBM2DDL_DB_NAME;
+import static org.hibernate.cfg.AvailableSettings.JTA_TRACK_BY_THREAD;
+import static org.hibernate.cfg.AvailableSettings.PREFER_USER_TRANSACTION;
+import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.engine.jdbc.env.internal.JdbcEnvironmentImpl.isMultiTenancyEnabled;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
@@ -233,76 +256,90 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			Integer explicitDatabaseMajorVersion,
 			Integer explicitDatabaseMinorVersion,
 			String explicitDatabaseVersion) {
-		final JdbcConnectionAccess jdbcConnectionAccess = buildJdbcConnectionAccess(registry);
+		final JdbcConnectionAccess jdbcConnectionAccess = buildJdbcConnectionAccess( registry );
+		final JdbcServicesImpl jdbcServices = new JdbcServicesImpl( registry );
+		final TemporaryJdbcSessionOwner temporaryJdbcSessionOwner = new TemporaryJdbcSessionOwner(
+				jdbcConnectionAccess,
+				jdbcServices,
+				registry
+		);
+		temporaryJdbcSessionOwner.transactionCoordinator = registry.getService( TransactionCoordinatorBuilder.class )
+				.buildTransactionCoordinator(
+						new JdbcCoordinatorImpl( null, temporaryJdbcSessionOwner, jdbcServices ),
+						() -> false
+				);
+
 		try {
-			final Connection connection = jdbcConnectionAccess.obtainConnection();
-			try {
-				final DatabaseMetaData dbmd = connection.getMetaData();
-				logDatabaseAndDriver( dbmd );
+			return temporaryJdbcSessionOwner.transactionCoordinator.createIsolationDelegate().delegateWork(
+					new AbstractReturningWork<>() {
+						@Override
+						public JdbcEnvironmentImpl execute(Connection connection) throws SQLException {
+							try {
+								final DatabaseMetaData dbmd = connection.getMetaData();
+								logDatabaseAndDriver( dbmd );
 
-				final String databaseName;
-				final String databaseVersion;
-				final int databaseMajorVersion;
-				final int databaseMinorVersion;
+								final String databaseName;
+								final String databaseVersion;
+								final int databaseMajorVersion;
+								final int databaseMinorVersion;
 
-				if ( explicitDatabaseName == null ) {
-					databaseName = dbmd.getDatabaseProductName();
-				}
-				else {
-					databaseName = explicitDatabaseName;
-				}
-				if ( explicitDatabaseVersion == null ) {
-					databaseVersion = dbmd.getDatabaseProductVersion();
-				}
-				else {
-					databaseVersion = explicitDatabaseVersion;
-				}
-				if ( explicitDatabaseMajorVersion == null ) {
-					databaseMajorVersion = dbmd.getDatabaseMajorVersion();
-				}
-				else {
-					databaseMajorVersion = explicitDatabaseMajorVersion;
-				}
-				if ( explicitDatabaseMinorVersion == null ) {
-					databaseMinorVersion = dbmd.getDatabaseMinorVersion();
-				}
-				else {
-					databaseMinorVersion = explicitDatabaseMinorVersion;
-				}
+								if ( explicitDatabaseName == null ) {
+									databaseName = dbmd.getDatabaseProductName();
+								}
+								else {
+									databaseName = explicitDatabaseName;
+								}
+								if ( explicitDatabaseVersion == null ) {
+									databaseVersion = dbmd.getDatabaseProductVersion();
+								}
+								else {
+									databaseVersion = explicitDatabaseVersion;
+								}
+								if ( explicitDatabaseMajorVersion == null ) {
+									databaseMajorVersion = dbmd.getDatabaseMajorVersion();
+								}
+								else {
+									databaseMajorVersion = explicitDatabaseMajorVersion;
+								}
+								if ( explicitDatabaseMinorVersion == null ) {
+									databaseMinorVersion = dbmd.getDatabaseMinorVersion();
+								}
+								else {
+									databaseMinorVersion = explicitDatabaseMinorVersion;
+								}
 
-				final DialectResolutionInfo dialectResolutionInfo = new DialectResolutionInfoImpl(
-						dbmd,
-						databaseName,
-						databaseVersion,
-						databaseMajorVersion,
-						databaseMinorVersion,
-						dbmd.getDriverName(),
-						dbmd.getDriverMajorVersion(),
-						dbmd.getDriverMinorVersion(),
-						dbmd.getSQLKeywords()
-				);
-				return new JdbcEnvironmentImpl(
-						registry,
-						dialectFactory.buildDialect( configurationValues, () -> dialectResolutionInfo ),
-						dbmd,
-						jdbcConnectionAccess
-				);
-			}
-			catch ( SQLException e ) {
-				log.unableToObtainConnectionMetadata( e );
-			}
-			finally {
-				try {
-					jdbcConnectionAccess.releaseConnection( connection );
-				}
-				catch ( SQLException ignore ) {
-				}
-			}
+								final DialectResolutionInfo dialectResolutionInfo = new DialectResolutionInfoImpl(
+										dbmd,
+										databaseName,
+										databaseVersion,
+										databaseMajorVersion,
+										databaseMinorVersion,
+										dbmd.getDriverName(),
+										dbmd.getDriverMajorVersion(),
+										dbmd.getDriverMinorVersion(),
+										dbmd.getSQLKeywords()
+								);
+								return new JdbcEnvironmentImpl(
+										registry,
+										dialectFactory.buildDialect( configurationValues, () -> dialectResolutionInfo ),
+										dbmd,
+										jdbcConnectionAccess
+								);
+							}
+							catch (SQLException e) {
+								log.unableToObtainConnectionMetadata( e );
+							}
+
+							// accessing the JDBC metadata failed
+							return getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
+						}
+					},
+					false
+			);
 		}
 		catch ( Exception e ) {
 			log.unableToObtainConnectionToQueryMetadata( e );
 		}
-
 		// accessing the JDBC metadata failed
 		return getJdbcEnvironmentWithDefaults( configurationValues, registry, dialectFactory );
 	}
@@ -504,6 +541,182 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		@Override
 		public String toString() {
 			return getMajor() + "." + getMinor();
+		}
+	}
+
+	/**
+	 * This is a temporary JdbcSessionOwner for the purpose of passing a connection to the Dialect for initialization.
+	 */
+	private static class TemporaryJdbcSessionOwner implements JdbcSessionOwner, JdbcSessionContext {
+
+		private final JdbcConnectionAccess jdbcConnectionAccess;
+		private final JdbcServices jdbcServices;
+		private final ServiceRegistryImplementor serviceRegistry;
+		private final boolean jtaTrackByThread;
+		private final boolean preferUserTransaction;
+		private final boolean connectionProviderDisablesAutoCommit;
+		private final PhysicalConnectionHandlingMode connectionHandlingMode;
+		private final JpaCompliance jpaCompliance;
+		TransactionCoordinator transactionCoordinator;
+
+		public TemporaryJdbcSessionOwner(
+				JdbcConnectionAccess jdbcConnectionAccess,
+				JdbcServices jdbcServices,
+				ServiceRegistryImplementor serviceRegistry) {
+			this.jdbcConnectionAccess = jdbcConnectionAccess;
+			this.jdbcServices = jdbcServices;
+			this.serviceRegistry = serviceRegistry;
+			final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
+			this.jtaTrackByThread = configurationService.getSetting( JTA_TRACK_BY_THREAD, BOOLEAN, true );
+			this.preferUserTransaction = getBoolean( PREFER_USER_TRANSACTION, configurationService.getSettings() );
+			this.connectionProviderDisablesAutoCommit = getBoolean(
+					AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT,
+					configurationService.getSettings(),
+					false
+			);
+
+			final PhysicalConnectionHandlingMode specifiedHandlingMode = PhysicalConnectionHandlingMode.interpret(
+					configurationService.getSettings().get( CONNECTION_HANDLING )
+			);
+
+			if ( specifiedHandlingMode != null ) {
+				this.connectionHandlingMode = specifiedHandlingMode;
+			}
+			else {
+				this.connectionHandlingMode = serviceRegistry.getService( TransactionCoordinatorBuilder.class )
+						.getDefaultConnectionHandlingMode();
+			}
+			this.jpaCompliance = new MutableJpaComplianceImpl( Collections.emptyMap(), false );
+		}
+
+		@Override
+		public JdbcSessionContext getJdbcSessionContext() {
+			return this;
+		}
+
+		@Override
+		public JdbcConnectionAccess getJdbcConnectionAccess() {
+			return jdbcConnectionAccess;
+		}
+
+		@Override
+		public TransactionCoordinator getTransactionCoordinator() {
+			return transactionCoordinator;
+		}
+
+		@Override
+		public void startTransactionBoundary() {
+
+		}
+
+		@Override
+		public void afterTransactionBegin() {
+
+		}
+
+		@Override
+		public void beforeTransactionCompletion() {
+
+		}
+
+		@Override
+		public void afterTransactionCompletion(boolean successful, boolean delayed) {
+
+		}
+
+		@Override
+		public void flushBeforeTransactionCompletion() {
+
+		}
+
+		@Override
+		public Integer getJdbcBatchSize() {
+			return null;
+		}
+
+		@Override
+		public boolean isScrollableResultSetsEnabled() {
+			return false;
+		}
+
+		@Override
+		public boolean isGetGeneratedKeysEnabled() {
+			return false;
+		}
+
+		@Override
+		public Integer getFetchSizeOrNull() {
+			return null;
+		}
+
+		@Override
+		public int getFetchSize() {
+			return 0;
+		}
+
+		@Override
+		public boolean doesConnectionProviderDisableAutoCommit() {
+			return connectionProviderDisablesAutoCommit;
+		}
+
+		@Override
+		public boolean isPreferUserTransaction() {
+			return preferUserTransaction;
+		}
+
+		@Override
+		public boolean isJtaTrackByThread() {
+			return jtaTrackByThread;
+		}
+
+		@Override
+		public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
+			return connectionHandlingMode;
+		}
+
+		@Override
+		public StatementInspector getStatementInspector() {
+			return null;
+		}
+
+		@Override
+		public JpaCompliance getJpaCompliance() {
+			return jpaCompliance;
+		}
+
+		@Override
+		public StatisticsImplementor getStatistics() {
+			return null;
+		}
+
+		@Override
+		public JdbcObserver getObserver() {
+			return null;
+		}
+
+		@Override
+		public SessionFactoryImplementor getSessionFactory() {
+			return null;
+		}
+
+		@Override
+		public ServiceRegistry getServiceRegistry() {
+			return serviceRegistry;
+		}
+
+		@Override
+		public JdbcServices getJdbcServices() {
+			return jdbcServices;
+		}
+
+		@Override
+		public BatchBuilder getBatchBuilder() {
+			return null;
+		}
+
+		@Override
+		public boolean isActive() {
+			return true;
 		}
 	}
 }

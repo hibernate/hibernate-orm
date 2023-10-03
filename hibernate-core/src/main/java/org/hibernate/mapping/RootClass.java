@@ -18,7 +18,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.ReflectHelper;
-import org.hibernate.internal.util.collections.SingletonIterator;
 import org.hibernate.persister.entity.EntityPersister;
 
 import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
@@ -131,29 +130,14 @@ public class RootClass extends PersistentClass implements TableOwner {
 		return this;
 	}
 
-	@Override @Deprecated
-	public Iterator<Property> getPropertyClosureIterator() {
-		return getPropertyIterator();
-	}
-
 	@Override
 	public List<Property> getPropertyClosure() {
 		return getProperties();
 	}
 
-	@Override @Deprecated
-	public Iterator<Table> getTableClosureIterator() {
-		return new SingletonIterator<>( getTable() );
-	}
-
 	@Override
 	public List<Table> getTableClosure() {
 		return List.of( getTable() );
-	}
-
-	@Override @Deprecated
-	public Iterator<KeyValue> getKeyClosureIterator() {
-		return new SingletonIterator<>( getKey() );
 	}
 
 	@Override

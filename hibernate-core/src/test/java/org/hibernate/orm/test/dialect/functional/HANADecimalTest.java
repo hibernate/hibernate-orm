@@ -31,7 +31,7 @@ import org.junit.Test;
  * 
  * @author Jonathan Bregler
  */
-@RequiresDialect(value = { AbstractHANADialect.class })
+@RequiresDialect(AbstractHANADialect.class)
 public class HANADecimalTest extends BaseCoreFunctionalTestCase {
 
 	private static final String ENTITY_NAME = "DecimalEntity";

@@ -210,7 +210,7 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	 *
 	 * @return The property spaces.
 	 */
-	Serializable[] getPropertySpaces();
+	String[] getPropertySpaces();
 
 	/**
 	 * Returns an array of objects that identify spaces in which properties of
@@ -806,6 +806,14 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	Object getCurrentVersion(Object id, SharedSessionContractImplementor session) throws HibernateException;
 
 	Object forceVersionIncrement(Object id, Object currentVersion, SharedSessionContractImplementor session) throws HibernateException;
+
+	default Object forceVersionIncrement(
+			Object id,
+			Object currentVersion,
+			boolean batching,
+			SharedSessionContractImplementor session) throws HibernateException {
+		return forceVersionIncrement( id, currentVersion, session );
+	}
 
 	/**
 	 * Has the class actually been bytecode instrumented?

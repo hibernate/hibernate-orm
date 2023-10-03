@@ -8,16 +8,19 @@ package org.hibernate.boot.model.process.spi;
 
 import java.io.InputStream;
 import java.sql.Types;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.OffsetTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.internal.InFlightMetadataCollectorImpl;
@@ -627,9 +630,7 @@ public class MetadataBuildingProcess {
 		dialect.contribute( typeContributions, options.getServiceRegistry() );
 		// Capture the dialect configured JdbcTypes so that we can detect if a TypeContributor overwrote them,
 		// which has precedence over the fallback and preferred type registrations
-		final JdbcType dialectUuidDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.UUID );
 		final JdbcType dialectArrayDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.ARRAY );
-		final JdbcType dialectIntervalDescriptor = jdbcTypeRegistry.findDescriptor( SqlTypes.INTERVAL_SECOND );
 
 		// add TypeContributor contributed types.
 		for ( TypeContributor contributor : classLoaderService.loadJavaServices( TypeContributor.class ) ) {
@@ -640,10 +641,11 @@ public class MetadataBuildingProcess {
 		final int preferredSqlTypeCodeForUuid = getPreferredSqlTypeCodeForUuid( serviceRegistry );
 		if ( preferredSqlTypeCodeForUuid != SqlTypes.UUID ) {
 			adaptToPreferredSqlTypeCode(
+					typeConfiguration,
 					jdbcTypeRegistry,
-					dialectUuidDescriptor,
-					SqlTypes.UUID,
-					preferredSqlTypeCodeForUuid
+					preferredSqlTypeCodeForUuid,
+					UUID.class,
+					"uuid"
 			);
 		}
 		else {
@@ -666,10 +668,11 @@ public class MetadataBuildingProcess {
 		final int preferredSqlTypeCodeForDuration = getPreferredSqlTypeCodeForDuration( serviceRegistry );
 		if ( preferredSqlTypeCodeForDuration != SqlTypes.INTERVAL_SECOND ) {
 			adaptToPreferredSqlTypeCode(
+					typeConfiguration,
 					jdbcTypeRegistry,
-					dialectIntervalDescriptor,
-					SqlTypes.INTERVAL_SECOND,
-					preferredSqlTypeCodeForDuration
+					preferredSqlTypeCodeForDuration,
+					Duration.class,
+					StandardBasicTypes.DURATION.getName()
 			);
 		}
 		else {
@@ -714,7 +717,14 @@ public class MetadataBuildingProcess {
 		}
 		final int preferredSqlTypeCodeForInstant = getPreferredSqlTypeCodeForInstant( serviceRegistry );
 		if ( preferredSqlTypeCodeForInstant != SqlTypes.TIMESTAMP_UTC ) {
-			adaptToPreferredSqlTypeCodeForInstant( typeConfiguration, jdbcTypeRegistry, preferredSqlTypeCodeForInstant );
+			adaptToPreferredSqlTypeCode(
+					typeConfiguration,
+					jdbcTypeRegistry,
+					preferredSqlTypeCodeForInstant,
+					Instant.class,
+					"instant",
+					"org.hibernate.type.InstantType"
+			);
 		}
 	}
 
@@ -732,23 +742,24 @@ public class MetadataBuildingProcess {
 		// else warning?
 	}
 
-	private static void adaptToPreferredSqlTypeCodeForInstant(
+	private static void adaptToPreferredSqlTypeCode(
 			TypeConfiguration typeConfiguration,
 			JdbcTypeRegistry jdbcTypeRegistry,
-			int preferredSqlTypeCodeForInstant) {
+			int preferredSqlTypeCode,
+			Class<?> javaType,
+			String name,
+			String... additionalKeys) {
 		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
 		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
-		final BasicType<?> instantType = new NamedBasicTypeImpl<>(
-				javaTypeRegistry.getDescriptor( Instant.class ),
-				jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForInstant ),
-				"instant"
+		final BasicType<?> basicType = new NamedBasicTypeImpl<>(
+				javaTypeRegistry.getDescriptor( javaType ),
+				jdbcTypeRegistry.getDescriptor( preferredSqlTypeCode ),
+				name
 		);
-		basicTypeRegistry.register(
-				instantType,
-				"org.hibernate.type.InstantType",
-				Instant.class.getSimpleName(),
-				Instant.class.getName()
-		);
+		final String[] keys = Arrays.copyOf( additionalKeys, additionalKeys.length + 2 );
+		keys[additionalKeys.length] = javaType.getSimpleName();
+		keys[additionalKeys.length + 1] = javaType.getName();
+		basicTypeRegistry.register( basicType, keys );
 	}
 
 	private static void adaptTimeTypesToDefaultTimeZoneStorage(

@@ -34,9 +34,6 @@ public interface JdbcLogging extends BasicLogger {
 	Logger JDBC_LOGGER = Logger.getLogger( NAME );
 	JdbcLogging JDBC_MESSAGE_LOGGER = Logger.getMessageLogger( JdbcLogging.class, NAME );
 
-	boolean JDBC_TRACE_ENABLED = JDBC_LOGGER.isTraceEnabled();
-	boolean JDBC_DEBUG_ENABLED = JDBC_LOGGER.isDebugEnabled();
-
 	@LogMessage(level = WARN)
 	@Message(
 			id=100001,

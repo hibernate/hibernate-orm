@@ -958,20 +958,6 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 					.collect(Collectors.toList());
 			}
 			//end::jpql-api-stream-example[]
-
-			// tag::jpql-api-stream-terminal-operation[]
-			List<Person> persons = entityManager.createQuery(
-					"select p " +
-					"from Person p " +
-					"where p.name like :name",
-					Person.class)
-			.setParameter("name", "J%")
-			.getResultStream()
-			.skip(5)
-			.limit(5)
-			.collect(Collectors.toList());
-
-			//end::jpql-api-stream-terminal-operation[]
 		});
 	}
 
@@ -1812,7 +1798,10 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 	}
 
 	@Test
-	@RequiresDialect({H2Dialect.class, MySQLDialect.class, PostgreSQLDialect.class, OracleDialect.class})
+	@RequiresDialect(H2Dialect.class)
+	@RequiresDialect(MySQLDialect.class)
+	@RequiresDialect(PostgreSQLDialect.class)
+	@RequiresDialect(OracleDialect.class)
 	public void test_hql_bit_length_function_example() {
 		doInJPA(this::entityManagerFactory, entityManager -> {
 			//tag::hql-native-function-example[]
@@ -2657,7 +2646,7 @@ public class HQLTest extends BaseEntityManagerFunctionalTestCase {
 			List<Person> persons = entityManager.createQuery(
 				"select p " +
 				"from Person p " +
-				"where p.createdOn between '1999-01-01' and '2001-01-02'",
+				"where p.createdOn between date 1999-01-01 and date 2001-01-02",
 				Person.class)
 			.getResultList();
 			//end::hql-between-predicate-example[]

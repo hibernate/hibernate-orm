@@ -28,8 +28,13 @@ import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Columns;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Subselect;
+import org.hibernate.annotations.TenantId;
+import org.hibernate.annotations.Type;
+import org.hibernate.annotations.UuidGenerator;
 import org.hibernate.annotations.common.annotationfactory.AnnotationDescriptor;
 import org.hibernate.annotations.common.annotationfactory.AnnotationFactory;
 import org.hibernate.annotations.common.reflection.AnnotationReader;
@@ -46,6 +51,8 @@ import org.hibernate.boot.jaxb.mapping.JaxbCascadeType;
 import org.hibernate.boot.jaxb.mapping.JaxbCollectionTable;
 import org.hibernate.boot.jaxb.mapping.JaxbColumn;
 import org.hibernate.boot.jaxb.mapping.JaxbColumnResult;
+import org.hibernate.boot.jaxb.mapping.JaxbColumnType;
+import org.hibernate.boot.jaxb.mapping.JaxbConfigurationParameter;
 import org.hibernate.boot.jaxb.mapping.JaxbConstructorResult;
 import org.hibernate.boot.jaxb.mapping.JaxbConvert;
 import org.hibernate.boot.jaxb.mapping.JaxbDiscriminatorColumn;
@@ -92,7 +99,9 @@ import org.hibernate.boot.jaxb.mapping.JaxbStoredProcedureParameter;
 import org.hibernate.boot.jaxb.mapping.JaxbSynchronizedTable;
 import org.hibernate.boot.jaxb.mapping.JaxbTable;
 import org.hibernate.boot.jaxb.mapping.JaxbTableGenerator;
+import org.hibernate.boot.jaxb.mapping.JaxbTenantId;
 import org.hibernate.boot.jaxb.mapping.JaxbUniqueConstraint;
+import org.hibernate.boot.jaxb.mapping.JaxbUuidGenerator;
 import org.hibernate.boot.jaxb.mapping.JaxbVersion;
 import org.hibernate.boot.jaxb.mapping.LifecycleCallbackContainer;
 import org.hibernate.boot.jaxb.mapping.ManagedType;
@@ -255,6 +264,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( ExcludeDefaultListeners.class, "exclude-default-listeners" );
 		annotationToXml.put( ExcludeSuperclassListeners.class, "exclude-superclass-listeners" );
 //		annotationToXml.put( AccessType.class, "access" );
+		// FIXME: adding same annotation as a key multiple times:
 		annotationToXml.put( AttributeOverride.class, "attribute-override" );
 		annotationToXml.put( AttributeOverrides.class, "attribute-override" );
 		annotationToXml.put( AttributeOverride.class, "association-override" );
@@ -306,7 +316,9 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		annotationToXml.put( Convert.class, "convert" );
 		annotationToXml.put( Converts.class, "convert" );
 		annotationToXml.put( ConstructorResult.class, "constructor-result" );
-
+		annotationToXml.put( Type.class, "type" );
+		annotationToXml.put( JdbcTypeCode.class, "jdbc-type-code" );
+		annotationToXml.put( UuidGenerator.class, "uuid-generator" );
 	}
 
 	private final XMLContext xmlContext;
@@ -1592,6 +1604,9 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			getFetchType( basic, element.getFetch() );
 			copyAttribute( basic, "optional", element.isOptional(), false );
 			annotationList.add( AnnotationFactory.create( basic ) );
+			getType( annotationList, element.getType() );
+			getJdbcTypeCode( annotationList, element.getJdbcTypeCode() );
+			getTenantId( annotationList, element );
 		}
 		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {
 			//no annotation presence constraint, basic is the default
@@ -1615,6 +1630,47 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			addIfNotNull( annotationList, annotation );
 			annotation = getPhysicalAnnotation( AssociationOverrides.class );
 			addIfNotNull( annotationList, annotation );
+		}
+	}
+
+	private void getTenantId(List<Annotation> annotationList, JaxbBasic element) {
+		if ( element instanceof JaxbTenantId ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( TenantId.class );
+			annotationList.add( AnnotationFactory.create( ad ) );
+		}
+	}
+
+	private void getType(List<Annotation> annotationList, JaxbColumnType type) {
+		if ( type != null ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( Type.class );
+			ad.setValue( "value", classLoaderAccess.classForName( type.getValue() ) );
+			Parameter[] parameters = new Parameter[type.getParameters().size()];
+			for ( int i = 0; i < parameters.length; i++ ) {
+				JaxbConfigurationParameter parameter = type.getParameters().get( i );
+				AnnotationDescriptor param = new AnnotationDescriptor( Parameter.class );
+				param.setValue( "name", parameter.getName() );
+				param.setValue( "value", parameter.getValue() );
+				parameters[i] = AnnotationFactory.create( param );
+			}
+			ad.setValue( "parameters", parameters );
+
+			annotationList.add( AnnotationFactory.create( ad ) );
+		}
+	}
+
+	private void getUuidGenerator(List<Annotation> annotationList, JaxbUuidGenerator uuidGenerator) {
+		if ( uuidGenerator != null ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( UuidGenerator.class );
+			ad.setValue( "style", uuidGenerator.getStyle() );
+			annotationList.add( AnnotationFactory.create( ad ) );
+		}
+	}
+
+	private void getJdbcTypeCode(List<Annotation> annotationList, Integer jdbcTypeCode) {
+		if ( jdbcTypeCode != null ) {
+			AnnotationDescriptor ad = new AnnotationDescriptor( JdbcTypeCode.class );
+			ad.setValue( "value", jdbcTypeCode );
+			annotationList.add( AnnotationFactory.create( ad ) );
 		}
 	}
 
@@ -1691,6 +1747,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		if ( entityListener != null ) {
 			elementsForProperty.collectLifecycleCallbacksIfMatching( entityListener );
 		}
+		elementsForProperty.collectTenantIdIfMatching( managedType );
 	}
 
 	private void getId(List<Annotation> annotationList, XMLContext.Default defaults) {
@@ -1710,6 +1767,9 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				AnnotationDescriptor id = new AnnotationDescriptor( Id.class );
 				annotationList.add( AnnotationFactory.create( id ) );
 				getAccessType( annotationList, element.getAccess() );
+				getType( annotationList, element.getType() );
+				getJdbcTypeCode( annotationList, element.getJdbcTypeCode() );
+				getUuidGenerator( annotationList, element.getUuidGenerator() );
 			}
 		}
 		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {

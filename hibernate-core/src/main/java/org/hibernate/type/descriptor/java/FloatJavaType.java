@@ -38,6 +38,7 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 	public String toString(Float value) {
 		return value == null ? null : value.toString();
 	}
+
 	@Override
 	public Float fromString(CharSequence string) {
 		return Float.valueOf( string.toString() );
@@ -78,6 +79,7 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Float wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
@@ -115,7 +117,7 @@ public class FloatJavaType extends AbstractClassJavaType<Float> implements Primi
 	}
 
 	@Override
-	public Class getPrimitiveClass() {
+	public Class<?> getPrimitiveClass() {
 		return float.class;
 	}
 

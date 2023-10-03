@@ -9,12 +9,9 @@ package org.hibernate.jpamodelgen.annotation;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.jpamodelgen.util.Constants;
-import org.hibernate.query.Order;
-import org.hibernate.query.Page;
 
 import java.util.List;
 
-import static java.util.stream.Collectors.toList;
 import static org.hibernate.jpamodelgen.util.StringUtil.getUpperUnderscoreCaseFromLowerCamelCase;
 
 /**
@@ -183,43 +180,6 @@ public class QueryMethod extends AbstractQueryMethod {
 				.append(")");
 	}
 
-	private void setPage(StringBuilder declaration, String paramName) {
-		if ( isUsingEntityManager() ) {
-			declaration
-					.append("\n\t\t\t.setFirstResult(")
-					.append(paramName)
-					.append(".getFirstResult())")
-					.append("\n\t\t\t.setMaxResults(")
-					.append(paramName)
-					.append(".getMaxResults())");
-		}
-		else {
-			declaration
-					.append("\n\t\t\t.setPage(")
-					.append(paramName)
-					.append(")");
-		}
-	}
-
-	private boolean setOrder(StringBuilder declaration, boolean unwrapped, String paramName, String paramType) {
-		unwrap( declaration, unwrapped );
-		if ( paramType.endsWith("...") ) {
-			declaration
-					.append("\n\t\t\t.setOrder(")
-					.append(annotationMetaEntity.importType(Constants.LIST))
-					.append(".of(")
-					.append(paramName)
-					.append("))");
-		}
-		else {
-			declaration
-					.append("\n\t\t\t.setOrder(")
-					.append(paramName)
-					.append(")");
-		}
-		return true;
-	}
-
 	private StringBuilder returnType() {
 		StringBuilder type = new StringBuilder();
 		boolean returnsUni = isReactive()
@@ -240,14 +200,6 @@ public class QueryMethod extends AbstractQueryMethod {
 			type.append('>');
 		}
 		return type;
-	}
-
-	private List<String> parameterTypes() {
-		return paramTypes.stream()
-				.map(paramType -> isOrderParam(paramType) && paramType.endsWith("[]")
-						? paramType.substring(0, paramType.length() - 2) + "..."
-						: paramType)
-				.collect(toList());
 	}
 
 	private void comment(StringBuilder declaration) {
@@ -280,24 +232,6 @@ public class QueryMethod extends AbstractQueryMethod {
 		else {
 			declaration
 					.append("public static ");
-		}
-	}
-
-	static boolean isPageParam(String parameterType) {
-		return Page.class.getName().equals(parameterType);
-	}
-
-	static boolean isOrderParam(String parameterType) {
-		return parameterType.startsWith(Order.class.getName())
-			|| parameterType.startsWith(List.class.getName() + "<" + Order.class.getName());
-	}
-
-	private void unwrap(StringBuilder declaration, boolean unwrapped) {
-		if ( !unwrapped ) {
-			declaration
-					.append("\n\t\t\t.unwrap(")
-					.append(annotationMetaEntity.importType(Constants.HIB_SELECTION_QUERY))
-					.append(".class)");
 		}
 	}
 

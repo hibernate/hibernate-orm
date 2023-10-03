@@ -106,7 +106,7 @@ Even better than DML statement batching is the use of HQL `update` or `delete` q
 [[association-fetching]]
 === Association fetching
 
-:association-fetching: {userGuideBase}#fetching
+:association-fetching: {doc-user-guide-url}#fetching
 
 Achieving high performance in ORM means minimizing the number of round trips to the database. This goal should be uppermost in your mind whenever you're writing data access code with Hibernate. The most fundamental rule of thumb in ORM is:
 
@@ -220,12 +220,12 @@ Clever, huh?
 Both batch fetching and subselect fetching are disabled by default, but we may enable one or the other globally using properties.
 
 .Configuration settings to enable batch and subselect fetching
-[%breakable,cols="35,~, 20"]
+[%breakable,cols="32,~,28"]
 |===
-| Configuration property name | Property value | Alternative
+| Configuration property name | Property value | Alternatives
 
-| `hibernate.default_batch_fetch_size` | A sensible batch size `>1` to enable batch fetching | `@BatchSize`, `setFetchBatchSize()`
-| `hibernate.use_subselect_fetch` | `true` to enable subselect fetching | `@Fetch(SUBSELECT)`
+| `hibernate.default_batch_fetch_size` | A sensible batch size `>1` to enable batch fetching | `@BatchSize()`, `setFetchBatchSize()`
+| `hibernate.use_subselect_fetch` | `true` to enable subselect fetching | `@Fetch(SUBSELECT)`, `setSubselectFetchingEnabled()`
 |===
 
 Alternatively, we can enable one or the other in a given session:
@@ -289,7 +289,7 @@ If we need eager join fetching in some particular transaction, we have four diff
 |===
 | Passing a JPA `EntityGraph` | We've already seen this in <<entity-graph>>
 | Specifying a named _fetch profile_ | We'll discuss this approach later in <<fetch-profiles>>
-| Using `left join fetch` in HQL/JPQL | See _A guide to Hibernate Query Language 6_ for details
+| Using `left join fetch` in HQL/JPQL | See {doc-query-language-url}[_A Guide to Hibernate Query Language_] for details
 | Using `From.fetch()` in a criteria query | Same semantics as `join fetch` in HQL
 |===
 
@@ -334,7 +334,7 @@ Join fetching, despite its non-lazy nature, is clearly more efficient than eithe
 
 [TIP]
 ====
-There's one interesting case where join fetching becomes inefficient: when we fetch two many-values associations _in parallel_.
+There's one interesting case where join fetching becomes inefficient: when we fetch two many-valued associations _in parallel_.
 Imagine we wanted to fetch both `Author.books` and `Author.royaltyStatements` in some unit of work.
 Joining both collections in a single query would result in a cartesian product of tables, and a large SQL result set.
 Subselect fetching comes to the rescue here, allowing us to fetch `books` using a join, and `royaltyStatements` using a single subsequent `select`.
@@ -352,7 +352,7 @@ In that case, we might be able to reduce the cost of cache misses by enabling ba
 [[second-level-cache]]
 === The second-level cache
 
-:second-level-cache: {userGuideBase}#caching
+:second-level-cache: {doc-user-guide-url}#caching
 
 A classic way to reduce the number of accesses to the database is to use a second-level cache, allowing  data cached in memory to be shared between sessions.
 
@@ -419,7 +419,7 @@ The `@Cache` annotation must be specified on the _root class_ of an entity inher
 It's an error to place it on a subclass entity.
 ====
 
-The `@Cache` annotation always specifies a `CacheConcurrencyStrategy`, a policy governing access to the second-level cache by concurrent transactions.
+The `@Cache` annotation always specifies a link:{doc-javadoc-url}org/hibernate/annotations/CacheConcurrencyStrategy.html[`CacheConcurrencyStrategy`], a policy governing access to the second-level cache by concurrent transactions.
 
 .Cache concurrency
 [%breakable,cols="20,30,~"]
@@ -794,7 +794,7 @@ SessionFactory sessionFactory =
             .buildSessionFactory();
 // prime the second-level cache
 sessionFactory.inSession(session -> {
-    session.createSelectionQuery("from Countries"))
+    session.createSelectionQuery("from Country"))
         .setReadOnly(true)
         .getResultList();
     session.createSelectionQuery("from Product where discontinued = false"))
@@ -838,13 +838,13 @@ And if you find yourself thinking you _do_ need them in a certain situation, you
 [[stateless-sessions]]
 === Stateless sessions
 
-An arguably-underappreciated feature of Hibernate is the `StatelessSession` interface, which provides a command-oriented, more bare-metal approach to interacting with the database.
+An arguably-underappreciated feature of Hibernate is the link:{doc-javadoc-url}org/hibernate/StatelessSession.html[`StatelessSession`] interface, which provides a command-oriented, more bare-metal approach to interacting with the database.
 
-You may obtain a reactive stateless session from the `SessionFactory`:
+You may obtain a stateless session from the `SessionFactory`:
 
 [source, JAVA, indent=0]
 ----
-Stage.StatelessSession ss = getSessionFactory().openStatelessSession();
+StatelessSession ss = getSessionFactory().openStatelessSession();
 ----
 
 A stateless session:
@@ -867,7 +867,7 @@ a `select`
 | `insert(Object)`     | Immediately `insert` the state of the given transient object into the database
 | `update(Object)`     | Immediately `update` the state of the given detached object in the database
 | `delete(Object)`     | Immediately `delete` the state of the given detached object from the database
-| `upsert(Object)1     | Immediately `insert` or `update` the state of the given detached object using a SQL `merge into` statement
+| `upsert(Object)`     | Immediately `insert` or `update` the state of the given detached object using a SQL `merge into` statement
 |===
 
 NOTE: There's no `flush()` operation, and so `update()` is always explicit.
@@ -960,7 +960,7 @@ We may ask Hibernate to collect statistics about its activity by setting this co
 | `hibernate.generate_statistics` | `true` to enable collection of statistics
 |===
 
-The statistics are exposed by the `Statistics` object:
+The statistics are exposed by the link:{doc-javadoc-url}org/hibernate/stat/Statistics.html[`Statistics`] object:
 
 [source,java]
 ----
@@ -1002,6 +1002,75 @@ The comment text may be customized:
 - by calling `Query.setComment(comment)` or `Query.setHint(AvailableHints.HINT_COMMENT,comment)`, or
 - via the `@NamedQuery` annotation.
 
+[TIP]
+====
+Once you've identified a slow query, one of the best ways to make it faster is to _actually go and talk to someone who is an expert at making queries go fast_.
+These people are called "database administrators", and if you're reading this document you probably aren't one.
+Database administrators know lots of stuff that Java developers don't.
+So if you're lucky enough to have a DBA about, you don't need to Dunning-Kruger your way out of a slow query.
+====
+
+An expertly-defined index might be all you need to fix a slow query.
+
+[[indexes]]
+=== Adding indexes
+
+The `@Index` annotation may be used to add an index to a table:
+
+[source,java]
+----
+@Entity
+@Table(indexes=@Index(columnList="title, year, publisher_id"))
+class Book { ... }
+----
+
+It's even possible to specify an ordering for an indexed column, or that the index should be case-insensitive:
+
+[source,java]
+----
+@Entity
+@Table(indexes=@Index(columnList="(lower(title)), year desc, publisher_id"))
+class Book { ... }
+----
+
+This lets us create a customized index for a particular query.
+
+Note that SQL expressions like `lower(title)` must be enclosed in parentheses in the `columnList` of the index definition.
+
+[TIP]
+====
+It's not clear that information about indexes belongs in annotations of Java code.
+Indexes are usually maintained and modified by a database administrator, ideally by an expert in tuning the performance of one particular RDBMS.
+So it might be better to keep the definition of indexes in a SQL DDL script that your DBA can easily read and modify.
+<<automatic-schema-export,Remember>>, we can ask Hibernate to execute a DDL script using the property `javax.persistence.schema-generation.create-script-source`.
+====
+
+[[denomalized-date]]
+=== Dealing with denormalized data
+
+A typical relational database table in a well-normalized schema has a relatively small number of columns, and so there's little to be gained by selectively querying columns and populating only certain fields of an entity class.
+
+But occasionally, we hear from someone asking how to map a table with a hundred columns or more!
+This situation can arise when:
+
+- data is intentionally denormalized for performance,
+- the results of a complicated analytic query are exposed via a view, or
+- someone has done something crazy and wrong.
+
+Let's suppose that we're _not_ dealing with the last possibility.
+Then we would like to be able to query the monster table without returning all of its columns.
+At first glance, Hibernate doesn't offer a perfect bottled solution to this problem.
+This first impression is misleading.
+Actually, Hibernate features more than one way to deal with this situation, and the real problem is deciding between the ways.
+We could:
+
+1. map multiple entity classes to the same table or view, being careful about "overlaps" where a mutable column is mapped to more than one of the entities,
+2. use <<hql-queries,HQL>> or <<native-queries,native SQL>> queries returning <<projection-lists,results into record types>> instead of retrieving entity instances, or
+3. use the <<bytecode-enhancer,bytecode enhancer>> and link:{doc-javadoc-url}org/hibernate/annotations/LazyGroup.html[`@LazyGroup`] for attribute-level lazy fetching.
+
+Some other ORM solutions push the third option as the recommended way to handle huge tables, but this has never been the preference of the Hibernate team or Hibernate community.
+It's much more typesafe to use one of the first two options.
+
 [[hibernate-reactive]]
 === Reactive programming with Hibernate
 
@@ -1011,3 +1080,10 @@ The comment text may be customized:
 Finally, many systems which require high scalability now make use of reactive programming and reactive streams.
 {hr}[Hibernate Reactive] brings O/R mapping to the world of reactive programming.
 You can learn much more about Hibernate Reactive from its {hr-guide}[Reference Documentation].
+
+[TIP]
+====
+Hibernate Reactive may be used alongside vanilla Hibernate in the same program, and can reuse the same entity classes.
+This means you can use the reactive programming model exactly where you need it—perhaps only in one or two places in your system.
+You don't need to rewrite your whole program using reactive streams.
+====

@@ -25,6 +25,7 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseUnitTestCase;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 
 /**
@@ -36,7 +37,7 @@ public class ForeignKeyMigrationTest extends BaseUnitTestCase {
 	@TestForIssue( jiraKey = "HHH-9716" )
 //	@FailureExpected( jiraKey = "HHH-9716" )
 	public void testMigrationOfForeignKeys() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 		try {
 			final MetadataImplementor metadata = (MetadataImplementor) new MetadataSources( ssr )
 					.addAnnotatedClass( Box.class )

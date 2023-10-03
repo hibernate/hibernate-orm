@@ -33,7 +33,10 @@ import org.hibernate.type.Type;
  * entities in response to generated replicate events.
  *
  * @author Steve Ebersole
+ *
+ * @deprecated since {@link org.hibernate.Session#replicate} is deprecated
  */
+@Deprecated(since="6")
 public class DefaultReplicateEventListener
 		extends AbstractSaveEventListener<ReplicationMode>
 		implements ReplicateEventListener {
@@ -123,16 +126,7 @@ public class DefaultReplicateEventListener
 			final boolean regenerate = persister.isIdentifierAssignedByInsert(); // prefer re-generation of identity!
 			final EntityKey key = regenerate ? null : source.generateEntityKey( id, persister );
 
-			performSaveOrReplicate(
-					entity,
-					key,
-					persister,
-					regenerate,
-					replicationMode,
-					source,
-					true
-			);
-
+			performSaveOrReplicate( entity, key, persister, regenerate, replicationMode, source, false );
 		}
 	}
 

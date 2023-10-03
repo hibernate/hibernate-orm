@@ -145,12 +145,12 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 
 	@Override
 	public boolean supportsFilterClause() {
-		return getDialect().getVersion().isSameOrAfter( 9, 4 );
+		return true;
 	}
 
 	@Override
 	protected String getForUpdate() {
-		return getDialect().getVersion().isSameOrAfter( 9, 3 ) ? " for no key update" : " for update";
+		return " for no key update";
 	}
 
 	@Override
@@ -228,29 +228,14 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 		// We render an empty group instead of literals as some DBs don't support grouping by literals
 		// Note that integer literals, which refer to select item positions, are handled in #visitGroupByClause
 		if ( expression instanceof Literal ) {
-			if ( getDialect().getVersion().isSameOrAfter( 9, 5 ) ) {
-				appendSql( "()" );
-			}
-			else {
-				appendSql( "(select 1" );
-				appendSql( getFromDualForSelectOnly() );
-				appendSql( ')' );
-			}
+			appendSql( "()" );
 		}
 		else if ( expression instanceof Summarization ) {
 			Summarization summarization = (Summarization) expression;
-			if ( getDialect().getVersion().isSameOrAfter( 9, 5 ) ) {
-				appendSql( summarization.getKind().sqlText() );
-				appendSql( OPEN_PARENTHESIS );
-				renderCommaSeparated( summarization.getGroupings() );
-				appendSql( CLOSE_PARENTHESIS );
-			}
-			else {
-				// This could theoretically be emulated by rendering all grouping variations of the query and
-				// connect them via union all but that's probably pretty inefficient and would have to happen
-				// on the query spec level
-				throw new UnsupportedOperationException( "Summarization is not supported by DBMS" );
-			}
+			appendSql( summarization.getKind().sqlText() );
+			appendSql( OPEN_PARENTHESIS );
+			renderCommaSeparated( summarization.getGroupings() );
+			appendSql( CLOSE_PARENTHESIS );
 		}
 		else {
 			expression.accept( this );

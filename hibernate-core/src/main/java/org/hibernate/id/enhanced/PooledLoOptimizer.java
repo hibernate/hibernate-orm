@@ -9,6 +9,8 @@ package org.hibernate.id.enhanced;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Lock;
 
 import org.hibernate.HibernateException;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -53,22 +55,32 @@ public class PooledLoOptimizer extends AbstractOptimizer {
 	}
 
 	@Override
-	public synchronized Serializable generate(AccessCallback callback) {
-		final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
+	public Serializable generate(AccessCallback callback) {
+		lock.lock();
+		try {
+			final GenerationState generationState = locateGenerationState( callback.getTenantIdentifier() );
 
-		if ( generationState.lastSourceValue == null
-				|| ! generationState.value.lt( generationState.upperLimitValue ) ) {
-			generationState.lastSourceValue = callback.getNextValue();
-			generationState.upperLimitValue = generationState.lastSourceValue.copy().add( incrementSize );
-			generationState.value = generationState.lastSourceValue.copy();
-			// handle cases where initial-value is less that one (hsqldb for instance).
-			while ( generationState.value.lt( 1 ) ) {
-				generationState.value.increment();
+			if ( generationState.lastSourceValue == null
+					|| ! generationState.value.lt( generationState.upperLimitValue ) ) {
+				generationState.lastSourceValue = callback.getNextValue();
+				generationState.upperLimitValue = generationState.lastSourceValue.copy().add( incrementSize );
+				generationState.value = generationState.lastSourceValue.copy();
+				// handle cases where initial-value is less that one (hsqldb for instance).
+				while ( generationState.value.lt( 1 ) ) {
+					generationState.value.increment();
+				}
 			}
+			return generationState.value.makeValueThenIncrement();
 		}
-		return generationState.value.makeValueThenIncrement();
+		finally {
+			lock.unlock();
+		}
 	}
 
+	/**
+	 * Use a lock instead of the monitor lock to avoid pinning when using virtual threads.
+	 */
+	private final Lock lock = new ReentrantLock();
 	private GenerationState noTenantState;
 	private Map<String,GenerationState> tenantSpecificState;
 

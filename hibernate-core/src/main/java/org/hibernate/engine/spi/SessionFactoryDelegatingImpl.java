@@ -350,7 +350,7 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override @Deprecated
-	public <T> BindableType<? extends T> resolveParameterBindType(T bindValue) {
+	public <T> BindableType<? super T> resolveParameterBindType(T bindValue) {
 		return delegate.resolveParameterBindType( bindValue );
 	}
 

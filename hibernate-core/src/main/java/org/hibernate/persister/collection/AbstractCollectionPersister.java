@@ -613,10 +613,10 @@ public abstract class AbstractCollectionPersister
 	public void postInstantiate() throws MappingException {
 		if ( hasNamedQueryLoader() ) {
 			// We pass null as metamodel because we did the initialization during construction already
-			collectionLoader = new CollectionLoaderNamedQuery( this, getNamedQueryMemento( null ) );
+			collectionLoader = createNamedQueryCollectionLoader( this, getNamedQueryMemento( null ) );
 		}
 		else {
-			collectionLoader = createCollectionLoader( new LoadQueryInfluencers( factory ) );
+			collectionLoader = createNamedQueryCollectionLoader( new LoadQueryInfluencers( factory ) );
 		}
 
 		if ( attributeMapping.getIndexDescriptor() != null ) {
@@ -642,7 +642,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected void logStaticSQL() {
-		if ( !ModelMutationLogging.MODEL_MUTATION_LOGGER_DEBUG_ENABLED ) {
+		if ( !ModelMutationLogging.MODEL_MUTATION_LOGGER.isDebugEnabled() ) {
 			return;
 		}
 
@@ -720,7 +720,7 @@ public abstract class AbstractCollectionPersister
 		}
 
 		return attributeMapping.isAffectedByInfluencers( influencers )
-				? createCollectionLoader( influencers )
+				? createNamedQueryCollectionLoader( influencers )
 				: getCollectionLoader();
 	}
 
@@ -765,7 +765,7 @@ public abstract class AbstractCollectionPersister
 //		return attributeMapping.isNotAffectedByInfluencers( loadQueryInfluencers );
 //	}
 
-	private CollectionLoader createCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+	private CollectionLoader createNamedQueryCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
 		if ( loadQueryInfluencers.effectivelyBatchLoadable( this ) ) {
 			final int batchSize = loadQueryInfluencers.effectiveBatchSize( this );
 			return factory.getServiceRegistry()
@@ -773,8 +773,22 @@ public abstract class AbstractCollectionPersister
 					.createCollectionBatchLoader( batchSize, loadQueryInfluencers, attributeMapping, factory );
 		}
 		else {
-			return new CollectionLoaderSingleKey( attributeMapping, loadQueryInfluencers, factory );
+			return createSingleKeyCollectionLoader( loadQueryInfluencers );
 		}
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected CollectionLoader createNamedQueryCollectionLoader(CollectionPersister persister, NamedQueryMemento namedQueryMemento) {
+		return new CollectionLoaderNamedQuery(persister, namedQueryMemento);
+	}
+
+	/**
+	 * For Hibernate Reactive
+	 */
+	protected CollectionLoader createSingleKeyCollectionLoader(LoadQueryInfluencers loadQueryInfluencers) {
+		return new CollectionLoaderSingleKey( attributeMapping, loadQueryInfluencers, factory );
 	}
 
 	@Override
@@ -1784,7 +1798,8 @@ public abstract class AbstractCollectionPersister
 				"one-shot delete for " + getRolePath(),
 				keyRestrictionBindings,
 				Collections.emptyList(),
-				parameterBinders
+				parameterBinders,
+				sqlWhereString
 		);
 	}
 

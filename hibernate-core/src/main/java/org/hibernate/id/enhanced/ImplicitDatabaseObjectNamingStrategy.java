@@ -18,6 +18,8 @@ import org.hibernate.service.ServiceRegistry;
  * tables and sequences relating to enhanced identifier-generators.
  *
  * @author Steve Ebersole
+ *
+ * @since 6
  */
 @Incubating
 public interface ImplicitDatabaseObjectNamingStrategy {

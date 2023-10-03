@@ -11,7 +11,6 @@ import java.util.Map;
 import org.hibernate.Internal;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
 
@@ -194,35 +193,17 @@ public class TypeHelper {
 				final Type type = types[i];
 				if ( type.isComponentType() ) {
 					final CompositeType compositeType = (CompositeType) type;
-					// need to extract the component values and check for subtype replacements...
-					final Type[] subtypes = compositeType.getSubtypes();
-					final Object[] origComponentValues = currentOriginal == null
-							? new Object[subtypes.length]
-							: compositeType.getPropertyValues( currentOriginal, session );
-					final Object[] targetComponentValues = target[i] == null
-							? new Object[subtypes.length]
-							: compositeType.getPropertyValues( target[i], session );
-					final Object[] objects = replaceAssociations(
-							origComponentValues,
-							targetComponentValues,
-							subtypes,
-							session,
-							null,
-							copyCache,
-							foreignKeyDirection
-					);
-					if ( target[i] != null && compositeType instanceof ComponentType ) {
-						final ComponentType componentType = (ComponentType) compositeType;
-						if ( componentType.isCompositeUserType() ) {
-							final EmbeddableInstantiator instantiator = ( (ComponentType) compositeType ).getMappingModelPart()
-									.getEmbeddableTypeDescriptor()
-									.getRepresentationStrategy()
-									.getInstantiator();
-							target[i] = instantiator.instantiate( () -> objects, session.getSessionFactory() );
-						}
-						else {
-							compositeType.setPropertyValues( target[i], objects );
-						}
+					if ( target[i] != null ) {
+						// need to extract the component values and check for subtype replacements...
+						final Object[] objects = replaceCompositeAssociations(
+								session,
+								copyCache,
+								foreignKeyDirection,
+								target[i],
+								currentOriginal,
+								compositeType
+						);
+						target[i] = compositeType.replacePropertyValues( target[i], objects, session );
 					}
 					copied[i] = target[i];
 				}
@@ -235,6 +216,28 @@ public class TypeHelper {
 			}
 		}
 		return copied;
+	}
+
+	private static Object[] replaceCompositeAssociations(
+			SharedSessionContractImplementor session,
+			Map<Object, Object> copyCache,
+			ForeignKeyDirection foreignKeyDirection,
+			Object target, Object currentOriginal,
+			CompositeType compositeType) {
+		final Type[] subtypes = compositeType.getSubtypes();
+		return replaceAssociations(
+				currentOriginal == null
+						? new Object[subtypes.length]
+						: compositeType.getPropertyValues( currentOriginal, session ),
+				target == null
+						? new Object[subtypes.length]
+						: compositeType.getPropertyValues( target, session ),
+				subtypes,
+				session,
+				null,
+				copyCache,
+				foreignKeyDirection
+		);
 	}
 
 }

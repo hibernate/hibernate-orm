@@ -12,6 +12,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Custom Antlr v4 Plugin
@@ -33,9 +34,10 @@ public class AntlrPlugin implements Plugin<Project> {
 
 	@Override
 	public void apply(Project project) {
-		final Task groupingTask = project.getTasks().create( "generateParsers" );
-		groupingTask.setDescription( "Performs all defined Antlr grammar generations" );
-		groupingTask.setGroup( ANTLR );
+		final TaskProvider<Task> groupingTask = project.getTasks().register( "generateParsers", (task) -> {
+			task.setDescription( "Performs all defined Antlr grammar generations" );
+			task.setGroup( ANTLR );
+		} );
 
 		final AntlrSpec antlrSpec = project.getExtensions().create(
 				AntlrSpec.REGISTRATION_NAME,
@@ -53,8 +55,10 @@ public class AntlrPlugin implements Plugin<Project> {
 		mainSourceSet.setCompileClasspath( mainSourceSet.getCompileClasspath().plus( antlrDependencies ) );
 		mainSourceSet.getJava().srcDir( antlrSpec.getOutputBaseDirectory() );
 
-		final Task compileTask = project.getTasks().getByName( mainSourceSet.getCompileJavaTaskName() );
-		compileTask.dependsOn( groupingTask );
+
+		project.getTasks().named( mainSourceSet.getCompileJavaTaskName(), (compileTask) -> {
+			compileTask.dependsOn( groupingTask );
+		} );
 
 		populateGrammars( antlrSpec );
 	}

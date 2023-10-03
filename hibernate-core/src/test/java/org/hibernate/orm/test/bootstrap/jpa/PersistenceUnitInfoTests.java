@@ -13,10 +13,13 @@ import jakarta.persistence.spi.PersistenceProvider;
 import javax.sql.DataSource;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.jpa.HibernatePersistenceProvider;
+
+import org.hibernate.testing.RequiresDialect;
 import org.hibernate.testing.jdbc.DataSourceStub;
 
 import org.hibernate.testing.FailureExpected;
@@ -33,6 +36,7 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author Steve Ebersole
  */
+@RequiresDialect( H2Dialect.class )
 public class PersistenceUnitInfoTests extends BaseUnitTestCase {
 	@Test
 	@TestForIssue( jiraKey = "HHH-13432" )

@@ -107,14 +107,14 @@ public class Compatibility {
 		}
 		else if ( isIntegralTypePrimitive( to ) ) {
 			return from == byte.class
-					|| isIntegralTypePrimitive( from )
+					|| isCompatibleIntegralTypePrimitive( to, from )
 					// this would for sure cause loss of precision
 					|| isFloatingTypePrimitive( from );
 		}
 		else if ( isFloatingTypePrimitive( to ) ) {
 			return from == byte.class
 					|| isIntegralTypePrimitive( from )
-					|| isFloatingTypePrimitive( from );
+					|| isCompatibleFloatingTypePrimitive( to, from );
 		}
 
 		return false;
@@ -138,6 +138,22 @@ public class Compatibility {
 				|| potentialIntegral == long.class;
 	}
 
+	private static boolean isCompatibleIntegralTypePrimitive(Class to, Class from) {
+		assert isIntegralTypePrimitive( to );
+		assert from.isPrimitive();
+
+		if ( to == short.class ) {
+			return from == short.class;
+		}
+		else if ( to == int.class ) {
+			return from == short.class
+					|| from == int.class;
+		}
+		else {
+			return isIntegralTypePrimitive( from );
+		}
+	}
+
 	public static boolean isFloatingType(Class potentialFloating) {
 		if ( potentialFloating.isPrimitive() ) {
 			return isFloatingTypePrimitive( potentialFloating );
@@ -153,6 +169,18 @@ public class Compatibility {
 
 		return potentialFloating == float.class
 				|| potentialFloating == double.class;
+	}
+
+	private static boolean isCompatibleFloatingTypePrimitive(Class to, Class from) {
+		assert isFloatingTypePrimitive( to );
+		assert from.isPrimitive();
+
+		if ( to == float.class ) {
+			return from == float.class;
+		}
+		else {
+			return isFloatingTypePrimitive( from );
+		}
 	}
 
 	public static boolean areAssignmentCompatible(

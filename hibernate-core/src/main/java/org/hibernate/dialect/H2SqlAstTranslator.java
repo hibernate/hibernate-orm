@@ -12,7 +12,6 @@ import org.hibernate.LockMode;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.sqm.ComparisonOperator;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
@@ -23,13 +22,11 @@ import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
-import org.hibernate.sql.ast.tree.expression.SqlTupleContainer;
 import org.hibernate.sql.ast.tree.expression.Summarization;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
-import org.hibernate.sql.ast.tree.predicate.InSubQueryPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.SelectClause;
@@ -116,12 +113,12 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 
 	@Override
 	protected boolean supportsRowConstructor() {
-		return getDialect().getVersion().isSameOrAfter( 2 );
+		return true;
 	}
 
 	@Override
 	protected boolean supportsArrayConstructor() {
-		return getDialect().getVersion().isSameOrAfter( 2 );
+		return true;
 	}
 
 	@Override
@@ -173,28 +170,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 			SqlTuple tuple,
 			ComparisonOperator operator) {
 		emulateSelectTupleComparison( lhsExpressions, tuple.getExpressions(), operator, true );
-	}
-
-	@Override
-	public void visitInSubQueryPredicate(InSubQueryPredicate inSubQueryPredicate) {
-		final SqlTuple lhsTuple;
-		// As of 1.4.200 this is supported
-		if ( getDialect().getVersion().isBefore( 1, 4, 200 )
-				&& ( lhsTuple = SqlTupleContainer.getSqlTuple( inSubQueryPredicate.getTestExpression() ) ) != null
-				&& lhsTuple.getExpressions().size() != 1 ) {
-			inSubQueryPredicate.getTestExpression().accept( this );
-			if ( inSubQueryPredicate.isNegated() ) {
-				appendSql( " not" );
-			}
-			appendSql( " in" );
-			final boolean renderAsArray = this.renderAsArray;
-			this.renderAsArray = true;
-			inSubQueryPredicate.getSubQuery().accept( this );
-			this.renderAsArray = renderAsArray;
-		}
-		else {
-			super.visitInSubQueryPredicate( inSubQueryPredicate );
-		}
 	}
 
 	@Override
@@ -282,14 +257,13 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 
 	@Override
 	protected boolean supportsRowValueConstructorDistinctFromSyntax() {
-		// Seems that before, this was buggy
-		return getDialect().getVersion().isSameOrAfter( 1, 4, 200 );
+		return true;
 	}
 
 	@Override
 	protected boolean supportsNullPrecedence() {
 		// Support for nulls clause in listagg was added in 2.0
-		return getClauseStack().getCurrent() != Clause.WITHIN_GROUP || getDialect().getVersion().isSameOrAfter( 2 );
+		return true;
 	}
 
 	@Override
@@ -305,6 +279,6 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	private boolean supportsOffsetFetchClausePercentWithTies() {
 		// Introduction of TIES clause https://github.com/h2database/h2database/commit/876e9fbe7baf11d01675bfe871aac2cf1b6104ce
 		// Introduction of PERCENT support https://github.com/h2database/h2database/commit/f45913302e5f6ad149155a73763c0c59d8205849
-		return getDialect().getVersion().isSameOrAfter( 1, 4, 198 );
+		return true;
 	}
 }

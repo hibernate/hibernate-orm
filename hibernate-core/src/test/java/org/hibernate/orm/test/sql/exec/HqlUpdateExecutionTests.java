@@ -59,6 +59,18 @@ public class HqlUpdateExecutionTests {
 	}
 
 	@Test
+	@TestForIssue( jiraKey = "HHH-15939" )
+	public void testNumericUpdate(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.createMutationQuery( "update EntityOfBasics set theShort = 69" )
+					.executeUpdate();
+			session.createMutationQuery( "update EntityOfBasics set theShort = ?1" )
+					.setParameter( 1, 69 )
+					.executeUpdate();
+		} );
+	}
+
+	@Test
 	public void testSimpleUpdateWithData(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {

@@ -88,14 +88,6 @@ public class Property implements Serializable, MetaAttributable {
 	}
 
 	/**
-	 * @deprecated moving away from the use of {@link Iterator} as a return type
-	 */
-	@Deprecated(since = "6.0")
-	public Iterator<Selectable> getColumnIterator() {
-		return value.getColumnIterator();
-	}
-
-	/**
 	 * Delegates to {@link Value#getSelectables()}.
 	 */
 	public java.util.List<Selectable> getSelectables() {

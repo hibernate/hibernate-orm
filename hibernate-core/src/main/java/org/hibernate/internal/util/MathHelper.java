@@ -23,4 +23,13 @@ public final class MathHelper {
 	public static int ceilingPowerOfTwo(int value) {
 		return 1 << -Integer.numberOfLeadingZeros(value - 1);
 	}
+
+	/**
+	 * Returns the result of dividing a positive {@code numerator} by a positive {@code denominator} rounded up.
+	 * <p>
+	 * For example dividing 5 by 2 ist 2.5, which (when rounded up) gives a result of 3.
+	 */
+	public static int divideRoundingUp(int numerator, int denominator) {
+		return ( numerator + denominator - 1 ) / denominator;
+	}
 }

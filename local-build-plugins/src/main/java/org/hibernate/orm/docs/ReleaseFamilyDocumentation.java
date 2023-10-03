@@ -18,7 +18,7 @@ import jakarta.json.bind.annotation.JsonbTypeAdapter;
 /**
  * Binding for the doc-pub descriptor (JSON) related to a specific release family.
  *
- * @see ProjectDocumentation
+ * @see ProjectDocumentationDescriptor
  *
  * @author Steve Ebersole
  */
@@ -56,5 +56,10 @@ public class ReleaseFamilyDocumentation {
 			redirects = new HashMap<>();
 		}
 		redirects.put( from, to );
+	}
+
+	@Override
+	public String toString() {
+		return "ReleaseFamilyDocumentation( " + name + ")";
 	}
 }

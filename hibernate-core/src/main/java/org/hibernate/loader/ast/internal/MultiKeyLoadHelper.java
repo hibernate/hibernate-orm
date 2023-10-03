@@ -26,8 +26,7 @@ public class MultiKeyLoadHelper {
 	}
 
 	public static boolean supportsSqlArrayType(Dialect dialect) {
-		return dialect.supportsStandardArrays()
-			&& dialect.getPreferredSqlTypeCodeForArray() == SqlTypes.ARRAY;
+		return dialect.useArrayForMultiValuedParameters();
 	}
 
 	public static JdbcMapping resolveArrayJdbcMapping(

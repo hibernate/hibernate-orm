@@ -1,44 +1,26 @@
-:pdf-theme: ../pdf/theme.yml
-:source-highlighter: rouge
-:icons: font
-:doctype: book
-:pdf-fontsdir: ../pdf/fonts
-:docsBase: https://docs.jboss.org/hibernate/orm
-:versionDocBase: {docsBase}/6.3
-:userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
+:shared-attributes-dir: ../shared/
 
-:root-project-dir: ../../../../..
-:testing-project-dir: {root-project-dir}/hibernate-testing
+include::{shared-attributes-dir}/common-attributes.adoc[]
+include::{shared-attributes-dir}/url-attributes.adoc[]
+include::{shared-attributes-dir}/filesystem-attributes.adoc[]
+include::{shared-attributes-dir}/renderer-attributes.adoc[]
+
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
-:core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
 :extrasdir: extras
 
-= A guide to Hibernate Query Language 6
-Gavin King and the Hibernate team
+= A Guide to Hibernate Query Language
 :title-logo-image: image:../../style/asciidoctor/images/org/hibernate/logo.png[]
 :toc:
 :toclevels: 3
 
-<<<
-
 include::Preface.adoc[]
-
-<<<
 
 :numbered:
 
 include::Concepts.adoc[]
-
-<<<
-
 include::Expressions.adoc[]
-
-<<<
-
 include::From.adoc[]
-
-<<<
-
 include::Relational.adoc[]
+include::Credits.adoc[]
 

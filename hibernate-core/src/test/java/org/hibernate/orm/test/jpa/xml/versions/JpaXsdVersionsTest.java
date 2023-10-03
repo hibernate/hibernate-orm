@@ -8,8 +8,9 @@ package org.hibernate.orm.test.jpa.xml.versions;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.PersistenceException;
@@ -26,6 +27,7 @@ import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.hibernate.orm.test.jpa.pack.defaultpar.Lighter;
 import org.hibernate.orm.test.jpa.pack.defaultpar_1_0.Lighter1;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -40,7 +42,7 @@ public class JpaXsdVersionsTest {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm1-test", "1.0" )
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-1_0.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
-		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
+		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() );
 		try {
 			emf.getMetamodel().entity( Lighter1.class ); // exception if not entity
 		}
@@ -49,12 +51,18 @@ public class JpaXsdVersionsTest {
 		}
 	}
 
-    @Test
+	private static Map<Object, Object> getDefaultPuConfig() {
+		final Map<Object, Object> settings = new HashMap<>();
+		ServiceRegistryUtil.applySettings( settings );
+		return settings;
+	}
+
+	@Test
 	public void testOrm20() {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.0" )
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-2_0.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
-		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
+		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() );
 		try {
 			emf.getMetamodel().entity( Lighter.class ); // exception if not entity
 		}
@@ -68,7 +76,7 @@ public class JpaXsdVersionsTest {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.1" )
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-2_1.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
-		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
+		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() );
 		try {
 			emf.getMetamodel().entity( Lighter.class ); // exception if not entity
 		}
@@ -82,7 +90,7 @@ public class JpaXsdVersionsTest {
 		PersistenceUnitInfoImpl pui = new PersistenceUnitInfoImpl( "orm2-test", "2.2")
 				.addMappingFileName( "org/hibernate/orm/test/jpa/xml/versions/valid-orm-2_2.xml" );
 		HibernatePersistenceProvider hp = new HibernatePersistenceProvider();
-		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, Collections.EMPTY_MAP );
+		EntityManagerFactory emf = hp.createContainerEntityManagerFactory( pui, getDefaultPuConfig() );
 		try {
 			emf.getMetamodel().entity( Lighter.class ); // exception if not entity
 		}
@@ -100,7 +108,7 @@ public class JpaXsdVersionsTest {
 		try {
 			emf = hp.createContainerEntityManagerFactory(
 					pui,
-					Collections.EMPTY_MAP
+					getDefaultPuConfig()
 			);
 			Assert.fail( "expecting 'invalid content' error" );
 		}
@@ -207,7 +215,7 @@ public class JpaXsdVersionsTest {
 		}
 
 		public ClassLoader getNewTempClassLoader() {
-			return getClassLoader();
+			return null;
 		}
 	}
 }

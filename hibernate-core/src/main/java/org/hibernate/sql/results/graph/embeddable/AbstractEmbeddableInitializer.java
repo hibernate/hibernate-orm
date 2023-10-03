@@ -11,10 +11,9 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
-import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.metamodel.mapping.internal.EmbeddedCollectionPart;
 import org.hibernate.metamodel.spi.ValueAccess;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
@@ -68,31 +67,20 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		final int size = embeddableTypeDescriptor.getNumberOfFetchables();
 		this.rowState = new Object[ size ];
 
-		this.isPartOfKey = isPartOfKey( embedded, navigablePath );
+		this.isPartOfKey = isPartOfKey( embedded, navigablePath, fetchParentAccess );
 		// We never want to create empty composites for the FK target or PK, otherwise collections would break
 		this.createEmptyCompositesEnabled = !isPartOfKey && embeddableTypeDescriptor.isCreateEmptyCompositesEnabled();
-
 		this.sessionFactory = creationState.getSqlAstCreationContext().getSessionFactory();
 		this.assemblers = createAssemblers( resultDescriptor, creationState, embeddableTypeDescriptor );
 	}
 
-	private static boolean isPartOfKey(EmbeddableValuedModelPart modelPart, NavigablePath navigablePath) {
+	private static boolean isPartOfKey(EmbeddableValuedModelPart modelPart, NavigablePath navigablePath, FetchParentAccess fetchParentAccess) {
 		return modelPart.isEntityIdentifierMapping()
-				|| isPartOfKey( navigablePath )
-				|| modelPart.getNavigableRole() != null && isPartOfKey( modelPart.getNavigableRole() );
-	}
-
-	private static boolean isPartOfKey(NavigablePath navigablePath) {
-		return ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
+				|| ForeignKeyDescriptor.PART_NAME.equals( navigablePath.getLocalName() )
 				|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( navigablePath.getLocalName() )
 				|| navigablePath instanceof EntityIdentifierNavigablePath
-				|| navigablePath.getParent().getParent() != null && isPartOfKey( navigablePath.getParent() );
-	}
-
-	private static boolean isPartOfKey(NavigableRole navigableRole) {
-		final NavigableRole parent = navigableRole.getParent();
-		return parent != null
-				&& ( parent.getLocalName().equals( EntityIdentifierMapping.ID_ROLE_NAME ) || isPartOfKey( parent ) );
+				|| fetchParentAccess != null && fetchParentAccess.isEmbeddableInitializer()
+				&& ( (AbstractEmbeddableInitializer) fetchParentAccess ).isPartOfKey;
 	}
 
 	protected DomainResultAssembler<?>[] createAssemblers(
@@ -277,7 +265,11 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 				// parent instance is null;
 				return State.NULL;
 			}
-			else if ( entityInitializer.isEntityInitialized() ) {
+			else if ( !entityInitializer.getConcreteDescriptor().isTypeOrSuperType( embedded.findContainingEntityMapping() ) ) {
+				// parent instance is of a supertype which doesn't contain this embeddable
+				return State.NULL;
+			}
+			else if ( entityInitializer.isEntityInitialized() && !(embedded instanceof EmbeddedCollectionPart )) {
 				// parent instance has been initialized, we do not need to inject the state
 				return State.INJECTED;
 			}
@@ -329,6 +321,15 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 		}
 
 		state = stateAllNull ? State.NULL : State.EXTRACTED;
+	}
+
+	@Override
+	public void resolveState(RowProcessingState rowProcessingState) {
+		if ( determinInitialState() == State.INITIAL ) {
+			for ( final DomainResultAssembler<?> assembler : assemblers ) {
+				assembler.resolveState( rowProcessingState );
+			}
+		}
 	}
 
 	private Object createCompositeInstance(NavigablePath navigablePath, SessionFactoryImplementor sessionFactory) {

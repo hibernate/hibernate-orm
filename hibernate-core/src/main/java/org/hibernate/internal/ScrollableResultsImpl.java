@@ -13,6 +13,7 @@ import org.hibernate.sql.results.internal.RowProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
+import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.sql.results.spi.RowReader;
 
 /**
@@ -124,19 +125,18 @@ public class ScrollableResultsImpl<R> extends AbstractScrollableResults<R> {
 		}
 
 		final PersistenceContext persistenceContext = getPersistenceContext().getPersistenceContext();
-
+		final LoadContexts loadContexts = persistenceContext.getLoadContexts();
+		loadContexts.register( getJdbcValuesSourceProcessingState() );
 		persistenceContext.beforeLoad();
 		try {
-			currentRow = getRowReader().readRow(
-					getRowProcessingState(),
-					getProcessingOptions()
-			);
+			currentRow = getRowReader().readRow( getRowProcessingState(), getProcessingOptions() );
 
 			getRowProcessingState().finishRowProcessing();
 			getJdbcValuesSourceProcessingState().finishUp();
 		}
 		finally {
 			persistenceContext.afterLoad();
+			loadContexts.deregister( getJdbcValuesSourceProcessingState() );
 		}
 		persistenceContext.initializeNonLazyCollections();
 

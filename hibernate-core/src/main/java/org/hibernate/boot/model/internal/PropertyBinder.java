@@ -8,6 +8,7 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -48,13 +49,16 @@ import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.spi.AccessType;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.PropertyData;
+import org.hibernate.boot.spi.SecondPass;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Component;
 import org.hibernate.mapping.GeneratorCreator;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.MappedSuperclass;
+import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.mapping.SimpleValue;
@@ -448,13 +452,32 @@ public class PropertyBinder {
 
 	private void handleOptional(Property property) {
 		if ( this.property != null ) {
-			property.setOptional( !isId && isOptional( this.property ) && isNullable( property ) );
-		}
-	}
+			property.setOptional( !isId && isOptional( this.property ) );
+			if ( property.isOptional() ) {
+				final OptionalDeterminationSecondPass secondPass = persistentClasses -> {
+					// Defer determining whether a property and its columns are nullable,
+					// as handleOptional might be called when the value is not yet fully initialized
+					if ( property.getPersistentClass() != null ) {
+						for ( Join join : property.getPersistentClass().getJoins() ) {
+							if ( join.getProperties().contains( property ) ) {
+								// If this property is part of a join it is inherently optional
+								return;
+							}
+						}
+					}
 
-	private static boolean isNullable(Property property) {
-		final Value value = property.getValue();
-		return value instanceof org.hibernate.mapping.OneToMany || value.isNullable();
+					if ( !property.getValue().isNullable() ) {
+						property.setOptional( false );
+					}
+				};
+				// Always register this as second pass and never execute it directly,
+				// even if we are in a second pass already.
+				// If we are in a second pass, then we are currently processing the generalSecondPassList
+				// to which the following call will add the second pass to,
+				// so it will be executed within that second pass, just a bit later
+				buildingContext.getMetadataCollector().addSecondPass( secondPass );
+			}
+		}
 	}
 
 	private void handleNaturalId(Property property) {
@@ -1282,7 +1305,7 @@ public class PropertyBinder {
 		final XProperty idProperty = inferredData.getProperty();
 		final List<Annotation> idGeneratorAnnotations = findContainingAnnotations( idProperty, IdGeneratorType.class );
 		final List<Annotation> generatorAnnotations = findContainingAnnotations( idProperty, ValueGenerationType.class );
-		generatorAnnotations.removeAll( idGeneratorAnnotations );
+		removeIdGenerators( generatorAnnotations, idGeneratorAnnotations );
 		if ( idGeneratorAnnotations.size() + generatorAnnotations.size() > 1 ) {
 			throw new AnnotationException( "Property '"+ getPath( propertyHolder, inferredData )
 					+ "' has too many generator annotations " + combine( idGeneratorAnnotations, generatorAnnotations ) );
@@ -1305,6 +1328,22 @@ public class PropertyBinder {
 						isCompositeId( entityClass, idProperty ) ? "@EmbeddedId" : "@Id",
 						inferredData.getPropertyName()
 				);
+			}
+		}
+	}
+
+	// Since these collections may contain Proxies created by common-annotations module we cannot reliably use simple remove/removeAll
+	// collection methods as those proxies do not implement hashcode/equals and even a simple `a.equals(a)` will return `false`.
+	// Instead, we will check the annotation types, since generator annotations should not be "repeatable" we should have only
+	// at most one annotation for a generator:
+	private static void removeIdGenerators(List<Annotation> generatorAnnotations, List<Annotation> idGeneratorAnnotations) {
+		for ( Annotation id : idGeneratorAnnotations ) {
+			Iterator<Annotation> iterator = generatorAnnotations.iterator();
+			while ( iterator.hasNext() ) {
+				Annotation gen = iterator.next();
+				if ( gen.annotationType().equals( id.annotationType() ) ) {
+					iterator.remove();
+				}
 			}
 		}
 	}

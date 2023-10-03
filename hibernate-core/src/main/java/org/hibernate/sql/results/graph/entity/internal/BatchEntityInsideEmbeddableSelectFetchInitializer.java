@@ -63,12 +63,23 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
+		if ( state == State.INITIALIZED ) {
+			return;
+		}
 		resolveKey( rowProcessingState, referencedModelPart, parentAccess );
 		if ( entityKey == null ) {
 			return;
 		}
+		state = State.INITIALIZED;
+		initializedEntityInstance = getExistingInitializedInstance( rowProcessingState );
+		if ( initializedEntityInstance == null ) {
 
-		entityInstance = BATCH_PROPERTY;
+			// need to add the key to the batch queue only when the entity has not been already loaded or
+			// there isn't another initializer that is loading it
+			registerToBatchFetchQueue( rowProcessingState );
+
+			initializedEntityInstance = BATCH_PROPERTY;
+		}
 	}
 
 	@Override

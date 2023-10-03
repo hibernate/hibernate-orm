@@ -39,6 +39,7 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 	public String toString(Double value) {
 		return value == null ? null : value.toString();
 	}
+
 	@Override
 	public Double fromString(CharSequence string) {
 		return Double.valueOf( string.toString() );
@@ -79,6 +80,7 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 		}
 		throw unknownUnwrap( type );
 	}
+
 	@Override
 	public <X> Double wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
@@ -117,9 +119,8 @@ public class DoubleJavaType extends AbstractClassJavaType<Double> implements
 		}
 	}
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	public Class getPrimitiveClass() {
+	public Class<?> getPrimitiveClass() {
 		return double.class;
 	}
 

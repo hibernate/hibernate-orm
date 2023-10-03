@@ -34,7 +34,6 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -64,8 +63,8 @@ import org.hibernate.testing.DialectChecks;
 import org.hibernate.testing.RequiresDialectFeature;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
-import org.hibernate.testing.jdbc.SharedDriverManagerConnectionProviderImpl;
 import org.hibernate.testing.junit4.CustomParameterized;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -287,12 +286,6 @@ public class DefaultCatalogAndSchemaTest {
 		settings.put( GlobalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 		settings.put( LocalTemporaryTableStrategy.DROP_ID_TABLES, "true" );
 		settings.put( AvailableSettings.JAKARTA_HBM2DDL_CREATE_SCHEMAS, "true" );
-		if ( !Environment.getProperties().containsKey( Environment.CONNECTION_PROVIDER ) ) {
-			settings.put(
-					AvailableSettings.CONNECTION_PROVIDER,
-					SharedDriverManagerConnectionProviderImpl.getInstance()
-			);
-		}
 		if ( defaultCatalog != null ) {
 			settings.put( AvailableSettings.DEFAULT_CATALOG, defaultCatalog );
 		}
@@ -300,7 +293,7 @@ public class DefaultCatalogAndSchemaTest {
 			settings.put( AvailableSettings.DEFAULT_SCHEMA, defaultSchema );
 		}
 
-		final StandardServiceRegistryBuilder ssrb = new StandardServiceRegistryBuilder( bsr );
+		final StandardServiceRegistryBuilder ssrb = ServiceRegistryUtil.serviceRegistryBuilder( bsr );
 		ssrb.applySettings( settings );
 		StandardServiceRegistry registry = ssrb.build();
 		toClose.add( registry );
@@ -315,7 +308,12 @@ public class DefaultCatalogAndSchemaTest {
 	}
 
 	@Test
-	@SkipForDialect(value = { SQLServerDialect.class, SybaseDialect.class },
+	@SkipForDialect(value = SQLServerDialect.class,
+			comment = "SQL Server and Sybase support catalogs but their implementation of DatabaseMetaData"
+					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
+					+ " which results in nasty errors when generating an update script"
+					+ " and some catalogs don't exist.")
+	@SkipForDialect(value = SybaseDialect.class,
 			comment = "SQL Server and Sybase support catalogs but their implementation of DatabaseMetaData"
 					+ " throws exceptions when calling getSchemas/getTables with a non-existing catalog,"
 					+ " which results in nasty errors when generating an update script"

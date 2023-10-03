@@ -26,6 +26,9 @@ import org.hibernate.persister.entity.EntityPersister;
 
 import org.jboss.logging.Logger;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Keeps track of:<ul>
  *     <li>entity and collection keys that are available for batch fetching</li>
@@ -45,22 +48,22 @@ public class BatchFetchQueue {
 	 * A map of {@link SubselectFetch subselect-fetch descriptors} keyed by the
 	 * {@link EntityKey} against which the descriptor is registered.
 	 */
-	private Map<EntityKey, SubselectFetch> subselectsByEntityKey;
+	private @Nullable Map<EntityKey, SubselectFetch> subselectsByEntityKey;
 
 	/**
-	 * Used to hold information about the entities that are currently eligible for batch-fetching.  Ultimately
+	 * Used to hold information about the entities that are currently eligible for batch-fetching. Ultimately
 	 * used by {@link #getBatchLoadableEntityIds} to build entity load batches.
 	 * <p>
 	 * A Map structure is used to segment the keys by entity type since loading can only be done for a particular entity
 	 * type at a time.
 	 */
-	private Map <String,LinkedHashSet<EntityKey>> batchLoadableEntityKeys;
+	private @Nullable Map <String,LinkedHashSet<EntityKey>> batchLoadableEntityKeys;
 
 	/**
-	 * Used to hold information about the collections that are currently eligible for batch-fetching.  Ultimately
+	 * Used to hold information about the collections that are currently eligible for batch-fetching. Ultimately
 	 * used by {@link #getCollectionBatch} to build collection load batches.
 	 */
-	private Map<String, LinkedHashMap<CollectionEntry, PersistentCollection<?>>> batchLoadableCollections;
+	private @Nullable Map<String, LinkedHashMap<CollectionEntry, PersistentCollection<?>>> batchLoadableCollections;
 
 	/**
 	 * Constructs a queue for the given context.
@@ -92,7 +95,7 @@ public class BatchFetchQueue {
 	 * @return The fetch descriptor; may return null if no subselect fetch queued for
 	 * this entity key.
 	 */
-	public SubselectFetch getSubselect(EntityKey key) {
+	public @Nullable SubselectFetch getSubselect(EntityKey key) {
 		if ( subselectsByEntityKey == null ) {
 			return null;
 		}
@@ -165,9 +168,9 @@ public class BatchFetchQueue {
 	 * if necessary
 	 */
 	public void removeBatchLoadableEntityKey(EntityKey key) {
-		if ( batchLoadableEntityKeys != null
-				&& key.isBatchLoadable( context.getSession().getLoadQueryInfluencers() ) ) {
-			final LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName() );
+		if ( key.isBatchLoadable( context.getSession().getLoadQueryInfluencers() )
+				&& batchLoadableEntityKeys != null ) {
+			final LinkedHashSet<EntityKey> set = batchLoadableEntityKeys.get( key.getEntityName() );
 			if ( set != null ) {
 				set.remove( key );
 			}
@@ -175,12 +178,11 @@ public class BatchFetchQueue {
 	}
 
 	/**
-	 * Intended for test usage.  Really has no use-case in Hibernate proper.
+	 * Intended for test usage. Really has no use-case in Hibernate proper.
 	 */
 	public boolean containsEntityKey(EntityKey key) {
-		if ( batchLoadableEntityKeys != null
-				&& key.isBatchLoadable( context.getSession().getLoadQueryInfluencers() ) ) {
-			LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( key.getEntityName() );
+		if ( key.isBatchLoadable( context.getSession().getLoadQueryInfluencers() ) && batchLoadableEntityKeys != null ) {
+			LinkedHashSet<EntityKey> set = batchLoadableEntityKeys.get( key.getEntityName() );
 			if ( set != null ) {
 				return set.contains( key );
 			}
@@ -189,7 +191,7 @@ public class BatchFetchQueue {
 	}
 
 	/**
-	 * A "collector" form of {@link #getBatchLoadableEntityIds}.  Useful
+	 * A "collector" form of {@link #getBatchLoadableEntityIds}. Useful
 	 * in cases where we want a specially created array/container - allows
 	 * creation of concretely typed array for ARRAY param binding to ensure
 	 * the driver does not need to cast/copy the values array.
@@ -197,7 +199,7 @@ public class BatchFetchQueue {
 	public <T> void collectBatchLoadableEntityIds(
 			final int domainBatchSize,
 			IndexedConsumer<T> collector,
-			final T loadingId,
+			final @NonNull T loadingId,
 			final EntityMappingType entityDescriptor) {
 		// make sure we load the id being loaded in the batch!
 		collector.accept( 0, loadingId );
@@ -206,7 +208,7 @@ public class BatchFetchQueue {
 			return;
 		}
 
-		final LinkedHashSet<EntityKey> set =  batchLoadableEntityKeys.get( entityDescriptor.getEntityName() );
+		final LinkedHashSet<EntityKey> set = batchLoadableEntityKeys.get( entityDescriptor.getEntityName() );
 		if ( set == null ) {
 			return;
 		}
@@ -248,7 +250,7 @@ public class BatchFetchQueue {
 	 * complex algorithm that tries to grab keys registered immediately after
 	 * the given key.
 	 */
-	public Object[] getBatchLoadableEntityIds(
+	public Object [] getBatchLoadableEntityIds(
 			final EntityMappingType entityDescriptor,
 			final Object loadingId,
 			final int maxBatchSize) {
@@ -328,6 +330,7 @@ public class BatchFetchQueue {
 			batchLoadableCollections = CollectionHelper.mapOfSize( 12 );
 		}
 
+		assert persister != null : "@AssumeAssertion(nullness)";
 		final LinkedHashMap<CollectionEntry, PersistentCollection<?>> map =
 				batchLoadableCollections.computeIfAbsent(
 						persister.getRole(),
@@ -343,11 +346,13 @@ public class BatchFetchQueue {
 	 * if necessary
 	 */
 	public void removeBatchLoadableCollection(CollectionEntry ce) {
+		final CollectionPersister persister = ce.getLoadedPersister();
 		if ( batchLoadableCollections == null ) {
 			return;
 		}
+		assert persister != null : "@AssumeAssertion(nullness)";
 		LinkedHashMap<CollectionEntry, PersistentCollection<?>> map =
-				batchLoadableCollections.get( ce.getLoadedPersister().getRole() );
+				batchLoadableCollections.get( persister.getRole() );
 		if ( map != null ) {
 			map.remove( ce );
 		}
@@ -355,7 +360,7 @@ public class BatchFetchQueue {
 
 
 	/**
-	 * A "collector" form of {@link #getCollectionBatch}.  Useful
+	 * A "collector" form of {@link #getCollectionBatch}. Useful
 	 * in cases where we want a specially created array/container - allows
 	 * creation of concretely typed array for ARRAY param binding to ensure
 	 * the driver does not need to cast/copy the values array.
@@ -363,7 +368,7 @@ public class BatchFetchQueue {
 	public <T> void collectBatchLoadableCollectionKeys(
 			int batchSize,
 			IndexedConsumer<T> collector,
-			T keyBeingLoaded,
+			@NonNull T keyBeingLoaded,
 			PluralAttributeMapping pluralAttributeMapping) {
 		collector.accept( 0, keyBeingLoaded );
 
@@ -383,9 +388,10 @@ public class BatchFetchQueue {
 
 		for ( Entry<CollectionEntry, PersistentCollection<?>> me : map.entrySet() ) {
 			final CollectionEntry ce = me.getKey();
+			final Object loadedKey = ce.getLoadedKey();
 			final PersistentCollection<?> collection = me.getValue();
 
-			if ( ce.getLoadedKey() == null ) {
+			if ( loadedKey == null ) {
 				// the loadedKey of the collectionEntry might be null as it might have been reset to null
 				// (see for example Collections.processDereferencedCollection()
 				// and CollectionEntry.afterAction())
@@ -407,21 +413,21 @@ public class BatchFetchQueue {
 
 			final boolean isEqual = pluralAttributeMapping.getKeyDescriptor().areEqual(
 					keyBeingLoaded,
-					ce.getLoadedKey(),
+					loadedKey,
 					context.getSession()
 			);
 //			final boolean isEqual = collectionPersister.getKeyType().isEqual(
 //					id,
-//					ce.getLoadedKey(),
+//					loadedKey,
 //					collectionPersister.getFactory()
 //			);
 
 			if ( isEqual ) {
 				end = i;
 			}
-			else if ( !isCached( ce.getLoadedKey(), pluralAttributeMapping.getCollectionDescriptor() ) ) {
+			else if ( !isCached( loadedKey, pluralAttributeMapping.getCollectionDescriptor() ) ) {
 				//noinspection unchecked
-				collector.accept( i++, (T) ce.getLoadedKey() );
+				collector.accept( i++, (T) loadedKey );
 			}
 
 			if ( i == batchSize ) {
@@ -444,7 +450,7 @@ public class BatchFetchQueue {
 	 * @param batchSize the maximum number of keys to return
 	 * @return an array of collection keys, of length batchSize (padded with nulls)
 	 */
-	public Object[] getCollectionBatch(
+	public Object [] getCollectionBatch(
 			final CollectionPersister collectionPersister,
 			final Object id,
 			final int batchSize) {
@@ -465,9 +471,10 @@ public class BatchFetchQueue {
 		if ( map != null ) {
 			for ( Entry<CollectionEntry, PersistentCollection<?>> me : map.entrySet() ) {
 				final CollectionEntry ce = me.getKey();
+				final Object loadedKey = ce.getLoadedKey();
 				final PersistentCollection<?> collection = me.getValue();
 
-				if ( ce.getLoadedKey() == null ) {
+				if ( loadedKey == null ) {
 					// the loadedKey of the collectionEntry might be null as it might have been reset to null
 					// (see for example Collections.processDereferencedCollection()
 					// and CollectionEntry.afterAction())
@@ -488,7 +495,7 @@ public class BatchFetchQueue {
 
 				final boolean isEqual = collectionPersister.getKeyType().isEqual(
 						id,
-						ce.getLoadedKey(),
+						loadedKey,
 						collectionPersister.getFactory()
 				);
 
@@ -496,8 +503,8 @@ public class BatchFetchQueue {
 					end = i;
 					//checkForEnd = false;
 				}
-				else if ( !isCached( ce.getLoadedKey(), collectionPersister ) ) {
-					keys[i++] = ce.getLoadedKey();
+				else if ( !isCached( loadedKey, collectionPersister ) ) {
+					keys[i++] = loadedKey;
 					//count++;
 				}
 

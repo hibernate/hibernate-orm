@@ -1,3 +1,5 @@
+import java.util.function.Function
+
 import org.asciidoctor.gradle.jvm.AsciidoctorTask
 import org.asciidoctor.gradle.jvm.pdf.AsciidoctorPdfTask
 
@@ -5,6 +7,7 @@ plugins {
 	id 'org.asciidoctor.jvm.convert' version '3.3.2'
 	id 'org.asciidoctor.jvm.pdf' version '3.3.2'
 	id "org.asciidoctor.jvm.gems" version "3.3.2"
+	id "org.hibernate.orm.build.settings-doc"
 }
 
 repositories {
@@ -25,10 +28,91 @@ apply from: rootProject.file( 'gradle/releasable.gradle' )
 
 apply plugin: 'org.hibernate.orm.build.reports'
 
-tasks.build.dependsOn 'buildDocs'
+
 defaultTasks 'buildDocs'
 
+configurations {
+	core
+
+	testing
+
+	envers
+	spatial
+
+	agroal
+	c3p0
+	hikaricp
+	proxool
+	vibur
+
+	jcache
+
+	jpamodelgen
+
+	javadocClasspath {
+		description = 'Class files for the javadoc to be built'
+		resolutionStrategy.capabilitiesResolution.withCapability('org.junit.jupiter:junit-jupiter-params:5.7.1') { details ->
+			details.select( details.candidates.first() ).because( 'first' )
+		}
+
+		extendsFrom core
+		extendsFrom testing
+		extendsFrom envers
+		extendsFrom spatial
+		extendsFrom agroal
+		extendsFrom c3p0
+		extendsFrom hikaricp
+		extendsFrom proxool
+		extendsFrom vibur
+		extendsFrom jcache
+		extendsFrom jpamodelgen
+	}
+
+	javadocSources {
+		description = 'Source files to be built by the javadoc tool'
+	}
+}
+
 dependencies {
+	attributesSchema { schema ->
+		schema.attribute(Bundling.BUNDLING_ATTRIBUTE) { matchStrategy ->
+			final def nameComparator = Comparator.comparing(
+					new Function<Bundling,String>() {
+						@Override
+						String apply(Bundling o) {
+							return o.name
+						}
+					}
+			)
+			matchStrategy.ordered(new Comparator<Bundling>() {
+				@Override
+				int compare(Bundling o1, Bundling o2) {
+					if ( Objects.equals( o1, o2 ) ) {
+						return 0;
+					}
+
+					if ( o1 == null ) {
+						return 1;
+					}
+
+					if ( o2 == null ) {
+						return -1;
+					}
+
+					if ( o1.name == Bundling.EMBEDDED ) {
+						return -1;
+					}
+
+					if ( o2.name == Bundling.EMBEDDED ) {
+						return 1;
+					}
+
+					return nameComparator.compare(o1,o2)
+				}
+			} )
+		}
+	}
+
 	ext.pressgangVersion = '3.0.0'
 
 	reportAggregation project( ':hibernate-agroal' )
@@ -47,6 +131,51 @@ dependencies {
 	reportAggregation project(':hibernate-jpamodelgen')
 
 	asciidoctorGems 'rubygems:rouge:4.1.1'
+
+	core project( ':hibernate-core' )
+	javadocSources project( path: ':hibernate-core', configuration: 'javadocSources' )
+
+	testing project( ':hibernate-testing' )
+	javadocSources project( path: ':hibernate-testing', configuration: 'javadocSources' )
+
+	envers project( ':hibernate-envers' )
+	javadocSources project( path: ':hibernate-envers', configuration: 'javadocSources' )
+
+	spatial project( ':hibernate-spatial' )
+	javadocSources project( path: ':hibernate-spatial', configuration: 'javadocSources' )
+
+	agroal project( ':hibernate-agroal' )
+	javadocSources project( path: ':hibernate-agroal', configuration: 'javadocSources' )
+
+	c3p0 project( ':hibernate-c3p0' )
+	javadocSources project( path: ':hibernate-c3p0', configuration: 'javadocSources' )
+
+	hikaricp project( ':hibernate-hikaricp' )
+	javadocSources project( path: ':hibernate-hikaricp', configuration: 'javadocSources' )
+
+	proxool project( ':hibernate-proxool' )
+	javadocSources project( path: ':hibernate-proxool', configuration: 'javadocSources' )
+
+	vibur project( ':hibernate-vibur' )
+	javadocSources project( path: ':hibernate-vibur', configuration: 'javadocSources' )
+
+	jcache project( ':hibernate-jcache' )
+	javadocSources project( path: ':hibernate-jcache', configuration: 'javadocSources' )
+
+	jpamodelgen project( ':hibernate-jpamodelgen' )
+	javadocSources project( path: ':hibernate-jpamodelgen', configuration: 'javadocSources' )
+
+	javadocClasspath libs.loggingAnnotations
+	javadocClasspath jakartaLibs.validation
+	javadocClasspath jakartaLibs.cdi
+	javadocClasspath jakartaLibs.jacc
+	javadocClasspath jakartaLibs.jsonbApi
+	javadocClasspath libs.ant
+	javadocClasspath dbLibs.postgresql
+	javadocClasspath libs.jackson
+	javadocClasspath gradleApi()
+	javadocClasspath libs.jacksonXml
+	javadocClasspath dbLibs.oracle
 }
 
 
@@ -59,19 +188,53 @@ else {
 	tasks.release.dependsOn clean
 }
 
+
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// grouping tasks - declaration, see below for task dependency definitions
+// aggregated Javadoc
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-tasks.register('buildDocs') {
-	group 'Documentation'
-	description 'Grouping task for performing all documentation building tasks'
+def aggregateJavadocsTask = tasks.register( "javadoc", Javadoc ) {
+	group = "documentation"
+	description = 'Builds JavaDoc aggregated across all ORM sub-projects'
+
+	destinationDir = mkdir( layout.buildDirectory.file( 'javadocs' ) )
+	source = configurations.javadocSources
+	classpath = configurations.javadocClasspath
+
+	configure( options ) {
+		overview = rootProject.file( "shared/javadoc/overview.html" )
+		windowTitle = 'Hibernate Javadocs'
+		docTitle = "Hibernate Javadoc ($project.version)"
+	}
+
+	if ( jdkVersions.explicit ) {
+//			setJFlags(
+//					getProperty( 'toolchain.javadoc.jvmargs' ).toString().
+//							split( ' ' ).toList().findAll( { !it.isEmpty() } )
+//			)
+
+		// Display version of Java tools
+		doFirst {
+			if ( javadocTool.present ) {
+				logger.lifecycle "Building aggregated javadoc with '${javadocTool.get().metadata.installationPath}'"
+			}
+		}
+	}
+
+	doFirst {
+		def javaLanguageVersion = javadocTool.present
+				? javadocTool.get().metadata.languageVersion
+				: JavaLanguageVersion.of( JavaVersion.current().name )
+
+		if ( javaLanguageVersion.asInt() > 11 ) {
+			println "Aggregated Javadocs are bing built` using a JDK newer than version 11: \n" +
+							"\t* `stylesheet.css` will not be compatible\n" +
+							"\t* generating the User Guide settings fragment will not succeed"
+		}
+	}
 }
 
-tasks.register('buildDocsForPublishing') {
-	group 'Documentation'
-	description 'Grouping task for building all documentation for publishing (release)'
-}
+apply from: rootProject.file( 'gradle/javadoc.gradle' )
 
 
 asciidoctorj {
@@ -85,84 +248,46 @@ asciidoctorj {
 			experimental: true,
 			'source-highlighter': 'rouge',
 			majorMinorVersion: rootProject.ormVersion.family,
-			fullVersion: rootProject.ormVersion.fullName
+			fullVersion: rootProject.ormVersion.fullName,
+			javaCompatibleVersions: jdks.versions.compatible.get(),
+			jakartaJpaVersion: rootProject.jakartaJpaVersion,
+			jdbcVersion: jdks.versions.jdbc.get()
 
 	options logDocuments: true
 }
 
+
 // Topical Guides ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-tasks.register('renderTopicalGuides', AsciidoctorTask) { task ->
+def renderTopicalGuideHtmlTask = tasks.register( 'renderTopicalGuideHtml', AsciidoctorTask ) { task ->
 	group = "Documentation"
 	description = 'Renders the  Topical Guides in HTML format using Asciidoctor.'
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
 	inputs.property "hibernate-version", project.ormVersion
 
-	sourceDir = file('src/main/asciidoc/topical')
-	outputDir = new File("$buildDir/asciidoc/topical/html_single")
+	sourceDir = file( 'src/main/asciidoc/topical' )
+	outputDir = new File( "$buildDir/asciidoc/topical/html_single" )
 
 	resources {
-		from('src/main/asciidoc/topical/') {
+		from( 'src/main/asciidoc/topical/' ) {
 			include '**/images/**'
 		}
 	}
 }
 
+def renderTopicalGuidesTask = tasks.register( 'renderTopicalGuides', AsciidoctorTask ) { task ->
+	task.group = "Documentation"
+	task.description = 'Renders the Topical Guides in all formats.'
+	task.dependsOn renderTopicalGuideHtmlTask
+}
+
 
 // Getting Started Guides (quick starts) ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-tasks.register('renderGettingStartedGuides', AsciidoctorTask) { task ->
-	group = "Documentation"
-	description = 'Renders the Getting Started Guides (quickstarts) in HTML format using Asciidoctor.'
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
-	inputs.property "hibernate-version", project.ormVersion
+def gettingStartedGuideHtmlDir = layout.buildDirectory.dir( "asciidoc/quickstart/html_single" )
 
-	sourceDir = file('src/main/asciidoc/quickstart/guides')
-	sources {
-		include 'index.adoc'
-	}
-	outputDir = new File("$buildDir/asciidoc/quickstart/html_single")
-
-	attributes linkcss: true,
-			stylesheet: "css/hibernate.css",
-			docinfo: 'private',
-			jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
-
-	resources {
-		from('src/main/style/asciidoctor') {
-			include 'images/**'
-		}
-		from('src/main/style/asciidoctor') {
-			include 'css/**'
-		}
-		from('src/main/style/asciidoctor') {
-			include 'js/**'
-		}
-	}
-}
-
-tasks.register('renderGettingStartedGuidesPdf', AsciidoctorPdfTask) {task->
-	group = "Documentation"
-	description = 'Renders the Getting Started Guides in PDF format using Asciidoctor.'
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
-	inputs.property "hibernate-version", project.ormVersion
-
-	sourceDir = file( 'src/main/asciidoc/quickstart/guides' )
-	baseDir = file( 'src/main/asciidoc/quickstart/guides' )
-	sources {
-		include 'index.adoc'
-	}
-	outputDir = "$buildDir/asciidoc/quickstart/pdf"
-
-	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
-}
-
-tasks.register('buildTutorialZip', Zip) { task ->
+def buildTutorialZipTask = tasks.register( 'buildTutorialZip', Zip ) { task ->
 	from 'src/main/asciidoc/quickstart/tutorials'
-	destinationDirectory = tasks.renderGettingStartedGuides.outputDir
+	destinationDirectory.set( gettingStartedGuideHtmlDir )
 	archiveFileName = 'hibernate-tutorials.zip'
 	expand(
 			version: project.version,
@@ -170,70 +295,155 @@ tasks.register('buildTutorialZip', Zip) { task ->
 			junit: testLibs.versions.junit4.get(),
 			h2: dbLibs.versions.h2.get()
 	)
-	tasks.renderGettingStartedGuides.dependsOn task
 }
 
-
-// Introduction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-tasks.register('renderIntroductionPdf', AsciidoctorPdfTask) {task->
+def renderGettingStartedGuideHtmlTask = tasks.register( 'renderGettingStartedGuideHtmlTask', AsciidoctorTask ) { task ->
 	group = "Documentation"
-	description = 'Renders the Introduction in PDF format using Asciidoctor.'
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
+	description = 'Renders the Getting Started Guides (quickstarts) in HTML format using Asciidoctor.'
 	inputs.property "hibernate-version", project.ormVersion
+	finalizedBy buildTutorialZipTask
 
-	sourceDir = file( 'src/main/asciidoc/introduction' )
-	baseDir = file( 'src/main/asciidoc/introduction' )
-	sources {
-		include 'Hibernate_Introduction.adoc'
-	}
-	outputDir = "$buildDir/asciidoc/introduction/pdf"
+	sourceDir = file( 'src/main/asciidoc/quickstart/guides' )
+	sources 'index.adoc'
 
-	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
-}
-
-tasks.register('renderIntroduction', AsciidoctorTask) {task->
-	group = "Documentation"
-	description = 'Renders the Introduction in HTML format using Asciidoctor.'
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
-	inputs.property "hibernate-version", project.ormVersion
-
-	sourceDir = file( 'src/main/asciidoc/introduction' )
-	sources {
-		include 'Hibernate_Introduction.adoc'
-	}
-	outputDir = "$buildDir/asciidoc/introduction/html_single"
+	outputDir = gettingStartedGuideHtmlDir
 
 	attributes linkcss: true,
-			stylesheet: "css/hibernate.css",
-			docinfo: 'private',
-			jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+			   stylesheet: "css/hibernate.css",
+			   docinfo: 'private',
+			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
 
 	resources {
-		from('src/main/asciidoc/introduction/') {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'images/**'
 		}
-		from('src/main/style/asciidoctor') {
-			include 'images/**'
-		}
-		from('src/main/style/asciidoctor') {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'css/**'
 		}
-		from('src/main/style/asciidoctor') {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'js/**'
 		}
 	}
 }
 
+def renderGettingStartedGuidePdfTask = tasks.register( 'renderGettingStartedGuidePdf', AsciidoctorPdfTask ) { task ->
+	group = "Documentation"
+	description = 'Renders the Getting Started Guides in PDF format using Asciidoctor.'
+	inputs.property "hibernate-version", project.ormVersion
+
+	baseDir = file( 'src/main/asciidoc/quickstart/guides' )
+
+	sourceDir = file( 'src/main/asciidoc/quickstart/guides' )
+	sources 'index.adoc'
+
+	outputDir = layout.buildDirectory.dir( "asciidoc/quickstart/pdf" )
+
+	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+}
+
+def renderGettingStartedGuidesTask = tasks.register( 'renderGettingStartedGuides' ) { task ->
+	task.group = "Documentation"
+	task.description = 'Renders the Getting Started Guide in all formats, as well as the acccompanying tutorial zip.'
+	task.dependsOn renderGettingStartedGuideHtmlTask, renderGettingStartedGuidePdfTask, buildTutorialZipTask
+}
+
+
+// Introduction ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def renderIntroductionHtmlTask = tasks.register( 'renderIntroductionHtml', AsciidoctorTask ) { task ->
+	group = "Documentation"
+	description = 'Renders the Introduction in HTML format using Asciidoctor.'
+	inputs.property "hibernate-version", project.ormVersion
+
+	sourceDir = file( 'src/main/asciidoc/introduction' )
+	sources 'Hibernate_Introduction.adoc'
+
+	outputDir = "$buildDir/asciidoc/introduction/html_single"
+
+	attributes linkcss: true,
+			   stylesheet: "css/hibernate.css",
+			   docinfo: 'private',
+			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+
+	resources {
+		from( 'src/main/asciidoc/introduction/' ) {
+			include 'images/**'
+		}
+		from( 'src/main/style/asciidoctor' ) {
+			include 'images/**'
+		}
+		from( 'src/main/style/asciidoctor' ) {
+			include 'css/**'
+		}
+		from( 'src/main/style/asciidoctor' ) {
+			include 'js/**'
+		}
+	}
+}
+
+def renderIntroductionPdfTask = tasks.register( 'renderIntroductionPdf', AsciidoctorPdfTask ) { task ->
+	group = "Documentation"
+	description = 'Renders the Introduction in PDF format using Asciidoctor.'
+	inputs.property "hibernate-version", project.ormVersion
+
+	baseDir = file( 'src/main/asciidoc/introduction' )
+
+	sourceDir = file( 'src/main/asciidoc/introduction' )
+	sources 'Hibernate_Introduction.adoc'
+
+	outputDir = "$buildDir/asciidoc/introduction/pdf"
+
+	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+}
+
+//noinspection GroovyUnusedAssignment
+def renderIntroductionGuidesTask = tasks.register( "renderIntroductionGuides" ) { task ->
+	group = "Documentation"
+	description = 'Renders the Introduction Guide in all formats.'
+	task.dependsOn renderIntroductionHtmlTask, renderIntroductionPdfTask
+
+	tasks.buildDocs.dependsOn task
+}
+
+
 // HQL Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-tasks.register('renderQLPdf', AsciidoctorPdfTask) {task->
+def renderQueryLanguageGuideHtmlTask = tasks.register( 'renderQueryLanguageGuideHtml', AsciidoctorTask ) { task ->
+	task.group = "Documentation"
+	task.description = 'Renders the Query Language document in HTML format using Asciidoctor.'
+
+	task.inputs.property "hibernate-version", project.ormVersion
+
+	task.sourceDir = file( 'src/main/asciidoc/querylanguage' )
+	task.sources 'Hibernate_Query_Language.adoc'
+
+	task.outputDir = layout.buildDirectory.dir( "asciidoc/querylanguage/html_single" )
+
+	task.attributes linkcss: true,
+			   stylesheet: "css/hibernate.css",
+			   docinfo: 'private',
+			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+
+	task.resources {
+		from( 'src/main/asciidoc/querylanguage/' ) {
+			include 'images/**'
+		}
+		from( 'src/main/style/asciidoctor' ) {
+			include 'images/**'
+		}
+		from( 'src/main/style/asciidoctor' ) {
+			include 'css/**'
+		}
+		from( 'src/main/style/asciidoctor' ) {
+			include 'js/**'
+		}
+	}
+}
+
+def renderQueryLanguageGuidePdfTask = tasks.register( 'renderQueryLanguageGuidePdf', AsciidoctorPdfTask ) { task ->
 	group = "Documentation"
 	description = 'Renders the Query Language document in PDF format using Asciidoctor.'
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
+
 	inputs.property "hibernate-version", project.ormVersion
 
 	sourceDir = file( 'src/main/asciidoc/querylanguage' )
@@ -241,92 +451,181 @@ tasks.register('renderQLPdf', AsciidoctorPdfTask) {task->
 	sources {
 		include 'Hibernate_Query_Language.adoc'
 	}
-	outputDir = "$buildDir/asciidoc/querylanguage/pdf"
+	outputDir = layout.buildDirectory.dir( "asciidoc/querylanguage/pdf" )
 
 	attributes jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
 }
 
-tasks.register('renderQL', AsciidoctorTask) {task->
+//noinspection GroovyUnusedAssignment
+def renderQueryLanguageGuidesTask = tasks.register( 'renderQueryLanguageGuides' ) { task ->
 	group = "Documentation"
-	description = 'Renders the Query Language document in HTML format using Asciidoctor.'
+	description = 'Renders Query Language Guide in all formats.'
+	task.dependsOn renderQueryLanguageGuideHtmlTask
+	task.dependsOn renderQueryLanguageGuidePdfTask
+
 	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
-	inputs.property "hibernate-version", project.ormVersion
-
-	sourceDir = file( 'src/main/asciidoc/querylanguage' )
-	sources {
-		include 'Hibernate_Query_Language.adoc'
-	}
-	outputDir = "$buildDir/asciidoc/querylanguage/html_single"
-
-	attributes linkcss: true,
-			stylesheet: "css/hibernate.css",
-			docinfo: 'private',
-			jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
-
-	resources {
-		from('src/main/asciidoc/querylanguage/') {
-			include 'images/**'
-		}
-		from('src/main/style/asciidoctor') {
-			include 'images/**'
-		}
-		from('src/main/style/asciidoctor') {
-			include 'css/**'
-		}
-		from('src/main/style/asciidoctor') {
-			include 'js/**'
-		}
-	}
 }
+
 
 // User Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-tasks.register('renderUserGuide', AsciidoctorTask) { task ->
+settingsDocumentation {
+	anchorNameBase = "settings"
+	sections {
+		compliance {
+			explicitPosition = 1
+			summary = "Jakarta Persistence Compliance Settings"
+			description = "Settings which control various aspects of compliance with the Jakarta Persistence specification "
+			settingsClassName "org.hibernate.cfg.JpaComplianceSettings"
+		}
+		persistence {
+			explicitPosition = 2
+			summary = "Persistence Unit Settings"
+			description = "Settings related to the creation and configuration of a persistence-unit - SessionFactory and EntityManagerFactory"
+			settingsClassName "org.hibernate.cfg.PersistenceSettings"
+		}
+		jdbc {
+			explicitPosition = 3
+			summary = "JDBC Settings"
+			description = "Settings which control various aspects of how Hibernate interacts with JDBC"
+			settingsClassName "org.hibernate.cfg.JdbcSettings"
+		}
+		c3p0 {
+			explicitPosition = 4
+			summary = "C3P0 Connection Pool Settings"
+			description = "Settings related to integrating with the C3P0 Connection pool"
+			settingsClassName "org.hibernate.cfg.C3p0Settings"
+		}
+		proxool {
+			explicitPosition = 5
+			summary = "Proxool Connection Pool Settings"
+			description = "Settings related to integrating with the Proxool Connection pool"
+			settingsClassName "org.hibernate.cfg.ProxoolSettings"
+		}
+		mapping {
+			explicitPosition = 6
+			summary = "Domain Mapping Settings"
+			description = "Settings which control how domain mappings are handled"
+			settingsClassName "org.hibernate.cfg.MappingSettings"
+		}
+		environment {
+			summary = "Runtime Environment Settings"
+			description = "Settings related to JNDI and ClassLoaders"
+			settingsClassName "org.hibernate.cfg.EnvironmentSettings"
+		}
+		schema {
+			summary = "Schema Tooling Settings"
+			description = "Settings which control the creation, dropping, update and validation of database schemas"
+			settingsClassName "org.hibernate.cfg.SchemaToolingSettings"
+		}
+		bytecode {
+			summary = "Bytecode Manipulation Settings"
+			description = "Settings which control Hibernate's BytecodeProvider used for bytecode manipulation"
+			settingsClassName "org.hibernate.cfg.BytecodeSettings"
+		}
+		cache {
+			summary = "Second-level Cache Settings"
+			description = "Settings which control Hibernate's second-level caching"
+			settingsClassName "org.hibernate.cfg.CacheSettings"
+			settingsClassName "org.hibernate.cache.jcache.ConfigSettings"
+		}
+		query {
+			summary = "Query Settings"
+			description = "Settings which control various parts of Hibernate's Query handling"
+			settingsClassName "org.hibernate.cfg.QuerySettings"
+		}
+		stats {
+			summary = "Statistics Settings"
+			description = "Settings which control the collection of statistics"
+			settingsClassName "org.hibernate.cfg.StatisticsSettings"
+		}
+		validation {
+			summary = "Jakarta Validation Integeration Settings"
+			description = "Settings used in the integration of Jakarta Validation"
+			settingsClassName "org.hibernate.cfg.ValidationSettings"
+		}
+		envers {
+			summary = "Audit/History Settings"
+			description = "Settings which control Hibernate's audit/history support (hibernate-envers)"
+			settingsClassName "org.hibernate.envers.configuration.EnversSettings"
+		}
+		spatial {
+			summary = "Hibernate Spatial Settings"
+			description = "Settings which control Hibernate's support for spatial data (hibernate-spatial)"
+			settingsClassName "org.hibernate.spatial.HibernateSpatialConfigurationSettings"
+			settingsClassName "org.hibernate.spatial.integration.SpatialService"
+		}
+		misc {
+			summary = "Miscellaneous Settings"
+			description = "Miscellaneous Settings"
+			settingsClassName "org.hibernate.cfg.AvailableSettings"
+		}
+	}
+}
+
+def generateSettingsDocTask = tasks.named( "generateSettingsDoc" ) {
+	dependsOn aggregateJavadocsTask
+
+	doFirst {
+		def javadoc = aggregateJavadocsTask.get()
+		def javaLanguageVersion = javadoc.javadocTool.present
+				? javadoc.javadocTool.get().metadata.languageVersion
+				: JavaLanguageVersion.of( JavaVersion.current().name )
+
+		if ( javaLanguageVersion.asInt() > 11 ) {
+			println "Aggregated Javadocs was built using a JDK newer than version 11; generating the settings User Guide fragment will not succeed"
+		}
+	}
+}
+
+def renderUserGuideHtmlTask = tasks.register( 'renderUserGuideHtml', AsciidoctorTask ) { task ->
 	group = "Documentation"
 	description = 'Renders the User Guides in HTML format using Asciidoctor.'
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
 	inputs.property "hibernate-version", project.ormVersion
+	inputs.file( generateSettingsDocTask.get().outputFile )
 
-	dependsOn ':hibernate-core:collectConfigProperties'
-	dependsOn ':hibernate-envers:collectConfigProperties'
-	dependsOn ':hibernate-jcache:collectConfigProperties'
+	dependsOn generateSettingsDocTask, generateDialectTableReport
 
-    sourceDir = file( 'src/main/asciidoc/userguide' )
-    sources {
-        include 'Hibernate_User_Guide.adoc'
-    }
-    outputDir = "$buildDir/asciidoc/userguide/html_single"
+	sourceDir = file( 'src/main/asciidoc/userguide' )
+	sources {
+		include 'Hibernate_User_Guide.adoc'
+	}
+	outputDir = "$buildDir/asciidoc/userguide/html_single"
 
 	attributes linkcss: true,
-			stylesheet: "css/hibernate.css",
-			docinfo: 'private',
-			jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/"
+			   stylesheet: "css/hibernate.css",
+			   docinfo: 'private',
+			   jpaJavadocUrlPrefix: "https://javaee.github.io/javaee-spec/javadocs/javax/persistence/",
+			   'generated-report-dir': layout.buildDirectory.dir( 'orm/generated' )
 
 	resources {
-		from('src/main/asciidoc/userguide/') {
+		from( 'src/main/asciidoc/userguide/' ) {
 			include 'images/**'
 		}
-		from('src/main/style/asciidoctor') {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'images/**'
 		}
-		from('src/main/style/asciidoctor') {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'css/**'
 		}
-		from('src/main/style/asciidoctor') {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'js/**'
 		}
 	}
 }
 
+def renderUserGuidesTask = tasks.register( 'renderUserGuides' ) { task ->
+	task.group = "Documentation"
+	task.description = 'Renders the User Guides in all formats.'
+	task.dependsOn( renderUserGuideHtmlTask )
+}
+
+
 // Integration Guide ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-tasks.register( "renderIntegrationGuide", AsciidoctorTask.class, task-> {
+def renderIntegrationGuideHtmlTask = tasks.register( "renderIntegrationGuideHtml", AsciidoctorTask ) { task->
 	group = "Documentation"
 	description = 'Renders the User Guides in HTML format using Asciidoctor.'
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
 	inputs.property "hibernate-version", project.ormVersion
 
 	sourceDir = file( 'src/main/asciidoc/integrationguide' )
@@ -337,125 +636,157 @@ tasks.register( "renderIntegrationGuide", AsciidoctorTask.class, task-> {
 	outputDir = project.layout.buildDirectory.dir( 'asciidoc/integrationguide/html_single' )
 
 	attributes linkcss: true,
-				stylesheet: "css/hibernate.css"
+			   stylesheet: "css/hibernate.css"
 
 	resources {
-		from('src/main/asciidoc/integrationguide/') {
+		from( 'src/main/asciidoc/integrationguide/' ) {
 			include 'images/**'
 		}
-		from('src/main/style/asciidoctor') {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'images/**'
 		}
-		from('src/main/style/asciidoctor') {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'css/**'
 		}
 	}
-} )
+}
+
+def renderIntegrationGuidesTask = tasks.register( "renderIntegrationGuides" ) { task ->
+	group = "Documentation"
+	description = 'Renders all formats of the User Guide.'
+	task.dependsOn renderIntegrationGuideHtmlTask
+
+	tasks.buildDocs.dependsOn task
+}
 
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // Migration Guide
 
-tasks.register( "renderMigrationGuide", AsciidoctorTask.class, task-> {
+def migrationGuideSourceStagingDir = layout.buildDirectory.dir( "tmp/asciidoc/migration-guide" )
+
+def copyMigrationGuideTask = tasks.register( "copyMigrationGuide", Copy ) {task ->
 	group = "Documentation"
-	description = 'Renders the Migration Guide in HTML format using Asciidoctor.'
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
+	description = "Copies migration-guide.adoc in preparation for rendering."
+
 	inputs.property "hibernate-version", project.ormVersion
 
-	sourceDir = rootProject.layout.projectDirectory
-	sources {
-		include 'migration-guide.adoc'
-	}
+	from rootProject.layout.projectDirectory.file( "migration-guide.adoc" )
+	into migrationGuideSourceStagingDir
+}
+
+def renderMigrationGuideTask = tasks.register( "renderMigrationGuide", AsciidoctorTask ) { task ->
+	group = "Documentation"
+	description = "Renders the Migration Guide in HTML format using Asciidoctor."
+
+	dependsOn copyMigrationGuideTask
+	inputs.property "hibernate-version", project.ormVersion
+
+	sourceDir = migrationGuideSourceStagingDir
 
 	outputDir = project.layout.buildDirectory.dir( 'asciidoc/migration-guide' )
 
 	attributes linkcss: true,
-			stylesheet: "css/hibernate.css"
+			   stylesheet: "css/hibernate.css"
 
 	resources {
-		from('src/main/style/asciidoctor') {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'images/**'
 		}
-		from('src/main/style/asciidoctor') {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'css/**'
 		}
 	}
-} )
+}
+
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 // ORM Reports
 
-tasks.register('renderOrmReports') { task ->
-	group 'Documentation'
-	description 'Grouping task for rendering all ORM reports'
+def renderLoggingReportTask = tasks.register( 'renderLoggingReport', AsciidoctorTask ) { task ->
+	task.group = "hibernate-reports"
+	task.description = 'Renders the logging report (generated LoggingReportTask) by in HTML format using Asciidoctor.'
+	task.dependsOn "generateLoggingReport"
 
-	dependsOn tasks.generateIncubationReport
-	dependsOn tasks.generateInternalsReport
-	dependsOn tasks.generateDeprecationReport
+	task.inputs.property "version", project.ormVersion
 
-	tasks.buildDocs.dependsOn task
-	tasks.buildDocsForPublishing.dependsOn task
-}
+	task.sourceDir = layout.buildDirectory.dir( 'orm/generated/logging' )
+	task.sources 'logging.adoc'
 
-tasks.register('renderLoggingReport', AsciidoctorTask) { task ->
-	group 'Documentation'
-	description = 'Renders the ORM logging report in HTML format using Asciidoctor.'
-	dependsOn tasks.generateLoggingReport
-	tasks.renderOrmReports.dependsOn task
-	inputs.property "version", project.ormVersion
+	task.outputDir = project.layout.buildDirectory.dir( 'asciidoc/logging' )
 
-	sourceDir = layout.buildDirectory.dir('orm/reports')
-	sources {
-		include 'logging.adoc'
-	}
+	task.attributes linkcss: true,
+					stylesheet: "css/hibernate.css"
 
-	outputDir = project.layout.buildDirectory.dir('asciidoc/logging')
-
-	attributes linkcss: true,
-			stylesheet: "css/hibernate.css"
-
-	resources {
-		from('src/main/style/asciidoctor') {
+	task.resources {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'images/**'
 		}
-		from('src/main/style/asciidoctor') {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'css/**'
 		}
 	}
 }
 
-tasks.register('renderDialectReport', AsciidoctorTask) { task ->
-	group 'Documentation'
-	description = 'Renders the ORM Dialect report in HTML format using Asciidoctor.'
-	dependsOn tasks.generateDialectReport
-	tasks.renderOrmReports.dependsOn task
-	inputs.property "version", project.ormVersion
+def renderDialectReportTask = tasks.register( 'renderDialectReport', AsciidoctorTask ) { task ->
+	task.group = "hibernate-reports"
+	task.description = 'Renders the supported Dialect report in HTML format using Asciidoctor.'
+	task.dependsOn "generateDialectReport"
+	task.dependsOn "generateDialectTableReport"
 
-	sourceDir = layout.buildDirectory.dir('orm/reports')
-	sources {
-		include 'dialect.adoc'
-	}
+	task.inputs.property "version", project.ormVersion
 
-	outputDir = project.layout.buildDirectory.dir('asciidoc/dialect')
+	task.sourceDir = layout.buildDirectory.dir( 'orm/generated/dialect' )
+	task.sources 'dialect.adoc'
 
-	attributes linkcss: true,
-			stylesheet: "css/hibernate.css"
+	task.outputDir = project.layout.buildDirectory.dir( 'asciidoc/dialect' )
 
-	resources {
-		from('src/main/style/asciidoctor') {
+	task.attributes linkcss: true,
+					stylesheet: "css/hibernate.css"
+
+	task.resources {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'images/**'
 		}
-		from('src/main/style/asciidoctor') {
+		from( 'src/main/style/asciidoctor' ) {
 			include 'css/**'
 		}
 	}
 }
 
+def generateReportsTask = tasks.named( "generateReports" ) {
+	dependsOn renderLoggingReportTask, renderDialectReportTask
+}
+
+
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+// Overall grouping tasks
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+def buildDocsTask = tasks.register( 'buildDocs' ) { task ->
+	task.group = 'Documentation'
+	task.description = 'Grouping task for performing all documentation building tasks'
+	task.dependsOn aggregateJavadocsTask
+	task.dependsOn renderGettingStartedGuidesTask
+	task.dependsOn renderIntroductionGuidesTask
+	task.dependsOn renderUserGuidesTask
+	task.dependsOn renderQueryLanguageGuidesTask
+	task.dependsOn renderIntegrationGuidesTask
+	task.dependsOn renderTopicalGuidesTask
+	task.dependsOn generateReportsTask
+	task.dependsOn renderMigrationGuideTask
+}
+
+//noinspection GroovyUnusedAssignment
+def buildDocsForPublishingTask = tasks.register( 'buildDocsForPublishing' ) { task ->
+	task.group = 'Documentation'
+	task.description = 'Grouping task for building all documentation for publishing (release)'
+	task.dependsOn buildDocsTask
+}
 
 // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-tasks.withType(AsciidoctorTask).all {
+tasks.withType(AsciidoctorTask).configureEach {
 	baseDirFollowsSourceDir()
 	outputOptions {
 		separateOutputDirs = false

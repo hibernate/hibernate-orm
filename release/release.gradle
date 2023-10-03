@@ -12,360 +12,184 @@ import groovy.json.JsonSlurper
 apply from: rootProject.file( 'gradle/module.gradle' )
 
 apply plugin: 'org.hibernate.orm.build.doc-pub'
+apply plugin: 'org.hibernate.orm.build.jdks'
 apply plugin: 'idea'
 
 idea.module {
 }
 
-configurations {
-    core
-
-    testing
-
-    envers
-    spatial
-
-    agroal
-    c3p0
-    hikaricp
-    proxool
-    vibur
-
-    jcache
-
-    jpamodelgen
-
-    javadocClasspath {
-        description = 'Class files for the javadoc to be built'
-        resolutionStrategy.capabilitiesResolution.withCapability('org.junit.jupiter:junit-jupiter-params:5.7.1') { details ->
-            details.select( details.candidates.first() ).because( 'first' )
-        }
-
-        extendsFrom core
-        extendsFrom testing
-        extendsFrom envers
-        extendsFrom spatial
-        extendsFrom agroal
-        extendsFrom c3p0
-        extendsFrom hikaricp
-        extendsFrom proxool
-        extendsFrom vibur
-        extendsFrom jcache
-        extendsFrom jpamodelgen
-    }
-
-    javadocSources {
-        description = 'Source files to be built by the javadoc tool'
-    }
-}
-
 // skip building this when `build` task is run from root, as many of our CI jobs do
 tasks.build.dependsOn.clear()
 
-dependencies {
-    attributesSchema { schema ->
-        schema.attribute(Bundling.BUNDLING_ATTRIBUTE) { matchStrategy ->
-             final def nameComparator = Comparator.comparing(
-                    new Function<Bundling,String>() {
-                        @Override
-                        String apply(Bundling o) {
-                            return o.name
-                        }
-                    }
-            )
-            matchStrategy.ordered(new Comparator<Bundling>() {
-                @Override
-                int compare(Bundling o1, Bundling o2) {
-                    if ( Objects.equals( o1, o2 ) ) {
-                        return 0;
-                    }
 
-                    if ( o1 == null ) {
-                        return 1;
-                    }
+def stageIntegrationGuideTask = tasks.register( "stageIntegrationGuide", Copy ) {
+    group "documentation"
+    description "Stages the Integration Guide as part of preparing for release"
+    dependsOn ":documentation:renderIntegrationGuides"
 
-                    if ( o2 == null ) {
-                        return -1;
-                    }
-
-                    if ( o1.name == Bundling.EMBEDDED ) {
-                        return -1;
-                    }
-
-                    if ( o2.name == Bundling.EMBEDDED ) {
-                        return 1;
-                    }
-
-                    return nameComparator.compare(o1,o2)
-                }
-            } )
-        }
-    }
-
-    core project( ':hibernate-core' )
-    javadocSources project( path: ':hibernate-core', configuration: 'javadocSources' )
-
-    testing project( ':hibernate-testing' )
-    javadocSources project( path: ':hibernate-testing', configuration: 'javadocSources' )
-
-    envers project( ':hibernate-envers' )
-    javadocSources project( path: ':hibernate-envers', configuration: 'javadocSources' )
-
-    spatial project( ':hibernate-spatial' )
-    javadocSources project( path: ':hibernate-spatial', configuration: 'javadocSources' )
-
-    agroal project( ':hibernate-agroal' )
-    javadocSources project( path: ':hibernate-agroal', configuration: 'javadocSources' )
-
-    c3p0 project( ':hibernate-c3p0' )
-    javadocSources project( path: ':hibernate-c3p0', configuration: 'javadocSources' )
-
-    hikaricp project( ':hibernate-hikaricp' )
-    javadocSources project( path: ':hibernate-hikaricp', configuration: 'javadocSources' )
-
-    proxool project( ':hibernate-proxool' )
-    javadocSources project( path: ':hibernate-proxool', configuration: 'javadocSources' )
-
-    vibur project( ':hibernate-vibur' )
-    javadocSources project( path: ':hibernate-vibur', configuration: 'javadocSources' )
-
-    jcache project( ':hibernate-jcache' )
-    javadocSources project( path: ':hibernate-jcache', configuration: 'javadocSources' )
-
-    jpamodelgen project( ':hibernate-jpamodelgen' )
-    javadocSources project( path: ':hibernate-jpamodelgen', configuration: 'javadocSources' )
-
-    javadocClasspath libs.loggingAnnotations
-    javadocClasspath jakartaLibs.validation
-    javadocClasspath jakartaLibs.cdi
-    javadocClasspath jakartaLibs.jacc
-    javadocClasspath jakartaLibs.jsonbApi
-    javadocClasspath libs.ant
-    javadocClasspath dbLibs.postgresql
-    javadocClasspath libs.jackson
-    javadocClasspath gradleApi()
-    javadocClasspath libs.jacksonXml
-    javadocClasspath dbLibs.oracle
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/integrationguide" ) }
+    into layout.buildDirectory.dir( "documentation/integrationguide" )
 }
 
-
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// aggregated JavaDoc
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-final File javadocDir = mkdir( new File( (File) project.buildDir, 'documentation/javadocs' ) );
-
-/**
- * Builds the JavaDocs aggregated (unified) across all the sub-projects
- */
-task aggregateJavadocs(type: Javadoc) {
-    description = 'Builds an aggregated JavaDoc across all ORM sub-projects'
-
-    final int currentYear = new GregorianCalendar().get( Calendar.YEAR )
-
-    source configurations.javadocSources
-    classpath += configurations.javadocClasspath
-
-    // exclude any generated sources and internal packages
-    exclude '**/generated-src/**'
-    exclude '**/internal/**'
-    include '**/*.java'
-
-    // apply standard config
-    maxMemory = '512m'
-    destinationDir = javadocDir
-    configure( options ) {
-        overview = 'src/release/javadoc/overview.html'
-        stylesheetFile = new File(projectDir, 'src/release/javadoc/stylesheet.css')
-        windowTitle = 'Hibernate JavaDocs'
-        docTitle = "Hibernate JavaDoc ($project.version)"
-        bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
-        use = true
-        options.encoding = 'UTF-8'
-
-        links = [
-                'https://docs.oracle.com/en/java/javase/11/docs/api/',
-                'https://docs.jboss.org/hibernate/beanvalidation/spec/2.0/api/',
-                'https://docs.jboss.org/cdi/api/2.0/',
-                'https://jakarta.ee/specifications/platform/8/apidocs/'
-        ]
-
-        options.addStringOption( 'Xdoclint:none', '-quiet' )
-
-        if ( gradle.ext.javaToolchainEnabled ) {
-            options.setJFlags( getProperty( 'toolchain.javadoc.jvmargs' ).toString().
-                    split( ' ' ).toList().findAll( { !it.isEmpty() } ) )
-        }
-    }
-
-    if ( gradle.ext.javaToolchainEnabled ) {
-        // Display version of Java tools
-        doFirst {
-            if ( javadocTool.present ) {
-                logger.lifecycle "Aggregating javadoc with '${javadocTool.get().metadata.installationPath}'"
-            }
-        }
-    }
-}
-
-task stageIntegrationGuide(type: Copy) {
-    group 'Release'
-
-    dependsOn ':documentation:renderIntegrationGuide'
-
-    from "${project( ':documentation' ).buildDir}/asciidoc/integrationguide"
-    into "${buildDir}/documentation/integrationguide"
-}
-
-
-task stageQuickstart(type: Copy) {
-    group 'Release'
-
+def stageQuickstartTask = tasks.register( "stageQuickstart", Copy ) {
+    group 'documentation'
+    description "Stages the Getting Started Guide as part of preparing for release"
     dependsOn ':documentation:renderGettingStartedGuides'
 
-    from "${project( ':documentation' ).buildDir}/asciidoc/quickstart"
-    into "${buildDir}/documentation/quickstart"
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/quickstart" ) }
+    into layout.buildDirectory.dir( "documentation/quickstart" )
 }
 
-
-task stageTopicalGuide(type: Copy) {
-    group 'Release'
-
+def stageTopicalGuideTask = tasks.register( "stageTopicalGuide", Copy ) {
+    group 'documentation'
+    description "Stages the Topical Guide as part of preparing for release"
     dependsOn ':documentation:renderTopicalGuides'
 
-    from "${project( ':documentation' ).buildDir}/asciidoc/topical"
-    into "${buildDir}/documentation/topical"
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/topical" ) }
+    into layout.buildDirectory.dir( "documentation/topical" )
+
 }
 
-task stageIntroduction(type: Copy) {
-    group 'Release'
+def stageIntroductionGuideTask = tasks.register( "stageIntroductionGuide", Copy ) {
+    group 'documentation'
+    description "Stages the Introduction Guide as part of preparing for release"
+    dependsOn ':documentation:renderIntroductionGuides'
 
-    dependsOn ':documentation:renderIntroduction', ':documentation:renderIntroductionPdf'
-
-    from "${project( ':documentation' ).buildDir}/asciidoc/introduction"
-    into "${buildDir}/documentation/introduction"
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/introduction" ) }
+    into layout.buildDirectory.dir( "documentation/introduction" )
 }
 
-task stageQL(type: Copy) {
-    group 'Release'
+def stageQueryGuideTasks = tasks.register( "stageQueryGuide", Copy ) {
+    group 'documentation'
+    description "Stages the Query Language Guide as part of preparing for release"
+    dependsOn ':documentation:renderQueryLanguageGuides'
+    description "Stages the Query Language Guide as part of preparing for release"
+    dependsOn ':documentation:renderQueryLanguageGuides'
 
-    dependsOn ':documentation:renderQL', ':documentation:renderQLPdf'
-
-    from "${project( ':documentation' ).buildDir}/asciidoc/querylanguage"
-    into "${buildDir}/documentation/querylanguage"
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/querylanguage" ) }
+    into layout.buildDirectory.dir( "documentation/querylanguage" )
 }
 
-task stageUserGuide(type: Copy) {
-    group 'Release'
+def stageUserGuideTask = tasks.register( "stageUserGuide", Copy ) {
+    group 'documentation'
+    description "Stages the User Guide as part of preparing for release"
+    dependsOn ':documentation:renderUserGuides'
+    description "Stages the User Guide as part of preparing for release"
+    dependsOn ':documentation:renderUserGuides'
 
-    dependsOn ':documentation:renderUserGuide'
-
-    from "${project( ':documentation' ).buildDir}/asciidoc/userguide"
-    into "${buildDir}/documentation/userguide"
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/userguide" ) }
+    into layout.buildDirectory.dir( "documentation/userguide" )
 }
 
 
-task stageMigrationGuide(type: Copy) {
-    group 'Release'
-
+def stageMigrationGuideTask = tasks.register( "stageMigrationGuide", Copy ) {
+    group 'documentation'
+    description "Stages the Migration Guide as part of preparing for release"
     dependsOn ':documentation:renderMigrationGuide'
 
-    from project(":documentation").layout.buildDirectory.dir("asciidoc/migration-guide")
-    into layout.buildDirectory.dir("documentation/migration-guide")
+    from project.provider { project( ":documentation" ).layout.buildDirectory.dir( "asciidoc/migration-guide" ) }
+    into layout.buildDirectory.dir( "documentation/migration-guide" )
 }
 
 tasks.named( "publishMigrationGuide" ).configure {
     dependsOn stageMigrationGuide
-    migrationGuideDirectory = project.layout.buildDirectory.dir("documentation/migration-guide")
 }
 
-task stageOrmReports {
-    group 'Release'
-
-    dependsOn ':documentation:generateHibernateReports'
-}
-
-task stageOrmIncubationReport(type: Copy) { task ->
-    group 'Release'
-
+def stageIncubationReportTask = tasks.register( "stageIncubationReport", Copy ) { task ->
+    group 'documentation'
+    description "Stages ORM @Incubating report"
     dependsOn ':documentation:generateIncubationReport'
+
     tasks.stageOrmReports.dependsOn task
 
-    from project( ":documentation" ).tasks.generateIncubationReport.reportFileReferenceAccess
-    into "${buildDir}/documentation/incubating"
+    from project( ":documentation" ).tasks.generateIncubationReport
+    into layout.buildDirectory.dir( "documentation/incubating" )
 }
 
-task stageOrmInternalsReport(type: Copy) { task ->
-    group 'Release'
-
+def stageInternalsReportTask = tasks.register( "stageInternalsReport", Copy ) { task ->
+    group 'documentation'
+    description "Stages the @Internal report"
     dependsOn ':documentation:generateInternalsReport'
-    tasks.stageOrmReports.dependsOn task
 
-    from project( ":documentation" ).tasks.generateInternalsReport.reportFileReferenceAccess
-    into "${buildDir}/documentation/internals"
+    from project( ":documentation" ).tasks.generateInternalsReport
+    into layout.buildDirectory.dir( "documentation/internals" )
 }
 
-task stageOrmDeprecationReport(type: Copy) { task ->
-    group 'Release'
+def stageDeprecationReportTask = tasks.register( "stageDeprecationReport", Copy ) {
+    group 'documentation'
+    description "Stages the @Deprecated/@Remove report"
 
     dependsOn ':documentation:generateDeprecationReport'
-    tasks.stageOrmReports.dependsOn task
 
-    from project( ":documentation" ).tasks.generateDeprecationReport.reportFileReferenceAccess
-    into "${buildDir}/documentation/deprecated"
+    from project( ":documentation" ).tasks.generateDeprecationReport
+    into layout.buildDirectory.dir( "documentation/deprecated" )
 }
 
-task stageOrmLoggingReport(type: Copy) { task ->
-    group 'Release'
+def stageLoggingReportTask = tasks.register( "stageLoggingReport", Copy ) { task ->
+    group 'documentation'
+    description "Stages the logging report"
 
     dependsOn ':documentation:renderLoggingReport'
-    tasks.stageOrmReports.dependsOn task
 
-    from project( ":documentation" ).tasks.renderLoggingReport.outputDir
-    into "${buildDir}/documentation/logging"
+    from project( ":documentation" ).tasks.renderLoggingReport
+    into layout.buildDirectory.dir( "documentation/logging" )
 }
 
-
-task stageOrmDialectReport(type: Copy) { task ->
-    group 'Release'
-
+def stageDialectReportTask = tasks.register( "stageDialectReport", Copy ) { task ->
+    group 'documentation'
+    description "Stages the supported Dialects report"
     dependsOn ':documentation:renderDialectReport'
-    tasks.stageOrmReports.dependsOn task
 
-    from project( ":documentation" ).tasks.renderDialectReport.outputDir
+    from project( ":documentation" ).tasks.renderDialectReport
     into "${buildDir}/documentation/dialect"
 }
 
+def stageOrmReportsTask = tasks.register( "stageOrmReports" ) {
+    group 'documentation'
+    description "Stages all ORM reports as part of preparing for release"
+
+    dependsOn ':documentation:generateReports'
+    dependsOn stageIncubationReportTask
+    dependsOn stageInternalsReportTask
+    dependsOn stageDeprecationReportTask
+    dependsOn stageLoggingReportTask
+    dependsOn stageDialectReportTask
+}
+
+def stageJavadocsTask = tasks.register( "stageJavadocs", Copy ) {
+    group 'documentation'
+    description "Stages the aggregated Javadocs"
+    dependsOn ':documentation:javadoc'
+
+    from project( ":documentation" ).tasks.javadoc
+    into "${buildDir}/documentation/javadocs"
+}
 
 /**
  * Assembles all documentation into the {buildDir}/documentation directory.
  *
  * Depends on building the docs
  */
-task assembleDocumentation {
-    group 'Release'
+def assembleDocumentationTask = tasks.register( "assembleDocumentation" ) {
+    group 'documentation'
     description 'Assembles all documentation into the {buildDir}/documentation directory'
 
     dependsOn ':documentation:buildDocsForPublishing'
-    dependsOn tasks.aggregateJavadocs
-    dependsOn tasks.stageIntegrationGuide
-    dependsOn tasks.stageTopicalGuide
-    dependsOn tasks.stageQuickstart
-    dependsOn tasks.stageIntroduction
-    dependsOn tasks.stageUserGuide
-    dependsOn tasks.stageMigrationGuide
-    dependsOn tasks.stageOrmReports
+    dependsOn stageJavadocsTask
+    dependsOn stageQuickstartTask
+    dependsOn stageIntroductionGuideTask
+    dependsOn stageUserGuideTask
+    dependsOn stageQueryGuideTasks
+    dependsOn stageIntegrationGuideTask
+    dependsOn stageTopicalGuideTask
+    dependsOn stageMigrationGuideTask
+    dependsOn stageOrmReportsTask
 }
 
-//task assembleProjectTemplates(type:Copy, dependsOn: project( ":project-template" ).tasks.assembleDist) {
-//    def templateProject = project( ":project-template" )
-//    from templateProject.layout.buildDirectory.dir( "distributions" )
-//    into projectTemplateStagingDir
-//}
-
-tasks.uploadDocumentation {
-    dependsOn assembleDocumentation
+tasks.named( "uploadDocumentation" ) {
+    group = "documentation"
+    description = "Uploads assembled documentation to the doc server"
+    dependsOn assembleDocumentationTask
 
     doFirst {
         if ( rootProject.ormVersion.isSnapshot ) {
@@ -382,25 +206,23 @@ tasks.uploadDocumentation {
     }
 }
 
-task releaseChecks {
+def releaseChecksTask = tasks.register( "releaseChecks" ) {
     group 'Release'
     description 'Checks and preparation for release'
 }
 
-task preVerifyRelease{
+def preVerifyReleaseTask = tasks.register( "preVerifyRelease" ){
     group 'Release'
     description 'Pre-verifies a release job execution (Run locally before a CI release)'
 
-    dependsOn clean
-    dependsOn assembleDocumentation
+    dependsOn tasks.clean
+    dependsOn assembleDocumentationTask
 }
 
-
-task changeLogFile {
+def changeLogFileTask = tasks.register( "changeLogFile" ) {
     group 'Release'
     description 'Updates the changelog.txt file based on the change-log report from Jira'
-
-    dependsOn project.tasks.releaseChecks
+    dependsOn releaseChecksTask
 
     doFirst {
         logger.lifecycle( "Appending version `${project.releaseVersion}` to changelog..." )
@@ -408,11 +230,11 @@ task changeLogFile {
     }
 }
 
-task changeToReleaseVersion {
+def changeToReleaseVersionTask = tasks.register( "changeToReleaseVersion" ) {
     group 'Release'
     description 'Updates `gradle/version.properties` file to the specified release-version'
 
-    dependsOn project.tasks.releaseChecks
+    dependsOn releaseChecksTask
 
     doFirst {
         logger.lifecycle( "Updating version-file to release-version : `${project.releaseVersion}`" )
@@ -420,9 +242,9 @@ task changeToReleaseVersion {
     }
 }
 
-task gitPreparationForRelease {
-    dependsOn changeLogFile
-    dependsOn changeToReleaseVersion
+def gitPreparationForReleaseTask = tasks.register( 'gitPreparationForRelease' ) {
+    dependsOn changeLogFileTask
+    dependsOn changeToReleaseVersionTask
 
     doLast {
         logger.lifecycle( "Performing pre-steps Git commit : `${project.releaseVersion}`" )
@@ -431,11 +253,11 @@ task gitPreparationForRelease {
     }
 }
 
-task changeToDevelopmentVersion {
+def changeToDevelopmentVersionTask = tasks.register( 'changeToDevelopmentVersion' ) {
     group 'Release'
     description 'Updates `gradle/version.properties` file to the specified development-version'
 
-    dependsOn project.tasks.releaseChecks
+    dependsOn releaseChecksTask
 
     doFirst {
         logger.lifecycle( "Updating version-file to development-version : `${project.developmentVersion}`" )
@@ -443,8 +265,8 @@ task changeToDevelopmentVersion {
     }
 }
 
-task gitTasksAfterRelease {
-    dependsOn changeToDevelopmentVersion
+def gitTasksAfterReleaseTask = tasks.register( 'gitTasksAfterRelease' ) {
+    dependsOn changeToDevelopmentVersionTask
 
     doLast {
         logger.lifecycle( "Performing pre-steps Git commit : `${project.releaseVersion}`" )
@@ -452,7 +274,7 @@ task gitTasksAfterRelease {
         executeGitCommand( 'commit', '-m', "Post-steps for release : `${project.ormVersion.fullName}`" )
 
         if ( project.createTag ) {
-            logger.lifecycle("Tagging release : `${project.releaseTag}`...")
+            logger.lifecycle( "Tagging release : `${project.releaseTag}`..." )
             executeGitCommand( 'tag', '-a', project.releaseTag, '-m', "Release $project.ormVersion.fullName" )
         }
     }
@@ -463,50 +285,51 @@ void updateVersionFile(String version) {
     project.ormVersionFile.text = "hibernateVersion=${version}"
 }
 
-task publishReleaseArtifacts {
-    dependsOn releaseChecks
-    dependsOn uploadDocumentation
+def publishReleaseArtifactsTask = tasks.register( 'publishReleaseArtifacts' ) {
+    dependsOn releaseChecksTask
+    mustRunAfter gitPreparationForReleaseTask
 
-    mustRunAfter gitPreparationForRelease
+    dependsOn uploadDocumentation
+    dependsOn uploadDocumentationDescriptor
 }
 
-task release {
+def releaseTask = tasks.register( 'release' ) {
     group 'Release'
     description 'Performs a release on local check-out, including updating changelog and '
 
-    dependsOn gitPreparationForRelease
-    dependsOn publishReleaseArtifacts
+    dependsOn gitPreparationForReleaseTask
+    dependsOn publishReleaseArtifactsTask
 
-    finalizedBy gitTasksAfterRelease
+    finalizedBy gitTasksAfterReleaseTask
 }
 
-task ciReleaseChecks {
+def ciReleaseChecksTask = tasks.register( 'ciReleaseChecks' ) {
     dependsOn releaseChecks
 }
 
-task gitTasksAfterCiRelease {
-    dependsOn gitTasksAfterRelease
+def gitTasksAfterCiReleaseTask = tasks.register( 'gitTasksAfterCiRelease' ) {
+    dependsOn gitTasksAfterReleaseTask
 
     doLast {
         if ( project.createTag ) {
             logger.lifecycle( "Pushing branch and tag to remote `${project.gitRemote}`..." )
-            executeGitCommand( 'push', '--atomic', project.gitRemote , project.gitBranch, project.releaseTag )
+            executeGitCommand( 'push', '--atomic', project.gitRemote, project.gitBranch, project.releaseTag )
         }
         else {
-            logger.lifecycle("Pushing branch to remote `${project.gitRemote}`..." )
-            executeGitCommand( 'push', project.gitRemote , project.gitBranch )
+            logger.lifecycle( "Pushing branch to remote `${project.gitRemote}`..." )
+            executeGitCommand( 'push', project.gitRemote, project.gitBranch )
         }
     }
 }
 
-task ciRelease {
+def ciReleaseTask = tasks.register( 'ciRelease' ) {
     group 'Release'
     description 'Performs a release: the hibernate version is set and the changelog.txt file updated, the changes are pushed to github, then the release is performed, tagged and the hibernate version is set to the development one.'
 
-    dependsOn ciReleaseChecks
-    dependsOn release
+    dependsOn ciReleaseChecksTask
+    dependsOn releaseTask
 
-    finalizedBy gitTasksAfterCiRelease
+    finalizedBy gitTasksAfterCiReleaseTask
 }
 
 static String executeGitCommand(Object ... subcommand){

@@ -663,6 +663,13 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 
 		@Override
+		public void resolveState(RowProcessingState rowProcessingState) {
+			for ( DomainResultAssembler<?> subAssembler : subAssemblers ) {
+				subAssembler.resolveState( rowProcessingState );
+			}
+		}
+
+		@Override
 		public JavaType<Object[]> getAssembledJavaType() {
 			return jtd;
 		}

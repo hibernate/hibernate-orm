@@ -34,7 +34,7 @@ import jakarta.persistence.Version;
  * @author Zhenlei Huang
  */
 @TestForIssue(jiraKey = "HHH-10649")
-@RequiresDialect(value = {H2Dialect.class})
+@RequiresDialect(value = H2Dialect.class)
 public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 
 	@Override
@@ -50,7 +50,7 @@ public class RefreshUpdatedDataTest extends BaseCoreFunctionalTestCase {
 		super.configure( cfg );
 		Properties properties = Environment.getProperties();
 		if ( H2Dialect.class.getName().equals( properties.get( Environment.DIALECT ) ) ) {
-			cfg.setProperty( Environment.URL, "jdbc:h2:mem:db-mvcc" );
+			cfg.setProperty( Environment.URL, "jdbc:h2:mem:db-mvcc;DB_CLOSE_DELAY=-1;LOCK_TIMEOUT=10000;DB_CLOSE_ON_EXIT=FALSE" );
 		}
 		cfg.setProperty( Environment.CACHE_REGION_PREFIX, "" );
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );

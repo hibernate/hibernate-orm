@@ -9,7 +9,7 @@ package org.hibernate.event.spi;
 import java.io.Serializable;
 
 /**
- * Defines a base class for Session generated events.
+ * Defines a base class for {@link org.hibernate.Session}-generated events.
  *
  * @author Steve Ebersole
  */
@@ -27,7 +27,7 @@ public abstract class AbstractEvent implements Serializable {
 	}
 
     /**
-     * Returns the session event source for this event.  This is the underlying
+     * Returns the session event source for this event. This is the underlying
      * session from which this event was generated.
      *
      * @return The session event source.

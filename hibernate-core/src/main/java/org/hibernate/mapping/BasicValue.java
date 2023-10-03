@@ -67,6 +67,7 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
 
 import static java.lang.Boolean.parseBoolean;
+import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.mapping.MappingHelper.injectParameters;
 
 /**
@@ -260,14 +261,14 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		final Selectable column = getColumn();
 		if ( column == incomingColumn || column.getText().equals( incomingColumn.getText() ) ) {
 			log.debugf( "Skipping column re-registration: %s.%s", getTable().getName(), column.getText() );
-			return;
 		}
-
-//		throw new IllegalStateException(
-//				"BasicValue [" + ownerName + "." + propertyName +
-//						"] already had column associated: `" + column.getText() +
-//						"` -> `" + incomingColumn.getText() + "`"
-//		);
+//		else {
+//			throw new IllegalStateException(
+//					"BasicValue [" + ownerName + "." + propertyName +
+//							"] already had column associated: `" + column.getText() +
+//							"` -> `" + incomingColumn.getText() + "`"
+//			);
+//		}
 	}
 
 	@Override
@@ -390,12 +391,13 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	}
 
 	protected Resolution<?> buildResolution() {
-		Properties typeParameters = getTypeParameters();
+		final Properties typeParameters = getTypeParameters();
 		if ( typeParameters != null
 				&& parseBoolean( typeParameters.getProperty(DynamicParameterizedType.IS_DYNAMIC) )
 				&& typeParameters.get(DynamicParameterizedType.PARAMETER_TYPE) == null ) {
 			createParameterImpl();
 		}
+
 		if ( explicitTypeName != null ) {
 			return interpretExplicitlyNamedType(
 					explicitTypeName,
@@ -410,108 +412,115 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			);
 		}
 
-
 		if ( isVersion() ) {
 			return VersionResolution.from( implicitJavaTypeAccess, timeZoneStorageType, getBuildingContext() );
 		}
 
 		// determine JavaType if we can
-
-		final BasicJavaType explicitJavaType = explicitJavaTypeAccess == null ? null
-				: explicitJavaTypeAccess.apply( getTypeConfiguration() );
-
+		final BasicJavaType<?> explicitJavaType =
+				explicitJavaTypeAccess == null ? null : explicitJavaTypeAccess.apply( getTypeConfiguration() );
 		final JavaType<?> javaType = determineJavaType( explicitJavaType );
 
 		final ConverterDescriptor attributeConverterDescriptor = getAttributeConverterDescriptor();
-		final Selectable column = getColumn();
-		if ( attributeConverterDescriptor != null ) {
-			final ManagedBeanRegistry managedBeanRegistry = getServiceRegistry().getService( ManagedBeanRegistry.class );
+		return attributeConverterDescriptor != null
+				? converterResolution( javaType, attributeConverterDescriptor )
+				: resolution( explicitJavaType, javaType );
+	}
 
-			final NamedConverterResolution<?> converterResolution = NamedConverterResolution.from(
-					attributeConverterDescriptor,
-					explicitJavaTypeAccess,
-					explicitJdbcTypeAccess,
-					explicitMutabilityPlanAccess,
-					this,
-					new JpaAttributeConverterCreationContext() {
-						@Override
-						public ManagedBeanRegistry getManagedBeanRegistry() {
-							return managedBeanRegistry;
-						}
-						@Override
-						public TypeConfiguration getTypeConfiguration() {
-							return BasicValue.this.getTypeConfiguration();
-						}
-					},
-					getBuildingContext()
-			);
-
-			if ( javaType instanceof BasicPluralJavaType<?>
-					&& !attributeConverterDescriptor.getDomainValueResolvedType()
-							.getErasedType()
-							.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
-				// In this case, the converter applies to the element of a BasicPluralJavaType
-				final BasicPluralJavaType<?> containerJtd = (BasicPluralJavaType<?>) javaType;
-				final BasicType registeredElementType = converterResolution.getLegacyResolvedBasicType();
-				final BasicType<?> registeredType = registeredElementType == null ? null
-						: containerJtd.resolveType(
-								getTypeConfiguration(),
-								getDialect(),
-								registeredElementType,
-								column instanceof ColumnTypeInformation ? (ColumnTypeInformation) column : null,
-								this
-				);
-				if ( registeredType != null ) {
-					getTypeConfiguration().getBasicTypeRegistry().register( registeredType );
-
-					return new InferredBasicValueResolution(
-							registeredType,
-							registeredType.getJavaTypeDescriptor(),
-							registeredType.getJavaTypeDescriptor(),
-							registeredType.getJdbcType(),
-							registeredType,
-							null
-					);
-				}
-			}
-
-			return converterResolution;
+	private Resolution<?> resolution(BasicJavaType explicitJavaType, JavaType<?> javaType) {
+		final JavaType<?> basicJavaType;
+		final JdbcType jdbcType;
+		if ( explicitJdbcTypeAccess != null ) {
+			final TypeConfiguration typeConfiguration = getTypeConfiguration();
+			jdbcType = explicitJdbcTypeAccess.apply( typeConfiguration );
+			basicJavaType = javaType == null && jdbcType != null
+					? jdbcType.getJdbcRecommendedJavaTypeMapping(null, null, typeConfiguration)
+					: javaType;
 		}
-
-		final JdbcType jdbcType = explicitJdbcTypeAccess != null
-				? explicitJdbcTypeAccess.apply( getTypeConfiguration() )
-				: null;
-
-		final JavaType<?> basicJavaType = javaType == null && jdbcType != null
-				? jdbcType.getJdbcRecommendedJavaTypeMapping( null, null, getTypeConfiguration() )
-				: javaType;
+		else {
+			jdbcType = null;
+			basicJavaType = javaType;
+		}
 		if ( basicJavaType == null ) {
 			throw new MappingException( "Unable to determine JavaType to use : " + this );
 		}
 
-		final TypeDefinition autoAppliedTypeDef = basicJavaType instanceof BasicJavaType<?>
-				? getBuildingContext().getTypeDefinitionRegistry().resolveAutoApplied( (BasicJavaType<?>) basicJavaType )
-				: null;
-		if ( autoAppliedTypeDef != null
+		if ( basicJavaType instanceof BasicJavaType<?>
 				&& ( !basicJavaType.getJavaTypeClass().isEnum() || enumerationStyle == null ) ) {
-			log.debug( "BasicValue resolution matched auto-applied type-definition" );
-			return autoAppliedTypeDef.resolve( typeParameters, null, getBuildingContext(), this );
+			final TypeDefinition autoAppliedTypeDef =
+					getBuildingContext().getTypeDefinitionRegistry()
+							.resolveAutoApplied( (BasicJavaType<?>) basicJavaType );
+			if ( autoAppliedTypeDef != null ) {
+				log.debug("BasicValue resolution matched auto-applied type-definition");
+				return autoAppliedTypeDef.resolve( getTypeParameters(), null, getBuildingContext(), this );
+			}
 		}
-		else {
-			return InferredBasicValueResolver.from(
-					explicitJavaType,
-					jdbcType,
-					resolvedJavaType,
-					this::determineReflectedJavaType,
-					explicitMutabilityPlanAccess,
-					this,
-					getTable(),
-					column,
-					ownerName,
-					propertyName,
-					getBuildingContext()
+
+		return InferredBasicValueResolver.from(
+				explicitJavaType,
+				jdbcType,
+				resolvedJavaType,
+				this::determineReflectedJavaType,
+				explicitMutabilityPlanAccess,
+				this,
+				getTable(),
+				getColumn(),
+				ownerName,
+				propertyName,
+				getBuildingContext()
+		);
+	}
+
+	private Resolution<?> converterResolution(JavaType<?> javaType, ConverterDescriptor attributeConverterDescriptor) {
+		final ManagedBeanRegistry managedBeanRegistry = getServiceRegistry().getService( ManagedBeanRegistry.class );
+		final NamedConverterResolution<?> converterResolution = NamedConverterResolution.from(
+				attributeConverterDescriptor,
+				explicitJavaTypeAccess,
+				explicitJdbcTypeAccess,
+				explicitMutabilityPlanAccess,
+				this,
+				new JpaAttributeConverterCreationContext() {
+					@Override
+					public ManagedBeanRegistry getManagedBeanRegistry() {
+						return managedBeanRegistry;
+					}
+					@Override
+					public TypeConfiguration getTypeConfiguration() {
+						return BasicValue.this.getTypeConfiguration();
+					}
+				},
+				getBuildingContext()
+		);
+
+		if ( javaType instanceof BasicPluralJavaType<?>
+				&& !attributeConverterDescriptor.getDomainValueResolvedType().getErasedType()
+						.isAssignableFrom( javaType.getJavaTypeClass() ) ) {
+			// In this case, the converter applies to the element of a BasicPluralJavaType
+			final BasicPluralJavaType<?> containerJtd = (BasicPluralJavaType<?>) javaType;
+			final BasicType registeredElementType = converterResolution.getLegacyResolvedBasicType();
+			final Selectable column = getColumn();
+			final BasicType<?> registeredType = registeredElementType == null ? null
+					: containerJtd.resolveType(
+							getTypeConfiguration(),
+							getDialect(),
+							registeredElementType,
+							column instanceof ColumnTypeInformation ? (ColumnTypeInformation) column : null,
+							this
 			);
+			if ( registeredType != null ) {
+				getTypeConfiguration().getBasicTypeRegistry().register( registeredType );
+				return new InferredBasicValueResolution(
+						registeredType,
+						registeredType.getJavaTypeDescriptor(),
+						registeredType.getJavaTypeDescriptor(),
+						registeredType.getJdbcType(),
+						registeredType,
+						null
+				);
+			}
 		}
+
+		return converterResolution;
 	}
 
 	private JavaType<?> determineJavaType(JavaType<?> explicitJavaType) {
@@ -549,7 +558,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			impliedJavaType = ReflectHelper.reflectedPropertyType(
 					ownerName,
 					propertyName,
-					getServiceRegistry().getService( ClassLoaderService.class )
+					getServiceRegistry().requireService( ClassLoaderService.class )
 			);
 		}
 		else {
@@ -616,7 +625,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 //		}
 
 		if ( name.startsWith( BasicTypeImpl.EXTERNALIZED_PREFIX ) ) {
-			final BasicTypeImpl<Object> basicType = context.getBootstrapContext().resolveAdHocBasicType( name );
+			final BasicType<Object> basicType = context.getBootstrapContext().resolveAdHocBasicType( name );
 			return new NamedBasicTypeResolution<>(
 					basicType.getJavaTypeDescriptor(),
 					basicType,
@@ -666,7 +675,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 
 		// see if the name is a UserType or BasicType implementor class name
-		final ClassLoaderService cls = serviceRegistry.getService( ClassLoaderService.class );
+		final ClassLoaderService cls = serviceRegistry.requireService( ClassLoaderService.class );
 		try {
 			final Class<?> typeNamedClass = cls.classForName( name );
 
@@ -779,7 +788,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		if ( StringHelper.isNotEmpty( typeName ) ) {
 			if ( typeName.startsWith( ConverterDescriptor.TYPE_NAME_PREFIX ) ) {
 				final String converterClassName = typeName.substring( ConverterDescriptor.TYPE_NAME_PREFIX.length() );
-				final ClassLoaderService cls = getServiceRegistry().getService( ClassLoaderService.class );
+				final ClassLoaderService cls = getServiceRegistry().requireService( ClassLoaderService.class );
 				try {
 					final Class<AttributeConverter<?,?>> converterClass = cls.classForName( converterClassName );
 					setAttributeConverterDescriptor( new ClassBasedConverterDescriptor(
@@ -803,65 +812,70 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	private static int COUNTER;
 
-	public <T extends UserType<?>> void setExplicitCustomType(Class<T> explicitCustomType) {
+	public void setExplicitCustomType(Class<? extends UserType<?>> explicitCustomType) {
 		if ( explicitCustomType != null ) {
 			if ( resolution != null ) {
 				throw new UnsupportedOperationException( "Unsupported attempt to set an explicit-custom-type when value is already resolved" );
 			}
-
-			final BeanInstanceProducer instanceProducer =
-					getBuildingContext().getBootstrapContext().getCustomTypeProducer();
-
-			final Properties properties = new Properties();
-			if ( CollectionHelper.isNotEmpty( getTypeParameters() ) ) {
-				properties.putAll( getTypeParameters() );
-			}
-			if ( CollectionHelper.isNotEmpty( explicitLocalTypeParams ) ) {
-				properties.putAll( explicitLocalTypeParams );
-			}
-
-			final T typeInstance;
-			if ( getBuildingContext().getBuildingOptions().disallowExtensionsInCdi() ) {
-				typeInstance = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( explicitCustomType );
-			}
 			else {
-				final boolean hasParameters = CollectionHelper.isNotEmpty( properties );
-
-				final ManagedBean<T> typeBean;
-				if ( hasParameters ) {
-					final String name = explicitCustomType.getName() + COUNTER++;
-					typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
-							.getBean( name, explicitCustomType, instanceProducer );
-				}
-				else {
-					typeBean = getServiceRegistry().getService( ManagedBeanRegistry.class )
-							.getBean( explicitCustomType, instanceProducer );
-				}
-				typeInstance = typeBean.getBeanInstance();
+				resolution = new UserTypeResolution<>(
+						new CustomType<>(
+								getConfiguredUserTypeBean( explicitCustomType, getCustomTypeProperties() ),
+								getTypeConfiguration()
+						),
+						null,
+						getCustomTypeProperties()
+				);
 			}
+		}
+	}
 
-			if ( typeInstance instanceof TypeConfigurationAware ) {
-				( (TypeConfigurationAware) typeInstance ).setTypeConfiguration( getTypeConfiguration() );
-			}
+	private Properties getCustomTypeProperties() {
+		final Properties properties = new Properties();
+		if ( isNotEmpty( getTypeParameters() ) ) {
+			properties.putAll( getTypeParameters() );
+		}
+		if ( isNotEmpty( explicitLocalTypeParams ) ) {
+			properties.putAll( explicitLocalTypeParams );
+		}
+		return properties;
+	}
 
-			if ( typeInstance instanceof DynamicParameterizedType ) {
-				if (parseBoolean(properties.getProperty(DynamicParameterizedType.IS_DYNAMIC))) {
-					if (properties.get(DynamicParameterizedType.PARAMETER_TYPE) == null) {
-						final DynamicParameterizedType.ParameterType parameterType = makeParameterImpl();
-						properties.put(DynamicParameterizedType.PARAMETER_TYPE, parameterType);
-					}
+	private UserType<?> getConfiguredUserTypeBean(Class<? extends UserType<?>> explicitCustomType, Properties properties) {
+		final UserType<?> typeInstance =
+				getBuildingContext().getBuildingOptions().disallowExtensionsInCdi()
+						? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( explicitCustomType )
+						: getUserTypeBean( explicitCustomType, properties ).getBeanInstance();
+
+		if ( typeInstance instanceof TypeConfigurationAware ) {
+			final TypeConfigurationAware configurationAware = (TypeConfigurationAware) typeInstance;
+			configurationAware.setTypeConfiguration( getTypeConfiguration() );
+		}
+
+		if ( typeInstance instanceof DynamicParameterizedType ) {
+			if ( parseBoolean( properties.getProperty( DynamicParameterizedType.IS_DYNAMIC ) ) ) {
+				if ( properties.get( DynamicParameterizedType.PARAMETER_TYPE ) == null ) {
+					properties.put( DynamicParameterizedType.PARAMETER_TYPE, makeParameterImpl() );
 				}
 			}
+		}
 
-			injectParameters( typeInstance, properties );
-			// envers - grr
-			setTypeParameters( properties );
+		injectParameters( typeInstance, properties);
+		// envers - grr
+		setTypeParameters( properties );
 
-			this.resolution = new UserTypeResolution(
-					new CustomType<>( (UserType<?>) typeInstance, getTypeConfiguration() ),
-					null,
-					properties
-			);
+		return typeInstance;
+	}
+
+	private <T> ManagedBean<T> getUserTypeBean(Class<T> explicitCustomType, Properties properties) {
+		final BeanInstanceProducer producer = getBuildingContext().getBootstrapContext().getCustomTypeProducer();
+		final ManagedBeanRegistry registry = getServiceRegistry().requireService( ManagedBeanRegistry.class );
+		if ( isNotEmpty( properties ) ) {
+			final String name = explicitCustomType.getName() + COUNTER++;
+			return registry.getBean( name, explicitCustomType, producer );
+		}
+		else {
+			return registry.getBean( explicitCustomType, producer );
 		}
 	}
 
@@ -882,9 +896,9 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	@Internal
 	public boolean isDisallowedWrapperArray() {
 		return getBuildingContext().getBuildingOptions().getWrapperArrayHandling() == WrapperArrayHandling.DISALLOW
-				&& !isLob()
-				&& ( explicitJavaTypeAccess == null || explicitJavaTypeAccess.apply( getTypeConfiguration() ) == null )
-				&& isWrapperByteOrCharacterArray();
+			&& !isLob()
+			&& ( explicitJavaTypeAccess == null || explicitJavaTypeAccess.apply( getTypeConfiguration() ) == null )
+			&& isWrapperByteOrCharacterArray();
 	}
 
 	private boolean isWrapperByteOrCharacterArray() {

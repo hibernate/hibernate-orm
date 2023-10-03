@@ -29,6 +29,7 @@ import org.hibernate.tool.schema.JdbcMetadaAccessStrategy;
 import org.hibernate.tool.schema.TargetType;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -49,7 +50,7 @@ public class SchemaUpdateWithUseJdbcMetadataDefaultsSettingToFalseAndQuotedNameT
 		createOutputFile.deleteOnExit();
 		updateOutputFile = File.createTempFile( "update_script", ".sql" );
 		updateOutputFile.deleteOnExit();
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( "hibernate.temp.use_jdbc_metadata_defaults", "false" )
 				.applySetting( AvailableSettings.SHOW_SQL, "true" )
 				.applySetting(

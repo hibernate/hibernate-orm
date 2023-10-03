@@ -11,9 +11,11 @@ import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
 import org.hibernate.testing.TestForIssue;
@@ -24,6 +26,7 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfMaps;
 import org.hibernate.testing.orm.domain.gambit.SimpleEntity;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -56,6 +59,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.isOneOf;
 
 import static org.hibernate.testing.orm.domain.gambit.EntityOfBasics.Gender.FEMALE;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -74,7 +78,9 @@ public class FunctionTests {
 		scope.inTransaction(
 				em -> {
 					EntityOfBasics entity = new EntityOfBasics();
+					entity.setTheString("stringy");
 					entity.setTheInt(5);
+					entity.setTheInteger(2);
 					entity.setTheDouble(1.0);
 					entity.setId(123);
 					entity.setTheDate( new Date( 74, 2, 25 ) );
@@ -519,7 +525,7 @@ public class FunctionTests {
 							// Fetching the result as float would "hide" the error as that would do some rounding
 							Matchers.closeTo( 9.0d, ERROR )
 					);
-					assertThat( session.createQuery("select round(32.12345,2)", Float.class).getSingleResult(), is(32.12f) );
+					assertThat( session.createQuery("select round(32.12345f,2)", Float.class).getSingleResult(), is(32.12f) );
 					assertThat( session.createQuery("select mod(3,2)", Integer.class).getSingleResult(), is(1) );
 					assertThat( session.createQuery("select 3%2", Integer.class).getSingleResult(), is(1) );
 					assertThat( session.createQuery("select sqrt(9.0)", Double.class).getSingleResult(), is(3.0d) );
@@ -649,13 +655,14 @@ public class FunctionTests {
 				session -> {
 					session.createQuery("select substring(e.theString, e.theInt) from EntityOfBasics e", String.class)
 							.list();
-					session.createQuery("select substring(e.theString, 0, e.theInt) from EntityOfBasics e", String.class)
+					session.createQuery("select substring(e.theString, 1, e.theInt) from EntityOfBasics e", String.class)
 							.list();
 					session.createQuery("select substring(e.theString from e.theInt) from EntityOfBasics e", String.class)
 							.list();
-					session.createQuery("select substring(e.theString from 0 for e.theInt) from EntityOfBasics e", String.class)
+					session.createQuery("select substring(e.theString from 1 for e.theInt) from EntityOfBasics e", String.class)
 							.list();
 					assertThat( session.createQuery("select substring('hello world',4, 5)", String.class).getSingleResult(), is("lo wo") );
+					assertThat( session.createQuery("select substring('hello world' from 1 for 5)", String.class).getSingleResult(), is("hello") );
 				}
 		);
 
@@ -889,8 +896,6 @@ public class FunctionTests {
 							.list();
 					session.createQuery("select cast(e.id as BigInteger(10)), cast(e.theDouble as BigDecimal(10,5)) from EntityOfBasics e", Object[].class)
 							.list();
-					session.createQuery("select cast(e.theString as String(15)), cast(e.theDouble as String(17)) from EntityOfBasics e", Object[].class)
-							.list();
 
 					session.createQuery( "select cast('1002342345234523.452435245245243' as BigDecimal) from EntityOfBasics", BigDecimal.class)
 							.list();
@@ -999,28 +1004,88 @@ public class FunctionTests {
 	}
 
 	@Test
-	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsTruncateThroughCast.class)
-	public void testCastFunction_withTruncation(SessionFactoryScope scope) {
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting to the binary types")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle treats the cast value as a hexadecimal literal")
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL treats the cast value as a hexadecimal literal")
+	public void testCastFunctionBinary(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select cast(e.theString as String(15)), cast(e.theDouble as String(8)) from EntityOfBasics e", Object[].class)
-							.list();
-
-					session.createQuery("select cast('ABCDEF' as Character) from EntityOfBasics", Character.class)
+					session.createQuery("select cast(e.theString as Binary) from EntityOfBasics e", byte[].class)
 							.list();
 				}
 		);
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting to the binary types")
-	public void testCastFunctionBinary(SessionFactoryScope scope) {
+	@RequiresDialect(OracleDialect.class)
+	@RequiresDialect(HSQLDialect.class)
+	public void testCastFunctionHexToBinary(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.createQuery("select cast(e.theString as Binary) from EntityOfBasics e", byte[].class)
+					assertArrayEquals(new byte[] {(byte)16,(byte)18,(byte)32,(byte)0},
+					session.createQuery("select cast('10122000' as Binary)", byte[].class)
+							.getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	public void testCastFunctionWithLength(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select cast(e.theString as String(15)), cast(e.theDouble as String(17)) from EntityOfBasics e", Object[].class)
 							.list();
+					assertEquals( 'A',
+							session.createQuery("select cast('ABCDEF' as Character)", Character.class)
+									.getSingleResult() );
+					assertEquals( "ABC",
+							session.createQuery("select cast('ABCDEF' as String(3))", String.class)
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting to binary types")
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL bytea doesn't have a length")
+	@SkipForDialect(dialectClass = CockroachDialect.class, matchSubTypes = true, reason = "CockroachDB bytes doesn't have a length")
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle cast to raw does not do truncatation")
+	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, minorVersion = 5, reason = "On this version the length of the cast to the parameter appears to be > 2")
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL interprets string as hex literal and produces error")
+	public void testCastBinaryWithLength(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
 					session.createQuery("select cast(e.theString as Binary(10)) from EntityOfBasics e", byte[].class)
 							.list();
+					assertArrayEquals( new byte[]{(byte)0xFF,(byte)0},
+							session.createQuery("select cast(X'FF00EE11' as Binary(2))", byte[].class)
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby doesn't support casting varchar to binary")
+	public void testCastBinaryWithLengthForOracle(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertArrayEquals( new byte[]{(byte)0xFF,(byte)0},
+							session.createQuery("select cast(X'FF00' as Binary(2))", byte[].class)
+									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, matchSubTypes = true, reason = "PostgreSQL bytea doesn't have a length")
+	public void testCastBinaryWithLengthForDerby(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select cast(X'22FF00EE11' as Binary(10))", byte[].class)
+							.list();
+					assertArrayEquals( new byte[]{(byte)0xFF,(byte)0},
+							session.createQuery("select cast(X'FF00' as Binary(2))", byte[].class)
+									.getSingleResult() );
 				}
 		);
 	}
@@ -1355,6 +1420,26 @@ public class FunctionTests {
 	}
 
 	@Test
+	public void testAddDurationWithParameter(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createQuery("select 2 * cast(?1 as BigDecimal)")
+							.setParameter(1, BigDecimal.valueOf(123.446))
+							.getSingleResult();
+					session.createQuery("select 2 * cast(?1 as BigDecimal(7,4))")
+							.setParameter(1, BigDecimal.valueOf(123.446))
+							.getSingleResult();
+					session.createQuery("select cast(2 as BigDecimal) * ?1")
+							.setParameter(1, BigDecimal.valueOf(123.446))
+							.getSingleResult();
+					session.createQuery("select cast(:dt as LocalDateTime) + 1 day")
+							.setParameter("dt", LocalDateTime.now())
+							.getSingleResult();
+				}
+		);
+	}
+
+	@Test
 	public void testInstantCast(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
@@ -1553,6 +1638,22 @@ public class FunctionTests {
 //					assertEquals( LocalTime.of(5,30,25),
 //							session.createQuery("select time 5:30:46 - 21 second")
 //									.getSingleResult() );
+				}
+		);
+	}
+
+	@Test
+	@JiraKey("HHH-17074")
+	public void testDurationArithmeticWithParameters(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(
+							1,
+							session.createQuery( "from EntityOfBasics e where (:date - e.theTimestamp) by day > 1" )
+									.setParameter( "date", Timestamp.valueOf( "2022-01-01 00:00:00" ) )
+									.getResultList()
+									.size()
+					);
 				}
 		);
 	}
@@ -2000,6 +2101,17 @@ public class FunctionTests {
 		);
 	}
 
+	@Test
+	public void testEnumIsNull(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createSelectionQuery("from EntityOfBasics where gender is null").getResultList();
+					session.createSelectionQuery("from EntityOfBasics e where e.gender is null").getResultList();
+					session.createSelectionQuery("from EntityOfBasics where :gender is null").setParameter("gender", EntityOfBasics.Gender.MALE).getResultList();
+				}
+		);
+	}
+
 	static class Pair {
 		int integer; double floating;
 		Pair(int integer, double floating) {
@@ -2016,6 +2128,69 @@ public class FunctionTests {
 				session -> {
 					session.createSelectionQuery("select new Pair(theInt, theDouble) from EntityOfBasics", Pair.class).getResultList();
 					session.createSelectionQuery("select new Triple(theInt as integer, theDouble as floating, 'hello' as string) from EntityOfBasics", Triple.class).getResultList();
+				}
+		);
+	}
+
+	@Test
+	public void testTupleComparison(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(List.of(1),
+							session.createSelectionQuery("select 1 from EntityOfBasics where (theInt, theDouble) = (5, 1.0)", Integer.class)
+									.getResultList());
+					assertEquals(List.of(),
+							session.createSelectionQuery("select 1 from EntityOfBasics where (theInt, theDouble) = (1, 1.0)", Integer.class)
+									.getResultList());
+					assertEquals(List.of(1),
+							session.createSelectionQuery("select 1 from EntityOfBasics where (theInt, theDouble) > (1, 1.0)", Integer.class)
+									.getResultList());
+					assertEquals(List.of(),
+							session.createSelectionQuery("select 1 from EntityOfBasics where (theInt, theDouble) > (5, 1.0)", Integer.class)
+									.getResultList());
+				}
+		);
+	}
+
+	@JiraKey("HHH-17219")
+	public void testTupleComparisonWithParameters(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(List.of(1),
+							session.createSelectionQuery("select 1 from EntityOfBasics where (theInt, theDouble) = (:int, :float)", Integer.class)
+									.setParameter("int", 5)
+									.setParameter("float", 1.0)
+									.getResultList());
+					assertEquals(List.of(1),
+							session.createSelectionQuery("select 1 from EntityOfBasics where (theInt, theDouble) > (:int, :float)", Integer.class)
+									.setParameter("int", 1)
+									.setParameter("float", 1.0)
+									.getResultList());
+				}
+		);
+	}
+
+	@Test
+	public void testTupleInSubqueryResult(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(List.of(true),
+							session.createSelectionQuery("select (5, 'stringy') in (select theInt, theString from EntityOfBasics)", Boolean.class)
+									.getResultList());
+					assertEquals(List.of(false),
+							session.createSelectionQuery("select (5, 'hello') in (select theInt, theString from EntityOfBasics)", Boolean.class)
+									.getResultList());
+				}
+		);
+	}
+
+	@Test
+	public void testTupleInSelect(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertArrayEquals(new Object[]{5, 1.0, "hello"},
+							(Object[]) session.createSelectionQuery("select (5, 1.0, 'hello')", Object.class)
+									.getSingleResult());
 				}
 		);
 	}

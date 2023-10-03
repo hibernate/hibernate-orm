@@ -8,7 +8,6 @@ package org.hibernate.sql.exec.spi;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -94,11 +93,7 @@ public interface JdbcParameterBindings {
 		addBinding(
 				params.get( selectionIndex ),
 				new JdbcParameterBindingImpl(
-						BindingTypeHelper.INSTANCE.resolveBindType(
-								jdbcValue,
-								type,
-								typeConfiguration
-						),
+						BindingTypeHelper.INSTANCE.resolveBindType( jdbcValue, type, typeConfiguration ),
 						jdbcValue
 				)
 		);

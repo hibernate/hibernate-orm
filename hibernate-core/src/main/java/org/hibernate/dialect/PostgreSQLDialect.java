@@ -133,12 +133,12 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
 import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithMillis;
 
 /**
- * A {@linkplain Dialect SQL dialect} for PostgreSQL 10 and above.
+ * A {@linkplain Dialect SQL dialect} for PostgreSQL 11 and above.
  *
  * @author Gavin King
  */
 public class PostgreSQLDialect extends Dialect {
-	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10 );
+	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11 );
 
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
@@ -465,20 +465,23 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public String timestampaddPattern(TemporalUnit unit, TemporalType temporalType, IntervalType intervalType) {
-		if ( intervalType != null ) {
-			return "(?2+?3)";
-		}
-		switch ( unit ) {
+		return intervalType != null
+				? "(?2+?3)"
+				: "cast(?3+" + intervalPattern( unit ) + " as " + temporalType.name().toLowerCase() + ")";
+	}
+
+	private static String intervalPattern(TemporalUnit unit) {
+		switch (unit) {
 			case NANOSECOND:
-				return "(?3+(?2)/1e3*interval '1 microsecond')";
+				return "(?2)/1e3*interval '1 microsecond'";
 			case NATIVE:
-				return "(?3+(?2)*interval '1 second')";
+				return "(?2)*interval '1 second'";
 			case QUARTER: //quarter is not supported in interval literals
-				return "(?3+(?2)*interval '3 month')";
+				return "(?2)*interval '3 month'";
 			case WEEK: //week is not supported in interval literals
-				return "(?3+(?2)*interval '7 day')";
+				return "(?2)*interval '7 day'";
 			default:
-				return "(?3+(?2)*interval '1 ?1')";
+				return "(?2)*interval '1 " + unit + "'";
 		}
 	}
 
@@ -1031,9 +1034,7 @@ public class PostgreSQLDialect extends Dialect {
 
 	@Override
 	public CallableStatementSupport getCallableStatementSupport() {
-		return getVersion().isSameOrAfter( 11 )
-				? PostgreSQLCallableStatementSupport.INSTANCE
-				: PostgreSQLCallableStatementSupport.V10_INSTANCE;
+		return PostgreSQLCallableStatementSupport.INSTANCE;
 	}
 
 	@Override

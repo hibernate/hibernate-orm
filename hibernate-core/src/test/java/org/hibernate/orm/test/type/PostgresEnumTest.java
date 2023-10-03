@@ -16,9 +16,7 @@ import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.type.SqlTypes;
 import org.junit.jupiter.api.Test;
 
-import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -40,33 +38,31 @@ public class PostgresEnumTest {
 
 	@Test public void testSchema(SessionFactoryScope scope) {
 		scope.inSession( s -> {
-			try ( Connection c = s.getJdbcConnectionAccess().obtainConnection() ) {
-				ResultSet typeInfo = c.getMetaData().getTypeInfo();
-				while ( typeInfo.next() ) {
-					String name = typeInfo.getString(1);
-					if ( name.equalsIgnoreCase("ActivityType") ) {
-						return;
+			s.doWork(
+					c -> {
+						ResultSet typeInfo = c.getMetaData().getTypeInfo();
+						while ( typeInfo.next() ) {
+							String name = typeInfo.getString(1);
+							if ( name.equalsIgnoreCase("ActivityType") ) {
+								return;
+							}
+						}
+						fail("named enum type not exported");
 					}
-				}
-				fail("named enum type not exported");
-			}
-			catch (SQLException e) {
-				throw new RuntimeException(e);
-			}
+			);
 		});
 		scope.inSession( s -> {
-			try ( Connection c = s.getJdbcConnectionAccess().obtainConnection() ) {
-				ResultSet tableInfo = c.getMetaData().getColumns(null, null, "activity", "activitytype" );
-				while ( tableInfo.next() ) {
-					String type = tableInfo.getString(6);
-					assertEquals( "activitytype", type );
-					return;
-				}
-				fail("named enum column not exported");
-			}
-			catch (SQLException e) {
-				throw new RuntimeException(e);
-			}
+			s.doWork(
+					c -> {
+						ResultSet tableInfo = c.getMetaData().getColumns(null, null, "activity", "activitytype" );
+						while ( tableInfo.next() ) {
+							String type = tableInfo.getString(6);
+							assertEquals( "activitytype", type );
+							return;
+						}
+						fail("named enum column not exported");
+					}
+			);
 		});
 	}
 

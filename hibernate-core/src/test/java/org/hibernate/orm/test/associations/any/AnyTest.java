@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.associations.any;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.Jira;
 import org.junit.Test;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInHibernate;
@@ -22,7 +23,8 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
         return new Class<?>[] {
             IntegerProperty.class,
             StringProperty.class,
-            PropertyHolder.class
+            PropertyHolder.class,
+            PropertyHolder2.class,
         };
     }
 
@@ -71,4 +73,29 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
     }
 
 
+    @Test
+    @Jira( "https://hibernate.atlassian.net/browse/HHH-16938" )
+    public void testMetaAnnotated() {
+        doInHibernate( this::sessionFactory, session -> {
+            final StringProperty nameProperty = new StringProperty();
+            nameProperty.setId( 2L );
+            nameProperty.setName( "name2" );
+            nameProperty.setValue( "Mario Rossi" );
+            session.persist( nameProperty );
+            final PropertyHolder2 namePropertyHolder = new PropertyHolder2();
+            namePropertyHolder.setId( 2L );
+            namePropertyHolder.setProperty( nameProperty );
+            session.persist( namePropertyHolder );
+        } );
+        doInHibernate( this::sessionFactory, session -> {
+            final PropertyHolder2 propertyHolder = session.get( PropertyHolder2.class, 2L );
+            assertEquals( "name2", propertyHolder.getProperty().getName() );
+            assertEquals( "Mario Rossi", propertyHolder.getProperty().getValue() );
+            final String propertyType = session.createNativeQuery(
+                    "select property_type from property_holder2",
+                    String.class
+            ).getSingleResult();
+            assertEquals( "S", propertyType );
+        } );
+    }
 }

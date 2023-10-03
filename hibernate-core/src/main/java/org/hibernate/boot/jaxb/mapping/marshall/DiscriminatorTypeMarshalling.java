@@ -15,10 +15,10 @@ import jakarta.persistence.DiscriminatorType;
  */
 public class DiscriminatorTypeMarshalling {
 	public static DiscriminatorType fromXml(String name) {
-		return DiscriminatorType.valueOf( name );
+		return name == null ? null : DiscriminatorType.valueOf( name );
 	}
 
 	public static String toXml(DiscriminatorType discriminatorType) {
-		return discriminatorType.name();
+		return discriminatorType == null ? null : discriminatorType.name();
 	}
 }

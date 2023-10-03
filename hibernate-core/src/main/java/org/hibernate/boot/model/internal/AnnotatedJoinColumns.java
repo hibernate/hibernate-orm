@@ -31,7 +31,9 @@ import org.hibernate.boot.spi.PropertyData;
 import org.hibernate.cfg.RecoverableException;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Component;
 import org.hibernate.mapping.Join;
+import org.hibernate.mapping.KeyValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
@@ -64,9 +66,10 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 	private String propertyName; // this is really a .-separated property path
 
 	private String mappedBy;
-    //property name on the owning side if any
+	private String mapsId;
+	//property name on the owning side if any
 	private String mappedByPropertyName;
-    //table name on the mapped by side if any
+	//table name on the mapped by side if any
 	private String mappedByTableName;
 	private String mappedByEntityName;
 	private boolean elementCollection;
@@ -209,6 +212,27 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		return parent;
 	}
 
+	Property resolveMapsId() {
+		final PersistentClass persistentClass = getPropertyHolder().getPersistentClass();
+		final KeyValue identifier = persistentClass.getIdentifier();
+		try {
+			if ( identifier instanceof Component) {
+				// an @EmbeddedId
+				final Component embeddedIdType = (Component) identifier;
+				return embeddedIdType.getProperty( getMapsId() );
+			}
+			else {
+				// a simple id or an @IdClass
+				return persistentClass.getProperty( getMapsId() );
+			}
+		}
+		catch (MappingException me) {
+			throw new AnnotationException( "Identifier field '" + getMapsId()
+					+ "' named in '@MapsId' does not exist in entity '" + persistentClass.getEntityName() + "'",
+					me );
+		}
+	}
+
 	public List<AnnotatedJoinColumn> getJoinColumns() {
 		return columns;
 	}
@@ -236,9 +260,9 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 
 	/**
 	 * @return true if the association mapping annotation did specify
-	 *        {@link jakarta.persistence.OneToMany#mappedBy() mappedBy},
-	 * 		meaning that this {@code @JoinColumn} mapping belongs to an
-	 * 		unowned many-valued association.
+	 *         {@link jakarta.persistence.OneToMany#mappedBy() mappedBy},
+	 *         meaning that this {@code @JoinColumn} mapping belongs to an
+	 *         unowned many-valued association.
 	 */
 	public boolean hasMappedBy() {
 		return mappedBy != null;
@@ -343,7 +367,7 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 			return new Column( context.getMetadataCollector()
 					.getPhysicalColumnName( table, logicalReferencedColumnName ) );
 		}
-		catch  (MappingException me ) {
+		catch ( MappingException me ) {
 			throw new MappingException( "No column with logical name '" + logicalReferencedColumnName
 					+ "' in table '" + table.getName() + "'" );
 		}
@@ -351,58 +375,58 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 
 	String buildDefaultColumnName(PersistentClass referencedEntity, String logicalReferencedColumn) {
 		final MetadataBuildingOptions options = getBuildingContext().getBuildingOptions();
-		final ImplicitNamingStrategy implicitNamingStrategy = options.getImplicitNamingStrategy();
-		final PhysicalNamingStrategy physicalNamingStrategy = options.getPhysicalNamingStrategy();
-
-		boolean mappedBySide = getMappedByTableName() != null || getMappedByPropertyName() != null;
-		boolean ownerSide = getPropertyName() != null;
-		boolean isRefColumnQuoted = isQuoted( logicalReferencedColumn );
-
 		final InFlightMetadataCollector collector = getBuildingContext().getMetadataCollector();
 		final Database database = collector.getDatabase();
+		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
+		final Identifier columnIdentifier = columnIdentifier(
+				referencedEntity,
+				logicalReferencedColumn,
+				options.getImplicitNamingStrategy(),
+				collector,
+				database
+		);
+		return options.getPhysicalNamingStrategy()
+				.toPhysicalColumnName( columnIdentifier, jdbcEnvironment )
+				.render( jdbcEnvironment.getDialect() );
+	}
 
-		Identifier columnIdentifier;
-		if ( mappedBySide ) {
-			// NOTE : While it is completely misleading here to allow for the combination
-			//		of a "JPA ElementCollection" to be mappedBy, the code that uses this
-			// 		class relies on this behavior for handling the inverse side of
-			// 		many-to-many mappings
-			columnIdentifier = implicitNamingStrategy.determineJoinColumnName(
+	private Identifier columnIdentifier(
+			PersistentClass referencedEntity,
+			String logicalReferencedColumn,
+			ImplicitNamingStrategy implicitNamingStrategy,
+			InFlightMetadataCollector collector,
+			Database database) {
+		boolean isRefColumnQuoted = isQuoted( logicalReferencedColumn );
+
+		if ( isMappedBySide() ) {
+			// NOTE: An @ElementCollection can't be mappedBy, but the client code
+			//       also handles the inverse side of many-to-many mappings
+			final Identifier columnIdentifier = implicitNamingStrategy.determineJoinColumnName(
 					new UnownedImplicitJoinColumnNameSource( referencedEntity, logicalReferencedColumn )
 			);
-
 			//one element was quoted so we quote
-			if ( isRefColumnQuoted || isQuoted( getMappedByTableName() ) ) {
-				columnIdentifier = Identifier.quote( columnIdentifier );
-			}
+			return quoteIfNecessary( isRefColumnQuoted, getMappedByTableName(), columnIdentifier );
 		}
-		else if ( ownerSide ) {
+		else if ( isOwnerSide() ) {
 			final String logicalTableName = collector.getLogicalTableName( referencedEntity.getTable() );
-
-			columnIdentifier = implicitNamingStrategy.determineJoinColumnName(
-					new OwnedImplicitJoinColumnNameSource( referencedEntity, logicalTableName, logicalReferencedColumn )
+			Identifier columnIdentifier = implicitNamingStrategy.determineJoinColumnName(
+					new OwnedImplicitJoinColumnNameSource(referencedEntity, logicalTableName, logicalReferencedColumn)
 			);
-
-			// HHH-11826 magic. See Ejb3Column and the HHH-6005 comments
+			// HHH-11826 magic. See AnnotatedColumn and the HHH-6005 comments
 			if ( columnIdentifier.getText().contains( "_collection&&element_" ) ) {
 				columnIdentifier = Identifier.toIdentifier(
 						columnIdentifier.getText().replace( "_collection&&element_", "_" ),
 						columnIdentifier.isQuoted()
 				);
 			}
-
-			//one element was quoted so we quote
-			if ( isRefColumnQuoted || isQuoted( logicalTableName ) ) {
-				columnIdentifier = Identifier.quote( columnIdentifier );
-			}
+			return quoteIfNecessary( isRefColumnQuoted, logicalTableName, columnIdentifier );
 		}
 		else {
 			final Identifier logicalTableName = database.toIdentifier(
 					collector.getLogicalTableName( referencedEntity.getTable() )
 			);
-
 			// is an intra-entity hierarchy table join so copy the name by default
-			columnIdentifier = implicitNamingStrategy.determinePrimaryKeyJoinColumnName(
+			final Identifier columnIdentifier = implicitNamingStrategy.determinePrimaryKeyJoinColumnName(
 					new ImplicitPrimaryKeyJoinColumnNameSource() {
 						@Override
 						public MetadataBuildingContext getBuildingContext() {
@@ -420,15 +444,32 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 						}
 					}
 			);
-
-			if ( !columnIdentifier.isQuoted() && ( isRefColumnQuoted || logicalTableName.isQuoted() ) ) {
-				columnIdentifier = Identifier.quote( columnIdentifier );
-			}
+			return quoteIfNecessary( isRefColumnQuoted, logicalTableName, columnIdentifier );
 		}
+	}
 
-		final JdbcEnvironment jdbcEnvironment = database.getJdbcEnvironment();
-		return physicalNamingStrategy.toPhysicalColumnName( columnIdentifier, jdbcEnvironment )
-				.render( jdbcEnvironment.getDialect() );
+	private static Identifier quoteIfNecessary(
+			boolean isRefColumnQuoted, Identifier logicalTableName, Identifier columnIdentifier) {
+		return !columnIdentifier.isQuoted() && ( isRefColumnQuoted || logicalTableName.isQuoted() )
+				? Identifier.quote( columnIdentifier )
+				: columnIdentifier;
+	}
+
+	private static Identifier quoteIfNecessary(
+			boolean isRefColumnQuoted, String logicalTableName, Identifier columnIdentifier) {
+		//one element was quoted so we quote
+		return isRefColumnQuoted || isQuoted( logicalTableName )
+				? Identifier.quote( columnIdentifier )
+				: columnIdentifier;
+	}
+
+	private boolean isOwnerSide() {
+		return getPropertyName() != null;
+	}
+
+	private boolean isMappedBySide() {
+		return getMappedByTableName() != null
+			|| getMappedByPropertyName() != null;
 	}
 
 	/**
@@ -454,6 +495,18 @@ public class AnnotatedJoinColumns extends AnnotatedColumns {
 		else {
 			return ImplicitJoinColumnNameSource.Nature.ENTITY_COLLECTION;
 		}
+	}
+
+	public boolean hasMapsId() {
+		return mapsId != null;
+	}
+
+	public String getMapsId() {
+		return mapsId;
+	}
+
+	public void setMapsId(String mapsId) {
+		this.mapsId = nullIfEmpty( mapsId );
 	}
 
 	private class UnownedImplicitJoinColumnNameSource implements ImplicitJoinColumnNameSource {

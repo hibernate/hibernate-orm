@@ -144,7 +144,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 	}
 
 	private void createJoins(PersistentClass persistentClass, JoinAwarePersistentEntity entity, ClassAuditingData auditingData) {
-		final Iterator<org.hibernate.mapping.Join> joins = persistentClass.getJoinIterator();
+		final Iterator<org.hibernate.mapping.Join> joins = persistentClass.getJoins().iterator();
 		final Map<org.hibernate.mapping.Join, Join> joinElements = new HashMap<>();
 		entityJoins.put( persistentClass.getEntityName(), joinElements );
 
@@ -196,7 +196,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 			String entityName,
 			EntityMappingData mappingData,
 			boolean firstPass) {
-		final Iterator<org.hibernate.mapping.Join> joins = persistentClass.getJoinIterator();
+		final Iterator<org.hibernate.mapping.Join> joins = persistentClass.getJoins().iterator();
 
 		while ( joins.hasNext() ) {
 			final org.hibernate.mapping.Join join = joins.next();
@@ -322,7 +322,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		LOG.infof( "Adding properties for entity: %s", persistentClass.getEntityName() );
 		addProperties(
 				entity,
-				persistentClass.getUnjoinedPropertyIterator(),
+				persistentClass.getUnjoinedProperties().iterator(),
 				propertyMapper,
 				auditingData,
 				persistentClass.getEntityName(),
@@ -394,7 +394,7 @@ public final class AuditMetadataGenerator extends AbstractMetadataGenerator {
 		// Mapping unjoined properties
 		addProperties(
 				mappingData.getEntityDefinition(),
-				persistentClass.getUnjoinedPropertyIterator(),
+				persistentClass.getUnjoinedProperties().iterator(),
 				propertyMapper,
 				auditingData,
 				entityName,

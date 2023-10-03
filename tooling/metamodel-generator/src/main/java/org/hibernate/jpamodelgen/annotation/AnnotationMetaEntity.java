@@ -283,7 +283,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 
-		findSessionGetter( methodsOfClass );
+		findSessionGetter( element );
 
 		if ( managed ) {
 			putMember( "class", new AnnotationMetaType(this) );
@@ -301,12 +301,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		initialized = true;
 	}
 
-	private void findSessionGetter(List<ExecutableElement> methodsOfClass) {
-		if ( !containsAnnotation( element, Constants.ENTITY ) ) {
-			for ( ExecutableElement method : methodsOfClass ) {
+	private void findSessionGetter(TypeElement type) {
+		if ( !containsAnnotation( type, Constants.ENTITY ) ) {
+			for ( ExecutableElement method : methodsIn( type.getEnclosedElements() ) ) {
 				if ( isSessionGetter( method ) ) {
 					dao = true;
 					sessionType = addDaoConstructor( method );
+				}
+			}
+			if ( !dao ) {
+				final TypeMirror superclass = type.getSuperclass();
+				if ( superclass.getKind() == TypeKind.DECLARED ) {
+					final DeclaredType declaredType = (DeclaredType) superclass;
+					findSessionGetter( (TypeElement) declaredType.asElement() );
+				}
+				for ( TypeMirror superinterface : type.getInterfaces() ) {
+					if ( superinterface.getKind() == TypeKind.DECLARED ) {
+						final DeclaredType declaredType = (DeclaredType) superinterface;
+						findSessionGetter( (TypeElement) declaredType.asElement() );
+					}
 				}
 			}
 		}
@@ -373,15 +386,25 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			|| isGetter( methodSimpleName, methodParameterTypes, returnType );
 	}
 
-	private static boolean isGetter(Name methodSimpleName, List<? extends TypeMirror> methodParameterTypes, TypeMirror returnType) {
-		return ( methodSimpleName.subSequence(0,3).toString().equals("get")
-				|| methodSimpleName.subSequence(0,2).toString().equals("is") )
+	private static boolean hasPrefix(Name methodSimpleName, String prefix) {
+		return methodSimpleName.length() > prefix.length()
+			&& methodSimpleName.subSequence( 0, prefix.length() ).toString().equals( prefix );
+	}
+
+	private static boolean isGetter(
+			Name methodSimpleName,
+			List<? extends TypeMirror> methodParameterTypes,
+			TypeMirror returnType) {
+		return ( hasPrefix( methodSimpleName, "get" ) || hasPrefix( methodSimpleName,"is" ) )
 			&& methodParameterTypes.isEmpty()
 			&& returnType.getKind() != TypeKind.VOID;
 	}
 
-	private static boolean isSetter(Name methodSimpleName, List<? extends TypeMirror> methodParameterTypes, TypeMirror returnType) {
-		return methodSimpleName.subSequence(0,3).toString().equals("set")
+	private static boolean isSetter(
+			Name methodSimpleName,
+			List<? extends TypeMirror> methodParameterTypes,
+			TypeMirror returnType) {
+		return hasPrefix( methodSimpleName, "set")
 			&& methodParameterTypes.size() == 1
 			&& returnType.getKind() != TypeKind.VOID;
 	}
@@ -418,11 +441,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	private void addQueryMethod(ExecutableElement method) {
 		final TypeMirror returnType = method.getReturnType();
 		final TypeKind kind = returnType.getKind();
-		if ( kind == TypeKind.VOID || kind.isPrimitive() ) {
+		if ( kind == TypeKind.VOID ||  kind == TypeKind.ARRAY || kind.isPrimitive() ) {
 			addQueryMethod( method, returnType, null );
 		}
 		else if ( kind == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = ununi((DeclaredType) returnType);
+			final DeclaredType declaredType = ununi( (DeclaredType) returnType );
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 			switch ( typeArguments.size() ) {
@@ -573,7 +596,10 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean isFinderParameterMappingToAttribute(VariableElement param) {
-		return !isSessionParameter( param.asType().toString() );
+		final String type = param.asType().toString();
+		return !isSessionParameter( type )
+			&& !isPageParam( type )
+			&& !isOrderParam( type );
 	}
 
 	private String[] sessionTypeFromParameters(List<String> paramNames, List<String> paramTypes) {
@@ -889,17 +915,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private static boolean fieldMatches(String token, Name fieldName) {
-		return fieldName.contentEquals(token);
+		return fieldName.contentEquals( token );
 	}
 
 	private static boolean getterMatches(String token, Name methodName) {
-		if ( methodName.length() > 3 && methodName.subSequence(0,3).toString().equals("get")) {
-			final String propertyName = decapitalize(methodName.subSequence(3, methodName.length()).toString());
-			return token.equals(propertyName);
+		if ( hasPrefix( methodName, "get" ) ) {
+			return token.equals( decapitalize( methodName.subSequence( 3, methodName.length()).toString() ) );
 		}
-		else if ( methodName.length() > 2 && methodName.subSequence(0,2).toString().equals("is")) {
-			final String propertyName = decapitalize(methodName.subSequence(2, methodName.length()).toString());
-			return token.equals(propertyName);
+		else if ( hasPrefix( methodName, "is" ) ) {
+			return token.equals( decapitalize( methodName.subSequence( 2, methodName.length() ).toString() ) );
 		}
 		else {
 			return false;
@@ -929,10 +953,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 								containerType == null ? null : containerType.getQualifiedName().toString(),
 								paramNames,
 								paramTypes,
-								// update/delete/insert query methods must return int or void
-								returnType != null
-										&& returnType.getKind() != TypeKind.DECLARED
-										&& returnType.getKind() != TypeKind.ARRAY,
+								isInsertUpdateDelete( hql ),
 								isNative,
 								dao,
 								sessionType[0],
@@ -952,6 +973,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
+	private static boolean isInsertUpdateDelete(String hql) {
+		final String trimmed = hql.trim();
+		final String keyword = trimmed.length() > 6 ? trimmed.substring(0, 6) : "";
+		return keyword.equalsIgnoreCase("update")
+			|| keyword.equalsIgnoreCase("delete")
+			|| keyword.equalsIgnoreCase("insert");
+	}
+
 	private void validateHql(
 			ExecutableElement method,
 			@Nullable TypeMirror returnType,
@@ -962,6 +991,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final SqmStatement<?> statement =
 				Validation.validate(
 						hql,
+						returnType,
 						true,
 						new ErrorHandler( context, method, mirror, value, hql),
 						ProcessorSessionFactory.create( context.getProcessingEnvironment() )
@@ -1030,7 +1060,15 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 			else {
 				// TODO: anything more we can do here? e.g. check constructor
-				returnTypeCorrect = true;
+				try {
+					final Class<?> javaResultType = selection.getJavaType();
+					final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( javaResultType.getName() );
+					returnTypeCorrect = context.getTypeUtils().isAssignable( returnType,  typeElement.asType() );
+				}
+				catch (Exception e) {
+					//ignore
+					returnTypeCorrect = true;
+				}
 			}
 			if ( !returnTypeCorrect ) {
 				context.message(method, mirror, value,

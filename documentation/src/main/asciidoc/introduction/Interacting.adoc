@@ -238,7 +238,7 @@ Notice that `persist()` and `remove()` have no immediate effect on the database,
 Also notice that there's no `update()` operation for a stateful session.
 Modifications are automatically detected when the session is <<flush,flushed>>.
 
-On the other hand, the following operations all result in immediate access to the database:
+On the other hand, except for `getReference()`, the following operations all result in immediate access to the database:
 
 .Methods for reading and locking data
 [%breakable,cols="30,~"]
@@ -367,7 +367,7 @@ Hibernate has a slightly easier way to do it:
 boolean authorsFetched = Hibernate.isInitialized(book.getAuthors());
 ----
 
-But the static methods of the `Hibernate` class let us do a lot more, and it's worth getting a bit familiar them.
+But the static methods of the link:{doc-javadoc-url}org/hibernate/Hibernate.html[`Hibernate`] class let us do a lot more, and it's worth getting a bit familiar them.
 
 Of particular interest are the operations which let us work with unfetched collections without fetching their state from the database.
 For example, consider this code:
@@ -392,7 +392,7 @@ Hibernate.initialize(book.getAuthors());  // fetch the Authors
 But of course, this code is very inefficient, requiring two trips to the database to obtain data that could in principle be retrieved with just one query.
 
 It's clear from the discussion above that we need a way to request that an association be _eagerly_ fetched using a database `join`, thus protecting ourselves from the infamous N+1 selects.
-One way to do that is by passing an `EntityGraph` to `find()`.
+One way to do this is by passing an `EntityGraph` to `find()`.
 
 [[entity-graph]]
 === Entity graphs and eager fetching
@@ -461,9 +461,9 @@ But the annotation-based API is so verbose that it's just not worth using.
 
 From time to time, a _flush_ operation is triggered, and the session synchronizes dirty state held in memory—that is, modifications to the state of entities associated with the persistence context—with persistent state held in the database. Of course, it does this by executing SQL `INSERT`, `UPDATE`, and `DELETE` statements.
 
-By default, a flush is triggered when:
+By default, a flush is triggered:
 
-- the current transaction commits, for example, when `Transacion.commit()` is called,
+- when the current transaction commits, for example, when `Transaction.commit()` is called,
 - before execution of a query whose result would be affected by the synchronization of dirty state held in memory, or
 - when the program directly calls `flush()`.
 
@@ -507,12 +507,12 @@ A second way to reduce the cost of flushing is to load entities in _read-only_ m
 - `SelectionQuery.setReadOnly(false)` specifies that every entity returned by a given query should be loaded in read-only mode, and
 - `Session.setReadOnly(Object, false)` specifies that a given entity already loaded by the session should be switched to read-only mode.
 
-It's not necessary to dirty-check on entity instance in read-only mode.
+It's not necessary to dirty-check an entity instance in read-only mode.
 
 [[queries]]
 === Queries
 
-:hql: {userGuideBase}#query-language
+:hql: {doc-user-guide-url}#query-language
 
 Hibernate features three complementary ways to write queries:
 
@@ -523,10 +523,10 @@ Hibernate features three complementary ways to write queries:
 [[hql-queries]]
 === HQL queries
 
-:hql: {userGuideBase}#query-language
+:hql: {doc-user-guide-url}#query-language
 
-A full discussion of the query language would require just as much text as the rest of this Introduction.
-Fortunately, HQL is already described in exhaustive (and exhausting) detail in _A guide to Hibernate Query Language 6_.
+A full discussion of the query language would require almost as much text as the rest of this Introduction.
+Fortunately, HQL is already described in exhaustive (and exhausting) detail in {doc-query-language-url}[_A Guide to Hibernate Query Language_].
 It doesn't make sense to repeat that information here.
 // The query language is discussed in great detail below in <<query-language>>.
 
@@ -567,7 +567,7 @@ List<Book> matchingBooks =
             .getResultList();
 ----
 
-The only difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throw an exception if passed an `insert`, `delete`, or `update`.
+The only difference between `createSelectionQuery()` and `createQuery()` is that `createSelectionQuery()` throws an exception if passed an `insert`, `delete`, or `update`.
 
 In the query above, `:titleSearchPattern` is called a _named parameter_.
 We may also identify parameters by a number.
@@ -655,7 +655,7 @@ Using the JPA-standard APIs, this would be a `CriteriaBuilder`, and we get it fr
 CriteriaBuilder builder = entityManagerFactory.getCriteriaBuilder();
 ----
 
-But if we have a `SessionFactory`, we get something much better, a `HibernateCriteriaBuilder`:
+But if we have a `SessionFactory`, we get something much better, a link:{doc-javadoc-url}org/hibernate/query/criteria/HibernateCriteriaBuilder.html[`HibernateCriteriaBuilder`]:
 
 [source,java]
 ----
@@ -705,14 +705,11 @@ query.select(book).where(where)
 
 Here, as before, the classes `Book_` and `Author_` are generated by Hibernate's <<metamodel-generator,JPA Metamodel Generator>>.
 
-[CAUTION]
+[NOTE]
 // .Injection attacks and criteria queries
 ====
-Notice that we did not bother treating `titlePattern` and `namePattern` as parameters.
-That's safe because, _by default_, Hibernate automatically and transparently handles any literal string passed to the `CriteriaBuilder` as a JDBC parameter.
-
-But this behavior is controlled by the configuration setting `hibernate.criteria.value_handling_mode`.
-If you change the default behavior, and set the property to `INLINE` instead of `BIND`, you _must_ pass user-input via a JPA `ParameterExpression`.
+Notice that we didn't bother treating `titlePattern` and `namePattern` as parameters.
+That's safe because, by default, Hibernate automatically and transparently treats strings passed to the `CriteriaBuilder` as JDBC parameters.
 ====
 
 Execution of a criteria query works almost exactly like execution of HQL.
@@ -765,13 +762,13 @@ We do.
 [[criteria-definition]]
 === A more comfortable way to write criteria queries
 
-Actually, what makes the JPA criteria API less ergonomic that it should be is the need to call all operations of the `CriteriaBuilder` as instance methods, instead of having them as `static` functions.
-The reason it works this way is that each JPA providor has its own implementation of `CriteriaBuilder`.
+Actually, what makes the JPA criteria API less ergonomic than it should be is the need to call all operations of the `CriteriaBuilder` as instance methods, instead of having them as `static` functions.
+The reason it works this way is that each JPA provider has its own implementation of `CriteriaBuilder`.
 
 // [%unbreakable]
 // [TIP]
 // ====
-Hibernate 6.3 introduces the helper class `CriteriaDefinition` to reduce the verbosity of criteria queries.
+Hibernate 6.3 introduces the helper class link:{doc-javadoc-url}org/hibernate/query/criteria/CriteriaDefinition.html[`CriteriaDefinition`] to reduce the verbosity of criteria queries.
 Our example looks like this:
 
 [source,java]
@@ -840,7 +837,7 @@ List<Book> books =
 
 There's two ways to ensure the persistence context is flushed before this query is executed.
 
-Either, we could simply force a flush by set the flush mode to `ALWAYS`:
+Either, we could simply force a flush by calling `flush()` or by setting the flush mode to `ALWAYS`:
 
 [source,java]
 ----
@@ -1073,7 +1070,7 @@ Note that the code which executes the named query is not aware of whether the qu
 
 It's nice to have our queries checked at startup time.
 It's even better to have them checked at compile time.
-Back in <<generated-query-methods>>, we mentioned that the Metamodel Generator can do that for us, and we presented that as a reason to use `@NamedQuery`.
+In <<organizing-persistence>>, we mentioned that the Metamodel Generator can do that for us, with the help of the `@CheckHQL` annotation, and we presented that as a reason to use `@NamedQuery`.
 
 But actually, Hibernate has a separate <<query-validator,Query Validator>> capable of performing compile-time validation of HQL query strings that occur as arguments to `createQuery()` and friends.
 If we use the Query Validator, there's not much advantage to the use of named queries.
@@ -1215,3 +1212,4 @@ In this section we'll quickly sketch some general strategies for avoiding "quagm
   (Sure, we can be a bit cantankerous at times, but we _do_ always want you to be successful.)
 - Always consider other options.
   You don't have to use Hibernate for _everything_.
+

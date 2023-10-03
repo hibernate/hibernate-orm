@@ -99,7 +99,7 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 				(sql) -> executionContext.getSession()
 						.getJdbcCoordinator()
 						.getStatementPreparer()
-						.prepareStatement( sql ),
+						.prepareQueryStatement( sql, false, null ),
 				ListResultsConsumer.instance( uniqueSemantic )
 		);
 	}
@@ -796,6 +796,11 @@ public class JdbcSelectExecutorStandardImpl implements JdbcSelectExecutor {
 		@Override
 		public Callback getCallback() {
 			return context.getCallback();
+		}
+
+		@Override
+		public boolean hasCallbackActions() {
+			return context.hasCallbackActions();
 		}
 
 		@Override

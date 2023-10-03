@@ -94,6 +94,7 @@ public abstract class AnnotationMeta implements Metamodel {
 					final SqmStatement<?> statement =
 							Validation.validate(
 									hql,
+									null,
 									true,
 									// If we are in the scope of @CheckHQL, semantic errors in the
 									// query result in compilation errors. Otherwise, they only

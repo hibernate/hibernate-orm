@@ -20,6 +20,7 @@ import org.hibernate.mapping.Value;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.Test;
 
 import static org.hibernate.testing.junit4.ExtraAssertions.assertJdbcTypeCode;
@@ -32,7 +33,7 @@ public class FieldAccessedNestedEmbeddableMetadataTest {
 
 	@Test
 	public void testEnumTypeInterpretation() {
-		StandardServiceRegistry ssr = new StandardServiceRegistryBuilder().build();
+		StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistry();
 
 		try {
 			final Metadata metadata = new MetadataSources( ssr )
@@ -48,7 +49,7 @@ public class FieldAccessedNestedEmbeddableMetadataTest {
 			Component investmentMetadata = (Component) investmentsValue.getElement();
 			Value descriptionValue = investmentMetadata.getProperty( "description" ).getValue();
 			assertEquals( 1, descriptionValue.getColumnSpan() );
-			Column selectable = (Column) descriptionValue.getColumnIterator().next();
+			Column selectable = (Column) descriptionValue.getSelectables().get( 0 );
 			assertEquals( (Long) 500L, selectable.getLength() );
 			Component amountMetadata = (Component) investmentMetadata.getProperty( "amount" ).getValue();
 			SimpleValue currencyMetadata = (SimpleValue) amountMetadata.getProperty( "currency" ).getValue();

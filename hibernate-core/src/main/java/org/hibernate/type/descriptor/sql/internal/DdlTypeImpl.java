@@ -10,6 +10,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.type.SqlTypes;
+import org.hibernate.type.descriptor.java.CharacterJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
@@ -24,24 +25,36 @@ public class DdlTypeImpl implements DdlType {
 	private final int sqlTypeCode;
 	private final String typeNamePattern;
 	private final String castTypeNamePattern;
+	private final String castTypeName;
 	private final boolean castTypeNameIsStatic;
 	final Dialect dialect;
 
 	public DdlTypeImpl(int sqlTypeCode, String typeNamePattern, Dialect dialect) {
-		this( sqlTypeCode, typeNamePattern, typeNamePattern, dialect );
+		this( sqlTypeCode, typeNamePattern, typeNamePattern, typeNamePattern, dialect );
 	}
 
 	public DdlTypeImpl(
 			int sqlTypeCode,
 			String typeNamePattern,
-			String castTypeNamePattern,
+			String castTypeName,
+			Dialect dialect) {
+		this( sqlTypeCode, typeNamePattern, null, castTypeName, dialect );
+	}
+
+	public DdlTypeImpl(
+			int sqlTypeCode,
+			String typeNamePattern,
+			String castTypeNamePattern, //optional, usually null
+			String castTypeName,
 			Dialect dialect) {
 		this.sqlTypeCode = sqlTypeCode;
 		this.typeNamePattern = typeNamePattern;
 		this.castTypeNamePattern = castTypeNamePattern;
-		this.castTypeNameIsStatic = !castTypeNamePattern.contains( "$s" )
-				&& !castTypeNamePattern.contains( "$l" )
-				&& !castTypeNamePattern.contains( "$p" );
+		this.castTypeName = castTypeName;
+		this.castTypeNameIsStatic =
+				!castTypeName.contains( "$s" )
+				&& !castTypeName.contains( "$p" )
+				&& !castTypeName.contains( "$l" );
 		this.dialect = dialect;
 	}
 
@@ -58,7 +71,7 @@ public class DdlTypeImpl implements DdlType {
 			final int parenEnd = typeNamePattern.lastIndexOf( ')' );
 			return parenEnd + 1 == typeNamePattern.length()
 					? typeNamePattern.substring( 0, paren )
-					: ( typeNamePattern.substring( 0, paren ) + typeNamePattern.substring( parenEnd + 1 ) );
+					: typeNamePattern.substring( 0, paren ) + typeNamePattern.substring( parenEnd + 1 );
 		}
 		return typeNamePattern;
 	}
@@ -79,38 +92,40 @@ public class DdlTypeImpl implements DdlType {
 				//needed for cast(x as BigInteger(p))
 				scale = javaType.getDefaultSqlScale( dialect, jdbcType );
 			}
+			return castTypeNamePattern == null
+					? getTypeName( length, precision, scale )
+					: replace( castTypeNamePattern, length, precision, scale );
 		}
-
-		return getTypeName( length, precision, scale );
 	}
 
 	@Override
 	public String getCastTypeName(JdbcType jdbcType, JavaType<?> javaType) {
-		if ( castTypeNameIsStatic ) {
-			return castTypeNamePattern;
+		if ( javaType instanceof CharacterJavaType && jdbcType.isString() ) {
+			// nasty special case for casting to Character
+			return getCastTypeName( jdbcType, javaType, 1L, null, null );
 		}
-		Long length = null;
-		Integer precision = null;
-		Integer scale = null;
+		else if ( castTypeNameIsStatic ) {
+			return castTypeName;
+		}
+		else {
+			final Size size = dialect.getSizeStrategy()
+					.resolveSize( jdbcType, javaType, null, null, defaultLength( jdbcType ) );
+			return replace( castTypeName, size.getLength(), size.getPrecision(), size.getScale() );
+		}
+	}
+
+	//TODO: move this to JdbcType??
+	private Long defaultLength(JdbcType jdbcType) {
 		switch ( jdbcType.getDdlTypeCode() ) {
 			case SqlTypes.VARCHAR:
-				length = (long) dialect.getMaxVarcharLength();
-				break;
+				return (long) dialect.getMaxVarcharLength();
 			case SqlTypes.NVARCHAR:
-				length = (long) dialect.getMaxNVarcharLength();
-				break;
+				return (long) dialect.getMaxNVarcharLength();
 			case SqlTypes.VARBINARY:
-				length = (long) dialect.getMaxVarbinaryLength();
-				break;
+				return (long) dialect.getMaxVarbinaryLength();
+			default:
+				return null;
 		}
-		final Size size = dialect.getSizeStrategy().resolveSize(
-				jdbcType,
-				javaType,
-				precision,
-				scale,
-				length
-		);
-		return replace( castTypeNamePattern, size.getLength(), size.getPrecision(), size.getScale() );
 	}
 
 	/**

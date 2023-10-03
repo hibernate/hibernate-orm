@@ -46,6 +46,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 
 	@Override
 	public String getAttributeDeclarationString() {
+		final List<String> paramTypes = parameterTypes();
 		final StringBuilder declaration = new StringBuilder();
 		comment( declaration );
 		modifiers( declaration );
@@ -86,7 +87,9 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		for ( int i = 0; i < paramNames.size(); i ++ ) {
 			final String paramName = paramNames.get(i);
 			final String paramType = paramTypes.get(i);
-			if ( !isSessionParameter(paramType) ) {
+			if ( !isSessionParameter(paramType)
+					&& !isPageParam(paramType)
+					&& !isOrderParam(paramType) ) {
 				if ( first ) {
 					first = false;
 				}
@@ -94,27 +97,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 					declaration
 							.append(", ");
 				}
-				declaration
-						.append("\n\t\t\t");
-				if ( isNullable(i) && !isPrimitive(paramType) ) {
-					declaration
-							.append(paramName)
-							.append("==null")
-							.append("\n\t\t\t\t? ")
-							.append("entity");
-					path( declaration, paramName );
-					declaration
-							.append(".isNull()")
-							.append("\n\t\t\t\t: ");
-				}
-				declaration
-						.append("builder.equal(entity");
-				path( declaration, paramName );
-				declaration
-						.append(", ")
-						//TODO: only safe if we are binding literals as parameters!!!
-						.append(paramName)
-						.append(')');
+				parameter( declaration, i, paramName, paramType );
 			}
 		}
 		declaration
@@ -122,11 +105,12 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 				.append("\n\treturn ")
 				.append(sessionName)
 				.append(".createQuery(query)");
+		final boolean hasOrderParameter = paramTypes.stream().anyMatch(AbstractQueryMethod::isOrderParam);
 		final boolean hasEnabledFetchProfiles = !fetchProfiles.isEmpty();
 		final boolean hasNativeReturnType =
 				containerType != null && containerType.startsWith("org.hibernate");
 		final boolean unwrap =
-				( hasEnabledFetchProfiles || hasNativeReturnType )
+				( hasOrderParameter || hasEnabledFetchProfiles || hasNativeReturnType )
 						&& isUsingEntityManager();
 		if ( unwrap ) {
 			declaration
@@ -134,16 +118,26 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 					.append(annotationMetaEntity.importType(Constants.HIB_SELECTION_QUERY))
 					.append(".class)");
 		}
+		for ( int i = 0; i < paramNames.size(); i ++ ) {
+			final String paramName = paramNames.get(i);
+			final String paramType = paramTypes.get(i);
+			if ( isPageParam(paramType) ) {
+				setPage( declaration, paramName );
+			}
+			else if ( isOrderParam(paramType) ) {
+				setOrder( declaration, true, paramName, paramType );
+			}
+		}
 		enableFetchProfile( declaration );
 		if ( containerType == null) {
-			if ( unwrap || hasEnabledFetchProfiles) {
+			if ( unwrap || hasEnabledFetchProfiles ) {
 				declaration.append("\n\t\t\t");
 			}
 			declaration
 					.append(".getSingleResult()");
 		}
 		else if ( containerType.equals(Constants.LIST) ) {
-			if ( unwrap || hasEnabledFetchProfiles ) {
+			if ( unwrap || hasOrderParameter || hasEnabledFetchProfiles ) {
 				declaration.append("\n\t\t\t");
 			}
 			declaration
@@ -152,6 +146,30 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		declaration
 				.append(";\n}");
 		return declaration.toString();
+	}
+
+	private void parameter(StringBuilder declaration, int i, String paramName, String paramType) {
+		declaration
+				.append("\n\t\t\t");
+		if ( isNullable(i) && !isPrimitive(paramType) ) {
+			declaration
+					.append(paramName)
+					.append("==null")
+					.append("\n\t\t\t\t? ")
+					.append("entity");
+			path( declaration, paramName );
+			declaration
+					.append(".isNull()")
+					.append("\n\t\t\t\t: ");
+		}
+		declaration
+				.append("builder.equal(entity");
+		path( declaration, paramName );
+		declaration
+				.append(", ")
+				//TODO: only safe if we are binding literals as parameters!!!
+				.append(paramName)
+				.append(')');
 	}
 
 	private void path(StringBuilder declaration, String paramName) {

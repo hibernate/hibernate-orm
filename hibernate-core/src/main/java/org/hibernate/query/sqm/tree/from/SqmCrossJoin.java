@@ -56,19 +56,23 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	}
 
 	@Override
+	public boolean isImplicitlySelectable() {
+		return true;
+	}
+
+	@Override
 	public SqmCrossJoin<T> copy(SqmCopyContext context) {
 		final SqmCrossJoin<T> existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmRoot<?> rootCopy = getRoot().copy( context );
 		final SqmCrossJoin<T> path = context.registerCopy(
 				this,
 				new SqmCrossJoin<>(
-						getNavigablePathCopy( rootCopy ),
+						getNavigablePath(),
 						getReferencedPathSource(),
 						getExplicitAlias(),
-						rootCopy
+						getRoot().copy( context )
 				)
 		);
 		copyTo( path, context );

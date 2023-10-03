@@ -54,7 +54,7 @@ import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
  * bytecode tricks. The tricks used depend on whether build-time bytecode enhancement
  * is enabled.
  * <p>
- * When bytecode enhancement is <em>not</em> used, an unfetched lazy association* is
+ * When bytecode enhancement is <em>not</em> used, an unfetched lazy association is
  * represented by a <em>proxy object</em> which holds the identifier (foreign key) of
  * the associated entity instance.
  * <ul>
@@ -305,7 +305,7 @@ public final class Hibernate {
 	 * @return true if the named property of the object is not listed as uninitialized;
 	 *         false otherwise
 	 */
-	public <E, T> boolean isPropertyInitialized(E entity, Attribute<E, T> attribute) {
+	public <E> boolean isPropertyInitialized(E entity, Attribute<? super E, ?> attribute) {
 		return isPropertyInitialized( entity, attribute.getName() );
 	}
 

@@ -292,7 +292,7 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			throw new AssertionFailure( "Building implicit column but the column is not implicit" );
 		}
 		for ( Column synthCol: referencedValue.getColumns() ) {
-			this.linkValueUsingDefaultColumnNaming( synthCol, referencedEntity, value );
+			linkValueUsingDefaultColumnNaming( synthCol, referencedEntity, value );
 		}
 		//reset for the future
 		setMappingColumn( null );
@@ -302,11 +302,21 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 			Column referencedColumn,
 			PersistentClass referencedEntity,
 			SimpleValue value) {
+		int columnIndex = getParent().getJoinColumns().indexOf(this);
+		linkValueUsingDefaultColumnNaming( columnIndex, referencedColumn, referencedEntity, value );
+	}
+
+	public void linkValueUsingDefaultColumnNaming(
+			int columnIndex,
+			Column referencedColumn,
+			PersistentClass referencedEntity,
+			SimpleValue value) {
 		final String logicalReferencedColumn = getBuildingContext().getMetadataCollector()
 				.getLogicalColumnName( referencedEntity.getTable(), referencedColumn.getQuotedName() );
-		final String columnName = getParent().buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
+		final String columnName = defaultColumnName( columnIndex, referencedEntity, logicalReferencedColumn );
 		//yuk side effect on an implicit column
 		setLogicalColumnName( columnName );
+		setImplicit( true );
 		setReferencedColumn( logicalReferencedColumn );
 		final Column mappingColumn = getMappingColumn();
 		initMappingColumn(
@@ -322,6 +332,30 @@ public class AnnotatedJoinColumn extends AnnotatedColumn {
 				false
 		);
 		linkWithValue( value );
+	}
+
+	private String defaultColumnName(int columnIndex, PersistentClass referencedEntity, String logicalReferencedColumn) {
+		final AnnotatedJoinColumns parent = getParent();
+		if ( parent.hasMapsId() ) {
+			// infer the join column of the association
+			// from the name of the mapped primary key
+			// column (this is not required by the JPA
+			// spec) and is arguably backwards, given
+			// the name of the @MapsId annotation, but
+			// it's better than just having two different
+			// column names which disagree
+			final Column column = parent.resolveMapsId().getValue().getColumns().get( columnIndex );
+//			return column.getQuotedName();
+			if ( column.isExplicit() ) {
+				throw new AnnotationException( "Association '" + parent.getPropertyName()
+						+ "' in entity '" + parent.getPropertyHolder().getEntityName()
+						+ "' is annotated '@MapsId' but refers to a property '"
+						+ parent.getMapsId() + "' which has an explicit column mapping" );
+			}
+		}
+//		else {
+			return parent.buildDefaultColumnName( referencedEntity, logicalReferencedColumn );
+//		}
 	}
 
 	public void addDefaultJoinColumnName(PersistentClass referencedEntity, String logicalReferencedColumn) {

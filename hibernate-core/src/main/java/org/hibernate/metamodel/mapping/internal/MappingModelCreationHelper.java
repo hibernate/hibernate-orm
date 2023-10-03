@@ -101,7 +101,6 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
-import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_DEBUG_ENABLED;
 import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
@@ -207,6 +206,7 @@ public class MappingModelCreationHelper {
 
 		final FetchTiming fetchTiming;
 		final FetchStyle fetchStyle;
+		final boolean partitioned;
 		if ( declaringType instanceof EmbeddableMappingType ) {
 			if ( bootProperty.isLazy() ) {
 				MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
@@ -217,10 +217,12 @@ public class MappingModelCreationHelper {
 			}
 			fetchTiming = FetchTiming.IMMEDIATE;
 			fetchStyle = FetchStyle.JOIN;
+			partitioned = value.isPartitionKey() && !( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping().isVirtual();
 		}
 		else {
 			fetchTiming = bootProperty.isLazy() ? FetchTiming.DELAYED : FetchTiming.IMMEDIATE;
 			fetchStyle = bootProperty.isLazy() ? FetchStyle.SELECT : FetchStyle.JOIN;
+			partitioned = value.isPartitionKey();
 		}
 
 		return new BasicAttributeMapping(
@@ -244,7 +246,7 @@ public class MappingModelCreationHelper {
 				nullable,
 				insertable,
 				updateable,
-				value.isPartitionKey(),
+				partitioned,
 				attrType,
 				declaringType,
 				propertyAccess
@@ -913,7 +915,7 @@ public class MappingModelCreationHelper {
 
 		if ( fkTarget instanceof BasicValuedModelPart ) {
 			final BasicValuedModelPart simpleFkTarget = (BasicValuedModelPart) fkTarget;
-			final Iterator<Selectable> columnIterator = bootValueMapping.getColumnIterator();
+			final Iterator<Selectable> columnIterator = bootValueMapping.getSelectables().iterator();
 			final Table table = bootValueMapping.getTable();
 			final String tableExpression = getTableIdentifierExpression( table, creationProcess );
 			final PropertyAccess declaringKeyPropertyAccess;
@@ -1707,7 +1709,7 @@ public class MappingModelCreationHelper {
 					|| value instanceof ManyToOne && value.isNullable() && ( (ManyToOne) value ).isIgnoreNotFound() ) {
 				fetchTiming = FetchTiming.IMMEDIATE;
 				if ( lazy ) {
-					if ( MAPPING_MODEL_CREATION_DEBUG_ENABLED ) {
+					if ( MAPPING_MODEL_CREATION_MESSAGE_LOGGER.isDebugEnabled() ) {
 						MAPPING_MODEL_CREATION_MESSAGE_LOGGER.debugf(
 								"Forcing FetchTiming.IMMEDIATE for to-one association : %s.%s",
 								declaringType.getNavigableRole(),

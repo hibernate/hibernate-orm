@@ -217,7 +217,7 @@ public interface SessionFactoryImplementor
 	 * @deprecated Use {@link #getMappingMetamodel()}.{@link MappingMetamodelImplementor#resolveParameterBindType(Object)}
 	 */
 	@Override @Deprecated(since = "6.2", forRemoval = true)
-	<T> BindableType<? extends T> resolveParameterBindType(T bindValue);
+	<T> BindableType<? super T> resolveParameterBindType(T bindValue);
 
 	/**
 	 * @deprecated Use {@link #getMappingMetamodel()}.{@link MappingMetamodelImplementor#resolveParameterBindType(Class)}

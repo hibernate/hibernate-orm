@@ -19,6 +19,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.RequiresDialects;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -87,7 +88,7 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	public void testSynonymUsingIndividuallySchemaValidator() {
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,
@@ -111,7 +112,7 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 	public void testSynonymUsingDefaultStrategySchemaValidator() {
 		// Hibernate should use JdbcMetadaAccessStrategy.INDIVIDUALLY when
 		// AvailableSettings.ENABLE_SYNONYMS is true.
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
 				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
 				.build();
 		try {
@@ -132,7 +133,9 @@ public class SynonymValidationTest extends BaseSessionFactoryFunctionalTest {
 		// Hibernate should use JdbcMetadaAccessStrategy.INDIVIDUALLY when
 		// AvailableSettings.ENABLE_SYNONYMS is true,
 		// even if JdbcMetadaAccessStrategy.GROUPED is specified.
-		ssr = new StandardServiceRegistryBuilder()
+		ssr = ServiceRegistryUtil.serviceRegistryBuilder()
+				// Reset the connection provider to avoid rebuilding the shared connection pool for this single test
+				.applySetting( AvailableSettings.CONNECTION_PROVIDER, "" )
 				.applySetting( AvailableSettings.ENABLE_SYNONYMS, "true" )
 				.applySetting(
 						AvailableSettings.HBM2DDL_JDBC_METADATA_EXTRACTOR_STRATEGY,

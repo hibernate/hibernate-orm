@@ -183,13 +183,13 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void setFlushMode(FlushModeType flushMode);
 
 	/**
-	 * Set the current {@link FlushMode flush mode} for this session.
+	 * Set the current {@linkplain FlushMode flush mode} for this session.
 	 * <p>
 	 * <em>Flushing</em> is the process of synchronizing the underlying persistent
 	 * store with persistable state held in memory. The current flush mode determines
 	 * when the session is automatically flushed.
 	 * <p>
-	 * The {@link FlushMode#AUTO default flush mode} is sometimes unnecessarily
+	 * The {@linkplain FlushMode#AUTO default flush mode} is sometimes unnecessarily
 	 * aggressive. For a logically "read only" session, it's reasonable to set the
 	 * session's flush mode to {@link FlushMode#MANUAL} at the start of the session
 	 * in order to avoid some unnecessary work.
@@ -201,7 +201,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void setHibernateFlushMode(FlushMode flushMode);
 
 	/**
-	 * Get the current {@link FlushModeType JPA flush mode} for this session.
+	 * Get the current {@linkplain FlushModeType JPA flush mode} for this session.
 	 *
 	 * @return the {@link FlushModeType} currently in effect
 	 */
@@ -209,14 +209,14 @@ public interface Session extends SharedSessionContract, EntityManager {
 	FlushModeType getFlushMode();
 
 	/**
-	 * Get the current {@link FlushMode flush mode} for this session.
+	 * Get the current {@linkplain FlushMode flush mode} for this session.
 	 *
 	 * @return the {@link FlushMode} currently in effect
 	 */
 	FlushMode getHibernateFlushMode();
 
 	/**
-	 * Set the current {@link CacheMode cache mode} for this session.
+	 * Set the current {@linkplain CacheMode cache mode} for this session.
 	 * <p>
 	 * The cache mode determines the manner in which this session can interact with
 	 * the second level cache.
@@ -226,7 +226,7 @@ public interface Session extends SharedSessionContract, EntityManager {
 	void setCacheMode(CacheMode cacheMode);
 
 	/**
-	 * Get the current {@link CacheMode cache mode} for this session.
+	 * Get the current {@linkplain CacheMode cache mode} for this session.
 	 *
 	 * @return the current cache mode
 	 */
@@ -726,9 +726,9 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * database. This operation cascades to associated instances if the association
 	 * is mapped with {@link jakarta.persistence.CascadeType#PERSIST}.
 	 * <p>
-	 * For entities with a {@link jakarta.persistence.GeneratedValue generated id},
-	 * {@code persist()} ultimately results in generation of an identifier for the
-	 * given instance. But this may happen asynchronously, when the session is
+	 * For an entity with a {@linkplain jakarta.persistence.GeneratedValue generated}
+	 * id, {@code persist()} ultimately results in generation of an identifier for
+	 * the given instance. But this may happen asynchronously, when the session is
 	 * {@linkplain #flush() flushed}, depending on the identifier generation strategy.
 	 *
 	 * @param object a transient instance to be made persistent
@@ -858,12 +858,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Reread the state of the given managed instance associated with this session
 	 * from the underlying database. This may be useful:
 	 * <ul>
-	 * <li>when a database trigger alters the object state upon insert or update
+	 * <li>when a database trigger alters the object state upon insert or update,
 	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update
-	 *     or delete statement
+	 *     or delete statement,
 	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native
-	 *     SQL statement
-	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
+	 *     SQL statement, or
+	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}.
 	 * </ul>
 	 * <p>
 	 * This operation cascades to associated instances if the association is mapped
@@ -880,12 +880,12 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 * Reread the state of the given managed instance associated with this session
 	 * from the underlying database. This may be useful:
 	 * <ul>
-	 * <li>when a database trigger alters the object state upon insert or update
+	 * <li>when a database trigger alters the object state upon insert or update,
 	 * <li>after {@linkplain #createMutationQuery(String) executing} any HQL update
-	 *     or delete statement
+	 *     or delete statement,
 	 * <li>after {@linkplain #createNativeMutationQuery(String) executing} a native
-	 *     SQL statement
-	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}
+	 *     SQL statement, or
+	 * <li>after inserting a {@link java.sql.Blob} or {@link java.sql.Clob}.
 	 * </ul>
 	 * <p>
 	 * This operation cascades to associated instances if the association is mapped

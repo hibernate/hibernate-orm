@@ -9,7 +9,10 @@ package org.hibernate.orm.test.softdelete;
 import java.sql.Statement;
 import java.util.List;
 
+import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.type.YesNoConverter;
 
@@ -31,7 +34,7 @@ import static org.assertj.core.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
-@DomainModel( annotatedClasses = SimpleSoftDeleteTests.SimpleEntity.class )
+@DomainModel(annotatedClasses = { SimpleSoftDeleteTests.SimpleEntity.class, SimpleSoftDeleteTests.BatchLoadable.class })
 @SessionFactory(useCollectingStatementInspector = true)
 public class SimpleSoftDeleteTests {
 	@BeforeEach
@@ -40,6 +43,9 @@ public class SimpleSoftDeleteTests {
 			session.persist( new SimpleEntity( 1, "first" ) );
 			session.persist( new SimpleEntity( 2, "second" ) );
 			session.persist( new SimpleEntity( 3, "third" ) );
+
+			session.persist( new BatchLoadable( 1, "first" ) );
+			session.persist( new BatchLoadable( 2, "second" ) );
 
 			session.flush();
 
@@ -90,6 +96,58 @@ public class SimpleSoftDeleteTests {
 
 			final SimpleEntity reference3 = session.getReference( SimpleEntity.class, 3 );
 			reference3.getName();
+		} );
+	}
+
+	@Test
+	void testMultiLoading(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+
+		scope.inTransaction( (session) -> {
+			statementInspector.clear();
+			final List<SimpleEntity> results = session
+					.byMultipleIds( SimpleEntity.class )
+					// otherwise the first position would contain a null for #1
+					.enableOrderedReturn( false )
+					.multiLoad( 1, 2, 3 );
+			assertThat( results ).hasSize( 2 );
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "removed='N'" );
+		} );
+	}
+
+	@Test
+	void testNaturalIdLoading(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+
+		scope.inTransaction( (session) -> {
+			statementInspector.clear();
+			session.bySimpleNaturalId( SimpleEntity.class ).load( "second" );
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "removed='N'" );
+		} );
+	}
+
+	@Test
+	void testBatchLoading(SessionFactoryScope scope) {
+		final SQLStatementInspector statementInspector = scope.getCollectingStatementInspector();
+
+		scope.inTransaction( (session) -> {
+			statementInspector.clear();
+			final BatchLoadable first = session.getReference( BatchLoadable.class, 1 );
+			final BatchLoadable second = session.getReference( BatchLoadable.class, 2 );
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 0 );
+
+			assertThat( Hibernate.isInitialized( first ) ).isFalse();
+			assertThat( Hibernate.isInitialized( second ) ).isFalse();
+
+			// trigger load
+			first.getName();
+			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "active='Y'" );
+
+			assertThat( Hibernate.isInitialized( first ) ).isTrue();
+			assertThat( Hibernate.isInitialized( second ) ).isTrue();
 		} );
 	}
 
@@ -163,6 +221,7 @@ public class SimpleSoftDeleteTests {
 	public static class SimpleEntity {
 		@Id
 		private Integer id;
+		@NaturalId
 		private String name;
 
 		public SimpleEntity() {
@@ -179,6 +238,36 @@ public class SimpleSoftDeleteTests {
 
 		public String getName() {
 			return name;
+		}
+	}
+
+	@Entity(name="BatchLoadable")
+	@Table(name="BatchLoadable")
+	@BatchSize(size = 5)
+	@SoftDelete(columnName = "active", converter = ReverseYesNoConverter.class)
+	public static class BatchLoadable {
+		@Id
+		private Integer id;
+		private String name;
+
+		public BatchLoadable() {
+		}
+
+		public BatchLoadable(Integer id, String name) {
+			this.id = id;
+			this.name = name;
+		}
+
+		public Integer getId() {
+			return id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
 		}
 	}
 }

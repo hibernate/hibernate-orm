@@ -30,6 +30,8 @@ import jakarta.persistence.Table;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
+ * Test for collections which contain soft-deletable entities
+ *
  * @author Steve Ebersole
  */
 @DomainModel( annotatedClasses = { CollectionOfSoftDeleteTests.Shelf.class, CollectionOfSoftDeleteTests.Book.class } )

@@ -10,6 +10,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
 import org.hibernate.engine.FetchTiming;
@@ -75,6 +76,7 @@ import org.hibernate.sql.results.graph.collection.internal.SelectEagerCollection
 import org.jboss.logging.Logger;
 
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
+import static org.hibernate.boot.model.internal.SoftDeleteHelper.resolveSoftDeleteMapping;
 
 /**
  * @author Steve Ebersole
@@ -201,8 +203,7 @@ public class PluralAttributeMappingImpl
 			}
 		};
 
-//		softDeleteMapping = resolveSoftDeleteMapping( this, bootDescriptor, getSeparateCollectionTable(), creationProcess.getCreationContext().getDialect() );
-		softDeleteMapping = null;
+		softDeleteMapping = resolveSoftDeleteMapping( this, bootDescriptor, getSeparateCollectionTable(), creationProcess.getCreationContext().getDialect() );
 
 		injectAttributeMapping( elementDescriptor, indexDescriptor, collectionDescriptor, this );
 	}
@@ -423,6 +424,39 @@ public class PluralAttributeMappingImpl
 	@Override
 	public boolean hasPartitionedSelectionMapping() {
 		return false;
+	}
+
+	@Override
+	public void applySoftDeleteRestrictions(TableGroup tableGroup, PredicateConsumer predicateConsumer) {
+		if ( !hasSoftDelete() ) {
+			// short-circuit
+			return;
+		}
+
+		if ( getCollectionDescriptor().isOneToMany()
+				|| getCollectionDescriptor().isManyToMany() ) {
+			// see if the associated entity has soft-delete defined
+			final EntityCollectionPart elementDescriptor = (EntityCollectionPart) getElementDescriptor();
+			final EntityMappingType associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
+			final SoftDeleteMapping softDeleteMapping = associatedEntityDescriptor.getSoftDeleteMapping();
+			if ( softDeleteMapping != null ) {
+				final Predicate softDeleteRestriction = SoftDeleteHelper.createNonSoftDeletedRestriction(
+						tableGroup.resolveTableReference( associatedEntityDescriptor.getSoftDeleteTableDetails().getTableName() ),
+						softDeleteMapping
+				);
+				predicateConsumer.applyPredicate( softDeleteRestriction );
+			}
+		}
+
+		// apply the collection's soft-delete mapping, if one
+		final SoftDeleteMapping softDeleteMapping = getSoftDeleteMapping();
+		if ( softDeleteMapping != null ) {
+			final Predicate softDeleteRestriction = SoftDeleteHelper.createNonSoftDeletedRestriction(
+					tableGroup.resolveTableReference( getSoftDeleteTableDetails().getTableName() ),
+					softDeleteMapping
+			);
+			predicateConsumer.applyPredicate( softDeleteRestriction );
+		}
 	}
 
 	@Override
@@ -736,18 +770,32 @@ public class PluralAttributeMappingImpl
 			Consumer<Predicate> predicateConsumer,
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
+		if ( !hasSoftDelete() ) {
+			// short circuit
+			return;
+		}
+
 		if ( getElementDescriptor() instanceof EntityCollectionPart ) {
 			final EntityMappingType entityMappingType = ( (EntityCollectionPart) getElementDescriptor() ).getAssociatedEntityMappingType();
 			final SoftDeleteMapping softDeleteMapping = entityMappingType.getSoftDeleteMapping();
-			final TableDetails softDeleteTable = entityMappingType.getSoftDeleteTableDetails();
 			if ( softDeleteMapping != null ) {
+				final TableDetails softDeleteTable = entityMappingType.getSoftDeleteTableDetails();
 				predicateConsumer.accept( createNonSoftDeletedRestriction(
 						tableGroup.resolveTableReference( softDeleteTable.getTableName() ),
 						softDeleteMapping,
 						creationState.getSqlExpressionResolver()
 				) );
-
 			}
+		}
+
+		final SoftDeleteMapping softDeleteMapping = getSoftDeleteMapping();
+		if ( softDeleteMapping != null ) {
+			final TableDetails softDeleteTable = getSoftDeleteTableDetails();
+			predicateConsumer.accept( createNonSoftDeletedRestriction(
+					tableGroup.resolveTableReference( softDeleteTable.getTableName() ),
+					softDeleteMapping,
+					creationState.getSqlExpressionResolver()
+			) );
 		}
 	}
 

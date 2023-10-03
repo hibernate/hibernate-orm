@@ -7,7 +7,6 @@
 package org.hibernate.loader.ast.internal;
 
 import org.hibernate.LockOptions;
-import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CollectionKey;
@@ -17,14 +16,10 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.loader.ast.spi.CollectionLoader;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SoftDeleteMapping;
-import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.TableGroup;
-import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.BaseExecutionContext;
@@ -71,23 +66,10 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 				sessionFactory
 		);
 
-		if ( attributeMapping.getCollectionDescriptor().isOneToMany()
-				|| attributeMapping.getCollectionDescriptor().isManyToMany() ) {
-			// see if the associated entity has soft-delete defined
-			final EntityCollectionPart elementDescriptor = (EntityCollectionPart) attributeMapping.getElementDescriptor();
-			final EntityMappingType associatedEntityDescriptor = elementDescriptor.getAssociatedEntityMappingType();
-			final SoftDeleteMapping softDeleteMapping = associatedEntityDescriptor.getSoftDeleteMapping();
-			if ( softDeleteMapping != null ) {
-				final QuerySpec querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
-				final FromClause fromClause = querySpec.getFromClause();
-				final TableGroup tableGroup = fromClause.getRoots().get( 0 );
-				final Predicate softDeleteRestriction = SoftDeleteHelper.createNonSoftDeletedRestriction(
-						tableGroup.resolveTableReference( associatedEntityDescriptor.getSoftDeleteTableDetails().getTableName() ),
-						softDeleteMapping
-				);
-				querySpec.applyPredicate( softDeleteRestriction );
-			}
-		}
+		final QuerySpec querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
+		final FromClause fromClause = querySpec.getFromClause();
+		final TableGroup tableGroup = fromClause.getRoots().get( 0 );
+		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
 
 		this.jdbcParameters = jdbcParametersBuilder.build();
 		this.jdbcSelect = sessionFactory.getJdbcServices()

@@ -44,6 +44,13 @@ public interface PluralAttributeMapping
 	@Override
 	CollectionMappingType<?> getMappedType();
 
+	@FunctionalInterface
+	interface PredicateConsumer {
+		void applyPredicate(Predicate predicate);
+	}
+
+	void applySoftDeleteRestrictions(TableGroup tableGroup, PredicateConsumer predicateConsumer);
+
 	interface IndexMetadata {
 		CollectionPart getIndexDescriptor();
 		int getListIndexBase();

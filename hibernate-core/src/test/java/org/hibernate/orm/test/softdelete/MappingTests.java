@@ -6,8 +6,6 @@
  */
 package org.hibernate.orm.test.softdelete;
 
-import java.util.Collection;
-
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.type.BooleanAsBooleanConverter;
@@ -16,20 +14,12 @@ import org.hibernate.type.TrueFalseConverter;
 import org.hibernate.type.YesNoConverter;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.NotImplementedYet;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.Basic;
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 
 /**
@@ -43,9 +33,7 @@ import jakarta.persistence.Table;
 		MappingTests.NumericEntity.class,
 		MappingTests.TrueFalseEntity.class,
 		MappingTests.YesNoEntity.class,
-		MappingTests.ReversedYesNoEntity.class,
-		MappingTests.CollectionOwner.class,
-		MappingTests.CollectionOwned.class
+		MappingTests.ReversedYesNoEntity.class
 })
 @SessionFactory(exportSchema = false)
 @SuppressWarnings("unused")
@@ -87,26 +75,6 @@ public class MappingTests {
 				"active",
 				"reversed_yes_no_entity",
 				'N'
-		);
-	}
-
-	@Test
-	@NotImplementedYet
-	void verifyCollectionMappings(SessionFactoryScope scope) {
-		final MappingMetamodelImplementor metamodel = scope.getSessionFactory().getMappingMetamodel();
-
-		MappingVerifier.verifyMapping(
-				metamodel.getCollectionDescriptor( CollectionOwner.class.getName() + ".elements" ).getAttributeMapping().getSoftDeleteMapping(),
-				"deleted",
-				"elements",
-				true
-		);
-
-		MappingVerifier.verifyMapping(
-				metamodel.getCollectionDescriptor( CollectionOwner.class.getName() + ".manyToMany" ).getAttributeMapping().getSoftDeleteMapping(),
-				"gone",
-				"m2m",
-				1
 		);
 	}
 
@@ -153,59 +121,5 @@ public class MappingTests {
 		@Id
 		private Integer id;
 		private String name;
-	}
-
-	@Entity
-	@Table(name="coll_owned")
-	public static class CollectionOwned {
-		@Id
-		private Integer id;
-		@Basic
-		private String name;
-	}
-
-	@Entity
-	@Table(name="coll_owner")
-	public static class CollectionOwner {
-		@Id
-		private Integer id;
-		@Basic
-		private String name;
-
-		@ElementCollection
-		@CollectionTable(name="elements", joinColumns = @JoinColumn(name = "owner_fk"))
-		@Column(name="txt")
-		@SoftDelete
-		private Collection<String> elements;
-
-		@ManyToMany
-		@JoinTable(
-				name = "m2m",
-				joinColumns = @JoinColumn(name = "owner_fk"),
-				inverseJoinColumns = @JoinColumn(name="owned_fk")
-		)
-		@SoftDelete(columnName = "gone", converter = NumericBooleanConverter.class)
-		private Collection<CollectionOwned> manyToMany;
-
-		protected CollectionOwner() {
-			// for Hibernate use
-		}
-
-		public CollectionOwner(Integer id, String name) {
-			this.id = id;
-			this.name = name;
-		}
-
-		public Integer getId() {
-			return id;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
 	}
 }

@@ -112,6 +112,7 @@ import org.hibernate.mapping.SimpleValue;
 import org.hibernate.mapping.Table;
 import org.hibernate.mapping.Value;
 import org.hibernate.metamodel.CollectionClassification;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.spi.EmbeddableInstantiator;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.resource.beans.spi.ManagedBean;
@@ -425,6 +426,12 @@ public abstract class CollectionBinder {
 					"' belongs to an '@Embeddable' class that is contained in an '@ElementCollection' and may not be a "
 					+ annotationName( oneToMany, manyToMany, elementCollection ));
 		}
+
+		if ( oneToMany != null && property.isAnnotationPresent( SoftDelete.class ) ) {
+			throw new UnsupportedMappingException(
+					"@SoftDelete cannot be applied to @OneToMany - " +
+							property.getDeclaringClass().getName() + "." + property.getName()
+			);		}
 
 		if ( property.isAnnotationPresent( OrderColumn.class )
 				&& manyToMany != null && !manyToMany.mappedBy().isEmpty() ) {
@@ -2505,15 +2512,6 @@ public abstract class CollectionBinder {
 	}
 
 	private void processSoftDeletes() {
-		// only needed if we have an element-collection or many-to-many
-		final Value elementValue = collection.getElement();
-		final boolean isElementCollection = elementValue instanceof BasicValue
-				|| elementValue instanceof Component;
-		final boolean isManyToManyCollection = !(elementValue instanceof org.hibernate.mapping.OneToMany);
-		if ( !isElementCollection && !isManyToManyCollection ) {
-			return;
-		}
-
 		assert collection.getCollectionTable() != null;
 
 		final SoftDelete softDelete = extractSoftDelete( property, propertyHolder, buildingContext );

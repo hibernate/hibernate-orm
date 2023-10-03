@@ -6,6 +6,18 @@
  */
 package org.hibernate.persister.collection;
 
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Consumer;
+
 import org.hibernate.AssertionFailure;
 import org.hibernate.FetchMode;
 import org.hibernate.Filter;
@@ -65,7 +77,6 @@ import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SoftDeletableModelPart;
 import org.hibernate.metamodel.mapping.internal.MappingModelCreationHelper;
 import org.hibernate.metamodel.mapping.internal.PluralAttributeMappingImpl;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -120,18 +131,6 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
-
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
@@ -1776,11 +1775,35 @@ public abstract class AbstractCollectionPersister
 				ParameterUsage.RESTRICT,
 				keyColumnCount
 		);
-		final java.util.List<ColumnValueBinding> keyRestrictionBindings = arrayList( keyColumnCount );
-		fkDescriptor.getKeyPart().forEachSelectable( parameterBinders );
-		for ( ColumnValueParameter columnValueParameter : parameterBinders ) {
+		final java.util.List<ColumnValueBinding> restrictionBindings = arrayList( keyColumnCount );
+		applyKeyRestrictions( tableReference, parameterBinders, restrictionBindings );
+
+		//noinspection unchecked,rawtypes
+		return (RestrictedTableMutation) new TableDeleteStandard(
+				tableReference,
+				this,
+				"one-shot delete for " + getRolePath(),
+				restrictionBindings,
+				Collections.emptyList(),
+				parameterBinders,
+				sqlWhereString
+		);
+	}
+
+	protected void applyKeyRestrictions(
+			MutatingTableReference tableReference,
+			ColumnValueParameterList parameterList,
+			java.util.List<ColumnValueBinding> restrictionBindings) {
+
+		final ForeignKeyDescriptor fkDescriptor = getAttributeMapping().getKeyDescriptor();
+		assert fkDescriptor != null;
+
+		final int keyColumnCount = fkDescriptor.getJdbcTypeCount();
+
+		fkDescriptor.getKeyPart().forEachSelectable( parameterList );
+		for ( ColumnValueParameter columnValueParameter : parameterList ) {
 			final ColumnReference columnReference = columnValueParameter.getColumnReference();
-			keyRestrictionBindings.add(
+			restrictionBindings.add(
 					new ColumnValueBinding(
 							columnReference,
 							new ColumnWriteFragment(
@@ -1791,17 +1814,6 @@ public abstract class AbstractCollectionPersister
 					)
 			);
 		}
-
-		//noinspection unchecked,rawtypes
-		return (RestrictedTableMutation) new TableDeleteStandard(
-				tableReference,
-				this,
-				"one-shot delete for " + getRolePath(),
-				keyRestrictionBindings,
-				Collections.emptyList(),
-				parameterBinders,
-				sqlWhereString
-		);
 	}
 
 

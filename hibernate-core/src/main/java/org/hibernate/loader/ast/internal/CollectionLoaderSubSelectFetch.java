@@ -26,6 +26,8 @@ import org.hibernate.loader.ast.spi.CollectionLoader;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -61,6 +63,10 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 				jdbcParameter -> {},
 				session.getFactory()
 		);
+
+		final QuerySpec querySpec = sqlAst.getQueryPart().getFirstQuerySpec();
+		final TableGroup tableGroup = querySpec.getFromClause().getRoots().get( 0 );
+		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
 	}
 
 	@Override

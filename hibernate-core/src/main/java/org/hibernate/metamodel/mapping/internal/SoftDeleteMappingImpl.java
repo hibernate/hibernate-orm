@@ -219,4 +219,9 @@ public class SoftDeleteMappingImpl implements SoftDeleteMapping {
 	public EntityMappingType findContainingEntityMapping() {
 		return softDeletable.findContainingEntityMapping();
 	}
+
+	@Override
+	public String toString() {
+		return "SoftDeleteMappingImpl(" + tableName + "." + columnName + ")";
+	}
 }

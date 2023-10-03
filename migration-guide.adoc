@@ -51,7 +51,7 @@ only the entity with id equals to 2 will be loaded but the proxy will not be ini
 
 [[metamodel-generation]]
 == Integrating Static Metamodel Generation
-The integration of static metamodel generation in a project has changed; the recommended way to do this now is by harnessing the annotation processor classpath. This is true for both gradle and maven.
+The integration of static metamodel generation in a project has changed; the recommended way to do this now is by harnessing the annotation processor classpath. This is true for both Gradle and Maven.
 
 Check out the specific sections in the User Guide for a guideline on how to do this for {userGuideBase}#tooling-gradle-modelgen[Gradle] or {userGuideBase}#tooling-maven-modelgen[Maven].
 

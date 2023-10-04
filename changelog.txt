@@ -3,6 +3,56 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.11.Final (October 04, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32194
+
+** Bug
+    * [HHH-17257] - ElementCollection is missing elements after update if embeddable type has primitive columns marked as nullable
+    * [HHH-17256] - elementcollection embeddable contains only nulls when loading in multiple steps 
+    * [HHH-17255] - Cannot resolve table reference for treated many-to-many map collection simple attribute
+    * [HHH-17243] - org.hibernate.MappingException: Could not resolve named type : duration
+    * [HHH-17242] - Oracle temporal arithmetic performance regression
+    * [HHH-17234] - PostgreSQL: operator does not exist '!=-' exception when using JPA not equals operator '<>' with negative number
+    * [HHH-17231] - HHH-17231 SQLGrammarException when selecting property of grouped join association in subquery
+    * [HHH-17228] - Exception when selecting from a subclass in single table inheritance when another entity has 1-1 attributes of other subclasses
+    * [HHH-17205] - QueryException: could not resolve property: null on OneToOne with composite key
+    * [HHH-17188] - Query Cache contains null values when entity is found in Persistence Context
+    * [HHH-17178] - Is null predicate on treated plural path causes InterpretationException
+    * [HHH-17172] - SerializableProxy: Unable to retrieve matching session factory by name (Hibernate 6 regression?)
+    * [HHH-17170] - Custom @SQLDelete, @SQLDeleteAll and @SQLUpdate not working on associated collections
+    * [HHH-17155] - DynamicInstantiationResult wrong java type constructor selected
+    * [HHH-17131] - Regression in entity streams with associated collections resulting in result duplication
+    * [HHH-17105] - SQL clause from @WhereJoinTable is no longer used for DELETE queries (6.2 regression)
+    * [HHH-17104] - Bug with max() request inside projection
+    * [HHH-17100] - CustomType wrongly calls UserType#disassemble
+    * [HHH-17049] - Bytecode Enhancement, extra records created for associations created in constructor
+    * [HHH-16962] - General documentation improvements
+    * [HHH-16945] - CTE query cycle attribute evaluated incorrectly on MSSQL using collation "Latin1_General_CI_AS"
+    * [HHH-16900] - Iteration of MutationOperation(s) triggers type pollution 
+    * [HHH-16885] - Hibernate 6.1.6 - 6.2.7 changes outer to inner join when EntityGraph and @Id
+    * [HHH-16781] - @JavaType annotation is ignored when Basic type is already registered for same JdbcType/Java class pair
+    * [HHH-15317] - When setting a read-only entity to non-readonly, mutable properties that are user defined types are not cloned
+    * [HHH-13741] - LOG_SLOW_QUERY parameter doesn't always log SQL
+
+** Improvement
+    * [HHH-17286] - Upgrade integration tests to use Oracle JDBC driver version 23.3.0.23.09
+    * [HHH-17282] - Introduce a specialized Map for NavigablePath to Initializer
+    * [HHH-17220] - Avoid runtime lookups of JdbcService from TableGenerator and TableStructure
+    * [HHH-17082] - Improve documentation of configuration settings
+    * [HHH-16706] - Spelling fix in Envers.adoc
+    * [HHH-16403] - Avoid unnecessary wrapping for exceptions/errors thrown by getters/setters
+
+** Task
+    * [HHH-17187] - Avoid 0 byte trailing UUID's in tests
+    * [HHH-17160] - Gradle 8.3 upgrade
+    * [HHH-17087] - Update container images to the latest version
+    * [HHH-17047] - Follow up tasks for Gradle 8.2 upgrade
+    * [HHH-17015] - Upgrade to Gradle 8
+    * [HHH-16675] - Reenable native query OffsetDateTime test after Oracle JDBC update
+
+
 Changes in 6.2.9.Final (September 19, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

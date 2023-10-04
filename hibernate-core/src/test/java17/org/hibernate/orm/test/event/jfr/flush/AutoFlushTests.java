@@ -3,6 +3,7 @@ package org.hibernate.orm.test.event.jfr.flush;
 import java.util.List;
 
 import org.hibernate.event.jfr.FlushEvent;
+import org.hibernate.event.jfr.PartialFlushEvent;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -28,6 +29,7 @@ public class AutoFlushTests {
 
 	@Test
 	@EnableEvent(FlushEvent.NAME)
+	@EnableEvent(PartialFlushEvent.NAME)
 	public void testFlushEvent(SessionFactoryScope scope) {
 		jfrEvents.reset();
 		scope.inTransaction(
@@ -48,6 +50,25 @@ public class AutoFlushTests {
 					RecordedEvent event = events.get( 0 );
 					assertThat( event.getEventType().getName() )
 							.isEqualTo( FlushEvent.NAME );
+					assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
+					assertThat( event.getString( "sessionIdentifier" ) )
+							.isEqualTo( session.getSessionIdentifier().toString() );
+					assertThat( event.getInt( "numberOfEntitiesProcessed" ) )
+							.isEqualTo( 1 );
+					assertThat( event.getInt( "numberOfCollectionsProcessed" ) ).isEqualTo( 0 );
+					assertThat( event.getBoolean( "isAutoFlush" ) ).isTrue();
+
+					events = jfrEvents.events()
+							.filter(
+									recordedEvent ->
+									{
+										String eventName = recordedEvent.getEventType().getName();
+										return eventName.equals( PartialFlushEvent.NAME );
+									}
+							).toList();
+					event = events.get( 0 );
+					assertThat( event.getEventType().getName() )
+							.isEqualTo( PartialFlushEvent.NAME );
 					assertThat( event.getLong( "executionTime" ) ).isGreaterThan( 0 );
 					assertThat( event.getString( "sessionIdentifier" ) )
 							.isEqualTo( session.getSessionIdentifier().toString() );

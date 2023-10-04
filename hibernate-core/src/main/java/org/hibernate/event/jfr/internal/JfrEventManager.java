@@ -19,8 +19,10 @@ import org.hibernate.event.jfr.JdbcConnectionAcquisitionEvent;
 import org.hibernate.event.jfr.JdbcConnectionReleaseEvent;
 import org.hibernate.event.jfr.JdbcPreparedStatementCreationEvent;
 import org.hibernate.event.jfr.JdbcPreparedStatementExecutionEvent;
+import org.hibernate.event.jfr.PartialFlushEvent;
 import org.hibernate.event.jfr.SessionClosedEvent;
 import org.hibernate.event.jfr.SessionOpenEvent;
+import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.build.AllowNonPortable;
 import org.hibernate.persister.collection.CollectionPersister;
@@ -358,7 +360,7 @@ public class JfrEventManager {
 	}
 
 	public static FlushEvent beginFlushEvent() {
-		FlushEvent flushEvent = new FlushEvent();
+		final FlushEvent flushEvent = new FlushEvent();
 		if ( flushEvent.isEnabled() ) {
 			flushEvent.begin();
 			flushEvent.startedAt = System.nanoTime();
@@ -385,6 +387,32 @@ public class JfrEventManager {
 				flushEvent.numberOfEntitiesProcessed = event.getNumberOfEntitiesProcessed();
 				flushEvent.numberOfCollectionsProcessed = event.getNumberOfCollectionsProcessed();
 				flushEvent.isAutoFlush = autoFlush;
+				flushEvent.commit();
+			}
+		}
+	}
+
+	public static PartialFlushEvent beginPartialFlushEvent() {
+		final PartialFlushEvent partialFlushEvent = new PartialFlushEvent();
+		if ( partialFlushEvent.isEnabled() ) {
+			partialFlushEvent.startedAt = System.nanoTime();
+			partialFlushEvent.begin();
+		}
+		return partialFlushEvent;
+	}
+
+	public static void completePartialFlushEvent(
+			PartialFlushEvent flushEvent,
+			AutoFlushEvent event) {
+		if ( flushEvent.isEnabled() ) {
+			flushEvent.end();
+			if ( flushEvent.shouldCommit() ) {
+				flushEvent.executionTime = getExecutionTime( flushEvent.startedAt );
+				EventSource session = event.getSession();
+				flushEvent.sessionIdentifier = getSessionIdentifier( session );
+				flushEvent.numberOfEntitiesProcessed = event.getNumberOfEntitiesProcessed();
+				flushEvent.numberOfCollectionsProcessed = event.getNumberOfCollectionsProcessed();
+				flushEvent.isAutoFlush = true;
 				flushEvent.commit();
 			}
 		}

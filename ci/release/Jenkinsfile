@@ -155,12 +155,13 @@ pipeline {
 						withCredentials([
 							usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'OSSRH_PASSWORD', usernameVariable: 'OSSRH_USER'),
 							usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'PLUGIN_PORTAL_PASSWORD', usernameVariable: 'PLUGIN_PORTAL_USERNAME'),
-							file(credentialsId: 'release.gpg.private-key', variable: 'RELEASE_GPG_PRIVATE_KEY_PATH'), string(credentialsId: 'release.gpg.passphrase', variable: 'RELEASE_GPG_PASSPHRASE')
+							file(credentialsId: 'release.gpg.private-key', variable: 'RELEASE_GPG_PRIVATE_KEY_PATH'),
+							string(credentialsId: 'release.gpg.passphrase', variable: 'RELEASE_GPG_PASSPHRASE')
 						]) {
 							sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
 								// performs documentation upload and Sonatype release
 								// push to github
-								sh ".release/scripts/publish.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.VERSION_BASIS} ${env.NEXT_VERSION_BASIS}"
+								sh ".release/scripts/publish.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.RELEASE_VERSION} ${env.DEVELOPMENT_VERSION}"
 							}
 						}
 					}

@@ -156,7 +156,8 @@ pipeline {
 							usernamePassword(credentialsId: 'ossrh.sonatype.org', passwordVariable: 'OSSRH_PASSWORD', usernameVariable: 'OSSRH_USER'),
 							usernamePassword(credentialsId: 'gradle-plugin-portal-api-key', passwordVariable: 'PLUGIN_PORTAL_PASSWORD', usernameVariable: 'PLUGIN_PORTAL_USERNAME'),
 							file(credentialsId: 'release.gpg.private-key', variable: 'RELEASE_GPG_PRIVATE_KEY_PATH'),
-							string(credentialsId: 'release.gpg.passphrase', variable: 'RELEASE_GPG_PASSPHRASE')
+							string(credentialsId: 'release.gpg.passphrase', variable: 'RELEASE_GPG_PASSPHRASE'),
+							gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
 						]) {
 							sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
 								// performs documentation upload and Sonatype release
@@ -175,10 +176,18 @@ pipeline {
 						checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate-release-scripts.git']])
 					}
 					configFileProvider([configFile(fileId: 'release.config.ssh', targetLocation: "${env.HOME}/.ssh/config"), configFile(fileId: 'release.config.ssh.knownhosts', targetLocation: "${env.HOME}/.ssh/known_hosts")]) {
-						sshagent(['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net']) {
-							dir('.release/hibernate.org') {
-								checkout scmGit(branches: [[name: '*/production']], extensions: [], userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate.org.git']])
-								sh "../scripts/website-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.VERSION_BASIS}"
+						withCredentials([
+								gitUsernamePassword(credentialsId: 'username-and-token.Hibernate-CI.github.com', gitToolName: 'Default')
+						]) {
+							sshagent( ['ed25519.Hibernate-CI.github.com', 'hibernate.filemgmt.jboss.org', 'hibernate-ci.frs.sourceforge.net'] ) {
+								dir( '.release/hibernate.org' ) {
+									checkout scmGit(
+											branches: [[name: '*/production']],
+											extensions: [],
+											userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/hibernate/hibernate.org.git']]
+									)
+									sh "../scripts/website-release.sh ${env.SCRIPT_OPTIONS} ${env.PROJECT} ${env.VERSION_BASIS}"
+								}
 							}
 						}
 					}

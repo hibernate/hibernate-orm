@@ -229,14 +229,14 @@ def releaseChecksTask = tasks.register( "releaseChecks" ) {
             gitBranchLocal = project.property('gitBranch')
         }
         else {
-            gitBranchLocal = executeGitCommand( 'branch', '--show-current' )
+            gitBranchLocal = executeGitCommand( 'branch', '--show-current' ).trim()
         }
 
         if (project.hasProperty('gitRemote')) {
             gitRemoteLocal = project.property('gitRemote')
         }
         else {
-            final String remotes = executeGitCommand( 'remote', 'show' )
+            final String remotes = executeGitCommand( 'remote', 'show' ).trim()
             final List<String> tokens = remotes.tokenize()
             if ( tokens.size() != 1 ) {
                 throw new GradleException( "Could not determine `gitRemote` property for `releaseChecks` tasks." )
@@ -263,7 +263,7 @@ def releaseChecksTask = tasks.register( "releaseChecks" ) {
     }
 }
 
-def preVerifyReleaseTask = tasks.register( "preVerifyRelease" ){
+def preVerifyReleaseTask = tasks.register( "preVerifyRelease" ) {
     group 'Release'
     description 'Pre-verifies a release job execution (Run locally before a CI release)'
 

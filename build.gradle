@@ -33,6 +33,7 @@ plugins {
 	id 'idea'
 	id 'org.jetbrains.gradle.plugin.idea-ext' version '1.0'
 	id 'eclipse'
+	id "com.dorongold.task-tree" version "2.1.1"
 }
 
 apply from: file( 'gradle/module.gradle' )

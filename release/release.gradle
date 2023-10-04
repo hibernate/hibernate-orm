@@ -209,6 +209,58 @@ tasks.named( "uploadDocumentation" ) {
 def releaseChecksTask = tasks.register( "releaseChecks" ) {
     group 'Release'
     description 'Checks and preparation for release'
+
+    doFirst {
+        logger.lifecycle("Checking that the working tree is clean...")
+        String uncommittedFiles = executeGitCommand('status', '--porcelain')
+        if (!uncommittedFiles.isEmpty()) {
+            throw new GradleException(
+                    "Cannot release because there are uncommitted or untracked files in the working tree.\n" +
+                            "Commit or stash your changes first.\n" +
+                            "Uncommitted files:\n    " +
+                            uncommittedFiles
+            );
+        }
+
+        String gitBranchLocal
+        String gitRemoteLocal
+
+        if (project.hasProperty('gitBranch')) {
+            gitBranchLocal = project.property('gitBranch')
+        }
+        else {
+            gitBranchLocal = executeGitCommand( 'branch', '--show-current' )
+        }
+
+        if (project.hasProperty('gitRemote')) {
+            gitRemoteLocal = project.property('gitRemote')
+        }
+        else {
+            final String remotes = executeGitCommand( 'remote', 'show' )
+            final List<String> tokens = remotes.tokenize()
+            if ( tokens.size() != 1 ) {
+                throw new GradleException( "Could not determine `gitRemote` property for `releaseChecks` tasks." )
+            }
+            gitRemoteLocal = tokens.get( 0 )
+        }
+
+        project.ext {
+            gitBranch = gitBranchLocal
+            gitRemote = gitRemoteLocal
+        }
+
+        logger.lifecycle("Switching to branch '${project.gitBranch}'...")
+        executeGitCommand('checkout', project.gitBranch)
+
+        logger.lifecycle("Checking that all commits are pushed...")
+        String diffWithUpstream = executeGitCommand('diff', '@{u}')
+        if (!diffWithUpstream.isEmpty()) {
+            throw new GradleException(
+                    "Cannot perform `ciRelease` tasks because there are un-pushed local commits .\n" +
+                            "Push your commits first."
+            );
+        }
+    }
 }
 
 def preVerifyReleaseTask = tasks.register( "preVerifyRelease" ){
@@ -243,6 +295,7 @@ def changeToReleaseVersionTask = tasks.register( "changeToReleaseVersion" ) {
 }
 
 def gitPreparationForReleaseTask = tasks.register( 'gitPreparationForRelease' ) {
+    dependsOn releaseChecksTask
     dependsOn changeLogFileTask
     dependsOn changeToReleaseVersionTask
 
@@ -286,7 +339,6 @@ void updateVersionFile(String version) {
 }
 
 def publishReleaseArtifactsTask = tasks.register( 'publishReleaseArtifacts' ) {
-    dependsOn releaseChecksTask
     mustRunAfter gitPreparationForReleaseTask
 
     dependsOn uploadDocumentation
@@ -304,7 +356,7 @@ def releaseTask = tasks.register( 'release' ) {
 }
 
 def ciReleaseChecksTask = tasks.register( 'ciReleaseChecks' ) {
-    dependsOn releaseChecks
+
 }
 
 def gitTasksAfterCiReleaseTask = tasks.register( 'gitTasksAfterCiRelease' ) {
@@ -502,58 +554,6 @@ gradle.getTaskGraph().whenReady {tg->
             developmentVersion = developmentVersionLocal;
             createTag = !project.hasProperty('noTag')
             releaseTag = project.createTag ? determineReleaseTag(releaseVersionLocal) : ''
-        }
-
-        logger.lifecycle("Checking that the working tree is clean...")
-        String uncommittedFiles = executeGitCommand('status', '--porcelain')
-        if (!uncommittedFiles.isEmpty()) {
-            throw new GradleException(
-                    "Cannot release because there are uncommitted or untracked files in the working tree.\n" +
-                            "Commit or stash your changes first.\n" +
-                            "Uncommitted files:\n    " +
-                            uncommittedFiles
-            );
-        }
-
-        if (tg.hasTask(project.tasks.ciReleaseChecks)) {
-            String gitBranchLocal
-            String gitRemoteLocal
-
-            if (project.hasProperty('gitBranch')) {
-                gitBranchLocal = project.property('gitBranch')
-            }
-            else {
-                gitBranchLocal = executeGitCommand( 'branch', '--show-current' )
-            }
-
-            if (project.hasProperty('gitRemote')) {
-                gitRemoteLocal = project.property('gitRemote')
-            }
-            else {
-                final String remotes = executeGitCommand( 'remote', 'show' )
-                final List<String> tokens = remotes.tokenize()
-                if ( tokens.size() != 1 ) {
-                    throw new GradleException( "Could not determine `gitRemote` property for `ciRelease` tasks." )
-                }
-                gitRemoteLocal = tokens.get( 0 )
-            }
-
-            project.ext {
-                gitBranch = gitBranchLocal
-                gitRemote = gitRemoteLocal
-            }
-
-            logger.lifecycle("Switching to branch '${project.gitBranch}'...")
-            executeGitCommand('checkout', project.gitBranch)
-
-            logger.lifecycle("Checking that all commits are pushed...")
-            String diffWithUpstream = executeGitCommand('diff', '@{u}')
-            if (!diffWithUpstream.isEmpty()) {
-                throw new GradleException(
-                        "Cannot perform `ciRelease` tasks because there are un-pushed local commits .\n" +
-                                "Push your commits first."
-                );
-            }
         }
     }
 }

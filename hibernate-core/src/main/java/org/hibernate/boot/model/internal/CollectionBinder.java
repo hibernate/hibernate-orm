@@ -431,7 +431,8 @@ public abstract class CollectionBinder {
 			throw new UnsupportedMappingException(
 					"@SoftDelete cannot be applied to @OneToMany - " +
 							property.getDeclaringClass().getName() + "." + property.getName()
-			);		}
+			);
+		}
 
 		if ( property.isAnnotationPresent( OrderColumn.class )
 				&& manyToMany != null && !manyToMany.mappedBy().isEmpty() ) {

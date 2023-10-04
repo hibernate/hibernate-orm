@@ -13,6 +13,7 @@ import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.jfr.CacheGetEvent;
 import org.hibernate.event.jfr.CachePutEvent;
+import org.hibernate.event.jfr.FlushEvent;
 import org.hibernate.event.jfr.JdbcBatchExecutionEvent;
 import org.hibernate.event.jfr.JdbcConnectionAcquisitionEvent;
 import org.hibernate.event.jfr.JdbcConnectionReleaseEvent;
@@ -20,6 +21,7 @@ import org.hibernate.event.jfr.JdbcPreparedStatementCreationEvent;
 import org.hibernate.event.jfr.JdbcPreparedStatementExecutionEvent;
 import org.hibernate.event.jfr.SessionClosedEvent;
 import org.hibernate.event.jfr.SessionOpenEvent;
+import org.hibernate.event.spi.EventSource;
 import org.hibernate.internal.build.AllowNonPortable;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -292,6 +294,7 @@ public class JfrEventManager {
 	public static CacheGetEvent beginCacheGetEvent() {
 		final CacheGetEvent cacheGetEvent = new CacheGetEvent();
 		if ( cacheGetEvent.isEnabled() ) {
+			cacheGetEvent.begin();
 			cacheGetEvent.startedAt = System.nanoTime();
 		}
 		return cacheGetEvent;
@@ -350,6 +353,39 @@ public class JfrEventManager {
 				cacheGetEvent.regionName = region.getName();
 				cacheGetEvent.hit = hit;
 				cacheGetEvent.commit();
+			}
+		}
+	}
+
+	public static FlushEvent beginFlushEvent() {
+		FlushEvent flushEvent = new FlushEvent();
+		if ( flushEvent.isEnabled() ) {
+			flushEvent.begin();
+			flushEvent.startedAt = System.nanoTime();
+		}
+		return flushEvent;
+	}
+
+	public static void completeFlushEvent(
+			FlushEvent flushEvent,
+			org.hibernate.event.spi.FlushEvent event) {
+		completeFlushEvent( flushEvent, event, false );
+	}
+
+	public static void completeFlushEvent(
+			FlushEvent flushEvent,
+			org.hibernate.event.spi.FlushEvent event,
+			boolean autoFlush) {
+		if ( flushEvent.isEnabled() ) {
+			flushEvent.end();
+			if ( flushEvent.shouldCommit() ) {
+				flushEvent.executionTime = getExecutionTime( flushEvent.startedAt );
+				EventSource session = event.getSession();
+				flushEvent.sessionIdentifier = getSessionIdentifier( session );
+				flushEvent.numberOfEntitiesProcessed = event.getNumberOfEntitiesProcessed();
+				flushEvent.numberOfCollectionsProcessed = event.getNumberOfCollectionsProcessed();
+				flushEvent.isAutoFlush = autoFlush;
+				flushEvent.commit();
 			}
 		}
 	}

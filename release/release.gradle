@@ -515,7 +515,7 @@ class ReleaseNote {
 
 gradle.getTaskGraph().whenReady {tg->
 
-    if ( tg.hasTask( project.tasks.releaseChecks )
+    if ( ( tg.hasTask( project.tasks.releasePrepare ) || tg.hasTask( project.tasks.releasePerform ) )
             && ! project.getGradle().getStartParameter().isDryRun() ) {
         String releaseVersionLocal
         String developmentVersionLocal

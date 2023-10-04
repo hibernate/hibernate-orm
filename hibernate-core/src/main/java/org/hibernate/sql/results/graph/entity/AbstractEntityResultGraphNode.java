@@ -43,12 +43,13 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 		final TableGroup entityTableGroup = creationState.getSqlAstCreationState().getFromClauseAccess()
 				.getTableGroup( navigablePath );
 		final EntityResultGraphNode entityResultGraphNode = (EntityResultGraphNode) fetchParent;
-		if ( navigablePath.getParent() == null && !creationState.forceIdentifierSelection() ) {
+		final Fetch fetch = creationState.visitIdentifierFetch( entityResultGraphNode );
+		if ( navigablePath.getParent() == null && !creationState.forceIdentifierSelection() &&
+				( !( fetch instanceof FetchParent ) || !( (FetchParent) fetch ).containsCollectionFetches() ) ) {
 			identifierFetch = null;
-			creationState.visitIdentifierFetch( entityResultGraphNode );
 		}
 		else {
-			identifierFetch = creationState.visitIdentifierFetch( entityResultGraphNode );
+			identifierFetch = fetch;
 		}
 
 		discriminatorFetch = creationState.visitDiscriminatorFetch( entityResultGraphNode );

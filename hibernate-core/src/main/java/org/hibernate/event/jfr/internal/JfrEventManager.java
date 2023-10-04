@@ -10,9 +10,11 @@ import java.sql.PreparedStatement;
 
 import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.jfr.CacheGetEvent;
 import org.hibernate.event.jfr.CachePutEvent;
+import org.hibernate.event.jfr.DirtyCalculationEvent;
 import org.hibernate.event.jfr.FlushEvent;
 import org.hibernate.event.jfr.JdbcBatchExecutionEvent;
 import org.hibernate.event.jfr.JdbcConnectionAcquisitionEvent;
@@ -263,7 +265,7 @@ public class JfrEventManager {
 				cachePutEvent.executionTime = getExecutionTime( cachePutEvent.startedAt );
 				cachePutEvent.sessionIdentifier = getSessionIdentifier( session );
 				cachePutEvent.regionName = cachedDomainDataAccess.getRegion().getName();
-				cachePutEvent.entityName = StatsHelper.INSTANCE.getRootEntityRole( persister ).getFullPath();
+				cachePutEvent.entityName = getEntityName( persister );
 				cachePutEvent.description = description.getText();
 				cachePutEvent.isNaturalId = isNatualId;
 				cachePutEvent.cacheChanged = cacheContentChanged;
@@ -331,7 +333,7 @@ public class JfrEventManager {
 			if ( cacheGetEvent.shouldCommit() ) {
 				cacheGetEvent.executionTime = getExecutionTime( cacheGetEvent.startedAt );
 				cacheGetEvent.sessionIdentifier = getSessionIdentifier( session );
-				cacheGetEvent.entityName = StatsHelper.INSTANCE.getRootEntityRole( persister ).getFullPath();
+				cacheGetEvent.entityName = getEntityName( persister );
 				cacheGetEvent.regionName = region.getName();
 				cacheGetEvent.isNaturalId = isNaturalKey;
 				cacheGetEvent.hit = hit;
@@ -418,6 +420,34 @@ public class JfrEventManager {
 		}
 	}
 
+	public static DirtyCalculationEvent beginDirtyCalculationEvent() {
+		final DirtyCalculationEvent dirtyCalculationEvent = new DirtyCalculationEvent();
+		if ( dirtyCalculationEvent.isEnabled() ) {
+			dirtyCalculationEvent.startedAt = System.nanoTime();
+			dirtyCalculationEvent.begin();
+		}
+		return dirtyCalculationEvent;
+	}
+
+	public static void completeDirtyCalculationEvent(
+			DirtyCalculationEvent dirtyCalculationEvent,
+			SharedSessionContractImplementor session,
+			EntityPersister persister,
+			EntityEntry entry,
+			int[] dirtyProperties) {
+		if ( dirtyCalculationEvent.isEnabled() ) {
+			dirtyCalculationEvent.end();
+			if ( dirtyCalculationEvent.shouldCommit() ) {
+				dirtyCalculationEvent.executionTime = getExecutionTime( dirtyCalculationEvent.startedAt );
+				dirtyCalculationEvent.sessionIdentifier = getSessionIdentifier( session );
+				dirtyCalculationEvent.entityName = getEntityName( persister );
+				dirtyCalculationEvent.entityStatus = entry.getStatus().name();
+				dirtyCalculationEvent.dirty = dirtyProperties != null;
+				dirtyCalculationEvent.commit();
+			}
+		}
+	}
+
 	public enum CacheActionDescription {
 		ENTITY_INSERT( "Entity Insert" ),
 		ENTITY_AFTER_INSERT( "Entity After Insert" ),
@@ -457,4 +487,7 @@ public class JfrEventManager {
 		return session.getSessionIdentifier().toString();
 	}
 
+	private static String getEntityName(EntityPersister persister) {
+		return StatsHelper.INSTANCE.getRootEntityRole( persister ).getFullPath();
+	}
 }

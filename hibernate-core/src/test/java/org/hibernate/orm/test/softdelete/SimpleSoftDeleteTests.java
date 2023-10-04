@@ -61,6 +61,7 @@ public class SimpleSoftDeleteTests {
 		scope.inTransaction( (session) -> session.doWork( (connection) -> {
 			final Statement statement = connection.createStatement();
 			statement.execute( "delete from simple" );
+			statement.execute( "delete from batch_loadable" );
 		} ) );
 	}
 
@@ -242,7 +243,7 @@ public class SimpleSoftDeleteTests {
 	}
 
 	@Entity(name="BatchLoadable")
-	@Table(name="BatchLoadable")
+	@Table(name="batch_loadable")
 	@BatchSize(size = 5)
 	@SoftDelete(columnName = "active", converter = ReverseYesNoConverter.class)
 	public static class BatchLoadable {

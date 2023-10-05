@@ -900,8 +900,7 @@ public class AnnotatedColumn {
 //		}
 		//not following the spec but more clean
 		if ( nullability != Nullability.FORCED_NULL
-				&& inferredData.getClassOrElement().isPrimitive()
-				&& !inferredData.getProperty().isArray() ) {
+				&& !PropertyBinder.isOptional( inferredData.getProperty(), propertyHolder ) ) {
 			column.setNullable( false );
 		}
 		final String propertyName = inferredData.getPropertyName();

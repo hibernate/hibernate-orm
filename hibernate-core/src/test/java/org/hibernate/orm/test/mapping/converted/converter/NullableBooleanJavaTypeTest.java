@@ -34,6 +34,7 @@ public class NullableBooleanJavaTypeTest {
 					car.setId( 1L );
 					car.setName( "TestCar" );
 					car.setMainCar( Boolean.FALSE );
+					car.setMainCars( Boolean.FALSE );
 
 					session.persist( car );
 				}
@@ -43,6 +44,7 @@ public class NullableBooleanJavaTypeTest {
 					final Car entity = session.find( Car.class, 1L );
 					assertEquals( "TestCar", entity.name );
 					assertFalse( entity.mainCar );
+					assertFalse( entity.mainCars );
 				}
 		);
 	}
@@ -56,6 +58,7 @@ public class NullableBooleanJavaTypeTest {
 					car.setId( 2L );
 					car.setName( "MainCar" );
 					car.setMainCar( Boolean.TRUE );
+					car.setMainCars( Boolean.TRUE );
 
 					session.persist( car );
 				}
@@ -65,12 +68,13 @@ public class NullableBooleanJavaTypeTest {
 					final Car entity = session.find( Car.class, 2L );
 					assertEquals( "MainCar", entity.name );
 					assertTrue( entity.mainCar );
+					assertTrue( entity.mainCars );
 				}
 		);
 	}
 
 	@Converter
-	public static class BooleanConverter implements AttributeConverter<Boolean, Long> {
+	public static class BooleanLongConverter implements AttributeConverter<Boolean, Long> {
 
 		private static final Long LONG_TRUE = 1L;
 		private static final Long LONG_FALSE = null;
@@ -82,23 +86,43 @@ public class NullableBooleanJavaTypeTest {
 
 		@Override
 		public Boolean convertToEntityAttribute(Long dbData) {
-			return LONG_TRUE == dbData ? Boolean.TRUE : Boolean.FALSE;
+			return LONG_TRUE.equals( dbData ) ? Boolean.TRUE : Boolean.FALSE;
+		}
+	}
+
+	@Converter
+	public static class BooleanStringConverter implements AttributeConverter<Boolean, String> {
+
+		private static final String STRING_TRUE = "1";
+		private static final String STRING_FALSE = null;
+
+		@Override
+		public String convertToDatabaseColumn(Boolean attribute) {
+			return attribute ? STRING_TRUE : STRING_FALSE;
+		}
+
+		@Override
+		public Boolean convertToEntityAttribute(String dbData) {
+			return STRING_TRUE.equals( dbData ) ? Boolean.TRUE : Boolean.FALSE;
 		}
 	}
 
 	@Entity
-	@Table(name = "CAR")
+	@Table(name = "car")
 	public static class Car implements Serializable {
 
 		@Id
-		@Column(name = "id")
 		private Long id;
 
 		private String name;
 
-		@Convert(converter = BooleanConverter.class)
-		@Column(name = "MAIN_CAR", columnDefinition = "NUMBER(38,0)")
+		@Convert(converter = BooleanLongConverter.class)
+		@Column(columnDefinition = "NUMERIC(38,0)")
 		private Boolean mainCar;
+
+		@Convert(converter = BooleanStringConverter.class)
+		@Column(columnDefinition = "VARCHAR(38)")
+		private Boolean mainCars;
 
 		public Long getId() {
 			return id;
@@ -122,6 +146,14 @@ public class NullableBooleanJavaTypeTest {
 
 		public void setMainCar(Boolean mainCar) {
 			this.mainCar = mainCar;
+		}
+
+		public Boolean getMainCars() {
+			return mainCars;
+		}
+
+		public void setMainCars(Boolean mainCars) {
+			this.mainCars = mainCars;
 		}
 	}
 }

@@ -790,7 +790,12 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		check.append( columnName ).append( " in (" );
 		String separator = "";
 		for ( String value : values ) {
-			check.append( separator ).append('\'').append( value ).append('\'');
+			if ( value == null ) {
+				check.append( separator ).append( "null" );
+			}
+			else {
+				check.append( separator ).append( '\'' ).append( value ).append( '\'' );
+			}
 			separator = ",";
 		}
 		return check.append( ')' ).toString();

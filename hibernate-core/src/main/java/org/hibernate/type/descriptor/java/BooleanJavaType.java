@@ -6,6 +6,8 @@
  */
 package org.hibernate.type.descriptor.java;
 
+import java.util.Optional;
+
 import org.hibernate.dialect.Dialect;
 import org.hibernate.internal.util.CharSequenceHelper;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -190,8 +192,8 @@ public class BooleanJavaType extends AbstractClassJavaType<Boolean> implements
 				BasicValueConverter<Boolean, ?> stringConverter =
 						(BasicValueConverter<Boolean, ?>) converter;
 				String[] values = new String[] {
-						stringConverter.toRelationalValue(false).toString(),
-						stringConverter.toRelationalValue(true).toString()
+						Optional.ofNullable( stringConverter.toRelationalValue( false ) ).map( Object::toString ).orElse( null ),
+						Optional.ofNullable(stringConverter.toRelationalValue(true)).map( Object::toString ).orElse( null )
 				};
 				return dialect.getCheckCondition( columnName, values );
 			}

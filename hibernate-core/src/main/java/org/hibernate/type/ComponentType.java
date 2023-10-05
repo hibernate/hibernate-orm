@@ -500,7 +500,7 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			Object owner,
 			Map<Object, Object> copyCache) {
 
-		if ( original == null && target == null ) {
+		if ( original == null ) {
 			return null;
 		}
 
@@ -533,10 +533,9 @@ public class ComponentType extends AbstractType implements CompositeTypeImplemen
 			Map<Object, Object> copyCache,
 			ForeignKeyDirection foreignKeyDirection) {
 
-		if ( original == null && target == null ) {
+		if ( original == null ) {
 			return null;
 		}
-
 		final Object[] originalValues = getPropertyValues( original );
 		final Object[] resultValues = getPropertyValues( target );
 		final Object[] replacedValues = TypeHelper.replace(

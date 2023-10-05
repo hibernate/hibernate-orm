@@ -452,7 +452,7 @@ public class PropertyBinder {
 
 	private void handleOptional(Property property) {
 		if ( this.property != null ) {
-			property.setOptional( !isId && isOptional( this.property ) );
+			property.setOptional( !isId && isOptional( this.property, this.holder ) );
 			if ( property.isOptional() ) {
 				final OptionalDeterminationSecondPass secondPass = persistentClasses -> {
 					// Defer determining whether a property and its columns are nullable,
@@ -1201,10 +1201,12 @@ public class PropertyBinder {
 	 * Should this property be considered optional, taking into
 	 * account whether it is primitive?
 	 */
-	private static boolean isOptional(XProperty property) {
+	public static boolean isOptional(XProperty property, PropertyHolder propertyHolder) {
 		return property.isAnnotationPresent( Basic.class )
 				? property.getAnnotation( Basic.class ).optional()
-				: property.isArray() || !property.getClassOrElementClass().isPrimitive();
+				: property.isArray()
+				|| propertyHolder != null && propertyHolder.isComponent()
+				|| !property.getClassOrElementClass().isPrimitive();
 	}
 
 	private static boolean isLazy(XProperty property) {

@@ -7,6 +7,7 @@
 package org.hibernate.jpamodelgen.util;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -121,7 +122,7 @@ public final class TypeUtils {
 	}
 
 	public static String extractClosestRealTypeAsString(TypeMirror type, Context context) {
-		final TypeMirror mirror = extractClosestRealType( type, context );
+		final TypeMirror mirror = extractClosestRealType( type, context, new HashSet<>() );
 		return mirror == null ? "?" : mirror.toString();
 	}
 
@@ -133,22 +134,31 @@ public final class TypeUtils {
 		return bound == null || (bound.getKind() == TypeKind.DECLARED && bound.toString().equals("java.lang.Object")) ? null : bound;
 	}
 
-	public static @Nullable TypeMirror extractClosestRealType(TypeMirror type, Context context) {
+	public static @Nullable TypeMirror extractClosestRealType(TypeMirror type, Context context, Set<TypeVariable> beingVisited) {
 		if ( type == null ) {
 			return null;
 		}
 		switch ( type.getKind() ) {
 			case TYPEVAR:
 				final TypeVariable typeVariable = (TypeVariable) type;
-				return context.getTypeUtils().getWildcardType(
-						upperBound( extractClosestRealType( typeVariable.getUpperBound(), context ) ),
-						lowerBound( extractClosestRealType( typeVariable.getLowerBound(), context ) )
-				);
+				if ( beingVisited.contains( typeVariable ) ) {
+					return context.getTypeUtils().getWildcardType(
+							upperBound( typeVariable.getUpperBound() ),
+							lowerBound( typeVariable.getLowerBound() )
+					);
+				}
+				else {
+					beingVisited.add(typeVariable);
+					return context.getTypeUtils().getWildcardType(
+							upperBound( extractClosestRealType( typeVariable.getUpperBound(), context,beingVisited ) ),
+							lowerBound( extractClosestRealType( typeVariable.getLowerBound(), context, beingVisited ) )
+					);
+				}
 			case WILDCARD:
 				final WildcardType wildcardType = (WildcardType) type;
 				return context.getTypeUtils().getWildcardType(
-						extractClosestRealType( wildcardType.getExtendsBound(), context ),
-						extractClosestRealType( wildcardType.getSuperBound(), context )
+						extractClosestRealType( wildcardType.getExtendsBound(), context, beingVisited ),
+						extractClosestRealType( wildcardType.getSuperBound(), context, beingVisited )
 				);
 			case DECLARED:
 				final DeclaredType declaredType = (DeclaredType) type;
@@ -159,7 +169,7 @@ public final class TypeUtils {
 								.map( new Function<TypeMirror, TypeMirror>() {
 											@Override
 											public @Nullable TypeMirror apply(TypeMirror arg) {
-												return extractClosestRealType( arg, context );
+												return extractClosestRealType( arg, context, beingVisited );
 											}
 										} )
 								.toArray( TypeMirror[]::new )

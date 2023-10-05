@@ -536,6 +536,11 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 					getKeyValueFetch().createAssembler( parentAccess, creationState )
 			);
 		}
+
+		@Override
+		public FetchParent asFetchParent() {
+			return this;
+		}
 	}
 
 	private static class AnyResultAssembler<T> implements DomainResultAssembler<T> {

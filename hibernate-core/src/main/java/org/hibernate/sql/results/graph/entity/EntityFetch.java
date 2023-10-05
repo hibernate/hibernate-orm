@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph.entity;
 
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParent;
 
 /**
  * Specialization of Fetch for entity-valued fetches
@@ -19,4 +20,8 @@ public interface EntityFetch extends EntityResultGraphNode, Fetch {
 		return true;
 	}
 
+	@Override
+	default FetchParent asFetchParent() {
+		return this;
+	}
 }

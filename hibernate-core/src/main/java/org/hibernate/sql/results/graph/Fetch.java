@@ -38,6 +38,14 @@ public interface Fetch extends DomainResultGraphNode {
 	FetchParent getFetchParent();
 
 	/**
+	 * Utility method to avoid {@code instanceof} checks. Returns this if it's
+	 * an instance of {@link FetchParent}, null otherwise.
+	 */
+	default FetchParent asFetchParent() {
+		return null;
+	}
+
+	/**
 	 * The value mapping being fetched
 	 */
 	Fetchable getFetchedMapping();

@@ -168,4 +168,8 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 		return getFetchParent().appliesTo( graphImplementor, metamodel );
 	}
 
+	@Override
+	public FetchParent asFetchParent() {
+		return this;
+	}
 }

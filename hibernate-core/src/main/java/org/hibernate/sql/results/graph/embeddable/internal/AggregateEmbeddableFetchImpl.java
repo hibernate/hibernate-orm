@@ -170,4 +170,9 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 
 		return new EmbeddableAssembler( initializer );
 	}
+
+	@Override
+	public FetchParent asFetchParent() {
+		return this;
+	}
 }

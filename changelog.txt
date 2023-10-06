@@ -3,6 +3,18 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.12.Final (October 06, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32201
+
+** Bug
+    * [HHH-16897] - Delete query for entity using table-per-class inheritance may result in NullPointerException
+
+** Task
+    * [HHH-17239] - Automate maintenance releases
+
+
 Changes in 6.2.11.Final (October 04, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

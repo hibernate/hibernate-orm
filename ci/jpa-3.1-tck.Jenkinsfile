@@ -2,9 +2,9 @@
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
-  print "INFO: Build skipped due to trigger being Branch Indexing"
-  currentBuild.result = 'ABORTED'
-  return
+  	print "INFO: Build skipped due to trigger being Branch Indexing"
+	currentBuild.result = 'NOT_BUILT'
+  	return
 }
 
 pipeline {
@@ -31,6 +31,8 @@ pipeline {
 				script {
 					// Don't build the TCK on PRs, unless they use the tck label
 					if ( env.CHANGE_ID && !pullRequest.labels.contains( 'tck' ) ) {
+						print "INFO: Build skipped because pull request doesn't have 'tck' label"
+						currentBuild.result = 'NOT_BUILT'
 						return
 					}
 					docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {

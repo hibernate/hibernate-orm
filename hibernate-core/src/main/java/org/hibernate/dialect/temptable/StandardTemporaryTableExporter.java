@@ -10,6 +10,7 @@ import java.util.function.Function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.sql.ast.spi.ParameterMarkerStrategy;
 
 /**
  * @author Steve Ebersole
@@ -101,8 +102,11 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 			Function<SharedSessionContractImplementor, String> sessionUidAccess,
 			SharedSessionContractImplementor session) {
 		if ( idTable.getSessionUidColumn() != null ) {
+			final ParameterMarkerStrategy parameterMarkerStrategy = session.getSessionFactory()
+					.getFastSessionServices().parameterMarkerStrategy;
 			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName()
-					+ " where " + idTable.getSessionUidColumn().getColumnName() + " = ?";
+					+ " where " + idTable.getSessionUidColumn().getColumnName() + " = "
+					+ parameterMarkerStrategy.createMarker( 0, null );
 		}
 		else {
 			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName();

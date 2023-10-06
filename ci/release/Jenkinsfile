@@ -58,10 +58,10 @@ pipeline {
 			steps {
 				script {
 					// Avoid doing a release for commits from a release
-					def lastCommitter = sh(script: 'git show -s --format=\'%an\'', returnStdout: true)
-					def secondLastCommitter = sh(script: 'git show -s --format=\'%an\' HEAD~1', returnStdout: true)
+					def lastCommitter = sh(script: 'git show -s --format=\'%an\'', returnStdout: true).trim()
+					def secondLastCommitter = sh(script: 'git show -s --format=\'%an\' HEAD~1', returnStdout: true).trim()
 					if (lastCommitter == 'Hibernate-CI' && secondLastCommitter == 'Hibernate-CI') {
-						print "INFO: Build skipped because last commits were for the previous release"
+						print "INFO: Release skipped because last commits were for the previous release"
 						currentBuild.result = 'ABORTED'
 						return
 					}

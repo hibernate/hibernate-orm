@@ -29,6 +29,10 @@ pipeline {
         stage('Build') {
         	steps {
 				script {
+					// Don't build the TCK on PRs, unless they use the tck label
+					if ( env.CHANGE_ID && !pullRequest.labels.contains( 'tck' ) ) {
+						return
+					}
 					docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
 						docker.image('openjdk:11-jdk').pull()
 					}

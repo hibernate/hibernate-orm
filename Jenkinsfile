@@ -26,42 +26,15 @@ this.helper = new JobHelper(this)
 helper.runWithNotification {
 stage('Configure') {
 	this.environments = [
-//		new BuildEnvironment( dbName: 'h2' ),
-//		new BuildEnvironment( dbName: 'hsqldb' ),
-//		new BuildEnvironment( dbName: 'derby' ),
-//		new BuildEnvironment( dbName: 'mysql' ),
-//		new BuildEnvironment( dbName: 'mariadb' ),
-//		new BuildEnvironment( dbName: 'postgresql' ),
-//		new BuildEnvironment( dbName: 'edb' ),
-//		new BuildEnvironment( dbName: 'oracle' ),
-//		new BuildEnvironment( dbName: 'db2' ),
-//		new BuildEnvironment( dbName: 'mssql' ),
-//		new BuildEnvironment( dbName: 'sybase' ),
-// Don't build with HANA by default, but only do it nightly until we receive a 3rd instance
-// 		new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ),
 		new BuildEnvironment( node: 's390x' ),
-		new BuildEnvironment( dbName: 'tidb', node: 'tidb',
-				notificationRecipients: 'tidb_hibernate@pingcap.com' ),
+		new BuildEnvironment( dbName: 'sybase_jconn' ),
 		new BuildEnvironment( testJdkVersion: '17' ),
+		new BuildEnvironment( testJdkVersion: '21' ),
 		// We want to enable preview features when testing newer builds of OpenJDK:
 		// even if we don't use these features, just enabling them can cause side effects
 		// and it's useful to test that.
-		new BuildEnvironment( testJdkVersion: '20', testJdkLauncherArgs: '--enable-preview' ),
-		new BuildEnvironment( testJdkVersion: '21', testJdkLauncherArgs: '--enable-preview' ),
 		new BuildEnvironment( testJdkVersion: '22', testJdkLauncherArgs: '--enable-preview' )
 	];
-
-	if ( env.CHANGE_ID ) {
-		if ( pullRequest.labels.contains( 'cockroachdb' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'cockroachdb', node: 'cockroachdb', longRunning: true ) )
-		}
-		if ( pullRequest.labels.contains( 'hana' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'hana_cloud', dbLockableResource: 'hana-cloud', dbLockResourceAsHost: true ) )
-		}
-		if ( pullRequest.labels.contains( 'sybase' ) ) {
-			this.environments.add( new BuildEnvironment( dbName: 'sybase_jconn' ) )
-		}
-	}
 
 	helper.configure {
 		file 'job-configuration.yaml'
@@ -86,19 +59,15 @@ stage('Configure') {
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
-  print "INFO: Build skipped due to trigger being Branch Indexing"
-  currentBuild.result = 'ABORTED'
-  return
+	print "INFO: Build skipped due to trigger being Branch Indexing"
+	currentBuild.result = 'NOT_BUILT'
+  	return
 }
 
 stage('Build') {
 	Map<String, Closure> executions = [:]
 	Map<String, Map<String, String>> state = [:]
 	environments.each { BuildEnvironment buildEnv ->
-		// Don't build environments for newer JDKs when this is a PR
-		if ( helper.scmSource.pullRequest && buildEnv.testJdkVersion ) {
-			return
-		}
 		state[buildEnv.tag] = [:]
 		executions.put(buildEnv.tag, {
 			runBuildOnNode(buildEnv.node ?: NODE_PATTERN_BASE) {
@@ -137,13 +106,6 @@ stage('Build') {
 									}
 									sh "./docker_db.sh sybase"
 									state[buildEnv.tag]['containerName'] = "sybase"
-									break;
-								case "cockroachdb":
-									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach:v23.1.8').pull()
-									}
-									sh "./docker_db.sh cockroachdb"
-									state[buildEnv.tag]['containerName'] = "cockroach"
 									break;
 							}
 						}

@@ -30,4 +30,8 @@ public interface DomainType<J> extends SqmExpressible<J> {
 	default DomainType<J> getSqmType() {
 		return this;
 	}
+
+	default int getTupleLength() {
+		return 1;
+	}
 }

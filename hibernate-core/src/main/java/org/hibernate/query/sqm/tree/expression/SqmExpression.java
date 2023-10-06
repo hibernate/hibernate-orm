@@ -58,10 +58,6 @@ public interface SqmExpression<T> extends SqmSelectableNode<T>, JpaExpression<T>
 		jpaSelectionConsumer.accept( this );
 	}
 
-	default Integer getTupleLength() {
-		return 1;
-	}
-
 	@Override
 	SqmExpression<Long> asLong();
 

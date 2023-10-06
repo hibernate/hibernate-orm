@@ -6,8 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
-import jakarta.persistence.metamodel.Attribute;
-import jakarta.persistence.metamodel.SingularAttribute;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -21,8 +19,6 @@ import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
-
-import java.util.Set;
 
 /**
  * @author Steve Ebersole
@@ -77,21 +73,6 @@ public class SqmEmbeddedValuedSimplePath<T>
 	@Override
 	public SqmExpressible<T> getExpressible() {
 		return this;
-	}
-
-	@Override
-	public Integer getTupleLength() {
-		final EmbeddableDomainType<?> sqmPathType = (EmbeddableDomainType<?>) getReferencedPathSource().getSqmPathType();
-		final Set<? extends SingularAttribute<?, ?>> attributes = sqmPathType.getSingularAttributes();
-		return length(attributes);
-	}
-
-	private int length(Set<? extends SingularAttribute<?, ?>> attributes) {
-		int length = 0;
-		for (Attribute<?, ?> attribute : attributes) {
-			length += get(attribute.getName()).getTupleLength();
-		}
-		return length;
 	}
 
 	@Override

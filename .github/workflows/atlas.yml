@@ -9,10 +9,10 @@ name: Hibernate ORM build-Atlas
 on:
   push:
     branches:
-      - 'main'
+      - '6.3'
   pull_request:
     branches:
-      - 'main'
+      - '6.3'
 
 permissions: {} # none
 

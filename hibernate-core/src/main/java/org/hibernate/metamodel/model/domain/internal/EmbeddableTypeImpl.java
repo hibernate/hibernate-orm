@@ -8,12 +8,14 @@ package org.hibernate.metamodel.model.domain.internal;
 
 import java.io.Serializable;
 
-import org.hibernate.graph.internal.SubGraphImpl;
-import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.AbstractManagedType;
+import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 
 /**
  * Implementation of {@link jakarta.persistence.metamodel.EmbeddableType}.
@@ -38,5 +40,13 @@ public class EmbeddableTypeImpl<J>
 	@Override
 	public PersistenceType getPersistenceType() {
 		return PersistenceType.EMBEDDABLE;
+	}
+
+	public int getTupleLength() {
+		int count = 0;
+		for ( SingularAttribute<? super J, ?> attribute : getSingularAttributes() ) {
+			count += ( (DomainType<?>) attribute.getType() ).getTupleLength();
+		}
+		return count;
 	}
 }

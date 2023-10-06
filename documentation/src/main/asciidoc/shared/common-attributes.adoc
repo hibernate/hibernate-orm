@@ -1,3 +1,4 @@
 
 // NOTE : majorMinorVersion is injected by the build and will override this value
 :majorMinorVersion: 6.3
+:fullVersion: 6.3.0.Final

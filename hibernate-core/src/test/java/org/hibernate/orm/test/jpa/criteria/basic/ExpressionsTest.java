@@ -275,7 +275,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 					final Root<Product> root = criteria.from( Product.class );
 					criteria.select(
 							builder.sum(
-									builder.coalesce( root.get( "quantity" ), 5 )
+									builder.coalesce( root.get( "quantity" ), builder.literal( 5 ) )
 							)
 					).groupBy( root.get( "id" ) );
 					final Integer result = entityManager.createQuery( criteria ).getSingleResult();

@@ -383,11 +383,11 @@ public class EmbeddableMappingTypeImpl extends AbstractEmbeddableMapping impleme
 				final boolean nullable;
 				if ( selectable instanceof Column ) {
 					final Column column = (Column) selectable;
-					columnDefinition = column.getSqlType( creationProcess.getCreationContext().getMetadata() );
+					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					precision = column.getPrecision();
 					scale = column.getScale();
-					isLob = column.isSqlTypeLob();
+					isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
 					nullable = bootPropertyDescriptor.isOptional() && column.isNullable() ;
 					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
 				}

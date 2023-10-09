@@ -184,13 +184,13 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		else {
 			Column column = (Column) selectable;
 			columnExpression = selectable.getText( dialect );
-			columnDefinition = column.getSqlType( creationContext.getMetadata() );
+			columnDefinition = column.getSqlType();
 			length = column.getLength();
 			precision = column.getPrecision();
 			scale = column.getScale();
 
 			isNullable = forceNotNullable ? false : column.isNullable();
-			isLob = column.isSqlTypeLob();
+			isLob = column.isSqlTypeLob( creationContext.getMetadata() );
 			selectableName = column.getQuotedName( dialect );
 		}
 		return new SelectableMappingImpl(

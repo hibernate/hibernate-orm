@@ -6,6 +6,18 @@ if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
 	currentBuild.result = 'NOT_BUILT'
   	return
 }
+def throttleCount
+// Don't build the TCK on PRs, unless they use the tck label
+if ( env.CHANGE_ID != null ) {
+	if ( !pullRequest.labels.contains( 'tck' ) ) {
+		print "INFO: Build skipped because pull request doesn't have 'tck' label"
+		return
+	}
+	throttleCount = 20
+}
+else {
+	throttleCount = 1
+}
 
 pipeline {
     agent {
@@ -15,7 +27,7 @@ pipeline {
         jdk 'OpenJDK 11 Latest'
     }
     options {
-  		rateLimitBuilds(throttle: [count: 1, durationName: 'day', userBoost: true])
+  		rateLimitBuilds(throttle: [count: throttleCount, durationName: 'day', userBoost: true])
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
         disableConcurrentBuilds(abortPrevious: true)
     }
@@ -29,12 +41,6 @@ pipeline {
         stage('Build') {
         	steps {
 				script {
-					// Don't build the TCK on PRs, unless they use the tck label
-					if ( env.CHANGE_ID && !pullRequest.labels.contains( 'tck' ) ) {
-						print "INFO: Build skipped because pull request doesn't have 'tck' label"
-						currentBuild.result = 'NOT_BUILT'
-						return
-					}
 					docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
 						docker.image('openjdk:11-jdk').pull()
 					}

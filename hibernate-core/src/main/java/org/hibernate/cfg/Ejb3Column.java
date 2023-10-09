@@ -717,7 +717,7 @@ public class Ejb3Column {
 		column.setLength( DEFAULT_COLUMN_LENGTH );
 		final String propertyName = inferredData.getPropertyName();
 		column.setPropertyName(
-				BinderHelper.getRelativePath( propertyHolder, propertyName )
+				BinderHelper.getRelativePathRecursively(propertyHolder, propertyName)
 		);
 		column.setPropertyHolder( propertyHolder );
 		column.setJoins( secondaryTables );

@@ -287,12 +287,12 @@ public abstract class AbstractEmbeddableMapping implements EmbeddableMappingType
 				final boolean nullable;
 				if ( selectable instanceof Column ) {
 					final Column column = (Column) selectable;
-					columnDefinition = column.getSqlType( creationProcess.getCreationContext().getMetadata() );
+					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					precision = column.getPrecision();
 					scale = column.getScale();
 					nullable = column.isNullable();
-					isLob = column.isSqlTypeLob();
+					isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
 					selectablePath = basicValue.createSelectablePath( column.getQuotedName( dialect ) );
 				}
 				else {

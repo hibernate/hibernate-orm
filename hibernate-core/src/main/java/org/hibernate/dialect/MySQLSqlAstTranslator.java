@@ -37,9 +37,20 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 		super( sessionFactory, statement );
 	}
 
+	/**
+	 * @deprecated Use {@link #getSqlType(CastTarget, SessionFactoryImplementor)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public static String getSqlType(CastTarget castTarget, Dialect dialect) {
-		final String sqlType = castTarget.getSqlType();
+		return getSqlType( castTarget, castTarget.getSqlType(), dialect );
+	}
 
+	public static String getSqlType(CastTarget castTarget, SessionFactoryImplementor factory) {
+		final String sqlType = getSqlTypeName( castTarget, factory );
+		return getSqlType( castTarget, sqlType, factory.getJdbcServices().getDialect() );
+	}
+
+	private static String getSqlType(CastTarget castTarget, String sqlType, Dialect dialect) {
 		if ( sqlType != null ) {
 			int parenthesesIndex = sqlType.indexOf( '(' );
 			final String baseName = parenthesesIndex == -1 ? sqlType : sqlType.substring( 0, parenthesesIndex );
@@ -63,10 +74,14 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 				case "varchar":
 				case "nchar":
 				case "nvarchar":
-					return "char";
+					return castTarget.getLength() == null
+							? "char"
+							: ( "char(" + castTarget.getLength() + ")" );
 				case "binary":
 				case "varbinary":
-					return "binary";
+					return castTarget.getLength() == null
+						? "binary"
+						: ( "binary(" + castTarget.getLength() + ")" );
 			}
 		}
 		return sqlType;
@@ -286,7 +301,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		String sqlType = getSqlType( castTarget, getDialect() );
+		String sqlType = getSqlType( castTarget, getSessionFactory() );
 		if ( sqlType != null ) {
 			appendSql( sqlType );
 		}

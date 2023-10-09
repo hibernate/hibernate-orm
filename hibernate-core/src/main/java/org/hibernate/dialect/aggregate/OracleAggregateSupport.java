@@ -20,6 +20,7 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.type.SqlTypes.BIGINT;
@@ -231,7 +232,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		final int aggregateSqlTypeCode = aggregateColumn.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
 		switch ( aggregateSqlTypeCode ) {
 			case JSON:
-				return jsonAggregateColumnWriter( aggregateColumn, columnsToUpdate );
+				return jsonAggregateColumnWriter( aggregateColumn, columnsToUpdate, typeConfiguration );
 		}
 		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateSqlTypeCode );
 	}
@@ -269,8 +270,9 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 
 	private WriteExpressionRenderer jsonAggregateColumnWriter(
 			SelectableMapping aggregateColumn,
-			SelectableMapping[] columns) {
-		return new RootJsonWriteExpression( aggregateColumn, columns, this );
+			SelectableMapping[] columns,
+			TypeConfiguration typeConfiguration) {
+		return new RootJsonWriteExpression( aggregateColumn, columns, this, typeConfiguration );
 	}
 
 	interface JsonWriteExpression {
@@ -293,7 +295,10 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			this.ddlTypeName = aggregateSupport.determineJsonTypeName( selectableMapping );
 		}
 
-		protected void initializeSubExpressions(SelectableMapping[] columns, OracleAggregateSupport aggregateSupport) {
+		protected void initializeSubExpressions(
+				SelectableMapping[] columns,
+				OracleAggregateSupport aggregateSupport,
+				TypeConfiguration typeConfiguration) {
 			for ( SelectableMapping column : columns ) {
 				final SelectablePath selectablePath = column.getSelectablePath();
 				final SelectablePath[] parts = selectablePath.getParts();
@@ -318,11 +323,31 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								aggregateSupport.jsonCustomWriteExpression(
 										customWriteExpression,
 										sqlTypeCode,
-										column.getColumnDefinition()
+										determineTypeName( column, typeConfiguration )
 								)
 						)
 				);
 			}
+		}
+
+		private static String determineTypeName(SelectableMapping column, TypeConfiguration typeConfiguration) {
+			final String typeName;
+			if ( column.getColumnDefinition() == null ) {
+				final DdlType ddlType = typeConfiguration.getDdlTypeRegistry().getDescriptor(
+						column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode()
+				);
+				return ddlType.getCastTypeName(
+						column.getJdbcMapping().getJdbcType(),
+						column.getJdbcMapping().getJavaTypeDescriptor(),
+						column.getLength(),
+						column.getPrecision(),
+						column.getScale()
+				);
+			}
+			else{
+				typeName = column.getColumnDefinition();
+			}
+			return typeName;
 		}
 
 		@Override
@@ -363,11 +388,12 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 		RootJsonWriteExpression(
 				SelectableMapping aggregateColumn,
 				SelectableMapping[] columns,
-				OracleAggregateSupport aggregateSupport) {
+				OracleAggregateSupport aggregateSupport,
+				TypeConfiguration typeConfiguration) {
 			super( aggregateColumn, aggregateSupport );
 			this.nullable = aggregateColumn.isNullable();
 			this.path = aggregateColumn.getSelectionExpression();
-			initializeSubExpressions( columns, aggregateSupport );
+			initializeSubExpressions( columns, aggregateSupport, typeConfiguration );
 		}
 
 		@Override

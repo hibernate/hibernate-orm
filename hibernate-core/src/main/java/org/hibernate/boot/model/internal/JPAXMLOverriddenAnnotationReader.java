@@ -1630,6 +1630,10 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			addIfNotNull( annotationList, annotation );
 			annotation = getPhysicalAnnotation( AssociationOverrides.class );
 			addIfNotNull( annotationList, annotation );
+			annotation = getPhysicalAnnotation( Type.class );
+			addIfNotNull( annotationList, annotation );
+			annotation = getPhysicalAnnotation( JdbcTypeCode.class );
+			addIfNotNull( annotationList, annotation );
 		}
 	}
 

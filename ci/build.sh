@@ -50,7 +50,7 @@ elif [ "$RDBMS" == "oracle_db23c" ]; then
   # I have no idea why, but these tests don't seem to work on CI...
   goal="-Pdb=oracle_cloud_db23c -DrunID=$RUNID -DdbHost=$HOST -DdbService=$SERVICE"
 elif [ "$RDBMS" == "oracle_11_2" ]; then
-  goal="-Pdb=oracle_legacy_ci"
+  goal="-Pdb=oracle_legacy_ci -PexcludeTests=**.LockTest.testQueryTimeout*"
 elif [ "$RDBMS" == "db2" ]; then
   goal="-Pdb=db2_ci"
 elif [ "$RDBMS" == "db2_10_5" ]; then

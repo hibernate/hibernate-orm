@@ -250,7 +250,7 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		String sqlType = MySQLSqlAstTranslator.getSqlType( castTarget, getDialect() );
+		String sqlType = MySQLSqlAstTranslator.getSqlType( castTarget, getSessionFactory() );
 		if ( sqlType != null ) {
 			appendSql( sqlType );
 		}

@@ -1186,7 +1186,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 		else {
 			final Column column = bootEntityDescriptor.getIdentifier().getColumns().get( 0 );
-			columnDefinition = column.getSqlType( creationProcess.getCreationContext().getMetadata() );
+			columnDefinition = column.getSqlType();
 			length = column.getLength();
 			precision = column.getPrecision();
 			scale = column.getScale();

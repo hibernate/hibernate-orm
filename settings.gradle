@@ -25,6 +25,9 @@ plugins {
 
 dependencyResolutionManagement {
     repositories {
+        if ( rootProject.hasProperty( "mavenMirror" ) ) {
+            url( rootProject.property( "mavenMirror" ) )
+        }
         mavenCentral()
         // Needed for the RC versions of Jakarta Persistence
         maven {

@@ -25,7 +25,7 @@ pipeline {
         stage('Build') {
         	steps {
 				script {
-					sh './gradlew publishToMavenLocal --no-daemon'
+					sh './gradlew publishToMavenLocal -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com --no-daemon'
 					script {
 						env.HIBERNATE_VERSION = sh (
 								script: "grep hibernateVersion gradle/version.properties|cut -d'=' -f2",

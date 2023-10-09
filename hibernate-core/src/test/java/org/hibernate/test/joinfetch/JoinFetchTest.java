@@ -240,9 +240,9 @@ public class JoinFetchTest extends BaseCoreFunctionalTestCase {
 		hb = s.get(Group.class, "hibernate");
 		assertTrue( Hibernate.isInitialized( hb.getUsers() ) );
 		gavin = (User) hb.getUsers().get("gavin");
-		assertFalse( Hibernate.isInitialized( gavin.getGroups() ) );
+		assertTrue( Hibernate.isInitialized( gavin.getGroups() ) );
 		max = s.get(User.class, "max");
-		assertFalse( Hibernate.isInitialized( max.getGroups() ) );
+		assertTrue( Hibernate.isInitialized( max.getGroups() ) );
 		t.commit();
 		s.close();
 

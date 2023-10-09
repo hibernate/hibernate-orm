@@ -22,6 +22,7 @@ import org.hibernate.loader.plan.build.internal.FetchStyleLoadPlanBuildingAssoci
 import org.hibernate.loader.plan.build.spi.LoadPlanTreePrinter;
 import org.hibernate.loader.plan.build.spi.MetamodelDrivenLoadPlanBuilder;
 import org.hibernate.loader.plan.exec.internal.AliasResolutionContextImpl;
+import org.hibernate.loader.plan.spi.CollectionAttributeFetch;
 import org.hibernate.loader.plan.spi.CollectionReturn;
 import org.hibernate.loader.plan.spi.EntityFetch;
 import org.hibernate.loader.plan.spi.EntityReference;
@@ -67,7 +68,11 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 		Fetch fetch = entityReturn.getFetches()[0];
 		EntityFetch entityFetch = ExtraAssertions.assertTyping( EntityFetch.class, fetch );
 		assertNotNull( entityFetch.getFetches() );
-		assertEquals( 0, entityFetch.getFetches().length );
+		assertEquals( 1, entityFetch.getFetches().length );
+		Fetch subFetch = entityFetch.getFetches()[0];
+		CollectionAttributeFetch subEntityFetch = ExtraAssertions.assertTyping( CollectionAttributeFetch.class, subFetch );
+		assertNotNull( subEntityFetch.getElementGraph().getFetches() );
+		assertEquals( 0, subEntityFetch.getElementGraph().getFetches().length );
 
 		LoadPlanTreePrinter.INSTANCE.logTree( plan, new AliasResolutionContextImpl( sessionFactory() ) );
 	}
@@ -91,7 +96,11 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 		Fetch fetch = entityReturn.getFetches()[0];
 		EntityFetch entityFetch = ExtraAssertions.assertTyping( EntityFetch.class, fetch );
 		assertNotNull( entityFetch.getFetches() );
-		assertEquals( 0, entityFetch.getFetches().length );
+		assertEquals( 1, entityFetch.getFetches().length );
+		Fetch subFetch = entityFetch.getFetches()[0];
+		CollectionAttributeFetch subEntityFetch = ExtraAssertions.assertTyping( CollectionAttributeFetch.class, subFetch );
+		assertNotNull( subEntityFetch.getElementGraph().getFetches() );
+		assertEquals( 0, subEntityFetch.getElementGraph().getFetches().length );
 
 		LoadPlanTreePrinter.INSTANCE.logTree( plan, new AliasResolutionContextImpl( sessionFactory() ) );
 	}
@@ -112,12 +121,13 @@ public class LoadPlanBuilderTest extends BaseCoreFunctionalTestCase {
 
 		assertNotNull( collectionReturn.getElementGraph() );
 		assertNotNull( collectionReturn.getElementGraph().getFetches() );
-		// the collection Message elements are fetched, but Message.poster is not fetched
-		// (because that collection is owned by that Poster)
-		assertEquals( 0, collectionReturn.getElementGraph().getFetches().length );
 		EntityReference entityReference = ExtraAssertions.assertTyping( EntityReference.class, collectionReturn.getElementGraph() );
 		assertNotNull( entityReference.getFetches() );
-		assertEquals( 0, entityReference.getFetches().length );
+		assertEquals( 1, entityReference.getFetches().length );
+		Fetch subFetch = entityReference.getFetches()[0];
+		EntityFetch subEntityFetch = ExtraAssertions.assertTyping( EntityFetch.class, subFetch );
+		assertNotNull( subEntityFetch.getFetches() );
+		assertEquals( 0, subEntityFetch.getFetches().length );
 
 		LoadPlanTreePrinter.INSTANCE.logTree( plan, new AliasResolutionContextImpl( sessionFactory() ) );
 	}

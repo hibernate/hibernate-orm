@@ -41,7 +41,7 @@ pipeline {
 				}
 				dir('hibernate') {
 					checkout scm
-					sh './gradlew publishToMavenLocal -DjakartaJpaVersion=3.2.0-SNAPSHOT'
+					sh './gradlew publishToMavenLocal -PmavenMirror=nexus-load-balancer-c4cf05fd92f43ef8.elb.us-east-1.amazonaws.com -DjakartaJpaVersion=3.2.0-SNAPSHOT'
 					script {
 						env.HIBERNATE_VERSION = sh (
 							script: "grep hibernateVersion gradle/version.properties|cut -d'=' -f2",

@@ -3316,6 +3316,11 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public boolean hasWhereRestrictions() {
+		return sqlWhereStringTemplate != null;
+	}
+
+	@Override
 	public void applyWhereRestrictions(
 			Consumer<Predicate> predicateConsumer,
 			TableGroup tableGroup,

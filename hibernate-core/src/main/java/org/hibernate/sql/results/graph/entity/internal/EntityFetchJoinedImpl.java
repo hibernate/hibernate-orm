@@ -65,7 +65,7 @@ public class EntityFetchJoinedImpl extends AbstractNonLazyEntityFetch {
 			NavigablePath navigablePath,
 			DomainResultCreationState creationState) {
 		super( fetchParent, collectionPart, navigablePath );
-		this.notFoundAction = null;
+		this.notFoundAction = collectionPart.getNotFoundAction();
 		this.keyResult = null;
 		this.sourceAlias = tableGroup.getSourceAlias();
 

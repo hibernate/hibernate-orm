@@ -809,7 +809,7 @@ The types defined by the JDBC specification are enumerated by the integer type c
 Each JDBC type is an abstraction of a commonly-available type in SQL.
 For example, `Types.VARCHAR` represents the SQL type `VARCHAR` (or `VARCHAR2` on Oracle).
 
-Since Hibernate understand more SQL types than JDBC, there's an extended list of integer type codes in the class `org.hibernate.type.SqlTypes`.
+Since Hibernate understands more SQL types than JDBC, there's an extended list of integer type codes in the class `org.hibernate.type.SqlTypes`.
 For example, `SqlTypes.GEOMETRY` represents the spatial data type `GEOMETRY`.
 ****
 
@@ -918,7 +918,7 @@ Later, in <<mapping-embeddables>>, we'll see a couple of different options.
 An attribute of embeddable type represents a relationship between a Java object with a persistent identity, and a Java object with no persistent identity.
 We can think of it as a whole/part relationship.
 The embeddable object belongs to the entity, and can't be shared with other entity instances.
-And it exits for only as long as its parent entity exists.
+And it exists for only as long as its parent entity exists.
 
 Next we'll discuss a different kind of relationship: a relationship between Java objects which each have their own distinct persistent identity and persistence lifecycle.
 

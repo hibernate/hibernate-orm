@@ -1134,7 +1134,7 @@ class Author {
 }
 ----
 
-Here, the `Author` table has a foreign key column holding the identifier of the associated `Publisher`.
+Here, the `Author` table has a foreign key column holding the identifier of the associated `Person`.
 
 [TIP]
 // .One-to-one associations are a way to represent subtyping

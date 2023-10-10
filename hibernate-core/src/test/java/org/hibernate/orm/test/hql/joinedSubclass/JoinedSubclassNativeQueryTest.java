@@ -27,7 +27,8 @@ import jakarta.persistence.InheritanceType;
  */
 @DomainModel(
 		annotatedClasses = {
-				JoinedSubclassNativeQueryTest.Person.class
+				JoinedSubclassNativeQueryTest.Person.class,
+				JoinedSubclassNativeQueryTest.Employee.class
 		}
 )
 @SessionFactory
@@ -56,7 +57,7 @@ public class JoinedSubclassNativeQueryTest {
 	public void testJoinedInheritanceNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Person p = session.createNativeQuery( "select p.*, 0 as clazz_ from Person p", Person.class ).getSingleResult();
+					Person p = session.createNativeQuery( "select p.*, null as companyName, 0 as clazz_  from Person p", Person.class ).getSingleResult();
 					Assertions.assertNotNull( p );
 					Assertions.assertEquals( p.getFirstName(), "Jan" );
 				}
@@ -81,4 +82,19 @@ public class JoinedSubclassNativeQueryTest {
 			this.firstName = firstName;
 		}
 	}
+
+	@Entity(name = "Employee")
+	public static class Employee extends Person {
+		@Basic(optional = false)
+		private String companyName;
+
+		public String getCompanyName() {
+			return companyName;
+		}
+
+		public void setCompanyName(String companyName) {
+			this.companyName = companyName;
+		}
+	}
+
 }

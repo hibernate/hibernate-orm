@@ -72,6 +72,11 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 			throw new HibernateException( "Illegal null value for array index encountered while reading: "
 					+ getCollectionAttributeMapping().getNavigableRole() );
 		}
+		final Object element = elementAssembler.assemble( rowProcessingState );
+		if ( element == null ) {
+			// If element is null, then NotFoundAction must be IGNORE
+			return;
+		}
 		int index = indexValue;
 
 		if ( indexBase != 0 ) {
@@ -82,7 +87,7 @@ public class ArrayInitializer extends AbstractImmediateCollectionInitializer {
 			loadingState.add( i, null );
 		}
 
-		loadingState.set( index, elementAssembler.assemble( rowProcessingState ) );
+		loadingState.set( index, element );
 	}
 
 	@Override

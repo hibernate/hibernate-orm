@@ -57,7 +57,7 @@ public class MapIssueTest {
 		statementInspector.clear();
 		scope.inTransaction(
 				s -> {
-					s.createQuery( "select c from MapOwner as o left join o.contents c join c.relationship r where r.id is not null" ).list();
+					s.createQuery( "select c from MapOwner as o join o.contents c join c.relationship r where r.id is not null" ).list();
 					statementInspector.assertExecutedCount( 1 );
 					// Assert 2 joins, collection table and collection element. No need to join the relationship because it is not nullable
 					statementInspector.assertNumberOfJoins( 0, 2 );

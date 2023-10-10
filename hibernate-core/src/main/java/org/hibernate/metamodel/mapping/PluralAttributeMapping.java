@@ -168,6 +168,11 @@ public interface PluralAttributeMapping
 	}
 
 	@Override
+	default boolean hasWhereRestrictions() {
+		return getCollectionDescriptor().hasWhereRestrictions();
+	}
+
+	@Override
 	default void applyWhereRestrictions(
 			Consumer<Predicate> predicateConsumer,
 			TableGroup tableGroup,

@@ -9,10 +9,12 @@ package org.hibernate.sql.results.graph.collection.internal;
 import java.util.List;
 
 import org.hibernate.LockMode;
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.collection.spi.PersistentMap;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.internal.EntityCollectionPart;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
@@ -61,12 +63,17 @@ public class MapInitializer extends AbstractImmediateCollectionInitializer {
 			CollectionKey collectionKey,
 			List<Object> loadingState,
 			RowProcessingState rowProcessingState) {
-		loadingState.add(
-				new Object[] {
-						mapKeyAssembler.assemble( rowProcessingState ),
-						mapValueAssembler.assemble( rowProcessingState )
-				}
-		);
+		final Object key = mapKeyAssembler.assemble( rowProcessingState );
+		if ( key == null ) {
+			// If element is null, then NotFoundAction must be IGNORE
+			return;
+		}
+		final Object value = mapValueAssembler.assemble( rowProcessingState );
+		if ( value == null ) {
+			// If element is null, then NotFoundAction must be IGNORE
+			return;
+		}
+		loadingState.add( new Object[] { key, value } );
 	}
 
 	@Override

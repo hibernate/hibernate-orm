@@ -708,18 +708,19 @@ public class LoaderSelectBuilder {
 		else {
 			final TableGroup parentTableGroup = astCreationState.getFromClauseAccess().getTableGroup(
 					parentNavigablePath );
-			TableGroupJoin pluralTableGroupJoin = null;
-			for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-				if ( nestedTableGroupJoin.getNavigablePath() == tableGroup.getNavigablePath() ) {
-					pluralTableGroupJoin = nestedTableGroupJoin;
-					break;
-				}
-			}
-
+			final TableGroupJoin pluralTableGroupJoin = parentTableGroup.findTableGroupJoin( tableGroup );
 			assert pluralTableGroupJoin != null;
 
+			final TableGroupJoin joinForPredicate;
+			if ( !tableGroup.getNestedTableGroupJoins().isEmpty() || tableGroup.getTableGroupJoins().isEmpty() ) {
+				joinForPredicate = pluralTableGroupJoin;
+			}
+			else {
+				joinForPredicate = tableGroup.getTableGroupJoins().get( tableGroup.getTableGroupJoins().size() - 1 );
+			}
+
 			pluralAttributeMapping.applyBaseRestrictions(
-					pluralTableGroupJoin::applyPredicate,
+					joinForPredicate::applyPredicate,
 					tableGroup,
 					true,
 					loadQueryInfluencers.getEnabledFilters(),
@@ -727,7 +728,7 @@ public class LoaderSelectBuilder {
 					astCreationState
 			);
 			pluralAttributeMapping.applyBaseManyToManyRestrictions(
-					pluralTableGroupJoin::applyPredicate,
+					joinForPredicate::applyPredicate,
 					tableGroup,
 					true,
 					loadQueryInfluencers.getEnabledFilters(),

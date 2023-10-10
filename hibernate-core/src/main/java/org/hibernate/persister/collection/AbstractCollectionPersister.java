@@ -1150,6 +1150,11 @@ public abstract class AbstractCollectionPersister
 	}
 
 	@Override
+	public boolean hasWhereRestrictions() {
+		return hasWhere() || manyToManyWhereTemplate != null;
+	}
+
+	@Override
 	public void applyWhereRestrictions(
 			Consumer<Predicate> predicateConsumer,
 			TableGroup tableGroup,

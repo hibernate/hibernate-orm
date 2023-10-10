@@ -25,6 +25,8 @@ import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.IdClassEmbeddable;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
@@ -94,6 +96,10 @@ public class CollectionBatchLoaderArrayParam
 				jdbcParameter,
 				getSessionFactory()
 		);
+
+		final QuerySpec querySpec = sqlSelect.getQueryPart().getFirstQuerySpec();
+		final TableGroup tableGroup = querySpec.getFromClause().getRoots().get( 0 );
+		attributeMapping.applySoftDeleteRestrictions( tableGroup, querySpec::applyPredicate );
 
 		jdbcSelectOperation = getSessionFactory().getJdbcServices()
 				.getJdbcEnvironment()

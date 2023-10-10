@@ -9,13 +9,11 @@ package org.hibernate.orm.test.jpa.criteria.idclass;
 import jakarta.persistence.Id;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.MappedSuperclass;
-import jakarta.persistence.Table;
 
 /**
  * @author Erich Heard
  */
 @MappedSuperclass
-@Table( name = "HELPER" )
 @IdClass( HelperId.class )
 public class Helper {
 	@Id

@@ -14,6 +14,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -23,6 +24,7 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.results.TableGroupImpl;
@@ -97,14 +99,28 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		this.afterUseAction = afterUseAction;
 		this.sessionUidAccess = sessionUidAccess;
 		this.updatingTableGroup = updatingTableGroup;
-		this.suppliedPredicate = suppliedPredicate;
-
 		this.sessionFactory = executionContext.getSession().getFactory();
 
 		final ModelPartContainer updatingModelPart = updatingTableGroup.getModelPart();
 		assert updatingModelPart instanceof EntityMappingType;
-
 		this.entityDescriptor = (EntityMappingType) updatingModelPart;
+
+		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
+		if ( softDeleteMapping != null ) {
+			final NamedTableReference rootTableReference = (NamedTableReference) updatingTableGroup.resolveTableReference(
+					updatingTableGroup.getNavigablePath(),
+					entityDescriptor.getIdentifierTableDetails().getTableName()
+			);
+			this.suppliedPredicate = Predicate.combinePredicates(
+					suppliedPredicate,
+					SoftDeleteHelper.createNonSoftDeletedRestriction( rootTableReference, softDeleteMapping )
+			);
+		}
+		else {
+			this.suppliedPredicate = suppliedPredicate;
+		}
+
+
 
 		this.assignmentsByTable = CollectionHelper.mapOfSize( updatingTableGroup.getTableReferenceJoins().size() + 1 );
 
@@ -513,4 +529,5 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 	protected SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
+
 }

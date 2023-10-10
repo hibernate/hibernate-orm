@@ -65,16 +65,31 @@ public class TableBasedDeleteHandler
 	}
 
 	protected ExecutionDelegate resolveDelegate(DomainQueryExecutionContext executionContext) {
+		if ( getEntityDescriptor().getSoftDeleteMapping() != null ) {
+			return new SoftDeleteExecutionDelegate(
+					getEntityDescriptor(),
+					idTable,
+					afterUseAction,
+					getSqmDeleteOrUpdateStatement(),
+					domainParameterXref,
+					executionContext.getQueryOptions(),
+					executionContext.getSession().getLoadQueryInfluencers(),
+					executionContext.getQueryParameterBindings(),
+					sessionUidAccess,
+					getSessionFactory()
+			);
+		}
+
 		return new RestrictedDeleteExecutionDelegate(
 				getEntityDescriptor(),
 				idTable,
 				afterUseAction,
 				getSqmDeleteOrUpdateStatement(),
 				domainParameterXref,
-				sessionUidAccess,
 				executionContext.getQueryOptions(),
 				executionContext.getSession().getLoadQueryInfluencers(),
 				executionContext.getQueryParameterBindings(),
+				sessionUidAccess,
 				getSessionFactory()
 		);
 	}

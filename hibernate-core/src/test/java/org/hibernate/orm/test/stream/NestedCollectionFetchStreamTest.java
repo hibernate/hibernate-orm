@@ -12,14 +12,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.hibernate.dialect.DB2Dialect;
-import org.hibernate.dialect.DerbyDialect;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -47,8 +43,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 } )
 @SessionFactory
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17131" )
-@SkipForDialect( dialectClass = DB2Dialect.class, reason = "The support for ResultSet#isBeforeFirst() is optional for ResultSets with a result set type of TYPE_FORWARD_ONLY and DB2 does not support it" )
-@SkipForDialect( dialectClass = DerbyDialect.class, reason = "The support for ResultSet#isBeforeFirst() is optional for ResultSets with a result set type of TYPE_FORWARD_ONLY and Derby does not support it" )
 public class NestedCollectionFetchStreamTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {

@@ -191,12 +191,7 @@ public class StatelessSessionFetchingTest {
 		scope.inStatelessTransaction(
 				session -> {
 					final Query query = session.createQuery( "select p from Producer p join fetch p.products" );
-					try (ScrollableResults scrollableResults = getScrollableResults(
-							query,
-							scope.getSessionFactory()
-									.getJdbcServices()
-									.getDialect()
-					)) {
+					try (ScrollableResults scrollableResults = query.scroll( ScrollMode.FORWARD_ONLY )) {
 
 						while ( scrollableResults.next() ) {
 							Producer producer = (Producer) scrollableResults.get();
@@ -211,20 +206,6 @@ public class StatelessSessionFetchingTest {
 					}
 				}
 		);
-	}
-
-	private ScrollableResults getScrollableResults(Query query, Dialect dialect) {
-		if ( dialect instanceof DB2Dialect || dialect instanceof DerbyDialect ) {
-			/*
-				FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
-				but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
-				set type of TYPE_FORWARD_ONLY and db2 does not support it.
-			 */
-			return query.scroll( ScrollMode.SCROLL_INSENSITIVE );
-		}
-		else {
-			return query.scroll( ScrollMode.FORWARD_ONLY );
-		}
 	}
 
 	@AfterEach

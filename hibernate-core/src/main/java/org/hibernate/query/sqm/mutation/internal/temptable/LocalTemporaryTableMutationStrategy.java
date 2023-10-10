@@ -8,6 +8,7 @@ package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -51,7 +52,7 @@ public class LocalTemporaryTableMutationStrategy extends LocalTemporaryTableStra
 			SqmDeleteStatement<?> sqmDelete,
 			DomainParameterXref domainParameterXref,
 			DomainQueryExecutionContext context) {
-		return new TableBasedDeleteHandler(
+		final TableBasedDeleteHandler deleteHandler = new TableBasedDeleteHandler(
 				sqmDelete,
 				domainParameterXref,
 				getTemporaryTable(),
@@ -62,7 +63,8 @@ public class LocalTemporaryTableMutationStrategy extends LocalTemporaryTableStra
 					throw new UnsupportedOperationException( "Unexpected call to access Session uid" );
 				},
 				getSessionFactory()
-		).execute( context );
+		);
+		return deleteHandler.execute( context );
 	}
 
 }

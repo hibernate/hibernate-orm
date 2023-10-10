@@ -36,13 +36,13 @@ tasks.named( "javadoc", Javadoc ) {
         stylesheetFile = rootProject.file( "shared/javadoc/stylesheet.css" )
         bottom = "Copyright &copy; 2001-$currentYear <a href=\"https://redhat.com\">Red Hat, Inc.</a>  All Rights Reserved."
 
-        links = [
-                'https://docs.oracle.com/en/java/javase/11/docs/api/',
-                'https://jakarta.ee/specifications/bean-validation/3.0/apidocs/',
-                'https://jakarta.ee/specifications/cdi/4.0/apidocs/',
-                'https://jakarta.ee/specifications/platform/9/apidocs/',
-                'https://www.javadoc.io/doc/javax.cache/cache-api/1.0.0/'
-        ]
+        // The javadoc folder contains cached versions of the respective element-list files to avoid release issues when servers are down
+        // When upgrading versions of the libraries, don't forget to update the file contents in the repository
+        linksOffline 'https://docs.oracle.com/en/java/javase/11/docs/api/', "${project.rootDir}/javadoc/javase11"
+        linksOffline 'https://jakarta.ee/specifications/bean-validation/3.0/apidocs/', "${project.rootDir}/javadoc/jakarta-validation-3.0"
+        linksOffline 'https://jakarta.ee/specifications/cdi/4.0/apidocs/', "${project.rootDir}/javadoc/jakarta-cdi-4.0"
+        linksOffline 'https://jakarta.ee/specifications/platform/9/apidocs/', "${project.rootDir}/javadoc/jakarta-platform-9"
+        linksOffline 'https://www.javadoc.io/doc/javax.cache/cache-api/1.0.0/', "${project.rootDir}/javadoc/javax-cache-1.0"
 
         tags(
                 'todo:X',

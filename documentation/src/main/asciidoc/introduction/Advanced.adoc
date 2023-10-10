@@ -862,10 +862,10 @@ Hibernate's {enhancer}[bytecode enhancer] enables the following features:
 
 To use the bytecode enhancer, we must add the Hibernate plugin to our gradle build:
 
-[source,groovy]
+[source,groovy,subs="attributes+"]
 ----
 plugins {
-    id "org.hibernate.orm" version "6.3.0.Final"
+    id "org.hibernate.orm" version "{fullVersion}"
 }
 
 hibernate { enhancement }

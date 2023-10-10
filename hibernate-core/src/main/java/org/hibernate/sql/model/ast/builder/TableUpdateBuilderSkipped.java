@@ -49,6 +49,10 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
+	public void addLiteralRestriction(String columnName, String sqlLiteralText, JdbcMapping jdbcMapping) {
+	}
+
+	@Override
 	public ColumnValueBindingList getKeyRestrictionBindings() {
 		return null;
 	}
@@ -64,7 +68,7 @@ public class TableUpdateBuilderSkipped implements TableUpdateBuilder {
 	}
 
 	@Override
-	public void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping) {
+	public void addValueColumn(String columnName, String columnWriteFragment, JdbcMapping jdbcMapping, boolean isLob) {
 		// nothing to do
 	}
 

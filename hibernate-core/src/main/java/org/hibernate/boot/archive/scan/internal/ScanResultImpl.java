@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.archive.scan.internal;
 
+import java.io.Serializable;
 import java.util.Set;
 
 import org.hibernate.boot.archive.scan.spi.ClassDescriptor;
@@ -17,7 +18,7 @@ import org.hibernate.boot.archive.scan.spi.ScanResult;
 /**
 * @author Steve Ebersole
 */
-public class ScanResultImpl implements ScanResult {
+public class ScanResultImpl implements ScanResult, Serializable {
 	private final Set<PackageDescriptor> packageDescriptorSet;
 	private final Set<ClassDescriptor> classDescriptorSet;
 	private final Set<MappingFileDescriptor> mappingFileSet;

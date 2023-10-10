@@ -769,7 +769,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		final SqmTypedNode<N> typedNode = (SqmTypedNode<N>) argument;
 		return getFunctionDescriptor( "sum" ).generateSqmExpression(
 				typedNode,
-				(ReturnableType<N>) typedNode.getNodeType(),
+				(ReturnableType<N>) typedNode.getExpressible().getSqmType(),
 				queryEngine
 		);
 	}

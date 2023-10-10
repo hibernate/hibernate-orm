@@ -9,6 +9,15 @@ on:
   schedule:
     - cron: '34 11 * * 4'
 
+# See https://github.com/hibernate/hibernate-orm/pull/4615 for a description of the behavior we're getting.
+concurrency:
+  # Consider that two builds are in the same concurrency group (cannot run concurrently)
+  # if they use the same workflow and are about the same branch ("ref") or pull request.
+  group: "workflow = ${{ github.workflow }}, ref = ${{ github.event.ref }}, pr = ${{ github.event.pull_request.id }}"
+  # Cancel previous builds in the same concurrency group even if they are in process
+  # for pull requests or pushes to forks (not the upstream repository).
+  cancel-in-progress: ${{ github.event_name == 'pull_request' || github.repository != 'hibernate/hibernate-orm' }}
+
 jobs:
   analyze:
     name: Analyze

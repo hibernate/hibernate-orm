@@ -13,6 +13,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.Locale;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -75,6 +76,7 @@ import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.internal.OptionalTableUpdate;
 import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorOracleDatabaseImpl;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.NullType;
@@ -83,6 +85,7 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
@@ -762,6 +765,19 @@ public class OracleDialect extends Dialect {
 					);
 					if ( aggregateDescriptor != null ) {
 						return aggregateDescriptor;
+					}
+				}
+				break;
+			case ARRAY:
+				if ( "MDSYS.SDO_ORDINATE_ARRAY".equals( columnTypeName ) ) {
+					final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
+					if ( jdbcTypeConstructor != null ) {
+						return jdbcTypeConstructor.resolveType(
+								jdbcTypeRegistry.getTypeConfiguration(),
+								this,
+								jdbcTypeRegistry.getDescriptor( NUMERIC ),
+								ColumnTypeInformation.EMPTY
+						);
 					}
 				}
 				break;

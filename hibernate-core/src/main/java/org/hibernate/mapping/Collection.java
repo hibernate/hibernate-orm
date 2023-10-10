@@ -41,7 +41,7 @@ import org.hibernate.usertype.UserCollectionType;
  *
  * @author Gavin King
  */
-public abstract class Collection implements Fetchable, Value, Filterable {
+public abstract class Collection implements Fetchable, Value, Filterable, SoftDeletable {
 
 	public static final String DEFAULT_ELEMENT_COLUMN_NAME = "elt";
 	public static final String DEFAULT_KEY_COLUMN_NAME = "id";
@@ -98,6 +98,8 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	private String customSQLDeleteAll;
 	private boolean customDeleteAllCallable;
 	private ExecuteUpdateResultCheckStyle deleteAllCheckStyle;
+
+	private Column softDeleteColumn;
 
 	private String loaderName;
 
@@ -826,5 +828,15 @@ public abstract class Collection implements Fetchable, Value, Filterable {
 	@Override
 	public boolean isColumnUpdateable(int index) {
 		return false;
+	}
+
+	@Override
+	public void enableSoftDelete(Column indicatorColumn) {
+		this.softDeleteColumn = indicatorColumn;
+	}
+
+	@Override
+	public Column getSoftDeleteColumn() {
+		return softDeleteColumn;
 	}
 }

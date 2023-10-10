@@ -138,7 +138,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					final String qry = "select d from D d";
 
 					final Query query = session.createQuery( qry );
-					try (ScrollableResults scrollableResults = getScrollableResults( query )) {
+					try (ScrollableResults scrollableResults = query.scroll()) {
 						while ( scrollableResults.next() ) {
 							final DEntity dEntity = (DEntity) scrollableResults.get();
 							assertFalse( Hibernate.isPropertyInitialized( dEntity, "blob" ) );
@@ -232,7 +232,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					final String qry = "select e from E e join fetch e.d";
 
 					final Query query = session.createQuery( qry );
-					try (ScrollableResults scrollableResults = getScrollableResults( query )) {
+					try (ScrollableResults scrollableResults = query.scroll()) {
 						while ( scrollableResults.next() ) {
 							final EEntity eEntity = (EEntity) scrollableResults.get();
 							final DEntity dEntity = eEntity.getD();
@@ -253,7 +253,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 							"join fetch d.g";
 
 					final Query query = session.createQuery( qry );
-					try (ScrollableResults scrollableResults = getScrollableResults( query )) {
+					try (ScrollableResults scrollableResults = query.scroll()) {
 						int i = 0;
 						while ( scrollableResults.next() ) {
 							i++;
@@ -270,7 +270,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 					final String qry = "select g from G g join fetch g.dEntities";
 
 					final Query query = session.createQuery( qry );
-					try (ScrollableResults scrollableResults = getScrollableResults( query )) {
+					try (ScrollableResults scrollableResults = query.scroll()) {
 						while ( scrollableResults.next() ) {
 							final Object o = scrollableResults.get();
 						}
@@ -300,7 +300,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 							"join fetch d.g";
 
 					final Query query = session.createQuery( qry );
-					try (ScrollableResults scrollableResults = getScrollableResults( query )) {
+					try (ScrollableResults scrollableResults = query.scroll()) {
 						int i = 0;
 						while ( scrollableResults.next() ) {
 							i++;
@@ -316,20 +316,7 @@ public class FetchGraphTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	private ScrollableResults getScrollableResults(Query query) {
-		ScrollableResults scrollableResults;
-		final Dialect dialect = sessionFactory().getJdbcServices().getDialect();
-		if ( dialect instanceof DB2Dialect || dialect instanceof DerbyDialect ) {
-					/*
-						FetchingScrollableResultsImp#next() in order to check if the ResultSet is empty calls ResultSet#isBeforeFirst()
-						but the support for ResultSet#isBeforeFirst() is optional for ResultSets with a result
-						set type of TYPE_FORWARD_ONLY and db2 does not support it.
-					*/
-			scrollableResults = query.scroll( ScrollMode.SCROLL_INSENSITIVE );
-		}
-		else {
-			scrollableResults = query.scroll();
-		}
-		return scrollableResults;
+		return query.scroll();
 	}
 
 	@Test

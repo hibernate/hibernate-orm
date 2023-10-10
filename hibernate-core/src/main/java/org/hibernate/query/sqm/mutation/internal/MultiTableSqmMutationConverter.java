@@ -27,6 +27,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.query.sqm.tree.update.SqmSetClause;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstHelper;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
@@ -184,7 +185,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 		this.parameterResolutionConsumer = parameterResolutionConsumer;
 
 		if ( sqmWhereClause == null || sqmWhereClause.getPredicate() == null ) {
-			return null;
+			return discriminatorPredicate;
 		}
 
 		final SqlAstProcessingState rootProcessingState = getCurrentProcessingState();
@@ -214,12 +215,14 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 		pushProcessingState( restrictionProcessingState, getFromClauseIndex() );
 		try {
+			getCurrentClauseStack().push( Clause.WHERE );
 			return SqlAstHelper.combinePredicates(
 					(Predicate) sqmWhereClause.getPredicate().accept( this ),
 					discriminatorPredicate
 			);
 		}
 		finally {
+			getCurrentClauseStack().pop();
 			popProcessingStateStack();
 			this.parameterResolutionConsumer = null;
 		}

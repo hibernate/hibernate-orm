@@ -28,7 +28,7 @@ import static org.hibernate.internal.util.StringHelper.nullIfEmpty;
  *
  * @author Gavin King
  */
-public class RootClass extends PersistentClass implements TableOwner {
+public class RootClass extends PersistentClass implements TableOwner, SoftDeletable {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( RootClass.class );
 
 	@Deprecated(since = "6.2") @Remove
@@ -58,6 +58,7 @@ public class RootClass extends PersistentClass implements TableOwner {
 	private int nextSubclassId;
 	private Property declaredIdentifierProperty;
 	private Property declaredVersion;
+	private Column softDeleteColumn;
 
 	public RootClass(MetadataBuildingContext buildingContext) {
 		super( buildingContext );
@@ -399,6 +400,16 @@ public class RootClass extends PersistentClass implements TableOwner {
 			}
 		}
 		return tables;
+	}
+
+	@Override
+	public void enableSoftDelete(Column indicatorColumn) {
+		this.softDeleteColumn = indicatorColumn;
+	}
+
+	@Override
+	public Column getSoftDeleteColumn() {
+		return softDeleteColumn;
 	}
 
 	@Override

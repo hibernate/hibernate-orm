@@ -7,6 +7,7 @@
 package org.hibernate.boot.archive.internal;
 
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.URL;
 
 import org.hibernate.HibernateException;
@@ -15,7 +16,7 @@ import org.hibernate.boot.archive.spi.InputStreamAccess;
 /**
  * @author Steve Ebersole
  */
-public class UrlInputStreamAccess implements InputStreamAccess {
+public class UrlInputStreamAccess implements InputStreamAccess, Serializable {
 	private final URL url;
 
 	public UrlInputStreamAccess(URL url) {

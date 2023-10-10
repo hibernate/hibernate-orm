@@ -6,6 +6,9 @@
  */
 package org.hibernate.persister.collection;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
@@ -25,6 +28,7 @@ import org.hibernate.metamodel.mapping.CollectionIdentifierDescriptor;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinator;
 import org.hibernate.persister.collection.mutation.DeleteRowsCoordinatorNoOp;
@@ -42,7 +46,11 @@ import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorNoOp;
 import org.hibernate.persister.collection.mutation.UpdateRowsCoordinatorStandard;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.model.ast.ColumnValueBinding;
+import org.hibernate.sql.model.ast.ColumnValueParameterList;
+import org.hibernate.sql.model.ast.ColumnWriteFragment;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.RestrictedTableMutation;
 import org.hibernate.sql.model.ast.TableInsert;
@@ -50,8 +58,10 @@ import org.hibernate.sql.model.ast.TableMutation;
 import org.hibernate.sql.model.ast.builder.CollectionRowDeleteBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.model.jdbc.JdbcMutationOperation;
 
+import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
 /**
@@ -205,6 +215,51 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 	}
 
 
+	@Override
+	public RestrictedTableMutation<JdbcMutationOperation> generateDeleteAllAst(MutatingTableReference tableReference) {
+		assert getAttributeMapping() != null;
+
+		final SoftDeleteMapping softDeleteMapping = getAttributeMapping().getSoftDeleteMapping();
+		if ( softDeleteMapping == null ) {
+			return super.generateDeleteAllAst( tableReference );
+		}
+
+		final ForeignKeyDescriptor fkDescriptor = getAttributeMapping().getKeyDescriptor();
+		assert fkDescriptor != null;
+
+		final int keyColumnCount = fkDescriptor.getJdbcTypeCount();
+		final ColumnValueParameterList parameterBinders = new ColumnValueParameterList(
+				tableReference,
+				ParameterUsage.RESTRICT,
+				keyColumnCount
+		);
+		final java.util.List<ColumnValueBinding> restrictionBindings = arrayList( keyColumnCount );
+		applyKeyRestrictions( tableReference, parameterBinders, restrictionBindings );
+
+		final ColumnReference softDeleteColumn = new ColumnReference( tableReference, softDeleteMapping );
+		final ColumnWriteFragment nonDeletedLiteral = new ColumnWriteFragment(
+				softDeleteMapping.getNonDeletedLiteralText(),
+				Collections.emptyList(),
+				softDeleteMapping.getJdbcMapping()
+		);
+		final ColumnWriteFragment deletedLiteral = new ColumnWriteFragment(
+				softDeleteMapping.getDeletedLiteralText(),
+				Collections.emptyList(),
+				softDeleteMapping.getJdbcMapping()
+		);
+		restrictionBindings.add( new ColumnValueBinding( softDeleteColumn, nonDeletedLiteral ) );
+		final List<ColumnValueBinding> valueBindings = List.of( new ColumnValueBinding( softDeleteColumn, deletedLiteral ) );
+
+		return new TableUpdateStandard(
+				tableReference,
+				this,
+				"soft-delete removal",
+				valueBindings,
+				restrictionBindings,
+				null
+		);
+	}
+
 	protected RowMutationOperations buildRowMutationOperations() {
 		final OperationProducer insertRowOperationProducer;
 		final RowMutationOperations.Values insertRowValues;
@@ -295,6 +350,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		}
 
 		attributeMapping.getElementDescriptor().forEachInsertable( insertBuilder );
+
+		final SoftDeleteMapping softDeleteMapping = getAttributeMapping().getSoftDeleteMapping();
+		if ( softDeleteMapping != null ) {
+			insertBuilder.addValueColumn( softDeleteMapping );
+		}
 	}
 
 	private JdbcMutationOperation buildGeneratedInsertRowOperation(MutatingTableReference tableReference) {
@@ -597,6 +657,11 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		final PluralAttributeMapping pluralAttribute = getAttributeMapping();
 		assert pluralAttribute != null;
 
+		final SoftDeleteMapping softDeleteMapping = pluralAttribute.getSoftDeleteMapping();
+		if ( softDeleteMapping != null ) {
+			return generateSoftDeleteRowsAst( tableReference );
+		}
+
 		final ForeignKeyDescriptor fkDescriptor = pluralAttribute.getKeyDescriptor();
 		assert fkDescriptor != null;
 
@@ -625,6 +690,50 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 		//noinspection unchecked,rawtypes
 		return (RestrictedTableMutation) deleteBuilder.buildMutation();
+	}
+
+	protected RestrictedTableMutation<JdbcMutationOperation> generateSoftDeleteRowsAst(MutatingTableReference tableReference) {
+		final SoftDeleteMapping softDeleteMapping = getAttributeMapping().getSoftDeleteMapping();
+		assert softDeleteMapping != null;
+
+		final ForeignKeyDescriptor fkDescriptor = getAttributeMapping().getKeyDescriptor();
+		assert fkDescriptor != null;
+
+		final TableUpdateBuilderStandard<JdbcMutationOperation> updateBuilder = new TableUpdateBuilderStandard<>(
+				this,
+				tableReference,
+				getFactory(),
+				sqlWhereString
+		);
+
+		if ( getAttributeMapping().getIdentifierDescriptor() != null ) {
+			updateBuilder.addKeyRestrictionsLeniently( getAttributeMapping().getIdentifierDescriptor() );
+		}
+		else {
+			updateBuilder.addKeyRestrictionsLeniently( getAttributeMapping().getKeyDescriptor().getKeyPart() );
+
+			if ( hasIndex() && !indexContainsFormula ) {
+				assert getAttributeMapping().getIndexDescriptor() != null;
+				updateBuilder.addKeyRestrictionsLeniently( getAttributeMapping().getIndexDescriptor() );
+			}
+			else {
+				updateBuilder.addKeyRestrictions( getAttributeMapping().getElementDescriptor() );
+			}
+		}
+
+		updateBuilder.addLiteralRestriction(
+				softDeleteMapping.getColumnName(),
+				softDeleteMapping.getNonDeletedLiteralText(),
+				softDeleteMapping.getJdbcMapping()
+		);
+
+		updateBuilder.addValueColumn(
+				softDeleteMapping.getColumnName(),
+				softDeleteMapping.getDeletedLiteralText(),
+				softDeleteMapping.getJdbcMapping()
+		);
+
+		return updateBuilder.buildMutation();
 	}
 
 	private void applyDeleteRowRestrictions(

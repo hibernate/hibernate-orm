@@ -4,29 +4,29 @@
 Hibernate is broken into a number of modules/artifacts under the `org.hibernate.orm`
 group.  The main artifact is named `hibernate-core`.
 
-[NOTE]
+[NOTE,subs="attributes+"]
 ====
-This guide uses 6.3.0.Final as the Hibernate version for illustration purposes.  Be sure to change
+This guide uses {fullVersion} as the Hibernate version for illustration purposes.  Be sure to change
 this version, if necessary, to the version you wish to use.
 ====
 
 We can declare a dependency on this artifact using https://www.gradle.org[Gradle]
 
-[source,groovy]
+[source,groovy,subs="attributes+"]
 ----
 dependencies {
-  implementation "org.hibernate.orm:hibernate-core:6.3.0.Final"
+  implementation "org.hibernate.orm:hibernate-core:{fullVersion}"
 }
 ----
 
 or https://maven.org[Maven]:
 
-[source,xml]
+[source,xml,subs="attributes+"]
 ----
 <dependency>
     <groupId>org.hibernate.orm</groupId>
     <artifactId>hibernate-core</artifactId>
-    <version>6.3.0.Final</version>
+    <version>{fullVersion}</version>
 </dependency>
 ----
 
@@ -72,10 +72,10 @@ Hibernate also provides a platform (BOM in Maven terminology) module which can b
 
 To apply the platform in Gradle
 
-[source,groovy]
+[source,groovy,subs="attributes+"]
 ----
 dependencies {
-  implementation platform "org.hibernate.orm:hibernate-platform:6.3.0.Final"
+  implementation platform "org.hibernate.orm:hibernate-platform:{fullVersion}"
 
   // use the versions from the platform
   implementation "org.hibernate.orm:hibernate-core"
@@ -87,7 +87,7 @@ See the https://docs.gradle.org/current/userguide/java_platform_plugin.html#sec:
 
 To apply the platform (BOM) in Maven
 
-[source,xml]
+[source,xml,subs="attributes+"]
 ----
 <dependency>
     <groupId>org.hibernate.orm</groupId>
@@ -102,7 +102,7 @@ To apply the platform (BOM) in Maven
   <dependency>
     <groupId>org.hibernate.orm</groupId>
     <artifactId>hibernate-platform</artifactId>
-    <version>6.3.0.Final</version>
+    <version>{fullVersion}</version>
     <type>pom</type>
     <scope>import</scope>
   </dependency>

@@ -1,0 +1,9 @@
+jakarta.validation
+jakarta.validation.bootstrap
+jakarta.validation.constraints
+jakarta.validation.constraintvalidation
+jakarta.validation.executable
+jakarta.validation.groups
+jakarta.validation.metadata
+jakarta.validation.spi
+jakarta.validation.valueextraction

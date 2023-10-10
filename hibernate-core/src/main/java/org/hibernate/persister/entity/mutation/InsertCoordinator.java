@@ -390,6 +390,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 
 		// add the discriminator
 		entityPersister().addDiscriminatorToInsertGroup( insertGroupBuilder );
+		entityPersister().addSoftDeleteToInsertGroup( insertGroupBuilder );
 
 		// add the keys
 		final InsertGeneratedIdentifierDelegate identityDelegate = entityPersister().getIdentityInsertDelegate();

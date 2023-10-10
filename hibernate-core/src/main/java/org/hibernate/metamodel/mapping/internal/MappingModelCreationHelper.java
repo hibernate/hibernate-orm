@@ -194,6 +194,7 @@ public class MappingModelCreationHelper {
 			Long length,
 			Integer precision,
 			Integer scale,
+			boolean isLob,
 			boolean nullable,
 			boolean insertable,
 			boolean updateable,
@@ -243,6 +244,7 @@ public class MappingModelCreationHelper {
 				length,
 				precision,
 				scale,
+				isLob,
 				nullable,
 				insertable,
 				updateable,
@@ -512,7 +514,8 @@ public class MappingModelCreationHelper {
 						index.isColumnUpdateable( 0 ),
 						false,
 						dialect,
-						creationProcess.getSqmFunctionRegistry()
+						creationProcess.getSqmFunctionRegistry(),
+						creationProcess.getCreationContext()
 				);
 				indexDescriptor = new BasicValuedCollectionPart(
 						collectionDescriptor,
@@ -565,7 +568,8 @@ public class MappingModelCreationHelper {
 						index.isColumnUpdateable( 0 ),
 						false,
 						dialect,
-						creationProcess.getSqmFunctionRegistry()
+						creationProcess.getSqmFunctionRegistry(),
+						creationProcess.getCreationContext()
 				);
 				indexDescriptor = new BasicValuedCollectionPart(
 						collectionDescriptor,
@@ -674,7 +678,8 @@ public class MappingModelCreationHelper {
 				style,
 				cascadeStyle,
 				declaringType,
-				collectionDescriptor
+				collectionDescriptor,
+				creationProcess
 		) );
 
 		creationProcess.registerInitializationCallback(
@@ -776,7 +781,8 @@ public class MappingModelCreationHelper {
 					bootValueMappingKey.isColumnUpdateable( 0 ),
 					false,
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 
 			final SimpleForeignKeyDescriptor keyDescriptor = new SimpleForeignKeyDescriptor(
@@ -952,7 +958,8 @@ public class MappingModelCreationHelper {
 						value.isColumnUpdateable( i ),
 						((SimpleValue) value).isPartitionKey(),
 						dialect,
-						creationProcess.getSqmFunctionRegistry()
+						creationProcess.getSqmFunctionRegistry(),
+						creationProcess.getCreationContext()
 				);
 				i++;
 			}
@@ -967,7 +974,8 @@ public class MappingModelCreationHelper {
 						value.isColumnUpdateable( 0 ),
 						((SimpleValue) value).isPartitionKey(),
 						dialect,
-						creationProcess.getSqmFunctionRegistry()
+						creationProcess.getSqmFunctionRegistry(),
+						creationProcess.getCreationContext()
 				);
 			}
 
@@ -1114,7 +1122,8 @@ public class MappingModelCreationHelper {
 					insertable,
 					updateable,
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 		}
 		else {
@@ -1138,7 +1147,8 @@ public class MappingModelCreationHelper {
 					insertable,
 					updateable,
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 		}
 		if ( inverse ) {
@@ -1318,7 +1328,8 @@ public class MappingModelCreationHelper {
 					updatable,
 					false,
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 			return new BasicValuedCollectionPart(
 					collectionDescriptor,
@@ -1415,7 +1426,8 @@ public class MappingModelCreationHelper {
 					basicElement.isPartitionKey(),
 					true, // element collection does not support null elements
 					dialect,
-					creationProcess.getSqmFunctionRegistry()
+					creationProcess.getSqmFunctionRegistry(),
+					creationProcess.getCreationContext()
 			);
 			return new BasicValuedCollectionPart(
 					collectionDescriptor,

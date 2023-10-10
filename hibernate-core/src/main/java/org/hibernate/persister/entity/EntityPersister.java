@@ -42,6 +42,7 @@ import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
+import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -118,6 +119,17 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	 * @throws MappingException Indicates an issue in the metadata.
 	 */
 	void postInstantiate() throws MappingException;
+
+	/**
+	 * Prepare loaders associated with the persister.  Distinct "phase"
+	 * in building the persister after {@linkplain InFlightEntityMappingType#prepareMappingModel}
+	 * and {@linkplain #postInstantiate()} have occurred.
+	 * <p/>
+	 * The distinct phase is used to ensure that all {@linkplain org.hibernate.metamodel.mapping.TableDetails}
+	 * are available across the entire model
+	 */
+	default void prepareLoaders() {
+	}
 
 	/**
 	 * Return the {@link org.hibernate.SessionFactory} to which this persister
@@ -1110,5 +1122,4 @@ public interface EntityPersister extends EntityMappingType, RootTableGroupProduc
 	 */
 	@Incubating
 	Iterable<UniqueKeyEntry> uniqueKeyEntries();
-
 }

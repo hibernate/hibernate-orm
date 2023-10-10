@@ -94,7 +94,27 @@ public class CteMutationStrategy implements SqmMultiTableMutationStrategy {
 			DomainParameterXref domainParameterXref,
 			DomainQueryExecutionContext context) {
 		checkMatch( sqmDelete );
-		return new CteDeleteHandler( idCteTable, sqmDelete, domainParameterXref, this, sessionFactory ).execute( context );
+
+		final CteDeleteHandler deleteHandler;
+		if ( rootDescriptor.getSoftDeleteMapping() != null ) {
+			deleteHandler = new CteSoftDeleteHandler(
+					idCteTable,
+					sqmDelete,
+					domainParameterXref,
+					this,
+					sessionFactory
+			);
+		}
+		else {
+			deleteHandler = new CteDeleteHandler(
+					idCteTable,
+					sqmDelete,
+					domainParameterXref,
+					this,
+					sessionFactory
+			);
+		}
+		return deleteHandler.execute( context );
 	}
 
 	@Override

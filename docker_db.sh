@@ -185,7 +185,8 @@ postgresql_14() {
 
 postgresql_15() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d docker.io/postgis/postgis:15-3.3
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 --tmpfs /pgtmpfs:size=131072k -d docker.io/postgis/postgis:15-3.3 \
+      -c fsync=off -c synchronous_commit=off -c full_page_writes=off -c shared_buffers=256MB -c maintenance_work_mem=256MB -c max_wal_size=1GB -c checkpoint_timeout=1d
 }
 
 edb() {
@@ -561,6 +562,85 @@ grant all privileges to hibernate_orm_test;
 EOF\""
 }
 
+oracle_free_setup() {
+    HEALTHSTATUS=
+    until [ "$HEALTHSTATUS" == "healthy" ];
+    do
+        echo "Waiting for Oracle Free to start..."
+        sleep 5;
+        # On WSL, health-checks intervals don't work for Podman, so run them manually
+        if command -v podman > /dev/null; then
+          $PRIVILEGED_CLI $CONTAINER_CLI healthcheck run oracle > /dev/null
+        fi
+        HEALTHSTATUS="`$PRIVILEGED_CLI $CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
+        HEALTHSTATUS=${HEALTHSTATUS##+( )} #Remove longest matching series of spaces from the front
+        HEALTHSTATUS=${HEALTHSTATUS%%+( )} #Remove longest matching series of spaces from the back
+    done
+    sleep 2;
+    echo "Oracle successfully started"
+    # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
+    $PRIVILEGED_CLI $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
+cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
+set timing on
+-- Remove DISABLE_OOB parameter from Listener configuration and restart it
+!echo Enabling OOB for Listener...
+!echo NAMES.DIRECTORY_PATH=\(EZCONNECT,TNSNAMES\) > /opt/oracle/oradata/dbconfig/FREE/sqlnet.ora
+!lsnrctl reload
+-- Increasing redo logs
+alter database add logfile group 4 '\$ORACLE_BASE/oradata/FREE/redo04.log' size 500M reuse;
+alter database add logfile group 5 '\$ORACLE_BASE/oradata/FREE/redo05.log' size 500M reuse;
+alter database add logfile group 6 '\$ORACLE_BASE/oradata/FREE/redo06.log' size 500M reuse;
+alter system switch logfile;
+alter system switch logfile;
+alter system switch logfile;
+alter system checkpoint;
+alter database drop logfile group 1;
+alter database drop logfile group 2;
+alter database drop logfile group 3;
+!rm \$ORACLE_BASE/oradata/FREE/redo01.log
+!rm \$ORACLE_BASE/oradata/FREE/redo02.log
+!rm \$ORACLE_BASE/oradata/FREE/redo03.log
+
+-- Increasing SYSAUX data file
+alter database datafile '\$ORACLE_BASE/oradata/FREE/sysaux01.dbf' resize 600M;
+
+-- Modifying database init parameters
+alter system set open_cursors=1000 sid='*' scope=both;
+alter system set session_cached_cursors=500 sid='*' scope=spfile;
+alter system set db_securefile=ALWAYS sid='*' scope=spfile;
+alter system set dispatchers='(PROTOCOL=TCP)(SERVICE=FREEXDB)(DISPATCHERS=0)' sid='*' scope=spfile;
+alter system set recyclebin=OFF sid='*' SCOPE=SPFILE;
+
+-- Comment the 2 next lines to be able to use Diagnostics Pack features
+alter system set sga_target=0m sid='*' scope=both;
+-- alter system set statistics_level=BASIC sid='*' scope=spfile;
+
+-- Restart the database
+SHUTDOWN IMMEDIATE;
+STARTUP MOUNT;
+ALTER DATABASE OPEN;
+
+-- Switch to the FREEPDB1 pluggable database
+alter session set container=freepdb1;
+
+-- Modify FREEPDB1 datafiles and tablespaces
+alter database datafile '\$ORACLE_BASE/oradata/FREE/FREEPDB1/system01.dbf' resize 320M;
+alter database datafile '\$ORACLE_BASE/oradata/FREE/FREEPDB1/sysaux01.dbf' resize 360M;
+alter database datafile '\$ORACLE_BASE/oradata/FREE/FREEPDB1/undotbs01.dbf' resize 400M;
+alter database datafile '\$ORACLE_BASE/oradata/FREE/FREEPDB1/undotbs01.dbf' autoextend on next 16M;
+alter database tempfile '\$ORACLE_BASE/oradata/FREE/FREEPDB1/temp01.dbf' resize 400M;
+alter database tempfile '\$ORACLE_BASE/oradata/FREE/FREEPDB1/temp01.dbf' autoextend on next 16M;
+alter database datafile '\$ORACLE_BASE/oradata/FREE/FREEPDB1/users01.dbf' resize 100M;
+alter database datafile '\$ORACLE_BASE/oradata/FREE/FREEPDB1/users01.dbf' autoextend on next 16M;
+alter tablespace USERS nologging;
+alter tablespace SYSTEM nologging;
+alter tablespace SYSAUX nologging;
+
+create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
+grant all privileges to hibernate_orm_test;
+EOF\""
+}
+
 oracle_setup_old() {
     HEALTHSTATUS=
     until [ "$HEALTHSTATUS" == "healthy" ];
@@ -630,19 +710,72 @@ disable_userland_proxy() {
   if [[ "$HEALTCHECK_PATH" == "{{.State.Health.Status}}" ]]; then
     if [[ ! -f /etc/docker/daemon.json ]]; then
       sudo service docker stop
-      echo '{"userland-proxy": false}' > /etc/docker/daemon.json
+      sudo bash -c "echo '{\"userland-proxy\": false}' > /etc/docker/daemon.json"
       sudo service docker start
     elif ! grep -q userland-proxy /etc/docker/daemon.json; then
-      docker_daemon_json=$(</etc/docker/daemon.json)
+      export docker_daemon_json=$(</etc/docker/daemon.json)
       sudo service docker stop
-      echo "${docker_daemon_json/\}/,}\"userland-proxy\": false}" > /etc/docker/daemon.json
+      sudo bash -c 'echo "${docker_daemon_json/\}/,}{\"userland-proxy\": false}" > /etc/docker/daemon.json'
       sudo service docker start
     fi
   fi
 }
 
+oracle_atps() {
+  echo "Managing Oracle Autonomous Database..."
+  export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=autonomous&hostname=`hostname`" -H 'accept: application/json')
+  export HOST=$(echo $INFO | jq -r '.database' | jq -r '.host')
+  export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
+  export PASSWORD=$(echo $INFO | jq -r '.database' | jq -r '.password')
+
+  curl -s -X POST "https://${HOST}.oraclecloudapps.com/ords/admin/_/sql" -H 'content-type: application/sql' -H 'accept: application/json' -basic -u admin:${PASSWORD} --data-ascii "create user hibernate_orm_test_$RUNID identified by \"Oracle_19_Password\" DEFAULT TABLESPACE DATA TEMPORARY TABLESPACE TEMP;alter user hibernate_orm_test_$RUNID quota unlimited on data;grant pdb_dba to hibernate_orm_test_$RUNID;BEGIN ords_admin.enable_schema(p_enabled => TRUE, p_schema => 'hibernate_orm_test_$RUNID', p_url_mapping_type => 'BASE_PATH', p_url_mapping_pattern => 'hibernate_orm_test_$RUNID', p_auto_rest_auth => TRUE); END;"
+}
+
+oracle_db19c() {
+  echo "Managing Oracle Database 19c..."
+  export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=db19c&hostname=`hostname`" -H 'accept: application/json')
+  export HOST=$(echo $INFO | jq -r '.database' | jq -r '.host')
+  export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
+  export PASSWORD=$(echo $INFO | jq -r '.database' | jq -r '.password')
+
+/home/opc/sqlcl/bin/sql -s system/$PASSWORD@$HOST:1521/$SERVICE <<EOF
+    create user hibernate_orm_test_$RUNID identified by "Oracle_19_Password" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
+    alter user hibernate_orm_test_$RUNID quota unlimited on users;
+    grant all privileges to hibernate_orm_test_$RUNID;
+EOF
+
+}
+
+oracle_db21c() {
+  echo "Managing Oracle Database 21c..."
+  export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=db21c&hostname=`hostname`" -H 'accept: application/json')
+  export HOST=$(echo $INFO | jq -r '.database' | jq -r '.host')
+  export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
+  export PASSWORD=$(echo $INFO | jq -r '.database' | jq -r '.password')
+
+/home/opc/sqlcl/bin/sql -s system/$PASSWORD@$HOST:1521/$SERVICE <<EOF
+    create user hibernate_orm_test_$RUNID identified by "Oracle_21_Password" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
+    alter user hibernate_orm_test_$RUNID quota unlimited on users;
+    grant all privileges to hibernate_orm_test_$RUNID;
+EOF
+}
+
+oracle_db23c() {
+  echo "Managing Oracle Database 23c..."
+  export INFO=$(curl -s -k -L -X GET "https://api.atlas-controller.oraclecloud.com/ords/atlas/admin/database?type=db23c&hostname=`hostname`" -H 'accept: application/json')
+  export HOST=$(echo $INFO | jq -r '.database' | jq -r '.host')
+  export SERVICE=$(echo $INFO | jq -r '.database' | jq -r '.service')
+  export PASSWORD=$(echo $INFO | jq -r '.database' | jq -r '.password')
+
+/home/opc/sqlcl/bin/sql -s system/$PASSWORD@$HOST:1521/$SERVICE <<EOF
+    create user hibernate_orm_test_$RUNID identified by "Oracle_23_Password" DEFAULT TABLESPACE USERS TEMPORARY TABLESPACE TEMP;
+    alter user hibernate_orm_test_$RUNID quota unlimited on users;
+    grant all privileges to hibernate_orm_test_$RUNID;
+EOF
+}
+
 oracle() {
-  oracle_21
+  oracle_23
 }
 
 oracle_11() {
@@ -671,6 +804,20 @@ oracle_21() {
        --health-retries 10 \
        docker.io/gvenzl/oracle-xe:21.3.0-full
     oracle_setup
+}
+
+oracle_23() {
+    $PRIVILEGED_CLI $CONTAINER_CLI rm -f oracle || true
+    disable_userland_proxy
+    # We need to use the defaults
+    # SYSTEM/Oracle18
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
+       --health-cmd healthcheck.sh \
+       --health-interval 5s \
+       --health-timeout 5s \
+       --health-retries 10 \
+       docker.io/gvenzl/oracle-free:23-full
+    oracle_free_setup
 }
 
 hana() {
@@ -926,6 +1073,7 @@ if [ -z ${1} ]; then
     echo -e "\tmysql_8_0"
     echo -e "\tmysql_5_7"
     echo -e "\toracle"
+    echo -e "\toracle_23"
     echo -e "\toracle_21"
     echo -e "\toracle_11"
     echo -e "\tpostgresql"

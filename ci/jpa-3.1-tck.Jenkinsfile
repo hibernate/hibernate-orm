@@ -2,9 +2,21 @@
 
 // Avoid running the pipeline on branch indexing
 if (currentBuild.getBuildCauses().toString().contains('BranchIndexingCause')) {
-  print "INFO: Build skipped due to trigger being Branch Indexing"
-  currentBuild.result = 'ABORTED'
-  return
+  	print "INFO: Build skipped due to trigger being Branch Indexing"
+	currentBuild.result = 'NOT_BUILT'
+  	return
+}
+def throttleCount
+// Don't build the TCK on PRs, unless they use the tck label
+if ( env.CHANGE_ID != null ) {
+	if ( !pullRequest.labels.contains( 'tck' ) ) {
+		print "INFO: Build skipped because pull request doesn't have 'tck' label"
+		return
+	}
+	throttleCount = 20
+}
+else {
+	throttleCount = 1
 }
 
 pipeline {
@@ -15,7 +27,7 @@ pipeline {
         jdk 'OpenJDK 11 Latest'
     }
     options {
-  		rateLimitBuilds(throttle: [count: 1, durationName: 'day', userBoost: true])
+  		rateLimitBuilds(throttle: [count: throttleCount, durationName: 'day', userBoost: true])
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
         disableConcurrentBuilds(abortPrevious: true)
     }

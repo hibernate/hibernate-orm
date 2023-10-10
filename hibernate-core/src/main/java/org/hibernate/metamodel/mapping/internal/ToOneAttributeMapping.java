@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -34,6 +35,7 @@ import org.hibernate.mapping.Property;
 import org.hibernate.mapping.Selectable;
 import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
+import org.hibernate.metamodel.UnsupportedMappingException;
 import org.hibernate.metamodel.mapping.AssociationKey;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
@@ -52,6 +54,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.mapping.VirtualModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
@@ -62,6 +65,7 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.TreatedNavigablePath;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -100,6 +104,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+
+import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
 
 /**
  * @author Steve Ebersole
@@ -410,6 +416,18 @@ public class ToOneAttributeMapping
 			isKeyTableNullable = isNullable();
 			isOptional = !bootValue.isConstrained();
 			isInternalLoadNullable = isNullable();
+		}
+
+		if ( entityMappingType.getSoftDeleteMapping() != null ) {
+			// cannot be lazy
+			if ( getTiming() == FetchTiming.DELAYED ) {
+				throw new UnsupportedMappingException( String.format(
+						Locale.ROOT,
+						"To-one attribute (%s.%s) cannot be mapped as LAZY as its associated entity is defined with @SoftDelete",
+						declaringType.getPartName(),
+						getAttributeName()
+				) );
+			}
 		}
 
 		if ( referencedPropertyName == null ) {
@@ -1525,7 +1543,8 @@ public class ToOneAttributeMapping
 								);
 							}
 						}
-						else if ( notFoundAction != null ) {
+						else if ( notFoundAction != null
+								|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null ) {
 							// For the target side only add keyResult when a not-found action is present
 							keyResult = foreignKeyDescriptor.createTargetDomainResult(
 									fetchablePath,
@@ -1608,7 +1627,9 @@ public class ToOneAttributeMapping
 		final boolean selectByUniqueKey = isSelectByUniqueKey( side );
 
 		// Consider all associations annotated with @NotFound as EAGER
-		if ( fetchTiming == FetchTiming.IMMEDIATE || hasNotFoundAction() ) {
+		if ( fetchTiming == FetchTiming.IMMEDIATE
+				|| hasNotFoundAction()
+				|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null ) {
 			return buildEntityFetchSelect(
 					fetchParent,
 					this,
@@ -1977,10 +1998,37 @@ public class ToOneAttributeMapping
 					if ( getAssociatedEntityMappingType().getSuperMappingType() != null && !creationState.supportsEntityNameUsage() ) {
 						getAssociatedEntityMappingType().applyDiscriminator( null, null, tableGroup, creationState );
 					}
+
+					final SoftDeleteMapping softDeleteMapping = getAssociatedEntityMappingType().getSoftDeleteMapping();
+					if ( softDeleteMapping != null ) {
+						// add the restriction
+						final TableReference tableReference = lazyTableGroup.resolveTableReference(
+								navigablePath,
+								getAssociatedEntityMappingType().getSoftDeleteTableDetails().getTableName()
+						);
+						join.applyPredicate( createNonSoftDeletedRestriction(
+								tableReference,
+								softDeleteMapping,
+								creationState.getSqlExpressionResolver()
+						) );
+					}
 				}
 		);
 
 		return join;
+	}
+
+	@Override
+	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, SqlAstJoinType requestedJoinType, boolean fetched) {
+		if ( requestedJoinType != null ) {
+			return requestedJoinType;
+		}
+
+		if ( fetched ) {
+			return getDefaultSqlAstJoinType( lhs );
+		}
+
+		return SqlAstJoinType.INNER;
 	}
 
 	@Override
@@ -2000,11 +2048,15 @@ public class ToOneAttributeMapping
 				creationState.getSqlAliasBaseGenerator()
 		);
 
+		final SoftDeleteMapping softDeleteMapping = getAssociatedEntityMappingType().getSoftDeleteMapping();
+
 		final boolean canUseInnerJoin;
 		if ( ! lhs.canUseInnerJoins() ) {
 			canUseInnerJoin = false;
 		}
-		else if ( isNullable || hasNotFoundAction() ) {
+		else if ( isNullable
+				|| hasNotFoundAction()
+				|| softDeleteMapping != null ) {
 			canUseInnerJoin = false;
 		}
 		else {
@@ -2075,6 +2127,19 @@ public class ToOneAttributeMapping
 							)
 					)
 			);
+
+			if ( fetched && softDeleteMapping != null ) {
+				// add the restriction
+				final TableReference tableReference = lazyTableGroup.resolveTableReference(
+						navigablePath,
+						getAssociatedEntityMappingType().getSoftDeleteTableDetails().getTableName()
+				);
+				predicateConsumer.accept( createNonSoftDeletedRestriction(
+						tableReference,
+						softDeleteMapping,
+						creationState.getSqlExpressionResolver()
+				) );
+			}
 		}
 
 		if ( requestedJoinType != null && realParentTableGroup instanceof CorrelatedTableGroup ) {

@@ -6127,7 +6127,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitTableReferenceJoin(TableReferenceJoin tableReferenceJoin) {
-		// nothing to do... handled within TableGroup#render
+		// nothing to do... handled within TableGroupTableGroup#render
 	}
 
 
@@ -6229,8 +6229,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
+		appendSql( getSqlTypeName( castTarget, sessionFactory ) );
+	}
+
+	public static String getSqlTypeName(CastTarget castTarget, SessionFactoryImplementor factory) {
 		if ( castTarget.getSqlType() != null ) {
-			appendSql( castTarget.getSqlType() );
+			return castTarget.getSqlType();
 		}
 		else {
 			final SqlExpressible expressionType = (SqlExpressible) castTarget.getExpressionType();
@@ -6238,7 +6242,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) expressionType;
 				final BasicPluralJavaType<?> javaTypeDescriptor = (BasicPluralJavaType<?>) containerType.getJavaTypeDescriptor();
 				final BasicType<?> elementType = containerType.getElementType();
-				final String elementTypeName = sessionFactory.getTypeConfiguration().getDdlTypeRegistry()
+				final String elementTypeName = factory.getTypeConfiguration().getDdlTypeRegistry()
 						.getDescriptor( elementType.getJdbcType().getDdlTypeCode() )
 						.getCastTypeName(
 								elementType,
@@ -6246,17 +6250,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 								castTarget.getPrecision(),
 								castTarget.getScale()
 						);
-				final String arrayTypeName = dialect.getArrayTypeName(
+				final String arrayTypeName = factory.getJdbcServices().getDialect().getArrayTypeName(
 						javaTypeDescriptor.getElementJavaType().getJavaTypeClass().getSimpleName(),
 						elementTypeName,
 						null
 				);
 				if ( arrayTypeName != null ) {
-					appendSql( arrayTypeName );
-					return;
+					return arrayTypeName;
 				}
 			}
-			final DdlTypeRegistry ddlTypeRegistry = getSessionFactory().getTypeConfiguration().getDdlTypeRegistry();
+			final DdlTypeRegistry ddlTypeRegistry = factory.getTypeConfiguration().getDdlTypeRegistry();
 			DdlType ddlType = ddlTypeRegistry
 					.getDescriptor( expressionType.getJdbcMapping().getJdbcType().getDdlTypeCode() );
 			if ( ddlType == null ) {
@@ -6265,13 +6268,11 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				ddlType = ddlTypeRegistry.getDescriptor( SqlTypes.INTEGER );
 			}
 
-			appendSql(
-					ddlType.getCastTypeName(
-							expressionType,
-							castTarget.getLength(),
-							castTarget.getPrecision(),
-							castTarget.getScale()
-					)
+			return ddlType.getCastTypeName(
+					expressionType,
+					castTarget.getLength(),
+					castTarget.getPrecision(),
+					castTarget.getScale()
 			);
 		}
 	}

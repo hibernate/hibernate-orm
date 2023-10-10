@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import jakarta.persistence.FetchType;
 import org.hibernate.AnnotationException;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionTypeRegistration;
@@ -74,6 +73,7 @@ import org.hibernate.usertype.UserType;
 
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.MappedSuperclass;
@@ -87,6 +87,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.SequenceGenerators;
 import jakarta.persistence.SqlResultSetMapping;
 import jakarta.persistence.SqlResultSetMappings;
+import jakarta.persistence.Table;
 import jakarta.persistence.TableGenerator;
 import jakarta.persistence.TableGenerators;
 
@@ -433,16 +434,19 @@ public final class AnnotationBinder {
 	}
 
 	private static void detectMappedSuperclassProblems(XClass annotatedClass) {
-		//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
-		if ( annotatedClass.isAnnotationPresent( Entity.class )
-				&&  annotatedClass.isAnnotationPresent( MappedSuperclass.class ) ) {
-			throw new AnnotationException( "Type '"+ annotatedClass.getName()
-					+ "' is annotated both '@Entity' and '@MappedSuperclass'" );
-		}
-
-		if ( annotatedClass.isAnnotationPresent( Inheritance.class )
-				&&  annotatedClass.isAnnotationPresent( MappedSuperclass.class ) ) {
-			LOG.unsupportedMappedSuperclassWithEntityInheritance( annotatedClass.getName() );
+		if ( annotatedClass.isAnnotationPresent( MappedSuperclass.class ) ) {
+			//@Entity and @MappedSuperclass on the same class leads to a NPE down the road
+			if ( annotatedClass.isAnnotationPresent( Entity.class ) ) {
+				throw new AnnotationException( "Type '" + annotatedClass.getName()
+						+ "' is annotated both '@Entity' and '@MappedSuperclass'" );
+			}
+			if ( annotatedClass.isAnnotationPresent( Table.class ) ) {
+				throw new AnnotationException( "Mapped superclass '" + annotatedClass.getName()
+						+ "' may not specify a '@Table'" );
+			}
+			if ( annotatedClass.isAnnotationPresent( Inheritance.class ) ) {
+				LOG.unsupportedMappedSuperclassWithEntityInheritance( annotatedClass.getName() );
+			}
 		}
 	}
 
@@ -451,29 +455,31 @@ public final class AnnotationBinder {
 				.getServiceRegistry()
 				.getService( ManagedBeanRegistry.class );
 
-		final JavaTypeRegistration javaTypeRegistration = annotatedElement.getAnnotation( JavaTypeRegistration.class );
+		final JavaTypeRegistration javaTypeRegistration =
+				annotatedElement.getAnnotation( JavaTypeRegistration.class );
 		if ( javaTypeRegistration != null ) {
 			handleJavaTypeRegistration( context, managedBeanRegistry, javaTypeRegistration );
 		}
 		else {
-			final JavaTypeRegistrations javaTypeRegistrations = annotatedElement.getAnnotation( JavaTypeRegistrations.class );
+			final JavaTypeRegistrations javaTypeRegistrations =
+					annotatedElement.getAnnotation( JavaTypeRegistrations.class );
 			if ( javaTypeRegistrations != null ) {
-				final JavaTypeRegistration[] registrations = javaTypeRegistrations.value();
-				for ( JavaTypeRegistration registration : registrations ) {
+				for ( JavaTypeRegistration registration : javaTypeRegistrations.value() ) {
 					handleJavaTypeRegistration( context, managedBeanRegistry, registration );
 				}
 			}
 		}
 
-		final JdbcTypeRegistration jdbcTypeRegistration = annotatedElement.getAnnotation( JdbcTypeRegistration.class );
+		final JdbcTypeRegistration jdbcTypeRegistration =
+				annotatedElement.getAnnotation( JdbcTypeRegistration.class );
 		if ( jdbcTypeRegistration != null ) {
 			handleJdbcTypeRegistration( context, managedBeanRegistry, jdbcTypeRegistration );
 		}
 		else {
-			final JdbcTypeRegistrations jdbcTypeRegistrations = annotatedElement.getAnnotation( JdbcTypeRegistrations.class );
+			final JdbcTypeRegistrations jdbcTypeRegistrations =
+					annotatedElement.getAnnotation( JdbcTypeRegistrations.class );
 			if ( jdbcTypeRegistrations != null ) {
-				final JdbcTypeRegistration[] registrations = jdbcTypeRegistrations.value();
-				for ( JdbcTypeRegistration registration : registrations ) {
+				for ( JdbcTypeRegistration registration : jdbcTypeRegistrations.value() ) {
 					handleJdbcTypeRegistration( context, managedBeanRegistry, registration );
 				}
 			}
@@ -499,15 +505,9 @@ public final class AnnotationBinder {
 			ManagedBeanRegistry managedBeanRegistry,
 			JdbcTypeRegistration annotation) {
 		final Class<? extends JdbcType> jdbcTypeClass = annotation.value();
-
-		final JdbcType jdbcType;
-		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
-			jdbcType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( jdbcTypeClass );
-		}
-		else {
-			jdbcType = managedBeanRegistry.getBean( jdbcTypeClass ).getBeanInstance();
-		}
-
+		final JdbcType jdbcType = context.getBuildingOptions().disallowExtensionsInCdi()
+				? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( jdbcTypeClass )
+				: managedBeanRegistry.getBean( jdbcTypeClass ).getBeanInstance();
 		final int typeCode = annotation.registrationCode() == Integer.MIN_VALUE
 				? jdbcType.getDefaultSqlTypeCode()
 				: annotation.registrationCode();
@@ -519,14 +519,10 @@ public final class AnnotationBinder {
 			ManagedBeanRegistry managedBeanRegistry,
 			JavaTypeRegistration annotation) {
 		final Class<? extends BasicJavaType<?>> javaTypeClass = annotation.descriptorClass();
-
-		final BasicJavaType<?> javaType;
-		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
-			javaType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass );
-		}
-		else {
-			javaType = managedBeanRegistry.getBean( javaTypeClass ).getBeanInstance();
-		}
+		final BasicJavaType<?> javaType =
+				context.getBuildingOptions().disallowExtensionsInCdi()
+						? FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( javaTypeClass )
+						: managedBeanRegistry.getBean( javaTypeClass ).getBeanInstance();
 		context.getMetadataCollector().addJavaTypeRegistration( annotation.javaType(), javaType );
 	}
 
@@ -542,8 +538,7 @@ public final class AnnotationBinder {
 			final EmbeddableInstantiatorRegistrations embeddableInstantiatorRegistrations =
 					annotatedElement.getAnnotation( EmbeddableInstantiatorRegistrations.class );
 			if ( embeddableInstantiatorRegistrations != null ) {
-				final EmbeddableInstantiatorRegistration[] registrations = embeddableInstantiatorRegistrations.value();
-				for ( EmbeddableInstantiatorRegistration registration : registrations ) {
+				for ( EmbeddableInstantiatorRegistration registration : embeddableInstantiatorRegistrations.value() ) {
 					handleEmbeddableInstantiatorRegistration( context, registration );
 				}
 			}
@@ -571,8 +566,7 @@ public final class AnnotationBinder {
 			final CompositeTypeRegistrations compositeTypeRegistrations =
 					annotatedElement.getAnnotation( CompositeTypeRegistrations.class );
 			if ( compositeTypeRegistrations != null ) {
-				final CompositeTypeRegistration[] registrations = compositeTypeRegistrations.value();
-				for ( CompositeTypeRegistration registration : registrations ) {
+				for ( CompositeTypeRegistration registration : compositeTypeRegistrations.value() ) {
 					handleCompositeUserTypeRegistration( context, registration );
 				}
 			}
@@ -591,8 +585,7 @@ public final class AnnotationBinder {
 			final TypeRegistrations typeRegistrations =
 					annotatedElement.getAnnotation( TypeRegistrations.class );
 			if ( typeRegistrations != null ) {
-				final TypeRegistration[] registrations = typeRegistrations.value();
-				for ( TypeRegistration registration : registrations ) {
+				for ( TypeRegistration registration : typeRegistrations.value() ) {
 					handleUserTypeRegistration( context, registration );
 				}
 			}
@@ -625,14 +618,13 @@ public final class AnnotationBinder {
 		final ConverterRegistration converterRegistration = container.getAnnotation( ConverterRegistration.class );
 		if ( converterRegistration != null ) {
 			handleConverterRegistration( converterRegistration, context );
-			return;
 		}
-
-		final ConverterRegistrations converterRegistrations = container.getAnnotation( ConverterRegistrations.class );
-		if ( converterRegistrations != null ) {
-			final ConverterRegistration[] registrations = converterRegistrations.value();
-			for ( ConverterRegistration registration : registrations ) {
-				handleConverterRegistration( registration, context );
+		else {
+			final ConverterRegistrations converterRegistrations = container.getAnnotation( ConverterRegistrations.class );
+			if ( converterRegistrations != null ) {
+				for ( ConverterRegistration registration : converterRegistrations.value() ) {
+					handleConverterRegistration( registration, context );
+				}
 			}
 		}
 	}

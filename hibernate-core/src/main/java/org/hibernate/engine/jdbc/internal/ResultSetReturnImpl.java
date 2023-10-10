@@ -47,33 +47,6 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	}
 
 	@Override
-	public ResultSet extract(PreparedStatement statement) {
-		// IMPL NOTE : SQL logged by caller
-		long executeStartNanos = 0;
-		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStartNanos = System.nanoTime();
-		}
-		try {
-			final ResultSet rs;
-			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
-			try {
-				jdbcExecuteStatementStart();
-				rs = statement.executeQuery();
-			}
-			finally {
-				JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, statement );
-				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStartNanos, context() );
-			}
-			postExtract( rs, statement );
-			return rs;
-		}
-		catch (SQLException e) {
-			throw sqlExceptionHelper.convert( e, "could not extract ResultSet" );
-		}
-	}
-
-	@Override
 	public ResultSet extract(PreparedStatement statement, String sql) {
 		// IMPL NOTE : SQL logged by caller
 		long executeStartNanos = 0;
@@ -113,33 +86,6 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 	}
 
 	@Override
-	public ResultSet extract(CallableStatement callableStatement) {
-		// IMPL NOTE : SQL logged by caller
-		long executeStartNanos = 0;
-		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStartNanos = System.nanoTime();
-		}
-		try {
-			final ResultSet rs;
-			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
-			try {
-				jdbcExecuteStatementStart();
-				rs = dialect.getResultSet( callableStatement );
-			}
-			finally {
-				JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, callableStatement );
-				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( callableStatement, executeStartNanos, context() );
-			}
-			postExtract( rs, callableStatement );
-			return rs;
-		}
-		catch (SQLException e) {
-			throw sqlExceptionHelper.convert( e, "could not extract ResultSet" );
-		}
-	}
-
-	@Override
 	public ResultSet extract(Statement statement, String sql) {
 		sqlStatementLogger.logStatement( sql );
 		long executeStartNanos = 0;
@@ -163,38 +109,6 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		catch (SQLException e) {
 			throw sqlExceptionHelper.convert( e, "could not extract ResultSet", sql );
-		}
-	}
-
-	@Override
-	public ResultSet execute(PreparedStatement statement) {
-		// sql logged by StatementPreparerImpl
-		long executeStartNanos = 0;
-		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStartNanos = System.nanoTime();
-		}
-		try {
-			final ResultSet rs;
-			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
-			try {
-				jdbcExecuteStatementStart();
-				if ( !statement.execute() ) {
-					while ( !statement.getMoreResults() && statement.getUpdateCount() != -1 ) {
-						// do nothing until we hit the resultset
-					}
-				}
-				rs = statement.getResultSet();
-			}
-			finally {
-				JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, statement );
-				jdbcExecuteStatementEnd();
-				sqlStatementLogger.logSlowQuery( statement, executeStartNanos, context() );
-			}
-			postExtract( rs, statement );
-			return rs;
-		}
-		catch (SQLException e) {
-			throw sqlExceptionHelper.convert( e, "could not execute statement" );
 		}
 	}
 
@@ -259,30 +173,6 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		}
 		catch (SQLException e) {
 			throw sqlExceptionHelper.convert( e, "could not execute statement", sql );
-		}
-	}
-
-	@Override
-	public int executeUpdate(PreparedStatement statement) {
-		assert statement != null;
-
-		long executeStartNanos = 0;
-		if ( this.sqlStatementLogger.getLogSlowQuery() > 0 ) {
-			executeStartNanos = System.nanoTime();
-		}
-		final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
-
-		try {
-			jdbcExecuteStatementStart();
-			return statement.executeUpdate();
-		}
-		catch (SQLException e) {
-			throw sqlExceptionHelper.convert( e, "could not execute statement" );
-		}
-		finally {
-			JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, statement );
-			jdbcExecuteStatementEnd();
-			sqlStatementLogger.logSlowQuery( statement, executeStartNanos, context() );
 		}
 	}
 

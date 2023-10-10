@@ -169,20 +169,6 @@ public class JfrEventManager {
 		}
 	}
 
-	public static void completeJdbcPreparedStatementExecutionEvent(
-			JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent,
-			PreparedStatement statement) {
-		if ( jdbcPreparedStatementExecutionEvent.isEnabled() ) {
-			jdbcPreparedStatementExecutionEvent.end();
-			if ( jdbcPreparedStatementExecutionEvent.shouldCommit() ) {
-				jdbcPreparedStatementExecutionEvent.executionTime = getExecutionTime(
-						jdbcPreparedStatementExecutionEvent.startedAt );
-				jdbcPreparedStatementExecutionEvent.sql = statement.toString();
-				jdbcPreparedStatementExecutionEvent.commit();
-			}
-		}
-	}
-
 	public static JdbcBatchExecutionEvent beginJdbcBatchExecutionEvent() {
 		final JdbcBatchExecutionEvent jdbcBatchExecutionEvent = new JdbcBatchExecutionEvent();
 		if ( jdbcBatchExecutionEvent.isEnabled() ) {

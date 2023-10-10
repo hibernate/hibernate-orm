@@ -3350,6 +3350,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 
+		final TableGroupJoin joinForPredicate;
+		if ( !joinedTableGroup.getNestedTableGroupJoins().isEmpty() || joinedTableGroup.getTableGroupJoins().isEmpty() ) {
+			joinForPredicate = joinedTableGroupJoin;
+		}
+		else {
+			joinForPredicate = joinedTableGroup.getTableGroupJoins().get( joinedTableGroup.getTableGroupJoins().size() - 1 );
+		}
+
 		// add any additional join restrictions
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			if ( sqmJoin.isFetched() ) {
@@ -3358,13 +3366,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;
 			currentlyProcessingJoin = sqmJoin;
-			joinedTableGroupJoin.applyPredicate( visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() ) );
+			final Predicate predicate = visitNestedTopLevelPredicate( sqmJoin.getJoinPredicate() );
+			// If translating the join predicate didn't initialize the table group,
+			// we can safely apply it on the collection table group instead
+			if ( joinForPredicate.getJoinedGroup().isInitialized() ) {
+				joinForPredicate.applyPredicate( predicate );
+			}
+			else {
+				joinedTableGroupJoin.applyPredicate( predicate );
+			}
 			currentlyProcessingJoin = oldJoin;
 		}
 		// Since joins on treated paths will never cause table pruning, we need to add a join condition for the treat
 		if ( sqmJoin.getLhs() instanceof SqmTreatedPath<?, ?> ) {
 			final SqmTreatedPath<?, ?> treatedPath = (SqmTreatedPath<?, ?>) sqmJoin.getLhs();
-			joinedTableGroupJoin.applyPredicate(
+			joinForPredicate.applyPredicate(
 					createTreatTypeRestriction(
 							treatedPath.getWrappedPath(),
 							treatedPath.getTreatTarget()
@@ -8171,16 +8187,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			pluralAttributeMapping.applyBaseManyToManyRestrictions(
 					(predicate) -> {
 						final TableGroup parentTableGroup = getFromClauseIndex().getTableGroup( collectionFetch.getFetchParent().getNavigablePath() );
-						TableGroupJoin pluralTableGroupJoin = null;
-						for ( TableGroupJoin nestedTableGroupJoin : parentTableGroup.getTableGroupJoins() ) {
-							if ( nestedTableGroupJoin.getNavigablePath() == fetchablePath ) {
-								pluralTableGroupJoin = nestedTableGroupJoin;
-								break;
-							}
-						}
-
+						final TableGroupJoin pluralTableGroupJoin = parentTableGroup.findTableGroupJoin( tableGroup );
 						assert pluralTableGroupJoin != null;
-						pluralTableGroupJoin.applyPredicate( predicate );
+
+						final TableGroupJoin joinForPredicate;
+						if ( !tableGroup.getNestedTableGroupJoins().isEmpty() || tableGroup.getTableGroupJoins().isEmpty() ) {
+							joinForPredicate = pluralTableGroupJoin;
+						}
+						else {
+							joinForPredicate = tableGroup.getTableGroupJoins().get( tableGroup.getTableGroupJoins().size() - 1 );
+						}
+						joinForPredicate.applyPredicate( predicate );
 					},
 					tableGroup,
 					true,

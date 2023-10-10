@@ -19,6 +19,12 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
  * @see FilterRestrictable
  */
 public interface WhereRestrictable {
+
+	/**
+	 * Does this restrictable have a where restriction?
+	 */
+	boolean hasWhereRestrictions();
+
 	/**
 	 * Apply the {@link org.hibernate.annotations.Where} restrictions
 	 */

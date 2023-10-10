@@ -1024,6 +1024,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
+		public boolean hasWhereRestrictions() {
+			return false;
+		}
+
+		@Override
 		public void applyWhereRestrictions(Consumer<Predicate> predicateConsumer, TableGroup tableGroup, boolean useQualifier, SqlAstCreationState creationState) {
 
 		}

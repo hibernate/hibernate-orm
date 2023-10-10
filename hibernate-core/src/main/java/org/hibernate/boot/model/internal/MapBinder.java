@@ -261,7 +261,7 @@ public class MapBinder extends CollectionBinder {
 				: associatedClass;
 		final Value indexValue = createFormulatedValue( mapProperty.getValue(), collection, associatedClass, targetEntity );
 		getMap().setIndex( indexValue );
-		getMap().setMapKeyPropertyName( mapProperty.getName() );
+		getMap().setMapKeyPropertyName( mapKeyPropertyName );
 	}
 
 	private CollectionPropertyHolder buildCollectionPropertyHolder(

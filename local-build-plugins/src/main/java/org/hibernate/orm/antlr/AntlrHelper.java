@@ -51,20 +51,23 @@ public class AntlrHelper {
 			tmpFile.getParentFile().mkdirs();
 			tmpFile.createNewFile();
 
-			try (final BufferedReader reader = new BufferedReader( new FileReader( generatedJavaFile ) );
-			    final BufferedWriter writer = new BufferedWriter( new FileWriter( tmpFile ) )) {
+			final BufferedReader reader = new BufferedReader( new FileReader( generatedJavaFile ) );
+			final BufferedWriter writer = new BufferedWriter( new FileWriter( tmpFile ) );
 
-				boolean found = false;
-				String currentLine;
+			boolean found = false;
+			String currentLine;
 
-				while ((currentLine = reader.readLine()) != null) {
-					if (!found && currentLine.startsWith("// Generated from")) {
-						found = true;
-						continue;
-					}
-					writer.write(currentLine + System.lineSeparator());
+			while ( ( currentLine = reader.readLine() ) != null ) {
+				if ( ! found && currentLine.startsWith( "// Generated from" ) ) {
+					found = true;
+					continue;
 				}
+				writer.write( currentLine + System.lineSeparator() );
 			}
+
+			writer.close();
+			reader.close();
+
 			generatedJavaFile.delete();
 			tmpFile.renameTo( generatedJavaFile );
 		}

@@ -32,7 +32,8 @@ public class SingleLineSqlScriptExtractor implements SqlScriptCommandExtractor {
 	public List<String> extractCommands(Reader reader, Dialect dialect) {
 		final List<String> statementList = new LinkedList<>();
 
-		try (final BufferedReader bufferedReader = new BufferedReader( reader )) {
+		final BufferedReader bufferedReader = new BufferedReader( reader );
+		try {
 			for ( String line = bufferedReader.readLine(); line != null; line = bufferedReader.readLine() ) {
 				final String trimmedLine = line.trim();
 

@@ -138,7 +138,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * @author Gavin King
  */
 public class PostgreSQLDialect extends Dialect {
-	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11 );
+	protected final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 12 );
 
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
@@ -583,16 +583,11 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.degrees();
 		functionFactory.log();
 		functionFactory.mod_operator();
-		if ( getVersion().isSameOrAfter( 12 ) ) {
-			functionFactory.log10();
-			functionFactory.tanh();
-			functionFactory.sinh();
-			functionFactory.cosh();
-			functionFactory.moreHyperbolic();
-		}
-		else {
-			functionContributions.getFunctionRegistry().registerAlternateKey( "log10", "log" );
-		}
+		functionFactory.log10();
+		functionFactory.tanh();
+		functionFactory.sinh();
+		functionFactory.cosh();
+		functionFactory.moreHyperbolic();
 		functionFactory.cbrt();
 		functionFactory.pi();
 		functionFactory.trim2();

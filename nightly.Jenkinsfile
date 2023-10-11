@@ -30,7 +30,7 @@ stage('Configure') {
 		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
 		new BuildEnvironment( dbName: 'mysql_5_7' ),
 		new BuildEnvironment( dbName: 'mariadb_10_3' ),
-		new BuildEnvironment( dbName: 'postgresql_11' ),
+		new BuildEnvironment( dbName: 'postgresql_12' ),
 		new BuildEnvironment( dbName: 'edb_11' ),
 		new BuildEnvironment( dbName: 'oracle_11_2' ),
 		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
@@ -124,12 +124,12 @@ stage('Build') {
 									sh "./docker_db.sh mariadb_10_3"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
-								case "postgresql_11":
+								case "postgresql_12":
 									// use the postgis image to enable the PGSQL GIS (spatial) extension
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:11-3.3').pull()
+										docker.image('postgis/postgis:12-3.4').pull()
 									}
-									sh "./docker_db.sh postgresql_11"
+									sh "./docker_db.sh postgresql_12"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
 								case "edb_11":

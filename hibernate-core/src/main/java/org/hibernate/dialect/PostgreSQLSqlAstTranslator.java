@@ -125,12 +125,10 @@ public class PostgreSQLSqlAstTranslator<T extends JdbcOperation> extends SqlAstT
 
 	@Override
 	protected void renderMaterializationHint(CteMaterialization materialization) {
-		if ( getDialect().getVersion().isSameOrAfter( 12 ) ) {
-			if ( materialization == CteMaterialization.NOT_MATERIALIZED ) {
-				appendSql( "not " );
-			}
-			appendSql( "materialized " );
+		if ( materialization == CteMaterialization.NOT_MATERIALIZED ) {
+			appendSql( "not " );
 		}
+		appendSql( "materialized " );
 	}
 
 	@Override

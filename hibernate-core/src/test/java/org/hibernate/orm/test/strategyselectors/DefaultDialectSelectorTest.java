@@ -10,6 +10,7 @@ import org.hibernate.boot.registry.selector.internal.DefaultDialectSelector;
 import org.hibernate.community.dialect.DerbyTenFiveDialect;
 import org.hibernate.community.dialect.DerbyTenSevenDialect;
 import org.hibernate.community.dialect.DerbyTenSixDialect;
+import org.hibernate.community.dialect.MySQL57Dialect;
 import org.hibernate.community.dialect.MySQL5Dialect;
 import org.hibernate.dialect.*;
 

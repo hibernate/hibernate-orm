@@ -6,31 +6,30 @@
 :example-dir-metamodelgen-generated: {testing-project-dir}/target/generated/sources/annotationProcessor/java/main/org/hibernate/testing/orm/domain/userguide
 :core-project-dir: {root-project-dir}/hibernate-core
 :toolingTestsDir: {core-project-dir}/src/test/java/org/hibernate/orm/test/tooling
+:ann-proc: https://docs.oracle.com/en/java/javase/11/tools/javac.html#GUID-082C33A5-CBCA-471A-845E-E77F79B7B049__GUID-3FA757C8-B67B-46BC-AEF9-7C3FFB126A93
+:ann-proc-path: https://docs.oracle.com/en/java/javase/11/tools/javac.html#GUID-AEEC9F07-CB49-4E96-8BC7-BCC2C7F725C9__GUID-214E175F-0F06-4CDC-B511-5BA469955F5A
+:ann-proc-options: https://docs.oracle.com/en/java/javase/11/tools/javac.html#GUID-AEEC9F07-CB49-4E96-8BC7-BCC2C7F725C9__GUID-6CC814A4-8A29-434A-B7E1-DF8234784E7C
+:intg-guide: https://docs.jboss.org/hibernate/orm/6.3/introduction/html_single/Hibernate_Introduction.html#generator
 
-Jakarta Persistence defines a typesafe Criteria API which allows `Criteria` queries to be constructed in a
-strongly-typed manner, utilizing so-called static metamodel classes.  For developers, it is important that
-the task of the metamodel generation can be automated.  Hibernate Static Metamodel Generator is an annotation
-processor based on https://jcp.org/en/jsr/detail?id=269[JSR_269] with the task of creating Jakarta Persistence
-static metamodel classes.
+Jakarta Persistence defines a typesafe Criteria API which allows <<criteria,`Criteria`>>
+queries to be constructed in a strongly-typed manner, utilizing so-called static metamodel
+classes.  The Hibernate Static Metamodel Generator, available via the published
+`org.hibernate.orm:hibernate-jpamodelgen` artifact, is an link:{ann-proc}[annotation processor]
+used to generate these static metamodel classes.
 
-See <<criteria>> for discussion of Jakarta Persistence criteria queries.
+[NOTE]
+====
+The Hibernate Static Metamodel Generator has many additional capabilities beyond static metamodel
+class generation.  See the link:{intg-guide}[Introduction Guide] for a complete discussion of its
+capabilities.  The rest of the discussion here is limited to the Jakarta Persistence static metamodel.
 
-The Hibernate Static Metamodel Generator is defined by the published `org.hibernate.orm:hibernate-jpamodelgen`
-artifact.  As it is defined as an
-https://docs.oracle.com/en/java/javase/11/tools/javac.html#GUID-082C33A5-CBCA-471A-845E-E77F79B7B049[annotation processor],
-it is usable anytime `javac` is used.  See the tool-specific discussions (<<tooling-gradle-modelgen,Gradle>>, <<tooling-maven-modelgen,Maven>>
+The generator is expected to be run using the `javac` link:{ann-proc-path}[-processorpath] option.
+See the tool-specific discussions (<<tooling-gradle-modelgen,Gradle>>, <<tooling-maven-modelgen,Maven>>
 and <<tooling-ant,Ant>>) for details on integrating the generator into those environments.
-
-NOTE:: The fully qualified name of the processor class is `org.hibernate.jpamodelgen.JPAMetaModelEntityProcessor`.
-
-[TIP]
-====
-The `javac` option _-proc:only_ instructs the compiler to just run the annotation processing.
-You can also disable annotation processing by specifying _-proc:none_.
-
-Run `'javac -help'` to see which other annotation processor relevant options can be specified.
 ====
 
+[[tooling-modelgen-classes]]
+==== Metamodel classes
 
 The structure of the metamodel classes is described in the Jakarta Persistence
 specification, but for completeness the definition is repeated in the following
@@ -107,4 +106,19 @@ Criteria queries for type-safe path references.  For example:
 include::{toolingTestsDir}/modelgen/ModelGenTests.java[tags=tooling-modelgen-usage]
 ----
 ====
+
+[[tooling-modelgen-options]]
+==== Generation Options
+
+The Hibernate Static Metamodel Generator accepts a number of configuration options, which are specified as
+part of the `javac` execution using standard link:{ann-proc-options}[-A] options -
+
+`-Adebug=[true|false]`:: Enables debug logging from the generator.
+`-AfullyAnnotationConfigured=[true|false]`:: Controls whether `orm.xml` mapping should be considered.
+`-ApersistenceXml=[path]`:: Specifies the path to the `persistence.xml` file.
+`-AormXml=[path]`:: Specifies the path to an `orm.xml` file.
+`-AlazyXmlParsing=[true|false]`:: Controls whether the processor should attempt to determine whether any `orm.xml` files have changed.
+`-AaddGeneratedAnnotation=[true|false]`:: Controls whether the processor should add `@jakarta.annotation.Generated` to the generated classes.
+`-addGenerationDate=[true|false]`:: Controls whether the processor should add `@jakarta.annotation.Generated#date`.
+`-addSuppressWarningsAnnotation=[true|false]`:: Controls whether the processor should add `@SuppressWarnings({"deprecation","rawtypes"})` to the generated classes.
 

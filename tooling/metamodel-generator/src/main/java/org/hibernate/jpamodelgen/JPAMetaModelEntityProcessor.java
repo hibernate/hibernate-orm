@@ -59,13 +59,46 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 		JPAMetaModelEntityProcessor.ADD_SUPPRESS_WARNINGS_ANNOTATION
 })
 public class JPAMetaModelEntityProcessor extends AbstractProcessor {
+	/**
+	 * Debug logging from the processor
+	 */
 	public static final String DEBUG_OPTION = "debug";
+
+	/**
+	 * Path to a {@code persistence.xml} file
+	 */
 	public static final String PERSISTENCE_XML_OPTION = "persistenceXml";
+
+	/**
+	 * Path to an {@code orm.xml} file
+	 */
 	public static final String ORM_XML_OPTION = "ormXml";
+
+	/**
+	 * Controls whether the processor should consider XML files
+	 */
 	public static final String FULLY_ANNOTATION_CONFIGURED_OPTION = "fullyAnnotationConfigured";
+
+	/**
+	 * Controls whether the processor should only load XML files when there have been changes
+	 */
 	public static final String LAZY_XML_PARSING = "lazyXmlParsing";
-	public static final String ADD_GENERATION_DATE = "addGenerationDate";
+
+	/**
+	 * Whether the {@code jakarta.annotation.Generated} annotation should be added to
+	 * the generated classes
+	 */
 	public static final String ADD_GENERATED_ANNOTATION = "addGeneratedAnnotation";
+
+	/**
+	 * Assuming that {@linkplain #ADD_GENERATED_ANNOTATION} is enabled, this option controls
+	 * whether {@code @Generated#date} should be populated.
+	 */
+	public static final String ADD_GENERATION_DATE = "addGenerationDate";
+
+	/**
+	 * Controls whether {@code @SuppressWarnings({"deprecation","rawtypes"})} should be added to the generated classes
+	 */
 	public static final String ADD_SUPPRESS_WARNINGS_ANNOTATION = "addSuppressWarningsAnnotation";
 
 	private static final Boolean ALLOW_OTHER_PROCESSORS_TO_CLAIM_ANNOTATIONS = Boolean.FALSE;

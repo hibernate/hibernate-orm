@@ -60,6 +60,7 @@ public class CommunityDialectSelectorTest {
 		testDialectNamingResolution( SAPDBDialect.class );
 
 		testDialectNamingResolution( SQLServer2005Dialect.class );
+		testDialectNamingResolution( SQLServer2008Dialect.class );
 
 		testDialectNamingResolution( SybaseAnywhereDialect.class );
 		testDialectNamingResolution( Sybase11Dialect.class );

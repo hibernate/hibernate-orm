@@ -31,7 +31,6 @@ import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.SQLServer2012Dialect;
 import org.hibernate.dialect.SQLServer2016Dialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -124,9 +123,8 @@ public class DefaultDialectSelector implements DialectSelector {
 			case "SQLServer":
 				return SQLServerDialect.class;
 			case "SQLServer2005":
-				return findCommunityDialect( name );
 			case "SQLServer2008":
-				return SQLServer2008Dialect.class;
+				return findCommunityDialect( name );
 			case "SQLServer2012":
 				return SQLServer2012Dialect.class;
 			case "SQLServer2016":

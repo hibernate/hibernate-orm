@@ -213,7 +213,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 		if ( queryPart instanceof QueryGroup ) {
 			// We can't use TOP for set operations
 			if ( hasOffset || hasLimit ) {
-				if ( version.isBefore( 11 ) || !isRowsOnlyFetchClauseType( queryPart ) ) {
+				if ( !isRowsOnlyFetchClauseType( queryPart ) ) {
 					return OffsetFetchClauseMode.EMULATED;
 				}
 				else {
@@ -227,7 +227,7 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 			if ( !hasOffset ) {
 				return hasLimit ? OffsetFetchClauseMode.TOP_ONLY : null;
 			}
-			else if ( version.isBefore( 11 ) || !isRowsOnlyFetchClauseType( queryPart ) ) {
+			else if ( !isRowsOnlyFetchClauseType( queryPart ) ) {
 				return OffsetFetchClauseMode.EMULATED;
 			}
 			else if ( !queryPart.hasSortSpecifications() && ((QuerySpec) queryPart).getSelectClause().isDistinct() ) {

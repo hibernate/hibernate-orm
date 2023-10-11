@@ -94,6 +94,8 @@ public class CommunityDialectSelector implements DialectSelector {
 				return SAPDBDialect.class;
 			case "SQLServer2005":
 				return SQLServer2005Dialect.class;
+			case "SQLServer2008":
+				return SQLServer2008Dialect.class;
 			case "MaxDB":
 				return MaxDBDialect.class;
 			case "Sybase11":

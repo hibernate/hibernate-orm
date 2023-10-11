@@ -117,7 +117,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  * @author Gavin King
  */
 public class SQLServerDialect extends AbstractTransactSQLDialect {
-	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 0 );
+	private final static DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11, 0 );
 
 	/**
 	 * NOTE : 2100 is the documented limit supposedly - but in my testing, sending
@@ -148,7 +148,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	private StandardSequenceExporter createSequenceExporter(DatabaseVersion version) {
-		return version.isSameOrAfter(11) ? new SqlServerSequenceExporter(this) : null;
+		return new SqlServerSequenceExporter(this);
 	}
 
 	@Override
@@ -333,49 +333,48 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 		functionFactory.stddevPopSamp_stdevp();
 		functionFactory.varPopSamp_varp();
 
-		if ( getVersion().isSameOrAfter( 11 ) ) {
-			functionContributions.getFunctionRegistry().register(
-					"format",
-					new SQLServerFormatEmulation( functionContributions.getTypeConfiguration() )
-			);
+		functionContributions.getFunctionRegistry().register(
+				"format",
+				new SQLServerFormatEmulation( functionContributions.getTypeConfiguration() )
+		);
 
-			//actually translate() was added in 2017 but
-			//it's not worth adding a new dialect for that!
-			functionFactory.translate();
+		//actually translate() was added in 2017 but
+		//it's not worth adding a new dialect for that!
+		functionFactory.translate();
 
-			functionFactory.median_percentileCont( true );
+		functionFactory.median_percentileCont( true );
 
-			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datefromparts" )
-					.setInvariantType( dateType )
-					.setExactArgumentCount( 3 )
-					.setParameterTypes(INTEGER)
-					.register();
-			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "timefromparts" )
-					.setInvariantType( timeType )
-					.setExactArgumentCount( 5 )
-					.setParameterTypes(INTEGER)
-					.register();
-			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "smalldatetimefromparts" )
-					.setInvariantType( timestampType )
-					.setExactArgumentCount( 5 )
-					.setParameterTypes(INTEGER)
-					.register();
-			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetimefromparts" )
-					.setInvariantType( timestampType )
-					.setExactArgumentCount( 7 )
-					.setParameterTypes(INTEGER)
-					.register();
-			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetime2fromparts" )
-					.setInvariantType( timestampType )
-					.setExactArgumentCount( 8 )
-					.setParameterTypes(INTEGER)
-					.register();
-			functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetimeoffsetfromparts" )
-					.setInvariantType( timestampType )
-					.setExactArgumentCount( 10 )
-					.setParameterTypes(INTEGER)
-					.register();
-		}
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datefromparts" )
+				.setInvariantType( dateType )
+				.setExactArgumentCount( 3 )
+				.setParameterTypes(INTEGER)
+				.register();
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "timefromparts" )
+				.setInvariantType( timeType )
+				.setExactArgumentCount( 5 )
+				.setParameterTypes(INTEGER)
+				.register();
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "smalldatetimefromparts" )
+				.setInvariantType( timestampType )
+				.setExactArgumentCount( 5 )
+				.setParameterTypes(INTEGER)
+				.register();
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetimefromparts" )
+				.setInvariantType( timestampType )
+				.setExactArgumentCount( 7 )
+				.setParameterTypes(INTEGER)
+				.register();
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetime2fromparts" )
+				.setInvariantType( timestampType )
+				.setExactArgumentCount( 8 )
+				.setParameterTypes(INTEGER)
+				.register();
+		functionContributions.getFunctionRegistry().namedDescriptorBuilder( "datetimeoffsetfromparts" )
+				.setInvariantType( timestampType )
+				.setExactArgumentCount( 10 )
+				.setParameterTypes(INTEGER)
+				.register();
+
 		functionFactory.windowFunctions();
 		functionFactory.inverseDistributionOrderedSetAggregates_windowEmulation();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
@@ -486,14 +485,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		if ( getVersion().isSameOrAfter( 11 ) ) {
-			return SQLServer2012LimitHandler.INSTANCE;
-		}
-		else {
-			//this is a stateful class, don't cache
-			//it in the Dialect!
-			return new SQLServer2005LimitHandler();
-		}
+		return SQLServer2012LimitHandler.INSTANCE;
 	}
 
 	@Override
@@ -642,10 +634,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
-		if ( getVersion().isBefore( 11 ) ) {
-			return NoSequenceSupport.INSTANCE;
-		}
-		else if ( getVersion().isSameOrAfter( 16 ) ) {
+		if ( getVersion().isSameOrAfter( 16 ) ) {
 			return SQLServer16SequenceSupport.INSTANCE;
 		}
 		else {
@@ -655,19 +644,12 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public String getQuerySequencesString() {
-		return getVersion().isBefore( 11 )
-				? super.getQuerySequencesString() //null
-				// The upper-case name should work on both case-sensitive
-				// and case-insensitive collations.
-				: "select * from INFORMATION_SCHEMA.SEQUENCES";
+		// The upper-case name should work on both case-sensitive and case-insensitive collations.
+		return "select * from INFORMATION_SCHEMA.SEQUENCES";
 	}
 
 	@Override
 	public String getQueryHintString(String sql, String hints) {
-		if ( getVersion().isBefore( 11 ) ) {
-			return super.getQueryHintString( sql, hints );
-		}
-
 		final StringBuilder buffer = new StringBuilder(
 				sql.length() + hints.length() + 12
 		);
@@ -714,7 +696,7 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 
 	@Override
 	public boolean supportsFetchClause(FetchClauseType type) {
-		return getVersion().isSameOrAfter( 11 );
+		return true;
 	}
 
 	@Override

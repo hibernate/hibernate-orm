@@ -216,16 +216,8 @@ public class ResultMappingAssociationTest {
 		}
 
 		@OneToMany(targetEntity = ItemInventory.class)
-		@SQLSelect(sql = """
-				SELECT
-				account_id,
-				item_id,
-				sum(quantity) AS quantity
-				FROM item_orders
-				WHERE account_id = :code
-				GROUP BY account_id, item_id
-				HAVING quantity > 0.000001 or quantity < -0.000001
-				""", resultSetMapping = @SqlResultSetMapping(name = "inventories", entities = {
+		@SQLSelect(sql = "SELECT account_id, item_id, sum(quantity) AS quantity	FROM item_orders WHERE account_id = :code GROUP BY account_id, item_id HAVING quantity > 0.000001 or quantity < -0.000001", 
+			resultSetMapping = @SqlResultSetMapping(name = "inventories", entities = {
 				@EntityResult(entityClass = ItemInventory.class, fields = {
 						@FieldResult(name = "account", column = "account_id"),
 						@FieldResult(name = "item", column = "item_id"),

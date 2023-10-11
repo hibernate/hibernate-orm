@@ -165,11 +165,9 @@ public class OracleDialect extends Dialect {
 	private static final String ADD_QUARTER_EXPRESSION = String.format( yqmSelect, "?2*3", "?3" );
 	private static final String ADD_MONTH_EXPRESSION = String.format( yqmSelect, "?2", "?3" );
 
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11, 2 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 19 );
 
-	private final LimitHandler limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
-			? Oracle12LimitHandler.INSTANCE
-			: new LegacyOracleLimitHandler( getVersion() );
+	private final LimitHandler limitHandler = Oracle12LimitHandler.INSTANCE;
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	// Is it an Autonomous Database Cloud Service?
@@ -298,12 +296,7 @@ public class OracleDialect extends Dialect {
 				typeConfiguration
 		).setArgumentListSignature("(pattern, string[, start])");
 		// The within group clause became optional in 18
-		if ( getVersion().isSameOrAfter( 18 ) ) {
-			functionFactory.listagg( null );
-		}
-		else {
-			functionFactory.listagg( "within group (order by rownum)" );
-		}
+		functionFactory.listagg( null );
 		functionFactory.windowFunctions();
 		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.inverseDistributionOrderedSetAggregates();
@@ -374,7 +367,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean supportsInsertReturningGeneratedKeys() {
-		return getVersion().isSameOrAfter( 12 );
+		return true;
 	}
 
 	/**
@@ -710,7 +703,7 @@ public class OracleDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 21 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 		}
-		else if ( getVersion().isSameOrAfter( 12 ) ) {
+		else {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "blob", this ) );
 		}
 
@@ -726,8 +719,7 @@ public class OracleDialect extends Dialect {
 	@Override
 	protected void initDefaultProperties() {
 		super.initDefaultProperties();
-		getDefaultProperties().setProperty( BATCH_VERSIONED_DATA,
-				Boolean.toString( getVersion().isSameOrAfter( 12 ) ) );
+		getDefaultProperties().setProperty( BATCH_VERSIONED_DATA, "true" );
 	}
 
 	@Override
@@ -741,7 +733,7 @@ public class OracleDialect extends Dialect {
 		// support the version taking an array of the names of the columns to
 		// be returned (via its RETURNING clause).  No other driver seems to
 		// support this overloaded version.
-		return getVersion().isSameOrAfter( 12 );
+		return true;
 	}
 
 	@Override
@@ -856,27 +848,25 @@ public class OracleDialect extends Dialect {
 			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );
 		}
 
-		if ( getVersion().isSameOrAfter( 12 ) ) {
-			// account for Oracle's deprecated support for LONGVARBINARY
-			// prefer BLOB, unless the user explicitly opts out
-			boolean preferLong = serviceRegistry.getService( ConfigurationService.class ).getSetting(
-					PREFER_LONG_RAW,
-					StandardConverters.BOOLEAN,
-					false
-			);
+		// account for Oracle's deprecated support for LONGVARBINARY
+		// prefer BLOB, unless the user explicitly opts out
+		boolean preferLong = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+				PREFER_LONG_RAW,
+				StandardConverters.BOOLEAN,
+				false
+		);
 
-			BlobJdbcType descriptor = preferLong ?
-					BlobJdbcType.PRIMITIVE_ARRAY_BINDING :
-					BlobJdbcType.DEFAULT;
+		BlobJdbcType descriptor = preferLong ?
+				BlobJdbcType.PRIMITIVE_ARRAY_BINDING :
+				BlobJdbcType.DEFAULT;
 
-			typeContributions.contributeJdbcType( descriptor );
+		typeContributions.contributeJdbcType( descriptor );
 
-			if ( getVersion().isSameOrAfter( 21 ) ) {
-				typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
-			}
-			else {
-				typeContributions.contributeJdbcType( OracleJsonBlobJdbcType.INSTANCE );
-			}
+		if ( getVersion().isSameOrAfter( 21 ) ) {
+			typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
+		}
+		else {
+			typeContributions.contributeJdbcType( OracleJsonBlobJdbcType.INSTANCE );
 		}
 
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
@@ -923,9 +913,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return getVersion().isBefore( 12 )
-				? super.getIdentityColumnSupport()
-				: Oracle12cIdentityColumnSupport.INSTANCE;
+		return Oracle12cIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
@@ -1176,13 +1164,13 @@ public class OracleDialect extends Dialect {
 	public int getMaxAliasLength() {
 		// Max identifier length is 30 for pre 12.2 versions, and 128 for 12.2+
 		// but Hibernate needs to add "uniqueing info" so we account for that
-		return getVersion().isSameOrAfter( 12, 2 ) ? 118 : 20;
+		return 118;
 	}
 
 	@Override
 	public int getMaxIdentifierLength() {
 		// Since 12.2 version, maximum identifier length is 128
-		return getVersion().isSameOrAfter( 12, 2 ) ? 128 : 30;
+		return 128;
 	}
 
 	@Override
@@ -1230,7 +1218,7 @@ public class OracleDialect extends Dialect {
 	public boolean supportsFetchClause(FetchClauseType type) {
 		// Until 12.2 there was a bug in the Oracle query rewriter causing ORA-00918
 		// when the query contains duplicate implicit aliases in the select clause
-		return getVersion().isSameOrAfter( 12, 2 );
+		return true;
 	}
 
 	@Override
@@ -1245,7 +1233,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean supportsLateral() {
-		return getVersion().isSameOrAfter( 12, 1 );
+		return true;
 	}
 
 	@Override

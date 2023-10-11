@@ -108,11 +108,6 @@ public class BatchOptimisticLockingTest extends
 						expected.getMessage().substring( 0, msg.length() )
 				);
 			}
-			else if ( getDialect() instanceof OracleDialect && getDialect().getVersion().isBefore( 12 ) ) {
-				assertTrue(
-						expected.getCause() instanceof StaleObjectStateException
-				);
-			}
 			else {
 				assertEquals(
 						"Batch update returned unexpected row count from update [1]; actual row count: 0; expected: 1; statement executed: update Person set name=?,version=? where id=? and version=?",

@@ -617,71 +617,6 @@ grant all privileges to hibernate_orm_test;
 EOF\""
 }
 
-oracle_setup_old() {
-    HEALTHSTATUS=
-    until [ "$HEALTHSTATUS" == "healthy" ];
-    do
-        echo "Waiting for Oracle to start..."
-        sleep 5;
-        # On WSL, health-checks intervals don't work for Podman, so run them manually
-        if command -v podman > /dev/null; then
-          $PRIVILEGED_CLI $CONTAINER_CLI healthcheck run oracle > /dev/null
-        fi
-        HEALTHSTATUS="`$PRIVILEGED_CLI $CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
-        HEALTHSTATUS=${HEALTHSTATUS##+( )} #Remove longest matching series of spaces from the front
-        HEALTHSTATUS=${HEALTHSTATUS%%+( )} #Remove longest matching series of spaces from the back
-    done
-    # We increase file sizes to avoid online resizes as that requires lots of CPU which is restricted in XE
-    $PRIVILEGED_CLI $CONTAINER_CLI exec oracle bash -c "source /home/oracle/.bashrc; bash -c \"
-cat <<EOF | \$ORACLE_HOME/bin/sqlplus / as sysdba
-alter database tempfile '\$ORACLE_BASE/oradata/XE/temp.dbf' resize 400M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/system.dbf' resize 1000M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/sysaux.dbf' resize 700M;
-alter database datafile '\$ORACLE_BASE/oradata/XE/undotbs1.dbf' resize 300M;
-alter database add logfile group 4 '\$ORACLE_BASE/oradata/XE/redo04.log' size 500M reuse;
-alter database add logfile group 5 '\$ORACLE_BASE/oradata/XE/redo05.log' size 500M reuse;
-alter database add logfile group 6 '\$ORACLE_BASE/oradata/XE/redo06.log' size 500M reuse;
-
-alter system switch logfile;
-alter system switch logfile;
-alter system switch logfile;
-alter system checkpoint;
-
-alter database drop logfile group 1;
-alter database drop logfile group 2;
-alter system set open_cursors=1000 sid='*' scope=both;
-alter system set session_cached_cursors=500 sid='*' scope=spfile;
-alter system set recyclebin=OFF sid='*' SCOPE=spfile;
-alter system set processes=150 scope=spfile;
-alter system set filesystemio_options=asynch scope=spfile;
-alter system set disk_asynch_io=true scope=spfile;
-
-shutdown immediate;
-startup;
-
-create user hibernate_orm_test identified by hibernate_orm_test quota unlimited on users;
-grant all privileges to hibernate_orm_test;
-EOF\""
-#  echo "Waiting for Oracle to restart after configuration..."
-#  $CONTAINER_CLI stop oracle
-#  $CONTAINER_CLI start oracle
-#  HEALTHSTATUS=
-#  until [ "$HEALTHSTATUS" == "healthy" ];
-#  do
-#      echo "Waiting for Oracle to start..."
-#      sleep 5;
-#      # On WSL, health-checks intervals don't work for Podman, so run them manually
-#      if command -v podman > /dev/null; then
-#        $CONTAINER_CLI healthcheck run oracle > /dev/null
-#      fi
-#      HEALTHSTATUS="`$CONTAINER_CLI inspect -f $HEALTCHECK_PATH oracle`"
-#      HEALTHSTATUS=${HEALTHSTATUS##+( )} #Remove longest matching series of spaces from the front
-#      HEALTHSTATUS=${HEALTHSTATUS%%+( )} #Remove longest matching series of spaces from the back
-#  done
-#  sleep 2;
-  echo "Oracle successfully started"
-}
-
 disable_userland_proxy() {
   if [[ "$HEALTCHECK_PATH" == "{{.State.Health.Status}}" ]]; then
     if [[ ! -f /etc/docker/daemon.json ]]; then
@@ -752,19 +687,6 @@ EOF
 
 oracle() {
   oracle_23
-}
-
-oracle_11() {
-    $PRIVILEGED_CLI $CONTAINER_CLI rm -f oracle || true
-    # We need to use the defaults
-    # SYSTEM/Oracle18
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name oracle -d -p 1521:1521 -e ORACLE_PASSWORD=Oracle18 \
-      --health-cmd healthcheck.sh \
-      --health-interval 5s \
-      --health-timeout 5s \
-      --health-retries 10 \
-      docker.io/gvenzl/oracle-xe:11.2.0.2-full
-    oracle_setup_old
 }
 
 oracle_21() {
@@ -963,7 +885,6 @@ if [ -z ${1} ]; then
     echo -e "\toracle"
     echo -e "\toracle_23"
     echo -e "\toracle_21"
-    echo -e "\toracle_11"
     echo -e "\tpostgresql"
     echo -e "\tpostgresql_15"
     echo -e "\tpostgresql_14"

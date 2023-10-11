@@ -47,6 +47,7 @@ public class CommunityDialectSelectorTest {
 		testDialectNamingResolution( Oracle8iDialect.class );
 		testDialectNamingResolution( Oracle9iDialect.class );
 		testDialectNamingResolution( Oracle10gDialect.class );
+		testDialectNamingResolution( Oracle12cDialect.class );
 
 		testDialectNamingResolution( PostgreSQL81Dialect.class );
 		testDialectNamingResolution( PostgreSQL82Dialect.class );

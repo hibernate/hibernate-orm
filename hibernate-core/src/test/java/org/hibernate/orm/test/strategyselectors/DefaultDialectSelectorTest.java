@@ -12,6 +12,7 @@ import org.hibernate.community.dialect.DerbyTenSevenDialect;
 import org.hibernate.community.dialect.DerbyTenSixDialect;
 import org.hibernate.community.dialect.MySQL57Dialect;
 import org.hibernate.community.dialect.MySQL5Dialect;
+import org.hibernate.community.dialect.Oracle12cDialect;
 import org.hibernate.community.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.*;
 

@@ -41,6 +41,7 @@ public class CommunityDialectSelectorTest {
 
 		testDialectNamingResolution( MySQL5Dialect.class );
 		testDialectNamingResolution( MySQL55Dialect.class );
+		testDialectNamingResolution( MySQL57Dialect.class );
 
 		testDialectNamingResolution( Oracle8iDialect.class );
 		testDialectNamingResolution( Oracle9iDialect.class );

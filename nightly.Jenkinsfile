@@ -28,7 +28,7 @@ stage('Configure') {
 	this.environments = [
 		// Minimum supported versions
 		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
-		new BuildEnvironment( dbName: 'mysql_5_7' ),
+		new BuildEnvironment( dbName: 'mysql_8_0' ),
 		new BuildEnvironment( dbName: 'mariadb_10_3' ),
 		new BuildEnvironment( dbName: 'postgresql_12' ),
 		new BuildEnvironment( dbName: 'edb_12' ),
@@ -110,11 +110,11 @@ stage('Build') {
 									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
 										" -Pgradle.libs.versions.hsqldb=2.6.1"
 									break;
-								case "mysql_5_7":
+								case "mysql_8_0":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mysql:5.7.43').pull()
+										docker.image('mysql:8.0.31').pull()
 									}
-									sh "./docker_db.sh mysql_5_7"
+									sh "./docker_db.sh mysql_8_0"
 									state[buildEnv.tag]['containerName'] = "mysql"
 									break;
 								case "mariadb_10_3":

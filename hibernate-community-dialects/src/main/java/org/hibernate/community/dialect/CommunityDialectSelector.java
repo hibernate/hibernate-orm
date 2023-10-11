@@ -62,6 +62,8 @@ public class CommunityDialectSelector implements DialectSelector {
 				return MySQL5Dialect.class;
 			case "MySQL55":
 				return MySQL55Dialect.class;
+			case "MySQL57":
+				return MySQL57Dialect.class;
 			case "Oracle8i":
 				return Oracle8iDialect.class;
 			case "Oracle9i":

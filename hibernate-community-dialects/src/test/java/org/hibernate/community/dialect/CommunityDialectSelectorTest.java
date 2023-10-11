@@ -38,6 +38,7 @@ public class CommunityDialectSelectorTest {
 		testDialectNamingResolution( MariaDB53Dialect.class );
 		testDialectNamingResolution( MariaDB10Dialect.class );
 		testDialectNamingResolution( MariaDB102Dialect.class );
+		testDialectNamingResolution( MariaDB103Dialect.class );
 
 		testDialectNamingResolution( MySQL5Dialect.class );
 		testDialectNamingResolution( MySQL55Dialect.class );

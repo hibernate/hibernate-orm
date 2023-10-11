@@ -125,7 +125,7 @@ public class CockroachDialect extends Dialect {
 	// Pre-compile and reuse pattern
 	private static final Pattern CRDB_VERSION_PATTERN = Pattern.compile( "v[\\d]+(\\.[\\d]+)?(\\.[\\d]+)?" );
 
-	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 22, 1 );
+	protected static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 22, 2 );
 
 	protected final PostgreSQLDriverKind driverKind;
 
@@ -452,7 +452,7 @@ public class CockroachDialect extends Dialect {
 		functionContributions.getFunctionRegistry().register(
 				"trunc",
 				new PostgreSQLTruncFunction(
-						getVersion().isSameOrAfter( 22, 2 ),
+						true,
 						functionContributions.getTypeConfiguration()
 				)
 		);

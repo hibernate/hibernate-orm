@@ -168,9 +168,9 @@ postgresql() {
   postgresql_15
 }
 
-postgresql_11() {
+postgresql_12() {
     $CONTAINER_CLI rm -f postgres || true
-    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d docker.io/postgis/postgis:11-3.3
+    $CONTAINER_CLI run --name postgres -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p5432:5432 -d docker.io/postgis/postgis:12-3.4
 }
 
 postgresql_13() {
@@ -1080,6 +1080,7 @@ if [ -z ${1} ]; then
     echo -e "\tpostgresql_15"
     echo -e "\tpostgresql_14"
     echo -e "\tpostgresql_13"
+    echo -e "\tpostgresql_12"
     echo -e "\tsybase"
     echo -e "\ttidb"
     echo -e "\ttidb_5_1"

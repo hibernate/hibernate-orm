@@ -193,11 +193,11 @@ edb() {
     edb_15
 }
 
-edb_11() {
+edb_12() {
     $CONTAINER_CLI rm -f edb || true
     # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
-    (cd edb; $CONTAINER_CLI build -t edb-test:11 -f edb11.Dockerfile .)
-    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:11
+    (cd edb; $CONTAINER_CLI build -t edb-test:12 -f edb12.Dockerfile .)
+    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:12
 }
 
 edb_14() {
@@ -1059,7 +1059,7 @@ if [ -z ${1} ]; then
     echo -e "\tedb"
     echo -e "\tedb_15"
     echo -e "\tedb_14"
-    echo -e "\tedb_11"
+    echo -e "\tedb_12"
     echo -e "\thana"
     echo -e "\tmariadb"
     echo -e "\tmariadb_11_1"

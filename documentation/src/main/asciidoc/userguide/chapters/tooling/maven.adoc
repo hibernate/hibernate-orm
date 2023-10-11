@@ -23,7 +23,8 @@ include::extras/maven-example.pom[]
 [[tooling-maven-modelgen]]
 ==== Static Metamodel Generation
 
-The recommended way to integrate the metamodel generation into a maven project is through the annotation processor paths of the maven compiler plugin (roughly equivalent to how the generator is integrated in a gradle project).
+Static metamodel generation should be integrated into a maven project through the annotation processor
+paths of the maven compiler plugin.
 
 .Integrate the metamodel generator
 ====

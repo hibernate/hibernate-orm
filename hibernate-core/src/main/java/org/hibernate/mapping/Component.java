@@ -506,6 +506,13 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		throw new MappingException("component: " + componentClassName + " property not found: " + propertyName);
 	}
 
+	public boolean matchesAllProperties(String... propertyNames) {
+		return properties.size() == propertyNames.length &&
+				new HashSet<>(properties.stream().map(Property::getName)
+						.collect(toList()))
+						.containsAll(List.of(propertyNames));
+	}
+
 	public boolean hasProperty(String propertyName) {
 		for ( Property prop : properties ) {
 			if ( prop.getName().equals(propertyName) ) {

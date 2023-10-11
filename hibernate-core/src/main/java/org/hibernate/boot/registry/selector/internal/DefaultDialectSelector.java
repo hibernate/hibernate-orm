@@ -23,7 +23,6 @@ import org.hibernate.dialect.HANACloudColumnStoreDialect;
 import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.dialect.HANARowStoreDialect;
 import org.hibernate.dialect.HSQLDialect;
-import org.hibernate.dialect.MariaDB103Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQL8Dialect;
 import org.hibernate.dialect.MySQLDialect;
@@ -85,9 +84,8 @@ public class DefaultDialectSelector implements DialectSelector {
 			case "MariaDB53":
 			case "MariaDB10":
 			case "MariaDB102":
-				return findCommunityDialect( name );
 			case "MariaDB103":
-				return MariaDB103Dialect.class;
+				return findCommunityDialect( name );
 			case "MySQL":
 				return MySQLDialect.class;
 			case "MySQL5":

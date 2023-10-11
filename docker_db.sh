@@ -71,9 +71,9 @@ mariadb() {
   mariadb_11_1
 }
 
-mariadb_10_3() {
+mariadb_10_4() {
     $CONTAINER_CLI rm -f mariadb || true
-    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.3.39 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
+    $CONTAINER_CLI run --name mariadb -e MYSQL_USER=hibernate_orm_test -e MYSQL_PASSWORD=hibernate_orm_test -e MYSQL_DATABASE=hibernate_orm_test -e MYSQL_ROOT_PASSWORD=hibernate_orm_test -p3306:3306 -d docker.io/mariadb:10.4.31 --character-set-server=utf8mb4 --collation-server=utf8mb4_bin --skip-character-set-client-handshake
     OUTPUT=
     n=0
     until [ "$n" -ge 5 ]
@@ -953,7 +953,7 @@ if [ -z ${1} ]; then
     echo -e "\tmariadb"
     echo -e "\tmariadb_11_1"
     echo -e "\tmariadb_10_9"
-    echo -e "\tmariadb_10_3"
+    echo -e "\tmariadb_10_4"
     echo -e "\tmssql"
     echo -e "\tmssql_2022"
     echo -e "\tmssql_2017"

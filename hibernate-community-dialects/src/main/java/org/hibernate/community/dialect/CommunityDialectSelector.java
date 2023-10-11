@@ -56,6 +56,8 @@ public class CommunityDialectSelector implements DialectSelector {
 				return MariaDB10Dialect.class;
 			case "MariaDB102":
 				return MariaDB102Dialect.class;
+			case "MariaDB103":
+				return MariaDB103Dialect.class;
 			case "MimerSQL":
 				return MimerSQLDialect.class;
 			case "MySQL5":

@@ -60,7 +60,7 @@ It also exposes the following method forms:
 ==== Static Metamodel Generation
 
 Static metamodel generation can be incorporated into Gradle builds via the
-annotation processor provided by the `hibernate-jpamodelgen` artifact.  Applying
+annotation processor provided by the `org.hibernate.orm:hibernate-jpamodelgen` artifact.  Applying
 an annotation processor in Gradle is super easy -
 
 
@@ -70,40 +70,3 @@ dependencies {
     annotationProcessor "org.hibernate.orm:hibernate-jpamodelgen:${hibernateVersion}"
 }
 ----
-
-When the build does not need bytecode enhancement support, this is a perfectly valid solution.
-
-The plugin supports simpler configuration of the generator using the registered
-`jpaMetamodel` extension:
-
-
-[source,gradle]
-----
-hibernate {
-    jpaMetamodel {
-        applyGeneratedAnnotation false
-        suppress 'raw'
-        generationOutputDirectory "${buildDir}/generated/sources/modelgen"
-        compileOutputDirectory "${buildDir}/classes/java/modelgen"
-    }
-}
-----
-
-The extension is of type `JpaMetamodelGenerationSpec`, which exposes the following configuration properties:
-
-applyGeneratedAnnotation:: Should the `javax.annotation.processing.Generated` annotation be added to the
-generated classes.  Defaults to `true`.
-suppressions:: Suppressions to add to the generated classes.  Defaults to `['raw', 'deprecation']`
-generationOutputDirectory:: Directory where the generated metamodel classes should be created.  Defaults
-to `${buildDir}/generated/sources/jpaMetamodel`
-[[tooling-gradle-modelgen-compile-output]]
-compileOutputDirectory:: Directory where the classes compiled from the generated metamodel classes should be
-created. Defaults to `${buildDir}/classes/java/jpaMetamodel`.
-
-It also exposes the following method forms:
-
-* applyGeneratedAnnotation(boolean)
-* suppress(String)
-* generationOutputDirectory(Object)
-* compileOutputDirectory(Object)
-

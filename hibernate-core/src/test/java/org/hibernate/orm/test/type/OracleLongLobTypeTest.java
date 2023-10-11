@@ -18,7 +18,7 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.Oracle12cDialect;
+import org.hibernate.community.dialect.Oracle12cDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.type.BasicType;

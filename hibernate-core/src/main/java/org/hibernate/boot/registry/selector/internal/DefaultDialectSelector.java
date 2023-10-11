@@ -26,7 +26,6 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQL8Dialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.Oracle12cDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
@@ -99,9 +98,8 @@ public class DefaultDialectSelector implements DialectSelector {
 			case "Oracle8i":
 			case "Oracle9i":
 			case "Oracle10g":
-				return findCommunityDialect( name );
 			case "Oracle12c":
-				return Oracle12cDialect.class;
+				return findCommunityDialect( name );
 			case "PostgresPlus":
 				return PostgresPlusDialect.class;
 			case "PostgreSQL":

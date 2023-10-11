@@ -72,6 +72,8 @@ public class CommunityDialectSelector implements DialectSelector {
 				return Oracle9iDialect.class;
 			case "Oracle10g":
 				return Oracle10gDialect.class;
+			case "Oracle12c":
+				return Oracle12cDialect.class;
 			case "PostgreSQL81":
 				return PostgreSQL81Dialect.class;
 			case "PostgreSQL82":

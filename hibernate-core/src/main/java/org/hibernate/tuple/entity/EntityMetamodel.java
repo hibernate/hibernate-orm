@@ -333,6 +333,9 @@ public class EntityMetamodel implements Serializable {
 					if ( generator.generatesOnInsert() ) {
 						if ( generator.generatedOnExecution() ) {
 							foundPostInsertGeneratedValues = true;
+							if ( generator instanceof BeforeExecutionGenerator ) {
+								foundPreInsertGeneratedValues = true;
+							}
 						}
 						else {
 							foundPreInsertGeneratedValues = true;
@@ -341,6 +344,9 @@ public class EntityMetamodel implements Serializable {
 					if ( generator.generatesOnUpdate() ) {
 						if ( generator.generatedOnExecution() ) {
 							foundPostUpdateGeneratedValues = true;
+							if ( generator instanceof BeforeExecutionGenerator ) {
+								foundPreUpdateGeneratedValues = true;
+							}
 						}
 						else {
 							foundPreUpdateGeneratedValues = true;

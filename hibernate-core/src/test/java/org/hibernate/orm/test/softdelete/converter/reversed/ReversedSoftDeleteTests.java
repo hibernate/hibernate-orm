@@ -58,6 +58,6 @@ public class ReversedSoftDeleteTests {
 		assertThat( sqlInspector.getSqlQueries() ).hasSize( 1 );
 		assertThat( sqlInspector.getSqlQueries().get( 0 ) ).doesNotContainIgnoringCase( "delete " );
 		assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( "update " );
-		assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( "active='N'" );
+		assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "active='N'", "active=N'N'" );
 	}
 }

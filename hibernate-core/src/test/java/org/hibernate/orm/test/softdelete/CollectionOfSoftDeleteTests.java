@@ -83,7 +83,7 @@ public class CollectionOfSoftDeleteTests {
 			assertThat( loaded.getBooks() ).isEmpty();
 
 			assertThat( sqlInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( ".deleted='N'" );
+			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsAnyOf( ".deleted='N'", ".deleted=N'N'" );
 		} );
 	}
 
@@ -101,7 +101,7 @@ public class CollectionOfSoftDeleteTests {
 
 			assertThat( sqlInspector.getSqlQueries() ).hasSize( 1 );
 			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( " join " );
-			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( ".deleted='N'" );
+			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsAnyOf( ".deleted='N'", ".deleted=N'N'" );
 		} );
 	}
 

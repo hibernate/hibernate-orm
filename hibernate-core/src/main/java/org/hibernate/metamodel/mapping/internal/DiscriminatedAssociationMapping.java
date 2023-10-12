@@ -358,7 +358,8 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				navigablePath,
 				baseAssociationJtd,
 				modelPart,
-				resultVariable
+				resultVariable,
+				creationState
 		);
 	}
 
@@ -462,9 +463,12 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 				NavigablePath navigablePath,
 				JavaType<?> baseAssociationJtd,
 				DiscriminatedAssociationModelPart fetchedPart,
-				String resultVariable) {
+				String resultVariable,
+				DomainResultCreationState creationState) {
 			super( navigablePath, fetchedPart, baseAssociationJtd );
 			this.resultVariable = resultVariable;
+
+			afterInitialize( creationState );
 		}
 
 		@Override
@@ -535,6 +539,11 @@ public class DiscriminatedAssociationMapping implements MappingType, FetchOption
 					getDiscriminatorValueFetch().createAssembler( parentAccess, creationState ),
 					getKeyValueFetch().createAssembler( parentAccess, creationState )
 			);
+		}
+
+		@Override
+		public FetchParent asFetchParent() {
+			return this;
 		}
 	}
 

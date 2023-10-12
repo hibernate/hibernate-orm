@@ -122,16 +122,9 @@ dependencies {
 		testRuntimeOnly dbLibs.firebird
 	}
 	else if ( db.startsWith( 'oracle' ) ) {
-		if ( db.startsWith( 'oracle_legacy' ) ) {
-			testRuntimeOnly dbLibs.oracleLegacy
-			testRuntimeOnly dbLibs.oracleLegacyXml
-			testRuntimeOnly dbLibs.oracleLegacyXmlParser
-		}
-		else {
-			testRuntimeOnly dbLibs.oracle
-			testRuntimeOnly dbLibs.oracleXml
-			testRuntimeOnly dbLibs.oracleXmlParser
-		}
+		testRuntimeOnly dbLibs.oracle
+		testRuntimeOnly dbLibs.oracleXml
+		testRuntimeOnly dbLibs.oracleXmlParser
 	}
 
 	annotationProcessor libs.loggingProcessor

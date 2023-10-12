@@ -3391,6 +3391,8 @@ public abstract class AbstractEntityPersister
 		multiIdLoader = buildMultiIdLoader();
 
 		lazyLoadPlanByFetchGroup = getLazyLoadPlanByFetchGroup();
+
+		logStaticSQL();
 	}
 
 	private void doLateInit() {
@@ -3417,8 +3419,6 @@ public abstract class AbstractEntityPersister
 
 		//select SQL
 		sqlVersionSelectString = generateSelectVersionString();
-
-		logStaticSQL();
 	}
 
 	private EntityTableMapping findTableMapping(String tableName) {

@@ -409,7 +409,7 @@ public class EmbeddableBinder {
 	private static CompositeUserType<?> compositeUserType(
 			Class<? extends CompositeUserType<?>> compositeUserTypeClass,
 			MetadataBuildingContext context) {
-		if ( context.getBuildingOptions().disallowExtensionsInCdi() ) {
+		if ( !context.getBuildingOptions().isAllowExtensionsInCdi() ) {
 			FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( compositeUserTypeClass );
 		}
 

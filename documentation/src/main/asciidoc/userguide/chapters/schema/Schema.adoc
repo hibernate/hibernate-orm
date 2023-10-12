@@ -211,6 +211,8 @@ The second INSERT statement fails because of the unique constraint violation.
 
 The {jpaJavadocUrlPrefix}Index.html[`@Index`] annotation is used by the automated schema generation tool to create a database index.
 
+TIP: Creating unique index containing all primary key columns will result in ordering primary key columns specified by `columnList`
+
 Considering the following entity mapping. Hibernate generates the index when creating the database schema:
 
 [[schema-generation-columns-index-mapping-example]]

@@ -202,16 +202,23 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	default boolean hasRealJoins() {
 		for ( TableGroupJoin join : getTableGroupJoins() ) {
 			final TableGroup joinedGroup = join.getJoinedGroup();
-			if ( !( joinedGroup instanceof VirtualTableGroup ) || joinedGroup.hasRealJoins() ) {
+			if ( !joinedGroup.isVirtual() || joinedGroup.hasRealJoins() ) {
 				return true;
 			}
 		}
 		for ( TableGroupJoin join : getNestedTableGroupJoins() ) {
 			final TableGroup joinedGroup = join.getJoinedGroup();
-			if ( !( joinedGroup instanceof VirtualTableGroup ) || joinedGroup.hasRealJoins() ) {
+			if ( !joinedGroup.isVirtual() || joinedGroup.hasRealJoins() ) {
 				return true;
 			}
 		}
+		return false;
+	}
+
+	/**
+	 * Utility method that indicates weather this table group is {@linkplain VirtualTableGroup virtual} or not
+	 */
+	default boolean isVirtual() {
 		return false;
 	}
 }

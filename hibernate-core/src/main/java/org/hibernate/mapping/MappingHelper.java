@@ -60,7 +60,7 @@ public final class MappingHelper {
 		final boolean hasParameters = CollectionHelper.isNotEmpty( typeParameters );
 		final ManagedBean<? extends UserCollectionType> userTypeBean;
 
-		if ( metadata.getMetadataBuildingOptions().disallowExtensionsInCdi() ) {
+		if ( !metadata.getMetadataBuildingOptions().isAllowExtensionsInCdi() ) {
 			//noinspection unchecked,rawtypes
 			userTypeBean = createLocalUserCollectionTypeBean(
 					role,

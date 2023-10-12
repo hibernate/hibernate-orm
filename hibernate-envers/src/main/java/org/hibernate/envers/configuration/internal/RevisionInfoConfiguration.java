@@ -6,6 +6,7 @@
  */
 package org.hibernate.envers.configuration.internal;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Locale;
@@ -498,12 +499,12 @@ public class RevisionInfoConfiguration {
 			}
 
 			final XClass propertyType = property.getType();
-			if ( isAnyType( propertyType, Long.class, Long.TYPE, Date.class, LocalDateTime.class, java.sql.Date.class ) ) {
+			if ( isAnyType( propertyType, Long.class, Long.TYPE, Date.class, LocalDateTime.class, Instant.class, java.sql.Date.class ) ) {
 				revisionInfoTimestampData = createPropertyData( property, accessType );
 				revisionTimestampFound = true;
 			}
 			else {
-				throwUnexpectedAnnotatedType( property, RevisionTimestamp.class, "long, Long, Date, LocalDateTime, or java.sql.Date" );
+				throwUnexpectedAnnotatedType( property, RevisionTimestamp.class, "long, Long, Date, LocalDateTime, Instant, or java.sql.Date" );
 			}
 		}
 		

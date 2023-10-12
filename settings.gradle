@@ -25,6 +25,9 @@ plugins {
 
 dependencyResolutionManagement {
     repositories {
+        if ( rootProject.hasProperty( "mavenMirror" ) ) {
+            url( rootProject.property( "mavenMirror" ) )
+        }
         mavenCentral()
         // Needed for the RC versions of Jakarta Persistence
         maven {
@@ -61,7 +64,7 @@ dependencyResolutionManagement {
             version "maxSupportedBytecode", "21"
         }
         libs {
-            def antlrVersion = version "antlr", "4.10.1"
+            def antlrVersion = version "antlr", "4.13.0"
             def byteBuddyVersion = version "byteBuddy", "1.14.7"
             def classmateVersion = version "classmate", "1.5.1"
             def geolatteVersion = version "geolatte", "1.8.2"
@@ -236,9 +239,6 @@ dependencyResolutionManagement {
             library( "oracle", "com.oracle.database.jdbc", "ojdbc11" ).versionRef( oracleVersion )
             library( "oracleXml", "com.oracle.database.xml", "xdb" ).versionRef( oracleVersion )
             library( "oracleXmlParser", "com.oracle.database.xml", "xmlparserv2" ).versionRef( oracleVersion )
-            library( "oracleLegacy", "com.oracle.database.jdbc", "ojdbc6" ).versionRef( oracleLegacyVersion )
-            library( "oracleLegacyXml", "com.oracle.database.xml", "xdb6" ).versionRef( oracleLegacyVersion )
-            library( "oracleLegacyXmlParser", "com.oracle.database.xml", "xmlparserv2" ).versionRef( oracleLegacyVersion )
             library( "mssql", "com.microsoft.sqlserver", "mssql-jdbc" ).versionRef( mssqlVersion )
             library( "db2", "com.ibm.db2", "jcc" ).versionRef( db2Version )
             library( "hana", "com.sap.cloud.db.jdbc", "ngdbc" ).versionRef( hanaVersion )

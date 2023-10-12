@@ -497,7 +497,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		private void setMetadataBuildingContext(MetadataBuildingContext metadataBuildingContext) {
 			this.metadataBuildingContext = metadataBuildingContext;
 			if ( metadataBuildingContext != null ) {
-				this.allowExtensionsInCdi = metadataBuildingContext.getBuildingOptions().disallowExtensionsInCdi();
+				this.allowExtensionsInCdi = metadataBuildingContext.getBuildingOptions().isAllowExtensionsInCdi();
 			}
 		}
 
@@ -814,7 +814,7 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 
 	@Internal @SuppressWarnings("unchecked")
 	public <J> MutabilityPlan<J> createMutabilityPlan(Class<? extends MutabilityPlan<?>> planClass) {
-		if ( scope.allowExtensionsInCdi ) {
+		if ( !scope.allowExtensionsInCdi ) {
 			//noinspection rawtypes
 			return (MutabilityPlan) FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( planClass );
 		}

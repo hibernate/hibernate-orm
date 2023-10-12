@@ -53,7 +53,7 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 		final Component propComponent = (Component) value;
 		final EmbeddableInstantiator instantiator;
 		if ( propComponent.getCustomInstantiator() != null ) {
-			if ( getMetadataBuildingContext().getBuildingOptions().disallowExtensionsInCdi() ) {
+			if ( !getMetadataBuildingContext().getBuildingOptions().isAllowExtensionsInCdi() ) {
 				instantiator = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( propComponent.getCustomInstantiator() );
 			}
 			else {
@@ -68,7 +68,7 @@ public final class ComponentMetadataGenerator extends AbstractMetadataGenerator 
 			final Class<CompositeUserType<?>> userTypeClass = getMetadataBuildingContext().getBootstrapContext()
 					.getClassLoaderAccess()
 					.classForName( propComponent.getTypeName() );
-			if ( getMetadataBuildingContext().getBuildingOptions().disallowExtensionsInCdi() ) {
+			if ( !getMetadataBuildingContext().getBuildingOptions().isAllowExtensionsInCdi() ) {
 				final CompositeUserType<?> compositeUserType = FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( userTypeClass );
 				//noinspection rawtypes
 				instantiator = new EmbeddableCompositeUserTypeInstantiator( (CompositeUserType) compositeUserType );

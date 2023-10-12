@@ -1515,7 +1515,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						tableGroupJoin -> {
 							final TableGroup group = tableGroupJoin.getJoinedGroup();
 							if ( forUpdateClause.hasAlias( group.getSourceAlias() ) ) {
-								if ( tableGroupJoin.isInitialized() && tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !( group instanceof VirtualTableGroup ) ) {
+								if ( tableGroupJoin.isInitialized() && tableGroupJoin.getJoinType() != SqlAstJoinType.INNER && !group.isVirtual() ) {
 									if ( Boolean.FALSE.equals( followOnLocking ) ) {
 										throw new IllegalQueryOperationException(
 												"Locking with OUTER joins is not supported" );
@@ -4477,6 +4477,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					&& !( getCurrentQueryPart() instanceof QueryGroup ) ) {
 				appendSql( '*' );
 			}
+			else if ( columnAliases != null ) {
+				String separator = "";
+				for ( String columnAlias : columnAliases ) {
+					appendSql( separator );
+					appendSql( alias );
+					appendSql( '.' );
+					appendSql( columnAlias );
+					separator = COMMA_SEPARATOR;
+				}
+			}
 			else {
 				int size = 0;
 				for ( SqlSelection sqlSelection : queryPart.getFirstQuerySpec().getSelectClause().getSqlSelections() ) {
@@ -5233,7 +5243,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private String renderFromClauseRoot(TableGroup root, String separator) {
-		if ( root instanceof VirtualTableGroup ) {
+		if ( root.isVirtual() ) {
 			for ( TableGroupJoin tableGroupJoin : root.getTableGroupJoins() ) {
 				separator = renderFromClauseRoot( tableGroupJoin.getJoinedGroup(), separator );
 			}
@@ -5382,7 +5392,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( !joinedGroup.isInitialized() ) {
 				continue;
 			}
-			if ( joinedGroup instanceof VirtualTableGroup ) {
+			if ( joinedGroup.isVirtual() ) {
 				if ( hasNestedTableGroupsToRender( joinedGroup.getNestedTableGroupJoins() ) ) {
 					return true;
 				}
@@ -5652,7 +5662,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	protected void processTableGroupJoin(TableGroupJoin tableGroupJoin, List<TableGroupJoin> tableGroupJoinCollector) {
 		final TableGroup joinedGroup = tableGroupJoin.getJoinedGroup();
 
-		if ( joinedGroup instanceof VirtualTableGroup ) {
+		if ( joinedGroup.isVirtual() ) {
 			processNestedTableGroupJoins( joinedGroup, tableGroupJoinCollector );
 			if ( tableGroupJoinCollector != null ) {
 				tableGroupJoinCollector.addAll( joinedGroup.getTableGroupJoins() );

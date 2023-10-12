@@ -4477,6 +4477,16 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					&& !( getCurrentQueryPart() instanceof QueryGroup ) ) {
 				appendSql( '*' );
 			}
+			else if ( columnAliases != null ) {
+				String separator = "";
+				for ( String columnAlias : columnAliases ) {
+					appendSql( separator );
+					appendSql( alias );
+					appendSql( '.' );
+					appendSql( columnAlias );
+					separator = COMMA_SEPARATOR;
+				}
+			}
 			else {
 				int size = 0;
 				for ( SqlSelection sqlSelection : queryPart.getFirstQuerySpec().getSelectClause().getSqlSelections() ) {

@@ -9,7 +9,20 @@ Changes in 6.2.13.Final (October 11, 2023)
 https://hibernate.atlassian.net/projects/HHH/versions/32203
 
 ** Bug
+    * [HHH-16933] - JSON issue on Oracle 23c
+    * [HHH-17225] - Right join does not return records from the right table if there's no matching record in the from clause
+    * [HHH-17264] - OracleAggregateSupport should use json_object to create empty json
+    * [HHH-17276] - Columns that are widened to LOB type aren't considered as LOBs
     * [HHH-17290] - Embeddable with a primitive field cannot be set to null
+    * [HHH-17302] - Use nocache for MariaDB sequences
+
+** Improvement
+    * [HHH-16876] - Update Oracle testing to 23c
+
+** Task
+    * [HHH-17237] - Integrate Oracle Atlas for CI testing
+    * [HHH-17296] - Gradle 8.4 upgrade
+    * [HHH-17297] - Adapt limited support testing for 6.2
 
 
 Changes in 6.2.12.Final (October 06, 2023)

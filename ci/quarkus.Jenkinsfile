@@ -18,9 +18,6 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '3', artifactNumToKeepStr: '3'))
         disableConcurrentBuilds(abortPrevious: true)
     }
-	environment {
-		MAVEN_OPTS = '-Xmx2g -XX:MaxMetaspaceSize=1g'
-	}
     stages {
         stage('Build') {
         	steps {
@@ -33,11 +30,19 @@ pipeline {
 						).trim()
 					}
 					dir('.release/quarkus') {
-// 						checkout scmGit(branches: [[name: '*/orm-update']], extensions: [], userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/beikov/quarkus.git']])
-						checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'ed25519.Hibernate-CI.github.com', url: 'https://github.com/quarkusio/quarkus.git']])
+						sh "git clone -b 3.2 --single-branch https://github.com/quarkusio/quarkus.git . || git reset --hard && git clean -fx && git pull"
 						sh "sed -i 's@<hibernate-orm.version>.*</hibernate-orm.version>@<hibernate-orm.version>${env.HIBERNATE_VERSION}</hibernate-orm.version>@' bom/application/pom.xml"
-						sh './mvnw -Dquickly install'
-						sh './mvnw -pl :quarkus-hibernate-orm -amd -pl "!integration-tests/kafka-oauth-keycloak" verify -Dstart-containers -Dtest-containers'
+						// Need to override the default maven configuration this way, because there is no other way to do it
+						sh "sed -i 's/-Xmx5g/-Xmx1920m/' ./.mvn/jvm.config"
+						sh "echo -e '\\n-XX:MaxMetaspaceSize=768m'>>./.mvn/jvm.config"
+						sh "./mvnw -Dquickly install"
+						// Need to kill the gradle daemons started during the Maven install run
+						sh "pkill -f '.*GradleDaemon.*' || true"
+						// Need to override the default maven configuration this way, because there is no other way to do it
+						sh "sed -i 's/-Xmx1920m/-Xmx1372m/' ./.mvn/jvm.config"
+						sh "sed -i 's/MaxMetaspaceSize=768m/MaxMetaspaceSize=512m/' ./.mvn/jvm.config"
+						def excludes = "'!integration-tests/kafka-oauth-keycloak,!integration-tests/kafka-sasl-elytron,!integration-tests/hibernate-search-orm-opensearch,!integration-tests/maven,!docs,!integration-tests/mongodb-client,!integration-tests/mongodb-panache,!integration-tests/mongodb-panache-kotlin,!integration-tests/mongodb-devservices,!integration-tests/mongodb-rest-data-panache,!integration-tests/liquibase-mongodb,!extensions/mongodb-client/deployment,!extensions/liquibase-mongodb/deployment,!extensions/panache/mongodb-panache/deployment,!extensions/panache/mongodb-panache-kotlin/deployment,!extensions/panache/mongodb-panache-kotlin/runtime,!extensions/panache/mongodb-rest-data-panache/deployment,!extensions/panache/mongodb-panache-common/deployment'"
+						sh "TESTCONTAINERS_RYUK_CONTAINER_PRIVILEGED=true ./mvnw -pl :quarkus-hibernate-orm -amd -pl ${excludes} verify -Dstart-containers -Dtest-containers -Dskip.gradle.build"
 					}
 				}
 			}

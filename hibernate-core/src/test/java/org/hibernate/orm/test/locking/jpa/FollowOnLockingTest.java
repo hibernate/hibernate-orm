@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.spi.QueryImplementor;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -39,6 +40,7 @@ import static org.hibernate.jpa.SpecHints.HINT_SPEC_QUERY_TIMEOUT;
 @SessionFactory(useCollectingStatementInspector = true)
 @SkipForDialect(dialectClass = HSQLDialect.class, reason = "Seems HSQLDB doesn't cancel the query if it waits for a lock?!")
 @SkipForDialect(dialectClass = CockroachDialect.class, reason = "Cockroach allows the concurrent access but cancels one or both transactions at the end")
+@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "Timeouts don't work on Oracle 11 when using a driver other than ojdbc6, but we can't test with that driver")
 public class FollowOnLockingTest {
 
 	@Test

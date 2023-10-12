@@ -83,10 +83,10 @@ public class ToOneTests {
 			assertThat( sqlInspector.getSqlQueries() ).hasSize( 2 );
 			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( " join " );
 			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( ".reporter_fk" );
-			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( ".active='Y" );
+			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsAnyOf( ".active='Y'", ".active=N'Y'" );
 			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsOnlyOnce( "active" );
 			assertThat( sqlInspector.getSqlQueries().get( 1 ) ).doesNotContain( " join " );
-			assertThat( sqlInspector.getSqlQueries().get( 1 ) ).contains( ".active='Y" );
+			assertThat( sqlInspector.getSqlQueries().get( 1 ) ).containsAnyOf( ".active='Y'", ".active=N'Y'" );
 			assertThat( sqlInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "active" );
 		} );
 	}

@@ -59,7 +59,13 @@ public class CommentGenerationTest {
 					.execute( EnumSet.of( TargetType.SCRIPT ), metadata );
 
 			String fileContent = new String( Files.readAllBytes( output.toPath() ) );
-			assertThat( fileContent.contains( "comment on column version.description " ), is( true ) );
+			String commentFragment = metadata.getDatabase().getDialect().getColumnComment( "This is a column comment" );
+			if ( commentFragment.isEmpty() ) {
+				assertThat( fileContent.contains( "comment on column version.description " ), is( true ) );
+			}
+			else {
+				assertThat( fileContent.contains( commentFragment ), is( true ) );
+			}
 		}
 		finally {
 			StandardServiceRegistryBuilder.destroy( ssr );

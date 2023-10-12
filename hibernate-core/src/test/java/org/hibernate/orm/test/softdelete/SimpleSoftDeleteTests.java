@@ -113,7 +113,7 @@ public class SimpleSoftDeleteTests {
 					.multiLoad( 1, 2, 3 );
 			assertThat( results ).hasSize( 2 );
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "removed='N'" );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "removed='N'", "removed=N'N'" );
 		} );
 	}
 
@@ -125,7 +125,7 @@ public class SimpleSoftDeleteTests {
 			statementInspector.clear();
 			session.bySimpleNaturalId( SimpleEntity.class ).load( "second" );
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "removed='N'" );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "removed='N'", "removed=N'N'" );
 		} );
 	}
 
@@ -145,7 +145,7 @@ public class SimpleSoftDeleteTests {
 			// trigger load
 			first.getName();
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "active='Y'" );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "active='Y'", "active=N'Y'" );
 
 			assertThat( Hibernate.isInitialized( first ) ).isTrue();
 			assertThat( Hibernate.isInitialized( second ) ).isTrue();

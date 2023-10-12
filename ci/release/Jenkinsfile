@@ -62,7 +62,8 @@ pipeline {
 					def secondLastCommitter = sh(script: 'git show -s --format=\'%an\' HEAD~1', returnStdout: true).trim()
 					if (lastCommitter == 'Hibernate-CI' && secondLastCommitter == 'Hibernate-CI') {
 						print "INFO: Release skipped because last commits were for the previous release"
-						currentBuild.result = 'ABORTED'
+						currentBuild.getRawBuild().getExecutor().interrupt(Result.NOT_BUILT)
+						sleep(1)   // Interrupt is not blocking and does not take effect immediately.
 						return
 					}
 

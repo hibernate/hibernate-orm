@@ -1053,6 +1053,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsCommentOn() {
+		return true;
+	}
+
+	@Override
 	public String getTableComment(String comment) {
 		return " comment='" + comment + "'";
 	}

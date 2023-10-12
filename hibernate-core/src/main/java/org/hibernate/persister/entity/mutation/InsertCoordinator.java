@@ -102,32 +102,36 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			Object entity,
 			SharedSessionContractImplementor session) {
 		// apply any pre-insert in-memory value generation
-		preInsertInMemoryValueGeneration( values, entity, session );
+		final boolean needsDynamicInsert = preInsertInMemoryValueGeneration( values, entity, session );
 
 		final EntityMetamodel entityMetamodel = entityPersister().getEntityMetamodel();
-		if ( entityMetamodel.isDynamicInsert() ) {
-			return doDynamicInserts( id, values, entity, session );
+		final boolean forceIdentifierBinding = entityPersister().getGenerator().generatedOnExecution() && id != null;
+		if ( entityMetamodel.isDynamicInsert() || needsDynamicInsert || forceIdentifierBinding ) {
+			return doDynamicInserts( id, values, entity, session, forceIdentifierBinding );
 		}
 		else {
 			return doStaticInserts( id, values, entity, session );
 		}
 	}
 
-	protected void preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
+	protected boolean preInsertInMemoryValueGeneration(Object[] values, Object entity, SharedSessionContractImplementor session) {
 		final AbstractEntityPersister persister = entityPersister();
 		final EntityMetamodel entityMetamodel = persister.getEntityMetamodel();
+		boolean foundStateDependentGenerator = false;
 		if ( entityMetamodel.hasPreInsertGeneratedValues() ) {
 			final Generator[] generators = entityMetamodel.getGenerators();
 			for ( int i = 0; i < generators.length; i++ ) {
 				final Generator generator = generators[i];
 				if ( generator != null
-						&& !generator.generatedOnExecution()
+						&& !generator.generatedOnExecution( entity, session )
 						&& generator.generatesOnInsert() ) {
 					values[i] = ( (BeforeExecutionGenerator) generator ).generate( session, entity, values[i], INSERT );
 					persister.setPropertyValue( entity, i, values[i] );
+					foundStateDependentGenerator = foundStateDependentGenerator || generator.generatedOnExecution();
 				}
 			}
 		}
+		return foundStateDependentGenerator;
 	}
 
 	protected static class InsertValuesAnalysis implements ValuesAnalysis {
@@ -273,9 +277,14 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		}
 	}
 
-	protected Object doDynamicInserts(Object id, Object[] values, Object object, SharedSessionContractImplementor session) {
+	protected Object doDynamicInserts(
+			Object id,
+			Object[] values,
+			Object object,
+			SharedSessionContractImplementor session,
+			boolean forceIdentifierBinding) {
 		final boolean[] insertability = getPropertiesToInsert( values );
-		final MutationOperationGroup insertGroup = generateDynamicInsertSqlGroup( insertability );
+		final MutationOperationGroup insertGroup = generateDynamicInsertSqlGroup( insertability, object, session, forceIdentifierBinding );
 
 		final MutationExecutor mutationExecutor = executor( session, insertGroup, true );
 
@@ -330,28 +339,31 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		return notNull;
 	}
 
-	protected MutationOperationGroup generateDynamicInsertSqlGroup(boolean[] insertable) {
-		assert entityPersister().getEntityMetamodel().isDynamicInsert();
+	protected MutationOperationGroup generateDynamicInsertSqlGroup(
+			boolean[] insertable,
+			Object object,
+			SharedSessionContractImplementor session,
+			boolean forceIdentifierBinding) {
 		final MutationGroupBuilder insertGroupBuilder = new MutationGroupBuilder( MutationType.INSERT, entityPersister() );
 		entityPersister().forEachMutableTable(
-				(tableMapping) -> insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping ) )
+				(tableMapping) -> insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping, forceIdentifierBinding ) )
 		);
-		applyTableInsertDetails( insertGroupBuilder, insertable );
+		applyTableInsertDetails( insertGroupBuilder, insertable, object, session, forceIdentifierBinding );
 		return createOperationGroup( null, insertGroupBuilder.buildMutationGroup() );
 	}
 
 	public MutationOperationGroup generateStaticOperationGroup() {
 		final MutationGroupBuilder insertGroupBuilder = new MutationGroupBuilder( MutationType.INSERT, entityPersister() );
 		entityPersister().forEachMutableTable(
-				(tableMapping) -> insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping ) )
+				(tableMapping) -> insertGroupBuilder.addTableDetailsBuilder( createTableInsertBuilder( tableMapping, false ) )
 		);
-		applyTableInsertDetails( insertGroupBuilder, entityPersister().getPropertyInsertability() );
+		applyTableInsertDetails( insertGroupBuilder, entityPersister().getPropertyInsertability(), null, null, false );
 		return createOperationGroup( null, insertGroupBuilder.buildMutationGroup() );
 	}
 
-	private TableInsertBuilder createTableInsertBuilder(EntityTableMapping tableMapping) {
+	private TableInsertBuilder createTableInsertBuilder(EntityTableMapping tableMapping, boolean forceIdentifierBinding) {
 		final InsertGeneratedIdentifierDelegate identityDelegate = entityPersister().getIdentityInsertDelegate();
-		if ( tableMapping.isIdentifierTable() && identityDelegate != null ) {
+		if ( tableMapping.isIdentifierTable() && identityDelegate != null && !forceIdentifierBinding ) {
 			final BasicEntityIdentifierMapping mapping =
 					(BasicEntityIdentifierMapping) entityPersister().getIdentifierMapping();
 			return identityDelegate.createTableInsertBuilder( mapping, tableMapping.getInsertExpectation(), factory() );
@@ -363,7 +375,10 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 
 	private void applyTableInsertDetails(
 			MutationGroupBuilder insertGroupBuilder,
-			boolean[] attributeInclusions) {
+			boolean[] attributeInclusions,
+			Object object,
+			SharedSessionContractImplementor session,
+			boolean forceIdentifierBinding) {
 		final AttributeMappingsList attributeMappings = entityPersister().getAttributeMappings();
 
 		insertGroupBuilder.forEachTableMutationBuilder( (builder) -> {
@@ -381,8 +396,14 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 				}
 				else {
 					final Generator generator = attributeMapping.getGenerator();
-					if ( isValueGenerationInSql( generator, factory().getJdbcServices().getDialect() ) ) {
-						handleValueGeneration( attributeMapping, insertGroupBuilder, (OnExecutionGenerator) generator );
+					if ( isValueGenerated( generator ) ) {
+						if ( session != null && !generator.generatedOnExecution( object, session ) ) {
+							attributeInclusions[attributeIndex] = true;
+							attributeMapping.forEachInsertable( insertGroupBuilder );
+						}
+						else if ( isValueGenerationInSql( generator, factory().getJdbcServices().getDialect() ) ) {
+							handleValueGeneration( attributeMapping, insertGroupBuilder, (OnExecutionGenerator) generator );
+						}
 					}
 				}
 			}
@@ -398,7 +419,7 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 			final TableInsertBuilder tableInsertBuilder = (TableInsertBuilder) tableMutationBuilder;
 			final EntityTableMapping tableMapping = (EntityTableMapping) tableInsertBuilder.getMutatingTable().getTableMapping();
 			//noinspection StatementWithEmptyBody
-			if ( tableMapping.isIdentifierTable() && identityDelegate != null ) {
+			if ( tableMapping.isIdentifierTable() && identityDelegate != null && !forceIdentifierBinding ) {
 				// nothing to do - the builder already includes the identity handling
 			}
 			else {
@@ -407,11 +428,15 @@ public class InsertCoordinator extends AbstractMutationCoordinator {
 		} );
 	}
 
-	private static boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
+	private static boolean isValueGenerated(Generator generator) {
 		return generator != null
-			&& generator.generatesOnInsert()
-			&& generator.generatedOnExecution()
-			&& ( (OnExecutionGenerator) generator ).referenceColumnsInSql(dialect);
+				&& generator.generatesOnInsert()
+				&& generator.generatedOnExecution();
+	}
+
+	private static boolean isValueGenerationInSql(Generator generator, Dialect dialect) {
+		assert isValueGenerated( generator );
+		return ( (OnExecutionGenerator) generator ).referenceColumnsInSql(dialect);
 	}
 
 	/**

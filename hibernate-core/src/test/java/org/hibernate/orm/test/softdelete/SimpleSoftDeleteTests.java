@@ -12,7 +12,6 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.type.YesNoConverter;
 
@@ -34,7 +33,7 @@ import static org.assertj.core.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(annotatedClasses = { SimpleSoftDeleteTests.SimpleEntity.class, SimpleSoftDeleteTests.BatchLoadable.class })
+@DomainModel(annotatedClasses = { SimpleEntity.class, SimpleSoftDeleteTests.BatchLoadable.class })
 @SessionFactory(useCollectingStatementInspector = true)
 public class SimpleSoftDeleteTests {
 	@BeforeEach
@@ -212,40 +211,10 @@ public class SimpleSoftDeleteTests {
 		} );
 	}
 
-	/**
-	 * @implNote Uses YesNoConverter to work across all databases, even those
-	 * not supporting an actual BOOLEAN datatype
-	 */
-	@Entity(name="SimpleEntity")
-	@Table(name="simple")
-	@SoftDelete(columnName = "removed", converter = YesNoConverter.class)
-	public static class SimpleEntity {
-		@Id
-		private Integer id;
-		@NaturalId
-		private String name;
-
-		public SimpleEntity() {
-		}
-
-		public SimpleEntity(Integer id, String name) {
-			this.id = id;
-			this.name = name;
-		}
-
-		public Integer getId() {
-			return id;
-		}
-
-		public String getName() {
-			return name;
-		}
-	}
-
 	@Entity(name="BatchLoadable")
 	@Table(name="batch_loadable")
 	@BatchSize(size = 5)
-	@SoftDelete(columnName = "active", converter = ReverseYesNoConverter.class)
+	@SoftDelete(columnName = "active", converter = YesNoConverter.class, reversed = true)
 	public static class BatchLoadable {
 		@Id
 		private Integer id;

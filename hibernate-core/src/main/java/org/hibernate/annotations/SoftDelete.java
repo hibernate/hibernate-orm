@@ -12,7 +12,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.BooleanAsBooleanConverter;
 
 import jakarta.persistence.AttributeConverter;
 
@@ -66,19 +65,6 @@ public @interface SoftDelete {
 	String columnName() default "deleted";
 
 	/**
-	 * (Optional) The Java type used for values when dealing with JDBC.
-	 * This type should match the "relational type" of the specified
-	 * {@linkplain #converter() converter}.
-	 * <p/>
-	 * By default, Hibernate will inspect the {@linkplain #converter() converter}
-	 * and determine the proper type from its signature.
-	 *
-	 * @apiNote Sometimes useful since {@linkplain #converter() converter}
-	 * signatures are not required to be parameterized.
-	 */
-	Class<?> jdbcType() default void.class;
-
-	/**
 	 * (Optional) Conversion to apply to determine the appropriate value to
 	 * store in the database.  The "domain representation" can be: <dl>
 	 *     <dt>{@code true}</dt>
@@ -94,5 +80,19 @@ public @interface SoftDelete {
 	 *
 	 * @apiNote The converter should never return {@code null}
 	 */
-	Class<? extends AttributeConverter<Boolean,?>> converter() default BooleanAsBooleanConverter.class;
+	Class<? extends AttributeConverter<Boolean,?>> converter() default UnspecifiedConversion.class;
+
+	/**
+	 * Whether the stored values should be reversed.  This is used when the application tracks
+	 * rows that are active as opposed to rows that are deleted.
+	 */
+	boolean reversed() default false;
+
+	/**
+	 * Used as the default for {@linkplain SoftDelete#converter()}, indicating that
+	 * {@linkplain Dialect#getPreferredSqlTypeCodeForBoolean() dialect} and
+	 * {@linkplain org.hibernate.cfg.MappingSettings#PREFERRED_BOOLEAN_JDBC_TYPE settings}
+	 * resolution should be used.
+	 */
+	interface UnspecifiedConversion extends AttributeConverter<Boolean,Object> {}
 }

@@ -16,9 +16,13 @@ import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.model.TypeDefinition;
+import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorBypassedImpl;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.internal.InstanceBasedConverterDescriptor;
+import org.hibernate.boot.model.convert.spi.AutoApplicableConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.convert.spi.JpaAttributeConverterCreationContext;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolution;
@@ -47,13 +51,17 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.NumericBooleanConverter;
+import org.hibernate.type.TrueFalseConverter;
 import org.hibernate.type.Type;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.jdbc.BooleanJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.internal.BasicTypeImpl;
@@ -62,6 +70,7 @@ import org.hibernate.type.spi.TypeConfigurationAware;
 import org.hibernate.usertype.DynamicParameterizedType;
 import org.hibernate.usertype.UserType;
 
+import com.fasterxml.classmate.ResolvedType;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.TemporalType;
@@ -73,7 +82,7 @@ import static org.hibernate.mapping.MappingHelper.injectParameters;
 /**
  * @author Steve Ebersole
  */
-public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resolvable {
+public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resolvable, JpaAttributeConverterCreationContext {
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( BasicValue.class );
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -90,6 +99,8 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	private EnumType enumerationStyle;
 	private TemporalType temporalPrecision;
 	private TimeZoneStorageType timeZoneStorageType;
+	private boolean isSoftDelete;
+	private boolean isSoftDeleteReversed;
 
 	private java.lang.reflect.Type resolvedJavaType;
 
@@ -133,6 +144,19 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	@Override
 	public BasicValue copy() {
 		return new BasicValue( this );
+	}
+
+	public boolean isSoftDelete() {
+		return isSoftDelete;
+	}
+
+	public boolean isSoftDeleteReversed() {
+		return isSoftDeleteReversed;
+	}
+
+	public void makeSoftDelete(boolean reversed) {
+		isSoftDelete = true;
+		isSoftDeleteReversed = reversed;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -417,14 +441,166 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		}
 
 		// determine JavaType if we can
-		final BasicJavaType<?> explicitJavaType =
-				explicitJavaTypeAccess == null ? null : explicitJavaTypeAccess.apply( getTypeConfiguration() );
-		final JavaType<?> javaType = determineJavaType( explicitJavaType );
+		final BasicJavaType<?> explicitJavaType = explicitJavaTypeAccess == null
+				? null
+				: explicitJavaTypeAccess.apply( getTypeConfiguration() );
 
-		final ConverterDescriptor attributeConverterDescriptor = getAttributeConverterDescriptor();
+		JavaType<?> javaType = determineJavaType( explicitJavaType );
+		ConverterDescriptor attributeConverterDescriptor = getAttributeConverterDescriptor();
+
+		if ( isSoftDelete() ) {
+			assert attributeConverterDescriptor != null;
+			final boolean conversionWasUnspecified = SoftDelete.UnspecifiedConversion.class.equals( attributeConverterDescriptor.getAttributeConverterClass() );
+			if ( conversionWasUnspecified ) {
+				final JdbcType jdbcType = BooleanJdbcType.INSTANCE.resolveIndicatedType( this, javaType );
+				if ( jdbcType.isNumber() ) {
+					attributeConverterDescriptor = new InstanceBasedConverterDescriptor(
+							NumericBooleanConverter.INSTANCE,
+							getBuildingContext().getBootstrapContext().getClassmateContext()
+					);
+				}
+				else if ( jdbcType.isString() ) {
+					// here we pick 'T' / 'F' storage, though 'Y' / 'N' is equally valid - its 50/50
+					attributeConverterDescriptor = new InstanceBasedConverterDescriptor(
+							TrueFalseConverter.INSTANCE,
+							getBuildingContext().getBootstrapContext().getClassmateContext()
+					);
+				}
+				else {
+					// should indicate BIT or BOOLEAN == no conversion needed
+					//		- we still create the converter to properly set up JDBC type, etc
+					attributeConverterDescriptor = new InstanceBasedConverterDescriptor(
+							PassThruSoftDeleteConverter.INSTANCE,
+							getBuildingContext().getBootstrapContext().getClassmateContext()
+					);
+				}
+			}
+
+			if ( isSoftDeleteReversed() ) {
+				attributeConverterDescriptor = new ReversedConverterDescriptor<>( attributeConverterDescriptor );
+			}
+		}
+
 		return attributeConverterDescriptor != null
 				? converterResolution( javaType, attributeConverterDescriptor )
 				: resolution( explicitJavaType, javaType );
+	}
+
+	private static class ReversedConverterDescriptor<R> implements ConverterDescriptor {
+		private final ConverterDescriptor underlyingDescriptor;
+
+		public ReversedConverterDescriptor(ConverterDescriptor underlyingDescriptor) {
+			this.underlyingDescriptor = underlyingDescriptor;
+		}
+
+		@Override
+		public Class<? extends AttributeConverter<Boolean,R>> getAttributeConverterClass() {
+			//noinspection unchecked
+			return (Class<? extends AttributeConverter<Boolean, R>>) getClass();
+		}
+
+		@Override
+		public ResolvedType getDomainValueResolvedType() {
+			return underlyingDescriptor.getDomainValueResolvedType();
+		}
+
+		@Override
+		public ResolvedType getRelationalValueResolvedType() {
+			return underlyingDescriptor.getRelationalValueResolvedType();
+		}
+
+		@Override
+		public AutoApplicableConverterDescriptor getAutoApplyDescriptor() {
+			return AutoApplicableConverterDescriptorBypassedImpl.INSTANCE;
+		}
+
+		@Override
+		public JpaAttributeConverter<Boolean,R> createJpaAttributeConverter(JpaAttributeConverterCreationContext context) {
+			//noinspection unchecked
+			return new ReversedJpaAttributeConverter<>(
+					(JpaAttributeConverter<Boolean, R>) underlyingDescriptor.createJpaAttributeConverter( context ),
+					context.getJavaTypeRegistry().getDescriptor( ReversedJpaAttributeConverter.class )
+			);
+		}
+	}
+
+	private static class ReversedJpaAttributeConverter<R, B extends AttributeConverter<Boolean, R>>
+			implements JpaAttributeConverter<Boolean,R>, AttributeConverter<Boolean,R>, ManagedBean<B> {
+		private final JpaAttributeConverter<Boolean,R> underlyingJpaConverter;
+		private final JavaType<ReversedJpaAttributeConverter<R,B>> converterJavaType;
+
+		public ReversedJpaAttributeConverter(
+				JpaAttributeConverter<Boolean, R> underlyingJpaConverter,
+				JavaType<ReversedJpaAttributeConverter<R,B>> converterJavaType) {
+			this.underlyingJpaConverter = underlyingJpaConverter;
+			this.converterJavaType = converterJavaType;
+		}
+
+		@Override
+		public Boolean toDomainValue(R relationalValue) {
+			return !underlyingJpaConverter.toDomainValue( relationalValue );
+		}
+
+		@Override
+		public R toRelationalValue(Boolean domainValue) {
+			return underlyingJpaConverter.toRelationalValue( !domainValue );
+		}
+
+		@Override
+		public Boolean convertToEntityAttribute(R relationalValue) {
+			return toDomainValue( relationalValue );
+		}
+
+		@Override
+		public R convertToDatabaseColumn(Boolean domainValue) {
+			return toRelationalValue( domainValue );
+		}
+
+		@Override
+		public JavaType<Boolean> getDomainJavaType() {
+			return underlyingJpaConverter.getDomainJavaType();
+		}
+
+		@Override
+		public JavaType<R> getRelationalJavaType() {
+			return underlyingJpaConverter.getRelationalJavaType();
+		}
+
+		@Override
+		public JavaType<? extends AttributeConverter<Boolean, R>> getConverterJavaType() {
+			return converterJavaType;
+		}
+
+		@Override
+		public ManagedBean<? extends AttributeConverter<Boolean, R>> getConverterBean() {
+			return this;
+		}
+
+		@Override
+		public Class<B> getBeanClass() {
+			//noinspection unchecked
+			return (Class<B>) getClass();
+		}
+
+		@Override
+		public B getBeanInstance() {
+			//noinspection unchecked
+			return (B) this;
+		}
+	}
+
+	private static class PassThruSoftDeleteConverter implements AttributeConverter<Boolean,Boolean> {
+		private static final PassThruSoftDeleteConverter INSTANCE = new PassThruSoftDeleteConverter();
+
+		@Override
+		public Boolean convertToDatabaseColumn(Boolean domainValue) {
+			return domainValue;
+		}
+
+		@Override
+		public Boolean convertToEntityAttribute(Boolean relationalValue) {
+			return relationalValue;
+		}
 	}
 
 	private Resolution<?> resolution(BasicJavaType explicitJavaType, JavaType<?> javaType) {
@@ -471,24 +647,19 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		);
 	}
 
+	@Override
+	public ManagedBeanRegistry getManagedBeanRegistry() {
+		return getServiceRegistry().getService( ManagedBeanRegistry.class );
+	}
+
 	private Resolution<?> converterResolution(JavaType<?> javaType, ConverterDescriptor attributeConverterDescriptor) {
-		final ManagedBeanRegistry managedBeanRegistry = getServiceRegistry().getService( ManagedBeanRegistry.class );
 		final NamedConverterResolution<?> converterResolution = NamedConverterResolution.from(
 				attributeConverterDescriptor,
 				explicitJavaTypeAccess,
 				explicitJdbcTypeAccess,
 				explicitMutabilityPlanAccess,
 				this,
-				new JpaAttributeConverterCreationContext() {
-					@Override
-					public ManagedBeanRegistry getManagedBeanRegistry() {
-						return managedBeanRegistry;
-					}
-					@Override
-					public TypeConfiguration getTypeConfiguration() {
-						return BasicValue.this.getTypeConfiguration();
-					}
-				},
+				this,
 				getBuildingContext()
 		);
 

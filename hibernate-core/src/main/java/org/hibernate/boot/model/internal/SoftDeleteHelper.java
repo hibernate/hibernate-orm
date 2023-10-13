@@ -77,6 +77,7 @@ public class SoftDeleteHelper {
 		);
 
 		final BasicValue softDeleteIndicatorValue = new BasicValue( context, table );
+		softDeleteIndicatorValue.makeSoftDelete( softDelete.reversed() );
 		softDeleteIndicatorValue.setJpaAttributeConverterDescriptor( converterDescriptor );
 		softDeleteIndicatorValue.setImplicitJavaTypeAccess( (typeConfiguration) -> {
 			return converterDescriptor.getRelationalValueResolvedType().getErasedType();
@@ -149,8 +150,17 @@ public class SoftDeleteHelper {
 		//noinspection unchecked
 		final JdbcLiteralFormatter<Object> literalFormatter = resolution.getJdbcMapping().getJdbcLiteralFormatter();
 
-		final Object deletedLiteralValue = converter.toRelationalValue( true );
-		final Object nonDeletedLiteralValue = converter.toRelationalValue( false );
+		final Object deletedLiteralValue;
+		final Object nonDeletedLiteralValue;
+		if ( converter == null ) {
+			// the database column is BIT or BOOLEAN : pass-thru
+			deletedLiteralValue = true;
+			nonDeletedLiteralValue = false;
+		}
+		else {
+			deletedLiteralValue = converter.toRelationalValue( true );
+			nonDeletedLiteralValue = converter.toRelationalValue( false );
+		}
 
 		return new SoftDeleteMappingImpl(
 				softDeletableModelPart,

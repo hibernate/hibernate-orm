@@ -947,6 +947,11 @@ public class OracleDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return getVersion().isSameOrAfter( 23 );
+	}
+
+	@Override
 	public String getCascadeConstraintsString() {
 		return " cascade constraints";
 	}

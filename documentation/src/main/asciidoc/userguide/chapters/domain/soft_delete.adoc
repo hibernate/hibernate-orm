@@ -1,0 +1,166 @@
+[[soft-delete]]
+=== Soft Delete
+:root-project-dir: ../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:testing-dir: {core-project-dir}/src/test/java/org/hibernate/orm/test/softdelete
+
+An occasional requirement seen in the wild is to never physically remove rows from the database, but to
+instead perform a "soft delete" where a column is updated to indicate that the row is no longer active.
+Hibernate offers first-class support for this behavior through its `@SoftDelete` annotation.
+
+[NOTE]
+====
+The `@SoftDelete` annotation is new in 6.4.
+
+It was possible to hack together support for soft deletes in previous versions using a combination of filters,
+`@Where` and custom delete event handling.  However, that approach was tedious and did not work in
+all cases.  `@SoftDelete` should be highly preferred.
+====
+
+Hibernate supports soft delete for both <<soft-delete-entity,entities>> and <<soft-delete-collection,collections>>.
+
+Soft delete support is defined by 3 main parts -
+
+1. The <<soft-delete-column,column>> which contains the indicator.
+2. A conversion from `Boolean` indicator value to the proper database type
+3. Whether to <<soft-delete-reverse,reverse>> the indicator values
+
+
+[[soft-delete-column]]
+==== Indicator column
+
+The column where the indicator value is stored is defined using `@SoftDelete#columnName` attribute.  This
+defaults to the name `deleted`.
+
+See <<soft-delete-basic-example>> for an example of customizing the column name.
+
+Depending on the conversion type, an appropriate check constraint may be applied to the column.
+
+
+[[soft-delete-conversion]]
+==== Indicator conversion
+
+The conversion is defined using a JPA <<basic-jpa-convert,AttributeConverter>>.  The "domain type" is always
+boolean.  The "relational type" can be any type, as defined by the converter; though generally speaking,
+numerics and characters work best.
+
+An explicit conversion can be specified using `@SoftDelete#converter`.  See <<soft-delete-basic-example>>
+for an example of specifying an explicit conversion.  Explicit conversions can leverage the 3
+Hibernate-provided converters for the 3 most common cases -
+
+`NumericBooleanConverter`:: Defines conversion using `0` for `false` and `1` for `true`
+`YesNoConverter`:: Defines conversion using `'N'` for `false` and `'Y'` for `true`
+`TrueFalseConverter`:: Defines conversion using `'F'` for `false` and `'T'` for `true`
+
+If an explicit converter is not specified, Hibernate will follow the same resolution steps defined in
+<<basic-boolean>> to determine the proper database type.  This breaks down into 3 categories -
+
+boolean (and bit):: the underlying type is boolean / bit and no conversion is applied
+numeric:: the underlying type is integer and values are converted according to `NumericBooleanConverter`
+character:: the underlying type is char and values are converted according to `TrueFalseConverter`
+
+
+[[soft-delete-entity]]
+==== Entity soft delete
+
+Hibernate supports the soft delete of entities, with the indicator column defined on the primary table.
+
+[[soft-delete-basic-example]]
+.Basic entity soft-delete
+====
+[source,java]
+----
+include::{testing-dir}/SimpleEntity.java[tag=example-soft-delete-basic, indent=0]
+----
+====
+
+For entity hierarchies, the soft delete applies to all inheritance types.
+
+[[soft-delete-secondary-example]]
+.Inherited entity soft-delete
+====
+[source,java]
+----
+include::{testing-dir}/secondary/JoinedRoot.java[tag=example-soft-delete-secondary, indent=0]
+include::{testing-dir}/secondary/JoinedSub.java[tag=example-soft-delete-secondary, indent=0]
+----
+====
+
+See also <<soft-delete-package>>.
+
+
+[[soft-delete-collection]]
+==== Collection soft delete
+
+Soft delete may be applied to collection mapped with a "collection table", aka `@ElementCollection`
+and `@ManyToMany`.  The soft delete applies to the collection table row.
+
+Annotating a `@OneToMany` association with `@SoftDelete` will throw an exception.
+
+In the case of `@OneToMany` and `@ManyToMany`, the mapped entity may itself be soft deletable which is
+handled transparently.
+
+[[soft-delete-element-collection-example]]
+.Soft delete for @ElementCollection
+====
+[source,java]
+----
+include::{testing-dir}/collections/CollectionOwner.java[tag=example-soft-delete-element-collection, indent=0]
+----
+====
+
+Given this `@ElementCollection` mapping, rows in the `elements` table will be soft deleted using an indicator column named `deleted`.
+
+[[soft-delete-many2many-example]]
+.Soft delete for @ManyToMany
+====
+[source,java]
+----
+include::{testing-dir}/collections/CollectionOwner.java[tag=example-soft-delete-many-to-many, indent=0]
+----
+====
+
+Given this `@ManyToMany` mapping, rows in the `m2m` table will be soft deleted using an indicator column named `gone`.
+
+See also <<soft-delete-package>>.
+
+
+[[soft-delete-package]]
+==== Package-level soft delete
+
+The `@SoftDelete` annotation may also be placed at the package level, in which case it applies to all
+entities and collections defined within the package.
+
+
+[[soft-delete-reverse]]
+==== Reversed soft delete
+
+A common requirement in applications using soft delete is to track rows which are active as opposed to removed,
+reversing the boolean value.  For example:
+
+[[soft-delete-reverse-example]]
+.Reversed soft-delete
+====
+[source,java]
+----
+include::{testing-dir}/converter/reversed/TheEntity.java[tag=example-soft-delete-reverse, indent=0]
+----
+====
+
+When an instance of `TheEntity` is persisted, the value `'Y'` will be inserted into the
+`active` column.  When an instance of `TheEntity` is removed, the column's value is updated to `'N'`.
+
+This example explicitly specifies the built-in `YesNoConverter`, but reversal works with any conversion
+even implicit conversions -
+
+[[soft-delete-reverse-example-2]]
+.Reversed soft-delete with implicit conversion
+====
+[source,java]
+----
+include::{testing-dir}/converter/reversed/TheEntity2.java[tag=example-soft-delete-reverse, indent=0]
+----
+====
+
+The important thing to remember is that the stored values are reversed from the "normal" soft delete state.
+`active == true` is the same as `deleted == false` - both describe the same state.

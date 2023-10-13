@@ -121,7 +121,7 @@ public class FetchLoadableTests {
 			// trigger loading one of the subselect-loadable collections
 			first.getSubSelectLoadable().size();
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "active='Y'", "active=N'Y'" );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "active=1", "active=N'Y'" );
 			assertThat( Hibernate.isInitialized( first.getSubSelectLoadable() ) ).isTrue();
 			assertThat( Hibernate.isInitialized( second.getSubSelectLoadable() ) ).isTrue();
 		} );

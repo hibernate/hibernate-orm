@@ -57,6 +57,7 @@ import org.hibernate.query.spi.ScrollableResultsImplementor;
 import org.hibernate.query.spi.SelectQueryPlan;
 import org.hibernate.query.sqm.SqmSelectionQuery;
 import org.hibernate.query.sqm.internal.SqmInterpretationsKey.InterpretationsKeySource;
+import org.hibernate.query.sqm.spi.SqmSelectionQueryImplementor;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
@@ -64,6 +65,7 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.sql.results.internal.TupleMetadata;
+import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import static java.util.stream.Collectors.toList;
@@ -85,7 +87,7 @@ import static org.hibernate.query.sqm.internal.SqmUtil.sortSpecification;
  * @author Steve Ebersole
  */
 public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
-		implements SqmSelectionQuery<R>, InterpretationsKeySource {
+		implements SqmSelectionQueryImplementor<R>, InterpretationsKeySource {
 	private final String hql;
 	private SqmSelectStatement<R> sqm;
 
@@ -396,6 +398,10 @@ public class SqmSelectionQueryImpl<R> extends AbstractSelectionQuery<R>
 		return resolveQueryPlan().performScroll( scrollMode, this );
 	}
 
+	@Override
+	public <T> T executeQuery(ResultsConsumer<T, R> resultsConsumer) {
+		return resolveQueryPlan().executeQuery( this, resultsConsumer );
+	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Query plan

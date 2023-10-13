@@ -54,7 +54,7 @@ jobs:
       - name: Set up Java 11
         uses: graalvm/setup-graalvm@v1
         with:
-          distribution: 'graalvm'
+          distribution: 'graalvm-community'
           java-version: '19'
       - name: Get year/month for cache key
         id: get-date

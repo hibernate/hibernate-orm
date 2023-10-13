@@ -95,7 +95,6 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 			}
 		}
 
-		session.autoFlushIfRequired( (Set) CollectionHelper.setOf( entityDescriptor.getQuerySpaces() ) );
 		final LoadQueryInfluencers loadQueryInfluencers = session.getLoadQueryInfluencers();
 
 		try {
@@ -112,6 +111,7 @@ public class NaturalIdMultiLoadAccessStandard<T> implements NaturalIdMultiLoadAc
 			}
 
 			try {
+				session.autoFlushIfRequired( (Set) CollectionHelper.setOf( entityDescriptor.getQuerySpaces() ) );
 				return (List<T>) entityDescriptor.getMultiNaturalIdLoader().multiLoad( ids, this, session );
 			}
 			finally {

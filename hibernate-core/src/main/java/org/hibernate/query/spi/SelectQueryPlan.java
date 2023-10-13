@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.Incubating;
 import org.hibernate.ScrollMode;
 import org.hibernate.query.Query;
+import org.hibernate.sql.results.spi.ResultsConsumer;
 
 /**
  * General contract for performing execution of a query returning results.  These
@@ -32,6 +33,12 @@ import org.hibernate.query.Query;
  */
 @Incubating
 public interface SelectQueryPlan<R> extends QueryPlan {
+	/**
+	 * Execute the query
+	 *
+	 * @since 6.4
+	 */
+	<T> T executeQuery(DomainQueryExecutionContext executionContext, ResultsConsumer<T, R> resultsConsumer);
 	/**
 	 * Perform (execute) the query returning a List
 	 */

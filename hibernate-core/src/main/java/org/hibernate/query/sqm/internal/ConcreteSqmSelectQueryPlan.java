@@ -53,6 +53,7 @@ import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.internal.RowTransformerTupleTransformerAdapter;
 import org.hibernate.sql.results.internal.TupleMetadata;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
+import org.hibernate.sql.results.spi.ResultsConsumer;
 import org.hibernate.sql.results.spi.RowTransformer;
 
 import static org.hibernate.internal.util.ReflectHelper.isClass;
@@ -69,6 +70,7 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 	private final SqmSelectStatement<?> sqm;
 	private final DomainParameterXref domainParameterXref;
 	private final RowTransformer<R> rowTransformer;
+	private final SqmInterpreter<Object, ResultsConsumer<?, R>> executeQueryInterpreter;
 	private final SqmInterpreter<List<R>, Void> listInterpreter;
 	private final SqmInterpreter<ScrollableResultsImplementor<R>, ScrollMode> scrollInterpreter;
 
@@ -93,6 +95,34 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		else {
 			uniqueSemantic = ListResultsConsumer.UniqueSemantic.ALLOW;
 		}
+		this.executeQueryInterpreter = (resultsConsumer, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
+			final SharedSessionContractImplementor session = executionContext.getSession();
+			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.getJdbcSelect();
+			try {
+				final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
+						session.getPersistenceContext().getBatchFetchQueue(),
+						sqmInterpretation.selectStatement,
+						JdbcParametersList.empty(),
+						jdbcParameterBindings
+				);
+
+				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().executeQuery(
+						jdbcSelect,
+						jdbcParameterBindings,
+						listInterpreterExecutionContext( hql, executionContext, jdbcSelect, subSelectFetchKeyHandler ),
+						rowTransformer,
+						null,
+						sql -> executionContext.getSession()
+								.getJdbcCoordinator()
+								.getStatementPreparer()
+								.prepareQueryStatement( sql, false, null ),
+						resultsConsumer
+				);
+			}
+			finally {
+				domainParameterXref.clearExpansions();
+			}
+		};
 		this.listInterpreter = (unused, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
 			final SharedSessionContractImplementor session = executionContext.getSession();
 			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.getJdbcSelect();
@@ -105,7 +135,6 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 				);
 
 				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
-
 				return session.getFactory().getJdbcServices().getJdbcSelectExecutor().list(
 						jdbcSelect,
 						jdbcParameterBindings,
@@ -120,6 +149,8 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		};
 
 		this.scrollInterpreter = (scrollMode, executionContext, sqmInterpretation, jdbcParameterBindings) -> {
+			final SharedSessionContractImplementor session = executionContext.getSession();
+			final JdbcOperationQuerySelect jdbcSelect = sqmInterpretation.getJdbcSelect();
 			try {
 //				final SubselectFetch.RegistrationHandler subSelectFetchKeyHandler = SubselectFetch.createRegistrationHandler(
 //						executionContext.getSession().getPersistenceContext().getBatchFetchQueue(),
@@ -128,15 +159,15 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 //						jdbcParameterBindings
 //				);
 
-				final JdbcSelectExecutor jdbcSelectExecutor = executionContext.getSession()
-						.getFactory()
+				final JdbcSelectExecutor jdbcSelectExecutor = session.getFactory()
 						.getJdbcServices()
 						.getJdbcSelectExecutor();
+				session.autoFlushIfRequired( jdbcSelect.getAffectedTableNames() );
 				return jdbcSelectExecutor.scroll(
-						sqmInterpretation.getJdbcSelect(),
+						jdbcSelect,
 						scrollMode,
 						jdbcParameterBindings,
-						new SqmJdbcExecutionContextAdapter( executionContext, sqmInterpretation.jdbcSelect ),
+						new SqmJdbcExecutionContextAdapter( executionContext, jdbcSelect ),
 						rowTransformer
 				);
 			}
@@ -235,6 +266,16 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		return new RowTransformerTupleTransformerAdapter<T>(
 				ArrayHelper.toStringArray( aliases ),
 				tupleTransformer
+		);
+	}
+
+	@Override
+	public <T> T executeQuery(DomainQueryExecutionContext executionContext, ResultsConsumer<T, R> resultsConsumer) {
+		//noinspection unchecked,rawtypes
+		return withCacheableSqmInterpretation(
+				executionContext,
+				resultsConsumer,
+				(SqmInterpreter<T, ResultsConsumer<T, R>>) (SqmInterpreter) executeQueryInterpreter
 		);
 	}
 

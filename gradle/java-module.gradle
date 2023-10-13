@@ -164,6 +164,9 @@ artifacts {
 tasks.withType( JavaCompile ) {
 	options.encoding = 'UTF-8'
 	options.warnings false
+	options.fork = true
+	options.forkOptions.memoryMaximumSize = '768m'
+
 //	javaCompileTask.options.compilerArgs += [
 //			"-nowarn",
 //			"-encoding", "UTF-8"

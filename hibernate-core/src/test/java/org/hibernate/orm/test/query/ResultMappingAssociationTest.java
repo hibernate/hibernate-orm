@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.SQLSelect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -51,8 +53,8 @@ import jakarta.persistence.Table;
 		ResultMappingAssociationTest.Item.class,
 		ResultMappingAssociationTest.ItemOrder.class,
 		ResultMappingAssociationTest.Account.class,
-	},
-	xmlMappings = "org/hibernate/orm/test/query/ResultMappingAssociationTest.hbm.xml"
+		ResultMappingAssociationTest.ItemInventory.class
+	}
 )
 @Jira("HHH-17308")
 public class ResultMappingAssociationTest {
@@ -129,7 +131,7 @@ public class ResultMappingAssociationTest {
 		}
 	}
 
-	// Mapped in ResultMappingAssociationTest.hbm.xml
+	@Entity
 	public static class ItemInventory {
 		Account account;
 
@@ -145,7 +147,9 @@ public class ResultMappingAssociationTest {
 			this.item = item;
 			this.quantity = quantity;
 		}
-
+		@Id
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "account_id")
 		public Account getAccount() {
 			return account;
 		}
@@ -154,6 +158,9 @@ public class ResultMappingAssociationTest {
 			this.account = account;
 		}
 
+		@Id
+		@ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "item_id")
 		public Item getItem() {
 			return item;
 		}
@@ -162,35 +169,13 @@ public class ResultMappingAssociationTest {
 			this.item = item;
 		}
 
+		@Column(name = "quantity")
 		public int getQuantity() {
 			return quantity;
 		}
 
 		public void setQuantity(int quantity) {
 			this.quantity = quantity;
-		}
-	}
-
-	// Mapped in ResultMappingAssociationTest.hbm.xml
-	public static class ItemInventoryKey {
-		Account account;
-		
-		Item item;
-
-		public Account getAccount() {
-			return account;
-		}
-
-		public void setAccount(Account account) {
-			this.account = account;
-		}
-
-		public Item getItem() {
-			return item;
-		}
-
-		public void setItem(Item item) {
-			this.item = item;
 		}
 	}
 

@@ -19,3 +19,16 @@ earlier versions, see any other pertinent migration guides as well.
 [[soft-delete]]
 == Soft Delete
 
+6.4 adds support for soft deletes against an entity's primary table and collection tables, using the
+new `@SoftDelete` annotation.
+
+[source,java]
+----
+@Entity
+@SoftDelete
+class Account {
+	...
+}
+----
+
+See the link:{userGuideBase}#soft-delete[User Guide] for details.

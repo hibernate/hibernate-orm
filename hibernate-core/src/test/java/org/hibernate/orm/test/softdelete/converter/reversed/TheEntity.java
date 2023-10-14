@@ -20,7 +20,7 @@ import jakarta.persistence.Table;
 @Table(name = "the_entity")
 //tag::example-soft-delete-reverse[]
 @Entity
-@SoftDelete(columnName = "active", converter = YesNoConverter.class, reversed = true)
+@SoftDelete(converter = YesNoConverter.class, trackActive = true)
 public class TheEntity {
 	// ...
 //end::example-soft-delete-reverse[]

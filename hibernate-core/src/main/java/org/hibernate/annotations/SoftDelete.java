@@ -11,6 +11,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
 
 import jakarta.persistence.AttributeConverter;
@@ -56,13 +57,34 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({PACKAGE, TYPE, FIELD, METHOD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 @Documented
+@Incubating
 public @interface SoftDelete {
 	/**
 	 * (Optional) The name of the column.
 	 * <p/>
-	 * Defaults to {@code deleted}.
+	 * Default depends on {@linkplain #trackActive()} - {@code deleted} if {@code false} and
+	 * {@code active} if {@code true}.
 	 */
-	String columnName() default "deleted";
+	String columnName() default "";
+
+	/**
+	 * Whether the database value indicates active/inactive, as opposed to the
+	 * default of tracking deleted/not-deleted
+	 * <p/>
+	 * By default, the database values are interpreted as <ul>
+	 *     <li>{@code true} means the row is considered deleted</li>
+	 *     <li>{@code false} means the row is considered NOT deleted</li>
+	 * </ul>
+	 * <p/>
+	 * Setting this {@code true} reverses the interpretation of the database value <ul>
+	 *     <li>{@code true} means the row is active (NOT deleted)</li>
+	 *     <li>{@code false} means the row is inactive (deleted)</li>
+	 * </ul>
+	 *
+	 * @implNote Causes the {@linkplain #converter() conversion} to be wrapped in
+	 * a negated conversion.
+	 */
+	boolean trackActive() default false;
 
 	/**
 	 * (Optional) Conversion to apply to determine the appropriate value to
@@ -81,12 +103,6 @@ public @interface SoftDelete {
 	 * @apiNote The converter should never return {@code null}
 	 */
 	Class<? extends AttributeConverter<Boolean,?>> converter() default UnspecifiedConversion.class;
-
-	/**
-	 * Whether the stored values should be reversed.  This is used when the application tracks
-	 * rows that are active as opposed to rows that are deleted.
-	 */
-	boolean reversed() default false;
 
 	/**
 	 * Used as the default for {@linkplain SoftDelete#converter()}, indicating that

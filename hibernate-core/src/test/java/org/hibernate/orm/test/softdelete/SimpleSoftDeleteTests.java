@@ -214,7 +214,7 @@ public class SimpleSoftDeleteTests {
 	@Entity(name="BatchLoadable")
 	@Table(name="batch_loadable")
 	@BatchSize(size = 5)
-	@SoftDelete(columnName = "active", converter = YesNoConverter.class, reversed = true)
+	@SoftDelete(converter = YesNoConverter.class, trackActive = true)
 	public static class BatchLoadable {
 		@Id
 		private Integer id;

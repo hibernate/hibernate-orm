@@ -65,7 +65,7 @@ public class ValidationTests {
 
 	@Entity(name="Address")
 	@Table(name="addresses")
-	@SoftDelete(columnName = "active", converter = YesNoConverter.class, reversed = true)
+	@SoftDelete(converter = YesNoConverter.class, trackActive = true)
 	public static class Address {
 		@Id
 		private Integer id;
@@ -74,7 +74,7 @@ public class ValidationTests {
 
 	@Entity(name="NoNo")
 	@Table(name="nonos")
-	@SoftDelete(columnName = "active", converter = YesNoConverter.class, reversed = true)
+	@SoftDelete(converter = YesNoConverter.class, trackActive = true)
 	@SQLDelete( sql = "delete from nonos" )
 	public static class NoNo {
 		@Id

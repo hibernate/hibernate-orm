@@ -144,7 +144,7 @@ public class ToOneTests {
 
 	@Entity(name="User")
 	@Table(name="users")
-	@SoftDelete(columnName = "active", converter = YesNoConverter.class, reversed = true)
+	@SoftDelete(converter = YesNoConverter.class, trackActive = true)
 	public static class User {
 		@Id
 		private Integer id;

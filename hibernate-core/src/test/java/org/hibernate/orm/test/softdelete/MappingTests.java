@@ -115,7 +115,7 @@ public class MappingTests {
 
 	@Entity(name="ReversedYesNoEntity")
 	@Table(name="reversed_yes_no_entity")
-	@SoftDelete(columnName = "active", converter = YesNoConverter.class, reversed = true)
+	@SoftDelete(converter = YesNoConverter.class, trackActive = true)
 	public static class ReversedYesNoEntity {
 		@Id
 		private Integer id;

@@ -35,13 +35,13 @@ public class CollectionOwner2 {
 	@ElementCollection
 	@CollectionTable(name="batch_loadables", joinColumns = @JoinColumn(name="owner_fk"))
 	@BatchSize(size = 5)
-	@SoftDelete(columnName = "active", converter = YesNoConverter.class, reversed = true)
+	@SoftDelete(converter = YesNoConverter.class, trackActive = true)
 	private Set<String> batchLoadable;
 
 	@ElementCollection
 	@CollectionTable(name="subselect_loadables", joinColumns = @JoinColumn(name="owner_fk"))
 	@Fetch(FetchMode.SUBSELECT)
-	@SoftDelete(columnName = "active", converter = NumericBooleanConverter.class, reversed = true)
+	@SoftDelete(converter = NumericBooleanConverter.class, trackActive = true)
 	private Set<String> subSelectLoadable;
 
 	public CollectionOwner2() {

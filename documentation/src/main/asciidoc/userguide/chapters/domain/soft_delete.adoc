@@ -22,14 +22,16 @@ Hibernate supports soft delete for both <<soft-delete-entity,entities>> and <<so
 Soft delete support is defined by 3 main parts -
 
 1. The <<soft-delete-column,column>> which contains the indicator.
-2. A conversion from `Boolean` indicator value to the proper database type
-3. Whether to <<soft-delete-reverse,reverse>> the indicator values
+2. A <<soft-delete-conversion,conversion>> from `Boolean` indicator value to the proper database type
+3. Whether to <<soft-delete-reverse,reverse>> the indicator values, tracking active/inactive instead
 
 
 [[soft-delete-column]]
 ==== Indicator column
 
-The column where the indicator value is stored is defined using `@SoftDelete#columnName` attribute.  This
+The column where the indicator value is stored is defined using `@SoftDelete#columnName` attribute.
+
+When using <<soft-delete-reverse,reversed>> mappings, the column name defaults to `active`; otherwise, it
 defaults to the name `deleted`.
 
 See <<soft-delete-basic-example>> for an example of customizing the column name.
@@ -41,11 +43,10 @@ Depending on the conversion type, an appropriate check constraint may be applied
 ==== Indicator conversion
 
 The conversion is defined using a JPA <<basic-jpa-convert,AttributeConverter>>.  The "domain type" is always
-boolean.  The "relational type" can be any type, as defined by the converter; though generally speaking,
-numerics and characters work best.
+`boolean`.  The "relational type" can be any type, as defined by the converter; generally `BOOLEAN`, `BIT`, `INTEGER` or `CHAR`.
 
 An explicit conversion can be specified using `@SoftDelete#converter`.  See <<soft-delete-basic-example>>
-for an example of specifying an explicit conversion.  Explicit conversions can leverage the 3
+for an example of specifying an explicit conversion.  Explicit conversions can specify a custom converter or leverage the 3
 Hibernate-provided converters for the 3 most common cases -
 
 `NumericBooleanConverter`:: Defines conversion using `0` for `false` and `1` for `true`
@@ -53,7 +54,7 @@ Hibernate-provided converters for the 3 most common cases -
 `TrueFalseConverter`:: Defines conversion using `'F'` for `false` and `'T'` for `true`
 
 If an explicit converter is not specified, Hibernate will follow the same resolution steps defined in
-<<basic-boolean>> to determine the proper database type.  This breaks down into 3 categories -
+<<basic-boolean>> to determine the proper database type -
 
 boolean (and bit):: the underlying type is boolean / bit and no conversion is applied
 numeric:: the underlying type is integer and values are converted according to `NumericBooleanConverter`

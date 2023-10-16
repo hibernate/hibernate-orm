@@ -52,7 +52,7 @@ public class IdClassWithOneToOneTest {
         );
     }
 
-    @Entity
+    @Entity(name = "Task")
     public static class Task {
 
         @Id
@@ -70,7 +70,7 @@ public class IdClassWithOneToOneTest {
         }
     }
 
-    @Entity
+    @Entity(name = "TaskText")
     @IdClass(TaskText.TaskTextPK.class)
     public static class TaskText {
 

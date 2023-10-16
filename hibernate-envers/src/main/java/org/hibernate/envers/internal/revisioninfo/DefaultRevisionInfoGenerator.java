@@ -110,7 +110,7 @@ public class DefaultRevisionInfoGenerator implements RevisionInfoGenerator {
 			Class<? extends RevisionListener> listenerClass,
 			ServiceRegistry serviceRegistry) {
 		if ( !listenerClass.equals( RevisionListener.class ) ) {
-			if ( Helper.allowExtensionsInCdi( serviceRegistry ) ) {
+			if ( !Helper.allowExtensionsInCdi( serviceRegistry ) ) {
 				return new ProvidedInstanceManagedBeanImpl<>(
 						FallbackBeanInstanceProducer.INSTANCE.produceBeanInstance( listenerClass )
 				);

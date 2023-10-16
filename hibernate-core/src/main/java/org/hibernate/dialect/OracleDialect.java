@@ -13,7 +13,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
-import java.util.Locale;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,7 +27,6 @@ import org.hibernate.dialect.function.ModeStatsModeEmulation;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
-import org.hibernate.dialect.pagination.LegacyOracleLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
@@ -923,7 +921,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select systimestamp from dual";
+		return getVersion().isSameOrAfter( 23 ) ? "select systimestamp" : "select systimestamp from dual";
 	}
 
 
@@ -970,7 +968,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getSelectGUIDString() {
-		return "select rawtohex(sys_guid()) from dual";
+		return getVersion().isSameOrAfter( 23 ) ? "select rawtohex(sys_guid())" : "select rawtohex(sys_guid()) from dual";
 	}
 
 	@Override
@@ -1186,7 +1184,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getCurrentSchemaCommand() {
-		return "SELECT SYS_CONTEXT('USERENV','CURRENT_SCHEMA') FROM DUAL";
+		return getVersion().isSameOrAfter( 23 ) ? "select sys_context('USERENV','CURRENT_SCHEMA')" : "SELECT SYS_CONTEXT('USERENV','CURRENT_SCHEMA') FROM DUAL";
 	}
 
 	@Override

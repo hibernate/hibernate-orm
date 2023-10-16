@@ -924,7 +924,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select systimestamp from dual";
+		return getVersion().isSameOrAfter( 23 ) ? "select systimestamp" : "select systimestamp from dual";
 	}
 
 
@@ -971,7 +971,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getSelectGUIDString() {
-		return "select rawtohex(sys_guid()) from dual";
+		return getVersion().isSameOrAfter( 23 ) ? "select rawtohex(sys_guid())" : "select rawtohex(sys_guid()) from dual";
 	}
 
 	@Override
@@ -1189,7 +1189,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getCurrentSchemaCommand() {
-		return "SELECT SYS_CONTEXT('USERENV','CURRENT_SCHEMA') FROM DUAL";
+		return getVersion().isSameOrAfter( 23 ) ? "select sys_context('USERENV','CURRENT_SCHEMA')" : "SELECT SYS_CONTEXT('USERENV','CURRENT_SCHEMA') FROM DUAL";
 	}
 
 	@Override

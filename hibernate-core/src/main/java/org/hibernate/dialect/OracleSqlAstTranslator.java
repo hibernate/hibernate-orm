@@ -540,7 +540,7 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return getDialect().getVersion().isSameOrAfter( 23 ) ? super.getFromDualForSelectOnly() : getFromDual();
 	}
 
 	private boolean supportsOffsetFetchClause() {
@@ -609,7 +609,8 @@ public class OracleSqlAstTranslator<T extends JdbcOperation> extends SqlAstTrans
 			appendSql( valueBinding.getColumnReference().getColumnExpression() );
 		}
 
-		appendSql( " from dual)" );
+		appendSql( getFromDualForSelectOnly() );
+		appendSql( ")" );
 
 		renderMergeSourceAlias();
 	}

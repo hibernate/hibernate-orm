@@ -92,7 +92,7 @@ public class FetchLoadableTests {
 			// trigger loading one of the batch-loadable collections
 			first.getBatchLoadable().size();
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "active='Y'" );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "active='Y'", "active=N'Y'" );
 			assertThat( Hibernate.isInitialized( first.getBatchLoadable() ) ).isTrue();
 			assertThat( Hibernate.isInitialized( second.getBatchLoadable() ) ).isTrue();
 		} );
@@ -121,7 +121,7 @@ public class FetchLoadableTests {
 			// trigger loading one of the subselect-loadable collections
 			first.getSubSelectLoadable().size();
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "active='Y'" );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "active='Y'", "active=N'Y'" );
 			assertThat( Hibernate.isInitialized( first.getSubSelectLoadable() ) ).isTrue();
 			assertThat( Hibernate.isInitialized( second.getSubSelectLoadable() ) ).isTrue();
 		} );

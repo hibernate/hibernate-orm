@@ -141,17 +141,18 @@ public class StandardTableExporter implements Exporter<Table> {
 	 */
 	protected void applyComments(Table table, String formattedTableName, List<String> sqlStrings) {
 		if ( dialect.supportsCommentOn() ) {
-			if ( table.getComment() != null ) {
-				sqlStrings.add( "comment on table "
-						+ formattedTableName
-						+ " is '" + table.getComment() + "'" );
+			if ( table.getComment() != null && dialect.getTableComment( "" ).isEmpty() ) {
+				sqlStrings.add( "comment on table " + formattedTableName + " is '" + table.getComment() + "'" );
 			}
-			for ( Column column : table.getColumns() ) {
-				String columnComment = column.getComment();
-				if ( columnComment != null ) {
-					sqlStrings.add( "comment on column "
-							+ formattedTableName + '.' + column.getQuotedName( dialect )
-							+ " is '" + columnComment + "'" );
+			if ( dialect.getColumnComment( "" ).isEmpty() ){
+				for ( Column column : table.getColumns() ) {
+					String columnComment = column.getComment();
+					if ( columnComment != null ) {
+						sqlStrings.add(
+								"comment on column " + formattedTableName + '.' + column.getQuotedName( dialect )
+										+ " is '" + columnComment + "'"
+						);
+					}
 				}
 			}
 		}

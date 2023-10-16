@@ -13,7 +13,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
-import java.util.Locale;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,7 +27,6 @@ import org.hibernate.dialect.function.ModeStatsModeEmulation;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
-import org.hibernate.dialect.pagination.LegacyOracleLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
@@ -154,7 +152,10 @@ public class OracleDialect extends Dialect {
 	private static final Pattern SQL_STATEMENT_TYPE_PATTERN =
 			Pattern.compile( "^(?:/\\*.*?\\*/)?\\s*(select|insert|update|delete)\\s+.*?", CASE_INSENSITIVE );
 
-	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
+	private static final int PARAM_LIST_SIZE_LIMIT_1000 = 1000;
+
+	/** Starting from 23c, 65535 parameters are supported for the IN condition. */
+	private static final int PARAM_LIST_SIZE_LIMIT_65535 = 65535;
 
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
@@ -1075,7 +1076,9 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public int getInExpressionCountLimit() {
-		return PARAM_LIST_SIZE_LIMIT;
+		return getVersion().isSameOrAfter( 23 )
+				? PARAM_LIST_SIZE_LIMIT_65535
+				: PARAM_LIST_SIZE_LIMIT_1000;
 	}
 
 	@Override

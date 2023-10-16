@@ -19,12 +19,15 @@ import org.hibernate.query.spi.NonSelectQueryPlan;
 import org.hibernate.query.spi.QueryParameterImplementor;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.SqmTranslation;
+import org.hibernate.query.sqm.sql.SqmTranslator;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
+import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
 
@@ -36,7 +39,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 	private final DomainParameterXref domainParameterXref;
 	private Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions;
 
-	private JdbcOperationQueryInsert jdbcInsert;
+	private JdbcOperationQueryMutation jdbcInsert;
 	private FromClauseAccess tableGroupAccess;
 	private Map<QueryParameterImplementor<?>, Map<SqmParameter<?>, List<JdbcParametersList>>> jdbcParamsXref;
 
@@ -47,12 +50,11 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 		this.domainParameterXref = domainParameterXref;
 	}
 
-	private SqlAstTranslator<JdbcOperationQueryInsert> createInsertTranslator(DomainQueryExecutionContext executionContext) {
+	private SqlAstTranslator<? extends JdbcOperationQueryMutation> createInsertTranslator(DomainQueryExecutionContext executionContext) {
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 
-		final SqmTranslation<InsertStatement> sqmInterpretation =
-				factory.getQueryEngine().getSqmTranslatorFactory()
-						.createInsertTranslator(
+		final SqmTranslation<? extends MutationStatement> sqmInterpretation = factory.getQueryEngine().getSqmTranslatorFactory()
+				.createMutationTranslator(
 								sqmInsert,
 								executionContext.getQueryOptions(),
 								domainParameterXref,
@@ -74,7 +76,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 		return factory.getJdbcServices()
 				.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildInsertTranslator( factory, sqmInterpretation.getSqlAst() );
+				.buildMutationTranslator( factory, sqmInterpretation.getSqlAst() );
 	}
 
 	@Override
@@ -83,7 +85,7 @@ public class SimpleInsertQueryPlan implements NonSelectQueryPlan {
 		final SharedSessionContractImplementor session = executionContext.getSession();
 		final SessionFactoryImplementor factory = session.getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
-		SqlAstTranslator<JdbcOperationQueryInsert> insertTranslator = null;
+		SqlAstTranslator<? extends JdbcOperationQueryMutation> insertTranslator = null;
 		if ( jdbcInsert == null ) {
 			insertTranslator = createInsertTranslator( executionContext );
 		}

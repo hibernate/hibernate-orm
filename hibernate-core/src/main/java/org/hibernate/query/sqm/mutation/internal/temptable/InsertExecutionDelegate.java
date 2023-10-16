@@ -68,6 +68,7 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -473,9 +474,9 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 						)
 				);
 
-				final JdbcOperationQueryUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
+				final JdbcOperationQueryMutation jdbcUpdate = jdbcServices.getJdbcEnvironment()
 						.getSqlAstTranslatorFactory()
-						.buildUpdateTranslator( sessionFactory, updateStatement )
+						.buildMutationTranslator( sessionFactory, updateStatement )
 						.translate( null, executionContext.getQueryOptions() );
 				final JdbcParameterBindings updateBindings = new JdbcParameterBindingsImpl( 2 );
 				if ( sessionUidColumn != null ) {
@@ -540,9 +541,9 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			}
 		}
 
-		final JdbcOperationQueryInsert jdbcInsert = jdbcServices.getJdbcEnvironment()
+		final JdbcOperationQueryMutation jdbcInsert = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildInsertTranslator( sessionFactory, insertStatement )
+				.buildMutationTranslator( sessionFactory, insertStatement )
 				.translate( null, executionContext.getQueryOptions() );
 
 		if ( generator.generatedOnExecution() ) {
@@ -596,9 +597,9 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					)
 			);
 
-			final JdbcOperationQueryUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
+			final JdbcOperationQueryMutation jdbcUpdate = jdbcServices.getJdbcEnvironment()
 					.getSqlAstTranslatorFactory()
-					.buildUpdateTranslator( sessionFactory, updateStatement )
+					.buildMutationTranslator( sessionFactory, updateStatement )
 					.translate( null, executionContext.getQueryOptions() );
 			final JdbcParameterBindings updateBindings = new JdbcParameterBindingsImpl( 2 );
 
@@ -740,9 +741,9 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			);
 		}
 		final JdbcServices jdbcServices = sessionFactory.getJdbcServices();
-		final JdbcOperationQueryInsert jdbcInsert = jdbcServices.getJdbcEnvironment()
+		final JdbcOperationQueryMutation jdbcInsert = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildInsertTranslator( sessionFactory, insertStatement )
+				.buildMutationTranslator( sessionFactory, insertStatement )
 				.translate( null, executionContext.getQueryOptions() );
 
 		jdbcServices.getJdbcMutationExecutor().execute(

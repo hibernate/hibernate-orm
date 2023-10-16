@@ -10,11 +10,13 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
+import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -34,28 +36,78 @@ public interface SqmTranslatorFactory {
 			SqlAstCreationContext creationContext,
 			boolean deduplicateSelectionItems);
 
-	SqmTranslator<DeleteStatement> createSimpleDeleteTranslator(
+	SqmTranslator<? extends MutationStatement> createMutationTranslator(
+			SqmDmlStatement<?> sqmDeleteStatement,
+			QueryOptions queryOptions,
+			DomainParameterXref domainParameterXref,
+			QueryParameterBindings domainParameterBindings,
+			LoadQueryInfluencers loadQueryInfluencers,
+			SqlAstCreationContext creationContext);
+
+	/**
+	 * @deprecated Use {@link #createMutationTranslator(SqmDmlStatement, QueryOptions, DomainParameterXref, QueryParameterBindings, LoadQueryInfluencers, SqlAstCreationContext)} instead
+	 */
+	@Deprecated(forRemoval = true)
+	default SqmTranslator<DeleteStatement> createSimpleDeleteTranslator(
 			SqmDeleteStatement<?> sqmDeleteStatement,
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers loadQueryInfluencers,
-			SqlAstCreationContext creationContext);
+			SqlAstCreationContext creationContext) {
+		//noinspection unchecked
+		return (SqmTranslator<DeleteStatement>) createMutationTranslator(
+				sqmDeleteStatement,
+				queryOptions,
+				domainParameterXref,
+				domainParameterBindings,
+				loadQueryInfluencers,
+				creationContext
+		);
+	}
 
-	SqmTranslator<InsertStatement> createInsertTranslator(
+	/**
+	 * @deprecated Use {@link #createMutationTranslator(SqmDmlStatement, QueryOptions, DomainParameterXref, QueryParameterBindings, LoadQueryInfluencers, SqlAstCreationContext)} instead
+	 */
+	@Deprecated(forRemoval = true)
+	default SqmTranslator<InsertStatement> createInsertTranslator(
 			SqmInsertStatement<?> sqmInsertStatement,
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
 			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers loadQueryInfluencers,
-			SqlAstCreationContext creationContext);
+			SqlAstCreationContext creationContext) {
+		//noinspection unchecked
+		return (SqmTranslator<InsertStatement>) createMutationTranslator(
+				sqmInsertStatement,
+				queryOptions,
+				domainParameterXref,
+				domainParameterBindings,
+				loadQueryInfluencers,
+				creationContext
+		);
+	}
 
-	SqmTranslator<UpdateStatement> createSimpleUpdateTranslator(
+	/**
+	 * @deprecated Use {@link #createMutationTranslator(SqmDmlStatement, QueryOptions, DomainParameterXref, QueryParameterBindings, LoadQueryInfluencers, SqlAstCreationContext)} instead
+	 */
+	@Deprecated(forRemoval = true)
+	default SqmTranslator<UpdateStatement> createSimpleUpdateTranslator(
 			SqmUpdateStatement<?> sqmUpdateStatement,
 			QueryOptions queryOptions,
 			DomainParameterXref domainParameterXref,
-			QueryParameterBindings queryParameterBindings,
+			QueryParameterBindings domainParameterBindings,
 			LoadQueryInfluencers loadQueryInfluencers,
-			SqlAstCreationContext creationContext);
+			SqlAstCreationContext creationContext) {
+		//noinspection unchecked
+		return (SqmTranslator<UpdateStatement>) createMutationTranslator(
+				sqmUpdateStatement,
+				queryOptions,
+				domainParameterXref,
+				domainParameterBindings,
+				loadQueryInfluencers,
+				creationContext
+		);
+	}
 
 }

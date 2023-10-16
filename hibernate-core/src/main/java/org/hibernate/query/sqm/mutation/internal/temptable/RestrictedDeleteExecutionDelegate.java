@@ -58,7 +58,7 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.predicate.PredicateCollector;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 
 import static org.hibernate.query.sqm.mutation.internal.MutationQueryLogging.MUTATION_QUERY_LOGGER;
@@ -434,9 +434,9 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 
-		final JdbcOperationQueryDelete jdbcDelete = jdbcServices.getJdbcEnvironment()
+		final JdbcOperationQueryMutation jdbcDelete = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildDeleteTranslator( factory, sqlAst )
+				.buildMutationTranslator( factory, sqlAst )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		return jdbcServices.getJdbcMutationExecutor().execute(

@@ -54,6 +54,7 @@ import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -413,9 +414,9 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 		final SessionFactoryImplementor factory = executionContext.getSession().getFactory();
 		final JdbcServices jdbcServices = factory.getJdbcServices();
 
-		final JdbcOperationQueryUpdate jdbcUpdate = jdbcServices.getJdbcEnvironment()
+		final JdbcOperationQueryMutation jdbcUpdate = jdbcServices.getJdbcEnvironment()
 				.getSqlAstTranslatorFactory()
-				.buildUpdateTranslator( factory, updateStatement )
+				.buildMutationTranslator( factory, updateStatement )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		return jdbcServices.getJdbcMutationExecutor().execute(

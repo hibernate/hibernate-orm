@@ -54,8 +54,8 @@ jobs:
       - name: Set up Java 11
         uses: graalvm/setup-graalvm@v1
         with:
-          distribution: 'graalvm-community'
-          java-version: '19'
+          distribution: 'graalvm'
+          java-version: '21'
       - name: Get year/month for cache key
         id: get-date
         run: echo "yearmonth=$(/bin/date -u "+%Y-%m")" >> $GITHUB_OUTPUT

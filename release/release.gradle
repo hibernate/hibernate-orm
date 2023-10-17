@@ -21,6 +21,7 @@ idea.module {
 }
 
 final File documentationDir = mkdir( "${project.buildDir}/documentation" );
+final File projectTemplateStagingDir = mkdir( "${project.buildDir}/projectTemplate" )
 
 task releaseChecks() {
     doFirst {
@@ -102,6 +103,12 @@ task assembleDocumentation(type: Task, dependsOn: [rootProject.project( 'documen
     }
 }
 
+task assembleProjectTemplates(type:Copy, dependsOn: project( ":project-template" ).tasks.assembleDist) {
+    def templateProject = project( ":project-template" )
+    from templateProject.layout.buildDirectory.dir( "distributions" )
+    into projectTemplateStagingDir
+}
+
 /**
  * Upload the documentation to the JBoss doc server
  */
@@ -144,6 +151,11 @@ distributions {
                 from parent.project( 'hibernate-core' ).configurations.provided.files { dep -> dep.name == 'jta' }
                 from parent.project( 'hibernate-core' ).configurations.runtime
                 from parent.project( 'hibernate-core' ).configurations.archives.allArtifacts.files.filter{ file -> !file.name.endsWith('-sources.jar') }
+            }
+
+            into( 'project-template' ) {
+                // todo : hook in some form of variable replacement - especially for version
+                from project( ':project-template' ).files( 'src/main/dist' )
             }
 
 //            into( 'lib/jpa' ) {

@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!-- ~ Hibernate, Relational Persistence for Idiomatic Java ~ ~ License: 
+	GNU Lesser General Public License (LGPL), version 2.1 or later. ~ See the 
+	lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>. -->
+<!DOCTYPE hibernate-mapping PUBLIC
+  "-//Hibernate/Hibernate Mapping DTD//EN"
+  "http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+
+	<class
+		name="org.hibernate.test.cache.CollectionCacheEvictionHbmTest$Person"
+		table="person">
+
+		<cache usage="read-write" />
+
+		<id name="id" />
+
+		<version name="version" />
+
+		<set name="phones" table="phone" lazy="true" inverse="true">
+			<cache usage="read-write" />
+			<key column="id_person" />
+			<one-to-many
+				class="org.hibernate.test.cache.CollectionCacheEvictionHbmTest$Phone" />
+		</set>
+	</class>
+
+	<class
+		name="org.hibernate.test.cache.CollectionCacheEvictionHbmTest$Phone"
+		table="phone">
+
+		<cache usage="read-write" />
+
+		<id name="id" />
+
+		<version name="version" />
+
+		<many-to-one name="person"
+			class="org.hibernate.test.cache.CollectionCacheEvictionHbmTest$Person"
+			column="id_person" not-null="true" />
+	</class>
+
+</hibernate-mapping>

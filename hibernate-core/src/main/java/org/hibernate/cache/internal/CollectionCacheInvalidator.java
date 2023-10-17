@@ -32,6 +32,9 @@ import org.hibernate.integrator.spi.Integrator;
 import org.hibernate.metamodel.spi.MetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.Joinable;
+import org.hibernate.persister.entity.PropertyMapping;
+import org.hibernate.persister.walking.spi.AttributeDefinition;
 import org.hibernate.service.spi.SessionFactoryServiceRegistry;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
@@ -120,6 +123,18 @@ public class CollectionCacheInvalidator
 				}
 				// this is the property this OneToMany relation is mapped by
 				String mappedBy = collectionPersister.getMappedByProperty();
+
+				// collection is mapped without annotation (with hbm.xml), find property name by key column
+				if ( mappedBy == null && collectionPersister.isInverse() ) {
+					String columnName = ( (Joinable) collectionPersister ).getKeyColumnNames()[0];
+					for ( AttributeDefinition attr : persister.getAttributes() ) {
+						if ( attr.getType().isAssociationType() && columnName.equals( ( (PropertyMapping) persister ).toColumns( attr.getName() )[0] ) ) {
+							mappedBy = attr.getName();
+							break;
+						}
+					}
+				}
+				
 				if ( !collectionPersister.isManyToMany() &&
 						mappedBy != null && !mappedBy.isEmpty() ) {
 					int i = entityMetamodel.getPropertyIndex( mappedBy );

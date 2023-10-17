@@ -166,7 +166,7 @@ tasks.withType( JavaCompile ) {
 	options.warnings false
 	options.fork = true
 	options.forkOptions.memoryMaximumSize = '768m'
-
+	options.forkOptions.jvmArgs += [ "-XX:-UseJVMCICompiler" ]
 //	javaCompileTask.options.compilerArgs += [
 //			"-nowarn",
 //			"-encoding", "UTF-8"

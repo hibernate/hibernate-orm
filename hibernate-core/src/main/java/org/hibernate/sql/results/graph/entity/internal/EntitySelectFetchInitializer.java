@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 import org.hibernate.FetchNotFoundException;
 import org.hibernate.Hibernate;
 import org.hibernate.annotations.NotFoundAction;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -29,9 +30,7 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityLoadingLogging;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
-import org.hibernate.sql.results.spi.LoadContexts;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
@@ -140,16 +139,8 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		final EntityKey entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-		entityInstance = persistenceContext.getEntity( entityKey );
-		if ( entityInstance != null && Hibernate.isInitialized( entityInstance )) {
-			isInitialized = true;
-			return;
-		}
-
-		final LoadContexts loadContexts = session.getPersistenceContext().getLoadContexts();
-		final LoadingEntityEntry existingLoadingEntry = loadContexts.findLoadingEntityEntry( entityKey );
-
-		if ( existingLoadingEntry != null ) {
+		final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+		if ( holder != null ) {
 			if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 						"(%s) Found existing loading entry [%s] - using loading instance",
@@ -160,29 +151,29 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 						)
 				);
 			}
-			this.entityInstance = existingLoadingEntry.getEntityInstance();
-
-			final EntityInitializer entityInitializer = existingLoadingEntry.getEntityInitializer();
-			if ( entityInitializer != this ) {
+			entityInstance = holder.getEntity();
+			if ( holder.getEntityInitializer() == null ) {
+				if ( entityInstance != null && Hibernate.isInitialized( entityInstance ) ) {
+					isInitialized = true;
+					return;
+				}
+			}
+			else if ( holder.getEntityInitializer() != this ) {
 				// the entity is already being loaded elsewhere
 				if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 					EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
 							"(%s) Entity [%s] being loaded by another initializer [%s] - skipping processing",
 							CONCRETE_NAME,
 							toLoggableString( getNavigablePath(), entityIdentifier ),
-							entityInitializer
+							holder.getEntityInitializer()
 					);
 				}
-
-				// EARLY EXIT!!!
 				isInitialized = true;
 				return;
 			}
-			else {
-				if ( entityInstance == null ) {
-					isInitialized = true;
-					return;
-				}
+			else if ( entityInstance == null ) {
+				isInitialized = true;
+				return;
 			}
 		}
 
@@ -205,11 +196,12 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			if ( toOneMapping.getNotFoundAction() == NotFoundAction.EXCEPTION ) {
 				throw new FetchNotFoundException( entityName, entityIdentifier );
 			}
-			rowProcessingState.getJdbcValuesSourceProcessingState()
-					.registerLoadingEntity(
-							entityKey,
-							new LoadingEntityEntry( this, entityKey, concreteDescriptor, entityInstance )
-					);
+			rowProcessingState.getSession().getPersistenceContextInternal().claimEntityHolderIfPossible(
+					entityKey,
+					entityInstance,
+					rowProcessingState.getJdbcValuesSourceProcessingState(),
+					this
+			);
 		}
 
 		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {

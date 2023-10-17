@@ -174,12 +174,14 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 				results = new Results<>( domainResultJavaType );
 			}
 
+			int readRows = 0;
 			if ( uniqueSemantic == UniqueSemantic.FILTER
 					|| uniqueSemantic == UniqueSemantic.ASSERT && rowProcessingState.hasCollectionInitializers()
 					|| uniqueSemantic == UniqueSemantic.ALLOW && isEntityResultType ) {
 				while ( rowProcessingState.next() ) {
 					results.addUnique( rowReader.readRow( rowProcessingState, processingOptions ) );
 					rowProcessingState.finishRowProcessing();
+					readRows++;
 				}
 			}
 			else if ( uniqueSemantic == UniqueSemantic.ASSERT ) {
@@ -194,18 +196,20 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 						);
 					}
 					rowProcessingState.finishRowProcessing();
+					readRows++;
 				}
 			}
 			else {
 				while ( rowProcessingState.next() ) {
 					results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
 					rowProcessingState.finishRowProcessing();
+					readRows++;
 				}
 			}
 
 			try {
 				rowReader.finishUp( jdbcValuesSourceProcessingState );
-				jdbcValuesSourceProcessingState.finishUp();
+				jdbcValuesSourceProcessingState.finishUp( readRows > 1 );
 			}
 			finally {
 				persistenceContext.getLoadContexts().deregister( jdbcValuesSourceProcessingState );

@@ -6,12 +6,54 @@
  */
 package org.hibernate.engine.spi;
 
-public interface EntityHolder {
-	Object getEntity();
-	Object getProxy();
+import org.hibernate.Incubating;
+import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 
-	default Object getManagedObject() {
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+/**
+ * Holder for an entry in the {@link PersistenceContext} for an {@link EntityKey}.
+ *
+ * @since 6.4
+ */
+@Incubating
+public interface EntityHolder {
+	EntityKey getEntityKey();
+	EntityPersister getDescriptor();
+
+	/**
+	 * The entity object, or {@code null} if no entity object was registered yet.
+	 */
+	@Nullable Object getEntity();
+	/**
+	 * The proxy object, or {@code null} if no proxy object was registered yet.
+	 */
+	@Nullable Object getProxy();
+	/**
+	 * The entity initializer that claims to initialize the entity for this holder.
+	 * Will be {@code null} if entity is initialized already or the entity holder is not claimed yet.
+	 */
+	@Nullable EntityInitializer getEntityInitializer();
+
+	/**
+	 * The proxy if there is one and otherwise the entity.
+	 */
+	default @Nullable Object getManagedObject() {
 		final Object proxy = getProxy();
 		return proxy == null ? getEntity() : proxy;
 	}
+
+	/**
+	 * Marks the entity holder as reloaded to potentially trigger follow-on locking.
+	 *
+	 * @param processingState The processing state within which this entity is reloaded.
+	 */
+	void markAsReloaded(JdbcValuesSourceProcessingState processingState);
+
+	/**
+	 * Whether the entity is already initialized or will be initialized through an initializer eventually.
+	 */
+	boolean isEventuallyInitialized();
 }

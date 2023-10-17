@@ -86,6 +86,7 @@ import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityEntryFactory;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.NaturalIdResolutions;
@@ -276,7 +277,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultImpl;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -4112,14 +4112,15 @@ public abstract class AbstractEntityPersister
 			final Object version = getVersion( entity );
 			final Boolean isUnsaved = versionMapping.getUnsavedStrategy().isUnsaved( version );
 			if ( isUnsaved != null ) {
-				if ( isUnsaved  ) {
-					if ( version == null && session.getPersistenceContext().hasLoadContext() ) {
+				if ( isUnsaved ) {
+					final PersistenceContext persistenceContext;
+					if ( version == null && ( persistenceContext = session.getPersistenceContext() ).hasLoadContext()
+							&& !persistenceContext.getLoadContexts().isLoadingFinished() ) {
 						// check if we're currently loading this entity instance, the version
 						// will be null but the entity cannot be considered transient
-						final LoadingEntityEntry loadingEntityEntry = session.getPersistenceContext()
-								.getLoadContexts()
-								.findLoadingEntityEntry( new EntityKey( id, this ) );
-						if ( loadingEntityEntry != null && loadingEntityEntry.getEntityInstance() == entity ) {
+						final EntityHolder holder = persistenceContext
+								.getEntityHolder( new EntityKey( id, this ) );
+						if ( holder != null && holder.isEventuallyInitialized() && holder.getEntity() == entity ) {
 							return false;
 						}
 					}

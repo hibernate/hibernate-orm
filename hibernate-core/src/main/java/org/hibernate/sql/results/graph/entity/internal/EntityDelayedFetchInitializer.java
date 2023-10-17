@@ -25,7 +25,6 @@ import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
@@ -102,16 +101,9 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 				final EntityKey entityKey = new EntityKey( identifier, concreteDescriptor );
 				final PersistenceContext persistenceContext = session.getPersistenceContext();
 
-				final LoadingEntityEntry loadingEntityLocally = persistenceContext.getLoadContexts()
-						.findLoadingEntityEntry( entityKey );
-				if ( loadingEntityLocally != null ) {
-					entityInstance = loadingEntityLocally.getEntityInstance();
-				}
-				if ( entityInstance == null ) {
-					final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
-					if ( holder != null && holder.getEntity() != null ) {
-						entityInstance = persistenceContext.proxyFor( holder );
-					}
+				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+				if ( holder != null && holder.getEntity() != null ) {
+					entityInstance = persistenceContext.proxyFor( holder );
 				}
 			}
 			if ( entityInstance == null ) {

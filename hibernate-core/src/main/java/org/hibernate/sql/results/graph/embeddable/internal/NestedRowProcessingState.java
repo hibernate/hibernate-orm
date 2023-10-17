@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph.embeddable.internal;
 
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -18,7 +19,6 @@ import org.hibernate.sql.exec.internal.BaseExecutionContext;
 import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
@@ -131,8 +131,8 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	}
 
 	@Override
-	public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-		processingState.registerLoadingEntityEntry( entityKey, entry );
+	public void registerLoadingEntityHolder(EntityHolder holder) {
+		processingState.registerLoadingEntityHolder( holder );
 	}
 
 	@Override

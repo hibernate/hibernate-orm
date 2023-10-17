@@ -10,7 +10,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -27,7 +27,6 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.JdbcParametersList;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.internal.RowTransformerStandardImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 
@@ -148,8 +147,8 @@ public class CollectionLoaderSingleKey implements CollectionLoader {
 		}
 
 		@Override
-		public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-			subSelectFetchableKeysHandler.addKey( entityKey, entry );
+		public void registerLoadingEntityHolder(EntityHolder holder) {
+			subSelectFetchableKeysHandler.addKey( holder );
 		}
 
 	}

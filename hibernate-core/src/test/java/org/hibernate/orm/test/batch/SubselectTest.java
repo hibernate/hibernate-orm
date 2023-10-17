@@ -93,7 +93,7 @@ public class SubselectTest {
 					List<String> sqlQueries = statementInspector.getSqlQueries();
 					assertThat( sqlQueries.size() ).isEqualTo( 1 );
 					String query = sqlQueries.get( 0 );
-					assertFalse( containsSubquery( query ), " The query should contain a subquery" );
+					assertFalse( containsSubquery( query ), " The query should not contain a subquery" );
 
 				}
 		);

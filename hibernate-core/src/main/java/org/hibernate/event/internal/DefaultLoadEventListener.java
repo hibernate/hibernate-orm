@@ -274,7 +274,8 @@ public class DefaultLoadEventListener implements LoadEventListener {
 	private Object loadWithRegularProxy(LoadEvent event, EntityPersister persister, EntityKey keyToLoad, LoadType options) {
 		// This is the case where the proxy is a separate object:
 		// look for a proxy
-		final EntityHolder holder = event.getSession().getPersistenceContextInternal().getEntityHolder( keyToLoad );
+		final PersistenceContext persistenceContext = event.getSession().getPersistenceContextInternal();
+		final EntityHolder holder = persistenceContext.getEntityHolder( keyToLoad );
 		final Object proxy = holder == null ? null : holder.getProxy();
 		if ( proxy != null ) {
 			// narrow the existing proxy to the type we're looking for

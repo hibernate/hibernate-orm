@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -129,7 +130,8 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 						final Object loadedInstance = loadInstance( entityKey, referencedModelPart, session );
 						for ( ParentInfo parentInfo : parentInfos ) {
 							final PersistenceContext persistenceContext = session.getPersistenceContext();
-							final Object entity = persistenceContext.getEntity( parentInfo.initializerEntityKey );
+							final EntityHolder holder = persistenceContext.getEntityHolder( parentInfo.initializerEntityKey );
+							final Object entity = holder.getEntity();
 							setInstance(
 									firstEntityInitializer,
 									referencedModelPart,

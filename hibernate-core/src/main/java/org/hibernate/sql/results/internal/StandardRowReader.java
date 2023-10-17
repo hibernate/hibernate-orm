@@ -111,7 +111,6 @@ public class StandardRowReader<T> implements RowReader<T> {
 
 	@Override
 	public void finishUp(JdbcValuesSourceProcessingState processingState) {
-		processingState.registerSubselect();
 		initializers.endLoading( processingState.getExecutionContext() );
 	}
 

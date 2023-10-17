@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.jdbc.spi;
 
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.PostLoadEvent;
@@ -15,7 +14,6 @@ import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.spi.LoadContexts;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
@@ -41,24 +39,6 @@ public interface JdbcValuesSourceProcessingState {
 	PreLoadEvent getPreLoadEvent();
 	PostLoadEvent getPostLoadEvent();
 
-	/**
-	 * Find a LoadingEntityEntry locally to this context.
-	 *
-	 * @see LoadContexts#findLoadingEntityEntry(EntityKey)
-	 */
-	LoadingEntityEntry findLoadingEntityLocally(EntityKey entityKey);
-
-	/**
-	 * Registers a LoadingEntityEntry locally to this context
-	 */
-	void registerLoadingEntity(
-			EntityKey entityKey,
-			LoadingEntityEntry loadingEntry);
-
-	void registerReloadedEntity(
-			EntityKey entityKey,
-			LoadingEntityEntry loadingEntry);
-
 	void registerInitializer(
 			EntityUniqueKey entityKey,
 			Initializer initializer);
@@ -80,8 +60,5 @@ public interface JdbcValuesSourceProcessingState {
 			CollectionKey collectionKey,
 			LoadingCollectionEntry loadingCollectionEntry);
 
-	default void registerSubselect() {
-	}
-
-	void finishUp();
+	void finishUp(boolean registerSubselects);
 }

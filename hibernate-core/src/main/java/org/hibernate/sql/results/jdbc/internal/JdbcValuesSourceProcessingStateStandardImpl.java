@@ -10,26 +10,23 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostLoadEvent;
-import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.spi.QueryOptions;
-import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.collection.LoadingCollectionEntry;
 import org.hibernate.sql.results.graph.collection.internal.ArrayInitializer;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 
@@ -43,8 +40,6 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	private final ExecutionContext executionContext;
 	private final JdbcValuesSourceProcessingOptions processingOptions;
 
-	private Map<EntityKey, LoadingEntityEntry> loadingEntityMap;
-	private Map<EntityKey, LoadingEntityEntry> reloadedEntityMap;
 	private Map<EntityUniqueKey, Initializer> initializerByUniquKeyMap;
 	private Map<CollectionKey, LoadingCollectionEntry> loadingCollectionMap;
 	private List<CollectionInitializer> arrayInitializers;
@@ -95,25 +90,6 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	@Override
-	public void registerLoadingEntity(
-			EntityKey entityKey,
-			LoadingEntityEntry loadingEntry) {
-		if ( loadingEntityMap == null ) {
-			loadingEntityMap = new HashMap<>();
-		}
-		loadingEntityMap.put( entityKey, loadingEntry );
-	}
-
-	@Override
-	public void registerReloadedEntity(EntityKey entityKey, LoadingEntityEntry loadingEntry) {
-		if ( reloadedEntityMap == null ) {
-			reloadedEntityMap = new HashMap<>();
-		}
-
-		reloadedEntityMap.put( entityKey, loadingEntry );
-	}
-
-	@Override
 	public void registerInitializer(EntityUniqueKey entityKey, Initializer initializer) {
 		if ( initializerByUniquKeyMap == null ) {
 			initializerByUniquKeyMap = new HashMap<>();
@@ -127,33 +103,12 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	@Override
-	public LoadingEntityEntry findLoadingEntityLocally(EntityKey entityKey) {
-		return loadingEntityMap == null ? null : loadingEntityMap.get( entityKey );
-	}
-
-	@Override
 	public LoadingCollectionEntry findLoadingCollectionLocally(CollectionKey key) {
 		if ( loadingCollectionMap == null ) {
 			return null;
 		}
 
 		return loadingCollectionMap.get( key );
-	}
-
-	@Override
-	public void registerSubselect() {
-		if ( loadingEntityMap != null && loadingEntityMap.size() > 1 ) {
-			loadingEntityMap.forEach(
-					(entityKey, loadingEntityEntry) ->
-							executionContext.registerSubselect( entityKey, loadingEntityEntry )
-			);
-		}
-		else {
-			LOG.tracef(
-					"Skipping create subselects because there are fewer than 2 results, so query by key is more efficient.",
-					getClass().getName()
-			);
-		}
 	}
 
 	@Override
@@ -177,61 +132,18 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	}
 
 	@Override
-	public void finishUp() {
+	public void finishUp(boolean registerSubselects) {
 		// now we can finalize loading collections
 		finishLoadingCollections();
 
-		postLoad();
-	}
-
-	private void postLoad() {
-		final Callback callback = executionContext.getCallback();
-		if ( loadingEntityMap != null ) {
-			final EventListenerGroup<PostLoadEventListener> listenerGroup = executionContext.getSession().getFactory()
-					.getFastSessionServices()
-					.eventListenerGroup_POST_LOAD;
-
-			loadingEntityMap.forEach(
-					(entityKey, loadingEntityEntry) -> {
-						if ( loadingEntityEntry.getEntityInstance() != null ) {
-							if ( postLoadEvent != null ) {
-								postLoadEvent.reset();
-								postLoadEvent.setEntity( loadingEntityEntry.getEntityInstance() )
-										.setId( entityKey.getIdentifier() )
-										.setPersister( loadingEntityEntry.getDescriptor() );
-								listenerGroup.fireEventOnEachListener(
-										postLoadEvent,
-										PostLoadEventListener::onPostLoad
-								);
-							}
-
-							if ( callback != null ) {
-								callback.invokeAfterLoadActions(
-										loadingEntityEntry.getEntityInstance(),
-										loadingEntityEntry.getDescriptor(),
-										getSession()
-								);
-							}
-						}
-					}
-			);
+		final Consumer<EntityHolder> holderConsumer;
+		if ( registerSubselects ) {
+			holderConsumer = executionContext::registerLoadingEntityHolder;
 		}
-		loadingEntityMap = null;
-
-		if ( reloadedEntityMap != null ) {
-			if ( callback != null ) {
-				reloadedEntityMap.forEach(
-						(entityKey, loadingEntityEntry) -> {
-							callback.invokeAfterLoadActions(
-									loadingEntityEntry.getEntityInstance(),
-									loadingEntityEntry.getDescriptor(),
-									getSession()
-							);
-						}
-				);
-			}
-			reloadedEntityMap = null;
+		else {
+			holderConsumer = null;
 		}
+		executionContext.getSession().getPersistenceContextInternal().postLoad( this, holderConsumer );
 	}
 
 	@SuppressWarnings("SimplifiableIfStatement")

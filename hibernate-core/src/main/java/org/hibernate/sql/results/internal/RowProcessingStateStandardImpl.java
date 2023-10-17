@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.internal;
 
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
@@ -18,7 +19,6 @@ import org.hibernate.sql.exec.spi.Callback;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesCacheHit;
 import org.hibernate.sql.results.jdbc.internal.JdbcValuesSourceProcessingStateStandardImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValues;
@@ -179,8 +179,8 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 	}
 
 	@Override
-	public void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
-		executionContext.registerLoadingEntityEntry( entityKey, entry );
+	public void registerLoadingEntityHolder(EntityHolder holder) {
+		executionContext.registerLoadingEntityHolder( holder );
 	}
 
 	@Override

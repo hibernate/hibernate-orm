@@ -46,7 +46,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.NonAggregatedIdentifierMappingFetch;
 import org.hibernate.sql.results.graph.embeddable.internal.NonAggregatedIdentifierMappingResult;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 
 /**
  * A "non-aggregated" composite identifier.
@@ -293,10 +292,8 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 							toOneAttributeMapping.getAttributeName()
 					);
 					if ( o == null ) {
-						final LoadingEntityEntry loadingEntityEntry = persistenceContext.getLoadContexts()
-								.findLoadingEntityEntry( entityKey );
-						if ( loadingEntityEntry != null ) {
-							o = loadingEntityEntry.getEntityInstance();
+						if ( holder != null && holder.isEventuallyInitialized() ) {
+							o = holder.getEntity();
 						}
 						else {
 							o = session.internalLoad(

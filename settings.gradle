@@ -208,7 +208,7 @@ dependencyResolutionManagement {
             library( "weld", "org.jboss.weld.se", "weld-se-shaded" ).versionRef( weldVersion )
         }
         dbLibs {
-            def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.2.220" )
+            def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.2.224" )
 
             def db2Version = version "db2", "11.5.8.0"
             // Latest Derby version 10.16.1.1 only supports JDK 17+, but 10.15.2 should be compatible

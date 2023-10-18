@@ -13,6 +13,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.type.YesNoConverter;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -214,7 +215,7 @@ public class SimpleSoftDeleteTests {
 	@Entity(name="BatchLoadable")
 	@Table(name="batch_loadable")
 	@BatchSize(size = 5)
-	@SoftDelete(converter = YesNoConverter.class, trackActive = true)
+	@SoftDelete(converter = YesNoConverter.class, strategy = SoftDeleteType.ACTIVE)
 	public static class BatchLoadable {
 		@Id
 		private Integer id;

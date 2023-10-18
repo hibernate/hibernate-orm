@@ -64,27 +64,17 @@ public @interface SoftDelete {
 	 * <p/>
 	 * Default depends on {@linkplain #trackActive()} - {@code deleted} if {@code false} and
 	 * {@code active} if {@code true}.
+	 *
+	 * @see SoftDeleteType#getDefaultColumnName()
 	 */
 	String columnName() default "";
 
 	/**
-	 * Whether the database value indicates active/inactive, as opposed to the
-	 * default of tracking deleted/not-deleted
+	 * The strategy to use for storing/reading values to/from the database.
 	 * <p/>
-	 * By default, the database values are interpreted as <ul>
-	 *     <li>{@code true} means the row is considered deleted</li>
-	 *     <li>{@code false} means the row is considered NOT deleted</li>
-	 * </ul>
-	 * <p/>
-	 * Setting this {@code true} reverses the interpretation of the database value <ul>
-	 *     <li>{@code true} means the row is active (NOT deleted)</li>
-	 *     <li>{@code false} means the row is inactive (deleted)</li>
-	 * </ul>
-	 *
-	 * @implNote Causes the {@linkplain #converter() conversion} to be wrapped in
-	 * a negated conversion.
+	 * The strategy also affects the default {@linkplain #columnName() column name}.
 	 */
-	boolean trackActive() default false;
+	SoftDeleteType strategy() default SoftDeleteType.DELETED;
 
 	/**
 	 * (Optional) Conversion to apply to determine the appropriate value to

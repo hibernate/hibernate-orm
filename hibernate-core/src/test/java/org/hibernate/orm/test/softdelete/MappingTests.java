@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.softdelete;
 
 import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.type.NumericBooleanConverter;
 import org.hibernate.type.TrueFalseConverter;
@@ -115,7 +116,7 @@ public class MappingTests {
 
 	@Entity(name="ReversedYesNoEntity")
 	@Table(name="reversed_yes_no_entity")
-	@SoftDelete(converter = YesNoConverter.class, trackActive = true)
+	@SoftDelete(converter = YesNoConverter.class, strategy = SoftDeleteType.ACTIVE)
 	public static class ReversedYesNoEntity {
 		@Id
 		private Integer id;

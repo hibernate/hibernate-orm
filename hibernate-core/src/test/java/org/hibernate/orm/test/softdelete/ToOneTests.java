@@ -11,6 +11,7 @@ import java.sql.Statement;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.type.YesNoConverter;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -144,7 +145,7 @@ public class ToOneTests {
 
 	@Entity(name="User")
 	@Table(name="users")
-	@SoftDelete(converter = YesNoConverter.class, trackActive = true)
+	@SoftDelete(converter = YesNoConverter.class, strategy = SoftDeleteType.ACTIVE)
 	public static class User {
 		@Id
 		private Integer id;

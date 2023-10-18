@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.softdelete.converter.reversed;
 
 import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.type.YesNoConverter;
 
 import jakarta.persistence.Basic;
@@ -20,7 +21,7 @@ import jakarta.persistence.Table;
 @Table(name = "the_entity")
 //tag::example-soft-delete-reverse[]
 @Entity
-@SoftDelete(converter = YesNoConverter.class, trackActive = true)
+@SoftDelete(converter = YesNoConverter.class, strategy = SoftDeleteType.ACTIVE)
 public class TheEntity {
 	// ...
 //end::example-soft-delete-reverse[]

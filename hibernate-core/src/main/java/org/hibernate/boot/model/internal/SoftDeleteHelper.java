@@ -41,10 +41,6 @@ import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
  * @author Steve Ebersole
  */
 public class SoftDeleteHelper {
-
-	public static final String DEFAULT_COLUMN_NAME = "deleted";
-	public static final String DEFAULT_REVERSED_COLUMN_NAME = "active";
-
 	/**
 	 * Creates and binds the column and value for modeling the soft-delete in the database
 	 *
@@ -80,7 +76,7 @@ public class SoftDeleteHelper {
 		);
 
 		final BasicValue softDeleteIndicatorValue = new BasicValue( context, table );
-		softDeleteIndicatorValue.makeSoftDelete( softDeleteConfig.trackActive() );
+		softDeleteIndicatorValue.makeSoftDelete( softDeleteConfig.strategy() );
 		softDeleteIndicatorValue.setJpaAttributeConverterDescriptor( converterDescriptor );
 		softDeleteIndicatorValue.setImplicitJavaTypeAccess( (typeConfiguration) -> converterDescriptor.getRelationalValueResolvedType().getErasedType() );
 		return softDeleteIndicatorValue;
@@ -112,7 +108,7 @@ public class SoftDeleteHelper {
 		final Database database = context.getMetadataCollector().getDatabase();
 		final PhysicalNamingStrategy namingStrategy = context.getBuildingOptions().getPhysicalNamingStrategy();
 		final String logicalColumnName = coalesce(
-				softDeleteConfig.trackActive() ? DEFAULT_REVERSED_COLUMN_NAME : DEFAULT_COLUMN_NAME,
+				softDeleteConfig.strategy().getDefaultColumnName(),
 				softDeleteConfig.columnName()
 		);
 		final Identifier physicalColumnName = namingStrategy.toPhysicalColumnName(

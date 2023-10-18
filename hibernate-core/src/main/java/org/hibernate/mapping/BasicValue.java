@@ -17,6 +17,7 @@ import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.TimeZoneStorageStrategy;
 import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.boot.model.TypeDefinition;
 import org.hibernate.boot.model.convert.internal.AutoApplicableConverterDescriptorBypassedImpl;
@@ -100,7 +101,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	private TemporalType temporalPrecision;
 	private TimeZoneStorageType timeZoneStorageType;
 	private boolean isSoftDelete;
-	private boolean isSoftDeleteReversed;
+	private SoftDeleteType softDeleteStrategy;
 
 	private java.lang.reflect.Type resolvedJavaType;
 
@@ -150,13 +151,13 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 		return isSoftDelete;
 	}
 
-	public boolean isSoftDeleteReversed() {
-		return isSoftDeleteReversed;
+	public SoftDeleteType getSoftDeleteStrategy() {
+		return softDeleteStrategy;
 	}
 
-	public void makeSoftDelete(boolean reversed) {
+	public void makeSoftDelete(SoftDeleteType strategy) {
 		isSoftDelete = true;
-		isSoftDeleteReversed = reversed;
+		softDeleteStrategy = strategy;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -476,7 +477,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 				}
 			}
 
-			if ( isSoftDeleteReversed() ) {
+			if ( getSoftDeleteStrategy() == SoftDeleteType.ACTIVE ) {
 				attributeConverterDescriptor = new ReversedConverterDescriptor<>( attributeConverterDescriptor );
 			}
 		}

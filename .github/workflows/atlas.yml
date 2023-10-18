@@ -71,18 +71,23 @@ jobs:
           # refresh cache every month to avoid unlimited growth
           key: maven-localrepo-${{ steps.get-date.outputs.yearmonth }}
       - name: Run build script
+        id: gradle_build
         env:
           RDBMS: ${{ matrix.rdbms }}
           RUNID: ${{ github.run_number }}
         run: ./ci/build-github.sh
         shell: bash
+      - name: Zip test reports (if Gradle failed)
+        if: failure()
+        env:
+          ZIP_NAME: test-reports-java11-${{ matrix.rdbms }}
+        run: ./ci/zip-reports.sh
+        shell: bash
       - name: Upload test reports (if Gradle failed)
         uses: actions/upload-artifact@v3
-        if: failure()
+        if: ${{ failure() && steps.gradle_build.conclusion == 'failure' }}
         with:
           name: test-reports-java11-${{ matrix.rdbms }}
-          path: |
-            ./**/target/reports/tests/
-            ./**/target/reports/checkstyle/
+          path: ./test-reports-java11-${{ matrix.rdbms }}.zip
       - name: Omit produced artifacts from build cache
         run: ./ci/before-cache.sh

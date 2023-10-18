@@ -47,9 +47,10 @@ public class ParameterParser {
 	 *
 	 * @param sqlString The string to be parsed/tokenized.
 	 * @param recognizer The thing which handles recognition events.
+	 * @param nativeJdbcParametersIgnored Whether to ignore ordinal parameters in native queries or not.
 	 * @throws QueryException Indicates unexpected parameter conditions.
 	 */
-	public static void parse(String sqlString, ParameterRecognizer recognizer) throws QueryException {
+	public static void parse(String sqlString, ParameterRecognizer recognizer, boolean nativeJdbcParametersIgnored) throws QueryException {
 		checkIsNotAFunctionCall( sqlString );
 		final int stringLength = sqlString.length();
 
@@ -163,7 +164,9 @@ public class ParameterParser {
 						}
 					}
 					else {
-						recognizer.ordinalParameter( indx );
+						if ( !nativeJdbcParametersIgnored ) {
+							recognizer.ordinalParameter( indx );
+						}
 					}
 				}
 				else {
@@ -173,6 +176,10 @@ public class ParameterParser {
 		}
 
 		recognizer.complete();
+	}
+
+	public static void parse(String sqlString, ParameterRecognizer recognizer) throws QueryException {
+		parse( sqlString, recognizer, false );
 	}
 
 	private static void checkIsNotAFunctionCall(String sqlString) {

@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.query.sql;
 
+import org.hibernate.engine.query.ParameterRecognitionException;
+import org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl;
 import org.hibernate.engine.query.spi.ParamLocationRecognizer;
 import org.hibernate.query.sql.internal.ParameterParser;
 import org.hibernate.query.sql.spi.ParameterRecognizer;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.hibernate.engine.query.internal.NativeQueryInterpreterStandardImpl.NATIVE_QUERY_INTERPRETER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -197,4 +200,44 @@ public class ParameterParserTest {
         assertEquals( 2, recognizer.getOrdinalParameterDescriptionMap().size() );
     }
 
+	@Test
+	public void testJdbcParameterScanningEnabled() {
+		ParamLocationRecognizer recognizer = createRecognizer();
+
+		assertThrows(
+				ParameterRecognitionException.class,
+				() -> {
+					NATIVE_QUERY_INTERPRETER.recognizeParameters(
+							"SELECT column FROM Table WHERE column.id = :param and column.name = ?1",
+							recognizer
+					);
+					recognizer.validate();
+				},
+				"Mixed parameter strategies - use just one of named, positional or JPA-ordinal strategy"
+		);
+	}
+
+	@Test
+	public void testJdbcParameterScanningDisabled() {
+		ParamLocationRecognizer recognizer = createRecognizer();
+
+		// Should recognize the jpa style ordinal parameters
+		new NativeQueryInterpreterStandardImpl( true ).recognizeParameters(
+				"SELECT column FROM Table WHERE column.id = ?1 and column.name = ?2",
+				recognizer
+		);
+		recognizer.validate();
+		assertEquals( 2, recognizer.getOrdinalParameterDescriptionMap().size() );
+
+		recognizer = createRecognizer();
+		// Should ignore the '?'
+		new NativeQueryInterpreterStandardImpl( true ).recognizeParameters(
+				"SELECT column ? FROM Table WHERE column.id = :id",
+				recognizer
+		);
+		recognizer.validate();
+		assertTrue(recognizer.getNamedParameterDescriptionMap().containsKey("id"));
+		assertEquals( 0, recognizer.getOrdinalParameterDescriptionMap().size() );
+
+	}
 }

@@ -21,7 +21,7 @@ public class NativeQueryInterpreterInitiator implements SessionFactoryServiceIni
 
 	@Override
 	public NativeQueryInterpreter initiateService(SessionFactoryServiceInitiatorContext context) {
-		return new NativeQueryInterpreterStandardImpl();
+		return new NativeQueryInterpreterStandardImpl( context.getSessionFactoryOptions().getNativeJdbcParametersIgnored() );
 	}
 
 	@Override

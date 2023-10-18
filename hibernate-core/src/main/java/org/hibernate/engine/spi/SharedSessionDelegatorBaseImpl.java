@@ -475,6 +475,16 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	}
 
 	@Override
+	public boolean getNativeJdbcParametersIgnored() {
+		return delegate.getNativeJdbcParametersIgnored();
+	}
+
+	@Override
+	public void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored) {
+		delegate.setNativeJdbcParametersIgnored( nativeJdbcParametersIgnored );
+	}
+
+	@Override
 	public FlushModeType getFlushMode() {
 		return delegate.getFlushMode();
 	}

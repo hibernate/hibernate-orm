@@ -241,6 +241,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public boolean getNativeJdbcParametersIgnored() {
+		return delegate.getNativeJdbcParametersIgnored();
+	}
+
+	@Override
+	public void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored) {
+		delegate.setNativeJdbcParametersIgnored( nativeJdbcParametersIgnored );
+	}
+
+	@Override
 	public boolean isOpen() {
 		return delegate.isOpen();
 	}

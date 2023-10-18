@@ -162,6 +162,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private boolean criteriaCopyTreeEnabled;
 
+	private boolean nativeJdbcParametersIgnored;
+
 	protected boolean closed;
 	protected boolean waitingForAutoClose;
 
@@ -183,6 +185,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		sessionEventsManager = createSessionEventsManager(options);
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 		setCriteriaCopyTreeEnabled( factory.getSessionFactoryOptions().isCriteriaCopyTreeEnabled() );
+		setNativeJdbcParametersIgnored( factory.getSessionFactoryOptions().getNativeJdbcParametersIgnored() );
 
 		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
 
@@ -699,6 +702,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public boolean isCriteriaCopyTreeEnabled() {
 		return criteriaCopyTreeEnabled;
+	}
+
+	@Override
+	public boolean getNativeJdbcParametersIgnored() {
+		return nativeJdbcParametersIgnored;
+	}
+
+	@Override
+	public void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored) {
+		this.nativeJdbcParametersIgnored = nativeJdbcParametersIgnored;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

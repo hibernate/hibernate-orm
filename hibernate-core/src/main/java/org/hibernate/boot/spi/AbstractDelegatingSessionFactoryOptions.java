@@ -382,6 +382,10 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 		return delegate.isCriteriaCopyTreeEnabled();
 	}
 
+	public boolean getNativeJdbcParametersIgnored() {
+		return delegate.getNativeJdbcParametersIgnored();
+	}
+
 	@Override
 	public JpaCompliance getJpaCompliance() {
 		return delegate.getJpaCompliance();

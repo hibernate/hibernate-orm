@@ -231,6 +231,13 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 		return false;
 	}
 
+	/**
+	 * @see org.hibernate.cfg.AvailableSettings#NATIVE_IGNORE_JDBC_PARAMETERS
+	 */
+	default boolean getNativeJdbcParametersIgnored() {
+		return false;
+	}
+
 	JpaCompliance getJpaCompliance();
 
 	boolean isFailOnPaginationOverCollectionFetchEnabled();

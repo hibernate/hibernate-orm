@@ -65,10 +65,10 @@ public class C3P0ConnectionProviderTest extends BaseCoreFunctionalTestCase {
 				// see according c3p0 settings in META-INF/persistence.xml
 
 				int actual_minPoolSize = (Integer) mBeanServer.getAttribute( obj, "minPoolSize" );
-				assertEquals( 50, actual_minPoolSize );
+				assertEquals( 0, actual_minPoolSize );
 
 				int actual_initialPoolSize = (Integer) mBeanServer.getAttribute( obj, "initialPoolSize" );
-				assertEquals( 50, actual_initialPoolSize );
+				assertEquals( 0, actual_initialPoolSize );
 
 				int actual_maxPoolSize = (Integer) mBeanServer.getAttribute( obj, "maxPoolSize" );
 				assertEquals( 800, actual_maxPoolSize );

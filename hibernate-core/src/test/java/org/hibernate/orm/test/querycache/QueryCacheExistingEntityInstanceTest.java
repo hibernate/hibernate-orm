@@ -8,6 +8,8 @@ package org.hibernate.orm.test.querycache;
 
 import java.util.function.Consumer;
 
+import org.hibernate.annotations.Fetch;
+import org.hibernate.annotations.FetchMode;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -18,12 +20,16 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,20 +37,36 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Marco Belladelli
  */
-@DomainModel( annotatedClasses = QueryCacheExistingEntityInstanceTest.TestEntity.class )
+@DomainModel( annotatedClasses = {
+		QueryCacheExistingEntityInstanceTest.TestEntity.class,
+		QueryCacheExistingEntityInstanceTest.ParentEntity.class,
+} )
 @SessionFactory( generateStatistics = true )
 @ServiceRegistry( settings = {
 		@Setting( name = AvailableSettings.USE_QUERY_CACHE, value = "true" ),
 		@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" )
 } )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17188" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-17329" )
 public class QueryCacheExistingEntityInstanceTest {
 	private static final String TEXT = "text";
 	private static final String QUERY = "select e from TestEntity e where text = :text";
 
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
-		scope.inTransaction( session -> session.persist( new TestEntity( 1L, TEXT ) ) );
+		scope.inTransaction( session -> {
+			final TestEntity testEntity = new TestEntity( 1L, TEXT );
+			session.persist( testEntity );
+			session.persist( new ParentEntity( 1L, testEntity ) );
+		} );
+	}
+
+	@AfterAll
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			session.createMutationQuery( "delete from ParentEntity" ).executeUpdate();
+			session.createMutationQuery( "delete from TestEntity" ).executeUpdate();
+		} );
 	}
 
 	@Test
@@ -61,6 +83,27 @@ public class QueryCacheExistingEntityInstanceTest {
 	@Test
 	public void testAfterGetReference(SessionFactoryScope scope) {
 		testQueryCache( scope, session -> session.getReference( TestEntity.class, 1L ) );
+	}
+
+	@Test
+	public void testAfterParentFind(SessionFactoryScope scope) {
+		testQueryCache( scope, session -> {
+			session.find( ParentEntity.class, 1L );
+			// make TestEntity instance available in PC
+			session.find( TestEntity.class, 1L );
+		} );
+	}
+
+	@Test
+	public void testAfterParentQuery(SessionFactoryScope scope) {
+		testQueryCache( scope, session -> {
+			session.createQuery(
+					"from ParentEntity",
+					ParentEntity.class
+			).getResultList();
+			// make TestEntity instance available in PC
+			session.find( TestEntity.class, 1L );
+		} );
 	}
 
 	private void testQueryCache(SessionFactoryScope scope, Consumer<SessionImplementor> beforeQuery) {
@@ -121,6 +164,29 @@ public class QueryCacheExistingEntityInstanceTest {
 
 		public String getText() {
 			return text;
+		}
+	}
+
+	@Entity( name = "ParentEntity" )
+	public static class ParentEntity {
+		@Id
+		private Long id;
+
+		@ManyToOne( fetch = FetchType.LAZY )
+		@Fetch( FetchMode.SELECT )
+		@JoinColumn( name = "test_entity_id" )
+		private TestEntity testEntity;
+
+		public ParentEntity() {
+		}
+
+		public ParentEntity(Long id, TestEntity testEntity) {
+			this.id = id;
+			this.testEntity = testEntity;
+		}
+
+		public TestEntity getTestEntity() {
+			return testEntity;
 		}
 	}
 }

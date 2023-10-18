@@ -55,7 +55,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           distribution: 'oracle'
-          java-version: '11'
+          java-version: '17'
       - name: Get year/month for cache key
         id: get-date
         run: echo "yearmonth=$(/bin/date -u "+%Y-%m")" >> $GITHUB_OUTPUT

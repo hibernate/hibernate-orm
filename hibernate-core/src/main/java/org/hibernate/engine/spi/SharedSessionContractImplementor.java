@@ -381,6 +381,10 @@ public interface SharedSessionContractImplementor
 
 	boolean isCriteriaCopyTreeEnabled();
 
+	boolean getNativeJdbcParametersIgnored();
+
+	void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored);
+
 	/**
 	 * Get the current {@link FlushModeType} for this session.
 	 * <p>

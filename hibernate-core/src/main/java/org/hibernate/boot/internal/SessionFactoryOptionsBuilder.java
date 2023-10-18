@@ -248,6 +248,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private TimeZone jdbcTimeZone;
 	private final ValueHandlingMode criteriaValueHandlingMode;
 	private final boolean criteriaCopyTreeEnabled;
+	private final boolean nativeJdbcParametersIgnored;
 	private final ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 	// These two settings cannot be modified from the builder,
 	// in order to maintain consistency.
@@ -549,6 +550,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				AvailableSettings.CRITERIA_COPY_TREE,
 				configurationSettings,
 				jpaBootstrap
+		);
+
+		this.nativeJdbcParametersIgnored = getBoolean(
+				AvailableSettings.NATIVE_IGNORE_JDBC_PARAMETERS,
+				configurationSettings,
+				false
 		);
 
 		// added the boolean parameter in case we want to define some form of "all" as discussed
@@ -1143,6 +1150,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isCriteriaCopyTreeEnabled() {
 		return criteriaCopyTreeEnabled;
+	}
+
+	@Override
+	public boolean getNativeJdbcParametersIgnored() {
+		return nativeJdbcParametersIgnored;
 	}
 
 	@Override

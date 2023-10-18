@@ -427,7 +427,7 @@ public abstract class MockSessionFactory
 
 	@Override
 	public NativeQueryInterpreter getNativeQueryInterpreter() {
-		return new NativeQueryInterpreterStandardImpl();
+		return new NativeQueryInterpreterStandardImpl( this.getNativeJdbcParametersIgnored() );
 	}
 
 	@Override

@@ -134,20 +134,11 @@ public class TableBasedInsertHandler implements InsertHandler {
 
 		final TableGroup insertingTableGroup = converterDelegate.getMutatingTableGroup();
 
-		final Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions;
-		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
-			parameterResolutions = Collections.emptyMap();
-		}
-		else {
-			parameterResolutions = new IdentityHashMap<>();
-		}
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// visit the insertion target using our special converter, collecting
 		// information about the target paths
 
 		final List<Assignment> targetPathColumns = new ArrayList<>();
-		final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions = new LinkedHashMap<>();
 		final NamedTableReference entityTableReference = new NamedTableReference(
 				entityTable.getTableExpression(),
 				TemporaryTable.DEFAULT_ALIAS,
@@ -162,14 +153,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 				},
 				sqmInsertStatement,
 				entityDescriptor,
-				insertingTableGroup,
-				(sqmParameter, mappingType, jdbcParameters) -> {
-					parameterResolutions.computeIfAbsent(
-							sqmParameter,
-							k -> new ArrayList<>( 1 )
-					).add( jdbcParameters );
-					paramTypeResolutions.put( sqmParameter, mappingType );
-				}
+				insertingTableGroup
 		);
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -329,9 +313,9 @@ public class TableBasedInsertHandler implements InsertHandler {
 				tableReferenceByAlias,
 				targetPathColumns,
 				insertStatement,
-				parameterResolutions,
+				converterDelegate.getJdbcParamsBySqmParam(),
 				sessionUidParameter,
-				paramTypeResolutions,
+				converterDelegate.getSqmParameterMappingModelExpressibleResolutions(),
 				executionContext
 		);
 	}

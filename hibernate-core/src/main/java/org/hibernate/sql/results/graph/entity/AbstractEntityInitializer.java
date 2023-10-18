@@ -519,6 +519,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				if ( Hibernate.isInitialized( entityInstance ) ) {
 					this.isInitialized = true;
 					registerReloadedEntity( rowProcessingState, holder );
+					if ( rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
+						// We need to read result set values to correctly populate the query cache
+						resolveState( rowProcessingState );
+					}
 				}
 			}
 		}
@@ -532,7 +536,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						registerReloadedEntity( rowProcessingState, holder );
 						notifyResolutionListeners( entityInstance );
 						if ( rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
-							// We still need to read result set values to correctly populate the query cache
+							// We need to read result set values to correctly populate the query cache
 							resolveState( rowProcessingState );
 						}
 					}

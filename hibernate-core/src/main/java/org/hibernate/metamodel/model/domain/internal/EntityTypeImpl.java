@@ -154,9 +154,7 @@ public class EntityTypeImpl<J>
 		}
 
 		if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
-			if ( hasIdClass() ) {
-				return getIdentifierDescriptor();
-			}
+			return hasSingleIdAttribute() ? findIdAttribute() : getIdentifierDescriptor();
 		}
 
 		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {
@@ -179,7 +177,7 @@ public class EntityTypeImpl<J>
 		}
 
 		if ( EntityIdentifierMapping.matchesRoleName( name ) ) {
-			return hasIdClass() ? getIdentifierDescriptor() : findIdAttribute();
+			return hasSingleIdAttribute() ? findIdAttribute() : getIdentifierDescriptor();
 		}
 
 		if ( EntityDiscriminatorMapping.matchesRoleName( name ) ) {

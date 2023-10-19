@@ -6,11 +6,9 @@
  */
 package org.hibernate.dialect.function.array;
 
-import java.lang.reflect.Array;
 import java.util.List;
 import java.util.function.Supplier;
 
-import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -18,8 +16,6 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.type.BasicType;
-import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -54,7 +50,7 @@ public class ArrayViaElementArgumentReturnTypeResolver implements FunctionReturn
 		for ( SqmTypedNode<?> argument : arguments ) {
 			final DomainType<?> sqmType = argument.getExpressible().getSqmType();
 			if ( sqmType instanceof ReturnableType<?> ) {
-				return resolveArrayType( sqmType, typeConfiguration );
+				return ArrayTypeHelper.resolveArrayType( sqmType, typeConfiguration );
 			}
 		}
 		return null;
@@ -67,19 +63,4 @@ public class ArrayViaElementArgumentReturnTypeResolver implements FunctionReturn
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
-	public static BasicType<?> resolveArrayType(DomainType<?> elementType, TypeConfiguration typeConfiguration) {
-		@SuppressWarnings("unchecked") final BasicPluralJavaType<Object> arrayJavaType = (BasicPluralJavaType<Object>) typeConfiguration.getJavaTypeRegistry()
-				.getDescriptor(
-						Array.newInstance( elementType.getBindableJavaType(), 0 ).getClass()
-				);
-		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
-		return arrayJavaType.resolveType(
-				typeConfiguration,
-				dialect,
-				(BasicType<Object>) elementType,
-				null,
-				typeConfiguration.getCurrentBaseSqlTypeIndicators()
-		);
-	}
 }

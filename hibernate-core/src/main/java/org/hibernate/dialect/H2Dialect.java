@@ -312,6 +312,8 @@ public class H2Dialect extends Dialect {
 		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.array();
 		functionFactory.arrayAggregate();
+		functionFactory.arrayContains();
+		functionFactory.arrayContainsNull();
 	}
 
 	@Override

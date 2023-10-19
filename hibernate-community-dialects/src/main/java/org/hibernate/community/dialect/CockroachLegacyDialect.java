@@ -463,6 +463,8 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
 		functionFactory.array_casting();
 		functionFactory.arrayAggregate();
+		functionFactory.arrayContains_operator();
+		functionFactory.arrayContainsNull_array_position();
 
 		functionContributions.getFunctionRegistry().register(
 				"trunc",

@@ -583,6 +583,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.listagg_stringAgg( "varchar" );
 		functionFactory.array_casting();
 		functionFactory.arrayAggregate();
+		functionFactory.arrayContains_operator();
+		functionFactory.arrayContainsNull_array_position();
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 			functionFactory.makeDateTimeTimestamp();

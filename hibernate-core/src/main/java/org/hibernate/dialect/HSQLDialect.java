@@ -189,6 +189,8 @@ public class HSQLDialect extends Dialect {
 		functionFactory.listagg_groupConcat();
 		functionFactory.array();
 		functionFactory.arrayAggregate();
+		functionFactory.arrayContains_hsql();
+		functionFactory.arrayContainsNull_hsql();
 	}
 
 	@Override

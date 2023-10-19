@@ -23,6 +23,7 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
@@ -42,23 +43,13 @@ import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_A
  * @author Christian Beikov
  * @author Jordan Gigov
  */
-public class OracleArrayJdbcType implements JdbcType {
+public class OracleArrayJdbcType extends ArrayJdbcType {
 
-	private final JdbcType elementJdbcType;
 	private final String typeName;
 
 	public OracleArrayJdbcType(JdbcType elementJdbcType, String typeName) {
-		this.elementJdbcType = elementJdbcType;
+		super( elementJdbcType );
 		this.typeName = typeName;
-	}
-
-	@Override
-	public int getJdbcTypeCode() {
-		return Types.ARRAY;
-	}
-
-	public JdbcType getElementJdbcType() {
-		return elementJdbcType;
 	}
 
 	public String getTypeName() {
@@ -66,25 +57,8 @@ public class OracleArrayJdbcType implements JdbcType {
 	}
 
 	@Override
-	public <T> JavaType<T> getJdbcRecommendedJavaTypeMapping(
-			Integer precision,
-			Integer scale,
-			TypeConfiguration typeConfiguration) {
-		final JavaType<Object> elementJavaType =
-				elementJdbcType.getJdbcRecommendedJavaTypeMapping( precision, scale, typeConfiguration );
-		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
-				Array.newInstance( elementJavaType.getJavaTypeClass(), 0 ).getClass()
-		);
-	}
-
-	@Override
 	public <T> JdbcLiteralFormatter<T> getJdbcLiteralFormatter(JavaType<T> javaTypeDescriptor) {
 		return null;
-	}
-
-	@Override
-	public Class<?> getPreferredJavaTypeClass(WrapperOptions options) {
-		return java.sql.Array.class;
 	}
 
 	@Override
@@ -257,6 +231,43 @@ public class OracleArrayJdbcType implements JdbcType {
 						false
 				)
 		);
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_contains",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_contains(arr in " + arrayTypeName +
+										", elem in " + getRawTypeName( elementType ) + ") return number deterministic is begin " +
+										"if arr is null then return null; end if; " +
+										"if elem is null then " +
+										"for i in 1 .. arr.count loop " +
+										"if arr(i) is null then return 1; end if; " +
+										"end loop; " +
+										"else " +
+										"for i in 1 .. arr.count loop " +
+										"if arr(i)=elem then return 1; end if; " +
+										"end loop; " +
+										"end if; " +
+										"return 0; " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_contains" },
+						emptySet(),
+						false
+				)
+		);
+	}
+
+	private static String getRawTypeName(String typeName) {
+		//trim off the length/precision/scale
+		final int paren = typeName.indexOf( '(' );
+		if ( paren > 0 ) {
+			final int parenEnd = typeName.lastIndexOf( ')' );
+			return parenEnd + 1 == typeName.length()
+					? typeName.substring( 0, paren )
+					: typeName.substring( 0, paren ) + typeName.substring( parenEnd + 1 );
+		}
+		return typeName;
 	}
 
 	@Override

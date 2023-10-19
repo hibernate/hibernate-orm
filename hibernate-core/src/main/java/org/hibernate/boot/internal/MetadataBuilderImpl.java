@@ -84,6 +84,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
 import org.jboss.jandex.IndexView;
@@ -313,6 +314,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 	@Deprecated
 	public void contributeType(UserType<?> type, String[] keys) {
 		options.basicTypeRegistrations.add( new BasicTypeRegistration( type, keys, getTypeConfiguration() ) );
+	}
+
+	@Override
+	public void contributeType(CompositeUserType<?> type) {
+		options.compositeUserTypes.add( type );
 	}
 
 	@Override
@@ -597,6 +603,7 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private BootstrapContext bootstrapContext;
 
 		private final ArrayList<BasicTypeRegistration> basicTypeRegistrations = new ArrayList<>();
+		private final ArrayList<CompositeUserType<?>> compositeUserTypes = new ArrayList<>();
 
 		private ImplicitNamingStrategy implicitNamingStrategy;
 		private PhysicalNamingStrategy physicalNamingStrategy;
@@ -883,6 +890,11 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public List<BasicTypeRegistration> getBasicTypeRegistrations() {
 			return basicTypeRegistrations;
+		}
+
+		@Override
+		public List<CompositeUserType<?>> getCompositeUserTypes() {
+			return compositeUserTypes;
 		}
 
 		@Override

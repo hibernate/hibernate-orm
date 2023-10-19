@@ -21,6 +21,7 @@ import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.id.factory.IdentifierGeneratorFactory;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.SharedCacheMode;
 
@@ -76,6 +77,11 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public List<BasicTypeRegistration> getBasicTypeRegistrations() {
 		return delegate.getBasicTypeRegistrations();
+	}
+
+	@Override
+	public List<CompositeUserType<?>> getCompositeUserTypes() {
+		return delegate.getCompositeUserTypes();
 	}
 
 	@Override

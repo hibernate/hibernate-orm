@@ -25,6 +25,7 @@ import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandar
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.SharedCacheMode;
 
@@ -101,6 +102,11 @@ public interface MetadataBuildingOptions {
 	 * @return The {@code BasicTypes} registrations
 	 */
 	List<BasicTypeRegistration> getBasicTypeRegistrations();
+
+	/**
+	 * Access the list of {@link CompositeUserType} registrations.
+	 */
+	List<CompositeUserType<?>> getCompositeUserTypes();
 
 	/**
 	 * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY

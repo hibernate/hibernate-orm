@@ -34,7 +34,6 @@ import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
-import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.process.internal.ManagedResourcesImpl;
 import org.hibernate.boot.model.process.internal.ScanningCoordinator;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
@@ -53,6 +52,7 @@ import org.hibernate.boot.spi.AdditionalJaxbMappingProducer;
 import org.hibernate.boot.spi.AdditionalMappingContributions;
 import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingOptions;
 import org.hibernate.boot.spi.MetadataContributor;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -80,6 +80,7 @@ import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.NamedBasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.CompositeUserType;
 
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
@@ -592,7 +593,7 @@ public class MetadataBuildingProcess {
 	private static void handleTypes(
 			BootstrapContext bootstrapContext,
 			MetadataBuildingOptions options,
-			ConverterRegistry converterRegistry) {
+			InFlightMetadataCollector metadataCollector) {
 		final ClassLoaderService classLoaderService = options.getServiceRegistry().getService(ClassLoaderService.class);
 
 		final TypeConfiguration typeConfiguration = bootstrapContext.getTypeConfiguration();
@@ -606,7 +607,7 @@ public class MetadataBuildingProcess {
 
 			@Override
 			public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
-				converterRegistry.addAttributeConverter( converterClass );
+				metadataCollector.getConverterRegistry().addAttributeConverter( converterClass );
 			}
 		};
 
@@ -706,6 +707,13 @@ public class MetadataBuildingProcess {
 
 		// add explicit application registered types
 		typeConfiguration.addBasicTypeRegistrationContributions( options.getBasicTypeRegistrations() );
+		for ( CompositeUserType<?> compositeUserType : options.getCompositeUserTypes() ) {
+			//noinspection unchecked
+			metadataCollector.registerCompositeUserType(
+					compositeUserType.returnedClass(),
+					(Class<? extends CompositeUserType<?>>) compositeUserType.getClass()
+			);
+		}
 
 		final JdbcType timestampWithTimeZoneOverride = getTimestampWithTimeZoneOverride( options, jdbcTypeRegistry );
 		if ( timestampWithTimeZoneOverride != null ) {

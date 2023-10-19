@@ -16,6 +16,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.CompositeUserType;
 import org.hibernate.usertype.UserType;
 
 /**
@@ -58,6 +59,17 @@ public interface TypeContributions {
 	 */
 	default void contributeType(UserType<?> type) {
 		contributeType( type, type.returnedClass().getName() );
+	}
+
+	/**
+	 * Register a {@link CompositeUserType} as the implicit (auto-applied)
+	 * type for values of type {@link CompositeUserType#returnedClass()}.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	default void contributeType(CompositeUserType<?> type) {
+		throw new UnsupportedOperationException();
 	}
 
 	/**

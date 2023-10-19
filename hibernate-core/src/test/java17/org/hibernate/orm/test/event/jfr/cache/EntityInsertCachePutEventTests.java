@@ -8,7 +8,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.event.jfr.CachePutEvent;
 import org.hibernate.event.jfr.JdbcBatchExecutionEvent;
 import org.hibernate.event.jfr.internal.JfrEventManager;
-import org.hibernate.orm.test.cache.CacheRegionStatisticsTest;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -114,7 +113,7 @@ public class EntityInsertCachePutEventTests {
 				session -> {
 					session.createQuery(
 							"from TestEntity",
-							CacheRegionStatisticsTest.Dog.class
+							TestEntity.class
 					).setCacheable( false ).getResultList();
 				}
 		);

@@ -6,7 +6,6 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.event.jfr.CachePutEvent;
 import org.hibernate.event.jfr.JdbcBatchExecutionEvent;
 import org.hibernate.event.jfr.internal.JfrEventManager;
-import org.hibernate.orm.test.cache.CacheRegionStatisticsTest;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
@@ -58,9 +57,9 @@ public class QueryCachePutEventTests {
 		jfrEvents.reset();
 		scope.inTransaction(
 				session -> {
-					List<CacheRegionStatisticsTest.Dog> dogs = session.createQuery(
+					List<TestEntity> dogs = session.createQuery(
 							"from TestEntity",
-							CacheRegionStatisticsTest.Dog.class
+							TestEntity.class
 					).setCacheable( true ).getResultList();
 
 					final List<RecordedEvent> events = jfrEvents.events()
@@ -96,7 +95,7 @@ public class QueryCachePutEventTests {
 				session -> {
 					session.createQuery(
 							"from TestEntity",
-							CacheRegionStatisticsTest.Dog.class
+							TestEntity.class
 					).setCacheable( false ).getResultList();
 				}
 		);

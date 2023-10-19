@@ -13,12 +13,20 @@ import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.Dialect;
 
 import org.hibernate.dialect.function.array.ArrayAggFunction;
+import org.hibernate.dialect.function.array.ArrayAndElementArgumentTypeResolver;
+import org.hibernate.dialect.function.array.ArrayAndElementArgumentValidator;
+import org.hibernate.dialect.function.array.ArrayArgumentValidator;
 import org.hibernate.dialect.function.array.ArrayConstructorFunction;
+import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
 import org.hibernate.dialect.function.array.CastingArrayConstructorFunction;
 import org.hibernate.dialect.function.array.OracleArrayAggEmulation;
 import org.hibernate.dialect.function.array.OracleArrayConstructorFunction;
+import org.hibernate.dialect.function.array.OracleArrayContainsFunction;
+import org.hibernate.dialect.function.array.OracleArrayContainsNullFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
+import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
@@ -2579,5 +2587,108 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayAggregate_jsonArrayagg() {
 		functionRegistry.register( ArrayAggFunction.FUNCTION_NAME, new OracleArrayAggEmulation() );
+	}
+
+	/**
+	 * H2 array_contains() function
+	 */
+	public void arrayContains() {
+		functionRegistry.namedDescriptorBuilder( "array_contains" )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( booleanType ) )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+							StandardArgumentsValidators.exactly( 2 ),
+							ArrayAndElementArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setArgumentTypeResolver( ArrayAndElementArgumentTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentListSignature( "(ARRAY array, OBJECT element)" )
+				.register();
+	}
+
+	/**
+	 * HSQL array_contains() function
+	 */
+	public void arrayContains_hsql() {
+		functionRegistry.patternDescriptorBuilder( "array_contains", "position_array(?2 in ?1)>0" )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( booleanType ) )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 2 ),
+								ArrayAndElementArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setArgumentTypeResolver( ArrayAndElementArgumentTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentListSignature( "(ARRAY array, OBJECT element)" )
+				.register();
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array contains operator
+	 */
+	public void arrayContains_operator() {
+		functionRegistry.register( "array_contains", new ArrayContainsOperatorFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle array_contains() function
+	 */
+	public void arrayContains_oracle() {
+		functionRegistry.register( "array_contains", new OracleArrayContainsFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2, HSQL array_contains_null() function
+	 */
+	public void arrayContainsNull() {
+		functionRegistry.patternDescriptorBuilder( "array_contains_null", "array_contains(?1,null)" )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( booleanType ) )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 1 ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array)" )
+				.register();
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array contains null emulation
+	 */
+	public void arrayContainsNull_array_position() {
+		functionRegistry.patternDescriptorBuilder( "array_contains_null", "array_position(?1,null) is not null" )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( booleanType ) )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 1 ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array)" )
+				.register();
+	}
+
+	/**
+	 * Oracle array_contains() function
+	 */
+	public void arrayContainsNull_oracle() {
+		functionRegistry.register( "array_contains_null", new OracleArrayContainsNullFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array contains null emulation
+	 */
+	public void arrayContainsNull_hsql() {
+		functionRegistry.patternDescriptorBuilder( "array_contains_null", "position_array(null in ?1)>0" )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( booleanType ) )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 1 ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array)" )
+				.register();
 	}
 }

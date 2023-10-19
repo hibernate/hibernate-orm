@@ -9,6 +9,7 @@ package org.hibernate.orm.test.function.array;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.HSQLDialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -17,6 +18,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 // otherwise we might run into ORA-21700: object does not exist or is marked for delete
 // because the JDBC connection or database session caches something that should have been invalidated
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = ""))
-public class ArrayConstructorTest {
+public class ArrayContainsTest {
 
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
@@ -52,31 +54,34 @@ public class ArrayConstructorTest {
 	}
 
 	@Test
-	public void testEmpty(SessionFactoryScope scope) {
+	public void testContains(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where e.theArray = array()", EntityWithArrays.class )
+			//tag::hql-array-contains-example[]
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains(e.theArray, 'abc')", EntityWithArrays.class )
 					.getResultList();
+			//end::hql-array-contains-example[]
 			assertEquals( 1, results.size() );
-			assertEquals( 1L, results.get( 0 ).getId() );
+			assertEquals( 2L, results.get( 0 ).getId() );
 		} );
 	}
 
 	@Test
-	public void testNonExisting(SessionFactoryScope scope) {
+	public void testDoesNotContain(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where e.theArray = array('abc')", EntityWithArrays.class )
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains(e.theArray, 'xyz')", EntityWithArrays.class )
 					.getResultList();
 			assertEquals( 0, results.size() );
 		} );
 	}
 
 	@Test
-	public void testMultipleArguments(SessionFactoryScope scope) {
+	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1692/")
+	public void testContainsNull(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			//tag::hql-array-example[]
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where e.theArray is not distinct from array('abc', null, 'def')", EntityWithArrays.class )
+			//tag::hql-array-contains-null-example[]
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_null(e.theArray)", EntityWithArrays.class )
 					.getResultList();
-			//end::hql-array-example[]
+			//end::hql-array-contains-null-example[]
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
 		} );

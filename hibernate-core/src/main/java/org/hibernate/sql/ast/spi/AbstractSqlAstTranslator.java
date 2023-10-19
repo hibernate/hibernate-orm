@@ -6266,14 +6266,14 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( getSqlTypeName( castTarget, sessionFactory ) );
 	}
 
-	public static String getSqlTypeName(CastTarget castTarget, SessionFactoryImplementor factory) {
-		if ( castTarget.getSqlType() != null ) {
-			return castTarget.getSqlType();
+	public static String getSqlTypeName(SqlTypedMapping castTarget, SessionFactoryImplementor factory) {
+		if ( castTarget.getColumnDefinition() != null ) {
+			return castTarget.getColumnDefinition();
 		}
 		else {
 			final Size castTargetSize = castTarget.toSize();
 			final DdlTypeRegistry ddlTypeRegistry = factory.getTypeConfiguration().getDdlTypeRegistry();
-			final SqlExpressible expressionType = (SqlExpressible) castTarget.getExpressionType();
+			final SqlExpressible expressionType = (SqlExpressible) castTarget.getJdbcMapping();
 			if ( expressionType instanceof BasicPluralType<?, ?> ) {
 				final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) expressionType;
 				final BasicPluralJavaType<?> javaTypeDescriptor = (BasicPluralJavaType<?>) containerType.getJavaTypeDescriptor();

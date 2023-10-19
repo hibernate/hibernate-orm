@@ -5,6 +5,7 @@
 :example-dir-model: {testing-project-dir}/src/main/java/org/hibernate/testing/orm/domain/userguide
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/hql
+:array-example-dir-hql: {core-project-dir}/src/test/java/org/hibernate/orm/test/function/array
 :extrasdir: extras
 
 This chapter describes Hibernate Query Language (HQL) and Jakarta Persistence Query Language (JPQL).
@@ -1107,6 +1108,51 @@ Finally, the following functions evaluate the id, version, or natural id of an e
 Mainly useful with <<associations-not-found,`@NotFound` mappings>>. | &cross;
 |===
 
+[[hql-functions-arrays]]
+==== Functions for dealing with arrays
+
+The following functions deal with SQL array types, which are not supported on every database.
+
+[[hql-array-functions]]
+|===
+| Function | Purpose
+
+| `array()` | Creates an array based on the passed arguments
+| `array_contains()` | Whether an array contains an element
+| `array_contains_null()` | Whether an array contains a null
+|===
+
+===== `array()`
+
+Creates an array based on the passed arguments, and infers the array type from the context if possible.
+
+[[hql-array-constructor-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayConstructorTest.java[tags=hql-array-example]
+----
+====
+
+[[hql-array-contains-functions]]
+===== `array_contains()` and `array_contains_null()`
+
+Both functions return `null` if the first argument, the array, is null, yet the result of the `array_contains` function
+is undefined when the second argument, the element to search, is `null`.
+The `array_contains_null` function only takes a single argument, the array, and will return whether the array contains a `null` element.
+
+[[hql-array-contains-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-example]
+----
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-null-example]
+----
+====
+
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions
 
@@ -2194,7 +2240,7 @@ The following ordered set aggregate functions are available on many platforms:
 
 | Inverse distribution functions | `mode()`, `percentile_cont()`, `percentile_disc()`
 | Hypothetical set functions | `rank()`, `dense_rank()`, `percent_rank()`, `cume_dist()`
-| Other | `listagg()`
+| Other | `listagg()`, `array_agg`
 |===
 
 Actually, the most widely-supported ordered set aggregate function is one which builds a string by concatenating the values within a group.

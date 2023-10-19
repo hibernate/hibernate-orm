@@ -195,7 +195,7 @@ public class EntityJoinTest {
                                             QueryOptions.NONE,
                                             DomainParameterXref.empty(),
                                             QueryParameterBindings.NO_PARAM_BINDINGS,
-                                            LoadQueryInfluencers.NONE,
+                                            new LoadQueryInfluencers( factory ),
                                             factory,
                                             true
                                     )

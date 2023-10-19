@@ -23,7 +23,6 @@ import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.SessionCreationOptions;
-import org.hibernate.internal.util.NullnessUtil;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -44,17 +43,8 @@ import static org.hibernate.engine.FetchStyle.SUBSELECT;
  * @author Steve Ebersole
  */
 public class LoadQueryInfluencers implements Serializable {
-	/**
-	 * Static reference useful for cases where we are creating load SQL
-	 * outside the context of any influencers.  One such example is
-	 * anything created by the session factory.
-	 *
-	 * @deprecated use {@link #LoadQueryInfluencers(SessionFactoryImplementor)}
-	 */
-	@Deprecated(forRemoval = true)
-	public static final LoadQueryInfluencers NONE = new LoadQueryInfluencers();
 
-	private final @Nullable SessionFactoryImplementor sessionFactory;
+	private final SessionFactoryImplementor sessionFactory;
 
 	private CascadingFetchProfile enabledCascadingFetchProfile;
 
@@ -71,10 +61,6 @@ public class LoadQueryInfluencers implements Serializable {
 	private final EffectiveEntityGraph effectiveEntityGraph = new EffectiveEntityGraph();
 
 	private Boolean readOnly;
-
-	public LoadQueryInfluencers() {
-		this.sessionFactory = null;
-	}
 
 	public LoadQueryInfluencers(SessionFactoryImplementor sessionFactory) {
 		this.sessionFactory = sessionFactory;
@@ -99,7 +85,7 @@ public class LoadQueryInfluencers implements Serializable {
 		return effectiveEntityGraph;
 	}
 
-	public @Nullable SessionFactoryImplementor getSessionFactory() {
+	public SessionFactoryImplementor getSessionFactory() {
 		return sessionFactory;
 	}
 
@@ -135,7 +121,6 @@ public class LoadQueryInfluencers implements Serializable {
 	 * Set the effective {@linkplain #getEnabledCascadingFetchProfile() cascading fetch-profile}
 	 */
 	public void setEnabledCascadingFetchProfile(CascadingFetchProfile enabledCascadingFetchProfile) {
-		checkMutability();
 		this.enabledCascadingFetchProfile = enabledCascadingFetchProfile;
 	}
 
@@ -199,8 +184,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public Filter enableFilter(String filterName) {
-		checkMutability();
-		FilterImpl filter = new FilterImpl( NullnessUtil.castNonNull( sessionFactory ).getFilterDefinition( filterName ) );
+		FilterImpl filter = new FilterImpl( sessionFactory.getFilterDefinition( filterName ) );
 		if ( enabledFilters == null ) {
 			this.enabledFilters = new HashMap<>();
 		}
@@ -250,7 +234,7 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	private void checkFetchProfileName(String name) {
-		if ( sessionFactory != null && !sessionFactory.containsFetchProfileDefinition( name ) ) {
+		if ( !sessionFactory.containsFetchProfileDefinition( name ) ) {
 			throw new UnknownProfileException( name );
 		}
 	}
@@ -261,7 +245,6 @@ public class LoadQueryInfluencers implements Serializable {
 	}
 
 	public void enableFetchProfile(String name) throws UnknownProfileException {
-		checkMutability();
 		checkFetchProfileName( name );
 		if ( enabledFetchProfileNames == null ) {
 			this.enabledFetchProfileNames = new HashSet<>();
@@ -366,14 +349,6 @@ public class LoadQueryInfluencers implements Serializable {
 			}
 		}
 		return false;
-	}
-
-	private void checkMutability() {
-		if ( sessionFactory == null ) {
-			// that's the signal that this is the immutable, context-less
-			// variety
-			throw new IllegalStateException( "Cannot modify context-less LoadQueryInfluencers" );
-		}
 	}
 
 	public boolean hasSubselectLoadableCollections(EntityPersister persister) {

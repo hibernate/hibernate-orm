@@ -159,6 +159,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 					return;
 				}
 				sb.append( '(' );
+				arguments.get( 0 ).appendHqlString( sb );
 				for ( int i = 1; i < arguments.size(); i++ ) {
 					sb.append( ", " );
 					arguments.get( i ).appendHqlString( sb );

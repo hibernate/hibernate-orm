@@ -16,11 +16,15 @@ import org.hibernate.dialect.function.array.ArrayAggFunction;
 import org.hibernate.dialect.function.array.ArrayAndElementArgumentTypeResolver;
 import org.hibernate.dialect.function.array.ArrayAndElementArgumentValidator;
 import org.hibernate.dialect.function.array.ArrayArgumentValidator;
+import org.hibernate.dialect.function.array.ArrayConcatArgumentValidator;
+import org.hibernate.dialect.function.array.ArrayConcatFunction;
 import org.hibernate.dialect.function.array.ArrayConstructorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
 import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
+import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
 import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
 import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
+import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.CastingArrayConstructorFunction;
 import org.hibernate.dialect.function.array.OracleArrayAggEmulation;
@@ -2738,5 +2742,26 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayLength_oracle() {
 		functionRegistry.register( "array_length", new OracleArrayLengthFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2 and HSQLDB array_concat() function
+	 */
+	public void arrayConcat_operator() {
+		functionRegistry.register( "array_concat", new ArrayConcatFunction( "", "||", "" ) );
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array_concat() function
+	 */
+	public void arrayConcat_postgresql() {
+		functionRegistry.register( "array_concat", new PostgreSQLArrayConcatFunction() );
+	}
+
+	/**
+	 * Oracle array_concat() function
+	 */
+	public void arrayConcat_oracle() {
+		functionRegistry.register( "array_concat", new OracleArrayConcatFunction() );
 	}
 }

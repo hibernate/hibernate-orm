@@ -41,6 +41,14 @@ public class ArrayArgumentValidator implements ArgumentsValidator {
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
 			TypeConfiguration typeConfiguration) {
+		return getElementType( arrayIndex, arguments, functionName, typeConfiguration );
+	}
+
+	protected BasicType<?> getElementType(
+			int arrayIndex,
+			List<? extends SqmTypedNode<?>> arguments,
+			String functionName,
+			TypeConfiguration typeConfiguration) {
 		final SqmTypedNode<?> arrayArgument = arguments.get( arrayIndex );
 		final SqmExpressible<?> arrayType = arrayArgument.getExpressible().getSqmType();
 		if ( arrayType == null ) {

@@ -1122,6 +1122,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_contains_null()` | Whether an array contains a null
 | `array_position()` | Determines the position of an element in an array
 | `array_length()` | Determines the length of an array
+| `array_concat()` | Concatenates array with each other in order
 |===
 
 ===== `array()`
@@ -1178,6 +1179,19 @@ Returns size of the passed array. Returns `null` if the array is `null`.
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayLengthTest.java[tags=hql-array-length-example]
+----
+====
+
+[[hql-array-concat-functions]]
+===== `array_concat()`
+
+Concatenates arrays with each other in order. Returns `null` if one of the arguments is `null`.
+
+[[hql-array-concat-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayConcatTest.java[tags=hql-array-concat-example]
 ----
 ====
 

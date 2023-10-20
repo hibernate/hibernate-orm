@@ -18,6 +18,9 @@ import org.hibernate.dialect.function.array.ArrayAndElementArgumentValidator;
 import org.hibernate.dialect.function.array.ArrayArgumentValidator;
 import org.hibernate.dialect.function.array.ArrayConstructorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
+import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
+import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
+import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.CastingArrayConstructorFunction;
 import org.hibernate.dialect.function.array.OracleArrayAggEmulation;
 import org.hibernate.dialect.function.array.OracleArrayConstructorFunction;
@@ -2690,5 +2693,26 @@ public class CommonFunctionFactory {
 				)
 				.setArgumentListSignature( "(ARRAY array)" )
 				.register();
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array_position() function
+	 */
+	public void arrayPosition_postgresql() {
+		functionRegistry.register( "array_position", new PostgreSQLArrayPositionFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * HSQL array_position() function
+	 */
+	public void arrayPosition_hsql() {
+		functionRegistry.register( "array_position", new HSQLArrayPositionFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * Oracle array_position() function
+	 */
+	public void arrayPosition_oracle() {
+		functionRegistry.register( "array_position", new OracleArrayPositionFunction( typeConfiguration ) );
 	}
 }

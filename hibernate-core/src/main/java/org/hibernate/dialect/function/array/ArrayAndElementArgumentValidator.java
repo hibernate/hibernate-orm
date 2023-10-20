@@ -37,7 +37,7 @@ public class ArrayAndElementArgumentValidator extends ArrayArgumentValidator {
 		final BasicType<?> expectedElementType = getElementType( arguments, functionName, typeConfiguration );
 		final SqmTypedNode<?> elementArgument = arguments.get( elementIndex );
 		final SqmExpressible<?> elementType = elementArgument.getExpressible().getSqmType();
-		if ( expectedElementType != elementType ) {
+		if ( expectedElementType != null && elementType != null && expectedElementType != elementType ) {
 			throw new FunctionArgumentException(
 					String.format(
 							"Parameter %d of function '%s()' has type %s, but argument is of type '%s'",

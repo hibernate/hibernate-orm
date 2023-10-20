@@ -94,7 +94,7 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 			JdbcTypeIndicators indicators = typeConfiguration.getCurrentBaseSqlTypeIndicators();
 			SqmExpressible<?> nodeType = argument.getNodeType();
 			FunctionParameterType type = count < types.length ? types[count++] : types[types.length - 1];
-			if ( nodeType != null ) {
+			if ( nodeType != null && type != FunctionParameterType.ANY ) {
 				JavaType<?> javaType = nodeType.getRelationalJavaType();
 				if (javaType != null) {
 					checkArgumentType( functionName, count, argument, indicators, type, javaType );

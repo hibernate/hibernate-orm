@@ -43,7 +43,10 @@ public class ArrayArgumentValidator implements ArgumentsValidator {
 			TypeConfiguration typeConfiguration) {
 		final SqmTypedNode<?> arrayArgument = arguments.get( arrayIndex );
 		final SqmExpressible<?> arrayType = arrayArgument.getExpressible().getSqmType();
-		if ( !( arrayType instanceof BasicPluralType<?, ?> ) ) {
+		if ( arrayType == null ) {
+			return null;
+		}
+		else if ( !( arrayType instanceof BasicPluralType<?, ?> ) ) {
 			throw new FunctionArgumentException(
 					String.format(
 							"Parameter %d of function '%s()' requires an array type, but argument is of type '%s'",

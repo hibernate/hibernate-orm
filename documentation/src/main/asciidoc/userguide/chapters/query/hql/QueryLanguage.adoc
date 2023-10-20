@@ -1120,6 +1120,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array()` | Creates an array based on the passed arguments
 | `array_contains()` | Whether an array contains an element
 | `array_contains_null()` | Whether an array contains a null
+| `array_position()` | Determines the position of an element in an array
 |===
 
 ===== `array()`
@@ -1150,6 +1151,19 @@ include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-null-example]
+----
+====
+
+[[hql-array-position-functions]]
+===== `array_position()`
+
+Returns the 1-based position of an element in the array. Returns 0 if the element is not found and `null` if the array is `null`.
+
+[[hql-array-position-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayPositionTest.java[tags=hql-array-position-example]
 ----
 ====
 

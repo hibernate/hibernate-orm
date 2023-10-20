@@ -39,11 +39,11 @@ public class OracleArrayContainsFunction extends AbstractSqmSelfRenderingFunctio
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final String arrayTypeName = ArrayTypeHelper.getArrayTypeName( arrayExpression.getExpressionType(), walker );
 		sqlAppender.appendSql( arrayTypeName );
-		sqlAppender.append( "_contains(" );
+		sqlAppender.append( "_position(" );
 		arrayExpression.accept( walker );
 		sqlAppender.append( ',' );
 		sqlAstArguments.get( 1 ).accept( walker );
-		sqlAppender.append( ")=1" );
+		sqlAppender.append( ")>0" );
 	}
 
 	@Override

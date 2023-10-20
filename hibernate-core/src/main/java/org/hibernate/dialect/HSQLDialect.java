@@ -191,6 +191,7 @@ public class HSQLDialect extends Dialect {
 		functionFactory.arrayAggregate();
 		functionFactory.arrayContains_hsql();
 		functionFactory.arrayContainsNull_hsql();
+		functionFactory.arrayPosition_hsql();
 	}
 
 	@Override

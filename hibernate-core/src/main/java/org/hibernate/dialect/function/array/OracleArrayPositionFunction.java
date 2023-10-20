@@ -8,27 +8,16 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
-import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
-public class OracleArrayContainsNullFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+public class OracleArrayPositionFunction extends AbstractArrayPositionFunction {
 
-	public OracleArrayContainsNullFunction(TypeConfiguration typeConfiguration) {
-		super(
-				"array_contains_null",
-				StandardArgumentsValidators.composite(
-						StandardArgumentsValidators.exactly( 1 ),
-						ArrayArgumentValidator.DEFAULT_INSTANCE
-				),
-				StandardFunctionReturnTypeResolvers.invariant( typeConfiguration.standardBasicTypeForJavaType( Boolean.class ) ),
-				null
-		);
+	public OracleArrayPositionFunction(TypeConfiguration typeConfiguration) {
+		super( typeConfiguration );
 	}
 
 	@Override
@@ -41,11 +30,12 @@ public class OracleArrayContainsNullFunction extends AbstractSqmSelfRenderingFun
 		sqlAppender.appendSql( arrayTypeName );
 		sqlAppender.append( "_position(" );
 		arrayExpression.accept( walker );
-		sqlAppender.append( ",null)>0" );
-	}
-
-	@Override
-	public String getArgumentListSignature() {
-		return "(ARRAY array)";
+		sqlAppender.append( ',' );
+		sqlAstArguments.get( 1 ).accept( walker );
+		if ( sqlAstArguments.size() > 2 ) {
+			sqlAppender.append( ',' );
+			sqlAstArguments.get( 2 ).accept( walker );
+		}
+		sqlAppender.append( ")" );
 	}
 }

@@ -233,19 +233,19 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 		);
 		database.addAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
-						arrayTypeName + "_contains",
+						arrayTypeName + "_position",
 						database.getDefaultNamespace(),
 						new String[]{
-								"create or replace function " + arrayTypeName + "_contains(arr in " + arrayTypeName +
-										", elem in " + getRawTypeName( elementType ) + ") return number deterministic is begin " +
+								"create or replace function " + arrayTypeName + "_position(arr in " + arrayTypeName +
+										", elem in " + getRawTypeName( elementType ) + ", startPos in number default 1) return number deterministic is begin " +
 										"if arr is null then return null; end if; " +
 										"if elem is null then " +
-										"for i in 1 .. arr.count loop " +
-										"if arr(i) is null then return 1; end if; " +
+										"for i in startPos .. arr.count loop " +
+										"if arr(i) is null then return i; end if; " +
 										"end loop; " +
 										"else " +
-										"for i in 1 .. arr.count loop " +
-										"if arr(i)=elem then return 1; end if; " +
+										"for i in startPos .. arr.count loop " +
+										"if arr(i)=elem then return i; end if; " +
 										"end loop; " +
 										"end if; " +
 										"return 0; " +

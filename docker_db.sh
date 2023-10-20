@@ -619,14 +619,14 @@ EOF\""
 
 disable_userland_proxy() {
   if [[ "$HEALTCHECK_PATH" == "{{.State.Health.Status}}" ]]; then
-    if [[ ! -f /etc/docker/daemon.json ]]; then
+    if ! sudo test -f /etc/docker/daemon.json; then
       sudo service docker stop
       sudo bash -c "echo '{\"userland-proxy\": false}' > /etc/docker/daemon.json"
       sudo service docker start
-    elif ! grep -q userland-proxy /etc/docker/daemon.json; then
+    elif ! sudo grep -q userland-proxy /etc/docker/daemon.json; then
       export docker_daemon_json=$(</etc/docker/daemon.json)
       sudo service docker stop
-      sudo bash -c 'echo "${docker_daemon_json/\}/,}{\"userland-proxy\": false}" > /etc/docker/daemon.json'
+      sudo bash -c 'echo "${docker_daemon_json/\}/,}\"userland-proxy\": false}" > /etc/docker/daemon.json'
       sudo service docker start
     fi
   fi

@@ -62,6 +62,7 @@ import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.Queryable;
 import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.query.BindableType;
+import org.hibernate.query.derived.AnonymousTupleSqmPathSource;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmFieldLiteral;
@@ -784,6 +785,13 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 
 		if ( sqmExpressible instanceof CompositeSqmPathSource ) {
 			throw new UnsupportedOperationException( "Resolution of embedded-valued SqmExpressible nodes not yet implemented" );
+		}
+
+		if ( sqmExpressible instanceof AnonymousTupleSqmPathSource<?> ) {
+			return resolveMappingExpressible(
+					( (AnonymousTupleSqmPathSource<?>) sqmExpressible ).getSqmPathType(),
+					tableGroupLocator
+			);
 		}
 
 		if ( sqmExpressible instanceof EmbeddableTypeImpl ) {

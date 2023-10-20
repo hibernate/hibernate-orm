@@ -192,6 +192,7 @@ public class HSQLDialect extends Dialect {
 		functionFactory.arrayContains_hsql();
 		functionFactory.arrayContainsNull_hsql();
 		functionFactory.arrayPosition_hsql();
+		functionFactory.arrayLength_cardinality();
 	}
 
 	@Override

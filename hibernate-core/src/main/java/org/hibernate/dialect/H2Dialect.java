@@ -314,6 +314,7 @@ public class H2Dialect extends Dialect {
 		functionFactory.arrayAggregate();
 		functionFactory.arrayContains();
 		functionFactory.arrayContainsNull();
+		functionFactory.arrayLength_cardinality();
 	}
 
 	@Override

@@ -586,6 +586,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.arrayContains_operator();
 		functionFactory.arrayContainsNull_array_position();
 		functionFactory.arrayPosition_postgresql();
+		functionFactory.arrayLength_cardinality();
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 			functionFactory.makeDateTimeTimestamp();

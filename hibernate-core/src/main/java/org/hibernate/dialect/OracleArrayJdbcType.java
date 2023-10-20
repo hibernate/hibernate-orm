@@ -251,7 +251,23 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 										"return 0; " +
 										"end;"
 						},
-						new String[] { "drop function " + arrayTypeName + "_contains" },
+						new String[] { "drop function " + arrayTypeName + "_position" },
+						emptySet(),
+						false
+				)
+		);
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_length",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_length(arr in " + arrayTypeName +
+										") return number deterministic is begin " +
+										"if arr is null then return null; end if; " +
+										"return arr.count; " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_length" },
 						emptySet(),
 						false
 				)

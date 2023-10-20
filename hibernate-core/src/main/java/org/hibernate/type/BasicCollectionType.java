@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.BasicCollectionJavaType;
@@ -72,5 +73,16 @@ public class BasicCollectionType<C extends Collection<E>, E>
 		//  also, maybe move that logic into the ArrayJdbcType
 		//noinspection unchecked
 		return (BasicType<X>) this;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		return o == this || o.getClass() == BasicCollectionType.class
+				&& Objects.equals( baseDescriptor, ( (BasicCollectionType<?, ?>) o ).baseDescriptor );
+	}
+
+	@Override
+	public int hashCode() {
+		return baseDescriptor.hashCode();
 	}
 }

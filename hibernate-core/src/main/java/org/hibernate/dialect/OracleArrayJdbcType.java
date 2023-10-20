@@ -272,6 +272,48 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 						false
 				)
 		);
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_concat",
+						database.getDefaultNamespace(),
+						new String[]{ createOrReplaceConcatFunction( arrayTypeName ) },
+						new String[] { "drop function " + arrayTypeName + "_concat" },
+						emptySet(),
+						false
+				)
+		);
+	}
+
+	protected String createOrReplaceConcatFunction(String arrayTypeName) {
+		// Since Oracle has no builtin concat function for varrays and doesn't support varargs,
+		// we have to create a function with a fixed amount of arguments with default that fits "most" cases.
+		// Let's just use 5 for the time being until someone requests more.
+		return createOrReplaceConcatFunction( arrayTypeName, 5 );
+	}
+
+	protected String createOrReplaceConcatFunction(String arrayTypeName, int maxConcatParams) {
+		final StringBuilder sb = new StringBuilder();
+		sb.append( "create or replace function " ).append( arrayTypeName ).append( "_concat(" );
+		sb.append( "arr0 in " ).append( arrayTypeName ).append( ",arr1 in " ).append( arrayTypeName );
+		for ( int i = 2; i < maxConcatParams; i++ ) {
+			sb.append( ",arr" ).append( i ).append( " in " ).append( arrayTypeName )
+					.append( " default " ).append( arrayTypeName ).append( "()" );
+		}
+		sb.append( ") return " ).append( arrayTypeName ).append( " deterministic is res " ).append( arrayTypeName )
+				.append( "; begin if " );
+		String separator = "";
+		for ( int i = 0; i < maxConcatParams; i++ ) {
+			sb.append( separator ).append( "arr" ).append( i ).append( " is null" );
+			separator = " or ";
+		}
+		sb.append( " then return null; end if; " );
+		sb.append( "select * bulk collect into res from (" );
+		separator = "";
+		for ( int i = 0; i < maxConcatParams; i++ ) {
+			sb.append( separator ).append( "select * from table(arr" ).append( i ).append( ')' );
+			separator = " union all ";
+		}
+		return sb.append( "); return res; end;" ).toString();
 	}
 
 	private static String getRawTypeName(String typeName) {

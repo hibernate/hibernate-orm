@@ -1121,6 +1121,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_contains()` | Whether an array contains an element
 | `array_contains_null()` | Whether an array contains a null
 | `array_position()` | Determines the position of an element in an array
+| `array_length()` | Determines the length of an array
 |===
 
 ===== `array()`
@@ -1164,6 +1165,19 @@ Returns the 1-based position of an element in the array. Returns 0 if the elemen
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayPositionTest.java[tags=hql-array-position-example]
+----
+====
+
+[[hql-array-length-functions]]
+===== `array_length()`
+
+Returns size of the passed array. Returns `null` if the array is `null`.
+
+[[hql-array-length-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayLengthTest.java[tags=hql-array-length-example]
 ----
 ====
 

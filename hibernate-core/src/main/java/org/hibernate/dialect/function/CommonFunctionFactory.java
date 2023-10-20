@@ -19,6 +19,7 @@ import org.hibernate.dialect.function.array.ArrayArgumentValidator;
 import org.hibernate.dialect.function.array.ArrayConstructorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
 import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
+import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
 import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.CastingArrayConstructorFunction;
@@ -2714,5 +2715,28 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayPosition_oracle() {
 		functionRegistry.register( "array_position", new OracleArrayPositionFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * H2, HSQLDB, CockroachDB and PostgreSQL array_length() function
+	 */
+	public void arrayLength_cardinality() {
+		functionRegistry.patternDescriptorBuilder( "array_length", "cardinality(?1)" )
+				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( integerType ) )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 1 ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array)" )
+				.register();
+	}
+
+	/**
+	 * Oracle array_length() function
+	 */
+	public void arrayLength_oracle() {
+		functionRegistry.register( "array_length", new OracleArrayLengthFunction( typeConfiguration ) );
 	}
 }

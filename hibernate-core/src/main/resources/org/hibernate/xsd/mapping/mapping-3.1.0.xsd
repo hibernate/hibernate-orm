@@ -1037,7 +1037,7 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
-            <xsd:element name="embeddable" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="target" type="xsd:string" minOccurs="0"/>
             <xsd:element name="attribute-override" type="orm:attribute-override" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>

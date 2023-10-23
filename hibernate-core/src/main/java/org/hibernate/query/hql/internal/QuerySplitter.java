@@ -40,8 +40,8 @@ public class QuerySplitter {
 			return sqmSelectStatement;
 		}
 
-		final SqmPolymorphicRootDescriptor<?> unmappedPolymorphicDescriptor = (SqmPolymorphicRootDescriptor<?>) unmappedPolymorphicReference.getReferencedPathSource();
-		final Set<EntityDomainType<?>> implementors = unmappedPolymorphicDescriptor.getImplementors();
+		final SqmPolymorphicRootDescriptor<R> unmappedPolymorphicDescriptor = (SqmPolymorphicRootDescriptor<R>) unmappedPolymorphicReference.getReferencedPathSource();
+		final Set<EntityDomainType<? extends R>> implementors = unmappedPolymorphicDescriptor.getImplementors();
 		@SuppressWarnings("unchecked")
 		final SqmSelectStatement<R>[] expanded = new SqmSelectStatement[ implementors.size() ];
 
@@ -107,8 +107,8 @@ public class QuerySplitter {
 			return sqmDeleteStatement;
 		}
 
-		final SqmPolymorphicRootDescriptor<?> unmappedPolymorphicDescriptor = (SqmPolymorphicRootDescriptor<?>) unmappedPolymorphicReference.getReferencedPathSource();
-		final Set<EntityDomainType<?>> implementors = unmappedPolymorphicDescriptor.getImplementors();
+		final SqmPolymorphicRootDescriptor<R> unmappedPolymorphicDescriptor = (SqmPolymorphicRootDescriptor<R>) unmappedPolymorphicReference.getReferencedPathSource();
+		final Set<EntityDomainType<? extends R>> implementors = unmappedPolymorphicDescriptor.getImplementors();
 		@SuppressWarnings("unchecked")
 		final SqmDeleteStatement<R>[] expanded = new SqmDeleteStatement[ implementors.size() ];
 

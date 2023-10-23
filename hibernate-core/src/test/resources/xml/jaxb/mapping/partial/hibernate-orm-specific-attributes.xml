@@ -11,11 +11,18 @@
     <entity class="HibernateOrmSpecificAttributesMappingTest$MyEntity">
         <attributes>
             <!-- 1 == CHAR -->
-            <id name="id" jdbc-type-code="1">
+            <id name="id">
                 <uuid-generator style="time"/>
+                <jdbc-type>
+                    <code>1</code>
+                </jdbc-type>
             </id>
             <!-- 2005 == CLOB -->
-            <basic name="name" jdbc-type-code="2005"/>
+            <basic name="name">
+                <jdbc-type>
+                    <code>2005</code>
+                </jdbc-type>
+            </basic>
             <basic name="tags">
                 <type value="org.hibernate.orm.test.boot.jaxb.mapping.HibernateOrmSpecificAttributesMappingTest$DelimitedStringsJavaType"/>
             </basic>

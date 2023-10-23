@@ -17,7 +17,7 @@ import java.util.Set;
 
 import org.hibernate.Internal;
 import org.hibernate.boot.MetadataSources;
-import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.process.spi.ManagedResources;
@@ -33,7 +33,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	private final Set<Class<?>> annotatedClassReferences = new LinkedHashSet<>();
 	private final Set<String> annotatedClassNames = new LinkedHashSet<>();
 	private final Set<String> annotatedPackageNames = new LinkedHashSet<>();
-	private final List<Binding<BindableMappingDescriptor>> mappingFileBindings = new ArrayList<>();
+	private final List<Binding<JaxbBindableMappingDescriptor>> mappingFileBindings = new ArrayList<>();
 	private Map<String, Class<?>> extraQueryImports;
 
 	public static ManagedResourcesImpl baseline(MetadataSources sources, BootstrapContext bootstrapContext) {
@@ -71,7 +71,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Override
-	public Collection<Binding<BindableMappingDescriptor>> getXmlMappingBindings() {
+	public Collection<Binding<JaxbBindableMappingDescriptor>> getXmlMappingBindings() {
 		return Collections.unmodifiableList( mappingFileBindings );
 	}
 
@@ -105,7 +105,7 @@ public class ManagedResourcesImpl implements ManagedResources {
 	}
 
 	@Internal
-	public void addXmlBinding(Binding<BindableMappingDescriptor> binding) {
+	public void addXmlBinding(Binding<JaxbBindableMappingDescriptor> binding) {
 		mappingFileBindings.add( binding );
 	}
 }

@@ -256,6 +256,20 @@ public final class CollectionHelper {
 		return copy;
 	}
 
+	public static int count(Collection<?> collection) {
+		if ( isEmpty( collection ) ) {
+			return 0;
+		}
+		return collection.size();
+	}
+
+	public static int count(Map<?,?> map) {
+		if ( isEmpty( map ) ) {
+			return 0;
+		}
+		return map.size();
+	}
+
 	public static boolean isEmpty(Collection collection) {
 		return collection == null || collection.isEmpty();
 	}

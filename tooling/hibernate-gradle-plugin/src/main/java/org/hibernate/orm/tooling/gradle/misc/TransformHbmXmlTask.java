@@ -24,7 +24,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 
@@ -146,7 +146,7 @@ public abstract class TransformHbmXmlTask extends SourceTask {
 
 		final HbmXmlTransformer.Options transformationOptions = unsupportedFeatures::get;
 
-		final JaxbEntityMappings transformed = HbmXmlTransformer.transform( binding.getRoot(), origin, transformationOptions );
+		final JaxbEntityMappingsImpl transformed = HbmXmlTransformer.transform( binding.getRoot(), origin, transformationOptions );
 
 		final String copyName = determineCopyName( hbmXmlFile );
 		final File copyFile = determineCopyFile( copyName, hbmXmlFile );

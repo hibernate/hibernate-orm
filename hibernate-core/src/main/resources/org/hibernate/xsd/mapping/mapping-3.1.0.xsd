@@ -611,6 +611,9 @@
                 <xsd:element name="column" type="orm:column" />
                 <xsd:element name="formula" type="xsd:string" />
             </xsd:choice>
+
+            <xsd:element name="generated" minOccurs="0" type="orm:basic-generation-timing-type"/>
+
             <xsd:choice>
                 <xsd:element name="lob" type="orm:lob" minOccurs="0"/>
                 <xsd:element name="temporal" type="orm:temporal" minOccurs="0"/>
@@ -619,24 +622,7 @@
                 <xsd:element name="nationalized" type="orm:nationalized" minOccurs="0"/>
             </xsd:choice>
 
-            <xsd:element name="generated" minOccurs="0" type="orm:basic-generation-timing-type"/>
-
-            <xsd:choice>
-                <xsd:element name="type" type="orm:user-type" minOccurs="0"/>
-                <xsd:sequence minOccurs="0">
-                    <xsd:choice>
-                        <xsd:element name="target-class" type="xsd:string" minOccurs="0">
-                            <xsd:annotation>
-                                <xsd:documentation>
-                                    Generally only useful for dynamic-models - specifies the attribute's Java type
-                                </xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                        <xsd:element name="java-type" type="orm:java-type" minOccurs="0"/>
-                    </xsd:choice>
-                    <xsd:element name="jdbc-type" type="orm:jdbc-type" minOccurs="0"/>
-                </xsd:sequence>
-            </xsd:choice>
+            <xsd:group ref="basic-type-group" />
         </xsd:sequence>
 
         <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -648,17 +634,66 @@
         <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
     </xsd:complexType>
 
-    <xsd:complexType name="java-type">
-        <xsd:annotation>
-            <xsd:documentation>
-                See `@org.hibernate.annotations.JavaType
-            </xsd:documentation>
-        </xsd:annotation>
+    <xsd:group name="basic-type-group">
         <xsd:choice>
-            <xsd:element name="class" type="xsd:string"/>
-            <xsd:element name="descriptor" type="xsd:string"/>
+            <!--
+                Choice between -
+                        1. UserType
+                        2. composition
+                            a. java-type, as either
+                                i. @JavaType - descriptor
+                                ii. @Target - Java Class (dynamic models)
+                            b. jdbc-type, as either
+                                i. @JdbcType
+                                ii. @JdbcTypeCode
+                                iii. Name from SqlTypes
+            -->
+            <xsd:element name="type" type="orm:user-type" minOccurs="0"/>
+            <xsd:sequence minOccurs="0">
+                <xsd:choice minOccurs="0">
+                    <xsd:element name="target-class" type="xsd:string" minOccurs="0">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                See @org.hibernate.annotations.Target
+
+                                Generally only useful for dynamic-models - specifies the attribute's Java type
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:element>
+                    <xsd:element name="java-type" type="xsd:string" minOccurs="0">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                @org.hibernate.annotations.JavaType
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:element>
+                </xsd:choice>
+                <xsd:choice minOccurs="0">
+                    <xsd:element name="jdbc-type" type="xsd:string" minOccurs="0">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                @org.hibernate.annotations.JdbcType
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:element>
+                    <xsd:element name="jdbc-type-code" type="xsd:int" minOccurs="0">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                @org.hibernate.annotations.JdbcTypeCode
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:element>
+                    <xsd:element name="jdbc-type-name" type="xsd:string" minOccurs="0">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                Name from org.hibernate.type.SqlTypes
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:element>
+                </xsd:choice>
+            </xsd:sequence>
         </xsd:choice>
-    </xsd:complexType>
+    </xsd:group>
 
     <xsd:complexType name="jdbc-type">
         <xsd:annotation>
@@ -847,6 +882,7 @@
                         <xsd:element name="lob" type="orm:lob" minOccurs="0"/>
                         <xsd:element name="nationalized" type="orm:nationalized" minOccurs="0"/>
                     </xsd:choice>
+                    <xsd:group ref="basic-type-group" />
                 </xsd:sequence>
                 <xsd:sequence>
                     <xsd:element name="attribute-override" type="orm:attribute-override" minOccurs="0" maxOccurs="unbounded"/>
@@ -1125,23 +1161,9 @@
 
             <xsd:element name="unsaved-value" type="xsd:string" minOccurs="0"/>
 
-            <xsd:choice>
-                <xsd:element name="type" type="orm:user-type" minOccurs="0"/>
-                <xsd:sequence minOccurs="0">
-                    <xsd:choice>
-                        <xsd:element name="target-class" type="xsd:string" minOccurs="0">
-                            <xsd:annotation>
-                                <xsd:documentation>
-                                    <target-class/> is generally only useful for dynamic-models - specifies the attribute's Java type
-                                </xsd:documentation>
-                            </xsd:annotation>
-                        </xsd:element>
-                        <xsd:element name="java-type" type="orm:java-type" minOccurs="0"/>
-                    </xsd:choice>
-                    <xsd:element name="jdbc-type" type="orm:jdbc-type" minOccurs="0"/>
-                </xsd:sequence>
-            </xsd:choice>
+            <xsd:group ref="basic-type-group" />
         </xsd:sequence>
+
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />

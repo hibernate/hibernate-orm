@@ -9,6 +9,7 @@ package org.hibernate.dialect.function.array;
 import java.util.List;
 
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -18,9 +19,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * A {@link ArgumentsValidator} that validates all arguments are of the same array type.
  */
-public class ArrayConcatArgumentValidator implements ArgumentsValidator {
+public class ArraysOfSameTypeArgumentValidator implements ArgumentsValidator {
 
-	public static final ArgumentsValidator INSTANCE = new ArrayConcatArgumentValidator();
+	public static final ArgumentsValidator INSTANCE = new ArraysOfSameTypeArgumentValidator();
 
 	@Override
 	public void validate(
@@ -29,8 +30,9 @@ public class ArrayConcatArgumentValidator implements ArgumentsValidator {
 			TypeConfiguration typeConfiguration) {
 		BasicPluralType<?, ?> arrayType = null;
 		for ( int i = 0; i < arguments.size(); i++ ) {
-			final DomainType<?> sqmType = arguments.get( i ).getExpressible().getSqmType();
-			if ( sqmType != null ) {
+			final SqmExpressible<?> expressible = arguments.get( i ).getExpressible();
+			final DomainType<?> sqmType;
+			if ( expressible != null && ( sqmType = expressible.getSqmType() ) != null ) {
 				if ( arrayType == null ) {
 					if ( !( sqmType instanceof BasicPluralType<?, ?> ) ) {
 						throw new FunctionArgumentException(

@@ -9,7 +9,6 @@ package org.hibernate.orm.test.function.array;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.HSQLDialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -18,7 +17,6 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -76,7 +74,6 @@ public class ArrayLengthTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1692/")
 	public void testLengthNull(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_length(e.theArray) is null", EntityWithArrays.class )

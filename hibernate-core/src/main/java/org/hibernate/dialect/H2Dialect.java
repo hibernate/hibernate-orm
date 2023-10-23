@@ -316,6 +316,10 @@ public class H2Dialect extends Dialect {
 		functionFactory.arrayContainsNull();
 		functionFactory.arrayLength_cardinality();
 		functionFactory.arrayConcat_operator();
+		functionFactory.arrayContainsAll_h2();
+		functionFactory.arrayContainsAny_h2();
+		functionFactory.arrayContainsAllNullable_h2();
+		functionFactory.arrayContainsAnyNullable_h2();
 	}
 
 	@Override

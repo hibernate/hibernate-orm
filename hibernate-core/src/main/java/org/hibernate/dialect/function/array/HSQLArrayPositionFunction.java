@@ -30,14 +30,16 @@ public class HSQLArrayPositionFunction extends AbstractArrayPositionFunction {
 			SqlAstTranslator<?> walker) {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression elementExpression = (Expression) sqlAstArguments.get( 1 );
-		sqlAppender.append( "position_array(" );
-		elementExpression.accept( walker );
-		sqlAppender.append( " in " );
+		sqlAppender.append( "case when " );
 		arrayExpression.accept( walker );
+		sqlAppender.append( " is not null then coalesce((select t.idx from unnest(");
+		arrayExpression.accept( walker );
+		sqlAppender.append(") with ordinality t(val,idx) where t.val is not distinct from " );
+		elementExpression.accept( walker );
 		if ( sqlAstArguments.size() > 2 ) {
-			sqlAppender.append( " from " );
+			sqlAppender.append( " and t.idx>=" );
 			sqlAstArguments.get( 2 ).accept( walker );
 		}
-		sqlAppender.append( ')' );
+		sqlAppender.append( "),0) end" );
 	}
 }

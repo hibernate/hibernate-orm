@@ -967,6 +967,7 @@
             <xsd:element name="attributes" type="orm:embeddable-attributes" minOccurs="0"/>
         </xsd:sequence>
         <xsd:attribute name="class" type="xsd:string" />
+        <xsd:attribute name="name" type="xsd:string" />
         <xsd:attribute name="instantiator" type="xsd:string"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="metadata-complete" type="xsd:boolean"/>

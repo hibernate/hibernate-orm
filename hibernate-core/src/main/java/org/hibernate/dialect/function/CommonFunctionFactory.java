@@ -21,11 +21,14 @@ import org.hibernate.dialect.function.array.ArrayConstructorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsQuantifiedOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsQuantifiedUnnestFunction;
+import org.hibernate.dialect.function.array.ArrayGetUnnestFunction;
+import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.H2ArrayContainsQuantifiedEmulation;
 import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsAllFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsAnyFunction;
+import org.hibernate.dialect.function.array.OracleArrayGetFunction;
 import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
 import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
@@ -36,6 +39,7 @@ import org.hibernate.dialect.function.array.OracleArrayConstructorFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsNullFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -2924,5 +2928,52 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayConcat_oracle() {
 		functionRegistry.register( "array_concat", new OracleArrayConcatFunction() );
+	}
+
+	/**
+	 * H2 array_get() function via bracket syntax
+	 */
+	public void arrayGet_h2() {
+		functionRegistry.patternDescriptorBuilder( "array_get", "case when array_length(?1)>=?2 then ?1[?2] end" )
+				.setReturnTypeResolver( ElementViaArrayArgumentReturnTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								ArrayArgumentValidator.DEFAULT_INSTANCE,
+								new ArgumentTypesValidator( null, ANY, INTEGER )
+						)
+				)
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER ) )
+				.setArgumentListSignature( "(ARRAY array, INTEGER index)" )
+				.register();
+	}
+	/**
+	 * CockroachDB and PostgreSQL array_get() function via bracket syntax
+	 */
+	public void arrayGet_bracket() {
+		functionRegistry.patternDescriptorBuilder( "array_get", "?1[?2]" )
+				.setReturnTypeResolver( ElementViaArrayArgumentReturnTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								ArrayArgumentValidator.DEFAULT_INSTANCE,
+								new ArgumentTypesValidator( null, ANY, INTEGER )
+						)
+				)
+				.setArgumentTypeResolver( StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER ) )
+				.setArgumentListSignature( "(ARRAY array, INTEGER index)" )
+				.register();
+	}
+
+	/**
+	 * HSQL array_get() function
+	 */
+	public void arrayGet_unnest() {
+		functionRegistry.register( "array_get", new ArrayGetUnnestFunction() );
+	}
+
+	/**
+	 * Oracle array_get() function
+	 */
+	public void arrayGet_oracle() {
+		functionRegistry.register( "array_get", new OracleArrayGetFunction() );
 	}
 }

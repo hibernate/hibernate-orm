@@ -459,6 +459,7 @@ public class CockroachDialect extends Dialect {
 		functionFactory.arrayContainsAny_operator();
 		functionFactory.arrayContainsAllNullable_operator();
 		functionFactory.arrayContainsAnyNullable_operator();
+		functionFactory.arrayGet_bracket();
 
 		functionContributions.getFunctionRegistry().register(
 				"trunc",

@@ -236,10 +236,12 @@
 
         <bindings node="//xsd:complexType[@name='id']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbBasicMapping</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='embedded-id']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedMapping</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='version']">
@@ -248,10 +250,12 @@
 
         <bindings node="//xsd:complexType[@name='basic']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbBasicMapping</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='embedded']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedMapping</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='one-to-one']">

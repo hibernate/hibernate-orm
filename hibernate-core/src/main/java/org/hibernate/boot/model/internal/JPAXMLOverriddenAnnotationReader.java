@@ -1606,7 +1606,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 			copyAttribute( basic, "optional", element.isOptional(), false );
 			annotationList.add( AnnotationFactory.create( basic ) );
 			getType( annotationList, element.getType() );
-			getJdbcTypeCode( annotationList, element.getJdbcType() );
+			getJdbcTypeCode( annotationList, element.getJdbcTypeCode() );
 			getTenantId( annotationList, element );
 		}
 		if ( elementsForProperty.isEmpty() && defaults.canUseJavaAnnotations() ) {
@@ -1671,12 +1671,12 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 		}
 	}
 
-	private void getJdbcTypeCode(List<Annotation> annotationList, JaxbJdbcTypeImpl jdbcType) {
-		if ( jdbcType == null || jdbcType.getCode() == null ) {
+	private void getJdbcTypeCode(List<Annotation> annotationList, Integer jdbcTypeCode) {
+		if ( jdbcTypeCode == null ) {
 			return;
 		}
 		AnnotationDescriptor ad = new AnnotationDescriptor( JdbcTypeCode.class );
-		ad.setValue( "value", jdbcType.getCode() );
+		ad.setValue( "value", jdbcTypeCode );
 		annotationList.add( AnnotationFactory.create( ad ) );
 	}
 
@@ -1774,7 +1774,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				annotationList.add( AnnotationFactory.create( id ) );
 				getAccessType( annotationList, element.getAccess() );
 				getType( annotationList, element.getType() );
-				getJdbcTypeCode( annotationList, element.getJdbcType() );
+				getJdbcTypeCode( annotationList, element.getJdbcTypeCode() );
 				getUuidGenerator( annotationList, element.getUuidGenerator() );
 			}
 		}

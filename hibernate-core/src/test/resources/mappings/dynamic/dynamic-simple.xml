@@ -10,7 +10,7 @@
     <entity name="SimpleEntity" metadata-complete="true">
         <attributes>
             <id name="id">
-                <target-class>Integer</target-class>
+                <target>Integer</target>
                 <jdbc-type-name>BIGINT</jdbc-type-name>
             </id>
             <basic name="name">
@@ -18,7 +18,7 @@
                 <jdbc-type-code>12</jdbc-type-code>
             </basic>
             <basic name="quantity">
-                <target-class>int</target-class>
+                <target>int</target>
                 <jdbc-type>org.hibernate.type.descriptor.jdbc.BigIntJdbcType</jdbc-type>
             </basic>
             <element-collection name="elements" target-class="String">

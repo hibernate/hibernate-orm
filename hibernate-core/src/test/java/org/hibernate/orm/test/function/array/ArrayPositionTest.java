@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -77,7 +76,6 @@ public class ArrayPositionTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "See https://sourceforge.net/p/hsqldb/bugs/1692/")
 	public void testPositionNull(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_position(e.theArray, null) = 2", EntityWithArrays.class )

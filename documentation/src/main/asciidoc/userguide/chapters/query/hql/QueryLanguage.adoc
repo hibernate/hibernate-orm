@@ -1195,6 +1195,52 @@ include::{array-example-dir-hql}/ArrayConcatTest.java[tags=hql-array-concat-exam
 ----
 ====
 
+[[hql-array-contains-quantified-functions]]
+===== `array_contains_all()` and `array_contains_any()`
+
+Checks if the first array argument contains all or any of the elements of the second array argument.
+Returns `null` if either of the arguments is `null`. The result of the functions
+is undefined when the second array argument contains a `null`.
+
+[[hql-array-contains-all-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayContainsAllTest.java[tags=hql-array-contains-all-example]
+----
+====
+
+[[hql-array-contains-any-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayContainsAnyTest.java[tags=hql-array-contains-any-example]
+----
+====
+
+[[hql-array-contains-quantified-functions]]
+===== `array_contains_all_nullable()` & `array_contains_any_nullable()`
+
+Checks if the first array argument contains all or any of the elements of the second array argument.
+Returns `null` if either of the arguments is `null`. Contrary to `array_contains_all()` and `array_contains_any()`,
+these functions use the `distinct from` operator to also support searching for `null` elements.
+
+[[hql-array-contains-all-nullable-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayContainsAllTest.java[tags=hql-array-contains-all-nullable-example]
+----
+====
+
+[[hql-array-contains-any-nullable-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayContainsAnyTest.java[tags=hql-array-contains-any-nullable-example]
+----
+====
+
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions
 

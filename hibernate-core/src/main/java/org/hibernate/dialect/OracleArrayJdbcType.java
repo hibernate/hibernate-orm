@@ -282,6 +282,51 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 						false
 				)
 		);
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_contains_all",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_contains_all(haystack in " + arrayTypeName +
+										", needle in " + arrayTypeName + ", nullable in number) return number deterministic is found number(1,0); begin " +
+										"if haystack is null or needle is null then return null; end if; " +
+										"for i in 1 .. needle.count loop " +
+										"found := 0; " +
+										"for j in 1 .. haystack.count loop " +
+										"if nullable = 1 and needle(i) is null and haystack(j) is null or needle(i)=haystack(j) then found := 1; exit; end if; " +
+										"end loop; " +
+										"if found = 0 then return 0; end if;" +
+										"end loop; " +
+										"return 1; " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_contains_all" },
+						emptySet(),
+						false
+				)
+		);
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_contains_any",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_contains_any(haystack in " + arrayTypeName +
+										", needle in " + arrayTypeName + ", nullable in number) return number deterministic is begin " +
+										"if haystack is null or needle is null then return null; end if; " +
+										"if needle.count = 0 then return 1; end if; " +
+										"for i in 1 .. needle.count loop " +
+										"for j in 1 .. haystack.count loop " +
+										"if nullable = 1 and needle(i) is null and haystack(j) is null or needle(i)=haystack(j) then return 1; end if; " +
+										"end loop; " +
+										"end loop; " +
+										"return 0; " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_contains_any" },
+						emptySet(),
+						false
+				)
+		);
 	}
 
 	protected String createOrReplaceConcatFunction(String arrayTypeName) {

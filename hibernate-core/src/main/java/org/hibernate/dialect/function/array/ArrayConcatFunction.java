@@ -30,7 +30,7 @@ public class ArrayConcatFunction extends AbstractSqmSelfRenderingFunctionDescrip
 				"array_concat",
 				StandardArgumentsValidators.composite(
 						StandardArgumentsValidators.min( 2 ),
-						ArrayConcatArgumentValidator.INSTANCE
+						ArraysOfSameTypeArgumentValidator.INSTANCE
 				),
 				StandardFunctionReturnTypeResolvers.useFirstNonNull(),
 				StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE

@@ -16,12 +16,16 @@ import org.hibernate.dialect.function.array.ArrayAggFunction;
 import org.hibernate.dialect.function.array.ArrayAndElementArgumentTypeResolver;
 import org.hibernate.dialect.function.array.ArrayAndElementArgumentValidator;
 import org.hibernate.dialect.function.array.ArrayArgumentValidator;
-import org.hibernate.dialect.function.array.ArrayConcatArgumentValidator;
 import org.hibernate.dialect.function.array.ArrayConcatFunction;
 import org.hibernate.dialect.function.array.ArrayConstructorFunction;
+import org.hibernate.dialect.function.array.ArrayContainsQuantifiedOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
+import org.hibernate.dialect.function.array.ArrayContainsQuantifiedUnnestFunction;
+import org.hibernate.dialect.function.array.H2ArrayContainsQuantifiedEmulation;
 import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
+import org.hibernate.dialect.function.array.OracleArrayContainsAllFunction;
+import org.hibernate.dialect.function.array.OracleArrayContainsAnyFunction;
 import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
 import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
@@ -2688,7 +2692,7 @@ public class CommonFunctionFactory {
 	 * CockroachDB and PostgreSQL array contains null emulation
 	 */
 	public void arrayContainsNull_hsql() {
-		functionRegistry.patternDescriptorBuilder( "array_contains_null", "position_array(null in ?1)>0" )
+		functionRegistry.patternDescriptorBuilder( "array_contains_null", "exists(select 1 from unnest(?1) t(i) where t.i is null)" )
 				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( booleanType ) )
 				.setArgumentsValidator(
 						StandardArgumentsValidators.composite(
@@ -2698,6 +2702,163 @@ public class CommonFunctionFactory {
 				)
 				.setArgumentListSignature( "(ARRAY array)" )
 				.register();
+	}
+
+	/**
+	 * H2 array_contains_all() function
+	 */
+	public void arrayContainsAll_h2() {
+		functionRegistry.register(
+				"array_contains_all",
+				new H2ArrayContainsQuantifiedEmulation( typeConfiguration, true, false )
+		);
+	}
+
+	/**
+	 * HSQL array_contains_all() function
+	 */
+	public void arrayContainsAll_hsql() {
+		functionRegistry.register(
+				"array_contains_all",
+				new ArrayContainsQuantifiedUnnestFunction( typeConfiguration, true, false )
+		);
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array contains all operator
+	 */
+	public void arrayContainsAll_operator() {
+		functionRegistry.register(
+				"array_contains_all",
+				new ArrayContainsQuantifiedOperatorFunction( typeConfiguration, true, false )
+		);
+	}
+
+	/**
+	 * Oracle array_contains_all() function
+	 */
+	public void arrayContainsAll_oracle() {
+		functionRegistry.register(
+				"array_contains_all",
+				new OracleArrayContainsAllFunction( typeConfiguration, false )
+		);
+	}
+
+	/**
+	 * H2 array_contains_any() function
+	 */
+	public void arrayContainsAny_h2() {
+		functionRegistry.register(
+				"array_contains_any",
+				new H2ArrayContainsQuantifiedEmulation( typeConfiguration, false, false )
+		);
+	}
+
+	/**
+	 * HSQL array_contains_any() function
+	 */
+	public void arrayContainsAny_hsql() {
+		functionRegistry.register(
+				"array_contains_any",
+				new ArrayContainsQuantifiedUnnestFunction( typeConfiguration, false, false )
+		);
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array contains any operator
+	 */
+	public void arrayContainsAny_operator() {
+		functionRegistry.register( "array_contains_any", new ArrayContainsQuantifiedOperatorFunction( typeConfiguration, false, false ) );
+	}
+
+	/**
+	 * Oracle array_contains_any() function
+	 */
+	public void arrayContainsAny_oracle() {
+		functionRegistry.register(
+				"array_contains_any",
+				new OracleArrayContainsAnyFunction( typeConfiguration, false )
+		);
+	}
+
+	/**
+	 * H2 array_contains_all_nullable() function
+	 */
+	public void arrayContainsAllNullable_h2() {
+		functionRegistry.register(
+				"array_contains_all_nullable",
+				new H2ArrayContainsQuantifiedEmulation( typeConfiguration, true, true )
+		);
+	}
+
+	/**
+	 * HSQL array_contains_all_nullable() function
+	 */
+	public void arrayContainsAllNullable_hsql() {
+		functionRegistry.register(
+				"array_contains_all_nullable",
+				new ArrayContainsQuantifiedUnnestFunction( typeConfiguration, true, true )
+		);
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array contains all nullable operator
+	 */
+	public void arrayContainsAllNullable_operator() {
+		functionRegistry.register(
+				"array_contains_all_nullable",
+				new ArrayContainsQuantifiedOperatorFunction( typeConfiguration, true, true )
+		);
+	}
+
+	/**
+	 * Oracle array_contains_all_nullable() function
+	 */
+	public void arrayContainsAllNullable_oracle() {
+		functionRegistry.register(
+				"array_contains_all_nullable",
+				new OracleArrayContainsAllFunction( typeConfiguration, true )
+		);
+	}
+
+	/**
+	 * H2 array_contains_any_nullable() function
+	 */
+	public void arrayContainsAnyNullable_h2() {
+		functionRegistry.register(
+				"array_contains_any_nullable",
+				new H2ArrayContainsQuantifiedEmulation( typeConfiguration, false, true )
+		);
+	}
+
+	/**
+	 * HSQL array_contains_any_nullable() function
+	 */
+	public void arrayContainsAnyNullable_hsql() {
+		functionRegistry.register(
+				"array_contains_any_nullable",
+				new ArrayContainsQuantifiedUnnestFunction( typeConfiguration, false, true )
+		);
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array contains any nullable operator
+	 */
+	public void arrayContainsAnyNullable_operator() {
+		functionRegistry.register(
+				"array_contains_any_nullable",
+				new ArrayContainsQuantifiedOperatorFunction( typeConfiguration, false, true )
+		);
+	}
+
+	/**
+	 * Oracle array_contains_any_nullable() function
+	 */
+	public void arrayContainsAnyNullable_oracle() {
+		functionRegistry.register(
+				"array_contains_any_nullable",
+				new OracleArrayContainsAnyFunction( typeConfiguration, true )
+		);
 	}
 
 	/**

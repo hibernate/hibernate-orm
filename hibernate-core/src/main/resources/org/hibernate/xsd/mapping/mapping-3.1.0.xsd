@@ -936,10 +936,11 @@
                         * ORDERED_SET
                         * SORTED_MAP
                         * ORDERED_MAP
+
+                ARRAY is also missing, as handling the element type is tricky.
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">
-            <xsd:enumeration value="array"/>
             <xsd:enumeration value="bag"/>
             <xsd:enumeration value="list"/>
             <xsd:enumeration value="set"/>
@@ -1413,6 +1414,7 @@
         <xsd:attribute name="mapped-by" type="xsd:string"/>
         <xsd:attribute name="orphan-removal" type="xsd:boolean"/>
         <xsd:attribute name="classification" type="orm:limited-collection-classification-enum" />
+        <xsd:attribute name="not-found" default="EXCEPTION" type="orm:not-found-enum"/>
     </xsd:complexType>
 
     <!-- **************************************************** -->
@@ -2814,7 +2816,6 @@
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="classification" type="orm:limited-collection-classification-enum" />
-        <xsd:attribute name="not-found" default="EXCEPTION" type="orm:not-found-enum"/>
     </xsd:complexType>
 
 

@@ -264,6 +264,7 @@
 
         <bindings node="//xsd:complexType[@name='many-to-one']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbToOneAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNotFoundCapable</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='hbm-any-mapping']">
@@ -286,11 +287,13 @@
         <bindings node="//xsd:complexType[@name='one-to-many']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNotFoundCapable</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='many-to-many']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationAttribute</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNotFoundCapable</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='hbm-many-to-any']">

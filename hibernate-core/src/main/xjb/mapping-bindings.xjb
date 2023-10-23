@@ -537,17 +537,23 @@
 					printMethod="org.hibernate.boot.jaxb.mapping.internal.ConstraintModeMarshalling.toXml" />
         </bindings>
 
-		<bindings node="//xsd:simpleType[@name='collection-classifications']">
+		<bindings node="//xsd:simpleType[@name='collection-classification-enum']">
 			<javaType name="org.hibernate.metamodel.CollectionClassification"
 					parseMethod="org.hibernate.boot.jaxb.mapping.internal.CollectionClassificationMarshalling.fromXml"
 					printMethod="org.hibernate.boot.jaxb.mapping.internal.CollectionClassificationMarshalling.toXml" />
+        </bindings>
+
+		<bindings node="//xsd:simpleType[@name='limited-collection-classification-enum']">
+			<javaType name="org.hibernate.boot.internal.LimitedCollectionClassification"
+					parseMethod="org.hibernate.boot.jaxb.mapping.internal.LimitedCollectionClassificationMarshalling.fromXml"
+					printMethod="org.hibernate.boot.jaxb.mapping.internal.LimitedCollectionClassificationMarshalling.toXml" />
         </bindings>
 
         <bindings node="//xsd:simpleType[@name='uuid-generator-style']">
         			<javaType name="org.hibernate.annotations.UuidGenerator.Style"
         					parseMethod="org.hibernate.boot.jaxb.mapping.internal.UuidGeneratorStyleMarshalling.fromXml"
         					printMethod="org.hibernate.boot.jaxb.mapping.internal.UuidGeneratorStyleMarshalling.toXml" />
-                </bindings>
+        </bindings>
 
     </bindings>
 

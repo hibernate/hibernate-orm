@@ -13,15 +13,11 @@
             <!-- 1 == CHAR -->
             <id name="id">
                 <uuid-generator style="time"/>
-                <jdbc-type>
-                    <code>1</code>
-                </jdbc-type>
+                <jdbc-type-code>1</jdbc-type-code>
             </id>
             <!-- 2005 == CLOB -->
             <basic name="name">
-                <jdbc-type>
-                    <code>2005</code>
-                </jdbc-type>
+                <jdbc-type-code>2005</jdbc-type-code>
             </basic>
             <basic name="tags">
                 <type value="org.hibernate.orm.test.boot.jaxb.mapping.HibernateOrmSpecificAttributesMappingTest$DelimitedStringsJavaType"/>

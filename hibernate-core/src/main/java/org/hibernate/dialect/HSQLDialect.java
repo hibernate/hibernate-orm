@@ -198,6 +198,7 @@ public class HSQLDialect extends Dialect {
 		functionFactory.arrayContainsAny_hsql();
 		functionFactory.arrayContainsAllNullable_hsql();
 		functionFactory.arrayContainsAnyNullable_hsql();
+		functionFactory.arrayGet_unnest();
 	}
 
 	@Override

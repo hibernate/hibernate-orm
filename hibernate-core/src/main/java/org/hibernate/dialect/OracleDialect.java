@@ -323,6 +323,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.arrayContainsAny_oracle();
 		functionFactory.arrayContainsAllNullable_oracle();
 		functionFactory.arrayContainsAnyNullable_oracle();
+		functionFactory.arrayGet_oracle();
 	}
 
 	@Override

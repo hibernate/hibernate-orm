@@ -327,6 +327,22 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 						false
 				)
 		);
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_get",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_get(arr in " + arrayTypeName +
+										", idx in number) return " + getRawTypeName( elementType ) + " deterministic is begin " +
+										"if arr is null or idx is null or arr.count < idx then return null; end if; " +
+										"return arr(idx); " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_get" },
+						emptySet(),
+						false
+				)
+		);
 	}
 
 	protected String createOrReplaceConcatFunction(String arrayTypeName) {

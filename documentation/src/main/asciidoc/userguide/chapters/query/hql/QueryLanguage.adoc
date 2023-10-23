@@ -1123,6 +1123,11 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_position()` | Determines the position of an element in an array
 | `array_length()` | Determines the length of an array
 | `array_concat()` | Concatenates array with each other in order
+| `array_contains_all()` | Determines if one array holds all elements of another array
+| `array_contains_all_nullable()` | Determines if one array holds all elements of another array, supporting null elements
+| `array_contains_any()` | Determines if one array holds at least one element of another array
+| `array_contains_any_nullable()` | Determines if one array holds at least one element of another array, supporting null elements
+| `array_get()` | Accesses the element of an array by index
 |===
 
 ===== `array()`
@@ -1238,6 +1243,20 @@ include::{array-example-dir-hql}/ArrayContainsAllTest.java[tags=hql-array-contai
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayContainsAnyTest.java[tags=hql-array-contains-any-nullable-example]
+----
+====
+
+[[hql-array-get-functions]]
+===== `array_get()`
+
+Returns the element of an array at the given 1-based index. Returns `null` if either of the arguments is `null`,
+and also if the index is bigger than the array length.
+
+[[hql-array-get-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayGetTest.java[tags=hql-array-get-example]
 ----
 ====
 

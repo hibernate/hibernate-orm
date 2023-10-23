@@ -695,19 +695,6 @@
         </xsd:choice>
     </xsd:group>
 
-    <xsd:complexType name="jdbc-type">
-        <xsd:annotation>
-            <xsd:documentation>
-                See `@org.hibernate.annotations.JdbcType`
-                See `@org.hibernate.annotations.JdbcTypeCode`
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:choice>
-            <xsd:element name="code" type="xsd:int"/>
-            <xsd:element name="descriptor" type="xsd:string"/>
-        </xsd:choice>
-    </xsd:complexType>
-
 
     <!-- **************************************************** -->
 
@@ -956,7 +943,13 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
-            <xsd:element name="embeddable" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="target" type="xsd:string" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>
+                        See `@org.hibernate.annotations.Target`
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
             <xsd:element name="attribute-override" type="orm:attribute-override" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="association-override" type="orm:association-override" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="convert" type="orm:convert" minOccurs="0" maxOccurs="unbounded"/>

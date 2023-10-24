@@ -23,6 +23,7 @@ import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsQuantifiedUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayGetUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayRemoveIndexUnnestFunction;
+import org.hibernate.dialect.function.array.ArrayReplaceUnnestFunction;
 import org.hibernate.dialect.function.array.ArraySetUnnestFunction;
 import org.hibernate.dialect.function.array.ArraySliceUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayViaArgumentReturnTypeResolver;
@@ -30,6 +31,7 @@ import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeRes
 import org.hibernate.dialect.function.array.H2ArrayContainsQuantifiedEmulation;
 import org.hibernate.dialect.function.array.H2ArrayRemoveFunction;
 import org.hibernate.dialect.function.array.H2ArrayRemoveIndexFunction;
+import org.hibernate.dialect.function.array.H2ArrayReplaceFunction;
 import org.hibernate.dialect.function.array.H2ArraySetFunction;
 import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.HSQLArrayRemoveFunction;
@@ -42,6 +44,7 @@ import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
 import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
 import org.hibernate.dialect.function.array.OracleArrayRemoveFunction;
 import org.hibernate.dialect.function.array.OracleArrayRemoveIndexFunction;
+import org.hibernate.dialect.function.array.OracleArrayReplaceFunction;
 import org.hibernate.dialect.function.array.OracleArraySetFunction;
 import org.hibernate.dialect.function.array.OracleArraySliceFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
@@ -3132,5 +3135,43 @@ public class CommonFunctionFactory {
 	 */
 	public void arraySlice_oracle() {
 		functionRegistry.register( "array_slice", new OracleArraySliceFunction() );
+	}
+
+	/**
+	 * H2 array_replace() function
+	 */
+	public void arrayReplace_h2() {
+		functionRegistry.register( "array_replace", new H2ArrayReplaceFunction() );
+	}
+
+	/**
+	 * HSQL array_replace() function
+	 */
+	public void arrayReplace_unnest() {
+		functionRegistry.register( "array_replace", new ArrayReplaceUnnestFunction() );
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array_replace() function
+	 */
+	public void arrayReplace() {
+		functionRegistry.namedDescriptorBuilder( "array_replace" )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 3 ),
+								new ArrayAndElementArgumentValidator( 0, 1, 2 )
+						)
+				)
+				.setReturnTypeResolver( ArrayViaArgumentReturnTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentTypeResolver( new ArrayAndElementArgumentTypeResolver( 0, 1, 2 ) )
+				.setArgumentListSignature( "(ARRAY array, OBJECT old, OBJECT new)" )
+				.register();
+	}
+
+	/**
+	 * Oracle array_replace() function
+	 */
+	public void arrayReplace_oracle() {
+		functionRegistry.register( "array_replace", new OracleArrayReplaceFunction() );
 	}
 }

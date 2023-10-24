@@ -439,6 +439,38 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 						false
 				)
 		);
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_replace",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_replace(arr in " + arrayTypeName +
+										", old in " + getRawTypeName( elementType ) + ", elem in " + getRawTypeName( elementType ) + ") return " + arrayTypeName + " deterministic is " +
+										"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
+										"if arr is null then return null; end if; " +
+										"if old is null then " +
+										"for i in 1 .. arr.count loop " +
+										"res.extend; " +
+										"res(res.last) := coalesce(arr(i),elem); " +
+										"end loop; " +
+										"else " +
+										"for i in 1 .. arr.count loop " +
+										"res.extend; " +
+										"if arr(i) = old then " +
+										"res(res.last) := elem; " +
+										"else " +
+										"res(res.last) := arr(i); " +
+										"end if; " +
+										"end loop; " +
+										"end if; " +
+										"return res; " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_replace" },
+						emptySet(),
+						false
+				)
+		);
 	}
 
 	protected String createOrReplaceConcatFunction(String arrayTypeName) {

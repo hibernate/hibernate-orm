@@ -399,6 +399,26 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 						false
 				)
 		);
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_remove_index",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_remove_index(arr in " + arrayTypeName +
+										", idx in number) return " + arrayTypeName + " deterministic is " +
+										"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
+										"if arr is null or idx is null then return arr; end if; " +
+										"for i in 1 .. arr.count loop " +
+										"if i<>idx then res.extend; res(res.last) := arr(i); end if; " +
+										"end loop; " +
+										"return res; " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_remove_index" },
+						emptySet(),
+						false
+				)
+		);
 	}
 
 	protected String createOrReplaceConcatFunction(String arrayTypeName) {

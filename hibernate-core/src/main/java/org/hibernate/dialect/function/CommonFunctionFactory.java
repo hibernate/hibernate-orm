@@ -22,11 +22,13 @@ import org.hibernate.dialect.function.array.ArrayContainsQuantifiedOperatorFunct
 import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsQuantifiedUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayGetUnnestFunction;
+import org.hibernate.dialect.function.array.ArrayRemoveIndexUnnestFunction;
 import org.hibernate.dialect.function.array.ArraySetUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayViaArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.H2ArrayContainsQuantifiedEmulation;
 import org.hibernate.dialect.function.array.H2ArrayRemoveFunction;
+import org.hibernate.dialect.function.array.H2ArrayRemoveIndexFunction;
 import org.hibernate.dialect.function.array.H2ArraySetFunction;
 import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.HSQLArrayRemoveFunction;
@@ -38,6 +40,7 @@ import org.hibernate.dialect.function.array.OracleArrayGetFunction;
 import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
 import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
 import org.hibernate.dialect.function.array.OracleArrayRemoveFunction;
+import org.hibernate.dialect.function.array.OracleArrayRemoveIndexFunction;
 import org.hibernate.dialect.function.array.OracleArraySetFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
@@ -3014,6 +3017,22 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * CockroachDB and PostgreSQL array_remove() function
+	 */
+	public void arrayRemove() {
+		functionRegistry.namedDescriptorBuilder( "array_remove" )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 2 ),
+								ArrayAndElementArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setReturnTypeResolver( ArrayViaArgumentReturnTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentTypeResolver( ArrayAndElementArgumentTypeResolver.DEFAULT_INSTANCE )
+				.register();
+	}
+
+	/**
 	 * H2 array_remove() function
 	 */
 	public void arrayRemove_h2() {
@@ -3028,25 +3047,37 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * CockroachDB and PostgreSQL array_remove() function
-	 */
-	public void arrayRemove_unnest() {
-		functionRegistry.namedDescriptorBuilder( "array_remove" )
-				.setArgumentsValidator(
-						StandardArgumentsValidators.composite(
-								StandardArgumentsValidators.exactly( 2 ),
-								ArrayAndElementArgumentValidator.DEFAULT_INSTANCE
-						)
-				)
-				.setReturnTypeResolver( ArrayViaArgumentReturnTypeResolver.DEFAULT_INSTANCE )
-				.setArgumentTypeResolver( ArrayAndElementArgumentTypeResolver.DEFAULT_INSTANCE )
-				.register();
-	}
-
-	/**
 	 * Oracle array_remove() function
 	 */
 	public void arrayRemove_oracle() {
 		functionRegistry.register( "array_remove", new OracleArrayRemoveFunction() );
+	}
+
+	/**
+	 * H2 array_remove_index() function
+	 */
+	public void arrayRemoveIndex_h2() {
+		functionRegistry.register( "array_remove_index", new H2ArrayRemoveIndexFunction() );
+	}
+
+	/**
+	 * HSQL, CockroachDB and PostgreSQL array_remove_index() function
+	 */
+	public void arrayRemoveIndex_unnest() {
+		functionRegistry.register( "array_remove_index", new ArrayRemoveIndexUnnestFunction( false ) );
+	}
+
+	/**
+	 * HSQL, CockroachDB and PostgreSQL array_remove_index() function
+	 */
+	public void arrayRemoveIndex_postgresql() {
+		functionRegistry.register( "array_remove_index", new ArrayRemoveIndexUnnestFunction( true ) );
+	}
+
+	/**
+	 * Oracle array_remove_index() function
+	 */
+	public void arrayRemoveIndex_oracle() {
+		functionRegistry.register( "array_remove_index", new OracleArrayRemoveIndexFunction() );
 	}
 }

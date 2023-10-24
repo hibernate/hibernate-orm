@@ -1288,6 +1288,19 @@ include::{array-example-dir-hql}/ArrayRemoveTest.java[tags=hql-array-remove-exam
 ----
 ====
 
+[[hql-array-remove-index-functions]]
+===== `array_remove_index()`
+
+Returns an array copy with the element at the given index removed from the array.
+
+[[hql-array-remove-index-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayRemoveIndexTest.java[tags=hql-array-remove-index-example]
+----
+====
+
 [[hql-user-defined-functions]]
 ==== Native and user-defined functions
 

@@ -646,7 +646,10 @@ public class MetadataBuildingProcess {
 					jdbcTypeRegistry,
 					preferredSqlTypeCodeForUuid,
 					UUID.class,
-					"uuid"
+					StandardBasicTypes.UUID.getName(),
+					"org.hibernate.type.PostgresUUIDType",
+					"uuid",
+					"pg-uuid"
 			);
 		}
 		else {
@@ -673,7 +676,8 @@ public class MetadataBuildingProcess {
 					jdbcTypeRegistry,
 					preferredSqlTypeCodeForDuration,
 					Duration.class,
-					StandardBasicTypes.DURATION.getName()
+					StandardBasicTypes.DURATION.getName(),
+					"org.hibernate.type.DurationType"
 			);
 		}
 		else {
@@ -730,8 +734,9 @@ public class MetadataBuildingProcess {
 					jdbcTypeRegistry,
 					preferredSqlTypeCodeForInstant,
 					Instant.class,
-					"instant",
-					"org.hibernate.type.InstantType"
+					StandardBasicTypes.INSTANT.getName(),
+					"org.hibernate.type.InstantType",
+					"instant"
 			);
 		}
 	}

@@ -99,6 +99,9 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.relational.internal.SchemaManagerImpl;
@@ -132,6 +135,7 @@ import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 import static org.hibernate.internal.FetchProfileHelper.getFetchProfiles;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -228,6 +232,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		settings = getSettings( options, serviceRegistry );
 		maskOutSensitiveInformation( settings );
+		deprecationCheck( settings );
 		LOG.debugf( "Instantiating SessionFactory with settings: %s", settings);
 		logIfEmptyCompositesEnabled( settings );
 
@@ -327,6 +332,27 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		LOG.debug( "Instantiated SessionFactory" );
+	}
+
+	private void deprecationCheck(Map<String, Object> settings) {
+		for ( String s:settings.keySet() ) {
+			switch (s) {
+				case "hibernate.hql.bulk_id_strategy.global_temporary.create_tables":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.global_temporary.create_tables", GlobalTemporaryTableStrategy.CREATE_ID_TABLES );
+				case "hibernate.hql.bulk_id_strategy.global_temporary.drop_tables":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.global_temporary.drop_tables", GlobalTemporaryTableStrategy.DROP_ID_TABLES );
+				case "hibernate.hql.bulk_id_strategy.persistent.create_tables":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.create_tables", PersistentTableStrategy.CREATE_ID_TABLES );
+				case "hibernate.hql.bulk_id_strategy.persistent.drop_tables":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.drop_tables", PersistentTableStrategy.DROP_ID_TABLES );
+				case "hibernate.hql.bulk_id_strategy.persistent.schema":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.schema", PersistentTableStrategy.SCHEMA );
+				case "hibernate.hql.bulk_id_strategy.persistent.catalog":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.catalog", PersistentTableStrategy.CATALOG );
+				case "hibernate.hql.bulk_id_strategy.local_temporary.drop_tables":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.local_temporary.drop_tables", LocalTemporaryTableStrategy.DROP_ID_TABLES );
+			}
+		}
 	}
 
 	private void initializeMappingModel(

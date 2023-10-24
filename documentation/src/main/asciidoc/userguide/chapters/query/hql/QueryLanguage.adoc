@@ -1128,6 +1128,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_contains_any()` | Determines if one array holds at least one element of another array
 | `array_contains_any_nullable()` | Determines if one array holds at least one element of another array, supporting null elements
 | `array_get()` | Accesses the element of an array by index
+| `array_set()` | Creates array copy with given element at given index
 |===
 
 ===== `array()`
@@ -1257,6 +1258,19 @@ and also if the index is bigger than the array length.
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayGetTest.java[tags=hql-array-get-example]
+----
+====
+
+[[hql-array-set-functions]]
+===== `array_set()`
+
+Returns an array copy with the given element placed at the given 1-based index, filling up prior slots with `null` if necessary.
+
+[[hql-array-set-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArraySetTest.java[tags=hql-array-set-example]
 ----
 ====
 

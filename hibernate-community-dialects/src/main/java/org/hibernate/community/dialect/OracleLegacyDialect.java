@@ -295,6 +295,7 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.arrayContainsAllNullable_oracle();
 		functionFactory.arrayContainsAnyNullable_oracle();
 		functionFactory.arrayGet_oracle();
+		functionFactory.arraySet_oracle();
 	}
 
 	@Override

@@ -35,6 +35,7 @@ import org.hibernate.query.named.FetchMementoBasic;
 import org.hibernate.query.named.NamedResultSetMappingMemento;
 import org.hibernate.query.named.ResultMemento;
 import org.hibernate.query.named.ResultMementoInstantiation.ArgumentMemento;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -46,6 +47,7 @@ import jakarta.persistence.FieldResult;
 import jakarta.persistence.SqlResultSetMapping;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import static org.hibernate.metamodel.mapping.EntityIdentifierMapping.ID_ROLE_NAME;
 
 /**
  * @author Steve Ebersole
@@ -368,14 +370,25 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 			final RuntimeMetamodels runtimeMetamodels = resolutionContext.getSessionFactory().getRuntimeMetamodels();
 			final EntityMappingType entityMapping = runtimeMetamodels.getEntityMappingType( entityName );
 
-			NavigablePath navigablePath = this.navigablePath.append( propertyPathParts[ 0 ] );
 			ModelPart subPart = entityMapping.findSubPart(
-					propertyPathParts[ 0 ],
+					propertyPathParts[0],
 					null
 			);
+			final NavigablePath parentNavigablePath;
+			if ( !subPart.getNavigableRole().getParent().equals( entityMapping.getNavigableRole() )
+					&& subPart.getNavigableRole().getParent().getLocalName().equals( ID_ROLE_NAME ) ) {
+				// The attribute is defined in an ID class, append {id} to navigable path
+				parentNavigablePath = new EntityIdentifierNavigablePath( this.navigablePath, null );
+			}
+			else {
+				parentNavigablePath = this.navigablePath;
+			}
 
+			NavigablePath navigablePath = subPart.isEntityIdentifierMapping() ?
+					new EntityIdentifierNavigablePath( parentNavigablePath, propertyPathParts[0] ) :
+					parentNavigablePath.append( propertyPathParts[0] );
 			for ( int i = 1; i < propertyPathParts.length; i++ ) {
-				if ( ! ( subPart instanceof ModelPartContainer ) ) {
+				if ( !( subPart instanceof ModelPartContainer ) ) {
 					throw new MappingException(
 							String.format(
 									Locale.ROOT,
@@ -384,7 +397,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 							)
 					);
 				}
-				navigablePath = navigablePath.append( propertyPathParts[ i ] );
+				navigablePath = navigablePath.append( propertyPathParts[i] );
 				subPart = ( (ModelPartContainer) subPart ).findSubPart( propertyPathParts[i], null );
 			}
 

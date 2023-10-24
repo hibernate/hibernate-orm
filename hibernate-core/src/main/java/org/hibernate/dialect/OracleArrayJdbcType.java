@@ -373,6 +373,32 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 						false
 				)
 		);
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_remove",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_remove(arr in " + arrayTypeName +
+										", elem in " + getRawTypeName( elementType ) + ") return " + arrayTypeName + " deterministic is " +
+										"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
+										"if arr is null then return null; end if; " +
+										"if elem is null then " +
+										"for i in 1 .. arr.count loop " +
+										"if arr(i) is not null then res.extend; res(res.last) := arr(i); end if; " +
+										"end loop; " +
+										"else " +
+										"for i in 1 .. arr.count loop " +
+										"if arr(i) is null or arr(i)<>elem then res.extend; res(res.last) := arr(i); end if; " +
+										"end loop; " +
+										"end if; " +
+										"return res; " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_remove" },
+						emptySet(),
+						false
+				)
+		);
 	}
 
 	protected String createOrReplaceConcatFunction(String arrayTypeName) {

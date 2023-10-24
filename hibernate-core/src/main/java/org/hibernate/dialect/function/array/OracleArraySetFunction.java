@@ -8,7 +8,6 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -27,15 +26,10 @@ public class OracleArraySetFunction extends ArraySetUnnestFunction {
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker) {
-		JdbcMappingContainer expressionType = null;
-		for ( SqlAstNode sqlAstArgument : sqlAstArguments ) {
-			expressionType = ( (Expression) sqlAstArgument ).getExpressionType();
-			if ( expressionType != null ) {
-				break;
-			}
-		}
-
-		final String arrayTypeName = ArrayTypeHelper.getArrayTypeName( expressionType, walker );
+		final String arrayTypeName = ArrayTypeHelper.getArrayTypeName(
+				( (Expression) sqlAstArguments.get( 0 ) ).getExpressionType(),
+				walker
+		);
 		sqlAppender.append( arrayTypeName );
 		sqlAppender.append( "_set(" );
 		sqlAstArguments.get( 0 ).accept( walker );

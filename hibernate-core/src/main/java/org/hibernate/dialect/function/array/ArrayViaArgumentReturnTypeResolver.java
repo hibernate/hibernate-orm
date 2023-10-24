@@ -30,7 +30,7 @@ public class ArrayViaArgumentReturnTypeResolver implements FunctionReturnTypeRes
 
 	private final int arrayIndex;
 
-	private ArrayViaArgumentReturnTypeResolver(int arrayIndex) {
+	public ArrayViaArgumentReturnTypeResolver(int arrayIndex) {
 		this.arrayIndex = arrayIndex;
 	}
 

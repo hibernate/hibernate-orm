@@ -16,6 +16,7 @@ import org.hibernate.dialect.function.array.ArrayAggFunction;
 import org.hibernate.dialect.function.array.ArrayAndElementArgumentTypeResolver;
 import org.hibernate.dialect.function.array.ArrayAndElementArgumentValidator;
 import org.hibernate.dialect.function.array.ArrayArgumentValidator;
+import org.hibernate.dialect.function.array.ArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.ArrayConcatFunction;
 import org.hibernate.dialect.function.array.ArrayConstructorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsQuantifiedOperatorFunction;
@@ -36,6 +37,7 @@ import org.hibernate.dialect.function.array.H2ArraySetFunction;
 import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.HSQLArrayRemoveFunction;
 import org.hibernate.dialect.function.array.HSQLArraySetFunction;
+import org.hibernate.dialect.function.array.OracleArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsAllFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsAnyFunction;
@@ -47,6 +49,7 @@ import org.hibernate.dialect.function.array.OracleArrayRemoveIndexFunction;
 import org.hibernate.dialect.function.array.OracleArrayReplaceFunction;
 import org.hibernate.dialect.function.array.OracleArraySetFunction;
 import org.hibernate.dialect.function.array.OracleArraySliceFunction;
+import org.hibernate.dialect.function.array.PostgreSQLArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.CastingArrayConstructorFunction;
@@ -2944,6 +2947,48 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayConcat_oracle() {
 		functionRegistry.register( "array_concat", new OracleArrayConcatFunction() );
+	}
+
+	/**
+	 * H2 and HSQLDB array_prepend() function
+	 */
+	public void arrayPrepend_operator() {
+		functionRegistry.register( "array_prepend", new ArrayConcatElementFunction( "", "||", "", true ) );
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array_prepend() function
+	 */
+	public void arrayPrepend_postgresql() {
+		functionRegistry.register( "array_prepend", new PostgreSQLArrayConcatElementFunction( true ) );
+	}
+
+	/**
+	 * Oracle array_prepend() function
+	 */
+	public void arrayPrepend_oracle() {
+		functionRegistry.register( "array_prepend", new OracleArrayConcatElementFunction( true ) );
+	}
+
+	/**
+	 * H2 and HSQLDB array_append() function
+	 */
+	public void arrayAppend_operator() {
+		functionRegistry.register( "array_append", new ArrayConcatElementFunction( "", "||", "", false ) );
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array_append() function
+	 */
+	public void arrayAppend_postgresql() {
+		functionRegistry.register( "array_append", new PostgreSQLArrayConcatElementFunction( false ) );
+	}
+
+	/**
+	 * Oracle array_append() function
+	 */
+	public void arrayAppend_oracle() {
+		functionRegistry.register( "array_append", new OracleArrayConcatElementFunction( false ) );
 	}
 
 	/**

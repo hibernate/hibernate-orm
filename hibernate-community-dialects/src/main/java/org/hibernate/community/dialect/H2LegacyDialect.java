@@ -376,6 +376,8 @@ public class H2LegacyDialect extends Dialect {
 				functionFactory.arrayContainsNull();
 				functionFactory.arrayLength_cardinality();
 				functionFactory.arrayConcat_operator();
+				functionFactory.arrayPrepend_operator();
+				functionFactory.arrayAppend_operator();
 				functionFactory.arrayContainsAll_h2();
 				functionFactory.arrayContainsAny_h2();
 				functionFactory.arrayContainsAllNullable_h2();

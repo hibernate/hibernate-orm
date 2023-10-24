@@ -43,7 +43,7 @@ public class ArrayAndElementArgumentTypeResolver implements FunctionArgumentType
 				final SqmTypedNode<?> argument = function.getArguments().get( elementIndex );
 				final DomainType<?> sqmType = argument.getExpressible().getSqmType();
 				if ( sqmType instanceof ReturnableType<?> ) {
-					return ArrayTypeHelper.resolveArrayType(
+					return DdlTypeHelper.resolveArrayType(
 							sqmType,
 							converter.getCreationContext().getSessionFactory().getTypeConfiguration()
 					);

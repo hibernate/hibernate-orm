@@ -27,7 +27,7 @@ public class OracleArraySliceFunction extends ArraySliceUnnestFunction {
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker) {
-		final String arrayTypeName = ArrayTypeHelper.getArrayTypeName(
+		final String arrayTypeName = DdlTypeHelper.getTypeName(
 				( (Expression) sqlAstArguments.get( 0 ) ).getExpressionType(),
 				walker
 		);

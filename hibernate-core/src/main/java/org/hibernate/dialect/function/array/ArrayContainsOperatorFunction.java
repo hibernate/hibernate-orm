@@ -48,7 +48,7 @@ public class ArrayContainsOperatorFunction extends AbstractSqmSelfRenderingFunct
 			sqlAppender.append( "cast(array[" );
 			elementExpression.accept( walker );
 			sqlAppender.append( "] as " );
-			sqlAppender.append( ArrayTypeHelper.getArrayTypeName( arrayExpression.getExpressionType(), walker ) );
+			sqlAppender.append( DdlTypeHelper.getCastTypeName( arrayExpression.getExpressionType(), walker ) );
 			sqlAppender.append( ')' );
 		}
 		else {

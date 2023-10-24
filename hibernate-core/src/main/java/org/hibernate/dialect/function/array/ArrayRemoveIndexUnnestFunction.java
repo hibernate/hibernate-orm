@@ -59,7 +59,7 @@ public class ArrayRemoveIndexUnnestFunction extends AbstractSqmSelfRenderingFunc
 		sqlAppender.append( "),");
 		if ( castEmptyArrayLiteral ) {
 			sqlAppender.append( "cast(array[] as " );
-			sqlAppender.append( ArrayTypeHelper.getArrayTypeName( arrayExpression.getExpressionType(), walker ) );
+			sqlAppender.append( DdlTypeHelper.getCastTypeName( arrayExpression.getExpressionType(), walker ) );
 			sqlAppender.append( ')' );
 		}
 		else {

@@ -1123,6 +1123,8 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_position()` | Determines the position of an element in an array
 | `array_length()` | Determines the length of an array
 | `array_concat()` | Concatenates array with each other in order
+| `array_prepend()` | Prepends element to array
+| `array_append()` | Appends element to array
 | `array_contains_all()` | Determines if one array holds all elements of another array
 | `array_contains_all_nullable()` | Determines if one array holds all elements of another array, supporting null elements
 | `array_contains_any()` | Determines if one array holds at least one element of another array
@@ -1201,6 +1203,32 @@ Concatenates arrays with each other in order. Returns `null` if one of the argum
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayConcatTest.java[tags=hql-array-concat-example]
+----
+====
+
+[[hql-array-prepend-functions]]
+===== `array_prepend()`
+
+Prepends element to array. Returns `null` if the array argument is `null`.
+
+[[hql-array-prepend-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayPrependTest.java[tags=hql-array-prepend-example]
+----
+====
+
+[[hql-array-append-functions]]
+===== `array_append()`
+
+Appends element to array. Returns `null` if the array argument is `null`.
+
+[[hql-array-append-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayAppendTest.java[tags=hql-array-append-example]
 ----
 ====
 

@@ -18,6 +18,7 @@ import org.hibernate.classic.Lifecycle;
 import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ReflectHelper;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tuple.component.ComponentMetamodel;
 import org.hibernate.type.spi.TypeBootstrapContext;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -95,15 +96,24 @@ public final class TypeFactory implements Serializable, TypeBootstrapContext {
 		try {
 			final Type type;
 
-			final Constructor<Type> bootstrapContextAwareTypeConstructor = ReflectHelper.getConstructor(
+			Constructor<Type> contextAwareTypeConstructor = ReflectHelper.getConstructor(
 					typeClass,
-					TypeBootstrapContext.class
+					ServiceRegistry.class
 			);
-			if ( bootstrapContextAwareTypeConstructor != null ) {
-				type = bootstrapContextAwareTypeConstructor.newInstance( this );
+			if ( contextAwareTypeConstructor != null ) {
+				type = contextAwareTypeConstructor.newInstance( this.typeConfiguration.getServiceRegistry() );
 			}
 			else {
-				type = typeClass.newInstance();
+				contextAwareTypeConstructor = ReflectHelper.getConstructor(
+						typeClass,
+						TypeBootstrapContext.class
+				);
+				if ( contextAwareTypeConstructor != null ) {
+					type = contextAwareTypeConstructor.newInstance( this );
+				}
+				else {
+					type = typeClass.newInstance();
+				}
 			}
 
 			injectParameters( type, parameters );

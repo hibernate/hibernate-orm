@@ -1131,6 +1131,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_set()` | Creates array copy with given element at given index
 | `array_remove()` | Creates array copy with given element removed
 | `array_slice()` | Creates a sub-array of the based on lower and upper index
+| `array_replace()` | Creates array copy replacing a given element with another
 |===
 
 ===== `array()`
@@ -1313,6 +1314,19 @@ and also if the index is out of bounds.
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayRemoveIndexTest.java[tags=hql-array-remove-index-example]
+----
+====
+
+[[hql-array-replace-functions]]
+===== `array_replace()`
+
+Returns an array copy which has elements matching the second argument replaced by the third argument.
+
+[[hql-array-replace-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayReplaceTest.java[tags=hql-array-replace-example]
 ----
 ====
 

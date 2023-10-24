@@ -22,11 +22,11 @@ public class ArrayAndElementArgumentValidator extends ArrayArgumentValidator {
 
 	public static final ArgumentsValidator DEFAULT_INSTANCE = new ArrayAndElementArgumentValidator( 0, 1 );
 
-	private final int elementIndex;
+	private final int[] elementIndexes;
 
-	public ArrayAndElementArgumentValidator(int arrayIndex, int elementIndex) {
+	public ArrayAndElementArgumentValidator(int arrayIndex, int... elementIndexes) {
 		super( arrayIndex );
-		this.elementIndex = elementIndex;
+		this.elementIndexes = elementIndexes;
 	}
 
 	@Override
@@ -35,18 +35,20 @@ public class ArrayAndElementArgumentValidator extends ArrayArgumentValidator {
 			String functionName,
 			TypeConfiguration typeConfiguration) {
 		final BasicType<?> expectedElementType = getElementType( arguments, functionName, typeConfiguration );
-		final SqmTypedNode<?> elementArgument = arguments.get( elementIndex );
-		final SqmExpressible<?> elementType = elementArgument.getExpressible().getSqmType();
-		if ( expectedElementType != null && elementType != null && expectedElementType != elementType ) {
-			throw new FunctionArgumentException(
-					String.format(
-							"Parameter %d of function '%s()' has type %s, but argument is of type '%s'",
-							elementIndex,
-							functionName,
-							expectedElementType.getJavaTypeDescriptor().getTypeName(),
-							elementType.getTypeName()
-					)
-			);
+		for ( int elementIndex : elementIndexes ) {
+			final SqmTypedNode<?> elementArgument = arguments.get( elementIndex );
+			final SqmExpressible<?> elementType = elementArgument.getExpressible().getSqmType();
+			if ( expectedElementType != null && elementType != null && expectedElementType != elementType ) {
+				throw new FunctionArgumentException(
+						String.format(
+								"Parameter %d of function '%s()' has type %s, but argument is of type '%s'",
+								elementIndex,
+								functionName,
+								expectedElementType.getJavaTypeDescriptor().getTypeName(),
+								elementType.getTypeName()
+						)
+				);
+			}
 		}
 	}
 }

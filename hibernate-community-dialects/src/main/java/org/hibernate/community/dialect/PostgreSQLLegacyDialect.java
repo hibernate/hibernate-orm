@@ -597,6 +597,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 		functionFactory.arrayRemove();
 		functionFactory.arrayRemoveIndex_unnest( true );
 		functionFactory.arraySlice_operator();
+		functionFactory.arrayReplace();
 
 		if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 			functionFactory.makeDateTimeTimestamp();

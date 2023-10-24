@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.function.array;
 
+import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.ReturnableType;
@@ -25,11 +26,11 @@ public class ArrayAndElementArgumentTypeResolver implements FunctionArgumentType
 	public static final FunctionArgumentTypeResolver DEFAULT_INSTANCE = new ArrayAndElementArgumentTypeResolver( 0, 1 );
 
 	private final int arrayIndex;
-	private final int elementIndex;
+	private final int[] elementIndexes;
 
-	public ArrayAndElementArgumentTypeResolver(int arrayIndex, int elementIndex) {
+	public ArrayAndElementArgumentTypeResolver(int arrayIndex, int... elementIndexes) {
 		this.arrayIndex = arrayIndex;
-		this.elementIndex = elementIndex;
+		this.elementIndexes = elementIndexes;
 	}
 
 	@Override
@@ -38,16 +39,18 @@ public class ArrayAndElementArgumentTypeResolver implements FunctionArgumentType
 			int argumentIndex,
 			SqmToSqlAstConverter converter) {
 		if ( argumentIndex == arrayIndex ) {
-			final SqmTypedNode<?> argument = function.getArguments().get( elementIndex );
-			final DomainType<?> sqmType = argument.getExpressible().getSqmType();
-			if ( sqmType instanceof ReturnableType<?> ) {
-				return ArrayTypeHelper.resolveArrayType(
-						sqmType,
-						converter.getCreationContext().getSessionFactory().getTypeConfiguration()
-				);
+			for ( int elementIndex : elementIndexes ) {
+				final SqmTypedNode<?> argument = function.getArguments().get( elementIndex );
+				final DomainType<?> sqmType = argument.getExpressible().getSqmType();
+				if ( sqmType instanceof ReturnableType<?> ) {
+					return ArrayTypeHelper.resolveArrayType(
+							sqmType,
+							converter.getCreationContext().getSessionFactory().getTypeConfiguration()
+					);
+				}
 			}
 		}
-		else if ( argumentIndex == elementIndex ) {
+		else if ( ArrayHelper.contains( elementIndexes, argumentIndex ) ) {
 			final SqmTypedNode<?> argument = function.getArguments().get( arrayIndex );
 			final SqmExpressible<?> sqmType = argument.getNodeType();
 			if ( sqmType instanceof BasicPluralType<?, ?> ) {

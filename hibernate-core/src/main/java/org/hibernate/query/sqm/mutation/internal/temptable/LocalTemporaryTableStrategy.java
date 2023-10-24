@@ -22,7 +22,7 @@ import org.hibernate.metamodel.mapping.internal.MappingModelCreationProcess;
 public class LocalTemporaryTableStrategy {
 
 	public static final String SHORT_NAME = "local_temporary";
-	public static final String DROP_ID_TABLES = "hibernate.hql.bulk_id_strategy.local_temporary.drop_tables";
+	public static final String DROP_ID_TABLES = "hibernate.query.mutation_strategy.local_temporary.drop_tables";
 
 	private final TemporaryTable temporaryTable;
 	private final SessionFactoryImplementor sessionFactory;

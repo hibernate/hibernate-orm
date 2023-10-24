@@ -32,13 +32,13 @@ public abstract class PersistentTableStrategy {
 
 	public static final String SHORT_NAME = "persistent";
 
-	public static final String CREATE_ID_TABLES = "hibernate.hql.bulk_id_strategy.persistent.create_tables";
+	public static final String CREATE_ID_TABLES = "hibernate.query.mutation_strategy.persistent.create_tables";
 
-	public static final String DROP_ID_TABLES = "hibernate.hql.bulk_id_strategy.persistent.drop_tables";
+	public static final String DROP_ID_TABLES = "hibernate.query.mutation_strategy.persistent.drop_tables";
 
-	public static final String SCHEMA = "hibernate.hql.bulk_id_strategy.persistent.schema";
+	public static final String SCHEMA = "hibernate.query.mutation_strategy.persistent.schema";
 
-	public static final String CATALOG = "hibernate.hql.bulk_id_strategy.persistent.catalog";
+	public static final String CATALOG = "hibernate.query.mutation_strategy.persistent.catalog";
 
 	private final TemporaryTable temporaryTable;
 	private final SessionFactoryImplementor sessionFactory;

@@ -261,7 +261,8 @@ public class HSQLLegacyDialect extends Dialect {
 		functionFactory.arrayGet_unnest();
 		functionFactory.arraySet_hsql();
 		functionFactory.arrayRemove_hsql();
-		functionFactory.arrayRemoveIndex_unnest();
+		functionFactory.arrayRemoveIndex_unnest( false );
+		functionFactory.arraySlice_unnest();
 	}
 
 	@Override

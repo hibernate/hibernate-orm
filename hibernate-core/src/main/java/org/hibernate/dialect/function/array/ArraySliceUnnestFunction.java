@@ -21,22 +21,22 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 
 /**
- * Implement the array remove index function by using {@code unnest}.
+ * Implement the array slice function by using {@code unnest}.
  */
-public class ArrayRemoveIndexUnnestFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+public class ArraySliceUnnestFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
 	private final boolean castEmptyArrayLiteral;
 
-	public ArrayRemoveIndexUnnestFunction(boolean castEmptyArrayLiteral) {
+	public ArraySliceUnnestFunction(boolean castEmptyArrayLiteral) {
 		super(
-				"array_remove_index",
+				"array_slice",
 				StandardArgumentsValidators.composite(
-						new ArgumentTypesValidator( null, ANY, INTEGER ),
+						new ArgumentTypesValidator( null, ANY, INTEGER, INTEGER ),
 						ArrayArgumentValidator.DEFAULT_INSTANCE
 				),
 				ArrayViaArgumentReturnTypeResolver.DEFAULT_INSTANCE,
 				StandardFunctionArgumentTypeResolvers.composite(
-						StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER ),
+						StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER, INTEGER ),
 						StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
 				)
 		);
@@ -49,13 +49,20 @@ public class ArrayRemoveIndexUnnestFunction extends AbstractSqmSelfRenderingFunc
 			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker) {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
-		final Expression indexExpression = (Expression) sqlAstArguments.get( 1 );
+		final Expression startIndexExpression = (Expression) sqlAstArguments.get( 1 );
+		final Expression endIndexExpression = (Expression) sqlAstArguments.get( 2 );
 		sqlAppender.append( "case when ");
 		arrayExpression.accept( walker );
+		sqlAppender.append( " is null or ");
+		startIndexExpression.accept( walker );
+		sqlAppender.append( " is null or ");
+		endIndexExpression.accept( walker );
 		sqlAppender.append( " is null then null else coalesce((select array_agg(t.val) from unnest(" );
 		arrayExpression.accept( walker );
-		sqlAppender.append( ") with ordinality t(val,idx) where t.idx is distinct from " );
-		indexExpression.accept( walker );
+		sqlAppender.append( ") with ordinality t(val,idx) where t.idx between " );
+		startIndexExpression.accept( walker );
+		sqlAppender.append( " and " );
+		endIndexExpression.accept( walker );
 		sqlAppender.append( "),");
 		if ( castEmptyArrayLiteral ) {
 			sqlAppender.append( "cast(array[] as " );

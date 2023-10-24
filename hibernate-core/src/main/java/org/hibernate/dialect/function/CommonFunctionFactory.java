@@ -22,15 +22,19 @@ import org.hibernate.dialect.function.array.ArrayContainsQuantifiedOperatorFunct
 import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsQuantifiedUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayGetUnnestFunction;
+import org.hibernate.dialect.function.array.ArraySetUnnestFunction;
 import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.H2ArrayContainsQuantifiedEmulation;
+import org.hibernate.dialect.function.array.H2ArraySetFunction;
 import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
+import org.hibernate.dialect.function.array.HSQLArraySetFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsAllFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsAnyFunction;
 import org.hibernate.dialect.function.array.OracleArrayGetFunction;
 import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
 import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
+import org.hibernate.dialect.function.array.OracleArraySetFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.CastingArrayConstructorFunction;
@@ -2975,5 +2979,33 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayGet_oracle() {
 		functionRegistry.register( "array_get", new OracleArrayGetFunction() );
+	}
+
+	/**
+	 * H2 array_set() function
+	 */
+	public void arraySet_h2() {
+		functionRegistry.register( "array_set", new H2ArraySetFunction() );
+	}
+
+	/**
+	 * HSQL array_set() function
+	 */
+	public void arraySet_hsql() {
+		functionRegistry.register( "array_set", new HSQLArraySetFunction() );
+	}
+
+	/**
+	 * HSQL, CockroachDB and PostgreSQL array_set() function
+	 */
+	public void arraySet_unnest() {
+		functionRegistry.register( "array_set", new ArraySetUnnestFunction() );
+	}
+
+	/**
+	 * Oracle array_set() function
+	 */
+	public void arraySet_oracle() {
+		functionRegistry.register( "array_set", new OracleArraySetFunction() );
 	}
 }

@@ -37,7 +37,7 @@ public class OracleArrayContainsFunction extends AbstractSqmSelfRenderingFunctio
 			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker) {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
-		final String arrayTypeName = ArrayTypeHelper.getArrayTypeName( arrayExpression.getExpressionType(), walker );
+		final String arrayTypeName = DdlTypeHelper.getTypeName( arrayExpression.getExpressionType(), walker );
 		sqlAppender.appendSql( arrayTypeName );
 		sqlAppender.append( "_position(" );
 		arrayExpression.accept( walker );

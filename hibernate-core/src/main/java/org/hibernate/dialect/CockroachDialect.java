@@ -455,6 +455,8 @@ public class CockroachDialect extends Dialect {
 		functionFactory.arrayPosition_postgresql();
 		functionFactory.arrayLength_cardinality();
 		functionFactory.arrayConcat_postgresql();
+		functionFactory.arrayPrepend_postgresql();
+		functionFactory.arrayAppend_postgresql();
 		functionFactory.arrayContainsAll_operator();
 		functionFactory.arrayContainsAny_operator();
 		functionFactory.arrayContainsAllNullable_operator();

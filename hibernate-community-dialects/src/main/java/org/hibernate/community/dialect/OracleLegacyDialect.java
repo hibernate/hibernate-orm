@@ -290,6 +290,8 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.arrayPosition_oracle();
 		functionFactory.arrayLength_oracle();
 		functionFactory.arrayConcat_oracle();
+		functionFactory.arrayPrepend_oracle();
+		functionFactory.arrayAppend_oracle();
 		functionFactory.arrayContainsAll_oracle();
 		functionFactory.arrayContainsAny_oracle();
 		functionFactory.arrayContainsAllNullable_oracle();

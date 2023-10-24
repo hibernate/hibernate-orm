@@ -29,7 +29,7 @@ public class OracleArrayContainsAllFunction extends AbstractArrayContainsQuantif
 			List<? extends SqlAstNode> sqlAstArguments,
 			SqlAstTranslator<?> walker) {
 		final Expression haystackExpression = (Expression) sqlAstArguments.get( 0 );
-		final String arrayTypeName = ArrayTypeHelper.getArrayTypeName( haystackExpression.getExpressionType(), walker );
+		final String arrayTypeName = DdlTypeHelper.getTypeName( haystackExpression.getExpressionType(), walker );
 		sqlAppender.appendSql( arrayTypeName );
 		sqlAppender.append( "_contains_all(" );
 		haystackExpression.accept( walker );

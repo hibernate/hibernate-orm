@@ -6263,7 +6263,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		appendSql( getSqlTypeName( castTarget, sessionFactory ) );
+		appendSql( getCastTypeName( castTarget, sessionFactory ) );
 	}
 
 	public static String getSqlTypeName(SqlTypedMapping castTarget, SessionFactoryImplementor factory) {
@@ -6273,7 +6273,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		else {
 			final Size castTargetSize = castTarget.toSize();
 			final DdlTypeRegistry ddlTypeRegistry = factory.getTypeConfiguration().getDdlTypeRegistry();
-			final SqlExpressible expressionType = (SqlExpressible) castTarget.getJdbcMapping();
+			final BasicType<?> expressionType = (BasicType<?>) castTarget.getJdbcMapping();
 			if ( expressionType instanceof BasicPluralType<?, ?> ) {
 				final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) expressionType;
 				final BasicPluralJavaType<?> javaTypeDescriptor = (BasicPluralJavaType<?>) containerType.getJavaTypeDescriptor();
@@ -6293,19 +6293,52 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					return arrayTypeName;
 				}
 			}
-			DdlType ddlType = ddlTypeRegistry
-					.getDescriptor( expressionType.getJdbcMapping().getJdbcType().getDdlTypeCode() );
+			DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
 			if ( ddlType == null ) {
 				// this may happen when selecting a null value like `SELECT null from ...`
 				// some dbs need the value to be cast so not knowing the real type we fall back to INTEGER
 				ddlType = ddlTypeRegistry.getDescriptor( SqlTypes.INTEGER );
 			}
 
-			return ddlType.getCastTypeName(
-					castTargetSize,
-					expressionType,
-					ddlTypeRegistry
-			);
+			return ddlType.getTypeName( castTargetSize, expressionType, ddlTypeRegistry );
+		}
+	}
+
+	public static String getCastTypeName(SqlTypedMapping castTarget, SessionFactoryImplementor factory) {
+		if ( castTarget.getColumnDefinition() != null ) {
+			return castTarget.getColumnDefinition();
+		}
+		else {
+			final Size castTargetSize = castTarget.toSize();
+			final DdlTypeRegistry ddlTypeRegistry = factory.getTypeConfiguration().getDdlTypeRegistry();
+			final BasicType<?> expressionType = (BasicType<?>) castTarget.getJdbcMapping();
+			if ( expressionType instanceof BasicPluralType<?, ?> ) {
+				final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) expressionType;
+				final BasicPluralJavaType<?> javaTypeDescriptor = (BasicPluralJavaType<?>) containerType.getJavaTypeDescriptor();
+				final BasicType<?> elementType = containerType.getElementType();
+				final String elementTypeName = ddlTypeRegistry.getDescriptor( elementType.getJdbcType().getDdlTypeCode() )
+						.getCastTypeName(
+								castTargetSize,
+								elementType,
+								ddlTypeRegistry
+						);
+				final String arrayTypeName = factory.getJdbcServices().getDialect().getArrayTypeName(
+						javaTypeDescriptor.getElementJavaType().getJavaTypeClass().getSimpleName(),
+						elementTypeName,
+						null
+				);
+				if ( arrayTypeName != null ) {
+					return arrayTypeName;
+				}
+			}
+			DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
+			if ( ddlType == null ) {
+				// this may happen when selecting a null value like `SELECT null from ...`
+				// some dbs need the value to be cast so not knowing the real type we fall back to INTEGER
+				ddlType = ddlTypeRegistry.getDescriptor( SqlTypes.INTEGER );
+			}
+
+			return ddlType.getCastTypeName( castTargetSize, expressionType, ddlTypeRegistry );
 		}
 	}
 

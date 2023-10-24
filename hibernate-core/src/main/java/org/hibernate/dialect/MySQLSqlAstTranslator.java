@@ -46,7 +46,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	public static String getSqlType(CastTarget castTarget, SessionFactoryImplementor factory) {
-		final String sqlType = getSqlTypeName( castTarget, factory );
+		final String sqlType = getCastTypeName( castTarget, factory );
 		return getSqlType( castTarget, sqlType, factory.getJdbcServices().getDialect() );
 	}
 

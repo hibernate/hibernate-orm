@@ -36,7 +36,7 @@ public class OracleArrayConcatFunction extends ArrayConcatFunction {
 			}
 		}
 
-		final String arrayTypeName = ArrayTypeHelper.getArrayTypeName( expressionType, walker );
+		final String arrayTypeName = DdlTypeHelper.getTypeName( expressionType, walker );
 		sqlAppender.append( arrayTypeName );
 		sqlAppender.append( "_concat" );
 		super.render( sqlAppender, sqlAstArguments, walker );

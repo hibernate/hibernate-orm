@@ -50,7 +50,7 @@ public class ArrayViaElementArgumentReturnTypeResolver implements FunctionReturn
 		for ( SqmTypedNode<?> argument : arguments ) {
 			final DomainType<?> sqmType = argument.getExpressible().getSqmType();
 			if ( sqmType instanceof ReturnableType<?> ) {
-				return ArrayTypeHelper.resolveArrayType( sqmType, typeConfiguration );
+				return DdlTypeHelper.resolveArrayType( sqmType, typeConfiguration );
 			}
 		}
 		return null;

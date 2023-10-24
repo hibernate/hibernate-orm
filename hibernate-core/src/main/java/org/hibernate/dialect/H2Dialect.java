@@ -323,6 +323,7 @@ public class H2Dialect extends Dialect {
 		functionFactory.arrayGet_h2();
 		functionFactory.arraySet_h2();
 		functionFactory.arrayRemove_h2();
+		functionFactory.arrayRemoveIndex_h2();
 	}
 
 	@Override

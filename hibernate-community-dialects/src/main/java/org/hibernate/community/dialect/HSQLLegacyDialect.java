@@ -260,6 +260,7 @@ public class HSQLLegacyDialect extends Dialect {
 		functionFactory.arrayContainsAnyNullable_hsql();
 		functionFactory.arrayGet_unnest();
 		functionFactory.arraySet_hsql();
+		functionFactory.arrayRemove_hsql();
 	}
 
 	@Override

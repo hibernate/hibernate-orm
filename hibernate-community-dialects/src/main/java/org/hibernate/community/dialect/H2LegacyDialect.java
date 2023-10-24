@@ -382,6 +382,7 @@ public class H2LegacyDialect extends Dialect {
 				functionFactory.arrayContainsAnyNullable_h2();
 				functionFactory.arrayGet_h2();
 				functionFactory.arraySet_h2();
+				functionFactory.arrayRemove_h2();
 			}
 			else {
 				// Use group_concat until 2.x as listagg was buggy

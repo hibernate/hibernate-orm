@@ -14,11 +14,11 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
- * Oracle array_get function.
+ * Oracle array_remove function.
  */
-public class OracleArrayGetFunction extends ArrayGetUnnestFunction {
+public class OracleArrayRemoveFunction extends AbstractArrayRemoveFunction {
 
-	public OracleArrayGetFunction() {
+	public OracleArrayRemoveFunction() {
 	}
 
 	@Override
@@ -31,7 +31,7 @@ public class OracleArrayGetFunction extends ArrayGetUnnestFunction {
 				walker
 		);
 		sqlAppender.append( arrayTypeName );
-		sqlAppender.append( "_get(" );
+		sqlAppender.append( "_remove(" );
 		sqlAstArguments.get( 0 ).accept( walker );
 		sqlAppender.append( ',' );
 		sqlAstArguments.get( 1 ).accept( walker );

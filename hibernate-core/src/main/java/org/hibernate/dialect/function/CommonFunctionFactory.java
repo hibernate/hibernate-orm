@@ -23,10 +23,13 @@ import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsQuantifiedUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayGetUnnestFunction;
 import org.hibernate.dialect.function.array.ArraySetUnnestFunction;
+import org.hibernate.dialect.function.array.ArrayViaArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.H2ArrayContainsQuantifiedEmulation;
+import org.hibernate.dialect.function.array.H2ArrayRemoveFunction;
 import org.hibernate.dialect.function.array.H2ArraySetFunction;
 import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
+import org.hibernate.dialect.function.array.HSQLArrayRemoveFunction;
 import org.hibernate.dialect.function.array.HSQLArraySetFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsAllFunction;
@@ -34,6 +37,7 @@ import org.hibernate.dialect.function.array.OracleArrayContainsAnyFunction;
 import org.hibernate.dialect.function.array.OracleArrayGetFunction;
 import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
 import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
+import org.hibernate.dialect.function.array.OracleArrayRemoveFunction;
 import org.hibernate.dialect.function.array.OracleArraySetFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
@@ -2996,7 +3000,7 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * HSQL, CockroachDB and PostgreSQL array_set() function
+	 * CockroachDB and PostgreSQL array_set() function
 	 */
 	public void arraySet_unnest() {
 		functionRegistry.register( "array_set", new ArraySetUnnestFunction() );
@@ -3007,5 +3011,42 @@ public class CommonFunctionFactory {
 	 */
 	public void arraySet_oracle() {
 		functionRegistry.register( "array_set", new OracleArraySetFunction() );
+	}
+
+	/**
+	 * H2 array_remove() function
+	 */
+	public void arrayRemove_h2() {
+		functionRegistry.register( "array_remove", new H2ArrayRemoveFunction() );
+	}
+
+	/**
+	 * HSQL array_remove() function
+	 */
+	public void arrayRemove_hsql() {
+		functionRegistry.register( "array_remove", new HSQLArrayRemoveFunction() );
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array_remove() function
+	 */
+	public void arrayRemove_unnest() {
+		functionRegistry.namedDescriptorBuilder( "array_remove" )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								StandardArgumentsValidators.exactly( 2 ),
+								ArrayAndElementArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setReturnTypeResolver( ArrayViaArgumentReturnTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentTypeResolver( ArrayAndElementArgumentTypeResolver.DEFAULT_INSTANCE )
+				.register();
+	}
+
+	/**
+	 * Oracle array_remove() function
+	 */
+	public void arrayRemove_oracle() {
+		functionRegistry.register( "array_remove", new OracleArrayRemoveFunction() );
 	}
 }

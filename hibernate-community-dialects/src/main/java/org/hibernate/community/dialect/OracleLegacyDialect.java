@@ -298,6 +298,7 @@ public class OracleLegacyDialect extends Dialect {
 		functionFactory.arraySet_oracle();
 		functionFactory.arrayRemove_oracle();
 		functionFactory.arrayRemoveIndex_oracle();
+		functionFactory.arraySlice_oracle();
 	}
 
 	@Override

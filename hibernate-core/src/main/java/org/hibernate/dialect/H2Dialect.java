@@ -93,7 +93,6 @@ import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
@@ -324,6 +323,7 @@ public class H2Dialect extends Dialect {
 		functionFactory.arraySet_h2();
 		functionFactory.arrayRemove_h2();
 		functionFactory.arrayRemoveIndex_h2();
+		functionFactory.arraySlice();
 	}
 
 	@Override

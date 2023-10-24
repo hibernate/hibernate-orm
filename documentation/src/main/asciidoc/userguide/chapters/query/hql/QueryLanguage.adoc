@@ -1130,6 +1130,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_get()` | Accesses the element of an array by index
 | `array_set()` | Creates array copy with given element at given index
 | `array_remove()` | Creates array copy with given element removed
+| `array_slice()` | Creates a sub-array of the based on lower and upper index
 |===
 
 ===== `array()`
@@ -1292,6 +1293,20 @@ include::{array-example-dir-hql}/ArrayRemoveTest.java[tags=hql-array-remove-exam
 ===== `array_remove_index()`
 
 Returns an array copy with the element at the given index removed from the array.
+
+[[hql-array-remove-index-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayRemoveIndexTest.java[tags=hql-array-remove-index-example]
+----
+====
+
+[[hql-array-slice-functions]]
+===== `array_slice()`
+
+Returns the sub-array as specified by the given start and end index. Returns `null` if any of the arguments is `null`
+and also if the index is out of bounds.
 
 [[hql-array-remove-index-example]]
 ====

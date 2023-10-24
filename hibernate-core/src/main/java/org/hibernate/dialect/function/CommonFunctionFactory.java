@@ -24,6 +24,7 @@ import org.hibernate.dialect.function.array.ArrayContainsQuantifiedUnnestFunctio
 import org.hibernate.dialect.function.array.ArrayGetUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayRemoveIndexUnnestFunction;
 import org.hibernate.dialect.function.array.ArraySetUnnestFunction;
+import org.hibernate.dialect.function.array.ArraySliceUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayViaArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.H2ArrayContainsQuantifiedEmulation;
@@ -42,6 +43,7 @@ import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
 import org.hibernate.dialect.function.array.OracleArrayRemoveFunction;
 import org.hibernate.dialect.function.array.OracleArrayRemoveIndexFunction;
 import org.hibernate.dialect.function.array.OracleArraySetFunction;
+import org.hibernate.dialect.function.array.OracleArraySliceFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.CastingArrayConstructorFunction;
@@ -2123,7 +2125,7 @@ public class CommonFunctionFactory {
 				.setArgumentCountBetween( 1, 3 )
 				.setParameterTypes( ANY, INTEGER, ANY )
 				.setArgumentTypeResolver(
-						StandardFunctionArgumentTypeResolvers.composite(
+						StandardFunctionArgumentTypeResolvers.byArgument(
 								StandardFunctionArgumentTypeResolvers.argumentsOrImplied( 2 ),
 								StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, INTEGER ),
 								StandardFunctionArgumentTypeResolvers.argumentsOrImplied( 0 )
@@ -2135,7 +2137,7 @@ public class CommonFunctionFactory {
 				.setArgumentCountBetween( 1, 3 )
 				.setParameterTypes( ANY, INTEGER, ANY )
 				.setArgumentTypeResolver(
-						StandardFunctionArgumentTypeResolvers.composite(
+						StandardFunctionArgumentTypeResolvers.byArgument(
 								StandardFunctionArgumentTypeResolvers.argumentsOrImplied( 2 ),
 								StandardFunctionArgumentTypeResolvers.invariant( typeConfiguration, INTEGER ),
 								StandardFunctionArgumentTypeResolvers.argumentsOrImplied( 0 )
@@ -3063,15 +3065,8 @@ public class CommonFunctionFactory {
 	/**
 	 * HSQL, CockroachDB and PostgreSQL array_remove_index() function
 	 */
-	public void arrayRemoveIndex_unnest() {
-		functionRegistry.register( "array_remove_index", new ArrayRemoveIndexUnnestFunction( false ) );
-	}
-
-	/**
-	 * HSQL, CockroachDB and PostgreSQL array_remove_index() function
-	 */
-	public void arrayRemoveIndex_postgresql() {
-		functionRegistry.register( "array_remove_index", new ArrayRemoveIndexUnnestFunction( true ) );
+	public void arrayRemoveIndex_unnest(boolean castEmptyArrayLiteral) {
+		functionRegistry.register( "array_remove_index", new ArrayRemoveIndexUnnestFunction( castEmptyArrayLiteral ) );
 	}
 
 	/**
@@ -3079,5 +3074,63 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayRemoveIndex_oracle() {
 		functionRegistry.register( "array_remove_index", new OracleArrayRemoveIndexFunction() );
+	}
+
+	/**
+	 * H2 array_slice() function
+	 */
+	public void arraySlice() {
+		functionRegistry.patternAggregateDescriptorBuilder( "array_slice", "case when ?1 is null or ?2 is null or ?3 is null then null else coalesce(array_slice(?1,?2,?3),array[]) end" )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								new ArgumentTypesValidator( null, ANY, INTEGER, INTEGER ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setReturnTypeResolver( ArrayViaArgumentReturnTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentTypeResolver(
+						StandardFunctionArgumentTypeResolvers.composite(
+								StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER, INTEGER ),
+								StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array, INTEGER start, INTEGER end)" )
+				.register();
+	}
+
+	/**
+	 * HSQL array_slice() function
+	 */
+	public void arraySlice_unnest() {
+		functionRegistry.register( "array_slice", new ArraySliceUnnestFunction( false ) );
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array_slice() function
+	 */
+	public void arraySlice_operator() {
+		functionRegistry.patternAggregateDescriptorBuilder( "array_slice", "?1[?2:?3]" )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								new ArgumentTypesValidator( null, ANY, INTEGER, INTEGER ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setReturnTypeResolver( ArrayViaArgumentReturnTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentTypeResolver(
+						StandardFunctionArgumentTypeResolvers.composite(
+								StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER, INTEGER ),
+								StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array, INTEGER start, INTEGER end)" )
+				.register();
+	}
+
+	/**
+	 * Oracle array_slice() function
+	 */
+	public void arraySlice_oracle() {
+		functionRegistry.register( "array_slice", new OracleArraySliceFunction() );
 	}
 }

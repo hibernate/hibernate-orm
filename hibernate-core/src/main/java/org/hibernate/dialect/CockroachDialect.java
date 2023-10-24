@@ -462,7 +462,8 @@ public class CockroachDialect extends Dialect {
 		functionFactory.arrayGet_bracket();
 		functionFactory.arraySet_unnest();
 		functionFactory.arrayRemove();
-		functionFactory.arrayRemoveIndex_postgresql();
+		functionFactory.arrayRemoveIndex_unnest( true );
+		functionFactory.arraySlice_operator();
 
 		functionContributions.getFunctionRegistry().register(
 				"trunc",

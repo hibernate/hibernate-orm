@@ -131,6 +131,8 @@ public class OffsetDateTimeTest extends AbstractJavaTimeTypeTest<OffsetDateTime,
 				.add( 1905, 1, 1, 0, 0, 0, 0, "-01:00", ZONE_PARIS )
 				.add( 1905, 1, 1, 0, 0, 0, 0, "+00:00", ZONE_PARIS )
 				.add( 1905, 1, 1, 0, 0, 0, 0, "+01:00", ZONE_PARIS )
+				// => HHH-14256: Dates with negative years
+				.add(-1, 1, 1, 0, 0, 0, 0, "+00:00", ZONE_PARIS)
 				.build();
 	}
 

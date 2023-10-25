@@ -89,6 +89,8 @@ public class LocalDateTest extends AbstractJavaTimeTypeTest<LocalDate, LocalDate
 				.add( 2018, 3, 25, ZONE_PARIS )
 				.add( 2018, 9, 30, ZONE_AUCKLAND )
 				.add( 2018, 8, 12, ZONE_SANTIAGO ) // DST start: 00:00 => 01:00
+				// => HHH-14256: Dates with negative years
+				.add(-1, 1, 1, ZONE_PARIS)
 				.build();
 	}
 

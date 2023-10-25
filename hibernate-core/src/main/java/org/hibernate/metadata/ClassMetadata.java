@@ -73,6 +73,11 @@ public interface ClassMetadata {
 	boolean isVersioned();
 
 	/**
+	 * Should references to this class be kept after entity is marked for deletion?
+	 */
+	boolean keepReference();
+
+	/**
 	 * Get the index of the version property
 	 */
 	int getVersionProperty();

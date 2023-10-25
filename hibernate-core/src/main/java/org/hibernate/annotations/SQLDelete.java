@@ -36,4 +36,9 @@ public @interface SQLDelete {
 	 * For persistence operation what style of determining results (success/failure) is to be used.
 	 */
 	ResultCheckStyle check() default ResultCheckStyle.NONE;
+
+	/**
+	 * Use for soft delete operations if you want to keep the references to entities marked as deleted.
+	 */
+	boolean keepReference() default false;
 }

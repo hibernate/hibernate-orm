@@ -25,18 +25,19 @@ public class LocaleTypeDescriptorTest extends BaseUnitTestCase {
 
 	@Test
 	public void testConversionFromString() {
-		assertEquals( toLocale( "de", null, null ), LocaleTypeDescriptor.INSTANCE.fromString( "de" ) );
-		assertEquals( toLocale( "de", "DE", null ), LocaleTypeDescriptor.INSTANCE.fromString( "de_DE" ) );
-		assertEquals( toLocale( null, "DE", null ), LocaleTypeDescriptor.INSTANCE.fromString( "_DE" ) );
-		assertEquals( toLocale( null, null, "ch123" ), LocaleTypeDescriptor.INSTANCE.fromString( "__ch123" ) );
-		assertEquals( toLocale( null, "DE", "ch123" ), LocaleTypeDescriptor.INSTANCE.fromString( "_DE_ch123" ) );
-		assertEquals( toLocale( "de", null, "ch123" ), LocaleTypeDescriptor.INSTANCE.fromString( "de__ch123" ) );
-		assertEquals( toLocale( "de", "DE", "ch123" ), LocaleTypeDescriptor.INSTANCE.fromString( "de_DE_ch123" ) );
-		assertEquals( toLocale( "", "", "" ), LocaleTypeDescriptor.INSTANCE.fromString( "" ) );
+		assertEquals( toLocale( "de", null, null, null ), LocaleTypeDescriptor.INSTANCE.fromString( "de" ) );
+		assertEquals( toLocale( "de", "DE", null, null ), LocaleTypeDescriptor.INSTANCE.fromString( "de_DE" ) );
+		assertEquals( toLocale( null, "DE", null, null ), LocaleTypeDescriptor.INSTANCE.fromString( "_DE" ) );
+		assertEquals( toLocale( null, null, "ch123", null ), LocaleTypeDescriptor.INSTANCE.fromString( "__ch123" ) );
+		assertEquals( toLocale( null, "DE", "ch123", null ), LocaleTypeDescriptor.INSTANCE.fromString( "_DE_ch123" ) );
+		assertEquals( toLocale( "de", null, "ch123", null ), LocaleTypeDescriptor.INSTANCE.fromString( "de__ch123" ) );
+		assertEquals( toLocale( "de", "DE", "ch123", null ), LocaleTypeDescriptor.INSTANCE.fromString( "de_DE_ch123" ) );
+		assertEquals( toLocale( "zh", "HK", null, "Hant"), LocaleTypeDescriptor.INSTANCE.fromString( "zh_HK_#Hant" ) );
+		assertEquals( toLocale( "", "", "", null ), LocaleTypeDescriptor.INSTANCE.fromString( "" ) );
 		assertEquals( Locale.ROOT, LocaleTypeDescriptor.INSTANCE.fromString( "" ) );
 	}
 
-	public Locale toLocale(String lang, String region, String variant) {
+	public Locale toLocale(String lang, String region, String variant, String script) {
 		final Locale.Builder builder = new Locale.Builder();
 		if ( StringHelper.isNotEmpty( lang ) ) {
 			builder.setLanguage( lang );
@@ -46,6 +47,9 @@ public class LocaleTypeDescriptorTest extends BaseUnitTestCase {
 		}
 		if ( StringHelper.isNotEmpty( variant ) ) {
 			builder.setVariant( variant );
+		}
+		if ( StringHelper.isNotEmpty( script ) ) {
+			builder.setScript( script );
 		}
 		return builder.build();
 	}

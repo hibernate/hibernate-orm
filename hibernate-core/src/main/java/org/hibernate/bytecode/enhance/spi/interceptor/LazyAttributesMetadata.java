@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -21,6 +22,7 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 import org.hibernate.persister.spi.PersisterCreationContext;
+import org.hibernate.type.BasicType;
 
 /**
  * Information about all of the bytecode lazy attributes for an entity
@@ -40,6 +42,7 @@ public class LazyAttributesMetadata implements Serializable {
 			PersisterCreationContext creationContext) {
 		final Map<String, LazyAttributeDescriptor> lazyAttributeDescriptorMap = new LinkedHashMap<>();
 		final Map<String, Set<String>> fetchGroupToAttributesMap = new HashMap<>();
+		final Set<String> basicFieldFetchGroupNames = new HashSet<>();
 
 		int i = -1;
 		int x = 0;
@@ -67,6 +70,10 @@ public class LazyAttributesMetadata implements Serializable {
 						k -> new LinkedHashSet<>()
 				);
 				attributeSet.add( lazyAttributeDescriptor.getName() );
+
+				if (property.getType() instanceof BasicType && property.getLazyGroup() != null ) {
+					basicFieldFetchGroupNames.add( property.getLazyGroup() );
+				}
 			}
 		}
 
@@ -81,7 +88,8 @@ public class LazyAttributesMetadata implements Serializable {
 		return new LazyAttributesMetadata(
 				mappedEntity.getEntityName(),
 				Collections.unmodifiableMap( lazyAttributeDescriptorMap ),
-				Collections.unmodifiableMap( fetchGroupToAttributesMap )
+				Collections.unmodifiableMap( fetchGroupToAttributesMap ),
+				Collections.unmodifiableSet( basicFieldFetchGroupNames )
 		);
 	}
 
@@ -93,20 +101,23 @@ public class LazyAttributesMetadata implements Serializable {
 
 	private final Map<String, LazyAttributeDescriptor> lazyAttributeDescriptorMap;
 	private final Map<String,Set<String>> fetchGroupToAttributeMap;
+	private final Set<String> basicFieldFetchGroupNames;
 	private final Set<String> fetchGroupNames;
 	private final Set<String> lazyAttributeNames;
 
 	public LazyAttributesMetadata(String entityName) {
-		this( entityName, Collections.emptyMap(), Collections.emptyMap() );
+		this( entityName, Collections.emptyMap(), Collections.emptyMap(), Collections.emptySet() );
 	}
 
 	public LazyAttributesMetadata(
 			String entityName,
 			Map<String, LazyAttributeDescriptor> lazyAttributeDescriptorMap,
-			Map<String, Set<String>> fetchGroupToAttributeMap) {
+			Map<String, Set<String>> fetchGroupToAttributeMap,
+			Set<String> basicFieldFetchGroupNames) {
 		this.entityName = entityName;
 		this.lazyAttributeDescriptorMap = lazyAttributeDescriptorMap;
 		this.fetchGroupToAttributeMap = fetchGroupToAttributeMap;
+		this.basicFieldFetchGroupNames = basicFieldFetchGroupNames;
 		this.fetchGroupNames = Collections.unmodifiableSet( fetchGroupToAttributeMap.keySet() );
 		this.lazyAttributeNames = Collections.unmodifiableSet( lazyAttributeDescriptorMap.keySet() );
 	}
@@ -125,6 +136,10 @@ public class LazyAttributesMetadata implements Serializable {
 
 	public Set<String> getLazyAttributeNames() {
 		return lazyAttributeNames;
+	}
+
+	public Set<String> getBasicFieldFetchGroupNames() {
+		return basicFieldFetchGroupNames;
 	}
 
 	/**

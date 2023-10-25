@@ -151,6 +151,9 @@ stage('Build') {
 			}
 		})
 	}
+	executions.put('Hibernate Search Update Dependency', {
+		build job: '/hibernate-search-dependency-update/6.2', propagate: true, parameters: [string(name: 'UPDATE_JOB', value: 'orm6.2'), string(name: 'ORM_REPOSITORY', value: helper.scmSource.remoteUrl), string(name: 'ORM_PULL_REQUEST_ID', value: helper.scmSource.pullRequest.id)]
+	})
 	parallel(executions)
 }
 

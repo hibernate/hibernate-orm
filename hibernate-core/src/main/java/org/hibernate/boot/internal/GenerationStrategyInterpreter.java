@@ -11,8 +11,8 @@ import java.util.UUID;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.id.IncrementGenerator;
 import org.hibernate.id.PersistentIdentifierGenerator;
+import org.hibernate.id.UUIDGenerator;
 import org.hibernate.id.enhanced.SequenceStyleGenerator;
-import org.hibernate.id.uuid.UuidGenerator;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 
@@ -57,9 +57,12 @@ public class GenerationStrategyInterpreter {
 			case TABLE: {
 				return org.hibernate.id.enhanced.TableGenerator.class.getName();
 			}
+			case UUID: {
+				return UUIDGenerator.class.getName();
+			}
 			case AUTO: {
 				if ( UUID.class.isAssignableFrom( context.getIdType() ) ) {
-					return UuidGenerator.class.getName();
+					return UUIDGenerator.class.getName();
 				}
 				else if ( "increment".equalsIgnoreCase( context.getGeneratedValueGeneratorName() ) ) {
 					// special case for @GeneratedValue(name="increment")

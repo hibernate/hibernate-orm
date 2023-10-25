@@ -36,3 +36,9 @@ Methods that were accepting or returning a tenant identifier value of type `Stri
 
 Applications can migrate by specifying the type parameter `<String>` when extending `CurrentTenantIdentifierResolver`
 or one of the `MultiTenantConnectionProvider` subtypes.
+
+
+[[IdGeneratorStrategyInterpreter]]
+== Removed IdGeneratorStrategyInterpreter
+
+`IdGeneratorStrategyInterpreter` has been deprecated since 6.0 and has been removed to simplify id generator internals.

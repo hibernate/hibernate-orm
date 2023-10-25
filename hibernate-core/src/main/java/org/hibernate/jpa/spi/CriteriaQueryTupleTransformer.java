@@ -47,7 +47,7 @@ public class CriteriaQueryTupleTransformer extends BasicTransformerAdapter {
 
 		return tupleElements == null
 				? valueHandlerResult.length == 1 ? valueHandlerResult[0] : valueHandlerResult
-				: new TupleImpl( tuple );
+				: new TupleImpl( valueHandlerResult );
 
 	}
 

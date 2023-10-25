@@ -14,6 +14,7 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.JdbcSettings;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DialectLogging;
 import org.hibernate.engine.jdbc.dialect.spi.DialectFactory;
@@ -189,7 +190,7 @@ public class DialectFactoryImpl implements DialectFactory, ServiceRegistryAwareS
 		if ( resolutionInfoSource == null ) {
 			throw new HibernateException(
 					"Unable to determine Dialect without JDBC metadata "
-					+ "(please set 'javax.persistence.jdbc.url', 'hibernate.connection.url', or 'hibernate.dialect')"
+					+ "(please set '" + JdbcSettings.JAKARTA_JDBC_URL + "' for common cases or '" + JdbcSettings.DIALECT + "' when a custom Dialect implementation must be provided)"
 			);
 		}
 

@@ -2164,6 +2164,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		@Override
 		public Object[] extractNaturalIdValues(Object[] state, EntityPersister persister) {
 			final int[] naturalIdPropertyIndexes = persister.getNaturalIdentifierProperties();
+			if ( state == null || naturalIdPropertyIndexes == null ) {
+				return new Object[0];
+			}
 			if ( state.length == naturalIdPropertyIndexes.length ) {
 				return state;
 			}
@@ -2185,6 +2188,9 @@ public class StatefulPersistenceContext implements PersistenceContext {
 			}
 
 			final int[] naturalIdentifierProperties = persister.getNaturalIdentifierProperties();
+			if ( naturalIdentifierProperties == null ) {
+				return new Object[0];
+			}
 			final Object[] naturalIdValues = new Object[naturalIdentifierProperties.length];
 
 			for ( int i = 0; i < naturalIdentifierProperties.length; i++ ) {

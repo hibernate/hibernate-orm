@@ -6,18 +6,14 @@
  */
 package org.hibernate.cache.internal;
 
-import java.io.IOException;
-import java.io.ObjectInputStream;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
-import org.hibernate.Internal;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.ValueHolder;
+import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Defines a key for caching natural identifier resolutions into the second level cache.
@@ -33,88 +29,38 @@ public class NaturalIdCacheKey implements Serializable {
 	private final String entityName;
 	private final String tenantId;
 	private final int hashCode;
-	// "transient" is important here -- NaturalIdCacheKey needs to be Serializable
-	private transient ValueHolder<String> toString;
 
-	public static class NaturalIdCacheKeyBuilder implements MutableCacheKeyBuilder {
-
-		private final String entityName;
-		private final String tenantIdentifier;
-
-		private final List<Object> values;
-		private int hashCode;
-
-		public NaturalIdCacheKeyBuilder(
-				Object naturalIdValues,
-				EntityPersister persister,
-				String entityName,
-				SharedSessionContractImplementor session) {
-			this.entityName = entityName;
-			this.tenantIdentifier = session.getTenantIdentifier();
-			values = new ArrayList<>();
-			persister.getNaturalIdMapping().addToCacheKey( this, naturalIdValues, session );
-		}
-
-		public NaturalIdCacheKeyBuilder(
-				Object naturalIdValues,
-				EntityPersister persister,
-				SharedSessionContractImplementor session) {
-			this( naturalIdValues, persister, persister.getRootEntityName(), session );
-		}
-
-		@Override
-		public void addValue(Object value) {
-			values.add( value );
-		}
-
-		@Override
-		public void addHashCode(int hashCode) {
-			this.hashCode = 37 * this.hashCode + hashCode;
-		}
-
-		@Override
-		public NaturalIdCacheKey build() {
-			return new NaturalIdCacheKey(
-					values.toArray( new Object[0] ),
-					entityName,
-					tenantIdentifier,
-					hashCode
-			);
-		}
-	}
-
-	@Internal
-	public NaturalIdCacheKey(Object naturalIdValues, String entityName, String tenantId, int hashCode) {
+	private NaturalIdCacheKey(Object naturalIdValues, String entityName, String tenantId, int hashCode) {
 		this.naturalIdValues = naturalIdValues;
 		this.entityName = entityName;
 		this.tenantId = tenantId;
 		this.hashCode = hashCode;
-
-		initTransients();
 	}
 
-	private void initTransients() {
-		this.toString = new ValueHolder<>(
-				() -> {
-					//Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys
-					//the only same way to differentiate the keys is to include the disassembled values in the string.
-					final StringBuilder toStringBuilder = new StringBuilder().append( entityName ).append( "##NaturalId[" );
-					if ( naturalIdValues instanceof Object[] ) {
-						final Object[] values = (Object[]) naturalIdValues;
-						for ( int i = 0; i < values.length; i++ ) {
-							toStringBuilder.append( values[ i ] );
-							if ( i + 1 < values.length ) {
-								toStringBuilder.append( ", " );
-							}
-						}
-					}
-					else {
-						toStringBuilder.append( naturalIdValues );
-					}
-
-					return toStringBuilder.toString();
-				}
+	public static NaturalIdCacheKey from(
+			Object naturalIdValues,
+			EntityPersister persister,
+			String entityName,
+			SharedSessionContractImplementor session) {
+		final NaturalIdMapping naturalIdMapping = persister.getNaturalIdMapping();
+		final NaturalIdCacheKeyBuilder builder = new NaturalIdCacheKeyBuilder(
+				entityName,
+				session.getTenantIdentifier(),
+				naturalIdMapping.getJdbcTypeCount()
 		);
+		final JavaType<Object> tenantIdentifierJavaType = session.getFactory().getTenantIdentifierJavaType();
+		final Object tenantId = session.getTenantIdentifierValue();
+		// Add the tenant id to the hash code
+		builder.addHashCode( tenantId == null ? 0 : tenantIdentifierJavaType.extractHashCode( tenantId ) );
+		naturalIdMapping.addToCacheKey( builder, naturalIdValues, session );
+		return builder.build();
+	}
+
+	public static NaturalIdCacheKey from(
+			Object naturalIdValues,
+			EntityPersister persister,
+			SharedSessionContractImplementor session) {
+		return from( naturalIdValues, persister, persister.getRootEntityName(), session );
 	}
 
 	@SuppressWarnings( {"UnusedDeclaration"})
@@ -130,11 +76,6 @@ public class NaturalIdCacheKey implements Serializable {
 	@SuppressWarnings( {"UnusedDeclaration"})
 	public Object getNaturalIdValues() {
 		return naturalIdValues;
-	}
-
-	@Override
-	public String toString() {
-		return toString.getValue();
 	}
 
 	@Override
@@ -162,9 +103,59 @@ public class NaturalIdCacheKey implements Serializable {
 				&& Objects.deepEquals( this.naturalIdValues, other.naturalIdValues );
 	}
 
-	private void readObject(ObjectInputStream ois)
-			throws ClassNotFoundException, IOException {
-		ois.defaultReadObject();
-		initTransients();
+	@Override
+	public String toString() {
+		//Complex toString is needed as naturalIds for entities are not simply based on a single value like primary keys
+		//the only same way to differentiate the keys is to include the disassembled values in the string.
+		final StringBuilder toStringBuilder = new StringBuilder().append( entityName ).append( "##NaturalId[" );
+		if ( naturalIdValues instanceof Object[] ) {
+			final Object[] values = (Object[]) naturalIdValues;
+			for ( int i = 0; i < values.length; i++ ) {
+				toStringBuilder.append( values[ i ] );
+				if ( i + 1 < values.length ) {
+					toStringBuilder.append( ", " );
+				}
+			}
+		}
+		else {
+			toStringBuilder.append( naturalIdValues );
+		}
+
+		return toStringBuilder.toString();
+	}
+
+	private static class NaturalIdCacheKeyBuilder implements MutableCacheKeyBuilder {
+
+		private final String entityName;
+		private final String tenantIdentifier;
+		private final Object[] naturalIdValues;
+		private int hashCode;
+		private int naturalIdValueIndex;
+
+		public NaturalIdCacheKeyBuilder(String entityName, String tenantIdentifier, int naturalIdValueCount) {
+			this.entityName = entityName;
+			this.tenantIdentifier = tenantIdentifier;
+			this.naturalIdValues = new Object[naturalIdValueCount];
+		}
+
+		@Override
+		public void addValue(Object value) {
+			naturalIdValues[naturalIdValueIndex++] = value;
+		}
+
+		@Override
+		public void addHashCode(int hashCode) {
+			this.hashCode = 37 * this.hashCode + hashCode;
+		}
+
+		@Override
+		public NaturalIdCacheKey build() {
+			return new NaturalIdCacheKey(
+					naturalIdValues,
+					entityName,
+					tenantIdentifier,
+					hashCode
+			);
+		}
 	}
 }

@@ -16,10 +16,8 @@ import org.hibernate.Session;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
-import org.hibernate.engine.jdbc.connections.internal.DriverManagerConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.mapping.PersistentClass;
@@ -184,7 +182,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		} );
 	}
 
-	private static class TestCurrentTenantIdentifierResolver implements CurrentTenantIdentifierResolver {
+	private static class TestCurrentTenantIdentifierResolver implements CurrentTenantIdentifierResolver<Object> {
 		private String currentTenantIdentifier;
 		private final AtomicBoolean postBoot = new AtomicBoolean(false);
 
@@ -193,7 +191,7 @@ public class DiscriminatorMultiTenancyTest extends BaseUnitTestCase {
 		}
 
 		@Override
-		public String resolveCurrentTenantIdentifier() {
+		public Object resolveCurrentTenantIdentifier() {
 			if ( postBoot.get() == false ) {
 				//Check to prevent any optimisation which might want to cache the tenantId too early during bootstrap:
 				//it's a common use case to want to provide the tenantId, for example, via a ThreadLocal.

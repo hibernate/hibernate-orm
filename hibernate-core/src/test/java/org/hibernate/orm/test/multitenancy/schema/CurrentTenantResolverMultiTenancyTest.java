@@ -45,7 +45,7 @@ public class CurrentTenantResolverMultiTenancyTest extends SchemaBasedMultiTenan
 		return sessionBuilder;
 	}
 
-	private static class TestCurrentTenantIdentifierResolver implements CurrentTenantIdentifierResolver {
+	private static class TestCurrentTenantIdentifierResolver implements CurrentTenantIdentifierResolver<Object> {
 		private String currentTenantIdentifier;
 
 		@Override
@@ -54,7 +54,7 @@ public class CurrentTenantResolverMultiTenancyTest extends SchemaBasedMultiTenan
 		}
 
 		@Override
-		public String resolveCurrentTenantIdentifier() {
+		public Object resolveCurrentTenantIdentifier() {
 			return currentTenantIdentifier;
 		}
 	}

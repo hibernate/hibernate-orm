@@ -46,6 +46,8 @@ public interface SessionCreationOptions {
 
 	String getTenantIdentifier();
 
+	Object getTenantIdentifierValue();
+
 	TimeZone getJdbcTimeZone();
 
 	/**

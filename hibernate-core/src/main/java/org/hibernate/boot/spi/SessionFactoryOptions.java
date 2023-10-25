@@ -32,6 +32,8 @@ import org.hibernate.query.NullPrecedence;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.stat.Statistics;
+import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.java.ObjectJavaType;
 import org.hibernate.type.format.FormatMapper;
 
 /**
@@ -154,7 +156,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isMultiTenancyEnabled();
 
-	CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
+	CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver();
 
 	boolean isJtaTrackByThread();
 
@@ -341,4 +343,14 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	 */
 	@Incubating
 	FormatMapper getXmlFormatMapper();
+
+	/**
+	 * The default tenant identifier java type to use, in case no explicit tenant identifier property is defined.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	default JavaType<Object> getDefaultTenantIdentifierJavaType() {
+		return ObjectJavaType.INSTANCE;
+	}
 }

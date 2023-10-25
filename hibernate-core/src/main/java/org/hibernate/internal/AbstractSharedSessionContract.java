@@ -152,7 +152,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private final Interceptor interceptor;
 
-	private final String tenantIdentifier;
+	private final Object tenantIdentifier;
 	private final TimeZone jdbcTimeZone;
 
 	// mutable state
@@ -257,8 +257,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		);
 	}
 
-	private String getTenantId( SessionFactoryImpl factory, SessionCreationOptions options ) {
-		final String tenantIdentifier = options.getTenantIdentifier();
+	private Object getTenantId( SessionFactoryImpl factory, SessionCreationOptions options ) {
+		final Object tenantIdentifier = options.getTenantIdentifierValue();
 		if ( factory.getSessionFactoryOptions().isMultiTenancyEnabled() && tenantIdentifier == null ) {
 			throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
 		}
@@ -367,6 +367,14 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public String getTenantIdentifier() {
+		if ( tenantIdentifier == null ) {
+			return null;
+		}
+		return factory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+	}
+
+	@Override
+	public Object getTenantIdentifierValue() {
 		return tenantIdentifier;
 	}
 
@@ -611,7 +619,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			}
 			else {
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
-						getTenantIdentifier(),
+						getTenantIdentifierValue(),
 						getEventListenerManager(),
 						fastSessionServices.multiTenantConnectionProvider,
 						this

@@ -6,13 +6,12 @@
  */
 package org.hibernate.context.spi;
 
-import java.util.Objects;
-
 import org.hibernate.Session;
 import org.hibernate.SessionBuilder;
 import org.hibernate.context.TenantIdentifierMismatchException;
 import org.hibernate.engine.spi.SessionBuilderImplementor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.descriptor.java.JavaType;
 
 /**
  * Base support for {@link CurrentSessionContext} implementors.
@@ -37,7 +36,7 @@ public abstract class AbstractCurrentSessionContext implements CurrentSessionCon
 
 	protected SessionBuilder baseSessionBuilder() {
 		final SessionBuilderImplementor builder = factory.withOptions();
-		final CurrentTenantIdentifierResolver resolver = factory.getCurrentTenantIdentifierResolver();
+		final CurrentTenantIdentifierResolver<Object> resolver = factory.getCurrentTenantIdentifierResolver();
 		if ( resolver != null ) {
 			builder.tenantIdentifier( resolver.resolveCurrentTenantIdentifier() );
 		}
@@ -45,16 +44,17 @@ public abstract class AbstractCurrentSessionContext implements CurrentSessionCon
 	}
 
 	protected void validateExistingSession(Session existingSession) {
-		final CurrentTenantIdentifierResolver resolver = factory.getCurrentTenantIdentifierResolver();
+		final CurrentTenantIdentifierResolver<Object> resolver = factory.getCurrentTenantIdentifierResolver();
 		if ( resolver != null && resolver.validateExistingCurrentSessions() ) {
-			final String current = resolver.resolveCurrentTenantIdentifier();
-			if ( !Objects.equals( existingSession.getTenantIdentifier(), current ) ) {
+			final Object currentValue = resolver.resolveCurrentTenantIdentifier();
+			final JavaType<Object> tenantIdentifierJavaType = factory.getTenantIdentifierJavaType();
+			if ( !tenantIdentifierJavaType.areEqual( currentValue, existingSession.getTenantIdentifierValue() ) ) {
 				throw new TenantIdentifierMismatchException(
 						String.format(
 								"Reported current tenant identifier [%s] did not match tenant identifier from " +
 										"existing session [%s]",
-								current,
-								existingSession.getTenantIdentifier()
+								tenantIdentifierJavaType.toString( currentValue ),
+								tenantIdentifierJavaType.toString( existingSession.getTenantIdentifierValue() )
 						)
 				);
 			}

@@ -384,7 +384,12 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
-	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
+	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
+		return null;
+	}
+
+	@Override
+	public JavaType<Object> getTenantIdentifierJavaType() {
 		return null;
 	}
 

@@ -38,13 +38,13 @@ import static org.hibernate.cfg.MultiTenancySettings.TENANT_IDENTIFIER_TO_USE_FO
  *
  * @author Steve Ebersole
  */
-public class DataSourceBasedMultiTenantConnectionProviderImpl
-		extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl
+public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
+		extends AbstractDataSourceBasedMultiTenantConnectionProviderImpl<T>
 		implements ServiceRegistryAwareService, Stoppable {
 
-	private Map<String,DataSource> dataSourceMap;
+	private Map<T, DataSource> dataSourceMap;
 	private JndiService jndiService;
-	private String tenantIdentifierForAny;
+	private T tenantIdentifierForAny;
 	private String baseJndiNamespace;
 
 	@Override
@@ -53,7 +53,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl
 	}
 
 	@Override
-	protected DataSource selectDataSource(String tenantIdentifier) {
+	protected DataSource selectDataSource(T tenantIdentifier) {
 		DataSource dataSource = dataSourceMap().get( tenantIdentifier );
 		if ( dataSource == null ) {
 			dataSource = (DataSource) jndiService.locate( baseJndiNamespace + '/' + tenantIdentifier );
@@ -62,7 +62,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl
 		return dataSource;
 	}
 
-	private Map<String,DataSource> dataSourceMap() {
+	private Map<T, DataSource> dataSourceMap() {
 		if ( dataSourceMap == null ) {
 			dataSourceMap = new ConcurrentHashMap<>();
 		}
@@ -92,12 +92,12 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl
 		if ( namedObject instanceof DataSource ) {
 			final int loc = jndiName.lastIndexOf( '/' );
 			this.baseJndiNamespace = jndiName.substring( 0, loc );
-			this.tenantIdentifierForAny = jndiName.substring( loc + 1 );
+			this.tenantIdentifierForAny = (T) jndiName.substring( loc + 1 );
 			dataSourceMap().put( tenantIdentifierForAny, (DataSource) namedObject );
 		}
 		else if ( namedObject instanceof Context ) {
 			this.baseJndiNamespace = jndiName;
-			this.tenantIdentifierForAny = (String) serviceRegistry.getService( ConfigurationService.class )
+			this.tenantIdentifierForAny = (T) serviceRegistry.getService( ConfigurationService.class )
 					.getSettings()
 					.get( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY );
 			if ( tenantIdentifierForAny == null ) {

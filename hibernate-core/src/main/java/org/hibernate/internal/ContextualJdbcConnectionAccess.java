@@ -23,16 +23,16 @@ import org.hibernate.event.jfr.JdbcConnectionReleaseEvent;
  * @author Steve Ebersole
  */
 public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Serializable {
-	private final String tenantIdentifier;
+	private final Object tenantIdentifier;
 	private final SessionEventListener listener;
-	private final MultiTenantConnectionProvider connectionProvider;
+	private final MultiTenantConnectionProvider<Object> connectionProvider;
 	private final SharedSessionContractImplementor session;
 
 
 	public ContextualJdbcConnectionAccess(
-			String tenantIdentifier,
+			Object tenantIdentifier,
 			SessionEventListener listener,
-			MultiTenantConnectionProvider connectionProvider,
+			MultiTenantConnectionProvider<Object> connectionProvider,
 			SharedSessionContractImplementor session) {
 		this.tenantIdentifier = tenantIdentifier;
 		this.listener = listener;

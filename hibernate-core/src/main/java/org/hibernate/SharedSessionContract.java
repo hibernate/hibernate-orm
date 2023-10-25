@@ -32,6 +32,14 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	String getTenantIdentifier();
 
 	/**
+	 * Obtain the tenant identifier associated with this session.
+	 *
+	 * @return The tenant identifier associated with this session, or {@code null}
+	 * @since 6.4
+	 */
+	Object getTenantIdentifierValue();
+
+	/**
 	 * End the session by releasing the JDBC connection and cleaning up.
 	 *
 	 * @throws HibernateException Indicates problems cleaning up.

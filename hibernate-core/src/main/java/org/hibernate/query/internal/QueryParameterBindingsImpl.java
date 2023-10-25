@@ -173,6 +173,10 @@ public class QueryParameterBindingsImpl implements QueryParameterBindings {
 	@Override
 	public QueryKey.ParameterBindingsMemento generateQueryKeyMemento(SharedSessionContractImplementor session) {
 		final MutableCacheKeyImpl mutableCacheKey = new MutableCacheKeyImpl( parameterBindingMap.size() );
+		final JavaType<Object> tenantIdentifierJavaType = session.getFactory().getTenantIdentifierJavaType();
+		final Object tenantId = session.getTenantIdentifierValue();
+		mutableCacheKey.addValue( tenantIdentifierJavaType.getMutabilityPlan().disassemble( tenantId, session ) );
+		mutableCacheKey.addHashCode( tenantId == null ? 0 : tenantIdentifierJavaType.extractHashCode( tenantId ) );
 		// We know that parameters are consumed in processing order, this ensures consistency of generated cache keys
 		parameterMetadata.visitParameters( queryParameter -> {
 			final QueryParameterBinding<?> binding = parameterBindingMap.get( queryParameter );

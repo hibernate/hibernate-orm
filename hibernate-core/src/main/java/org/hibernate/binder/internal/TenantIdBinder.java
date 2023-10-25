@@ -55,23 +55,7 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 							FILTER_NAME,
 							"",
 							singletonMap( PARAMETER_NAME, tenantIdType )
-					) {
-						// unfortunately the old APIs only accept String for a tenantId, so parse it
-						@Override
-						public Object processArgument(Object value) {
-							if (value==null) {
-								return null;
-							}
-							else if (value instanceof String) {
-								return getParameterJdbcMapping( PARAMETER_NAME )
-										.getJavaTypeDescriptor()
-										.fromString((String) value);
-							}
-							else {
-								return value;
-							}
-						}
-					}
+					)
 			);
 		}
 		else {
@@ -89,27 +73,27 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 			}
 		}
 		persistentClass.addFilter(
-						FILTER_NAME,
-						columnNameOrFormula(property)
-								+ " = :"
-								+ PARAMETER_NAME,
-						true,
-						emptyMap(),
-						emptyMap()
-				);
+				FILTER_NAME,
+				columnNameOrFormula( property )
+						+ " = :"
+						+ PARAMETER_NAME,
+				true,
+				emptyMap(),
+				emptyMap()
+		);
 
-		property.resetUpdateable(false);
-		property.resetOptional(false);
+		property.resetUpdateable( false );
+		property.resetOptional( false );
 	}
 
 	private String columnNameOrFormula(Property property) {
-		if ( property.getColumnSpan()!=1 ) {
-			throw new MappingException("@TenantId attribute must be mapped to a single column or formula");
+		if ( property.getColumnSpan() != 1 ) {
+			throw new MappingException( "@TenantId attribute must be mapped to a single column or formula" );
 		}
-		Selectable selectable = property.getSelectables().get(0);
+		Selectable selectable = property.getSelectables().get( 0 );
 		return selectable.isFormula()
-				? ((Formula) selectable).getFormula()
-				: ((Column) selectable).getName();
+				? ( (Formula) selectable ).getFormula()
+				: ( (Column) selectable ).getName();
 	}
 
 }

@@ -36,6 +36,7 @@ import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.generator.Generator;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -143,7 +144,14 @@ public interface SessionFactoryImplementor
 	CustomEntityDirtinessStrategy getCustomEntityDirtinessStrategy();
 
 	//todo make a Service ?
-	CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver();
+	CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver();
+
+	/**
+	 * The java type to use for a tenant identifier.
+	 *
+	 * @since 6.4
+	 */
+	JavaType<Object> getTenantIdentifierJavaType();
 
 	/**
 	 * @return the FastSessionServices instance associated with this SessionFactory

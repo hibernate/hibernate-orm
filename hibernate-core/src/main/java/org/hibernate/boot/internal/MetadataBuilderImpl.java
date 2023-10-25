@@ -29,7 +29,6 @@ import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.FunctionContributor;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
@@ -613,8 +612,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		private boolean noConstraintByDefault;
 		private final ArrayList<MetadataSourceType> sourceProcessOrdering;
 
-		private final IdGeneratorInterpreterImpl idGenerationTypeInterpreter = new IdGeneratorInterpreterImpl();
-
 		private final String schemaCharset;
 		private final boolean xmlMappingEnabled;
 		private final boolean allowExtensionsInCdi;
@@ -923,11 +920,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		@Override
 		public boolean isMultiTenancyEnabled() {
 			return multiTenancyEnabled;
-		}
-
-		@Override
-		public IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter() {
-			return idGenerationTypeInterpreter;
 		}
 
 		@Override

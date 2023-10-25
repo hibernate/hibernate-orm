@@ -40,7 +40,8 @@ public interface ExtractionContext {
 			String queryString,
 			Object[] positionalParameters,
 			ResultSetProcessor<T> resultSetProcessor) throws SQLException {
-		try (PreparedStatement statement = getJdbcConnection().prepareStatement( queryString )) {
+		try (Connection jdbcConnection = getJdbcConnection();
+			 PreparedStatement statement = jdbcConnection.prepareStatement( queryString )) {
 			if ( positionalParameters != null ) {
 				for ( int i = 0 ; i < positionalParameters.length ; i++ ) {
 					statement.setObject( i + 1, positionalParameters[i] );

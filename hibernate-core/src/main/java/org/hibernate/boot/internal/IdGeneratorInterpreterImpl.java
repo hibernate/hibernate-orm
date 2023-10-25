@@ -6,7 +6,6 @@
  */
 package org.hibernate.boot.internal;
 
-import java.util.ArrayList;
 import java.util.UUID;
 
 import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
@@ -31,18 +30,9 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 	private static final CoreMessageLogger log = CoreLogging.messageLogger( IdGeneratorInterpreterImpl.class );
 
 	private final IdGeneratorStrategyInterpreter fallbackInterpreter = FallbackInterpreter.INSTANCE;
-	private ArrayList<IdGeneratorStrategyInterpreter> delegates;
 
 	@Override
 	public String determineGeneratorName(GenerationType generationType, GeneratorNameDeterminationContext context) {
-		if ( delegates != null ) {
-			for ( IdGeneratorStrategyInterpreter delegate : delegates ) {
-				final String result = delegate.determineGeneratorName( generationType, context );
-				if ( result != null ) {
-					return result;
-				}
-			}
-		}
 		return fallbackInterpreter.determineGeneratorName( generationType, context );
 	}
 
@@ -51,12 +41,6 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 			TableGenerator tableGeneratorAnnotation,
 			IdentifierGeneratorDefinition.Builder definitionBuilder) {
 		fallbackInterpreter.interpretTableGenerator( tableGeneratorAnnotation, definitionBuilder );
-
-		if ( delegates != null ) {
-			for ( IdGeneratorStrategyInterpreter delegate : delegates ) {
-				delegate.interpretTableGenerator( tableGeneratorAnnotation, definitionBuilder );
-			}
-		}
 	}
 
 	@Override
@@ -64,19 +48,6 @@ public class IdGeneratorInterpreterImpl implements IdGeneratorStrategyInterprete
 			SequenceGenerator sequenceGeneratorAnnotation,
 			IdentifierGeneratorDefinition.Builder definitionBuilder) {
 		fallbackInterpreter.interpretSequenceGenerator( sequenceGeneratorAnnotation, definitionBuilder );
-
-		if ( delegates != null ) {
-			for ( IdGeneratorStrategyInterpreter delegate : delegates ) {
-				delegate.interpretSequenceGenerator( sequenceGeneratorAnnotation, definitionBuilder );
-			}
-		}
-	}
-
-	public void addInterpreterDelegate(IdGeneratorStrategyInterpreter delegate) {
-		if ( delegates == null ) {
-			delegates = new ArrayList<>();
-		}
-		delegates.add( delegate );
 	}
 
 	private static class FallbackInterpreter implements IdGeneratorStrategyInterpreter {

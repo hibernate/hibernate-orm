@@ -11,7 +11,6 @@ import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.FunctionContributor;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -443,12 +442,6 @@ public interface MetadataBuilder {
 	 * @return {@code this} for method chaining
 	 */
 	MetadataBuilder applyAttributeConverter(AttributeConverter<?,?> attributeConverter, boolean autoApply);
-
-	/**
-	 * @deprecated since {@link IdGeneratorStrategyInterpreter} is deprecated
-	 */
-	@Deprecated(since = "6")
-	MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter);
 
 	/**
 	 * Actually build the metamodel

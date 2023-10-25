@@ -74,7 +74,6 @@ import org.hibernate.internal.log.DeprecationLogger;
 import org.hibernate.internal.util.NullnessHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
-import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
@@ -434,12 +433,6 @@ public class MetadataBuilderImpl implements MetadataBuilderImplementor, TypeCont
 		bootstrapContext.addAttributeConverterDescriptor(
 				new InstanceBasedConverterDescriptor( attributeConverter, autoApply, bootstrapContext.getClassmateContext() )
 		);
-		return this;
-	}
-
-	@Override
-	public MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter) {
-		this.options.idGenerationTypeInterpreter.addInterpreterDelegate( interpreter );
 		return this;
 	}
 

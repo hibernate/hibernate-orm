@@ -246,12 +246,6 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	}
 
 	@Override
-	public MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter) {
-		delegate.applyIdGenerationTypeInterpreter( interpreter );
-		return getThis();
-	}
-
-	@Override
 	public MetadataBuildingOptions getMetadataBuildingOptions() {
 		return delegate.getMetadataBuildingOptions();
 	}

@@ -23,7 +23,7 @@ Soft delete support is defined by 3 main parts -
 
 1. The <<soft-delete-column,column>> which contains the indicator.
 2. A <<soft-delete-conversion,conversion>> from `Boolean` indicator value to the proper database type
-3. Whether to <<soft-delete-reverse,reverse>> the indicator values, tracking active/inactive instead
+3. A <<soft-delete-type,strategy>> for interpreting the stored indicator values.
 
 
 [[soft-delete-column]]
@@ -31,8 +31,12 @@ Soft delete support is defined by 3 main parts -
 
 The column where the indicator value is stored is defined using `@SoftDelete#columnName` attribute.
 
-When using <<soft-delete-reverse,reversed>> mappings, the column name defaults to `active`; otherwise, it
-defaults to the name `deleted`.
+The default column name depends on the <<soft-delete-type,strategy>> being used -
+
+ACTIVE::
+    The default column name is `active`.
+DELETED::
+    The default column name is `deleted`.
 
 See <<soft-delete-basic-example>> for an example of customizing the column name.
 
@@ -42,11 +46,11 @@ Depending on the conversion type, an appropriate check constraint may be applied
 [[soft-delete-conversion]]
 ==== Indicator conversion
 
-The conversion is defined using a JPA <<basic-jpa-convert,AttributeConverter>>.  The "domain type" is always
-`boolean`.  The "relational type" can be any type, as defined by the converter; generally `BOOLEAN`, `BIT`, `INTEGER` or `CHAR`.
+The conversion is defined using a Jakarta Persistence <<basic-jpa-convert,AttributeConverter>>.  The domain-type is always
+`boolean`.  The relational-type can be any type, as defined by the converter; generally `BOOLEAN`, `BIT`, `INTEGER` or `CHAR`.
 
 An explicit conversion can be specified using `@SoftDelete#converter`.  See <<soft-delete-basic-example>>
-for an example of specifying an explicit conversion.  Explicit conversions can specify a custom converter or leverage the 3
+for an example of specifying an explicit conversion.  Explicit conversions can specify a custom converter or leverage
 Hibernate-provided converters for the 3 most common cases -
 
 `NumericBooleanConverter`:: Defines conversion using `0` for `false` and `1` for `true`
@@ -59,6 +63,8 @@ If an explicit converter is not specified, Hibernate will follow the same resolu
 boolean (and bit):: the underlying type is boolean / bit and no conversion is applied
 numeric:: the underlying type is integer and values are converted according to `NumericBooleanConverter`
 character:: the underlying type is char and values are converted according to `TrueFalseConverter`
+
+IMPORTANT: The converter should simply convert the `true` and `false`, irrespective of the <<soft-delete-type,strategy>> used.  Hibernate will handle applying the strategy.
 
 
 [[soft-delete-entity]]
@@ -133,35 +139,17 @@ The `@SoftDelete` annotation may also be placed at the package level, in which c
 entities and collections defined within the package.
 
 
-[[soft-delete-reverse]]
-==== Reversed soft delete
+[[soft-delete-type]]
+==== Strategy - SoftDeleteType
 
-A common requirement in applications using soft delete is to track rows which are active as opposed to removed,
-reversing the boolean value.  For example:
+Given truth values, there are 2 valid ways to interpret the values stored in the database.  This
+interpretation is defined by the SoftDeleteType enumeration and can be configured per-usage using
+`@SoftDelete(..., strategy=ACTIVE)` or `@SoftDelete(..., strategy=DELETED)` -
 
-[[soft-delete-reverse-example]]
-.Reversed soft-delete
-====
-[source,java]
-----
-include::{testing-dir}/converter/reversed/TheEntity.java[tag=example-soft-delete-reverse, indent=0]
-----
-====
+ACTIVE::
+    Tracks rows which are active.  A `true` value in the database indicates that the row is active
+    (non-deleted); a `false` value indicates inactive (deleted).
+DELETED::
+    Tracks rows which are deleted. A `true` value in the database indicates that the row is deleted;
+    a `false` value indicates that the row is non-deleted.
 
-When an instance of `TheEntity` is persisted, the value `'Y'` will be inserted into the
-`active` column.  When an instance of `TheEntity` is removed, the column's value is updated to `'N'`.
-
-This example explicitly specifies the built-in `YesNoConverter`, but reversal works with any conversion
-even implicit conversions -
-
-[[soft-delete-reverse-example-2]]
-.Reversed soft-delete with implicit conversion
-====
-[source,java]
-----
-include::{testing-dir}/converter/reversed/TheEntity2.java[tag=example-soft-delete-reverse, indent=0]
-----
-====
-
-The important thing to remember is that the stored values are reversed from the "normal" soft delete state.
-`active == true` is the same as `deleted == false` - both describe the same state.

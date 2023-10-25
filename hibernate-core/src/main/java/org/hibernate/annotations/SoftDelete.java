@@ -62,8 +62,7 @@ public @interface SoftDelete {
 	/**
 	 * (Optional) The name of the column.
 	 * <p/>
-	 * Default depends on {@linkplain #trackActive()} - {@code deleted} if {@code false} and
-	 * {@code active} if {@code true}.
+	 * Default depends on the {@linkplain #strategy() strategy} being used.
 	 *
 	 * @see SoftDeleteType#getDefaultColumnName()
 	 */

@@ -1,20 +1,56 @@
-:family: 6.3
-:version: 6.3.0.Final
-
 = Hibernate {version}
 Steve Ebersole
 :awestruct-tags: ["Hibernate ORM", "Releases"]
 :awestruct-layout: blog-post
+
+:version: 6.4.0.CR1
+:family: 6.4
+
 :docs-url: https://docs.jboss.org/hibernate/orm/{family}
 :javadocs-url: {docs-url}/javadocs
 :migration-guide-url: {docs-url}/migration-guide/migration-guide.html
 :intro-guide-url: {docs-url}/introduction/html_single/Hibernate_Introduction.html
 :user-guide-url: {docs-url}/userguide/html_single/Hibernate_User_Guide.html
 
-// Text ...
+6.4 adds some cool new features, in addition to many improvements and fixes.
+
+[[soft-delete]]
+== Soft Delete
 
 
-== Conclusion
+6.4 adds support for soft deletes using the new `@SoftDelete` annotation.
+
+[source,java]
+----
+@Entity
+@SoftDelete
+class Account {
+	...
+}
+----
+
+Dealing with values as deleted/non-deleted versus active/inactive (reversed) is simple using an annotation attribute:
+
+This has the ability to easily handle active v. deleted tracking using a simple annotation attribute:
+
+[source,java]
+----
+@Entity
+@SoftDelete(strategy=ACTIVE)
+class Account {
+	...
+}
+----
+
+It even supports pluggable converters for storing the indicator value into the database.strategy
+
+See the link:{userGuideBase}#soft-delete[User Guide] for details.
+
+
+
+
+
+== Finally,
 
 For additional details, see:
 

@@ -374,9 +374,11 @@ selectObject
 // NOTE: This *must* begin with the "FROM" token, otherwise the sub-query rule will be ambiguous
 // with the expression rule.
 // Also note: after a comma weak keywords are allowed and should be treated as identifiers.
+// fromJoin is prefixed with weakKeywords() ad some entities can be from domains ending in "in".
+// eg musicmaster.in causing, current fix will atleast enable escaping the class path (fully qualified name)
 
 fromClause
-	: FROM^ { weakKeywords(); } fromRange ( fromJoin | COMMA! { weakKeywords(); } fromRange )*
+	: FROM^ { weakKeywords(); } fromRange ( { weakKeywords(); }   fromJoin | COMMA! { weakKeywords(); } fromRange )*
 	;
 
 //## joinType:

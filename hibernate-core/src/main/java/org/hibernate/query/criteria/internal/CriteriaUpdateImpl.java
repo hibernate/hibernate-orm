@@ -27,8 +27,8 @@ import org.hibernate.sql.ast.Clause;
 public class CriteriaUpdateImpl<T> extends AbstractManipulationCriteriaQuery<T> implements CriteriaUpdate<T> {
 	private List<Assignment> assignments = new ArrayList<Assignment>();
 
-	public CriteriaUpdateImpl(CriteriaBuilderImpl criteriaBuilder) {
-		super( criteriaBuilder );
+	public CriteriaUpdateImpl(CriteriaBuilderImpl criteriaBuilder, Class<T> rootClass) {
+		super( criteriaBuilder, rootClass );
 	}
 
 	@Override

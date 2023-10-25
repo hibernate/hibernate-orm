@@ -18,8 +18,8 @@ import org.hibernate.query.criteria.internal.compile.RenderingContext;
  * @author Steve Ebersole
  */
 public class CriteriaDeleteImpl<T> extends AbstractManipulationCriteriaQuery<T> implements CriteriaDelete<T> {
-	protected CriteriaDeleteImpl(CriteriaBuilderImpl criteriaBuilder) {
-		super( criteriaBuilder );
+	protected CriteriaDeleteImpl(CriteriaBuilderImpl criteriaBuilder, Class<T> rootClass) {
+		super( criteriaBuilder, rootClass );
 	}
 
 	@Override

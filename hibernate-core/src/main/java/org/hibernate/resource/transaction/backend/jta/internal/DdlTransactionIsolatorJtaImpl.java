@@ -8,6 +8,7 @@ package org.hibernate.resource.transaction.backend.jta.internal;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import javax.transaction.NotSupportedException;
 import javax.transaction.SystemException;
 import javax.transaction.Transaction;
 import javax.transaction.TransactionManager;
@@ -50,9 +51,15 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 
 			this.suspendedTransaction = tm.suspend();
 			log.tracef( "DdlTransactionIsolatorJtaImpl#prepare: suspended Transaction -> %s", this.suspendedTransaction );
+
+			tm.begin();
+			log.tracef( "DdlTransactionIsolatorJtaImpl#prepare: begin Transaction" );
 		}
 		catch (SystemException e) {
 			throw new HibernateException( "Unable to suspend current JTA transaction in preparation for DDL execution" );
+		}
+		catch (NotSupportedException e) {
+			throw new HibernateException( "Unable to start JTA transaction in preparation for DDL execution" );
 		}
 
 		try {
@@ -60,13 +67,6 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 		}
 		catch (SQLException e) {
 			throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable to open JDBC Connection for DDL execution" );
-		}
-
-		try {
-			jdbcConnection.setAutoCommit( true );
-		}
-		catch (SQLException e) {
-			throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable set JDBC Connection for DDL execution to autocommit" );
 		}
 	}
 
@@ -93,6 +93,12 @@ public class DdlTransactionIsolatorJtaImpl implements DdlTransactionIsolator {
 			catch (SQLException e) {
 				throw jdbcContext.getSqlExceptionHelper().convert( e, "Unable to release JDBC Connection used for DDL execution" );
 			}
+		}
+		try {
+			jdbcContext.getServiceRegistry().getService( JtaPlatform.class ).retrieveTransactionManager().commit();
+		}
+		catch (Exception e) {
+			throw new HibernateException( "Unable to commit JTA transaction after DDL execution" );
 		}
 
 		if ( suspendedTransaction != null ) {

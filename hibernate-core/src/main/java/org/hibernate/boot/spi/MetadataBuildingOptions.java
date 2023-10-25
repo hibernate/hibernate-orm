@@ -9,7 +9,6 @@ package org.hibernate.boot.spi;
 import java.util.List;
 
 import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
@@ -151,12 +150,6 @@ public interface MetadataBuildingOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_CONNECTION_PROVIDER
 	 */
 	boolean isMultiTenancyEnabled();
-
-	/**
-	 * @deprecated since {@link IdGeneratorStrategyInterpreter} is deprecated
-	 */
-	@Deprecated(since = "6")
-	IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter();
 
 	/**
 	 * @return the {@link TypeConfiguration} belonging to the {@link BootstrapContext}

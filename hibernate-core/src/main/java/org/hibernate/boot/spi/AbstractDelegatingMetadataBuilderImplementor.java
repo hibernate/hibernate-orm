@@ -6,9 +6,6 @@
  */
 package org.hibernate.boot.spi;
 
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.SharedCacheMode;
-
 import org.hibernate.boot.CacheRegionDefinition;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataBuilder;
@@ -17,7 +14,6 @@ import org.hibernate.boot.archive.scan.spi.ScanOptions;
 import org.hibernate.boot.archive.scan.spi.Scanner;
 import org.hibernate.boot.archive.spi.ArchiveDescriptorFactory;
 import org.hibernate.boot.model.FunctionContributor;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.spi.ConverterDescriptor;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
@@ -31,6 +27,9 @@ import org.hibernate.type.BasicType;
 import org.hibernate.usertype.UserType;
 
 import org.jboss.jandex.IndexView;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.SharedCacheMode;
 
 /**
  * Convenience base class for custom implementors of {@link MetadataBuilderImplementor} using delegation.
@@ -242,12 +241,6 @@ public abstract class AbstractDelegatingMetadataBuilderImplementor<T extends Met
 	@Override
 	public MetadataBuilder applyAttributeConverter(AttributeConverter attributeConverter, boolean autoApply) {
 		delegate.applyAttributeConverter( attributeConverter, autoApply );
-		return getThis();
-	}
-
-	@Override
-	public MetadataBuilder applyIdGenerationTypeInterpreter(IdGeneratorStrategyInterpreter interpreter) {
-		delegate.applyIdGenerationTypeInterpreter( interpreter );
 		return getThis();
 	}
 

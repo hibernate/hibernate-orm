@@ -10,7 +10,6 @@ import java.util.List;
 
 import org.hibernate.HibernateException;
 import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
@@ -117,11 +116,6 @@ public abstract class AbstractDelegatingMetadataBuildingOptions implements Metad
 	@Override
 	public boolean isMultiTenancyEnabled() {
 		return delegate.isMultiTenancyEnabled();
-	}
-
-	@Override
-	public IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter() {
-		return delegate.getIdGenerationTypeInterpreter();
 	}
 
 	@Override

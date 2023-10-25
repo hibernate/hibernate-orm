@@ -16,7 +16,7 @@ import java.util.Objects;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.Internal;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter.GeneratorNameDeterminationContext;
+import org.hibernate.boot.internal.GenerationStrategyInterpreter;
 import org.hibernate.id.IdentifierGenerator;
 
 import jakarta.persistence.GenerationType;
@@ -94,31 +94,37 @@ public class IdentifierGeneratorDefinition implements Serializable {
 			String name,
 			Class<?> idType,
 			String generatorName,
-			IdGeneratorStrategyInterpreter generationInterpreter,
 			GenerationType generationType) {
 		// If we were unable to locate an actual matching named generator assume
 		// a sequence/table of the given name, make one based on GenerationType.
 
-		if ( generationType == null) {
-			return buildSequenceGeneratorDefinition( name, generationInterpreter );
+		if ( generationType == null ) {
+			generationType = GenerationType.SEQUENCE;
 		}
 
-		final String strategyName;
 		switch ( generationType ) {
-			case SEQUENCE:
-				return buildSequenceGeneratorDefinition( name, generationInterpreter );
-			case TABLE:
-				return buildTableGeneratorDefinition( name, generationInterpreter );
-			// really AUTO and IDENTITY work the same in this respect, aside from the actual strategy name
-			case IDENTITY:
+			case SEQUENCE: {
+				return buildSequenceGeneratorDefinition( name );
+			}
+			case TABLE: {
+				return buildTableGeneratorDefinition( name );
+			}
+			case IDENTITY: {
 				throw new AnnotationException(
 						"@GeneratedValue annotation specified 'strategy=IDENTITY' and 'generator'"
 								+ " but the generator name is unnecessary"
 				);
-			case AUTO:
-				strategyName = generationInterpreter.determineGeneratorName(
+			}
+			case UUID: {
+				throw new AnnotationException(
+						"@GeneratedValue annotation specified 'strategy=UUID' and 'generator'"
+								+ " but the generator name is unnecessary"
+				);
+			}
+			case AUTO: {
+				final String strategyName = GenerationStrategyInterpreter.STRATEGY_INTERPRETER.determineGeneratorName(
 						generationType,
-						new GeneratorNameDeterminationContext() {
+						new GenerationStrategyInterpreter.GeneratorNameDeterminationContext() {
 							@Override
 							public Class<?> getIdType() {
 								return idType;
@@ -129,32 +135,22 @@ public class IdentifierGeneratorDefinition implements Serializable {
 							}
 						}
 				);
-				break;
-			default:
-				//case UUID:
-				// (use the name instead for compatibility with javax.persistence)
-				if ( "UUID".equals( generationType.name() ) ) {
-					throw new AnnotationException(
-							"@GeneratedValue annotation specified 'strategy=UUID' and 'generator'"
-									+ " but the generator name is unnecessary"
-					);
-				}
-				else {
-					throw new AssertionFailure( "unknown generator type: " + generationType );
-				}
+
+				return new IdentifierGeneratorDefinition(
+						name,
+						strategyName,
+						Collections.singletonMap( IdentifierGenerator.GENERATOR_NAME, name )
+				);
+			}
 		}
 
-		return new IdentifierGeneratorDefinition(
-				name,
-				strategyName,
-				Collections.singletonMap( IdentifierGenerator.GENERATOR_NAME, name )
-		);
+		throw new AssertionFailure( "unknown generator type: " + generationType );
+
 	}
 
-	private static IdentifierGeneratorDefinition buildTableGeneratorDefinition(
-			String name, IdGeneratorStrategyInterpreter generationInterpreter) {
+	private static IdentifierGeneratorDefinition buildTableGeneratorDefinition(String name) {
 		final Builder builder = new Builder();
-		generationInterpreter.interpretTableGenerator(
+		GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretTableGenerator(
 				new TableGenerator() {
 					@Override
 					public String name() {
@@ -222,10 +218,9 @@ public class IdentifierGeneratorDefinition implements Serializable {
 		return builder.build();
 	}
 
-	private static IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(
-			String name, IdGeneratorStrategyInterpreter generationInterpreter) {
+	private static IdentifierGeneratorDefinition buildSequenceGeneratorDefinition(String name) {
 		final Builder builder = new Builder();
-		generationInterpreter.interpretSequenceGenerator(
+		GenerationStrategyInterpreter.STRATEGY_INTERPRETER.interpretSequenceGenerator(
 				new SequenceGenerator() {
 					@Override
 					public String name() {

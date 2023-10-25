@@ -392,7 +392,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
 		}
 		else {
-			final MultiTenantConnectionProvider multiTenantConnectionProvider = registry.getService( MultiTenantConnectionProvider.class );
+			final MultiTenantConnectionProvider<?> multiTenantConnectionProvider = registry.getService( MultiTenantConnectionProvider.class );
 			return new MultiTenantConnectionProviderJdbcConnectionAccess( multiTenantConnectionProvider );
 		}
 	}
@@ -403,7 +403,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
 		}
 		else {
-			final MultiTenantConnectionProvider multiTenantConnectionProvider = registry.getService( MultiTenantConnectionProvider.class );
+			final MultiTenantConnectionProvider<?> multiTenantConnectionProvider = registry.getService( MultiTenantConnectionProvider.class );
 			return new MultiTenantConnectionProviderJdbcConnectionAccess( multiTenantConnectionProvider );
 		}
 	}
@@ -436,13 +436,13 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	}
 
 	public static class MultiTenantConnectionProviderJdbcConnectionAccess implements JdbcConnectionAccess {
-		private final MultiTenantConnectionProvider connectionProvider;
+		private final MultiTenantConnectionProvider<?> connectionProvider;
 
-		public MultiTenantConnectionProviderJdbcConnectionAccess(MultiTenantConnectionProvider connectionProvider) {
+		public MultiTenantConnectionProviderJdbcConnectionAccess(MultiTenantConnectionProvider<?> connectionProvider) {
 			this.connectionProvider = connectionProvider;
 		}
 
-		public MultiTenantConnectionProvider getConnectionProvider() {
+		public MultiTenantConnectionProvider<?> getConnectionProvider() {
 			return connectionProvider;
 		}
 

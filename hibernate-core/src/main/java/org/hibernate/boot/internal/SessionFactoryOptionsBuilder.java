@@ -206,7 +206,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	// multi-tenancy
 	private boolean multiTenancyEnabled;
-	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
+	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
 
 	// Queries
 	private SqmFunctionRegistry sqmFunctionRegistry;
@@ -1008,7 +1008,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
+	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return currentTenantIdentifierResolver;
 	}
 
@@ -1390,8 +1390,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.multiTenancyEnabled = enabled;
 	}
 
-	public void applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {
-		this.currentTenantIdentifierResolver = resolver;
+	public void applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
+		//noinspection unchecked
+		this.currentTenantIdentifierResolver = (CurrentTenantIdentifierResolver<Object>) resolver;
 	}
 
 	public void enableNamedQueryCheckingOnStartup(boolean enabled) {

@@ -34,7 +34,7 @@ public class TenantResolverConfigurationTest extends BaseCoreFunctionalTestCase 
 		assertSame(currentTenantResolver, sessionFactory().getCurrentTenantIdentifierResolver());
 	}
 
-	private static class TestCurrentTenantIdentifierResolver implements CurrentTenantIdentifierResolver {
+	private static class TestCurrentTenantIdentifierResolver implements CurrentTenantIdentifierResolver<Object> {
 		private String currentTenantIdentifier;
 
 		@Override
@@ -43,7 +43,7 @@ public class TenantResolverConfigurationTest extends BaseCoreFunctionalTestCase 
 		}
 
 		@Override
-		public String resolveCurrentTenantIdentifier() {
+		public Object resolveCurrentTenantIdentifier() {
 			return currentTenantIdentifier;
 		}
 	}

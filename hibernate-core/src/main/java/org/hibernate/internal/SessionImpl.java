@@ -286,12 +286,12 @@ public class SessionImpl
 
 	private void setUpMultitenancy(SessionFactoryImplementor factory) {
 		if ( factory.getDefinedFilterNames().contains( TenantIdBinder.FILTER_NAME ) ) {
-			final String tenantIdentifier = getTenantIdentifier();
+			final Object tenantIdentifier = getTenantIdentifierValue();
 			if ( tenantIdentifier == null ) {
 				throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
 			}
 			else {
-				final CurrentTenantIdentifierResolver resolver = factory.getCurrentTenantIdentifierResolver();
+				final CurrentTenantIdentifierResolver<Object> resolver = factory.getCurrentTenantIdentifierResolver();
 				if ( resolver==null || !resolver.isRoot( tenantIdentifier ) ) {
 					// turn on the filter, unless this is the "root" tenant with access to all partitions
 					loadQueryInfluencers
@@ -2090,7 +2090,7 @@ public class SessionImpl
 		private SharedSessionBuilderImpl(SessionImpl session) {
 			super( (SessionFactoryImpl) session.getFactory() );
 			this.session = session;
-			super.tenantIdentifier( session.getTenantIdentifier() );
+			super.tenantIdentifier( session.getTenantIdentifierValue() );
 		}
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2099,6 +2099,12 @@ public class SessionImpl
 
 		@Override
 		public SharedSessionBuilderImpl tenantIdentifier(String tenantIdentifier) {
+			// todo : is this always true?  Or just in the case of sharing JDBC resources?
+			throw new SessionException( "Cannot redefine tenant identifier on child session" );
+		}
+
+		@Override
+		public SharedSessionBuilderImpl tenantIdentifier(Object tenantIdentifier) {
 			// todo : is this always true?  Or just in the case of sharing JDBC resources?
 			throw new SessionException( "Cannot redefine tenant identifier on child session" );
 		}

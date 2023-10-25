@@ -73,6 +73,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 		return delegate.getTenantIdentifier();
 	}
 
+	@Override
+	public Object getTenantIdentifierValue() {
+		return delegate.getTenantIdentifierValue();
+	}
+
 	private QueryProducerImplementor queryDelegate() {
 		return delegate;
 	}

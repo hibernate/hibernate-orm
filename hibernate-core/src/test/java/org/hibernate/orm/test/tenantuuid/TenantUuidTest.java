@@ -56,10 +56,10 @@ public class TenantUuidTest implements SessionFactoryProducer {
     @Override
     public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
         final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
-        sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver() {
+        sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver<UUID>() {
             @Override
-            public String resolveCurrentTenantIdentifier() {
-                return currentTenant.toString();
+            public UUID resolveCurrentTenantIdentifier() {
+                return currentTenant;
             }
             @Override
             public boolean validateExistingCurrentSessions() {

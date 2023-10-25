@@ -88,13 +88,15 @@ public class JfrEventManager {
 	public static void completeJdbcConnectionAcquisitionEvent(
 			JdbcConnectionAcquisitionEvent jdbcConnectionAcquisitionEvent,
 			SharedSessionContractImplementor session,
-			String tenantId) {
+			Object tenantId) {
 		if ( jdbcConnectionAcquisitionEvent.isEnabled() ) {
 			jdbcConnectionAcquisitionEvent.end();
 			if ( jdbcConnectionAcquisitionEvent.shouldCommit() ) {
 				jdbcConnectionAcquisitionEvent.executionTime = getExecutionTime( jdbcConnectionAcquisitionEvent.startedAt );
 				jdbcConnectionAcquisitionEvent.sessionIdentifier = getSessionIdentifier( session );
-				jdbcConnectionAcquisitionEvent.tenantIdentifier = tenantId;
+				jdbcConnectionAcquisitionEvent.tenantIdentifier = tenantId == null ? null : session.getFactory()
+						.getTenantIdentifierJavaType()
+						.toString( tenantId );
 				jdbcConnectionAcquisitionEvent.commit();
 			}
 		}
@@ -112,13 +114,15 @@ public class JfrEventManager {
 	public static void completeJdbcConnectionReleaseEvent(
 			JdbcConnectionReleaseEvent jdbcConnectionReleaseEvent,
 			SharedSessionContractImplementor session,
-			String tenantId) {
+			Object tenantId) {
 		if ( jdbcConnectionReleaseEvent.isEnabled() ) {
 			jdbcConnectionReleaseEvent.end();
 			if ( jdbcConnectionReleaseEvent.shouldCommit() ) {
 				jdbcConnectionReleaseEvent.executionTime = getExecutionTime( jdbcConnectionReleaseEvent.startedAt );
 				jdbcConnectionReleaseEvent.sessionIdentifier = getSessionIdentifier( session );
-				jdbcConnectionReleaseEvent.tenantIdentifier = tenantId;
+				jdbcConnectionReleaseEvent.tenantIdentifier = tenantId == null ? null : session.getFactory()
+						.getTenantIdentifierJavaType()
+						.toString( tenantId );
 				jdbcConnectionReleaseEvent.commit();
 			}
 		}

@@ -13,7 +13,6 @@ import org.hibernate.SessionBuilder;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.SessionFactoryBuilder;
-import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
@@ -46,7 +45,7 @@ import static org.hibernate.testing.transaction.TransactionUtil.doInHibernateSes
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantConnectionProvider, C extends ConnectionProvider> extends BaseUnitTestCase {
+public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantConnectionProvider<String>, C extends ConnectionProvider> extends BaseUnitTestCase {
 	protected C acmeProvider;
 	protected C jbossProvider;
 
@@ -271,7 +270,7 @@ public abstract class AbstractSchemaBasedMultiTenancyTest<T extends MultiTenantC
 	protected SessionBuilder newSession(String tenant) {
 		return sessionFactory
 			.withOptions()
-			.tenantIdentifier( tenant );
+			.tenantIdentifier( (Object) tenant );
 	}
 
 	private SessionBuilder jboss() {

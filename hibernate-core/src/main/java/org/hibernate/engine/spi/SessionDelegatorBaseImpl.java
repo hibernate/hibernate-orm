@@ -111,6 +111,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public Object getTenantIdentifierValue() {
+		return delegate.getTenantIdentifierValue();
+	}
+
+	@Override
 	public UUID getSessionIdentifier() {
 		return delegate.getSessionIdentifier();
 	}

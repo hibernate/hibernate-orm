@@ -32,3 +32,13 @@ class Account {
 ----
 
 See the link:{userGuideBase}#soft-delete[User Guide] for details.
+
+[[custom-tenant-identifier-type]]
+== Custom tenant identifier type
+
+The `CurrentTenantIdentifierResolver` and `MultiTenantConnectionProvider` SPIs were generified to support custom tenant identifier types.
+Both types now accept a type parameter that represents the tenant identifier type.
+Methods that were accepting or returning a tenant identifier value of type `String` were changed to use the type variable.
+
+Applications can migrate by specifying the type parameter `<String>` when extending `CurrentTenantIdentifierResolver`
+or one of the `MultiTenantConnectionProvider` subtypes.

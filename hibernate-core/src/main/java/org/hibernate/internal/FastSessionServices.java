@@ -158,7 +158,7 @@ public final class FastSessionServices {
 	final TimeZoneStorageStrategy defaultTimeZoneStorageStrategy;
 	final boolean requiresMultiTenantConnectionProvider;
 	final ConnectionProvider connectionProvider;
-	final MultiTenantConnectionProvider multiTenantConnectionProvider;
+	final MultiTenantConnectionProvider<Object> multiTenantConnectionProvider;
 	final ClassLoaderService classLoaderService;
 	final TransactionCoordinatorBuilder transactionCoordinatorBuilder;
 	public final JdbcServices jdbcServices;

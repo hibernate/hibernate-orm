@@ -978,15 +978,20 @@ public class InFlightMetadataCollectorImpl implements InFlightMetadataCollector 
 
 	@Override
 	public String getPhysicalColumnName(Table table, String logicalName) throws MappingException {
-		return getPhysicalColumnName( table, getDatabase().toIdentifier( logicalName ) );
+		Identifier logicalColumnIdentifier = getDatabase().toIdentifier(logicalName);
+		if (logicalColumnIdentifier == null) {
+			throw new MappingException( String.format(
+					Locale.ENGLISH,
+					"Column with logical name \"[%s]\" in table [%s] cannot be mapped to column identifier.",
+					logicalName,
+					table.getName()
+			) );
+		}
+		return getPhysicalColumnName( table, logicalColumnIdentifier);
 	}
 
 	@Override
 	public String getPhysicalColumnName(Table table, Identifier logicalName) throws MappingException {
-		if ( logicalName == null ) {
-			throw new MappingException( "Logical column name cannot be null" );
-		}
-
 		Table currentTable = table;
 		String physicalName = null;
 

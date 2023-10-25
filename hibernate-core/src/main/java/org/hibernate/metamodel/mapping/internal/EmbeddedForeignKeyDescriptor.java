@@ -16,8 +16,9 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.AssociationKey;
-import org.hibernate.metamodel.mapping.AttributeMappingsList;
+import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -25,7 +26,6 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
-import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
@@ -196,17 +196,15 @@ public class EmbeddedForeignKeyDescriptor implements ForeignKeyDescriptor {
 		if ( this == modelPart || keyPart == modelPart ) {
 			return true;
 		}
-		else if ( keyPart instanceof NonAggregatedIdentifierMapping ) {
-			final AttributeMappingsList attributeMappings = ( (NonAggregatedIdentifierMapping) keyPart ).getVirtualIdEmbeddable()
-					.getAttributeMappings();
-			for ( int i = 0; i < attributeMappings.size(); i++ ) {
-				if ( modelPart == attributeMappings.get( i ) ) {
+		else {
+			AttributeMapping attributeMapping = modelPart.asAttributeMapping();
+			while ( attributeMapping != null && attributeMapping.getDeclaringType() instanceof EmbeddableMappingType ) {
+				final EmbeddableValuedModelPart declaringModelPart = ( (EmbeddableMappingType) attributeMapping.getDeclaringType() ).getEmbeddedValueMapping();
+				if ( declaringModelPart == keyPart ) {
 					return true;
 				}
+				attributeMapping = declaringModelPart.asAttributeMapping();
 			}
-		}
-		else if ( keyPart.isVirtual() && keyPart.getNumberOfFetchables() == 1 ) {
-			return keyPart.getFetchable( 0 ) == modelPart;
 		}
 		return false;
 	}

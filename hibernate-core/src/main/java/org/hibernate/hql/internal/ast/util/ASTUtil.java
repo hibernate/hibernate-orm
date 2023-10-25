@@ -386,8 +386,9 @@ public final class ASTUtil {
 
 	/**
 	 * Method to generate a map of token type names, keyed by their token type values.
+	 * Synthetic fields are ignored.
 	 *
-	 * @param tokenTypeInterface The *TokenTypes interface (or implementor of said interface).
+	 * @param tokenTypeInterface The *TokenTypes interface
 	 *
 	 * @return A compact map int -> tokenName in array format
 	 */
@@ -398,7 +399,7 @@ public final class ASTUtil {
 		//and this is all run at boot so at worst would fail fast.
 		final String[] names = new String[ fields.length + 2 ];
 		for ( final Field field : fields ) {
-			if ( Modifier.isStatic( field.getModifiers() ) ) {
+			if ( Modifier.isStatic( field.getModifiers() ) && ! field.isSynthetic() ) {
 				int idx = 0;
 				try {
 					idx = field.getInt( null );

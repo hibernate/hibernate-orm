@@ -13,12 +13,16 @@ import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.io.Serializable;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 
 import org.hibernate.Criteria;
+import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.annotations.Type;
 import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Property;
@@ -56,6 +60,7 @@ public class CriteriaQueryWithAppliedFilterTest extends BaseCoreFunctionalTestCa
 			student.setStatus( "active" );
 			student.setAge( 21 );
 			student.setAddress( new Address( "London", "Lollard St" ) );
+			student.setBirthDate(new GregorianCalendar(1998, 5, 21).getTime());
 			session.save( student );
 
 			final Student student2 = new Student();
@@ -64,6 +69,7 @@ public class CriteriaQueryWithAppliedFilterTest extends BaseCoreFunctionalTestCa
 			student2.setStatus( "active" );
 			student2.setAge( 27 );
 			student2.setAddress( new Address( "London", "Oxford St" ) );
+			student.setBirthDate(new GregorianCalendar(1992, 1, 1).getTime());
 			session.save( student2 );
 	   });
 	}
@@ -162,6 +168,22 @@ public class CriteriaQueryWithAppliedFilterTest extends BaseCoreFunctionalTestCa
 		});
 	}
 
+	@Test
+	@TestForIssue(jiraKey = "HHH-13426")
+	public void testRestrictionsOnCompositeTypes() {
+		doInHibernate( this::sessionFactory, session -> {
+			session.enableFilter( "statusFilter" ).setParameter( "status", "active" );
+
+			final Criteria query = session.createCriteria( Student.class );
+			query.add( Restrictions.eq( "id", STUDENT_ID ) );
+			query.add( Restrictions.eq( "birthDate", new Date(1998, 5, 21) ) );
+
+			final List list = query.list();
+
+			assertThat( list.size(), is( 1 ) );
+		});
+	}
+
 	@FilterDef(
 		name = "statusFilter",
 		parameters = {
@@ -187,6 +209,10 @@ public class CriteriaQueryWithAppliedFilterTest extends BaseCoreFunctionalTestCa
 		@Embedded
 		private Address address;
 
+		@Type(type = "org.hibernate.test.filter.Date3Type")
+		@Columns(columns = {@Column(name = "year"), @Column(name = "month"), @Column(name = "day")})
+		private Date birthDate;
+
 		public void setId(Identifier id) {
 			this.id = id;
 		}
@@ -205,6 +231,10 @@ public class CriteriaQueryWithAppliedFilterTest extends BaseCoreFunctionalTestCa
 
 		public void setAddress(Address address) {
 			this.address = address;
+		}
+
+		public void setBirthDate(Date birthDate) {
+			this.birthDate = birthDate;
 		}
 	}
 

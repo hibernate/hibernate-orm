@@ -238,6 +238,7 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 			// The property is a collection...
 			checkLhsIsNotCollection();
 			dereferenceCollection( (CollectionType) propertyType, implicitJoin, false, classAlias, parent );
+			initText();
 		}
 		else {
 			// Otherwise, this is a primitive type.
@@ -251,15 +252,27 @@ public class DotNode extends FromReferenceNode implements DisplayableNode, Selec
 	}
 
 	private void initText() {
-		String[] cols = getColumns();
-		String text = String.join( ", ", cols );
-		boolean countDistinct = getWalker().isInCountDistinct()
-				&& getWalker().getSessionFactoryHelper().getFactory().getDialect().requiresParensForTupleDistinctCounts();
-		if ( cols.length > 1 &&
-				( getWalker().isComparativeExpressionClause() || countDistinct || getWalker().getCurrentClauseType() == HqlSqlTokenTypes.SET ) ) {
-			text = "(" + text + ")";
+		if ( dereferenceType == DereferenceType.COLLECTION ) {
+			if ( getWalker().isInCount() ) {
+				final String collectionElementColumnName = getFromElement().getQueryableCollection().getElementColumnNames()[0];
+				final String collectionTableAlias = getFromElement().getCollectionTableAlias();
+				setText( collectionTableAlias + "." + collectionElementColumnName );
+			}
 		}
-		setText( text );
+		else {
+			String[] cols = getColumns();
+			String text = String.join( ", ", cols );
+			boolean countDistinct = getWalker().isInCountDistinct()
+					&& getWalker().getSessionFactoryHelper()
+					.getFactory()
+					.getDialect()
+					.requiresParensForTupleDistinctCounts();
+			if ( cols.length > 1 &&
+					( getWalker().isComparativeExpressionClause() || countDistinct || getWalker().getCurrentClauseType() == HqlSqlTokenTypes.SET ) ) {
+				text = "(" + text + ")";
+			}
+			setText( text );
+		}
 	}
 
 	private Type prepareLhs() throws SemanticException {

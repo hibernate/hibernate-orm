@@ -116,7 +116,7 @@ public abstract class AbstractPropertyMapping implements PropertyMapping {
 		String[] result = new String[columns.length];
 		for ( int i = 0; i < columns.length; i++ ) {
 			if ( columnReaders[i] == null ) {
-				result[i] = StringHelper.replace( formulaTemplates[i], Template.TEMPLATE, "" );
+				result[i] = StringHelper.replace( formulaTemplates[i], Template.TEMPLATE + ".", "" );
 			}
 			else {
 				result[i] = columnReaders[i];

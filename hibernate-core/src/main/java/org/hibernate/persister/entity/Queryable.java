@@ -138,6 +138,8 @@ public interface Queryable extends Loadable, PropertyMapping, Joinable {
 
 	String[][] getSubclassPropertyFormulaTemplateClosure();
 
+	String[][] getSubclassPropertyColumnNameClosure();
+
 	public static class Declarer {
 		public static final Declarer CLASS = new Declarer( "class" );
 		public static final Declarer SUBCLASS = new Declarer( "subclass" );

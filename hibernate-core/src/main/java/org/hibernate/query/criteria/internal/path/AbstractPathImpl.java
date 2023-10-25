@@ -120,7 +120,11 @@ public abstract class AbstractPathImpl<X>
 			throw illegalDereference();
 		}
 
-		SingularAttributePath<Y> path = (SingularAttributePath<Y>) resolveCachedAttributePath( attribute.getName() );
+		boolean needCache = attribute.isAssociation();
+		SingularAttributePath<Y> path = null;
+		if ( needCache ) {
+			path = (SingularAttributePath<Y>) resolveCachedAttributePath(attribute.getName());
+		}
 		if ( path == null ) {
 			path = new SingularAttributePath<Y>(
 					criteriaBuilder(),
@@ -128,7 +132,9 @@ public abstract class AbstractPathImpl<X>
 					getPathSourceForSubPaths(),
 					attribute
 			);
-			registerAttributePath( attribute.getName(), path );
+			if ( needCache ) {
+				registerAttributePath(attribute.getName(), path);
+			}
 		}
 		return path;
 	}

@@ -370,7 +370,10 @@ public class CriteriaQueryTypeQueryAdapter<X> implements QueryImplementor<X> {
 			return (ExplicitParameterInfo<?>) param;
 		}
 		else if ( ParameterExpression.class.isInstance( param ) ) {
-			return explicitParameterInfoMap.get( param );
+			ExplicitParameterInfo<?> parameterInfo = explicitParameterInfoMap.get( param );
+			if ( parameterInfo != null ) {
+				return parameterInfo;
+			}
 		}
 		else {
 			for ( ExplicitParameterInfo<?> parameterInfo : explicitParameterInfoMap.values() ) {

@@ -35,6 +35,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.DependantValue;
+import org.hibernate.mapping.Formula;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -570,7 +571,11 @@ public class TableBinder {
 				mappedByColumns = property.getValue().getColumnIterator();
 			}
 			while ( mappedByColumns.hasNext() ) {
-				Column column = (Column) mappedByColumns.next();
+				Object o = mappedByColumns.next();
+				if(o instanceof Formula) {
+					throw new AnnotationException("Formula is not supported along with this type of relationship");
+                		}
+				Column column = (Column) o;
 				columns[0].overrideFromReferencedColumnIfNecessary( column );
 				columns[0].linkValueUsingAColumnCopy( column, value );
 			}

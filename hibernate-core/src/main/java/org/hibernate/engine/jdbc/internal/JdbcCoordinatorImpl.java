@@ -44,6 +44,7 @@ import org.hibernate.resource.jdbc.internal.LogicalConnectionProvidedImpl;
 import org.hibernate.resource.jdbc.internal.ResourceRegistryStandardImpl;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
+import org.hibernate.resource.jdbc.spi.StatementExecutionListener;
 import org.hibernate.resource.transaction.backend.jdbc.spi.JdbcResourceTransaction;
 
 /**
@@ -75,15 +76,19 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	 */
 	private boolean releasesEnabled = true;
 
+	private StatementExecutionListener statementExecutionListener;
+
 	/**
 	 * Constructs a JdbcCoordinatorImpl
 	 *
 	 * @param userSuppliedConnection The user supplied connection (may be null)
+	 * @param statementExecutionListener 
 	 */
 	public JdbcCoordinatorImpl(
 			Connection userSuppliedConnection,
 			JdbcSessionOwner owner,
-			JdbcServices jdbcServices) {
+			JdbcServices jdbcServices,
+			StatementExecutionListener statementExecutionListener) {
 		this.isUserSuppliedConnection = userSuppliedConnection != null;
 
 		final ResourceRegistry resourceRegistry = new ResourceRegistryStandardImpl(
@@ -102,6 +107,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 		}
 		this.owner = owner;
 		this.jdbcServices = jdbcServices;
+		this.statementExecutionListener = statementExecutionListener;
 	}
 
 	private JdbcCoordinatorImpl(
@@ -223,7 +229,7 @@ public class JdbcCoordinatorImpl implements JdbcCoordinator {
 	@Override
 	public ResultSetReturn getResultSetReturn() {
 		if ( resultSetExtractor == null ) {
-			resultSetExtractor = new ResultSetReturnImpl( this, jdbcServices );
+			resultSetExtractor = new ResultSetReturnImpl( this, jdbcServices, statementExecutionListener );
 		}
 		return resultSetExtractor;
 	}

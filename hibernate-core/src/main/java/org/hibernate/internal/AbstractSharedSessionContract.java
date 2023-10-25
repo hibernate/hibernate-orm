@@ -228,7 +228,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 					connectionHandlingMode, fastSessionServices );
 			// This must happen *after* the JdbcSessionContext was initialized,
 			// because some of the calls below retrieve this context indirectly through Session getters.
-			this.jdbcCoordinator = new JdbcCoordinatorImpl( options.getConnection(), this, fastSessionServices.jdbcServices );
+			this.jdbcCoordinator = new JdbcCoordinatorImpl( options.getConnection(), this, fastSessionServices.jdbcServices,
+					options.getStatementExecutionListener() );
 			this.transactionCoordinator = fastSessionServices.transactionCoordinatorBuilder.buildTransactionCoordinator( jdbcCoordinator, this );
 		}
 	}

@@ -36,6 +36,7 @@ import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementExecutionListener;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -149,6 +150,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyStatementInspector(StatementInspector statementInspector) {
 		this.optionsBuilder.applyStatementInspector( statementInspector );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyStatementExecutionListener(StatementExecutionListener statementExecutionListener) {
+		this.optionsBuilder.applyStatementExecutionListener( statementExecutionListener );
 		return this;
 	}
 

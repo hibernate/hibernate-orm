@@ -84,6 +84,7 @@ public class JdbcSessionContextImpl implements JdbcSessionContext {
 		return statementInspector;
 	}
 
+
 	@Override
 	public JdbcObserver getObserver() {
 		return this.jdbcObserver;

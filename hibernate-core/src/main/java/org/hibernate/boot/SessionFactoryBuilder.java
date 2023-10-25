@@ -26,6 +26,7 @@ import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementExecutionListener;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizer;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
@@ -166,6 +167,19 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_INSPECTOR
 	 */
 	SessionFactoryBuilder applyStatementInspector(StatementInspector statementInspector);
+
+	/**
+	 * Names a StatementExecutionListener to be applied to the SessionFactory, which in turn means it will be used by
+	 * all Sessions unless one is explicitly specified in
+	 * {@link org.hibernate.SessionBuilder#statementExecutionListener(StatementExecutionListener)}
+	 *
+	 * @param statementExecutionListener The StatementExecutionListener
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#STATEMENT_EXECUTION_LISTENER
+	 */
+	SessionFactoryBuilder applyStatementExecutionListener(StatementExecutionListener statementExecutionListener);
 
 	/**
 	 * Specifies one or more observers to be applied to the SessionFactory.  Can be called multiple times to add

@@ -113,6 +113,7 @@ import org.hibernate.query.NativeQuery;
 import org.hibernate.query.criteria.internal.CriteriaBuilderImpl;
 import org.hibernate.query.spi.NamedQueryRepository;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementExecutionListener;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.AfterCompletionAction;
 import org.hibernate.resource.transaction.backend.jta.internal.synchronization.ExceptionMapper;
@@ -1199,6 +1200,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		private final SessionFactoryImpl sessionFactory;
 		private Interceptor interceptor;
 		private StatementInspector statementInspector;
+		private StatementExecutionListener statementExecutionListener;
 		private Connection connection;
 		private PhysicalConnectionHandlingMode connectionHandlingMode;
 		private boolean autoJoinTransactions = true;
@@ -1224,6 +1226,7 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 			// set up default builder values...
 			final SessionFactoryOptions sessionFactoryOptions = sessionFactory.getSessionFactoryOptions();
 			this.statementInspector = sessionFactoryOptions.getStatementInspector();
+			this.statementExecutionListener = sessionFactoryOptions.getStatementExecutionListener();
 			this.connectionHandlingMode = sessionFactoryOptions.getPhysicalConnectionHandlingMode();
 			this.autoClose = sessionFactoryOptions.isAutoCloseSessionEnabled();
 
@@ -1306,6 +1309,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		}
 
 		@Override
+		public StatementExecutionListener getStatementExecutionListener() {
+			return statementExecutionListener;
+		}
+
+		@Override
 		public PhysicalConnectionHandlingMode getPhysicalConnectionHandlingMode() {
 			return connectionHandlingMode;
 		}
@@ -1360,6 +1368,13 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 		@SuppressWarnings("unchecked")
 		public T statementInspector(StatementInspector statementInspector) {
 			this.statementInspector = statementInspector;
+			return (T) this;
+		}
+
+		@Override
+		@SuppressWarnings("unchecked")
+		public T statementExecutionListener(StatementExecutionListener statementExecutionListener) {
+			this.statementExecutionListener = statementExecutionListener;
 			return (T) this;
 		}
 
@@ -1530,6 +1545,11 @@ public class SessionFactoryImpl implements SessionFactoryImplementor {
 
 		@Override
 		public StatementInspector getStatementInspector() {
+			return null;
+		}
+
+		@Override
+		public StatementExecutionListener getStatementExecutionListener() {
 			return null;
 		}
 

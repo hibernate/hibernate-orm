@@ -32,6 +32,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.LiteralHandlingMode;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
+import org.hibernate.resource.jdbc.spi.StatementExecutionListener;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.tuple.entity.EntityTuplizerFactory;
 
@@ -120,6 +121,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public StatementInspector getStatementInspector() {
 		return delegate.getStatementInspector();
+	}
+
+	@Override
+	public StatementExecutionListener getStatementExecutionListener() {
+		return delegate.getStatementExecutionListener();
 	}
 
 	@Override

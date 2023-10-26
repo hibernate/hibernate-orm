@@ -3631,4 +3631,747 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			Expression<?>... arguments) {
 		return functionWithinGroup( "percent_rank", Double.class, order, filter, window, arguments );
 	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayLiteral(T... elements) {
+		return getFunctionDescriptor( "array" ).generateSqmExpression(
+				literals( elements ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<Integer> arrayPosition(SqmExpression<T[]> arrayExpression, T element) {
+		return getFunctionDescriptor( "array_position" ).generateSqmExpression(
+				asList( arrayExpression, value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<Integer> arrayPosition(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_position" ).generateSqmExpression(
+				asList( arrayExpression, elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<Integer> arrayLength(SqmExpression<T[]> arrayExpression) {
+		return getFunctionDescriptor( "array_length" ).generateSqmExpression(
+				asList( arrayExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayConcat(
+			SqmExpression<T[]> arrayExpression1,
+			SqmExpression<T[]> arrayExpression2) {
+		return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
+				asList( arrayExpression1, arrayExpression2 ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayConcat(SqmExpression<T[]> arrayExpression1, T[] array2) {
+		return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
+				asList( arrayExpression1, value( array2, arrayExpression1 ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayConcat(T[] array1, SqmExpression<T[]> arrayExpression2) {
+		return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
+				asList( value( array1, arrayExpression2 ), arrayExpression2 ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayConcat(T[] array1, T[] array2) {
+		return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
+				asList( value( array1 ), value( array2 ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayAppend(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_append" ).generateSqmExpression(
+				asList( arrayExpression, elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayAppend(SqmExpression<T[]> arrayExpression, T element) {
+		return getFunctionDescriptor( "array_append" ).generateSqmExpression(
+				asList( arrayExpression, value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayAppend(T[] array, SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_append" ).generateSqmExpression(
+				asList( value( array ), elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayAppend(T[] array, T element) {
+		return getFunctionDescriptor( "array_append" ).generateSqmExpression(
+				asList( value( array ), value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayPrepend(SqmExpression<T> elementExpression, SqmExpression<T[]> arrayExpression) {
+		return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
+				asList( elementExpression, arrayExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayPrepend(T element, SqmExpression<T[]> arrayExpression) {
+		return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
+				asList( value( element ), arrayExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayPrepend(SqmExpression<T> elementExpression, T[] array) {
+		return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
+				asList( elementExpression, value( array ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayPrepend(T element, T[] array) {
+		return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
+				asList( value( element ), value( array ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContains(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression) {
+		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+				asList( arrayExpression, elementExpression ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContains(SqmExpression<T[]> arrayExpression, T element) {
+		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+				asList( arrayExpression, value( element ) ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContains(T[] array, SqmExpression<T> elementExpression) {
+		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+				asList( value( array ), elementExpression ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContains(T[] array, T element) {
+		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+				asList( value( array ), value( element ) ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContainsNullable(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<T> elementExpression) {
+		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+				asList( arrayExpression, elementExpression ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContainsNullable(SqmExpression<T[]> arrayExpression, T element) {
+		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+				asList( arrayExpression, value( element ) ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContainsNullable(T[] array, SqmExpression<T> elementExpression) {
+		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+				asList( value( array ), elementExpression ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContainsNullable(T[] array, T element) {
+		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+				asList( value( array ), value( element ) ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContainsAll(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<T[]> subArrayExpression) {
+		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+				asList( arrayExpression, subArrayExpression ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContainsAll(SqmExpression<T[]> arrayExpression, T[] subArray) {
+		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+				asList( arrayExpression, value( subArray, arrayExpression ) ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContainsAll(T[] array, SqmExpression<T[]> subArrayExpression) {
+		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+				asList( value( array, subArrayExpression ), subArrayExpression ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContainsAll(T[] array, T[] subArray) {
+		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
+				asList( value( array ), value( subArray ) ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContainsAllNullable(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<T[]> subArrayExpression) {
+		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+				asList( arrayExpression, subArrayExpression ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContainsAllNullable(SqmExpression<T[]> arrayExpression, T[] subArray) {
+		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+				asList( arrayExpression, value( subArray, arrayExpression ) ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContainsAllNullable(T[] array, SqmExpression<T[]> subArrayExpression) {
+		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+				asList( value( array, subArrayExpression ), subArrayExpression ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayContainsAllNullable(T[] array, T[] subArray) {
+		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
+				asList( value( array ), value( subArray ) ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayOverlaps(SqmExpression<T[]> arrayExpression1, SqmExpression<T[]> arrayExpression2) {
+		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
+				asList( arrayExpression1, arrayExpression2 ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayOverlaps(SqmExpression<T[]> arrayExpression1, T[] array2) {
+		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
+				asList( arrayExpression1, value( array2, arrayExpression1 ) ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayOverlaps(T[] array1, SqmExpression<T[]> arrayExpression2) {
+		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
+				asList( value( array1, arrayExpression2 ), arrayExpression2 ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayOverlaps(T[] array1, T[] array2) {
+		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
+				asList( value( array1 ), value( array2 ) ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayOverlapsNullable(
+			SqmExpression<T[]> arrayExpression1,
+			SqmExpression<T[]> arrayExpression2) {
+		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
+				asList( arrayExpression1, arrayExpression2 ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayOverlapsNullable(SqmExpression<T[]> arrayExpression1, T[] array2) {
+		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
+				asList( arrayExpression1, value( array2, arrayExpression1 ) ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayOverlapsNullable(T[] array1, SqmExpression<T[]> arrayExpression2) {
+		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
+				asList( value( array1, arrayExpression2 ), arrayExpression2 ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmPredicate arrayOverlapsNullable(T[] array1, T[] array2) {
+		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
+				asList( value( array1 ), value( array2 ) ),
+				null,
+				queryEngine
+		) );
+	}
+
+	@Override
+	public <T> SqmExpression<T> arrayGet(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> indexExpression) {
+		return getFunctionDescriptor( "array_get" ).generateSqmExpression(
+				asList( arrayExpression, indexExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T> arrayGet(SqmExpression<T[]> arrayExpression, Integer index) {
+		return getFunctionDescriptor( "array_get" ).generateSqmExpression(
+				asList( arrayExpression, value( index ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T> arrayGet(T[] array, SqmExpression<Integer> indexExpression) {
+		return getFunctionDescriptor( "array_get" ).generateSqmExpression(
+				asList( value( array ), indexExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T> arrayGet(T[] array, Integer index) {
+		return getFunctionDescriptor( "array_get" ).generateSqmExpression(
+				asList( value( array ), value( index ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySet(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<Integer> indexExpression,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
+				asList( arrayExpression, indexExpression, elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySet(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<Integer> indexExpression,
+			T element) {
+		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
+				asList( arrayExpression, indexExpression, value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySet(
+			SqmExpression<T[]> arrayExpression,
+			Integer index,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
+				asList( arrayExpression, value( index ), elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySet(SqmExpression<T[]> arrayExpression, Integer index, T element) {
+		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
+				asList( arrayExpression, value( index ), value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySet(
+			T[] array,
+			SqmExpression<Integer> indexExpression,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
+				asList( value( array ), indexExpression, elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySet(T[] array, SqmExpression<Integer> indexExpression, T element) {
+		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
+				asList( value( array ), indexExpression, value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySet(T[] array, Integer index, SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
+				asList( value( array ), value( index ), elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySet(T[] array, Integer index, T element) {
+		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
+				asList( value( array ), value( index ), value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayRemove(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_remove" ).generateSqmExpression(
+				asList( arrayExpression, elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayRemove(SqmExpression<T[]> arrayExpression, T element) {
+		return getFunctionDescriptor( "array_remove" ).generateSqmExpression(
+				asList( arrayExpression, value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayRemove(T[] array, SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_remove" ).generateSqmExpression(
+				asList( value( array ), elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayRemove(T[] array, T element) {
+		return getFunctionDescriptor( "array_remove" ).generateSqmExpression(
+				asList( value( array ), value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayRemoveIndex(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<Integer> indexExpression) {
+		return getFunctionDescriptor( "array_remove_index" ).generateSqmExpression(
+				asList( arrayExpression, indexExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayRemoveIndex(SqmExpression<T[]> arrayExpression, Integer index) {
+		return getFunctionDescriptor( "array_remove_index" ).generateSqmExpression(
+				asList( arrayExpression, value( index ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayRemoveIndex(T[] array, SqmExpression<Integer> indexExpression) {
+		return getFunctionDescriptor( "array_remove_index" ).generateSqmExpression(
+				asList( value( array ), indexExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayRemoveIndex(T[] array, Integer index) {
+		return getFunctionDescriptor( "array_remove_index" ).generateSqmExpression(
+				asList( value( array ), value( index ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySlice(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<Integer> lowerIndexExpression,
+			SqmExpression<Integer> upperIndexExpression) {
+		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+				asList( arrayExpression, lowerIndexExpression, upperIndexExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySlice(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<Integer> lowerIndexExpression,
+			Integer upperIndex) {
+		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+				asList( arrayExpression, lowerIndexExpression, value( upperIndex ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySlice(
+			SqmExpression<T[]> arrayExpression,
+			Integer lowerIndex,
+			SqmExpression<Integer> upperIndexExpression) {
+		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+				asList( arrayExpression, value( lowerIndex ), upperIndexExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySlice(
+			SqmExpression<T[]> arrayExpression,
+			Integer lowerIndex,
+			Integer upperIndex) {
+		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+				asList( arrayExpression, value( lowerIndex ), value( upperIndex ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySlice(
+			T[] array,
+			SqmExpression<Integer> lowerIndexExpression,
+			SqmExpression<Integer> upperIndexExpression) {
+		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+				asList( value( array ), lowerIndexExpression, upperIndexExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySlice(
+			T[] array,
+			SqmExpression<Integer> lowerIndexExpression,
+			Integer upperIndex) {
+		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+				asList( value( array ), lowerIndexExpression, value( upperIndex ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySlice(
+			T[] array,
+			Integer lowerIndex,
+			SqmExpression<Integer> upperIndexExpression) {
+		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+				asList( value( array ), value( lowerIndex ), upperIndexExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arraySlice(T[] array, Integer lowerIndex, Integer upperIndex) {
+		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
+				asList( value( array ), value( lowerIndex ), value( upperIndex ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayReplace(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<T> oldElementExpression,
+			SqmExpression<T> newElementExpression) {
+		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
+				asList( arrayExpression, oldElementExpression, newElementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayReplace(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<T> oldElementExpression,
+			T newElement) {
+		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
+				asList( arrayExpression, oldElementExpression, value( newElement ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayReplace(
+			SqmExpression<T[]> arrayExpression,
+			T oldElement,
+			SqmExpression<T> newElementExpression) {
+		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
+				asList( arrayExpression, value( oldElement ), newElementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayReplace(SqmExpression<T[]> arrayExpression, T oldElement, T newElement) {
+		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
+				asList( arrayExpression, value( oldElement ), value( newElement ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayReplace(
+			T[] array,
+			SqmExpression<T> oldElementExpression,
+			SqmExpression<T> newElementExpression) {
+		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
+				asList( value( array ), oldElementExpression, newElementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayReplace(T[] array, SqmExpression<T> oldElementExpression, T newElement) {
+		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
+				asList( value( array ), oldElementExpression, value( newElement ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayReplace(T[] array, T oldElement, SqmExpression<T> newElementExpression) {
+		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
+				asList( value( array ), value( oldElement ), newElementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayReplace(T[] array, T oldElement, T newElement) {
+		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
+				asList( value( array ), value( oldElement ), value( newElement ) ),
+				null,
+				queryEngine
+		);
+	}
 }

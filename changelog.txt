@@ -3,6 +3,68 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.4.0.CR1 (October 26, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32185
+
+** Bug
+    * [HHH-17351] - Missing basic type registration after changing preferred jdbc type
+    * [HHH-17332] - NullPointerException in TupleMappingModelExpressible constructor
+    * [HHH-17329] - Query Cache contains null values when entity was loaded as proxy
+    * [HHH-17306] - NPE in AbstractEntityPersister#logStaticSQL() when debug logging is enabled
+    * [HHH-17302] - Use nocache for MariaDB sequences
+    * [HHH-17290] - Embeddable with a primitive field cannot be set to null
+    * [HHH-17288] - IdClass broken column mapping in `@OneToOne` when `mappedBy` is used by the owning side
+    * [HHH-17285] - @MapdKey fails with name attribute that represetns a path with dots separator
+    * [HHH-17283] - Subquery using Entity with composite Id causes SemanticException
+    * [HHH-17276] - Columns that are widened to LOB type aren't considered as LOBs
+    * [HHH-17264] - OracleAggregateSupport should use json_object to create empty json
+    * [HHH-17262] - JdbcTypeRecommendationException when using <mapping-file> of persistence.xml file 
+    * [HHH-17260] - ClassCastException when using SUM() on subquery root
+    * [HHH-17225] - Right join does not return records from the right table if there's no matching record in the from clause
+    * [HHH-17224] - Hibernate 6.x - native queries for multiple entities do not respect FetchMode.EAGER annotation directives
+    * [HHH-17223] - ClassCastException when using SUM() on COALESCE in criteria api
+    * [HHH-17211] - Hibernate entity with @Any attribute throws a null pointer exception on HQL select query
+    * [HHH-17208] - @Any mapping not working on HQL inserts
+    * [HHH-17193] - Error when merging entity with composite PK and nested to-many collection
+    * [HHH-17143] - More not-found fix ups
+    * [HHH-17108] - Error In Native Query when adding two Entity's and using composite key. Error: Unable to find column position by name.
+    * [HHH-16935] - Hibernate cdi extension Regression introduced by HHH-16096
+    * [HHH-16933] - JSON issue on Oracle 23c
+    * [HHH-16897] - Delete query for entity using table-per-class inheritance may result in NullPointerException
+    * [HHH-16592] - @MapsId and @ManyToOne
+    * [HHH-16486] - StandardTemporaryTableExporter generates queries with the wrong parameter marker
+
+** Improvement
+    * [HHH-17346] - Allow global registration of composite types via TypeContributor.
+    * [HHH-17322] - Allow custom generators to determine timing based on current entity state
+    * [HHH-17315] - Reduce Oracle database user privileges to avoid cross schemas clashes
+    * [HHH-17311] - Reversed soft delete support
+    * [HHH-17309] - Reduce entity key based HashMap accesses
+    * [HHH-17300] - @Table annotation on @MappedSuperclass should be reported as error
+    * [HHH-17284] - Fix indentation in caching tests/documentation
+    * [HHH-17279] - Simplify SqmTranslatorFactory and get rid of MultiTableSqmMutationConverter
+    * [HHH-17226] - Generify result retrieval in JdbcSelectExecutor, SelectQueryPlan and SqmSelectionQuery
+    * [HHH-17212] - Avoid jdbc isBeforeFirst() and isAfterLast() in scrollable results calls when possible
+    * [HHH-17176] - Map SDO_ORDINATE_ARRAY to BigDecimal[] for Oracle
+    * [HHH-17153] - Upgrade to ANTLR 4.13.0
+    * [HHH-17139] - Support Instant as the RevisionTimestamp type
+    * [HHH-17121] - Nullability improvements to LoadQueryInfluencers
+    * [HHH-16876] - Update Oracle testing to 23c
+    * [HHH-16840] - Allow serialization of ScanResultImpl to speed up the creation of the entityManagerFactory
+    * [HHH-16595] - Different SQL queries for @ManyToMany relationships in Hibernate 5 and 6
+    * [HHH-16510] - 65535 expressions supported for IN ( ... ) condition
+    * [HHH-15757] - SELECT without FROM
+    * [HHH-15754] - IF [NOT] EXISTS DDL
+    * [HHH-14822] - Allow non-string tenant identifiers and tenant resolver as managed bean
+
+** New Feature
+    * [HHH-17335] - Add more functions for working with arrays
+    * [HHH-17181] - Cannot register `CompositeUserType` using `TypeContributions.contributeType`
+    * [HHH-17164] - Proper, first-class soft-delete support
+
+
 Changes in 6.3.1.Final (September 19, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

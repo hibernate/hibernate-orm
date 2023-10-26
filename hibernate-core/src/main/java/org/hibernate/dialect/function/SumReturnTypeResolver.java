@@ -7,6 +7,7 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -59,7 +60,16 @@ class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 			ReturnableType<?> impliedType,
 			List<? extends SqmTypedNode<?>> arguments,
 			TypeConfiguration typeConfiguration) {
-		if (impliedType != null) {
+		return resolveFunctionReturnType( impliedType, null, arguments, typeConfiguration );
+	}
+
+	@Override
+	public ReturnableType<?> resolveFunctionReturnType(
+			ReturnableType<?> impliedType,
+			Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+			List<? extends SqmTypedNode<?>> arguments,
+			TypeConfiguration typeConfiguration) {
+		if ( impliedType != null ) {
 			return impliedType;
 		}
 		final ReturnableType<?> argType = extractArgumentType( arguments, 1 );

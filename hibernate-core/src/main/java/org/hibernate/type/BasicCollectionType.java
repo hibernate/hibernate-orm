@@ -6,9 +6,11 @@
  */
 package org.hibernate.type;
 
+import java.lang.reflect.Array;
 import java.util.Collection;
 import java.util.Objects;
 
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.BasicCollectionJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -73,6 +75,21 @@ public class BasicCollectionType<C extends Collection<E>, E>
 		//  also, maybe move that logic into the ArrayJdbcType
 		//noinspection unchecked
 		return (BasicType<X>) this;
+	}
+
+	@Override
+	public Object disassemble(Object value, SharedSessionContractImplementor session) {
+		if ( value == null ) {
+			return null;
+		}
+		if ( baseDescriptor.isInstance( (E) value ) ) {
+			// Support binding a single element as parameter value
+			final BasicCollectionJavaType<C, E> javaType = (BasicCollectionJavaType<C, E>) getJavaTypeDescriptor();
+			final C collection = javaType.getSemantics().instantiateRaw( 1, null );
+			collection.add( (E) value );
+			return collection;
+		}
+		return value;
 	}
 
 	@Override

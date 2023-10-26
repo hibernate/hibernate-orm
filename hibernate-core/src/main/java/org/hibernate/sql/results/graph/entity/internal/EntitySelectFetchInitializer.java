@@ -48,14 +48,14 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	protected final DomainResultAssembler<?> keyAssembler;
 	private final ToOneAttributeMapping toOneMapping;
 
-	protected boolean isInitialized;
+	protected State state = State.UNINITIALIZED;
+	protected Object entityIdentifier;
+	protected Object entityInstance;
 
 	@Override
 	public FetchParentAccess getFetchParentAccess() {
 		return parentAccess;
 	}
-
-	protected Object entityInstance;
 
 	public EntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
@@ -87,41 +87,26 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
-		// Defer the select by default to the initialize phase
-		// We only need to select in this phase if this is part of an identifier or foreign key
-		NavigablePath np = navigablePath.getParent();
-		while ( np != null ) {
-			if ( np instanceof EntityIdentifierNavigablePath
-					|| ForeignKeyDescriptor.PART_NAME.equals( np.getLocalName() )
-					|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( np.getLocalName() )) {
-
-				initializeInstance( rowProcessingState );
-				return;
-			}
-			np = np.getParent();
-		}
-	}
-
-	@Override
-	public void initializeInstance(RowProcessingState rowProcessingState) {
-		if ( entityInstance != null || isInitialized ) {
+		if ( state != State.UNINITIALIZED ) {
 			return;
 		}
+		state = State.RESOLVED;
 
 		final EntityInitializer parentEntityInitializer = parentAccess.findFirstEntityInitializer();
 		if ( parentEntityInitializer != null && parentEntityInitializer.isEntityInitialized() ) {
-			isInitialized = true;
+			state = State.INITIALIZED;
 			return;
 		}
 
 		if ( !isAttributeAssignableToConcreteDescriptor() ) {
+			state = State.INITIALIZED;
 			return;
 		}
 
-		final Object entityIdentifier = keyAssembler.assemble( rowProcessingState );
+		entityIdentifier = keyAssembler.assemble( rowProcessingState );
 
 		if ( entityIdentifier == null ) {
-			isInitialized = true;
+			state = State.INITIALIZED;
 			return;
 		}
 
@@ -134,8 +119,6 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			);
 		}
 		final SharedSessionContractImplementor session = rowProcessingState.getSession();
-		final String entityName = concreteDescriptor.getEntityName();
-
 		final EntityKey entityKey = new EntityKey( entityIdentifier, concreteDescriptor );
 
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
@@ -154,7 +137,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 			entityInstance = holder.getEntity();
 			if ( holder.getEntityInitializer() == null ) {
 				if ( entityInstance != null && Hibernate.isInitialized( entityInstance ) ) {
-					isInitialized = true;
+					state = State.INITIALIZED;
 					return;
 				}
 			}
@@ -168,14 +151,38 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 							holder.getEntityInitializer()
 					);
 				}
-				isInitialized = true;
+				state = State.INITIALIZED;
 				return;
 			}
 			else if ( entityInstance == null ) {
-				isInitialized = true;
+				state = State.INITIALIZED;
 				return;
 			}
 		}
+
+		// Defer the select by default to the initialize phase
+		// We only need to select in this phase if this is part of an identifier or foreign key
+		NavigablePath np = navigablePath.getParent();
+		while ( np != null ) {
+			if ( np instanceof EntityIdentifierNavigablePath
+					|| ForeignKeyDescriptor.PART_NAME.equals( np.getLocalName() )
+					|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( np.getLocalName() )) {
+
+				initializeInstance( rowProcessingState );
+				return;
+			}
+			np = np.getParent();
+		}
+	}
+
+	@Override
+	public void initializeInstance(RowProcessingState rowProcessingState) {
+		if ( state == State.INITIALIZED ) {
+			return;
+		}
+		state = State.INITIALIZED;
+		final SharedSessionContractImplementor session = rowProcessingState.getSession();
+		final String entityName = concreteDescriptor.getEntityName();
 
 		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 			EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
@@ -197,7 +204,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 				throw new FetchNotFoundException( entityName, entityIdentifier );
 			}
 			rowProcessingState.getSession().getPersistenceContextInternal().claimEntityHolderIfPossible(
-					entityKey,
+					new EntityKey( entityIdentifier, concreteDescriptor ),
 					entityInstance,
 					rowProcessingState.getJdbcValuesSourceProcessingState(),
 					this
@@ -218,8 +225,6 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		if ( lazyInitializer != null ) {
 			lazyInitializer.setUnwrap( unwrapProxy );
 		}
-
-		isInitialized = true;
 	}
 
 	protected boolean isAttributeAssignableToConcreteDescriptor() {
@@ -229,7 +234,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		entityInstance = null;
-		isInitialized = false;
+		state = State.UNINITIALIZED;
 		clearResolutionListeners();
 	}
 
@@ -250,7 +255,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	@Override
 	public boolean isEntityInitialized() {
-		return isInitialized;
+		return state == State.INITIALIZED;
 	}
 
 	@Override
@@ -276,5 +281,11 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	@Override
 	public String toString() {
 		return "EntitySelectFetchInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+	}
+
+	protected enum State {
+		UNINITIALIZED,
+		RESOLVED,
+		INITIALIZED;
 	}
 }

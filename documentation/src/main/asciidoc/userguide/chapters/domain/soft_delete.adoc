@@ -21,9 +21,24 @@ Hibernate supports soft delete for both <<soft-delete-entity,entities>> and <<so
 
 Soft delete support is defined by 3 main parts -
 
-1. The <<soft-delete-column,column>> which contains the indicator.
-2. A <<soft-delete-conversion,conversion>> from `Boolean` indicator value to the proper database type
-3. A <<soft-delete-type,strategy>> for interpreting the stored indicator values.
+1. A <<soft-delete-type,strategy>> for interpreting the stored indicator values.
+2. The <<soft-delete-column,column>> which contains the indicator.
+3. A <<soft-delete-conversion,conversion>> from `Boolean` indicator value to the proper database type
+
+
+[[soft-delete-type]]
+==== Strategy - SoftDeleteType
+
+Given truth values, there are 2 valid ways to interpret the values stored in the database.  This
+interpretation is defined by the SoftDeleteType enumeration and can be configured per-usage using
+`@SoftDelete(..., strategy=ACTIVE)` or `@SoftDelete(..., strategy=DELETED)` -
+
+ACTIVE::
+Tracks rows which are active.  A `true` value in the database indicates that the row is active
+(non-deleted); a `false` value indicates inactive (deleted).
+DELETED::
+Tracks rows which are deleted. A `true` value in the database indicates that the row is deleted;
+a `false` value indicates that the row is non-deleted.
 
 
 [[soft-delete-column]]
@@ -138,18 +153,4 @@ See also <<soft-delete-package>>.
 The `@SoftDelete` annotation may also be placed at the package level, in which case it applies to all
 entities and collections defined within the package.
 
-
-[[soft-delete-type]]
-==== Strategy - SoftDeleteType
-
-Given truth values, there are 2 valid ways to interpret the values stored in the database.  This
-interpretation is defined by the SoftDeleteType enumeration and can be configured per-usage using
-`@SoftDelete(..., strategy=ACTIVE)` or `@SoftDelete(..., strategy=DELETED)` -
-
-ACTIVE::
-    Tracks rows which are active.  A `true` value in the database indicates that the row is active
-    (non-deleted); a `false` value indicates inactive (deleted).
-DELETED::
-    Tracks rows which are deleted. A `true` value in the database indicates that the row is deleted;
-    a `false` value indicates that the row is non-deleted.
 

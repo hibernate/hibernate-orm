@@ -318,9 +318,9 @@ public class H2Dialect extends Dialect {
 		functionFactory.arrayPrepend_operator();
 		functionFactory.arrayAppend_operator();
 		functionFactory.arrayContainsAll_h2();
-		functionFactory.arrayContainsAny_h2();
+		functionFactory.arrayOverlaps_h2();
 		functionFactory.arrayContainsAllNullable_h2();
-		functionFactory.arrayContainsAnyNullable_h2();
+		functionFactory.arrayOverlapsNullable_h2();
 		functionFactory.arrayGet_h2();
 		functionFactory.arraySet_h2();
 		functionFactory.arrayRemove_h2();

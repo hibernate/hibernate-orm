@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 // otherwise we might run into ORA-21700: object does not exist or is marked for delete
 // because the JDBC connection or database session caches something that should have been invalidated
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = ""))
-public class ArrayContainsAnyTest {
+public class ArrayOverlapsTest {
 
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
@@ -54,30 +54,30 @@ public class ArrayContainsAnyTest {
 	}
 
 	@Test
-	public void testContainsAny(SessionFactoryScope scope) {
+	public void testOverlapsFully(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			//tag::hql-array-contains-any-example[]
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_any(e.theArray, array('abc', 'def'))", EntityWithArrays.class )
+			//tag::hql-array-overlaps-example[]
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_overlaps(e.theArray, array('abc', 'def'))", EntityWithArrays.class )
 					.getResultList();
-			//end::hql-array-contains-any-example[]
+			//end::hql-array-overlaps-example[]
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
 		} );
 	}
 
 	@Test
-	public void testDoesNotContain(SessionFactoryScope scope) {
+	public void testDoesNotOverlap(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_any(e.theArray, array('xyz'))", EntityWithArrays.class )
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_overlaps(e.theArray, array('xyz'))", EntityWithArrays.class )
 					.getResultList();
 			assertEquals( 0, results.size() );
 		} );
 	}
 
 	@Test
-	public void testContainsPartly(SessionFactoryScope scope) {
+	public void testOverlaps(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_any(e.theArray, array('abc','xyz'))", EntityWithArrays.class )
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_overlaps(e.theArray, array('abc','xyz'))", EntityWithArrays.class )
 					.getResultList();
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
@@ -86,9 +86,9 @@ public class ArrayContainsAnyTest {
 
 	@Test
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Type inference isn't smart enough to figure out the type for the `null`")
-	public void testContainsNull(SessionFactoryScope scope) {
+	public void testOverlapsNullFully(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_any_nullable(e.theArray, array(null))", EntityWithArrays.class )
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_overlaps_nullable(e.theArray, array(null))", EntityWithArrays.class )
 					.getResultList();
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
@@ -96,12 +96,12 @@ public class ArrayContainsAnyTest {
 	}
 
 	@Test
-	public void testContainsNullPartly(SessionFactoryScope scope) {
+	public void testOverlapsNull(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			//tag::hql-array-contains-any-nullable-example[]
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_any_nullable(e.theArray, array('xyz',null))", EntityWithArrays.class )
+			//tag::hql-array-overlaps-nullable-example[]
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_overlaps_nullable(e.theArray, array('xyz',null))", EntityWithArrays.class )
 					.getResultList();
-			//end::hql-array-contains-any-nullable-example[]
+			//end::hql-array-overlaps-nullable-example[]
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
 		} );

@@ -1118,17 +1118,15 @@ The following functions deal with SQL array types, which are not supported on ev
 | Function | Purpose
 
 | `array()` | Creates an array based on the passed arguments
-| `array_contains()` | Whether an array contains an element
-| `array_contains_null()` | Whether an array contains a null
 | `array_position()` | Determines the position of an element in an array
 | `array_length()` | Determines the length of an array
 | `array_concat()` | Concatenates array with each other in order
 | `array_prepend()` | Prepends element to array
 | `array_append()` | Appends element to array
-| `array_contains_all()` | Determines if one array holds all elements of another array
-| `array_contains_all_nullable()` | Determines if one array holds all elements of another array, supporting null elements
-| `array_contains_any()` | Determines if one array holds at least one element of another array
-| `array_contains_any_nullable()` | Determines if one array holds at least one element of another array, supporting null elements
+| `array_contains()` | Whether an array contains element(s)
+| `array_contains_nullable()` | Whether an array contains element(s), supporting `null` elements
+| `array_overlaps()` | Whether an array holds at least one element of another array
+| `array_overlaps_nullable()` | Whether an array holds at least one element of another array, supporting `null` elements
 | `array_get()` | Accesses the element of an array by index
 | `array_set()` | Creates array copy with given element at given index
 | `array_remove()` | Creates array copy with given element removed
@@ -1145,25 +1143,6 @@ Creates an array based on the passed arguments, and infers the array type from t
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayConstructorTest.java[tags=hql-array-example]
-----
-====
-
-[[hql-array-contains-functions]]
-===== `array_contains()` and `array_contains_null()`
-
-Both functions return `null` if the first argument, the array, is null, yet the result of the `array_contains` function
-is undefined when the second argument, the element to search, is `null`.
-The `array_contains_null` function only takes a single argument, the array, and will return whether the array contains a `null` element.
-
-[[hql-array-contains-example]]
-====
-[source, JAVA, indent=0]
-----
-include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-example]
-----
-[source, JAVA, indent=0]
-----
-include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-null-example]
 ----
 ====
 
@@ -1232,14 +1211,25 @@ include::{array-example-dir-hql}/ArrayAppendTest.java[tags=hql-array-append-exam
 ----
 ====
 
-[[hql-array-contains-quantified-functions]]
-===== `array_contains_all()` and `array_contains_any()`
+[[hql-array-contains-functions]]
+===== `array_contains()` and `array_contains_nullable()`
 
-Checks if the first array argument contains all or any of the elements of the second array argument.
-Returns `null` if either of the arguments is `null`. The result of the functions
-is undefined when the second array argument contains a `null`.
+Checks if the first array argument contains the element(s) of the second argument.
+Returns `null` if the first argument is `null`. The result of the `array_contains` function
+is undefined when the second argument, the element to search, is `null`.
 
-[[hql-array-contains-all-example]]
+[[hql-array-contains-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayContainsTest.java[tags=hql-array-contains-example]
+----
+====
+
+The second argument may be an array of the same type as the first argument.
+The result of `array_contains` is undefined when the second argument is an array that contains a `null` element.
+
+[[hql-array-contains-array-example]]
 ====
 [source, JAVA, indent=0]
 ----
@@ -1247,22 +1237,9 @@ include::{array-example-dir-hql}/ArrayContainsAllTest.java[tags=hql-array-contai
 ----
 ====
 
-[[hql-array-contains-any-example]]
-====
-[source, JAVA, indent=0]
-----
-include::{array-example-dir-hql}/ArrayContainsAnyTest.java[tags=hql-array-contains-any-example]
-----
-====
+To search for `null` elements, the `array_contains_nullable` function must be used with an array argument.
 
-[[hql-array-contains-quantified-functions]]
-===== `array_contains_all_nullable()` & `array_contains_any_nullable()`
-
-Checks if the first array argument contains all or any of the elements of the second array argument.
-Returns `null` if either of the arguments is `null`. Contrary to `array_contains_all()` and `array_contains_any()`,
-these functions use the `distinct from` operator to also support searching for `null` elements.
-
-[[hql-array-contains-all-nullable-example]]
+[[hql-array-contains-array-nullable-example]]
 ====
 [source, JAVA, indent=0]
 ----
@@ -1270,11 +1247,27 @@ include::{array-example-dir-hql}/ArrayContainsAllTest.java[tags=hql-array-contai
 ----
 ====
 
-[[hql-array-contains-any-nullable-example]]
+[[hql-array-overlaps-functions]]
+===== `array_overlaps()` and `array_overlaps_nullable()`
+
+Checks if the first array argument any of the elements of the second array argument.
+Returns `null` if either of the arguments is `null`. The result of `array_overlaps`
+is undefined when the second array argument contains a `null` array element.
+Only `array_overlaps_nullable` is guaranteed to produce correct results for `null` array elements.
+
+[[hql-array-overlaps-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayContainsAnyTest.java[tags=hql-array-contains-any-nullable-example]
+include::{array-example-dir-hql}/ArrayOverlapsTest.java[tags=hql-array-overlaps-example]
+----
+====
+
+[[hql-array-overlaps-nullable-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayOverlapsTest.java[tags=hql-array-overlaps-nullable-example]
 ----
 ====
 

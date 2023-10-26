@@ -40,7 +40,7 @@ import org.hibernate.dialect.function.array.HSQLArraySetFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsAllFunction;
-import org.hibernate.dialect.function.array.OracleArrayContainsAnyFunction;
+import org.hibernate.dialect.function.array.OracleArrayOverlapsFunction;
 import org.hibernate.dialect.function.array.OracleArrayGetFunction;
 import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
 import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
@@ -2768,39 +2768,39 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * H2 array_contains_any() function
+	 * H2 array_overlaps() function
 	 */
-	public void arrayContainsAny_h2() {
+	public void arrayOverlaps_h2() {
 		functionRegistry.register(
-				"array_contains_any",
+				"array_overlaps",
 				new H2ArrayContainsQuantifiedEmulation( typeConfiguration, false, false )
 		);
 	}
 
 	/**
-	 * HSQL array_contains_any() function
+	 * HSQL array_overlaps() function
 	 */
-	public void arrayContainsAny_hsql() {
+	public void arrayOverlaps_hsql() {
 		functionRegistry.register(
-				"array_contains_any",
+				"array_overlaps",
 				new ArrayContainsQuantifiedUnnestFunction( typeConfiguration, false, false )
 		);
 	}
 
 	/**
-	 * CockroachDB and PostgreSQL array contains any operator
+	 * CockroachDB and PostgreSQL array overlaps operator
 	 */
-	public void arrayContainsAny_operator() {
-		functionRegistry.register( "array_contains_any", new ArrayContainsQuantifiedOperatorFunction( typeConfiguration, false, false ) );
+	public void arrayOverlaps_operator() {
+		functionRegistry.register( "array_overlaps", new ArrayContainsQuantifiedOperatorFunction( typeConfiguration, false, false ) );
 	}
 
 	/**
-	 * Oracle array_contains_any() function
+	 * Oracle array_overlaps() function
 	 */
-	public void arrayContainsAny_oracle() {
+	public void arrayOverlaps_oracle() {
 		functionRegistry.register(
-				"array_contains_any",
-				new OracleArrayContainsAnyFunction( typeConfiguration, false )
+				"array_overlaps",
+				new OracleArrayOverlapsFunction( typeConfiguration, false )
 		);
 	}
 
@@ -2845,42 +2845,32 @@ public class CommonFunctionFactory {
 	}
 
 	/**
-	 * H2 array_contains_any_nullable() function
+	 * H2 array_overlaps_nullable() function
 	 */
-	public void arrayContainsAnyNullable_h2() {
+	public void arrayOverlapsNullable_h2() {
 		functionRegistry.register(
-				"array_contains_any_nullable",
+				"array_overlaps_nullable",
 				new H2ArrayContainsQuantifiedEmulation( typeConfiguration, false, true )
 		);
 	}
 
 	/**
-	 * HSQL array_contains_any_nullable() function
+	 * HSQL, CockroachDB and PostgreSQL array_overlaps_nullable() function
 	 */
-	public void arrayContainsAnyNullable_hsql() {
+	public void arrayOverlapsNullable_unnest() {
 		functionRegistry.register(
-				"array_contains_any_nullable",
+				"array_overlaps_nullable",
 				new ArrayContainsQuantifiedUnnestFunction( typeConfiguration, false, true )
 		);
 	}
 
 	/**
-	 * CockroachDB and PostgreSQL array contains any nullable operator
+	 * Oracle array_overlaps_nullable() function
 	 */
-	public void arrayContainsAnyNullable_operator() {
+	public void arrayOverlapsNullable_oracle() {
 		functionRegistry.register(
-				"array_contains_any_nullable",
-				new ArrayContainsQuantifiedOperatorFunction( typeConfiguration, false, true )
-		);
-	}
-
-	/**
-	 * Oracle array_contains_any_nullable() function
-	 */
-	public void arrayContainsAnyNullable_oracle() {
-		functionRegistry.register(
-				"array_contains_any_nullable",
-				new OracleArrayContainsAnyFunction( typeConfiguration, true )
+				"array_overlaps_nullable",
+				new OracleArrayOverlapsFunction( typeConfiguration, true )
 		);
 	}
 

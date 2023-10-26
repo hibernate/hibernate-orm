@@ -14,12 +14,12 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
-public class OracleArrayContainsAnyFunction extends AbstractArrayContainsQuantifiedFunction {
+public class OracleArrayOverlapsFunction extends AbstractArrayContainsQuantifiedFunction {
 
 	private final boolean nullable;
 
-	public OracleArrayContainsAnyFunction(TypeConfiguration typeConfiguration, boolean nullable) {
-		super( "array_contains_any", typeConfiguration );
+	public OracleArrayOverlapsFunction(TypeConfiguration typeConfiguration, boolean nullable) {
+		super( "array_overlaps", typeConfiguration );
 		this.nullable = nullable;
 	}
 
@@ -31,7 +31,7 @@ public class OracleArrayContainsAnyFunction extends AbstractArrayContainsQuantif
 		final Expression haystackExpression = (Expression) sqlAstArguments.get( 0 );
 		final String arrayTypeName = DdlTypeHelper.getTypeName( haystackExpression.getExpressionType(), walker );
 		sqlAppender.appendSql( arrayTypeName );
-		sqlAppender.append( "_contains_any(" );
+		sqlAppender.append( "_overlaps(" );
 		haystackExpression.accept( walker );
 		sqlAppender.append( ',' );
 		sqlAstArguments.get( 1 ).accept( walker );

@@ -307,10 +307,10 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 		);
 		database.addAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
-						arrayTypeName + "_contains_any",
+						arrayTypeName + "_overlaps",
 						database.getDefaultNamespace(),
 						new String[]{
-								"create or replace function " + arrayTypeName + "_contains_any(haystack in " + arrayTypeName +
+								"create or replace function " + arrayTypeName + "_overlaps(haystack in " + arrayTypeName +
 										", needle in " + arrayTypeName + ", nullable in number) return number deterministic is begin " +
 										"if haystack is null or needle is null then return null; end if; " +
 										"if needle.count = 0 then return 1; end if; " +
@@ -322,7 +322,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 										"return 0; " +
 										"end;"
 						},
-						new String[] { "drop function " + arrayTypeName + "_contains_any" },
+						new String[] { "drop function " + arrayTypeName + "_overlaps" },
 						emptySet(),
 						false
 				)

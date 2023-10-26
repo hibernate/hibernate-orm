@@ -257,9 +257,9 @@ public class HSQLLegacyDialect extends Dialect {
 		functionFactory.arrayPrepend_operator();
 		functionFactory.arrayAppend_operator();
 		functionFactory.arrayContainsAll_hsql();
-		functionFactory.arrayContainsAny_hsql();
+		functionFactory.arrayOverlaps_hsql();
 		functionFactory.arrayContainsAllNullable_hsql();
-		functionFactory.arrayContainsAnyNullable_hsql();
+		functionFactory.arrayOverlapsNullable_unnest();
 		functionFactory.arrayGet_unnest();
 		functionFactory.arraySet_hsql();
 		functionFactory.arrayRemove_hsql();

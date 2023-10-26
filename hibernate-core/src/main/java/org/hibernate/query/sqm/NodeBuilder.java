@@ -641,6 +641,544 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
 
+	/**
+	 * Creates a basic collection literal with the {@code array} constructor function.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionLiteral(E... elements);
+
+	/**
+	 * Determines the 1-based position of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmExpression<Integer> collectionPosition(SqmExpression<? extends Collection<? extends E>> collectionExpression, E element);
+
+	/**
+	 * Determines the 1-based position of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmExpression<Integer> collectionPosition(SqmExpression<? extends Collection<? extends E>> collectionExpression, SqmExpression<E> elementExpression);
+
+	/**
+	 * Determines the length of a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	SqmExpression<Integer> collectionLength(SqmExpression<? extends Collection<?>> collectionExpression);
+
+	/**
+	 * Concatenates basic collections with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(SqmExpression<C> collectionExpression1, SqmExpression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Concatenates basic collections with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(SqmExpression<C> collectionExpression1, Collection<? extends E> collection2);
+
+	/**
+	 * Concatenates basic collections with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(C collection1, SqmExpression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Concatenates basic collections with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(C collection1, Collection<? extends E> collection2);
+
+	/**
+	 * Appends element to basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(SqmExpression<C> collectionExpression, SqmExpression<? extends E> elementExpression);
+
+	/**
+	 * Appends element to basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(SqmExpression<C> collectionExpression, E element);
+
+	/**
+	 * Appends element to basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(C collection, SqmExpression<? extends E> elementExpression);
+
+	/**
+	 * Appends element to basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(C collection, E element);
+
+	/**
+	 * Prepends element to basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(SqmExpression<? extends E> elementExpression, SqmExpression<C> collectionExpression);
+
+	/**
+	 * Prepends element to basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(E element, SqmExpression<C> collectionExpression);
+
+	/**
+	 * Prepends element to basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(SqmExpression<? extends E> elementExpression, C collection);
+
+	/**
+	 * Prepends element to basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(E element, C collection);
+
+	/**
+	 * Whether a basic collection contains an element.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContains(SqmExpression<? extends Collection<? super E>> collectionExpression, SqmExpression<? extends E> elementExpression);
+
+	/**
+	 * Whether a basic collection contains an element.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContains(SqmExpression<? extends Collection<? super E>> collectionExpression, E element);
+
+	/**
+	 * Whether a basic collection contains an element.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContains(Collection<? super E> collection, SqmExpression<? extends E> elementExpression);
+
+	/**
+	 * Whether a basic collection contains an element.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContains(Collection<? super E> collection, E element);
+
+	/**
+	 * Whether a basic collection contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContainsNullable(SqmExpression<? extends Collection<? super E>> collectionExpression, SqmExpression<? extends E> elementExpression);
+
+	/**
+	 * Whether a basic collection contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContainsNullable(SqmExpression<? extends Collection<? super E>> collectionExpression, E element);
+
+	/**
+	 * Whether a basic collection contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContainsNullable(Collection<? super E> collection, SqmExpression<? extends E> elementExpression);
+
+	/**
+	 * Whether a basic collection contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContainsNullable(Collection<? super E> collection, E element);
+
+	/**
+	 * Whether a basic collection contains another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContainsAll(SqmExpression<? extends Collection<? extends E>> collectionExpression, SqmExpression<? extends Collection<? extends E>> subCollectionExpression);
+
+	/**
+	 * Whether a basic collection contains another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContainsAll(SqmExpression<? extends Collection<? extends E>> collectionExpression, Collection<? extends E> subCollection);
+
+	/**
+	 * Whether a basic collection contains another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContainsAll(Collection<? extends E> collection, SqmExpression<? extends Collection<? extends E>> subArrayExpression);
+
+	/**
+	 * Whether a basic collection contains another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContainsAll(Collection<? extends E> collection, Collection<? extends E> subCollection);
+
+	/**
+	 * Whether a basic collection contains another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContainsAllNullable(SqmExpression<? extends Collection<? extends E>> collectionExpression, SqmExpression<? extends Collection<? extends E>> subCollectionExpression);
+
+	/**
+	 * Whether a basic collection contains another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContainsAllNullable(SqmExpression<? extends Collection<? extends E>> collectionExpression, Collection<? extends E> subCollection);
+
+	/**
+	 * Whether a basic collection contains another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContainsAllNullable(Collection<? extends E> collection, SqmExpression<? extends Collection<? extends E>> subCollectionExpression);
+
+	/**
+	 * Whether a basic collection contains another basic collection with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionContainsAllNullable(Collection<? extends E> collection, Collection<? extends E> subCollection);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionOverlaps(SqmExpression<? extends Collection<? extends E>> collectionExpression1, SqmExpression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionOverlaps(SqmExpression<? extends Collection<? extends E>> collectionExpression1, Collection<? extends E> collection2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionOverlaps(Collection<? extends E> collection1, SqmExpression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionOverlaps(Collection<? extends E> collection1, Collection<? extends E> collection2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionOverlapsNullable(SqmExpression<? extends Collection<? extends E>> collectionExpression1, SqmExpression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionOverlapsNullable(SqmExpression<? extends Collection<? extends E>> collectionExpression1, Collection<? extends E> collection2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionOverlapsNullable(Collection<? extends E> collection1, SqmExpression<? extends Collection<? extends E>> collectionExpression2);
+
+	/**
+	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmPredicate collectionOverlapsNullable(Collection<? extends E> collection1, Collection<? extends E> collection2);
+
+	/**
+	 * Accesses the element of the basic collection by 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmExpression<E> collectionGet(SqmExpression<? extends Collection<E>> collectionExpression, SqmExpression<Integer> indexExpression);
+
+	/**
+	 * Accesses the element of the basic collection by 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmExpression<E> collectionGet(SqmExpression<? extends Collection<E>> collectionExpression, Integer index);
+
+	/**
+	 * Accesses the element of the basic collection by 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmExpression<E> collectionGet(Collection<E> collection, SqmExpression<Integer> indexExpression);
+
+	/**
+	 * Accesses the element of the basic collection by 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<E> SqmExpression<E> collectionGet(Collection<E> collection, Integer index);
+
+	/**
+	 * Creates basic collection copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(SqmExpression<C> collectionExpression, SqmExpression<Integer> indexExpression, SqmExpression<? extends E> elementExpression);
+	/**
+	 * Creates basic collection copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(SqmExpression<C> collectionExpression, SqmExpression<Integer> indexExpression, E element);
+
+	/**
+	 * Creates basic collection copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(SqmExpression<C> collectionExpression, Integer index, SqmExpression<? extends E> elementExpression);
+
+	/**
+	 * Creates basic collection copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(SqmExpression<C> collectionExpression, Integer index, E element);
+
+	/**
+	 * Creates basic collection copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(C collection, SqmExpression<Integer> indexExpression, SqmExpression<? extends E> elementExpression);
+
+	/**
+	 * Creates basic collection copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(C collection, SqmExpression<Integer> indexExpression, E element);
+
+	/**
+	 * Creates basic collection copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(C collection, Integer index, SqmExpression<? extends E> elementExpression);
+
+	/**
+	 * Creates basic collection copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(C collection, Integer index, E element);
+
+	/**
+	 * Creates basic collection copy with given element removed.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(SqmExpression<C> collectionExpression, SqmExpression<? extends E> elementExpression);
+
+	/**
+	 * Creates basic collection copy with given element removed.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(SqmExpression<C> collectionExpression, E element);
+
+	/**
+	 * Creates basic collection copy with given element removed.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(C collection, SqmExpression<? extends E> elementExpression);
+
+	/**
+	 * Creates basic collection copy with given element removed.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(C collection, E element);
+
+	/**
+	 * Creates basic collection copy with the element at the given 1-based index removed.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(SqmExpression<C> collectionExpression, SqmExpression<Integer> indexExpression);
+
+	/**
+	 * Creates basic collection copy with the element at the given 1-based index removed.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(SqmExpression<C> collectionExpression, Integer index);
+
+	/**
+	 * Creates basic collection copy with the element at the given 1-based index removed.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(C collection, SqmExpression<Integer> indexExpression);
+
+	/**
+	 * Creates basic collection copy with the element at the given 1-based index removed.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(C collection, Integer index);
+
+	/**
+	 * Creates a sub-collection of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(SqmExpression<C> collectionExpression, SqmExpression<Integer> lowerIndexExpression, SqmExpression<Integer> upperIndexExpression);
+
+	/**
+	 * Creates a sub-collection of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(SqmExpression<C> collectionExpression, SqmExpression<Integer> lowerIndexExpression, Integer upperIndex);
+
+	/**
+	 * Creates a sub-collection of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(SqmExpression<C> collectionExpression, Integer lowerIndex, SqmExpression<Integer> upperIndexExpression);
+
+	/**
+	 * Creates a sub-collection of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(SqmExpression<C> collectionExpression, Integer lowerIndex, Integer upperIndex);
+
+	/**
+	 * Creates a sub-collection of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(C collection, SqmExpression<Integer> lowerIndexExpression, SqmExpression<Integer> upperIndexExpression);
+
+	/**
+	 * Creates a sub-collection of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(C collection, SqmExpression<Integer> lowerIndexExpression, Integer upperIndex);
+
+	/**
+	 * Creates a sub-collection of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(C collection, Integer lowerIndex, SqmExpression<Integer> upperIndexExpression);
+
+	/**
+	 * Creates a sub-collection of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(C collection, Integer lowerIndex, Integer upperIndex);
+
+	/**
+	 * Creates basic collection copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(SqmExpression<C> collectionExpression, SqmExpression<? extends E> oldElementExpression, SqmExpression<? extends E> newElementExpression);
+
+	/**
+	 * Creates basic collection copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(SqmExpression<C> collectionExpression, SqmExpression<? extends E> oldElementExpression, E newElement);
+
+	/**
+	 * Creates basic collection copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(SqmExpression<C> collectionExpression, E oldElement, SqmExpression<? extends E> newElementExpression);
+
+	/**
+	 * Creates basic collection copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(SqmExpression<C> collectionExpression, E oldElement, E newElement);
+
+	/**
+	 * Creates basic collection copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(C collection, SqmExpression<? extends E> oldElementExpression, SqmExpression<? extends E> newElementExpression);
+
+	/**
+	 * Creates basic collection copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(C collection, SqmExpression<? extends E> oldElementExpression, E newElement);
+
+	/**
+	 * Creates basic collection copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(C collection, E oldElement, SqmExpression<? extends E> newElementExpression);
+
+	/**
+	 * Creates basic collection copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(C collection, E oldElement, E newElement);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

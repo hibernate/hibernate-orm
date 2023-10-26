@@ -39,4 +39,13 @@ public class EntityAssembler implements DomainResultAssembler {
 		initializer.resolveInstance( rowProcessingState );
 		return initializer.getEntityInstance();
 	}
+
+	@Override
+	public void resolveState(RowProcessingState rowProcessingState) {
+		final Object entityInstance = assemble( rowProcessingState );
+		if ( entityInstance == null ) {
+			// Ensure the entity is initialized and the association key is read
+			initializer.initializeInstance( rowProcessingState );
+		}
+	}
 }

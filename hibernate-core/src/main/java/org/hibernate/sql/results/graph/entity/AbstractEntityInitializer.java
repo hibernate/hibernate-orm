@@ -517,12 +517,12 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			else {
 				entityInstance = proxy;
 				if ( Hibernate.isInitialized( entityInstance ) ) {
-					this.isInitialized = true;
 					registerReloadedEntity( rowProcessingState, holder );
 					if ( rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
 						// We need to read result set values to correctly populate the query cache
 						resolveState( rowProcessingState );
 					}
+					this.isInitialized = true;
 				}
 			}
 		}
@@ -532,13 +532,13 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				entityInstance = existingEntity;
 				if ( holder.getEntityInitializer() == null ) {
 					if ( isExistingEntityInitialized( existingEntity ) ) {
-						this.isInitialized = true;
 						registerReloadedEntity( rowProcessingState, holder );
 						notifyResolutionListeners( entityInstance );
 						if ( rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
 							// We need to read result set values to correctly populate the query cache
 							resolveState( rowProcessingState );
 						}
+						this.isInitialized = true;
 					}
 					else {
 						registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );

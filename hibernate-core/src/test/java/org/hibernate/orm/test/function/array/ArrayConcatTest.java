@@ -87,4 +87,88 @@ public class ArrayConcatTest {
 		} );
 	}
 
+	@Test
+	public void testConcatPipe(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			//tag::hql-array-concat-pipe-example[]
+			List<Tuple> results = em.createQuery( "select e.id, e.theArray || array('xyz') from EntityWithArrays e order by e.id", Tuple.class )
+					.getResultList();
+			//end::hql-array-concat-pipe-example[]
+			assertEquals( 3, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertArrayEquals( new String[]{ "xyz" }, results.get( 0 ).get( 1, String[].class ) );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertArrayEquals( new String[]{ "abc", null, "def", "xyz" }, results.get( 1 ).get( 1, String[].class ) );
+			assertEquals( 3L, results.get( 2 ).get( 0 ) );
+			assertNull( results.get( 2 ).get( 1, String[].class ) );
+		} );
+	}
+
+	@Test
+	public void testConcatPipeTwoArrayPaths(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			em.createQuery( "select e.id, e.theArray || e.theArray from EntityWithArrays e order by e.id" ).getResultList();
+		} );
+	}
+
+	@Test
+	public void testConcatPipeAppendLiteral(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			//tag::hql-array-concat-pipe-element-example[]
+			em.createQuery( "select e.id, e.theArray || 'last' from EntityWithArrays e order by e.id" ).getResultList();
+			//end::hql-array-concat-pipe-element-example[]
+		} );
+	}
+
+	@Test
+	public void testConcatPipePrependLiteral(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			em.createQuery( "select e.id, 'first' || e.theArray from EntityWithArrays e order by e.id" ).getResultList();
+		} );
+	}
+
+	@Test
+	public void testConcatPipeAppendNull(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			em.createQuery( "select e.id, e.theArray || null from EntityWithArrays e order by e.id" ).getResultList();
+		} );
+	}
+
+	@Test
+	public void testConcatPipePrependNull(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			em.createQuery( "select e.id, null || e.theArray from EntityWithArrays e order by e.id" ).getResultList();
+		} );
+	}
+
+	@Test
+	public void testConcatPipeAppendParameter(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			em.createQuery( "select e.id, e.theArray || :p from EntityWithArrays e order by e.id" )
+					.setParameter( "p", null )
+					.getResultList();
+			em.createQuery( "select e.id, e.theArray || :p from EntityWithArrays e order by e.id" )
+					.setParameter( "p", "last" )
+					.getResultList();
+			em.createQuery( "select e.id, e.theArray || :p from EntityWithArrays e order by e.id" )
+					.setParameter( "p", new String[]{ "last" } )
+					.getResultList();
+		} );
+	}
+
+	@Test
+	public void testConcatPipePrependParameter(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			em.createQuery( "select e.id, :p || e.theArray from EntityWithArrays e order by e.id" )
+					.setParameter( "p", null )
+					.getResultList();
+			em.createQuery( "select e.id, :p || e.theArray from EntityWithArrays e order by e.id" )
+					.setParameter( "p", "first" )
+					.getResultList();
+			em.createQuery( "select e.id, :p || e.theArray from EntityWithArrays e order by e.id" )
+					.setParameter( "p", new String[]{ "first" } )
+					.getResultList();
+		} );
+	}
+
 }

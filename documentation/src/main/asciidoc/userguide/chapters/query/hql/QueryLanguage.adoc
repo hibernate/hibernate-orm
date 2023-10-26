@@ -1173,7 +1173,7 @@ include::{array-example-dir-hql}/ArrayLengthTest.java[tags=hql-array-length-exam
 ====
 
 [[hql-array-concat-functions]]
-===== `array_concat()`
+===== `array_concat()` or `||`
 
 Concatenates arrays with each other in order. Returns `null` if one of the arguments is `null`.
 
@@ -1182,6 +1182,26 @@ Concatenates arrays with each other in order. Returns `null` if one of the argum
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayConcatTest.java[tags=hql-array-concat-example]
+----
+====
+
+Arrays can also be concatenated with the `||` (double-pipe) operator.
+
+[[hql-array-concat-pipe-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayConcatTest.java[tags=hql-array-concat-pipe-example]
+----
+====
+
+In addition, the `||` (double-pipe) operator also support concatenating single elements to arrays.
+
+[[hql-array-concat-pipe-element-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayConcatTest.java[tags=hql-array-concat-pipe-element-example]
 ----
 ====
 

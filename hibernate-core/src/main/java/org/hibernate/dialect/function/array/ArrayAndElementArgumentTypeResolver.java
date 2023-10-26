@@ -9,11 +9,10 @@ package org.hibernate.dialect.function.array;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.model.domain.DomainType;
-import org.hibernate.query.ReturnableType;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.type.BasicPluralType;
 
@@ -40,21 +39,27 @@ public class ArrayAndElementArgumentTypeResolver implements FunctionArgumentType
 			SqmToSqlAstConverter converter) {
 		if ( argumentIndex == arrayIndex ) {
 			for ( int elementIndex : elementIndexes ) {
-				final SqmTypedNode<?> argument = function.getArguments().get( elementIndex );
-				final DomainType<?> sqmType = argument.getExpressible().getSqmType();
-				if ( sqmType instanceof ReturnableType<?> ) {
-					return DdlTypeHelper.resolveArrayType(
-							sqmType,
-							converter.getCreationContext().getSessionFactory().getTypeConfiguration()
-					);
+				final SqmTypedNode<?> node = function.getArguments().get( elementIndex );
+				if ( node instanceof SqmExpression<?> ) {
+					final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
+					if ( expressible != null ) {
+						return DdlTypeHelper.resolveArrayType(
+								(DomainType<?>) expressible.getSingleJdbcMapping(),
+								converter.getCreationContext().getSessionFactory().getTypeConfiguration()
+						);
+					}
 				}
 			}
 		}
 		else if ( ArrayHelper.contains( elementIndexes, argumentIndex ) ) {
-			final SqmTypedNode<?> argument = function.getArguments().get( arrayIndex );
-			final SqmExpressible<?> sqmType = argument.getNodeType();
-			if ( sqmType instanceof BasicPluralType<?, ?> ) {
-				return ( (BasicPluralType<?, ?>) sqmType ).getElementType();
+			final SqmTypedNode<?> node = function.getArguments().get( arrayIndex );
+			if ( node instanceof SqmExpression<?> ) {
+				final MappingModelExpressible<?> expressible = converter.determineValueMapping( (SqmExpression<?>) node );
+				if ( expressible != null ) {
+					if ( expressible.getSingleJdbcMapping() instanceof BasicPluralType<?, ?> ) {
+						return ( (BasicPluralType<?, ?>) expressible.getSingleJdbcMapping() ).getElementType();
+					}
+				}
 			}
 		}
 		return null;

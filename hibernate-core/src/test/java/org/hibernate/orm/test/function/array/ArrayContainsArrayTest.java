@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 // otherwise we might run into ORA-21700: object does not exist or is marked for delete
 // because the JDBC connection or database session caches something that should have been invalidated
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = ""))
-public class ArrayContainsAllTest {
+public class ArrayContainsArrayTest {
 
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
@@ -54,40 +54,39 @@ public class ArrayContainsAllTest {
 	}
 
 	@Test
-	public void testContainsAll(SessionFactoryScope scope) {
+	public void testContainsArray(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			//tag::hql-array-contains-all-example[]
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_all(e.theArray, array('abc', 'def'))", EntityWithArrays.class )
+			//tag::hql-array-contains-array-example[]
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains(e.theArray, array('abc', 'def'))", EntityWithArrays.class )
 					.getResultList();
-			//end::hql-array-contains-all-example[]
+			//end::hql-array-contains-array-example[]
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
 		} );
 	}
 
 	@Test
-	public void testDoesNotContain(SessionFactoryScope scope) {
+	public void testDoesNotContainArray(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_all(e.theArray, array('xyz'))", EntityWithArrays.class )
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains(e.theArray, array('xyz'))", EntityWithArrays.class )
 					.getResultList();
 			assertEquals( 0, results.size() );
 		} );
 	}
 
 	@Test
-	public void testContainsPartly(SessionFactoryScope scope) {
+	public void testContainsArrayPartly(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_all(e.theArray, array('abc','xyz'))", EntityWithArrays.class )
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains(e.theArray, array('abc','xyz'))", EntityWithArrays.class )
 					.getResultList();
 			assertEquals( 0, results.size() );
 		} );
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Type inference isn't smart enough to figure out the type for the `null`")
-	public void testContainsNull(SessionFactoryScope scope) {
+	public void testContainsArrayWithNullElementOnly(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_all_nullable(e.theArray, array(null))", EntityWithArrays.class )
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_nullable(e.theArray, array(null))", EntityWithArrays.class )
 					.getResultList();
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
@@ -95,14 +94,49 @@ public class ArrayContainsAllTest {
 	}
 
 	@Test
-	public void testContainsWithNull(SessionFactoryScope scope) {
+	public void testContainsArrayWithNullElement(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			//tag::hql-array-contains-all-nullable-example[]
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_all_nullable(e.theArray, array('abc',null))", EntityWithArrays.class )
+			//tag::hql-array-contains-array-nullable-example[]
+			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_nullable(e.theArray, array('abc',null))", EntityWithArrays.class )
 					.getResultList();
-			//end::hql-array-contains-all-nullable-example[]
+			//end::hql-array-contains-array-nullable-example[]
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	public void testContainsElementParameter(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<EntityWithArrays> results = em.createQuery(
+					"from EntityWithArrays e where array_contains_nullable(e.theArray, :param)",
+					EntityWithArrays.class
+			).setParameter( "param", "abc" ).getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	public void testContainsArrayParameter(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<EntityWithArrays> results = em.createQuery(
+					"from EntityWithArrays e where array_contains_nullable(e.theArray, :param)",
+					EntityWithArrays.class
+			).setParameter( "param", new String[]{ "abc", null } ).getResultList();
+			assertEquals( 1, results.size() );
+			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	public void testContainsNullParameter(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<EntityWithArrays> results = em.createQuery(
+					"from EntityWithArrays e where array_contains_nullable(e.theArray, :param)",
+					EntityWithArrays.class
+			).setParameter( "param", null ).getResultList();
+			assertEquals( 0, results.size() );
 		} );
 	}
 

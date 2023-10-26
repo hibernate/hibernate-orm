@@ -13,6 +13,7 @@ import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.type.BasicPluralType;
@@ -59,13 +60,13 @@ public class DdlTypeHelper {
 			return AbstractSqlAstTranslator.getCastTypeName( (SqlTypedMapping) type, walker.getSessionFactory() );
 		}
 		else {
-			final BasicType<?> jdbcMapping = (BasicType<?>) type.getSingleJdbcMapping();
+			final BasicType<?> basicType = (BasicType<?>) type.getSingleJdbcMapping();
 			final TypeConfiguration typeConfiguration = walker.getSessionFactory().getTypeConfiguration();
 			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 			final DdlType ddlType = ddlTypeRegistry.getDescriptor(
-					jdbcMapping.getJdbcType().getDdlTypeCode()
+					basicType.getJdbcType().getDdlTypeCode()
 			);
-			return ddlType.getCastTypeName( Size.nil(), jdbcMapping, ddlTypeRegistry );
+			return ddlType.getCastTypeName( Size.nil(), basicType, ddlTypeRegistry );
 		}
 	}
 

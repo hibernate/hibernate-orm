@@ -30,6 +30,10 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 
 	private final SqmPredicate filter;
 
+	/**
+	 * @deprecated Use {@link #SelfRenderingSqmAggregateFunction(SqmFunctionDescriptor, FunctionRenderer, List, SqmPredicate, ReturnableType, ArgumentsValidator, FunctionReturnTypeResolver, NodeBuilder, String)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public SelfRenderingSqmAggregateFunction(
 			SqmFunctionDescriptor descriptor,
 			FunctionRenderingSupport renderingSupport,
@@ -41,6 +45,20 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 			NodeBuilder nodeBuilder,
 			String name) {
 		super( descriptor, renderingSupport, arguments, impliedResultType, argumentsValidator, returnTypeResolver, nodeBuilder, name );
+		this.filter = filter;
+	}
+
+	public SelfRenderingSqmAggregateFunction(
+			SqmFunctionDescriptor descriptor,
+			FunctionRenderer renderer,
+			List<? extends SqmTypedNode<?>> arguments,
+			SqmPredicate filter,
+			ReturnableType<T> impliedResultType,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver,
+			NodeBuilder nodeBuilder,
+			String name) {
+		super( descriptor, renderer, arguments, impliedResultType, argumentsValidator, returnTypeResolver, nodeBuilder, name );
 		this.filter = filter;
 	}
 
@@ -58,7 +76,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 				this,
 				new SelfRenderingSqmAggregateFunction<>(
 						getFunctionDescriptor(),
-						getRenderingSupport(),
+						getFunctionRenderer(),
 						arguments,
 						filter == null ? null : filter.copy( context ),
 						getImpliedResultType(),
@@ -83,7 +101,7 @@ public class SelfRenderingSqmAggregateFunction<T> extends SelfRenderingSqmFuncti
 		}
 		return new SelfRenderingAggregateFunctionSqlAstExpression(
 				getFunctionName(),
-				getRenderingSupport(),
+				getFunctionRenderer(),
 				arguments,
 				filter == null ? null : walker.visitNestedTopLevelPredicate( filter ),
 				resultType,

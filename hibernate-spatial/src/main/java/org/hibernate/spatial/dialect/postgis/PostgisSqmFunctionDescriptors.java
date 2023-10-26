@@ -10,6 +10,7 @@ package org.hibernate.spatial.dialect.postgis;
 import java.util.List;
 
 import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -73,6 +74,7 @@ public class PostgisSqmFunctionDescriptors extends BaseSqmFunctionDescriptors {
 		public void render(
 				SqlAppender sqlAppender,
 				List<? extends SqlAstNode> sqlAstArguments,
+				ReturnableType<?> returnType,
 				SqlAstTranslator<?> walker) {
 			sqlAppender.appendSql( '(' );
 			final Expression arg1 = (Expression) sqlAstArguments.get( 0 );

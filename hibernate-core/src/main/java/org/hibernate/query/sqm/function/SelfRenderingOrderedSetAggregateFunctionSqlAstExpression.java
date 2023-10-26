@@ -29,9 +29,25 @@ public class SelfRenderingOrderedSetAggregateFunctionSqlAstExpression extends Se
 
 	private final List<SortSpecification> withinGroup;
 
+	/**
+	 * @deprecated Use {@link #SelfRenderingOrderedSetAggregateFunctionSqlAstExpression(String, FunctionRenderer, List, Predicate, List, ReturnableType, JdbcMappingContainer)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public SelfRenderingOrderedSetAggregateFunctionSqlAstExpression(
 			String functionName,
 			FunctionRenderingSupport renderer,
+			List<? extends SqlAstNode> sqlAstArguments,
+			Predicate filter,
+			List<SortSpecification> withinGroup,
+			ReturnableType<?> type,
+			JdbcMappingContainer expressible) {
+		super( functionName, renderer, sqlAstArguments, filter, type, expressible );
+		this.withinGroup = withinGroup;
+	}
+
+	public SelfRenderingOrderedSetAggregateFunctionSqlAstExpression(
+			String functionName,
+			FunctionRenderer renderer,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
@@ -51,6 +67,6 @@ public class SelfRenderingOrderedSetAggregateFunctionSqlAstExpression extends Se
 			SqlAppender sqlAppender,
 			SqlAstTranslator<?> walker,
 			SessionFactoryImplementor sessionFactory) {
-		getRenderer().render( sqlAppender, getArguments(), getFilter(), withinGroup, walker );
+		getFunctionRenderer().render( sqlAppender, getArguments(), getFilter(), withinGroup, getType(), walker );
 	}
 }

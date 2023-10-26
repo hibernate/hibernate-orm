@@ -9,10 +9,10 @@ package org.hibernate.dialect.function.array;
 import java.util.List;
 
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
-import org.hibernate.sql.ast.tree.expression.Expression;
 
 /**
  * Oracle concatenation function for arrays.
@@ -27,18 +27,11 @@ public class OracleArrayConcatFunction extends ArrayConcatFunction {
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		JdbcMappingContainer expressionType = null;
-		for ( SqlAstNode sqlAstArgument : sqlAstArguments ) {
-			expressionType = ( (Expression) sqlAstArgument ).getExpressionType();
-			if ( expressionType != null ) {
-				break;
-			}
-		}
-
-		final String arrayTypeName = DdlTypeHelper.getTypeName( expressionType, walker );
+		final String arrayTypeName = DdlTypeHelper.getTypeName( (JdbcMappingContainer) returnType, walker );
 		sqlAppender.append( arrayTypeName );
 		sqlAppender.append( "_concat" );
-		super.render( sqlAppender, sqlAstArguments, walker );
+		super.render( sqlAppender, sqlAstArguments, returnType, walker );
 	}
 }

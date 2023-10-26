@@ -479,7 +479,7 @@ public class SpannerDialect extends Dialect {
 		functionFactory.listagg_stringAgg( "string" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates();
-		functionFactory.array_withoutKeyword();
+		functionFactory.array_spanner();
 	}
 
 	@Override

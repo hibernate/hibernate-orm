@@ -72,16 +72,4 @@ public class ArrayContainsTest {
 		} );
 	}
 
-	@Test
-	public void testContainsNull(SessionFactoryScope scope) {
-		scope.inSession( em -> {
-			//tag::hql-array-contains-null-example[]
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_contains_null(e.theArray)", EntityWithArrays.class )
-					.getResultList();
-			//end::hql-array-contains-null-example[]
-			assertEquals( 1, results.size() );
-			assertEquals( 2L, results.get( 0 ).getId() );
-		} );
-	}
-
 }

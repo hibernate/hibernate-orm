@@ -7,6 +7,7 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.Dialect;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -58,7 +59,11 @@ public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
 		final TrimSpec specification = ( (TrimSpecification) sqlAstArguments.get( 0 ) ).getSpecification();
 		final Object trimCharacter = ( (Literal) sqlAstArguments.get( 1 ) ).getLiteralValue();
 		final Expression sourceExpr = (Expression) sqlAstArguments.get( 2 );

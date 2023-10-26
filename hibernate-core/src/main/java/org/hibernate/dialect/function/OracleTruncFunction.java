@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -45,11 +46,11 @@ public class OracleTruncFunction extends TruncFunction {
 			ReturnableType<T> impliedResultType,
 			QueryEngine queryEngine) {
 		final List<SqmTypedNode<?>> args = new ArrayList<>( arguments );
-		final FunctionRenderingSupport renderingSupport;
+		final FunctionRenderer renderer;
 		final ArgumentsValidator argumentsValidator;
 		if ( arguments.size() == 2 && arguments.get( 1 ) instanceof SqmExtractUnit ) {
 			// datetime truncation
-			renderingSupport = datetimeRenderingSupport;
+			renderer = datetimeRenderingSupport;
 			argumentsValidator = TruncArgumentsValidator.DATETIME_VALIDATOR;
 			// the trunc() function requires translating the temporal_unit to a format string
 			final TemporalUnit temporalUnit = ( (SqmExtractUnit<?>) arguments.get( 1 ) ).getUnit();
@@ -92,13 +93,13 @@ public class OracleTruncFunction extends TruncFunction {
 		}
 		else {
 			// numeric truncation
-			renderingSupport = numericRenderingSupport;
+			renderer = numericRenderingSupport;
 			argumentsValidator = TruncArgumentsValidator.NUMERIC_VALIDATOR;
 		}
 
 		return new SelfRenderingSqmFunction<>(
 				this,
-				renderingSupport,
+				renderer,
 				args,
 				impliedResultType,
 				argumentsValidator,

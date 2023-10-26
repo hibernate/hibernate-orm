@@ -85,7 +85,6 @@ public class ArrayOverlapsTest {
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Type inference isn't smart enough to figure out the type for the `null`")
 	public void testOverlapsNullFully(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_overlaps_nullable(e.theArray, array(null))", EntityWithArrays.class )

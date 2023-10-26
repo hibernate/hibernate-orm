@@ -19,9 +19,10 @@ import org.hibernate.dialect.function.array.ArrayArgumentValidator;
 import org.hibernate.dialect.function.array.ArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.ArrayConcatFunction;
 import org.hibernate.dialect.function.array.ArrayConstructorFunction;
-import org.hibernate.dialect.function.array.ArrayContainsQuantifiedOperatorFunction;
 import org.hibernate.dialect.function.array.ArrayContainsOperatorFunction;
-import org.hibernate.dialect.function.array.ArrayContainsQuantifiedUnnestFunction;
+import org.hibernate.dialect.function.array.ArrayContainsUnnestFunction;
+import org.hibernate.dialect.function.array.ArrayOverlapsOperatorFunction;
+import org.hibernate.dialect.function.array.ArrayOverlapsUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayGetUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayRemoveIndexUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayReplaceUnnestFunction;
@@ -29,17 +30,18 @@ import org.hibernate.dialect.function.array.ArraySetUnnestFunction;
 import org.hibernate.dialect.function.array.ArraySliceUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayViaArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
-import org.hibernate.dialect.function.array.H2ArrayContainsQuantifiedEmulation;
+import org.hibernate.dialect.function.array.H2ArrayContainsFunction;
+import org.hibernate.dialect.function.array.H2ArrayOverlapsFunction;
 import org.hibernate.dialect.function.array.H2ArrayRemoveFunction;
 import org.hibernate.dialect.function.array.H2ArrayRemoveIndexFunction;
 import org.hibernate.dialect.function.array.H2ArrayReplaceFunction;
 import org.hibernate.dialect.function.array.H2ArraySetFunction;
+import org.hibernate.dialect.function.array.HSQLArrayConstructorFunction;
 import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.HSQLArrayRemoveFunction;
 import org.hibernate.dialect.function.array.HSQLArraySetFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
-import org.hibernate.dialect.function.array.OracleArrayContainsAllFunction;
 import org.hibernate.dialect.function.array.OracleArrayOverlapsFunction;
 import org.hibernate.dialect.function.array.OracleArrayGetFunction;
 import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
@@ -52,11 +54,10 @@ import org.hibernate.dialect.function.array.OracleArraySliceFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
-import org.hibernate.dialect.function.array.CastingArrayConstructorFunction;
+import org.hibernate.dialect.function.array.PostgreSQLArrayConstructorFunction;
 import org.hibernate.dialect.function.array.OracleArrayAggEmulation;
 import org.hibernate.dialect.function.array.OracleArrayConstructorFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsFunction;
-import org.hibernate.dialect.function.array.OracleArrayContainsNullFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -2590,16 +2591,23 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * H2, HSQL array() constructor function
+	 */
+	public void array_hsql() {
+		functionRegistry.register( "array", new HSQLArrayConstructorFunction() );
+	}
+
+	/**
 	 * CockroachDB and PostgreSQL array() constructor function
 	 */
-	public void array_casting() {
-		functionRegistry.register( "array", new CastingArrayConstructorFunction() );
+	public void array_postgresql() {
+		functionRegistry.register( "array", new PostgreSQLArrayConstructorFunction() );
 	}
 
 	/**
 	 * Google Spanner array() constructor function
 	 */
-	public void array_withoutKeyword() {
+	public void array_spanner() {
 		functionRegistry.register( "array", new ArrayConstructorFunction( false ) );
 	}
 
@@ -2627,153 +2635,58 @@ public class CommonFunctionFactory {
 	/**
 	 * H2 array_contains() function
 	 */
-	public void arrayContains() {
-		functionRegistry.namedDescriptorBuilder( "array_contains" )
-				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( booleanType ) )
-				.setArgumentsValidator(
-						StandardArgumentsValidators.composite(
-							StandardArgumentsValidators.exactly( 2 ),
-							ArrayAndElementArgumentValidator.DEFAULT_INSTANCE
-						)
-				)
-				.setArgumentTypeResolver( ArrayAndElementArgumentTypeResolver.DEFAULT_INSTANCE )
-				.setArgumentListSignature( "(ARRAY array, OBJECT element)" )
-				.register();
+	public void arrayContains_h2(int maximumArraySize) {
+		functionRegistry.register(
+				"array_contains",
+				new H2ArrayContainsFunction( false, maximumArraySize, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_contains_nullable",
+				new H2ArrayContainsFunction( true, maximumArraySize, typeConfiguration )
+		);
 	}
 
 	/**
 	 * HSQL array_contains() function
 	 */
 	public void arrayContains_hsql() {
-		functionRegistry.patternDescriptorBuilder( "array_contains", "position_array(?2 in ?1)>0" )
-				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( booleanType ) )
-				.setArgumentsValidator(
-						StandardArgumentsValidators.composite(
-								StandardArgumentsValidators.exactly( 2 ),
-								ArrayAndElementArgumentValidator.DEFAULT_INSTANCE
-						)
-				)
-				.setArgumentTypeResolver( ArrayAndElementArgumentTypeResolver.DEFAULT_INSTANCE )
-				.setArgumentListSignature( "(ARRAY array, OBJECT element)" )
-				.register();
+		functionRegistry.register(
+				"array_contains",
+				new ArrayContainsUnnestFunction( false, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_contains_nullable",
+				new ArrayContainsUnnestFunction( true, typeConfiguration )
+		);
 	}
 
 	/**
 	 * CockroachDB and PostgreSQL array contains operator
 	 */
-	public void arrayContains_operator() {
-		functionRegistry.register( "array_contains", new ArrayContainsOperatorFunction( typeConfiguration ) );
+	public void arrayContains_postgresql() {
+		functionRegistry.register( "array_contains", new ArrayContainsOperatorFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_contains_nullable", new ArrayContainsOperatorFunction( true, typeConfiguration ) );
 	}
 
 	/**
 	 * Oracle array_contains() function
 	 */
 	public void arrayContains_oracle() {
-		functionRegistry.register( "array_contains", new OracleArrayContainsFunction( typeConfiguration ) );
-	}
-
-	/**
-	 * H2, HSQL array_contains_null() function
-	 */
-	public void arrayContainsNull() {
-		functionRegistry.patternDescriptorBuilder( "array_contains_null", "array_contains(?1,null)" )
-				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( booleanType ) )
-				.setArgumentsValidator(
-						StandardArgumentsValidators.composite(
-								StandardArgumentsValidators.exactly( 1 ),
-								ArrayArgumentValidator.DEFAULT_INSTANCE
-						)
-				)
-				.setArgumentListSignature( "(ARRAY array)" )
-				.register();
-	}
-
-	/**
-	 * CockroachDB and PostgreSQL array contains null emulation
-	 */
-	public void arrayContainsNull_array_position() {
-		functionRegistry.patternDescriptorBuilder( "array_contains_null", "array_position(?1,null) is not null" )
-				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( booleanType ) )
-				.setArgumentsValidator(
-						StandardArgumentsValidators.composite(
-								StandardArgumentsValidators.exactly( 1 ),
-								ArrayArgumentValidator.DEFAULT_INSTANCE
-						)
-				)
-				.setArgumentListSignature( "(ARRAY array)" )
-				.register();
-	}
-
-	/**
-	 * Oracle array_contains() function
-	 */
-	public void arrayContainsNull_oracle() {
-		functionRegistry.register( "array_contains_null", new OracleArrayContainsNullFunction( typeConfiguration ) );
-	}
-
-	/**
-	 * CockroachDB and PostgreSQL array contains null emulation
-	 */
-	public void arrayContainsNull_hsql() {
-		functionRegistry.patternDescriptorBuilder( "array_contains_null", "exists(select 1 from unnest(?1) t(i) where t.i is null)" )
-				.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( booleanType ) )
-				.setArgumentsValidator(
-						StandardArgumentsValidators.composite(
-								StandardArgumentsValidators.exactly( 1 ),
-								ArrayArgumentValidator.DEFAULT_INSTANCE
-						)
-				)
-				.setArgumentListSignature( "(ARRAY array)" )
-				.register();
-	}
-
-	/**
-	 * H2 array_contains_all() function
-	 */
-	public void arrayContainsAll_h2() {
-		functionRegistry.register(
-				"array_contains_all",
-				new H2ArrayContainsQuantifiedEmulation( typeConfiguration, true, false )
-		);
-	}
-
-	/**
-	 * HSQL array_contains_all() function
-	 */
-	public void arrayContainsAll_hsql() {
-		functionRegistry.register(
-				"array_contains_all",
-				new ArrayContainsQuantifiedUnnestFunction( typeConfiguration, true, false )
-		);
-	}
-
-	/**
-	 * CockroachDB and PostgreSQL array contains all operator
-	 */
-	public void arrayContainsAll_operator() {
-		functionRegistry.register(
-				"array_contains_all",
-				new ArrayContainsQuantifiedOperatorFunction( typeConfiguration, true, false )
-		);
-	}
-
-	/**
-	 * Oracle array_contains_all() function
-	 */
-	public void arrayContainsAll_oracle() {
-		functionRegistry.register(
-				"array_contains_all",
-				new OracleArrayContainsAllFunction( typeConfiguration, false )
-		);
+		functionRegistry.register( "array_contains", new OracleArrayContainsFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_contains_nullable", new OracleArrayContainsFunction( true, typeConfiguration ) );
 	}
 
 	/**
 	 * H2 array_overlaps() function
 	 */
-	public void arrayOverlaps_h2() {
+	public void arrayOverlaps_h2(int maximumArraySize) {
 		functionRegistry.register(
 				"array_overlaps",
-				new H2ArrayContainsQuantifiedEmulation( typeConfiguration, false, false )
+				new H2ArrayOverlapsFunction( false, maximumArraySize, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_overlaps_nullable",
+				new H2ArrayOverlapsFunction( true, maximumArraySize, typeConfiguration )
 		);
 	}
 
@@ -2783,15 +2696,20 @@ public class CommonFunctionFactory {
 	public void arrayOverlaps_hsql() {
 		functionRegistry.register(
 				"array_overlaps",
-				new ArrayContainsQuantifiedUnnestFunction( typeConfiguration, false, false )
+				new ArrayOverlapsUnnestFunction( false, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_overlaps_nullable",
+				new ArrayOverlapsUnnestFunction( true, typeConfiguration )
 		);
 	}
 
 	/**
 	 * CockroachDB and PostgreSQL array overlaps operator
 	 */
-	public void arrayOverlaps_operator() {
-		functionRegistry.register( "array_overlaps", new ArrayContainsQuantifiedOperatorFunction( typeConfiguration, false, false ) );
+	public void arrayOverlaps_postgresql() {
+		functionRegistry.register( "array_overlaps", new ArrayOverlapsOperatorFunction( false, typeConfiguration ) );
+		functionRegistry.register( "array_overlaps_nullable", new ArrayOverlapsOperatorFunction( true, typeConfiguration ) );
 	}
 
 	/**
@@ -2802,72 +2720,6 @@ public class CommonFunctionFactory {
 				"array_overlaps",
 				new OracleArrayOverlapsFunction( typeConfiguration, false )
 		);
-	}
-
-	/**
-	 * H2 array_contains_all_nullable() function
-	 */
-	public void arrayContainsAllNullable_h2() {
-		functionRegistry.register(
-				"array_contains_all_nullable",
-				new H2ArrayContainsQuantifiedEmulation( typeConfiguration, true, true )
-		);
-	}
-
-	/**
-	 * HSQL array_contains_all_nullable() function
-	 */
-	public void arrayContainsAllNullable_hsql() {
-		functionRegistry.register(
-				"array_contains_all_nullable",
-				new ArrayContainsQuantifiedUnnestFunction( typeConfiguration, true, true )
-		);
-	}
-
-	/**
-	 * CockroachDB and PostgreSQL array contains all nullable operator
-	 */
-	public void arrayContainsAllNullable_operator() {
-		functionRegistry.register(
-				"array_contains_all_nullable",
-				new ArrayContainsQuantifiedOperatorFunction( typeConfiguration, true, true )
-		);
-	}
-
-	/**
-	 * Oracle array_contains_all_nullable() function
-	 */
-	public void arrayContainsAllNullable_oracle() {
-		functionRegistry.register(
-				"array_contains_all_nullable",
-				new OracleArrayContainsAllFunction( typeConfiguration, true )
-		);
-	}
-
-	/**
-	 * H2 array_overlaps_nullable() function
-	 */
-	public void arrayOverlapsNullable_h2() {
-		functionRegistry.register(
-				"array_overlaps_nullable",
-				new H2ArrayContainsQuantifiedEmulation( typeConfiguration, false, true )
-		);
-	}
-
-	/**
-	 * HSQL, CockroachDB and PostgreSQL array_overlaps_nullable() function
-	 */
-	public void arrayOverlapsNullable_unnest() {
-		functionRegistry.register(
-				"array_overlaps_nullable",
-				new ArrayContainsQuantifiedUnnestFunction( typeConfiguration, false, true )
-		);
-	}
-
-	/**
-	 * Oracle array_overlaps_nullable() function
-	 */
-	public void arrayOverlapsNullable_oracle() {
 		functionRegistry.register(
 				"array_overlaps_nullable",
 				new OracleArrayOverlapsFunction( typeConfiguration, true )
@@ -3031,8 +2883,8 @@ public class CommonFunctionFactory {
 	/**
 	 * H2 array_set() function
 	 */
-	public void arraySet_h2() {
-		functionRegistry.register( "array_set", new H2ArraySetFunction() );
+	public void arraySet_h2(int maximumArraySize) {
+		functionRegistry.register( "array_set", new H2ArraySetFunction( maximumArraySize ) );
 	}
 
 	/**
@@ -3075,8 +2927,8 @@ public class CommonFunctionFactory {
 	/**
 	 * H2 array_remove() function
 	 */
-	public void arrayRemove_h2() {
-		functionRegistry.register( "array_remove", new H2ArrayRemoveFunction() );
+	public void arrayRemove_h2(int maximumArraySize) {
+		functionRegistry.register( "array_remove", new H2ArrayRemoveFunction( maximumArraySize ) );
 	}
 
 	/**
@@ -3096,8 +2948,8 @@ public class CommonFunctionFactory {
 	/**
 	 * H2 array_remove_index() function
 	 */
-	public void arrayRemoveIndex_h2() {
-		functionRegistry.register( "array_remove_index", new H2ArrayRemoveIndexFunction() );
+	public void arrayRemoveIndex_h2(int maximumArraySize) {
+		functionRegistry.register( "array_remove_index", new H2ArrayRemoveIndexFunction( maximumArraySize ) );
 	}
 
 	/**
@@ -3175,8 +3027,8 @@ public class CommonFunctionFactory {
 	/**
 	 * H2 array_replace() function
 	 */
-	public void arrayReplace_h2() {
-		functionRegistry.register( "array_replace", new H2ArrayReplaceFunction() );
+	public void arrayReplace_h2(int maximumArraySize) {
+		functionRegistry.register( "array_replace", new H2ArrayReplaceFunction( maximumArraySize ) );
 	}
 
 	/**

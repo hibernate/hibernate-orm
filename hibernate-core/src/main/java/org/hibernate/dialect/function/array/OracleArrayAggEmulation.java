@@ -18,10 +18,9 @@ import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
-import org.hibernate.query.sqm.function.FunctionRenderingSupport;
+import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.SelfRenderingOrderedSetAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingSqmOrderedSetAggregateFunction;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -38,7 +37,6 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.cte.SelfRenderingCteObject;
 import org.hibernate.sql.ast.tree.expression.Distinct;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -73,8 +71,9 @@ public class OracleArrayAggEmulation extends AbstractSqmSelfRenderingFunctionDes
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, null, Collections.emptyList(), walker );
+		render( sqlAppender, sqlAstArguments, null, Collections.emptyList(), returnType, walker );
 	}
 
 	@Override
@@ -82,8 +81,9 @@ public class OracleArrayAggEmulation extends AbstractSqmSelfRenderingFunctionDes
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, filter, Collections.emptyList(), walker );
+		render( sqlAppender, sqlAstArguments, filter, Collections.emptyList(), returnType, walker );
 	}
 
 	@Override
@@ -92,6 +92,7 @@ public class OracleArrayAggEmulation extends AbstractSqmSelfRenderingFunctionDes
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 		sqlAppender.appendSql( "json_arrayagg" );
 		sqlAppender.appendSql( '(' );
@@ -154,7 +155,7 @@ public class OracleArrayAggEmulation extends AbstractSqmSelfRenderingFunctionDes
 	protected static class OracleArrayAggSqmFunction<T> extends SelfRenderingSqmOrderedSetAggregateFunction<T> {
 		public OracleArrayAggSqmFunction(
 				OracleArrayAggEmulation descriptor,
-				FunctionRenderingSupport renderingSupport,
+				FunctionRenderer renderingSupport,
 				List<? extends SqmTypedNode<?>> arguments,
 				SqmPredicate filter,
 				SqmOrderByClause withinGroupClause,
@@ -241,7 +242,7 @@ public class OracleArrayAggEmulation extends AbstractSqmSelfRenderingFunctionDes
 			}
 			final OracleArrayAggEmulationSqlAstExpression expression = new OracleArrayAggEmulationSqlAstExpression(
 					getFunctionName(),
-					getRenderingSupport(),
+					getFunctionRenderer(),
 					arguments,
 					getFilter() == null ? null : walker.visitNestedTopLevelPredicate( getFilter() ),
 					withinGroup,
@@ -261,7 +262,7 @@ public class OracleArrayAggEmulation extends AbstractSqmSelfRenderingFunctionDes
 
 			public OracleArrayAggEmulationSqlAstExpression(
 					String functionName,
-					FunctionRenderingSupport renderer,
+					FunctionRenderer renderer,
 					List<? extends SqlAstNode> sqlAstArguments,
 					Predicate filter,
 					List<SortSpecification> withinGroup,

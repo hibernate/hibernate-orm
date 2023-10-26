@@ -42,3 +42,31 @@ or one of the `MultiTenantConnectionProvider` subtypes.
 == Removed IdGeneratorStrategyInterpreter
 
 `IdGeneratorStrategyInterpreter` has been deprecated since 6.0 and has been removed to simplify id generator internals.
+
+[[function-rendering-support-deprecation]]
+== Deprecation of `FunctionRenderingSupport`
+
+The `FunctionRenderingSupport` interface was deprecated for removal in favor of the new `FunctionRenderer` interface.
+`FunctionRenderer` extends `FunctionRenderingSupport`, so switching to the new type should not be a big deal.
+Classes the previously implemented the `FunctionRenderingSupport` interface should switch to implement `FunctionRenderer`
+and the signature of the implemented `render(SqlAppender, List, SqlAstTranslator)` method has to be changed to
+`render(SqlAppender, List, ReturnableType, SqlAstTranslator)` i.e. add `ReturnableType` as second last argument.
+
+The newly passed `ReturnableType` argument allows the rendering process to consider the resolved function result type
+during rendering, which is common for certain array specific functions, especially for Oracle.
+
+Note that the deprecation also affects some methods/constructors of the `SelfRenderingSqlAstExpression` type hierarchy,
+which were previously accepting/returning a `FunctionRenderingSupport`. Constructors that accept a `FunctionRenderer`
+have been added to:
+
+* `SelfRenderingSqmFunction`
+* `SelfRenderingSqmWindowFunction`
+* `SelfRenderingSqmAggregateFunction`
+* `SelfRenderingSqmOrderedSetAggregateFunction`
+* `SelfRenderingFunctionSqlAstExpression`
+* `SelfRenderingWindowFunctionSqlAstExpression`
+* `SelfRenderingAggregateFunctionSqlAstExpression`
+* `SelfRenderingOrderedSetAggregateFunctionSqlAstExpression`
+
+In addition, the `SelfRenderingSqmFunction.getRenderingSupport()` method was deprecated in favor of the new `SelfRenderingSqmFunction.getFunctionRenderer()` method.
+Finally, the `SelfRenderingFunctionSqlAstExpression.getRenderer()` method was deprecated in favor of the new `SelfRenderingFunctionSqlAstExpression.getFunctionRenderer()` method.

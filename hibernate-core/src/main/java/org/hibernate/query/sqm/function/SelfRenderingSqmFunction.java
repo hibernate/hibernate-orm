@@ -37,8 +37,13 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 	private final ArgumentsValidator argumentsValidator;
 	private final FunctionReturnTypeResolver returnTypeResolver;
 	private final FunctionRenderingSupport renderingSupport;
+	private final FunctionRenderer renderer;
 	private ReturnableType<?> resultType;
 
+	/**
+	 * @deprecated Use {@link #SelfRenderingSqmFunction(SqmFunctionDescriptor, FunctionRenderer, List, ReturnableType, ArgumentsValidator, FunctionReturnTypeResolver, NodeBuilder, String)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public SelfRenderingSqmFunction(
 			SqmFunctionDescriptor descriptor,
 			FunctionRenderingSupport renderingSupport,
@@ -50,6 +55,24 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 			String name) {
 		super( name, descriptor, impliedResultType, arguments, nodeBuilder );
 		this.renderingSupport = renderingSupport;
+		this.renderer = renderingSupport::render;
+		this.impliedResultType = impliedResultType;
+		this.argumentsValidator = argumentsValidator;
+		this.returnTypeResolver = returnTypeResolver;
+	}
+
+	public SelfRenderingSqmFunction(
+			SqmFunctionDescriptor descriptor,
+			FunctionRenderer renderer,
+			List<? extends SqmTypedNode<?>> arguments,
+			ReturnableType<T> impliedResultType,
+			ArgumentsValidator argumentsValidator,
+			FunctionReturnTypeResolver returnTypeResolver,
+			NodeBuilder nodeBuilder,
+			String name) {
+		super( name, descriptor, impliedResultType, arguments, nodeBuilder );
+		this.renderingSupport = renderer;
+		this.renderer = renderer;
 		this.impliedResultType = impliedResultType;
 		this.argumentsValidator = argumentsValidator;
 		this.returnTypeResolver = returnTypeResolver;
@@ -69,7 +92,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 				this,
 				new SelfRenderingSqmFunction<>(
 						getFunctionDescriptor(),
-						getRenderingSupport(),
+						getFunctionRenderer(),
 						arguments,
 						getImpliedResultType(),
 						getArgumentsValidator(),
@@ -82,8 +105,16 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		return expression;
 	}
 
+	/**
+	 * @deprecated Use {@link #getFunctionRenderer()} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public FunctionRenderingSupport getRenderingSupport() {
 		return renderingSupport;
+	}
+
+	public FunctionRenderer getFunctionRenderer() {
+		return renderer;
 	}
 
 	protected ReturnableType<T> getImpliedResultType() {
@@ -144,7 +175,7 @@ public class SelfRenderingSqmFunction<T> extends SqmFunction<T> {
 		}
 		return new SelfRenderingFunctionSqlAstExpression(
 				getFunctionName(),
-				getRenderingSupport(),
+				getFunctionRenderer(),
 				arguments,
 				resultType,
 				resultType == null ? null : getMappingModelExpressible( walker, resultType, arguments )

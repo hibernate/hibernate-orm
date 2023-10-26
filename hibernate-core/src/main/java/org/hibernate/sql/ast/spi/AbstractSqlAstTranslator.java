@@ -55,7 +55,6 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
-import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Loadable;
@@ -210,12 +209,10 @@ import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducer;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMappingProducerProvider;
-import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
-import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
@@ -2313,7 +2310,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					);
 					arguments.add( nullSeparator );
 				}
-				concat.render( this, arguments, this );
+				concat.render( this, arguments, stringType, this );
 			}
 			else {
 				arguments.add(
@@ -2352,7 +2349,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					arguments.add( nullSeparator );
 				}
 				arguments.add( nullSeparator );
-				concat.render( this, arguments, this );
+				concat.render( this, arguments, stringType, this );
 			}
 		}
 		else {
@@ -2644,7 +2641,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( "case when " );
 				visitColumnReference( cyclePathColumnReference );
 				appendSql( " like " );
-				concat.render( this, arguments, this );
+				concat.render( this, arguments, stringType, this );
 				appendSql( " then " );
 				currentCteStatement.getCycleValue().accept( this );
 				appendSql( " else " );
@@ -2657,7 +2654,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			arguments.remove( arguments.size() - 1 );
 			arguments.set( 0, cyclePathColumnReference );
 			// Cycle path
-			concat.render( this, arguments, this );
+			concat.render( this, arguments, stringType, this );
 		}
 		else {
 			if ( !supportsRecursiveCycleClause() ) {
@@ -5194,23 +5191,23 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 		final List<SqlAstNode> arguments = new ArrayList<>( 2 );
 		arguments.add( expression );
+		final CastTarget castTarget;
 		if ( expression instanceof SqlTypedMappingJdbcParameter ) {
 			final SqlTypedMappingJdbcParameter parameter = (SqlTypedMappingJdbcParameter) expression;
 			final SqlTypedMapping sqlTypedMapping = parameter.getSqlTypedMapping();
-			arguments.add(
-					new CastTarget(
-							parameter.getJdbcMapping(),
-							sqlTypedMapping.getColumnDefinition(),
-							sqlTypedMapping.getLength(),
-							sqlTypedMapping.getPrecision(),
-							sqlTypedMapping.getScale()
-					)
+			castTarget = new CastTarget(
+					parameter.getJdbcMapping(),
+					sqlTypedMapping.getColumnDefinition(),
+					sqlTypedMapping.getLength(),
+					sqlTypedMapping.getPrecision(),
+					sqlTypedMapping.getScale()
 			);
 		}
 		else {
-			arguments.add( new CastTarget( expression.getExpressionType().getSingleJdbcMapping() ) );
+			castTarget = new CastTarget( expression.getExpressionType().getSingleJdbcMapping() );
 		}
-		castFunction().render( this, arguments, this );
+		arguments.add( castTarget );
+		castFunction().render( this, arguments, (ReturnableType<?>) castTarget.getJdbcMapping(), this );
 	}
 
 	@SuppressWarnings("unchecked")
@@ -5917,7 +5914,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 							0,
 							new SelfRenderingAggregateFunctionSqlAstExpression(
 									"count",
-									(sqlAppender, sqlAstArguments, walker) -> sqlAppender.append( "count(*)" ),
+									(sqlAppender, sqlAstArguments, returnType, walker) -> sqlAppender.append( "count(*)" ),
 									List.of( Star.INSTANCE ),
 									null,
 									getIntegerType(),
@@ -6274,25 +6271,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final Size castTargetSize = castTarget.toSize();
 			final DdlTypeRegistry ddlTypeRegistry = factory.getTypeConfiguration().getDdlTypeRegistry();
 			final BasicType<?> expressionType = (BasicType<?>) castTarget.getJdbcMapping();
-			if ( expressionType instanceof BasicPluralType<?, ?> ) {
-				final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) expressionType;
-				final BasicPluralJavaType<?> javaTypeDescriptor = (BasicPluralJavaType<?>) containerType.getJavaTypeDescriptor();
-				final BasicType<?> elementType = containerType.getElementType();
-				final String elementTypeName = ddlTypeRegistry.getDescriptor( elementType.getJdbcType().getDdlTypeCode() )
-						.getCastTypeName(
-								castTargetSize,
-								elementType,
-								ddlTypeRegistry
-						);
-				final String arrayTypeName = factory.getJdbcServices().getDialect().getArrayTypeName(
-						javaTypeDescriptor.getElementJavaType().getJavaTypeClass().getSimpleName(),
-						elementTypeName,
-						null
-				);
-				if ( arrayTypeName != null ) {
-					return arrayTypeName;
-				}
-			}
 			DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
 			if ( ddlType == null ) {
 				// this may happen when selecting a null value like `SELECT null from ...`
@@ -6312,25 +6290,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			final Size castTargetSize = castTarget.toSize();
 			final DdlTypeRegistry ddlTypeRegistry = factory.getTypeConfiguration().getDdlTypeRegistry();
 			final BasicType<?> expressionType = (BasicType<?>) castTarget.getJdbcMapping();
-			if ( expressionType instanceof BasicPluralType<?, ?> ) {
-				final BasicPluralType<?, ?> containerType = (BasicPluralType<?, ?>) expressionType;
-				final BasicPluralJavaType<?> javaTypeDescriptor = (BasicPluralJavaType<?>) containerType.getJavaTypeDescriptor();
-				final BasicType<?> elementType = containerType.getElementType();
-				final String elementTypeName = ddlTypeRegistry.getDescriptor( elementType.getJdbcType().getDdlTypeCode() )
-						.getCastTypeName(
-								castTargetSize,
-								elementType,
-								ddlTypeRegistry
-						);
-				final String arrayTypeName = factory.getJdbcServices().getDialect().getArrayTypeName(
-						javaTypeDescriptor.getElementJavaType().getJavaTypeClass().getSimpleName(),
-						elementTypeName,
-						null
-				);
-				if ( arrayTypeName != null ) {
-					return arrayTypeName;
-				}
-			}
 			DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
 			if ( ddlType == null ) {
 				// this may happen when selecting a null value like `SELECT null from ...`

@@ -10,6 +10,7 @@ import java.util.List;
 
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.spi.QueryEngine;
+import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.FunctionRenderingSupport;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -28,7 +29,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  *
  * @author Christian Beikov
  */
-public class TransactSQLStrFunction extends CastStrEmulation implements FunctionRenderingSupport {
+public class TransactSQLStrFunction extends CastStrEmulation implements FunctionRenderer {
 
 	public TransactSQLStrFunction(TypeConfiguration typeConfiguration) {
 		super(
@@ -66,7 +67,11 @@ public class TransactSQLStrFunction extends CastStrEmulation implements Function
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, SqlAstTranslator<?> walker) {
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( "str(" );
 		arguments.get( 0 ).accept( walker );
 		for ( int i = 1; i < arguments.size(); i++ ) {

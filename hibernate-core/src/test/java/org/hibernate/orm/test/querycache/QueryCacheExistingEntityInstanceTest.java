@@ -27,18 +27,19 @@ import org.junit.jupiter.api.Test;
 import jakarta.persistence.Cacheable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * @author Marco Belladelli
  */
 @DomainModel( annotatedClasses = {
 		QueryCacheExistingEntityInstanceTest.TestEntity.class,
+		QueryCacheExistingEntityInstanceTest.ChildEntity.class,
 		QueryCacheExistingEntityInstanceTest.ParentEntity.class,
 } )
 @SessionFactory( generateStatistics = true )
@@ -48,6 +49,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 } )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17188" )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-17329" )
+@Jira( "https://hibernate.atlassian.net/browse/HHH-17359" )
 public class QueryCacheExistingEntityInstanceTest {
 	private static final String TEXT = "text";
 	private static final String QUERY = "select e from TestEntity e where text = :text";
@@ -55,7 +57,9 @@ public class QueryCacheExistingEntityInstanceTest {
 	@BeforeAll
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			final TestEntity testEntity = new TestEntity( 1L, TEXT );
+			final ChildEntity child = new ChildEntity( "child_1" );
+			session.persist( child );
+			final TestEntity testEntity = new TestEntity( 1L, TEXT, child );
 			session.persist( testEntity );
 			session.persist( new ParentEntity( 1L, testEntity ) );
 		} );
@@ -66,6 +70,7 @@ public class QueryCacheExistingEntityInstanceTest {
 		scope.inTransaction( session -> {
 			session.createMutationQuery( "delete from ParentEntity" ).executeUpdate();
 			session.createMutationQuery( "delete from TestEntity" ).executeUpdate();
+			session.createMutationQuery( "delete from ChildEntity" ).executeUpdate();
 		} );
 	}
 
@@ -128,7 +133,8 @@ public class QueryCacheExistingEntityInstanceTest {
 				.setParameter( "text", TEXT )
 				.setCacheable( true )
 				.getSingleResult();
-		assertEquals( TEXT, entity.getText() );
+		assertThat( entity.getText() ).isEqualTo( TEXT );
+		assertThat( entity.getChild().getName() ).isEqualTo( "child_1" );
 	}
 
 	@SuppressWarnings( "SameParameterValue" )
@@ -150,12 +156,17 @@ public class QueryCacheExistingEntityInstanceTest {
 
 		private String text;
 
+		@ManyToOne
+		@JoinColumn
+		private ChildEntity child;
+
 		public TestEntity() {
 		}
 
-		public TestEntity(Long id, String text) {
+		public TestEntity(Long id, String text, ChildEntity child) {
 			this.id = id;
 			this.text = text;
+			this.child = child;
 		}
 
 		public Long getId() {
@@ -164,6 +175,30 @@ public class QueryCacheExistingEntityInstanceTest {
 
 		public String getText() {
 			return text;
+		}
+
+		public ChildEntity getChild() {
+			return child;
+		}
+	}
+
+	@Entity( name = "ChildEntity" )
+	public static class ChildEntity {
+		@Id
+		@GeneratedValue
+		private Long id;
+
+		private String name;
+
+		public ChildEntity() {
+		}
+
+		public ChildEntity(String name) {
+			this.name = name;
+		}
+
+		public String getName() {
+			return name;
 		}
 	}
 

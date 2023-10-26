@@ -9,6 +9,7 @@ package org.hibernate.orm.test.function.array;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -17,6 +18,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 // otherwise we might run into ORA-21700: object does not exist or is marked for delete
 // because the JDBC connection or database session caches something that should have been invalidated
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = ""))
+@SkipForDialect(dialectClass = CockroachDialect.class, reason = "See https://github.com/cockroachdb/cockroach/issues/32551")
 public class ArraySliceTest {
 
 	@BeforeEach

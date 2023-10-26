@@ -8,25 +8,24 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
-public class OracleArrayOverlapsFunction extends AbstractArrayContainsQuantifiedFunction {
-
-	private final boolean nullable;
+public class OracleArrayOverlapsFunction extends AbstractArrayOverlapsFunction {
 
 	public OracleArrayOverlapsFunction(TypeConfiguration typeConfiguration, boolean nullable) {
-		super( "array_overlaps", typeConfiguration );
-		this.nullable = nullable;
+		super( nullable, typeConfiguration );
 	}
 
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final Expression haystackExpression = (Expression) sqlAstArguments.get( 0 );
 		final String arrayTypeName = DdlTypeHelper.getTypeName( haystackExpression.getExpressionType(), walker );

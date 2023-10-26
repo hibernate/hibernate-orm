@@ -8,30 +8,32 @@ package org.hibernate.dialect.function.array;
 
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Encapsulates the validator, return type and argument type resolvers for the quantified array_contains functions.
+ * Encapsulates the validator, return type and argument type resolvers for the array_contains function.
  * Subclasses only have to implement the rendering.
  */
-public abstract class AbstractArrayContainsQuantifiedFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+public abstract class AbstractArrayContainsFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	public AbstractArrayContainsQuantifiedFunction(String functionName, TypeConfiguration typeConfiguration) {
+	protected final boolean nullable;
+
+	public AbstractArrayContainsFunction(boolean nullable, TypeConfiguration typeConfiguration) {
 		super(
-				functionName,
+				"array_contains" + ( nullable ? "_nullable" : "" ),
 				StandardArgumentsValidators.composite(
 						StandardArgumentsValidators.exactly( 2 ),
-						ArraysOfSameTypeArgumentValidator.INSTANCE
+						ArrayContainsArgumentValidator.INSTANCE
 				),
 				StandardFunctionReturnTypeResolvers.invariant( typeConfiguration.standardBasicTypeForJavaType( Boolean.class ) ),
-				StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE
+				ArrayContainsArgumentTypeResolver.INSTANCE
 		);
+		this.nullable = nullable;
 	}
 
 	@Override
 	public String getArgumentListSignature() {
-		return "(ARRAY haystackArray, ARRAY needleArray)";
+		return "(ARRAY haystackArray, OBJECT needleElementOrArray)";
 	}
 }

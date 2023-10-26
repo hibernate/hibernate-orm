@@ -8,6 +8,7 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -19,61 +20,52 @@ import org.hibernate.type.spi.TypeConfiguration;
  * due to https://github.com/h2database/h2database/issues/1815.
  * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same.
  */
-public class H2ArrayContainsQuantifiedEmulation extends AbstractArrayContainsQuantifiedFunction {
+public class H2ArrayOverlapsFunction extends AbstractArrayOverlapsFunction {
 
-	private final boolean all;
-	private final boolean nullable;
+	private final int maximumArraySize;
 
-	public H2ArrayContainsQuantifiedEmulation(TypeConfiguration typeConfiguration, boolean all, boolean nullable) {
-		super( "array_contains_" + ( all ? "all" : "any" ), typeConfiguration );
-		this.all = all;
-		this.nullable = nullable;
+	public H2ArrayOverlapsFunction(boolean nullable, int maximumArraySize, TypeConfiguration typeConfiguration) {
+		super( nullable, typeConfiguration );
+		this.maximumArraySize = maximumArraySize;
 	}
 
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final Expression haystackExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression needleExpression = (Expression) sqlAstArguments.get( 1 );
 		sqlAppender.append( '(' );
-		haystackExpression.accept( walker );
-		sqlAppender.append( " is not null and " );
-		needleExpression.accept( walker );
-		sqlAppender.append( " is not null and " );
+		if ( ArrayHelper.isNullable( haystackExpression ) ) {
+			haystackExpression.accept( walker );
+			sqlAppender.append( " is not null and " );
+		}
+		if ( ArrayHelper.isNullable( needleExpression ) ) {
+			needleExpression.accept( walker );
+			sqlAppender.append( " is not null and " );
+		}
 		if ( !nullable ) {
 			sqlAppender.append( "not array_contains(" );
 			needleExpression.accept( walker );
 			sqlAppender.append( ",null) and " );
 		}
-		if ( all ) {
-			sqlAppender.append( "not " );
-		}
 		sqlAppender.append( "exists(select array_get(" );
 		needleExpression.accept( walker );
 		sqlAppender.append( ",t.i) from system_range(1," );
-		sqlAppender.append( Integer.toString( getMaximumArraySize() ) );
+		sqlAppender.append( Integer.toString( maximumArraySize ) );
 		sqlAppender.append( ") t(i) where array_length(" );
 		needleExpression.accept( walker );
 		sqlAppender.append( ")>=t.i" );
-		if ( all ) {
-			sqlAppender.append( " except " );
-		}
-		else {
-			sqlAppender.append( " intersect " );
-		}
+		sqlAppender.append( " intersect " );
 		sqlAppender.append( "select array_get(" );
 		haystackExpression.accept( walker );
 		sqlAppender.append( ",t.i) from system_range(1," );
-		sqlAppender.append( Integer.toString( getMaximumArraySize() ) );
+		sqlAppender.append( Integer.toString( maximumArraySize ) );
 		sqlAppender.append( ") t(i) where array_length(" );
 		haystackExpression.accept( walker );
 		sqlAppender.append( ")>=t.i))" );
-	}
-
-	protected int getMaximumArraySize() {
-		return 1000;
 	}
 
 }

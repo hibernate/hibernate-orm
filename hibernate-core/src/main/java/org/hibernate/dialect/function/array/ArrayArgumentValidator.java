@@ -44,7 +44,7 @@ public class ArrayArgumentValidator implements ArgumentsValidator {
 		return getElementType( arrayIndex, arguments, functionName, typeConfiguration );
 	}
 
-	protected BasicType<?> getElementType(
+	protected BasicPluralType<?, ?> getPluralType(
 			int arrayIndex,
 			List<? extends SqmTypedNode<?>> arguments,
 			String functionName,
@@ -64,6 +64,14 @@ public class ArrayArgumentValidator implements ArgumentsValidator {
 					)
 			);
 		}
-		return ( (BasicPluralType<?, ?>) arrayType ).getElementType();
+		return (BasicPluralType<?, ?>) arrayType;
+	}
+
+	protected BasicType<?> getElementType(
+			int arrayIndex,
+			List<? extends SqmTypedNode<?>> arguments,
+			String functionName,
+			TypeConfiguration typeConfiguration) {
+		return getPluralType( arrayIndex, arguments, functionName, typeConfiguration ).getElementType();
 	}
 }

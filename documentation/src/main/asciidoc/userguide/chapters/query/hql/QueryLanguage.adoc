@@ -1233,7 +1233,7 @@ The result of `array_contains` is undefined when the second argument is an array
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayContainsAllTest.java[tags=hql-array-contains-all-example]
+include::{array-example-dir-hql}/ArrayContainsArrayTest.java[tags=hql-array-contains-array-example]
 ----
 ====
 
@@ -1243,7 +1243,7 @@ To search for `null` elements, the `array_contains_nullable` function must be us
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayContainsAllTest.java[tags=hql-array-contains-all-nullable-example]
+include::{array-example-dir-hql}/ArrayContainsArrayTest.java[tags=hql-array-contains-array-nullable-example]
 ----
 ====
 

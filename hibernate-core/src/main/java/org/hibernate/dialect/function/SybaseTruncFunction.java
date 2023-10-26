@@ -87,6 +87,7 @@ public class SybaseTruncFunction extends TruncFunction {
 		public void render(
 				SqlAppender sqlAppender,
 				List<? extends SqlAstNode> sqlAstArguments,
+				ReturnableType<?> returnType,
 				SqlAstTranslator<?> walker) {
 			sqlAppender.appendSql( toDateFunction );
 			sqlAppender.append( '(' );

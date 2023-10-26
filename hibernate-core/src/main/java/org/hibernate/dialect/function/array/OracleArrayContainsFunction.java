@@ -8,46 +8,49 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
-import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
-import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.spi.TypeConfiguration;
 
-public class OracleArrayContainsFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
+public class OracleArrayContainsFunction extends AbstractArrayContainsFunction {
 
-	public OracleArrayContainsFunction(TypeConfiguration typeConfiguration) {
-		super(
-				"array_contains",
-				StandardArgumentsValidators.composite(
-						StandardArgumentsValidators.exactly( 2 ),
-						ArrayAndElementArgumentValidator.DEFAULT_INSTANCE
-				),
-				StandardFunctionReturnTypeResolvers.invariant( typeConfiguration.standardBasicTypeForJavaType( Boolean.class ) ),
-				ArrayAndElementArgumentTypeResolver.DEFAULT_INSTANCE
-		);
+	public OracleArrayContainsFunction(boolean nullable, TypeConfiguration typeConfiguration) {
+		super( nullable, typeConfiguration );
 	}
 
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
-		final String arrayTypeName = DdlTypeHelper.getTypeName( arrayExpression.getExpressionType(), walker );
+		final Expression haystackExpression = (Expression) sqlAstArguments.get( 0 );
+		final Expression needleExpression = (Expression) sqlAstArguments.get( 1 );
+		final JdbcMappingContainer needleTypeContainer = needleExpression.getExpressionType();
+		final JdbcMapping needleType = needleTypeContainer == null ? null : needleTypeContainer.getSingleJdbcMapping();
+		final String arrayTypeName = DdlTypeHelper.getTypeName( haystackExpression.getExpressionType(), walker );
 		sqlAppender.appendSql( arrayTypeName );
-		sqlAppender.append( "_position(" );
-		arrayExpression.accept( walker );
-		sqlAppender.append( ',' );
-		sqlAstArguments.get( 1 ).accept( walker );
-		sqlAppender.append( ")>0" );
-	}
-
-	@Override
-	public String getArgumentListSignature() {
-		return "(ARRAY array, OBJECT element)";
+		if ( needleType == null || needleType instanceof BasicPluralType<?, ?> ) {
+			sqlAppender.append( "_contains(" );
+			haystackExpression.accept( walker );
+			sqlAppender.append( ',' );
+			sqlAstArguments.get( 1 ).accept( walker );
+			sqlAppender.append( ',' );
+			sqlAppender.append( nullable ? "1" : "0" );
+			sqlAppender.append( ")>0" );
+		}
+		else {
+			sqlAppender.append( "_position(" );
+			haystackExpression.accept( walker );
+			sqlAppender.append( ',' );
+			needleExpression.accept( walker );
+			sqlAppender.append( ")>0" );
+		}
 	}
 }

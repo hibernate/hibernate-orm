@@ -10,6 +10,7 @@ package org.hibernate.spatial.dialect.sqlserver;
 import java.util.List;
 
 import org.hibernate.boot.model.FunctionContributions;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.NamedSqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -169,7 +170,10 @@ class Property extends NamedSqmFunctionDescriptor {
 
 	@Override
 	public void render(
-			SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
 
 		final Expression arg1 = (Expression) sqlAstArguments.get( 0 );
 		walker.render( arg1, SqlAstNodeRenderingMode.DEFAULT );
@@ -187,7 +191,10 @@ class Method extends NamedSqmFunctionDescriptor {
 
 	@Override
 	public void render(
-			SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
 
 		final Expression arg1 = (Expression) sqlAstArguments.get( 0 );
 		walker.render( arg1, SqlAstNodeRenderingMode.DEFAULT );

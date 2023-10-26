@@ -9,6 +9,7 @@ package org.hibernate.spatial.dialect.oracle;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -31,7 +32,11 @@ public class STRelateFunction extends OracleSpatialFunction {
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> arguments, SqlAstTranslator<?> walker) {
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
 		final Expression geom1 = (Expression) arguments.get( 0 );
 		final Expression geom2 = (Expression) arguments.get( 1 );
 		sqlAppender.appendSql( "ST_GEOMETRY(" );

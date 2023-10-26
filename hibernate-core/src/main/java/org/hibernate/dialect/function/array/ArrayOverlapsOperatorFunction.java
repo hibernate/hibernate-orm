@@ -8,6 +8,7 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -15,32 +16,27 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * Array contains all function that uses the PostgreSQL {@code @>} operator.
+ * Array overlaps function that uses the PostgreSQL {@code &&} operator.
  */
-public class ArrayContainsQuantifiedOperatorFunction extends ArrayContainsQuantifiedUnnestFunction {
+public class ArrayOverlapsOperatorFunction extends ArrayOverlapsUnnestFunction {
 
-	public ArrayContainsQuantifiedOperatorFunction(TypeConfiguration typeConfiguration, boolean all, boolean nullable) {
-		super( typeConfiguration, all, nullable );
+	public ArrayOverlapsOperatorFunction(boolean nullable, TypeConfiguration typeConfiguration) {
+		super( nullable, typeConfiguration );
 	}
 
 	@Override
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
-			SqlAstTranslator<?> walker) {
+			ReturnableType<?> returnType, SqlAstTranslator<?> walker) {
 		if ( nullable ) {
-			super.render( sqlAppender, sqlAstArguments, walker );
+			super.render( sqlAppender, sqlAstArguments, returnType, walker );
 		}
 		else {
 			final Expression haystackExpression = (Expression) sqlAstArguments.get( 0 );
 			final Expression needleExpression = (Expression) sqlAstArguments.get( 1 );
 			haystackExpression.accept( walker );
-			if ( all ) {
-				sqlAppender.append( "@>" );
-			}
-			else {
-				sqlAppender.append( "&&" );
-			}
+			sqlAppender.append( "&&" );
 			needleExpression.accept( walker );
 		}
 	}

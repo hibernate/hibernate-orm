@@ -9,6 +9,7 @@ package org.hibernate.spatial.dialect.oracle;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
@@ -57,6 +58,7 @@ public class OracleSpatialSQLMMFunction extends OracleSpatialFunction {
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final Expression geometry = (Expression) arguments.get( 0 );
 

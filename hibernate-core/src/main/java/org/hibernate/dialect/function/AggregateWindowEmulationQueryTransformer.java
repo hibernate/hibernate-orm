@@ -129,7 +129,7 @@ public class AggregateWindowEmulationQueryTransformer implements QueryTransforme
 			if ( expression == windowFunction ) {
 				finalExpression = new SelfRenderingAggregateFunctionSqlAstExpression(
 						"min",
-						(sqlAppender, sqlAstArguments, walker1) -> {
+						(sqlAppender, sqlAstArguments, returnType, walker1) -> {
 							sqlAppender.appendSql( "min(" );
 							sqlAstArguments.get( 0 ).accept( walker1 );
 							sqlAppender.append( ')' );

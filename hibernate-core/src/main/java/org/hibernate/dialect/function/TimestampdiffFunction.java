@@ -74,6 +74,7 @@ public class TimestampdiffFunction
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 
 		final DurationUnit field = (DurationUnit) arguments.get( 0 );

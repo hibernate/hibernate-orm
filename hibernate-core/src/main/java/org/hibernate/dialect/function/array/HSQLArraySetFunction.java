@@ -8,6 +8,7 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -25,6 +26,7 @@ public class HSQLArraySetFunction extends ArraySetUnnestFunction {
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression indexExpression = (Expression) sqlAstArguments.get( 1 );
@@ -40,9 +42,5 @@ public class HSQLArraySetFunction extends ArraySetUnnestFunction {
 		sqlAppender.append( "),1)) i(idx) left join unnest(" );
 		arrayExpression.accept( walker );
 		sqlAppender.append( ") with ordinality t(val, idx) on i.idx=t.idx)" );
-	}
-
-	protected int getMaximumArraySize() {
-		return 1000;
 	}
 }

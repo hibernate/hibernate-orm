@@ -42,14 +42,32 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class SelfRenderingFunctionSqlAstExpression
 		implements SelfRenderingExpression, Selectable, SqlExpressible, DomainResultProducer, FunctionExpression {
 	private final String functionName;
-	private final FunctionRenderingSupport renderer;
+	private final FunctionRenderer renderer;
 	private final List<? extends SqlAstNode> sqlAstArguments;
 	private final ReturnableType<?> type;
 	private final JdbcMappingContainer expressible;
 
+	/**
+	 * @deprecated Use {@link #SelfRenderingFunctionSqlAstExpression(String, FunctionRenderer, List, ReturnableType, JdbcMappingContainer)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public SelfRenderingFunctionSqlAstExpression(
 			String functionName,
 			FunctionRenderingSupport renderer,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> type,
+			JdbcMappingContainer expressible) {
+		this.functionName = functionName;
+		this.renderer = renderer::render;
+		this.sqlAstArguments = sqlAstArguments;
+		this.type = type;
+		//might be null due to code in SelfRenderingFunctionSqlAstExpression
+		this.expressible = expressible;
+	}
+
+	public SelfRenderingFunctionSqlAstExpression(
+			String functionName,
+			FunctionRenderer renderer,
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> type,
 			JdbcMappingContainer expressible) {
@@ -78,8 +96,20 @@ public class SelfRenderingFunctionSqlAstExpression
 				: expressible;
 	}
 
+	/**
+	 * @deprecated Use {@link #getFunctionRenderer()} instead
+	 */
+	@Deprecated(forRemoval = true)
 	protected FunctionRenderingSupport getRenderer() {
 		return renderer;
+	}
+
+	protected FunctionRenderer getFunctionRenderer() {
+		return renderer;
+	}
+
+	protected ReturnableType<?> getType() {
+		return type;
 	}
 
 	@Override
@@ -151,7 +181,7 @@ public class SelfRenderingFunctionSqlAstExpression
 			SqlAppender sqlAppender,
 			SqlAstTranslator<?> walker,
 			SessionFactoryImplementor sessionFactory) {
-		renderer.render( sqlAppender, sqlAstArguments, walker );
+		renderer.render( sqlAppender, sqlAstArguments, type, walker );
 	}
 
 	@Override

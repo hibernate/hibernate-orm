@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -64,7 +65,11 @@ public class CastingConcatFunction extends AbstractSqmSelfRenderingFunctionDescr
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
 		// Apache Derby and DB2 add up the sizes of operands for concat operations and has a limit of 4000/32k until
 		// it changes the data type to long varchar, at which point problems start arising, because a long varchar
 		// can't be compared with a regular varchar for some reason.

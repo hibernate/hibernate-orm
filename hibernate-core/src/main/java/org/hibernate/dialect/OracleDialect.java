@@ -314,17 +314,13 @@ public class OracleDialect extends Dialect {
 
 		functionFactory.array_oracle();
 		functionFactory.arrayAggregate_jsonArrayagg();
-		functionFactory.arrayContains_oracle();
-		functionFactory.arrayContainsNull_oracle();
 		functionFactory.arrayPosition_oracle();
 		functionFactory.arrayLength_oracle();
 		functionFactory.arrayConcat_oracle();
 		functionFactory.arrayPrepend_oracle();
 		functionFactory.arrayAppend_oracle();
-		functionFactory.arrayContainsAll_oracle();
+		functionFactory.arrayContains_oracle();
 		functionFactory.arrayOverlaps_oracle();
-		functionFactory.arrayContainsAllNullable_oracle();
-		functionFactory.arrayOverlapsNullable_oracle();
 		functionFactory.arrayGet_oracle();
 		functionFactory.arraySet_oracle();
 		functionFactory.arrayRemove_oracle();

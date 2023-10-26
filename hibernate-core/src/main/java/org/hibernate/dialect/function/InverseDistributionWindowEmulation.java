@@ -96,7 +96,7 @@ public class InverseDistributionWindowEmulation extends InverseDistributionFunct
 				}
 				final SelfRenderingFunctionSqlAstExpression function = new SelfRenderingOrderedSetAggregateFunctionSqlAstExpression(
 						getFunctionName(),
-						getRenderingSupport(),
+						getFunctionRenderer(),
 						arguments,
 						getFilter() == null ? null : (Predicate) getFilter().accept( walker ),
 						withinGroup,

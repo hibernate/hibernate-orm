@@ -9,6 +9,7 @@ package org.hibernate.spatial.dialect.oracle;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -32,12 +33,12 @@ public class SDOMethodDescriptor extends OracleSpatialFunction {
 		this( name, true, argValidator, returnTypeResolver );
 	}
 
-
-
-
 	@Override
 	public void render(
-			SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
 		sqlAstArguments.get(0).accept( walker );
 		sqlAppender.appendSql( "." );
 		sqlAppender.appendSql( getName() );

@@ -8,6 +8,7 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -25,6 +26,7 @@ public class PostgreSQLArrayConcatFunction extends ArrayConcatFunction {
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		sqlAppender.append( "case when " );
 		String separator = "";
@@ -36,7 +38,7 @@ public class PostgreSQLArrayConcatFunction extends ArrayConcatFunction {
 		}
 
 		sqlAppender.append( " then " );
-		super.render( sqlAppender, sqlAstArguments, walker );
+		super.render( sqlAppender, sqlAstArguments, returnType, walker );
 		sqlAppender.append( " end" );
 	}
 }

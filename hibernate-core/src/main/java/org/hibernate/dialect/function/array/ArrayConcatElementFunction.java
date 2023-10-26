@@ -8,6 +8,7 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.sql.ast.SqlAstTranslator;
@@ -47,6 +48,7 @@ public class ArrayConcatElementFunction extends AbstractSqmSelfRenderingFunction
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final SqlAstNode firstArgument = sqlAstArguments.get( 0 );
 		final SqlAstNode secondArgument = sqlAstArguments.get( 1 );

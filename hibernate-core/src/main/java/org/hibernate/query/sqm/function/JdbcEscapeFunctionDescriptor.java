@@ -44,10 +44,10 @@ public class JdbcEscapeFunctionDescriptor
 
 		return new SelfRenderingSqmFunction<>(
 				JdbcEscapeFunctionDescriptor.this,
-				(sqlAppender, sqlAstArguments, walker) -> {
+				(sqlAppender, sqlAstArguments, returnType, walker) -> {
 					sqlAppender.appendSql("{fn ");
-					delegate.getRenderingSupport()
-							.render(sqlAppender, sqlAstArguments, walker);
+					delegate.getFunctionRenderer()
+							.render( sqlAppender, sqlAstArguments, returnType, walker);
 					sqlAppender.appendSql("}");
 				},
 				arguments,

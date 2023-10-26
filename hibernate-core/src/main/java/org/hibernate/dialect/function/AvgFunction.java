@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -62,8 +63,12 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 	}
 
 	@Override
-	public void render(SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, null, walker );
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
+		render( sqlAppender, sqlAstArguments, null, returnType, walker );
 	}
 
 	@Override
@@ -71,6 +76,7 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
 		sqlAppender.appendSql( "avg(" );
@@ -108,7 +114,12 @@ public class AvgFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 		final JdbcMapping sourceMapping = realArg.getExpressionType().getSingleJdbcMapping();
 		// Only cast to float/double if this is an integer
 		if ( sourceMapping.getJdbcType().isInteger() ) {
-			castFunction.render( sqlAppender, Arrays.asList( realArg, new CastTarget(doubleType) ), translator );
+			castFunction.render(
+					sqlAppender,
+					Arrays.asList( realArg, new CastTarget( doubleType ) ),
+					doubleType,
+					translator
+			);
 		}
 		else {
 			translator.render( realArg, defaultArgumentRenderingMode );

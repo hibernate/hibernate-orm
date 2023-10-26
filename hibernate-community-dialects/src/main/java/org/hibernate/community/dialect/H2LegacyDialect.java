@@ -372,22 +372,18 @@ public class H2LegacyDialect extends Dialect {
 				functionFactory.listagg( null );
 				functionFactory.array();
 				functionFactory.arrayAggregate();
-				functionFactory.arrayContains();
-				functionFactory.arrayContainsNull();
 				functionFactory.arrayLength_cardinality();
 				functionFactory.arrayConcat_operator();
 				functionFactory.arrayPrepend_operator();
 				functionFactory.arrayAppend_operator();
-				functionFactory.arrayContainsAll_h2();
-				functionFactory.arrayOverlaps_h2();
-				functionFactory.arrayContainsAllNullable_h2();
-				functionFactory.arrayOverlapsNullable_h2();
+				functionFactory.arrayContains_h2( getMaximumArraySize() );
+				functionFactory.arrayOverlaps_h2( getMaximumArraySize() );
 				functionFactory.arrayGet_h2();
-				functionFactory.arraySet_h2();
-				functionFactory.arrayRemove_h2();
-				functionFactory.arrayRemoveIndex_h2();
+				functionFactory.arraySet_h2( getMaximumArraySize() );
+				functionFactory.arrayRemove_h2( getMaximumArraySize() );
+				functionFactory.arrayRemoveIndex_h2( getMaximumArraySize() );
 				functionFactory.arraySlice();
-				functionFactory.arrayReplace_h2();
+				functionFactory.arrayReplace_h2( getMaximumArraySize() );
 			}
 			else {
 				// Use group_concat until 2.x as listagg was buggy
@@ -397,6 +393,16 @@ public class H2LegacyDialect extends Dialect {
 		else {
 			functionFactory.listagg_groupConcat();
 		}
+	}
+
+	/**
+	 * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
+	 * due to https://github.com/h2database/h2database/issues/1815.
+	 * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same,
+	 * but requires that {@code system_range} is fed with a "maximum array size".
+	 */
+	protected int getMaximumArraySize() {
+		return 1000;
 	}
 
 	@Override

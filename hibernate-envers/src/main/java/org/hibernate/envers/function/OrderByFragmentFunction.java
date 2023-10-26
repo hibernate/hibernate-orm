@@ -16,6 +16,7 @@ import org.hibernate.metamodel.mapping.ordering.OrderByFragment;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.persister.collection.QueryableCollection;
 import org.hibernate.persister.entity.Joinable;
+import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -149,7 +150,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 
 		private OrderByFragmentSelfRenderingSqmFunction(
 				SqmFunctionDescriptor descriptor,
-				FunctionRenderingSupport renderingSupport,
+				FunctionRenderer renderer,
 				List<? extends SqmTypedNode<?>> arguments,
 				ReturnableType<T> impliedResultType,
 				ArgumentsValidator argumentsValidator,
@@ -158,7 +159,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 				String name) {
 			super(
 					descriptor,
-					renderingSupport,
+					renderer,
 					arguments,
 					impliedResultType,
 					argumentsValidator,
@@ -182,7 +183,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 					this,
 					new OrderByFragmentSelfRenderingSqmFunction<>(
 							getFunctionDescriptor(),
-							getRenderingSupport(),
+							getFunctionRenderer(),
 							arguments,
 							getImpliedResultType(),
 							getArgumentsValidator(),

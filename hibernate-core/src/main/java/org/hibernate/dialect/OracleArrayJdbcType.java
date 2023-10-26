@@ -284,10 +284,10 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 		);
 		database.addAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
-						arrayTypeName + "_contains_all",
+						arrayTypeName + "_contains",
 						database.getDefaultNamespace(),
 						new String[]{
-								"create or replace function " + arrayTypeName + "_contains_all(haystack in " + arrayTypeName +
+								"create or replace function " + arrayTypeName + "_contains(haystack in " + arrayTypeName +
 										", needle in " + arrayTypeName + ", nullable in number) return number deterministic is found number(1,0); begin " +
 										"if haystack is null or needle is null then return null; end if; " +
 										"for i in 1 .. needle.count loop " +
@@ -300,7 +300,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 										"return 1; " +
 										"end;"
 						},
-						new String[] { "drop function " + arrayTypeName + "_contains_all" },
+						new String[] { "drop function " + arrayTypeName + "_contains" },
 						emptySet(),
 						false
 				)

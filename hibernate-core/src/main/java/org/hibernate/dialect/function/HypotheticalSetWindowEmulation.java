@@ -101,7 +101,7 @@ public class HypotheticalSetWindowEmulation extends HypotheticalSetFunction {
 				}
 				final SelfRenderingFunctionSqlAstExpression function = new SelfRenderingOrderedSetAggregateFunctionSqlAstExpression(
 						getFunctionName(),
-						getRenderingSupport(),
+						getFunctionRenderer(),
 						Collections.emptyList(),
 						getFilter() == null ? null : (Predicate) getFilter().accept( walker ),
 						Collections.emptyList(),

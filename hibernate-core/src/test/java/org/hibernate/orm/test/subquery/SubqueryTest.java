@@ -13,6 +13,7 @@ import java.util.List;
 
 import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -59,7 +60,10 @@ public class SubqueryTest extends BaseSessionFactoryFunctionalTest {
 
 		@Override
 		public void render(
-                SqlAppender sqlAppender, List<? extends SqlAstNode> sqlAstArguments, SqlAstTranslator<?> walker) {
+				SqlAppender sqlAppender,
+				List<? extends SqlAstNode> sqlAstArguments,
+				ReturnableType<?> returnType,
+				SqlAstTranslator<?> walker) {
 			sqlAstArguments.get( 0 ).accept( walker );
 			sqlAppender.appendSql( " limit " + ( (UnparsedNumericLiteral<?>) sqlAstArguments.get( 1 ) ).getUnparsedLiteralValue() );
 		}

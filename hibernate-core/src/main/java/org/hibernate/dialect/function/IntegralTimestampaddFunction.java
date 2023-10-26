@@ -8,6 +8,7 @@ package org.hibernate.dialect.function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
@@ -53,6 +54,7 @@ public class IntegralTimestampaddFunction
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 
 		final DurationUnit field = (DurationUnit) arguments.get( 0 );
@@ -64,7 +66,7 @@ public class IntegralTimestampaddFunction
 			renderWithUnitConversion( sqlAppender, magnitude, to, walker, field, unit );
 		}
 		else {
-			super.render( sqlAppender, arguments, walker );
+			super.render( sqlAppender, arguments, returnType, walker );
 		}
 	}
 

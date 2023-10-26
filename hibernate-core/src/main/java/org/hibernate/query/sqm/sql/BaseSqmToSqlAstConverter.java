@@ -333,7 +333,6 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.from.VirtualTableGroup;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
@@ -4286,15 +4285,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	private Expression extractEpoch(Expression intervalExpression) {
 		final BasicType<Integer> intType = getTypeConfiguration().getBasicTypeForJavaType( Integer.class );
+		final PatternRenderer patternRenderer = new PatternRenderer(
+				creationContext.getSessionFactory()
+						.getJdbcServices()
+						.getDialect()
+						.extractPattern( EPOCH )
+		);
 		return new SelfRenderingFunctionSqlAstExpression(
 				"extract",
-				(sqlAppender, sqlAstArguments, walker) ->
-						new PatternRenderer(
-								creationContext.getSessionFactory()
-										.getJdbcServices()
-										.getDialect()
-										.extractPattern( EPOCH )
-						).render( sqlAppender, sqlAstArguments, walker ),
+				(sqlAppender, sqlAstArguments, returnType, walker) ->
+						patternRenderer.render( sqlAppender, sqlAstArguments, walker ),
 				Arrays.asList( new ExtractUnit( EPOCH, intType ), intervalExpression ),
 				intType,
 				intType
@@ -4968,7 +4968,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				if ( jdbcTypeCount == 1 ) {
 					return new SelfRenderingFunctionSqlAstExpression(
 							pathName,
-							(sqlAppender, sqlAstArguments, walker) -> sqlAstArguments.get( 0 ).accept( walker ),
+							(sqlAppender, sqlAstArguments, returnType, walker) -> sqlAstArguments.get( 0 ).accept( walker ),
 							resultColumnReferences,
 							(ReturnableType<?>) resultColumnReferences.get( 0 ).getJdbcMapping(),
 							resultColumnReferences.get( 0 ).getJdbcMapping()
@@ -4990,7 +4990,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					.getSqlSelections();
 			return new SelfRenderingFunctionSqlAstExpression(
 					pathName,
-					(sqlAppender, sqlAstArguments, walker) -> sqlAstArguments.get( 0 ).accept( walker ),
+					(sqlAppender, sqlAstArguments, returnType, walker) -> sqlAstArguments.get( 0 ).accept( walker ),
 					singletonList(
 							new ColumnReference(
 									identifierVariable,

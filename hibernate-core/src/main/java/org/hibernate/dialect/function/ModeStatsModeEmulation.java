@@ -8,6 +8,7 @@ package org.hibernate.dialect.function;
 
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -37,6 +38,7 @@ public class ModeStatsModeEmulation extends InverseDistributionFunction {
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
 		sqlAppender.appendSql( "stats_mode(" );

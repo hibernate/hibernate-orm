@@ -97,6 +97,554 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 			SqmExpressible<R> tupleType,
 			List<? extends SqmExpression<?>> expressions);
 
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Array functions for array types
+
+	/**
+	 * Creates an array literal with the {@code array} constructor function.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayLiteral(T... elements);
+
+	/**
+	 * Determines the 1-based position of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<Integer> arrayPosition(SqmExpression<T[]> arrayExpression, T element);
+
+	/**
+	 * Determines the 1-based position of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<Integer> arrayPosition(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
+
+	/**
+	 * Determines the length of an array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<Integer> arrayLength(SqmExpression<T[]> arrayExpression);
+
+	/**
+	 * Concatenates arrays with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayConcat(SqmExpression<T[]> arrayExpression1, SqmExpression<T[]> arrayExpression2);
+
+	/**
+	 * Concatenates arrays with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayConcat(SqmExpression<T[]> arrayExpression1, T[] array2);
+
+	/**
+	 * Concatenates arrays with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayConcat(T[] array1, SqmExpression<T[]> arrayExpression2);
+
+	/**
+	 * Concatenates arrays with each other in order.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayConcat(T[] array1, T[] array2);
+
+	/**
+	 * Appends element to array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayAppend(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
+
+	/**
+	 * Appends element to array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayAppend(SqmExpression<T[]> arrayExpression, T element);
+
+	/**
+	 * Appends element to array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayAppend(T[] array, SqmExpression<T> elementExpression);
+
+	/**
+	 * Appends element to array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayAppend(T[] array, T element);
+
+	/**
+	 * Prepends element to array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayPrepend(SqmExpression<T> elementExpression, SqmExpression<T[]> arrayExpression);
+
+	/**
+	 * Prepends element to array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayPrepend(T element, SqmExpression<T[]> arrayExpression);
+
+	/**
+	 * Prepends element to array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayPrepend(SqmExpression<T> elementExpression, T[] array);
+
+	/**
+	 * Prepends element to array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayPrepend(T element, T[] array);
+
+	/**
+	 * Whether an array contains an element.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContains(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
+
+	/**
+	 * Whether an array contains an element.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContains(SqmExpression<T[]> arrayExpression, T element);
+
+	/**
+	 * Whether an array contains an element.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContains(T[] array, SqmExpression<T> elementExpression);
+
+	/**
+	 * Whether an array contains an element.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContains(T[] array, T element);
+
+	/**
+	 * Whether an array contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContainsNullable(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
+
+	/**
+	 * Whether an array contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContainsNullable(SqmExpression<T[]> arrayExpression, T element);
+
+	/**
+	 * Whether an array contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContainsNullable(T[] array, SqmExpression<T> elementExpression);
+
+	/**
+	 * Whether an array contains a nullable element.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContainsNullable(T[] array, T element);
+
+	/**
+	 * Whether an array contains another array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContainsAll(SqmExpression<T[]> arrayExpression, SqmExpression<T[]> subArrayExpression);
+
+	/**
+	 * Whether an array contains another array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContainsAll(SqmExpression<T[]> arrayExpression, T[] subArray);
+
+	/**
+	 * Whether an array contains another array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContainsAll(T[] array, SqmExpression<T[]> subArrayExpression);
+
+	/**
+	 * Whether an array contains another array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContainsAll(T[] array, T[] subArray);
+
+	/**
+	 * Whether an array contains another array with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContainsAllNullable(SqmExpression<T[]> arrayExpression, SqmExpression<T[]> subArrayExpression);
+
+	/**
+	 * Whether an array contains another array with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContainsAllNullable(SqmExpression<T[]> arrayExpression, T[] subArray);
+
+	/**
+	 * Whether an array contains another array with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContainsAllNullable(T[] array, SqmExpression<T[]> subArrayExpression);
+
+	/**
+	 * Whether an array contains another array with nullable elements.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayContainsAllNullable(T[] array, T[] subArray);
+
+	/**
+	 * Whether one array has any elements common with another array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayOverlaps(SqmExpression<T[]> arrayExpression1, SqmExpression<T[]> arrayExpression2);
+
+	/**
+	 * Whether one array has any elements common with another array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayOverlaps(SqmExpression<T[]> arrayExpression1, T[] array2);
+
+	/**
+	 * Whether one array has any elements common with another array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayOverlaps(T[] array1, SqmExpression<T[]> arrayExpression2);
+
+	/**
+	 * Whether one array has any elements common with another array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayOverlaps(T[] array1, T[] array2);
+
+	/**
+	 * Whether one array has any elements common with another array, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayOverlapsNullable(SqmExpression<T[]> arrayExpression1, SqmExpression<T[]> arrayExpression2);
+
+	/**
+	 * Whether one array has any elements common with another array, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayOverlapsNullable(SqmExpression<T[]> arrayExpression1, T[] array2);
+
+	/**
+	 * Whether one array has any elements common with another array, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayOverlapsNullable(T[] array1, SqmExpression<T[]> arrayExpression2);
+
+	/**
+	 * Whether one array has any elements common with another array, supporting {@code null} elements.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmPredicate arrayOverlapsNullable(T[] array1, T[] array2);
+
+	/**
+	 * Accesses the element of an array by 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T> arrayGet(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> indexExpression);
+
+	/**
+	 * Accesses the element of an array by 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T> arrayGet(SqmExpression<T[]> arrayExpression, Integer index);
+
+	/**
+	 * Accesses the element of an array by 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T> arrayGet(T[] array, SqmExpression<Integer> indexExpression);
+
+	/**
+	 * Accesses the element of an array by 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T> arrayGet(T[] array, Integer index);
+
+	/**
+	 * Creates array copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySet(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> indexExpression, SqmExpression<T> elementExpression);
+	/**
+	 * Creates array copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySet(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> indexExpression, T element);
+
+	/**
+	 * Creates array copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySet(SqmExpression<T[]> arrayExpression, Integer index, SqmExpression<T> elementExpression);
+
+	/**
+	 * Creates array copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySet(SqmExpression<T[]> arrayExpression, Integer index, T element);
+
+	/**
+	 * Creates array copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySet(T[] array, SqmExpression<Integer> indexExpression, SqmExpression<T> elementExpression);
+
+	/**
+	 * Creates array copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySet(T[] array, SqmExpression<Integer> indexExpression, T element);
+
+	/**
+	 * Creates array copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySet(T[] array, Integer index, SqmExpression<T> elementExpression);
+
+	/**
+	 * Creates array copy with given element at given 1-based index.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySet(T[] array, Integer index, T element);
+
+	/**
+	 * Creates array copy with given element removed.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayRemove(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
+
+	/**
+	 * Creates array copy with given element removed.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayRemove(SqmExpression<T[]> arrayExpression, T element);
+
+	/**
+	 * Creates array copy with given element removed.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayRemove(T[] array, SqmExpression<T> elementExpression);
+
+	/**
+	 * Creates array copy with given element removed.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayRemove(T[] array, T element);
+
+	/**
+	 * Creates array copy with the element at the given 1-based index removed.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayRemoveIndex(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> indexExpression);
+
+	/**
+	 * Creates array copy with the element at the given 1-based index removed.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayRemoveIndex(SqmExpression<T[]> arrayExpression, Integer index);
+
+	/**
+	 * Creates array copy with the element at the given 1-based index removed.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayRemoveIndex(T[] array, SqmExpression<Integer> indexExpression);
+
+	/**
+	 * Creates array copy with the element at the given 1-based index removed.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayRemoveIndex(T[] array, Integer index);
+
+	/**
+	 * Creates a sub-array of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySlice(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> lowerIndexExpression, SqmExpression<Integer> upperIndexExpression);
+
+	/**
+	 * Creates a sub-array of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySlice(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> lowerIndexExpression, Integer upperIndex);
+	/**
+	 * Creates a sub-array of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySlice(SqmExpression<T[]> arrayExpression, Integer lowerIndex, SqmExpression<Integer> upperIndexExpression);
+
+	/**
+	 * Creates a sub-array of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySlice(SqmExpression<T[]> arrayExpression, Integer lowerIndex, Integer upperIndex);
+
+	/**
+	 * Creates a sub-array of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySlice(T[] array, SqmExpression<Integer> lowerIndexExpression, SqmExpression<Integer> upperIndexExpression);
+
+	/**
+	 * Creates a sub-array of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySlice(T[] array, SqmExpression<Integer> lowerIndexExpression, Integer upperIndex);
+
+	/**
+	 * Creates a sub-array of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySlice(T[] array, Integer lowerIndex, SqmExpression<Integer> upperIndexExpression);
+
+	/**
+	 * Creates a sub-array of the based on 1-based lower and upper index.
+	 * Both indexes are inclusive.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arraySlice(T[] array, Integer lowerIndex, Integer upperIndex);
+
+	/**
+	 * Creates array copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayReplace(SqmExpression<T[]> arrayExpression, SqmExpression<T> oldElementExpression, SqmExpression<T> newElementExpression);
+
+	/**
+	 * Creates array copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayReplace(SqmExpression<T[]> arrayExpression, SqmExpression<T> oldElementExpression, T newElement);
+
+	/**
+	 * Creates array copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayReplace(SqmExpression<T[]> arrayExpression, T oldElement, SqmExpression<T> newElementExpression);
+
+	/**
+	 * Creates array copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayReplace(SqmExpression<T[]> arrayExpression, T oldElement, T newElement);
+
+	/**
+	 * Creates array copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayReplace(T[] array, SqmExpression<T> oldElementExpression, SqmExpression<T> newElementExpression);
+
+	/**
+	 * Creates array copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayReplace(T[] array, SqmExpression<T> oldElementExpression, T newElement);
+
+	/**
+	 * Creates array copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayReplace(T[] array, T oldElement, SqmExpression<T> newElementExpression);
+
+	/**
+	 * Creates array copy replacing a given element with another.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayReplace(T[] array, T oldElement, T newElement);
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Array functions for collection types
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Covariant overrides
+
 	@Override
 	SqmSelectStatement<Object> createQuery();
 

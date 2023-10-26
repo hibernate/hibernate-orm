@@ -1130,6 +1130,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_get()` | Accesses the element of an array by index
 | `array_set()` | Creates array copy with given element at given index
 | `array_remove()` | Creates array copy with given element removed
+| `array_remove_index()` | Creates array copy with the element at the given index removed
 | `array_slice()` | Creates a sub-array of the based on lower and upper index
 | `array_replace()` | Creates array copy replacing a given element with another
 |===

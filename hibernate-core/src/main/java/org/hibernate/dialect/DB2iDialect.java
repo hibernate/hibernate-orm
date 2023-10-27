@@ -158,7 +158,7 @@ public class DB2iDialect extends DB2Dialect {
 
 	@Override
 	public String rowId(String rowId) {
-		return rowId.isEmpty() ? "rowid_" : rowId;
+		return rowId == null || rowId.isEmpty() ? "rowid_" : rowId;
 	}
 
 	@Override

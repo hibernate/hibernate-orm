@@ -679,6 +679,34 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	 */
 	<T> SqmExpression<T[]> arrayReplace(T[] array, T oldElement, T newElement);
 
+	/**
+	 * Creates array copy without the last N elements, specified by the second argument.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayTrim(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> elementCountExpression);
+
+	/**
+	 * Creates array copy without the last N elements, specified by the second argument.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayTrim(SqmExpression<T[]> arrayExpression, Integer elementCount);
+
+	/**
+	 * Creates array copy without the last N elements, specified by the second argument.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayTrim(T[] array, SqmExpression<Integer> elementCountExpression);
+
+	/**
+	 * Creates array copy without the last N elements, specified by the second argument.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayTrim(T[] array, Integer elementCount);
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
 
@@ -1220,6 +1248,34 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	 * @since 6.4
 	 */
 	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(C collection, E oldElement, E newElement);
+
+	/**
+	 * Creates basic collection copy without the last N elements, specified by the second argument.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionTrim(SqmExpression<C> arrayExpression, SqmExpression<Integer> elementCountExpression);
+
+	/**
+	 * Creates basic collection copy without the last N elements, specified by the second argument.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionTrim(SqmExpression<C> arrayExpression, Integer elementCount);
+
+	/**
+	 * Creates basic collection copy without the last N elements, specified by the second argument.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionTrim(C collection, SqmExpression<Integer> elementCountExpression);
+
+	/**
+	 * Creates basic collection copy without the last N elements, specified by the second argument.
+	 *
+	 * @since 6.4
+	 */
+	<C extends Collection<?>> SqmExpression<C> collectionTrim(C collection, Integer elementCount);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

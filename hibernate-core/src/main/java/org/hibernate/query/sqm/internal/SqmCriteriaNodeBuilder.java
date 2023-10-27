@@ -3633,6 +3633,30 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public <T> JpaExpression<T[]> arrayAgg(JpaOrder order, Expression<? extends T> argument) {
+		return arrayAgg( order, null, null, argument );
+	}
+
+	@Override
+	public <T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaPredicate filter, Expression<? extends T> argument) {
+		return arrayAgg( order, filter, null, argument );
+	}
+
+	@Override
+	public <T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaWindow window, Expression<? extends T> argument) {
+		return arrayAgg( order, null, window, argument );
+	}
+
+	@Override
+	public <T> JpaExpression<T[]> arrayAgg(
+			JpaOrder order,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<? extends T> argument) {
+		return functionWithinGroup( "array_agg", null, order, filter, window, argument );
+	}
+
+	@Override
 	public <T> SqmExpression<T[]> arrayLiteral(T... elements) {
 		return getFunctionDescriptor( "array" ).generateSqmExpression(
 				literals( elements ),

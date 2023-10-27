@@ -109,8 +109,10 @@ public class ArrayAggregateTest {
 	@Test
 	public void testEmpty(SessionFactoryScope scope) {
 		scope.inSession( em -> {
+			//tag::hql-array-agg-example[]
 			List<String[]> results = em.createQuery( "select array_agg(e.data) within group (order by e.id) from BasicEntity e", String[].class )
 					.getResultList();
+			//end::hql-array-agg-example[]
 			assertEquals( 1, results.size() );
 			assertNull( results.get( 0 ) );
 		} );

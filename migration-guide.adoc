@@ -51,8 +51,31 @@ only the entity with id equals to 2 will be loaded but the proxy will not be ini
 
 [[metamodel-generation]]
 == Integrating Static Metamodel Generation
+
 The integration of static metamodel generation in a project has changed; the recommended way to do this now is by harnessing the annotation processor classpath. This is true for both Gradle and Maven.
 
-Check out the specific sections in the User Guide for a guideline on how to do this for {userGuideBase}#tooling-gradle-modelgen[Gradle] or {userGuideBase}#tooling-maven-modelgen[Maven].
+Some projects currently integrate with `hibernate-jpamodelgen` with a dependency, like so:
 
+[source,xml]
+----
+    <dependencies>
+        <!-- ... -->
+        <!-- THIS IS WRONG! See below -->
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-jpamodelgen</artifactId>
+            <scope>provided</scope>
+            <version>6.3.1</version> <!-- Optional, may be managed by a BOM -->
+        </dependency>
+        <!-- ... -->
+    </dependencies>
+----
 
+If you are in that case, in previous versions of Hibernate ORM you were leaking dependencies of `hibernate-jpamodelgen` into your compile classpath unknowingly.
+With Hibernate ORM 6.3, you may now experience a compilation error during annotation processing related to missing Antlr classes.
+To get rid of that error:
+
+1. Check out the specific sections in the User Guide for a guideline on how to properly harness the annotation processor classpath to use `hibernate-jpamodelgen`:
+   see {userGuideBase}#tooling-gradle-modelgen[here for Gradle] or {userGuideBase}#tooling-maven-modelgen[here for Maven].
+2. If the annotation processor classpath doesn't work in your case (e.g. because you use Maven and need the version of `hibernate-jpamodelgen` managed through a BOM),
+   upgrade to a newer version of Hibernate ORM that fixes https://hibernate.atlassian.net/browse/HHH-17362[HHH-17362].

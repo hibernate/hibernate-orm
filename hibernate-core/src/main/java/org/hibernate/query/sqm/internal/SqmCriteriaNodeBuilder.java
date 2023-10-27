@@ -4399,6 +4399,44 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		);
 	}
 
+	@Override
+	public <T> SqmExpression<T[]> arrayTrim(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<Integer> elementCountExpression) {
+		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
+				asList( arrayExpression, elementCountExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayTrim(SqmExpression<T[]> arrayExpression, Integer elementCount) {
+		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
+				asList( arrayExpression, value( elementCount ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayTrim(T[] array, SqmExpression<Integer> elementCountExpression) {
+		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
+				asList( value( array ), elementCountExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayTrim(T[] array, Integer elementCount) {
+		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
+				asList( value( array ), value( elementCount ) ),
+				null,
+				queryEngine
+		);
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
 
@@ -5224,6 +5262,48 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			E newElement) {
 		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
 				asList( value( collection ), value( oldElement ), value( newElement ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <C extends Collection<?>> SqmExpression<C> collectionTrim(
+			SqmExpression<C> collectionExpression,
+			SqmExpression<Integer> indexExpression) {
+		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
+				asList( collectionExpression, indexExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <C extends Collection<?>> SqmExpression<C> collectionTrim(
+			SqmExpression<C> collectionExpression,
+			Integer index) {
+		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
+				asList( collectionExpression, value( index ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <C extends Collection<?>> SqmExpression<C> collectionTrim(
+			C collection,
+			SqmExpression<Integer> indexExpression) {
+		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
+				asList( value( collection ), indexExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <C extends Collection<?>> SqmExpression<C> collectionTrim(C collection, Integer index) {
+		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
+				asList( value( collection ), value( index ) ),
 				null,
 				queryEngine
 		);

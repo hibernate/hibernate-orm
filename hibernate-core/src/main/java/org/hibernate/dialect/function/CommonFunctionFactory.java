@@ -51,6 +51,7 @@ import org.hibernate.dialect.function.array.OracleArrayRemoveIndexFunction;
 import org.hibernate.dialect.function.array.OracleArrayReplaceFunction;
 import org.hibernate.dialect.function.array.OracleArraySetFunction;
 import org.hibernate.dialect.function.array.OracleArraySliceFunction;
+import org.hibernate.dialect.function.array.OracleArrayTrimFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
@@ -3060,5 +3061,34 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayReplace_oracle() {
 		functionRegistry.register( "array_replace", new OracleArrayReplaceFunction() );
+	}
+
+	/**
+	 * H2, HSQLDB, CockroachDB and PostgreSQL array_trim() function
+	 */
+	public void arrayTrim_trim_array() {
+		functionRegistry.patternAggregateDescriptorBuilder( "array_trim", "trim_array(?1,?2)" )
+				.setArgumentsValidator(
+						StandardArgumentsValidators.composite(
+								new ArgumentTypesValidator( null, ANY, INTEGER ),
+								ArrayArgumentValidator.DEFAULT_INSTANCE
+						)
+				)
+				.setReturnTypeResolver( ArrayViaArgumentReturnTypeResolver.DEFAULT_INSTANCE )
+				.setArgumentTypeResolver(
+						StandardFunctionArgumentTypeResolvers.composite(
+								StandardFunctionArgumentTypeResolvers.invariant( ANY, INTEGER ),
+								StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE
+						)
+				)
+				.setArgumentListSignature( "(ARRAY array, INTEGER elementsToRemove)" )
+				.register();
+	}
+
+	/**
+	 * Oracle array_trim() function
+	 */
+	public void arrayTrim_oracle() {
+		functionRegistry.register( "array_trim", new OracleArrayTrimFunction() );
 	}
 }

@@ -202,6 +202,7 @@ public class HSQLDialect extends Dialect {
 		functionFactory.arrayRemoveIndex_unnest( false );
 		functionFactory.arraySlice_unnest();
 		functionFactory.arrayReplace_unnest();
+		functionFactory.arrayTrim_trim_array();
 	}
 
 	@Override

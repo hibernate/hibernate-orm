@@ -323,6 +323,7 @@ public class H2Dialect extends Dialect {
 		functionFactory.arrayRemoveIndex_h2( getMaximumArraySize() );
 		functionFactory.arraySlice();
 		functionFactory.arrayReplace_h2( getMaximumArraySize() );
+		functionFactory.arrayTrim_trim_array();
 	}
 
 	/**

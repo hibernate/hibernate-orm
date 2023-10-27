@@ -1134,6 +1134,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_remove_index()` | Creates array copy with the element at the given index removed
 | `array_slice()` | Creates a sub-array of the based on lower and upper index
 | `array_replace()` | Creates array copy replacing a given element with another
+| `array_trim()` | Creates array copy trimming the last _N_ elements
 |===
 
 ===== `array()`
@@ -1382,6 +1383,19 @@ Returns an array copy which has elements matching the second argument replaced b
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayReplaceTest.java[tags=hql-array-replace-example]
+----
+====
+
+===== `array_trim()`
+
+Returns an array copy without the last _N_ elements, specified by the second argument.
+It is an error if any array has a length smaller than the second argument.
+
+[[hql-array-trim-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayTrimTest.java[tags=hql-array-trim-example]
 ----
 ====
 

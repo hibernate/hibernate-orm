@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.Incubating;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.query.NullPrecedence;
@@ -25,10 +26,13 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.criteria.JpaParameterExpression;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSimpleCase;
+import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
@@ -99,6 +103,43 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for array types
+
+	/**
+	 * @see #arrayAgg(JpaOrder, JpaPredicate, JpaWindow, Expression)
+	 * @since 6.4
+	 */
+	<T> JpaExpression<T[]> arrayAgg(JpaOrder order, Expression<? extends T> argument);
+
+	/**
+	 * @see #arrayAgg(JpaOrder, JpaPredicate, JpaWindow, Expression)
+	 * @since 6.4
+	 */
+	<T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaPredicate filter, Expression<? extends T> argument);
+
+	/**
+	 * @see #arrayAgg(JpaOrder, JpaPredicate, JpaWindow, Expression)
+	 * @since 6.4
+	 */
+	<T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaWindow window, Expression<? extends T> argument);
+
+	/**
+	 * Create a {@code array_agg} ordered set-aggregate function expression.
+	 *
+	 * @param order order by clause used in within group
+	 * @param filter optional filter clause
+	 * @param window optional window over which to apply the function
+	 * @param argument values to aggregate
+	 *
+	 * @return ordered set-aggregate expression
+	 *
+	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
+	 * @since 6.4
+	 */
+	<T> JpaExpression<T[]> arrayAgg(
+			JpaOrder order,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<? extends T> argument);
 
 	/**
 	 * Creates an array literal with the {@code array} constructor function.

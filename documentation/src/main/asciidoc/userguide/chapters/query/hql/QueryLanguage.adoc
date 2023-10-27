@@ -1118,6 +1118,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | Function | Purpose
 
 | `array()` | Creates an array based on the passed arguments
+| `array_agg()` | Aggregates row values into an array
 | `array_position()` | Determines the position of an element in an array
 | `array_length()` | Determines the length of an array
 | `array_concat()` | Concatenates array with each other in order
@@ -1144,6 +1145,18 @@ Creates an array based on the passed arguments, and infers the array type from t
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayConstructorTest.java[tags=hql-array-example]
+----
+====
+
+===== `array_agg()`
+
+An <<hql-aggregate-functions-orderedset,ordered set aggregate function>> that aggregates values to an array.
+
+[[hql-array-agg-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayAggregateTest.java[tags=hql-array-agg-example]
 ----
 ====
 

@@ -237,7 +237,7 @@ public class DB2zLegacyDialect extends DB2LegacyDialect {
 
 	@Override
 	public String rowId(String rowId) {
-		return rowId.isEmpty() ? "rowid_" : rowId;
+		return rowId == null || rowId.isEmpty() ? "rowid_" : rowId;
 	}
 
 	@Override

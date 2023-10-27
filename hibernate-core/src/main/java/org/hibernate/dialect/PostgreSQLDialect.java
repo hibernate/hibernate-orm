@@ -644,6 +644,7 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.arrayRemoveIndex_unnest( true );
 		functionFactory.arraySlice_operator();
 		functionFactory.arrayReplace();
+		functionFactory.arrayTrim_trim_array();
 
 		functionFactory.makeDateTimeTimestamp();
 		// Note that PostgreSQL doesn't support the OVER clause for ordered set-aggregate functions

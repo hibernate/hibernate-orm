@@ -463,6 +463,7 @@ public class CockroachDialect extends Dialect {
 		functionFactory.arrayRemoveIndex_unnest( true );
 		functionFactory.arraySlice_operator();
 		functionFactory.arrayReplace();
+		functionFactory.arrayTrim_trim_array();
 
 		functionContributions.getFunctionRegistry().register(
 				"trunc",

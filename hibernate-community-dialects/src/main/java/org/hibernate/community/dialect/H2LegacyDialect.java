@@ -385,6 +385,7 @@ public class H2LegacyDialect extends Dialect {
 				functionFactory.arraySlice();
 				functionFactory.arrayReplace_h2( getMaximumArraySize() );
 				functionFactory.arrayTrim_trim_array();
+				functionFactory.arrayFill_h2();
 			}
 			else {
 				// Use group_concat until 2.x as listagg was buggy

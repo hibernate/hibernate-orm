@@ -340,7 +340,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				for ( ColumnReference columnReference : assignable.getColumnReferences() ) {
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									0,
 									new ColumnReference(
 											updatingTableReference.getIdentificationVariable(),
 											columnReference.getColumnExpression(),
@@ -528,7 +527,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				);
 				querySpec.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								0,
 								new ColumnReference(
 										updatingTableReference.getIdentificationVariable(),
 										idColumnReference.getColumnExpression(),
@@ -688,7 +686,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				for ( ColumnReference columnReference : assignment.getAssignable().getColumnReferences() ) {
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									0,
 									new ColumnReference(
 											updatingTableReference.getIdentificationVariable(),
 											columnReference.getColumnExpression(),
@@ -732,7 +729,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			);
 			querySpec.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
-							0,
 							new ColumnReference(
 									updatingTableReference.getIdentificationVariable(),
 									identifierMapping

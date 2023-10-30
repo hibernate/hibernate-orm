@@ -47,6 +47,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	private final Expression sqlExpression;
 	private final JavaType<?> jdbcJavaType;
 	private final boolean virtual;
+	private transient ValueExtractor valueExtractor;
 
 	public SqlSelectionImpl(Expression sqlExpression) {
 		this( 0, -1, null, sqlExpression, false );
@@ -66,11 +67,39 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 			JavaType<?> jdbcJavaType,
 			Expression sqlExpression,
 			boolean virtual) {
+		this(
+				jdbcPosition,
+				valuesArrayPosition,
+				sqlExpression,
+				jdbcJavaType,
+				virtual,
+				null
+		);
+	}
+
+	protected SqlSelectionImpl(
+			int jdbcPosition,
+			int valuesArrayPosition,
+			Expression sqlExpression,
+			JavaType<?> jdbcJavaType,
+			boolean virtual,
+			ValueExtractor valueExtractor) {
 		this.jdbcPosition = jdbcPosition;
 		this.valuesArrayPosition = valuesArrayPosition;
-		this.jdbcJavaType = jdbcJavaType;
 		this.sqlExpression = sqlExpression;
+		this.jdbcJavaType = jdbcJavaType;
 		this.virtual = virtual;
+		this.valueExtractor = valueExtractor;
+	}
+
+	private static ValueExtractor determineValueExtractor(Expression sqlExpression, JavaType<?> jdbcJavaType) {
+		final JdbcMapping jdbcMapping = sqlExpression.getExpressionType().getSingleJdbcMapping();
+		if ( jdbcJavaType == null || jdbcMapping.getMappedJavaType() == jdbcJavaType ) {
+			return jdbcMapping.getJdbcValueExtractor();
+		}
+		else {
+			return jdbcMapping.getJdbcType().getExtractor( jdbcJavaType );
+		}
 	}
 
 	@Override
@@ -80,11 +109,11 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 
 	@Override
 	public ValueExtractor getJdbcValueExtractor() {
-		final JdbcMapping jdbcMapping = sqlExpression.getExpressionType().getSingleJdbcMapping();
-		if ( jdbcJavaType == null || jdbcMapping.getMappedJavaType() == jdbcJavaType ) {
-			return jdbcMapping.getJdbcValueExtractor();
+		ValueExtractor extractor = valueExtractor;
+		if ( extractor == null ) {
+			valueExtractor = extractor = determineValueExtractor( sqlExpression, jdbcJavaType );
 		}
-		return jdbcMapping.getJdbcType().getExtractor( jdbcJavaType );
+		return extractor;
 	}
 
 	@Override

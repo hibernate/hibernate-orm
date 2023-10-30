@@ -31,17 +31,20 @@ import org.hibernate.dialect.function.array.ArraySliceUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayViaArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.H2ArrayContainsFunction;
+import org.hibernate.dialect.function.array.H2ArrayFillFunction;
 import org.hibernate.dialect.function.array.H2ArrayOverlapsFunction;
 import org.hibernate.dialect.function.array.H2ArrayRemoveFunction;
 import org.hibernate.dialect.function.array.H2ArrayRemoveIndexFunction;
 import org.hibernate.dialect.function.array.H2ArrayReplaceFunction;
 import org.hibernate.dialect.function.array.H2ArraySetFunction;
 import org.hibernate.dialect.function.array.HSQLArrayConstructorFunction;
+import org.hibernate.dialect.function.array.HSQLArrayFillFunction;
 import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.HSQLArrayRemoveFunction;
 import org.hibernate.dialect.function.array.HSQLArraySetFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatFunction;
+import org.hibernate.dialect.function.array.OracleArrayFillFunction;
 import org.hibernate.dialect.function.array.OracleArrayOverlapsFunction;
 import org.hibernate.dialect.function.array.OracleArrayGetFunction;
 import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
@@ -54,6 +57,7 @@ import org.hibernate.dialect.function.array.OracleArraySliceFunction;
 import org.hibernate.dialect.function.array.OracleArrayTrimFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatElementFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConcatFunction;
+import org.hibernate.dialect.function.array.PostgreSQLArrayFillFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayConstructorFunction;
 import org.hibernate.dialect.function.array.OracleArrayAggEmulation;
@@ -3090,5 +3094,33 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayTrim_oracle() {
 		functionRegistry.register( "array_trim", new OracleArrayTrimFunction() );
+	}
+
+	/**
+	 * H2 array_fill() function
+	 */
+	public void arrayFill_h2() {
+		functionRegistry.register( "array_fill", new H2ArrayFillFunction() );
+	}
+
+	/**
+	 * HSQLDB array_fill() function
+	 */
+	public void arrayFill_hsql() {
+		functionRegistry.register( "array_fill", new HSQLArrayFillFunction() );
+	}
+
+	/**
+	 * PostgreSQL array_fill() function
+	 */
+	public void arrayFill_postgresql() {
+		functionRegistry.register( "array_fill", new PostgreSQLArrayFillFunction() );
+	}
+
+	/**
+	 * Oracle array_fill() function
+	 */
+	public void arrayFill_oracle() {
+		functionRegistry.register( "array_fill", new OracleArrayFillFunction() );
 	}
 }

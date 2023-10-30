@@ -19,6 +19,7 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.expression.SqmCollation;
 import org.hibernate.query.sqm.tree.expression.SqmDurationUnit;
 import org.hibernate.query.sqm.tree.expression.SqmExtractUnit;
+import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.query.sqm.tree.expression.SqmTrimSpecification;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -117,6 +118,17 @@ public class ArgumentTypesValidator implements ArgumentsValidator {
 					case COLLATION:
 						if ( !(argument instanceof SqmCollation) ) {
 							throwError(type, Object.class, functionName, count);
+						}
+						break;
+					case NO_UNTYPED:
+						if ( argument instanceof SqmLiteralNull<?> ) {
+							throw new FunctionArgumentException(
+									String.format(
+											"Parameter %d of function '%s()' does not permit untyped expressions like null literals. Please cast the expression to a type",
+											count,
+											functionName
+									)
+							);
 						}
 						break;
 				}

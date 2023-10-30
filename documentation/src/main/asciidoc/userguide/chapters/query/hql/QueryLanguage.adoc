@@ -1135,6 +1135,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_slice()` | Creates a sub-array of the based on lower and upper index
 | `array_replace()` | Creates array copy replacing a given element with another
 | `array_trim()` | Creates array copy trimming the last _N_ elements
+| `array_fill()` | Creates array filled with the same element _N_ times
 |===
 
 ===== `array()`
@@ -1396,6 +1397,19 @@ It is an error if any array has a length smaller than the second argument.
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayTrimTest.java[tags=hql-array-trim-example]
+----
+====
+
+===== `array_fill()`
+
+Creates an array filled with the same element _N_ times as specified by the arguments.
+It is an error to supply an array length smaller than 0.
+
+[[hql-array-fill-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayFillTest.java[tags=hql-array-fill-example]
 ----
 ====
 

@@ -5772,12 +5772,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( shouldEmulateLateralWithIntersect( statement.getQueryPart() ) ) {
 				final QuerySpec lhsReferencesQuery = new QuerySpec( false );
 				for ( ColumnReference columnReference : columnReferences ) {
-					lhsReferencesQuery.getSelectClause().addSqlSelection(
-							new SqlSelectionImpl(
-									0,
-									columnReference
-							)
-					);
+					lhsReferencesQuery.getSelectClause().addSqlSelection( new SqlSelectionImpl( columnReference ) );
 				}
 				final List<QueryPart> queryParts = new ArrayList<>( 2 );
 				queryParts.add( lhsReferencesQuery );
@@ -5822,10 +5817,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				}
 				final QuerySpec existsQuery = new QuerySpec( false, 1 );
 				existsQuery.getSelectClause().addSqlSelection(
-						new SqlSelectionImpl(
-								0,
-								new QueryLiteral<>( 1, getIntegerType() )
-						)
+						new SqlSelectionImpl( new QueryLiteral<>( 1, getIntegerType() ) )
 				);
 				existsQuery.getFromClause().addRoot( subTableGroup );
 				existsQuery.applyPredicate(
@@ -5874,10 +5866,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			existsQuery.setGroupByClauseExpressions( querySpec.getGroupByClauseExpressions() );
 			existsQuery.setHavingClauseRestrictions( querySpec.getHavingClauseRestrictions() );
 			existsQuery.getSelectClause().addSqlSelection(
-					new SqlSelectionImpl(
-							0,
-							new QueryLiteral<>( 1, getIntegerType() )
-					)
+					new SqlSelectionImpl( new QueryLiteral<>( 1, getIntegerType() ) )
 			);
 			existsQuery.applyPredicate(
 					new ComparisonPredicate(
@@ -5911,7 +5900,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			countQuery.setHavingClauseRestrictions( querySpec.getHavingClauseRestrictions() );
 			countQuery.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
-							0,
 							new SelfRenderingAggregateFunctionSqlAstExpression(
 									"count",
 									(sqlAppender, sqlAstArguments, returnType, walker) -> sqlAppender.append( "count(*)" ),

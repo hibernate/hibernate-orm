@@ -55,11 +55,7 @@ public final class ExecuteWithoutIdTableHelper {
 							rootTableReference,
 							selection
 					);
-					final SqlSelection sqlSelection = new SqlSelectionImpl(
-							// irrelevant
-							0,
-							columnReference
-					);
+					final SqlSelection sqlSelection = new SqlSelectionImpl( columnReference );
 					matchingIdSelect.getSelectClause().addSqlSelection( sqlSelection );
 				}
 		);

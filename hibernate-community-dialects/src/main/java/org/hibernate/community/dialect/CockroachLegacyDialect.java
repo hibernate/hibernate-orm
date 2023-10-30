@@ -479,6 +479,7 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.arrayReplace();
 		functionFactory.arrayTrim_trim_array();
 		functionFactory.arrayFill_postgresql();
+		functionFactory.arrayToString_postgresql();
 
 		functionContributions.getFunctionRegistry().register(
 				"trunc",

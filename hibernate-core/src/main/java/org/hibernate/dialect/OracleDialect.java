@@ -330,6 +330,7 @@ public class OracleDialect extends Dialect {
 		functionFactory.arrayReplace_oracle();
 		functionFactory.arrayTrim_oracle();
 		functionFactory.arrayFill_oracle();
+		functionFactory.arrayToString_oracle();
 	}
 
 	@Override

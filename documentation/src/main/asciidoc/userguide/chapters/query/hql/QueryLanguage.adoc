@@ -1138,6 +1138,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_replace()` | Creates array copy replacing a given element with another
 | `array_trim()` | Creates array copy trimming the last _N_ elements
 | `array_fill()` | Creates array filled with the same element _N_ times
+| `array_to_string()` | String representation of non-null array elements
 |===
 
 ===== `array()`
@@ -1426,6 +1427,19 @@ It is an error to supply an array length smaller than 0.
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayFillTest.java[tags=hql-array-fill-example]
+----
+====
+
+===== `array_to_string()`
+
+Concatenates the non-null array elements with a separator, as specified by the arguments.
+Returns `null` if the first argument is `null`.
+
+[[hql-array-to-string-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayToStringTest.java[tags=hql-array-to-string-example]
 ----
 ====
 

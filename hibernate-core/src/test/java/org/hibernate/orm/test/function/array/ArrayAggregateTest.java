@@ -15,7 +15,6 @@ import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.OracleArrayJdbcType;
-import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.type.SqlTypes;
@@ -60,7 +59,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsStructuralArrays.class)
 @SkipForDialect(dialectClass = SpannerDialect.class, reason = "Doesn't support array_agg ordering yet")
-@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 11, reason = "Oracle array_agg emulation requires json_arrayagg which was only added in Oracle 12")
 public class ArrayAggregateTest {
 
 	public static class UdtContributor implements AdditionalMappingContributor {

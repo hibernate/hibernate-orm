@@ -184,7 +184,7 @@ public interface Query<R> extends SelectionQuery<R>, MutationQuery, TypedQuery<R
 	 */
 	@Override
 	default Stream<R> stream() {
-		return getResultStream();
+		return list().stream();
 	}
 
 	/**

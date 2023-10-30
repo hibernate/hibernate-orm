@@ -24,9 +24,13 @@ import org.hibernate.type.spi.TypeConfiguration;
  */
 public class ArrayViaElementArgumentReturnTypeResolver implements FunctionReturnTypeResolver {
 
-	public static final FunctionReturnTypeResolver INSTANCE = new ArrayViaElementArgumentReturnTypeResolver();
+	public static final FunctionReturnTypeResolver DEFAULT_INSTANCE = new ArrayViaElementArgumentReturnTypeResolver( 0  );
+	public static final FunctionReturnTypeResolver VARARGS_INSTANCE = new ArrayViaElementArgumentReturnTypeResolver( -1  );
 
-	private ArrayViaElementArgumentReturnTypeResolver() {
+	private final int elementIndex;
+
+	private ArrayViaElementArgumentReturnTypeResolver(int elementIndex) {
+		this.elementIndex = elementIndex;
 	}
 
 	@Override
@@ -47,8 +51,16 @@ public class ArrayViaElementArgumentReturnTypeResolver implements FunctionReturn
 		if ( impliedType != null ) {
 			return impliedType;
 		}
-		for ( SqmTypedNode<?> argument : arguments ) {
-			final DomainType<?> sqmType = argument.getExpressible().getSqmType();
+		if ( elementIndex == -1 ) {
+			for ( SqmTypedNode<?> argument : arguments ) {
+				final DomainType<?> sqmType = argument.getExpressible().getSqmType();
+				if ( sqmType instanceof ReturnableType<?> ) {
+					return DdlTypeHelper.resolveArrayType( sqmType, typeConfiguration );
+				}
+			}
+		}
+		else {
+			final DomainType<?> sqmType = arguments.get( elementIndex ).getExpressible().getSqmType();
 			if ( sqmType instanceof ReturnableType<?> ) {
 				return DdlTypeHelper.resolveArrayType( sqmType, typeConfiguration );
 			}

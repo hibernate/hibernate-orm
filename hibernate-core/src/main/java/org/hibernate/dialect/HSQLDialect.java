@@ -203,6 +203,7 @@ public class HSQLDialect extends Dialect {
 		functionFactory.arraySlice_unnest();
 		functionFactory.arrayReplace_unnest();
 		functionFactory.arrayTrim_trim_array();
+		functionFactory.arrayFill_hsql();
 	}
 
 	@Override

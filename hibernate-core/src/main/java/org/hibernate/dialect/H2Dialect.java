@@ -324,6 +324,7 @@ public class H2Dialect extends Dialect {
 		functionFactory.arraySlice();
 		functionFactory.arrayReplace_h2( getMaximumArraySize() );
 		functionFactory.arrayTrim_trim_array();
+		functionFactory.arrayFill_h2();
 	}
 
 	/**

@@ -28,23 +28,23 @@ import org.hibernate.type.spi.TypeConfiguration;
 public class ResultSetMappingSqlSelection implements SqlSelection, Expression, SqlExpressionAccess {
 	private final int valuesArrayPosition;
 	private final BasicValuedMapping valueMapping;
-	private final JdbcMapping jdbcMapping;
+	private final ValueExtractor valueExtractor;
 
 	public ResultSetMappingSqlSelection(int valuesArrayPosition, BasicValuedMapping valueMapping) {
 		this.valuesArrayPosition = valuesArrayPosition;
 		this.valueMapping = valueMapping;
-		this.jdbcMapping = valueMapping.getJdbcMapping();
+		this.valueExtractor = valueMapping.getJdbcMapping().getJdbcValueExtractor();
 	}
 
 	public ResultSetMappingSqlSelection(int valuesArrayPosition, JdbcMapping jdbcMapping) {
 		this.valuesArrayPosition = valuesArrayPosition;
-		this.jdbcMapping = jdbcMapping;
 		this.valueMapping = null;
+		this.valueExtractor = jdbcMapping.getJdbcValueExtractor();
 	}
 
 	@Override
 	public ValueExtractor getJdbcValueExtractor() {
-		return jdbcMapping.getJdbcValueExtractor();
+		return valueExtractor;
 	}
 
 	@Override

@@ -460,7 +460,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 									)
 							);
 							querySpec.getSelectClause().addSqlSelection(
-									new SqlSelectionImpl( 0, valuesColumnReference )
+									new SqlSelectionImpl( valuesColumnReference )
 							);
 						}
 				);
@@ -492,7 +492,7 @@ public class InlineUpdateHandler implements UpdateHandler {
 						)
 				);
 				querySpec.getSelectClause().addSqlSelection(
-						new SqlSelectionImpl( 0, valuesColumnReference )
+						new SqlSelectionImpl( valuesColumnReference )
 				);
 			}
 			final ValuesTableGroup valuesTableGroup = new ValuesTableGroup(

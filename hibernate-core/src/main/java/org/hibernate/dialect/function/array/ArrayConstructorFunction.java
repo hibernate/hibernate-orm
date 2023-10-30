@@ -33,7 +33,7 @@ public class ArrayConstructorFunction extends AbstractSqmSelfRenderingFunctionDe
 		super(
 				"array",
 				ArrayConstructorArgumentsValidator.INSTANCE,
-				ArrayViaElementArgumentReturnTypeResolver.INSTANCE,
+				ArrayViaElementArgumentReturnTypeResolver.VARARGS_INSTANCE,
 				StandardFunctionArgumentTypeResolvers.NULL
 		);
 		this.withKeyword = withKeyword;

@@ -32,12 +32,7 @@ public class HSQLArrayConstructorFunction extends ArrayConstructorFunction {
 			SqlAstTranslator<?> walker) {
 		final String castTypeName;
 		if ( returnType != null && hasOnlyBottomArguments( arguments ) ) {
-			if ( returnType instanceof SqlTypedMapping ) {
-				castTypeName = AbstractSqlAstTranslator.getCastTypeName( (SqlTypedMapping) returnType, walker.getSessionFactory() );
-			}
-			else {
-				castTypeName = DdlTypeHelper.getCastTypeName( (JdbcMappingContainer) returnType, walker );
-			}
+			castTypeName = DdlTypeHelper.getCastTypeName( returnType, walker );
 			sqlAppender.append( "cast(" );
 		}
 		else {

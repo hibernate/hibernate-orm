@@ -39,7 +39,7 @@ public class ArrayAggFunction extends AbstractSqmSelfRenderingFunctionDescriptor
 				FUNCTION_NAME,
 				FunctionKind.ORDERED_SET_AGGREGATE,
 				StandardArgumentsValidators.exactly( 1 ),
-				ArrayViaElementArgumentReturnTypeResolver.INSTANCE,
+				ArrayViaElementArgumentReturnTypeResolver.VARARGS_INSTANCE,
 				StandardFunctionArgumentTypeResolvers.NULL
 		);
 		this.functionName = functionName;

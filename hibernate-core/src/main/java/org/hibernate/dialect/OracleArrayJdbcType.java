@@ -493,6 +493,28 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 						false
 				)
 		);
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_fill",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_fill(elem in " + getRawTypeName( elementType ) +
+										", elems number) return " + arrayTypeName + " deterministic is " +
+										"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
+										"if elems is null then return null; end if; " +
+										"if elems<0 then raise_application_error (-20000, 'number of elements must be greater than or equal to 0'); end if;" +
+										"for i in 1 .. elems loop " +
+										"res.extend; " +
+										"res(i) := elem; " +
+										"end loop; " +
+										"return res; " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_fill" },
+						emptySet(),
+						false
+				)
+		);
 	}
 
 	protected String createOrReplaceConcatFunction(String arrayTypeName) {

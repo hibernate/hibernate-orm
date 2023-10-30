@@ -87,5 +87,9 @@ public enum FunctionParameterType {
 	 * Indicates that the argument should be a spatial type
 	 * @see org.hibernate.type.SqlTypes#isSpatialType(int) 
 	 */
-	SPATIAL
+	SPATIAL,
+	/**
+	 * Indicates a parameter that accepts any type, except untyped expressions like {@code null} literals
+	 */
+	NO_UNTYPED
 }

@@ -791,6 +791,34 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	 */
 	<T> SqmExpression<List<Integer>> arrayPositionsList(T[] array, T element);
 
+	/**
+	 * Concatenates the non-null array elements with a separator, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<String> arrayToString(SqmExpression<? extends Object[]> arrayExpression, SqmExpression<String> separatorExpression);
+
+	/**
+	 * Concatenates the non-null array elements with a separator, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<String> arrayToString(SqmExpression<? extends Object[]> arrayExpression, String separator);
+
+	/**
+	 * Concatenates the non-null array elements with a separator, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<String> arrayToString(Object[] array, SqmExpression<String> separatorExpression);
+
+	/**
+	 * Concatenates the non-null array elements with a separator, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<String> arrayToString(Object[] array, String separator);
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
 
@@ -1444,6 +1472,34 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	 * @since 6.4
 	 */
 	<T> SqmExpression<List<Integer>> collectionPositionsList(Collection<? super T> collection, T element);
+
+	/**
+	 * Concatenates the non-null basic collection elements with a separator, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<String> collectionToString(SqmExpression<? extends Collection<?>> collectionExpression, SqmExpression<String> separatorExpression);
+
+	/**
+	 * Concatenates the non-null basic collection elements with a separator, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<String> collectionToString(SqmExpression<? extends Collection<?>> collectionExpression, String separator);
+
+	/**
+	 * Concatenates the non-null basic collection elements with a separator, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<String> collectionToString(Collection<?> collection, SqmExpression<String> separatorExpression);
+
+	/**
+	 * Concatenates the non-null basic collection elements with a separator, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<String> collectionToString(Collection<?> collection, String separator);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

@@ -4551,6 +4551,46 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		);
 	}
 
+	@Override
+	public <T> SqmExpression<String> arrayToString(
+			SqmExpression<? extends Object[]> arrayExpression,
+			SqmExpression<String> separatorExpression) {
+		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
+				asList( arrayExpression, separatorExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<String> arrayToString(
+			SqmExpression<? extends Object[]> arrayExpression,
+			String separator) {
+		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
+				asList( arrayExpression, value( separator ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<String> arrayToString(Object[] array, SqmExpression<String> separatorExpression) {
+		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
+				asList( value( array ), separatorExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<String> arrayToString(Object[] array, String separator) {
+		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
+				asList( value( array ), value( separator ) ),
+				null,
+				queryEngine
+		);
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
 
@@ -4581,6 +4621,90 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			SqmExpression<E> elementExpression) {
 		return getFunctionDescriptor( "array_position" ).generateSqmExpression(
 				asList( collectionExpression, elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<int[]> collectionPositions(
+			SqmExpression<? extends Collection<? super T>> collectionExpression,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
+				asList( collectionExpression, elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<int[]> collectionPositions(
+			SqmExpression<? extends Collection<? super T>> collectionExpression,
+			T element) {
+		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
+				asList( collectionExpression, value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<int[]> collectionPositions(
+			Collection<? super T> collection,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
+				asList( value( collection ), elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<int[]> collectionPositions(Collection<? super T> collection, T element) {
+		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
+				asList( value( collection ), value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<List<Integer>> collectionPositionsList(
+			SqmExpression<? extends Collection<? super T>> collectionExpression,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
+				asList( collectionExpression, elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<List<Integer>> collectionPositionsList(
+			SqmExpression<? extends Collection<? super T>> collectionExpression,
+			T element) {
+		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
+				asList( collectionExpression, value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<List<Integer>> collectionPositionsList(
+			Collection<? super T> collection,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
+				asList( value( collection ), elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<List<Integer>> collectionPositionsList(Collection<? super T> collection, T element) {
+		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
+				asList( value( collection ), value( element ) ),
 				null,
 				queryEngine
 		);
@@ -5462,84 +5586,42 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmExpression<int[]> collectionPositions(
-			SqmExpression<? extends Collection<? super T>> collectionExpression,
-			SqmExpression<T> elementExpression) {
-		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
-				asList( collectionExpression, elementExpression ),
+	public <T> SqmExpression<String> collectionToString(
+			SqmExpression<? extends Collection<?>> collectionExpression,
+			SqmExpression<String> separatorExpression) {
+		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
+				asList( collectionExpression, separatorExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<int[]> collectionPositions(
-			SqmExpression<? extends Collection<? super T>> collectionExpression,
-			T element) {
-		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
-				asList( collectionExpression, value( element ) ),
+	public <T> SqmExpression<String> collectionToString(
+			SqmExpression<? extends Collection<?>> collectionExpression,
+			String separator) {
+		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
+				asList( collectionExpression, value( separator ) ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<int[]> collectionPositions(
-			Collection<? super T> collection,
-			SqmExpression<T> elementExpression) {
-		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
-				asList( value( collection ), elementExpression ),
+	public <T> SqmExpression<String> collectionToString(
+			Collection<?> collection,
+			SqmExpression<String> separatorExpression) {
+		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
+				asList( value( collection ), separatorExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<int[]> collectionPositions(Collection<? super T> collection, T element) {
-		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
-				asList( value( collection ), value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<List<Integer>> collectionPositionsList(
-			SqmExpression<? extends Collection<? super T>> collectionExpression,
-			SqmExpression<T> elementExpression) {
-		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
-				asList( collectionExpression, elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<List<Integer>> collectionPositionsList(
-			SqmExpression<? extends Collection<? super T>> collectionExpression,
-			T element) {
-		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
-				asList( collectionExpression, value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<List<Integer>> collectionPositionsList(
-			Collection<? super T> collection,
-			SqmExpression<T> elementExpression) {
-		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
-				asList( value( collection ), elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<List<Integer>> collectionPositionsList(Collection<? super T> collection, T element) {
-		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
-				asList( value( collection ), value( element ) ),
+	public <T> SqmExpression<String> collectionToString(Collection<?> collection, String separator) {
+		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
+				asList( value( collection ), value( separator ) ),
 				null,
 				queryEngine
 		);

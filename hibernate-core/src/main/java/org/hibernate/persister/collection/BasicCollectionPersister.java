@@ -512,7 +512,7 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 
 			 	For this reason we cannot take into consideration the `@Column(updatable = false)`
 			 */
-			attribute.getElementDescriptor().forEachNonFormula( updateBuilder );
+			attribute.getElementDescriptor().forEachInsertable( updateBuilder );
 		}
 		else {
 			attribute.getElementDescriptor().forEachUpdatable( updateBuilder );

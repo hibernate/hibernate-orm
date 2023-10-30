@@ -707,6 +707,34 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	 */
 	<T> SqmExpression<T[]> arrayTrim(T[] array, Integer elementCount);
 
+	/**
+	 * Creates array with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayFill(SqmExpression<T> elementExpression, SqmExpression<Integer> elementCountExpression);
+
+	/**
+	 * Creates array with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayFill(SqmExpression<T> elementExpression, Integer elementCount);
+
+	/**
+	 * Creates array with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayFill(T element, SqmExpression<Integer> elementCountExpression);
+
+	/**
+	 * Creates array with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<T[]> arrayFill(T element, Integer elementCount);
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
 
@@ -1276,6 +1304,34 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	 * @since 6.4
 	 */
 	<C extends Collection<?>> SqmExpression<C> collectionTrim(C collection, Integer elementCount);
+
+	/**
+	 * Creates basic collection with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<Collection<T>> collectionFill(SqmExpression<T> elementExpression, SqmExpression<Integer> elementCountExpression);
+
+	/**
+	 * Creates basic collection with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<Collection<T>> collectionFill(SqmExpression<T> elementExpression, Integer elementCount);
+
+	/**
+	 * Creates basic collection with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<Collection<T>> collectionFill(T element, SqmExpression<Integer> elementCountExpression);
+
+	/**
+	 * Creates basic collection with the same element N times, as specified by the arguments.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<Collection<T>> collectionFill(T element, Integer elementCount);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

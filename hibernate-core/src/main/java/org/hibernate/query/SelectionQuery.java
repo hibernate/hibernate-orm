@@ -140,9 +140,13 @@ public interface SelectionQuery<R> extends CommonQueryContract {
 	 * stream so that resources are freed as soon as possible.
 	 *
 	 * @return The results as a {@link Stream}
+	 *
+	 * @implNote: The default implementation simply returns
+	 * <code>{@link #list()}.stream()</code>. Concrete implementations
+	 * may provide more efficient implementations.
 	 */
 	default Stream<R> getResultStream() {
-		return stream();
+		return list().stream();
 	}
 
 	/**

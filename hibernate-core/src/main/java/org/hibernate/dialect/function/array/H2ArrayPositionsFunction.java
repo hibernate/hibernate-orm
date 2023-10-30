@@ -13,13 +13,20 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * HSQLDB array_remove function.
+ * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
+ * due to https://github.com/h2database/h2database/issues/1815.
+ * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same.
  */
-public class HSQLArrayRemoveFunction extends AbstractArrayRemoveFunction {
+public class H2ArrayPositionsFunction extends AbstractArrayPositionsFunction {
 
-	public HSQLArrayRemoveFunction() {
+	private final int maximumArraySize;
+
+	public H2ArrayPositionsFunction(boolean list, int maximumArraySize, TypeConfiguration typeConfiguration) {
+		super( list, typeConfiguration );
+		this.maximumArraySize = maximumArraySize;
 	}
 
 	@Override
@@ -32,9 +39,13 @@ public class HSQLArrayRemoveFunction extends AbstractArrayRemoveFunction {
 		final Expression elementExpression = (Expression) sqlAstArguments.get( 1 );
 		sqlAppender.append( "case when ");
 		arrayExpression.accept( walker );
-		sqlAppender.append( " is not null then coalesce((select array_agg(t.val) from unnest(" );
+		sqlAppender.append( " is not null then coalesce((select array_agg(i.idx) from system_range(1," );
+		sqlAppender.append( Integer.toString( maximumArraySize ) );
+		sqlAppender.append( ") i(idx) where i.idx<=coalesce(cardinality(");
 		arrayExpression.accept( walker );
-		sqlAppender.append( ") with ordinality t(val,idx) where t.val is distinct from " );
+		sqlAppender.append("),0) and array_get(");
+		arrayExpression.accept( walker );
+		sqlAppender.append( ",i.idx) is not distinct from " );
 		elementExpression.accept( walker );
 		sqlAppender.append( "),array[]) end" );
 	}

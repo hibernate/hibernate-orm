@@ -42,6 +42,6 @@ public class HSQLArrayPositionFunction extends AbstractArrayPositionFunction {
 			sqlAppender.append( " and t.idx>=" );
 			sqlAstArguments.get( 2 ).accept( walker );
 		}
-		sqlAppender.append( "),0) end" );
+		sqlAppender.append( " order by t.idx fetch first 1 row only),0) end" );
 	}
 }

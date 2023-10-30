@@ -6,9 +6,12 @@
  */
 package org.hibernate.dialect.function;
 
+import java.lang.reflect.Type;
 import java.util.Date;
 import java.util.Arrays;
+import java.util.List;
 
+import org.hibernate.annotations.common.reflection.java.generics.ParameterizedTypeImpl;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.Dialect;
 
@@ -33,6 +36,8 @@ import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeRes
 import org.hibernate.dialect.function.array.H2ArrayContainsFunction;
 import org.hibernate.dialect.function.array.H2ArrayFillFunction;
 import org.hibernate.dialect.function.array.H2ArrayOverlapsFunction;
+import org.hibernate.dialect.function.array.H2ArrayPositionFunction;
+import org.hibernate.dialect.function.array.H2ArrayPositionsFunction;
 import org.hibernate.dialect.function.array.H2ArrayRemoveFunction;
 import org.hibernate.dialect.function.array.H2ArrayRemoveIndexFunction;
 import org.hibernate.dialect.function.array.H2ArrayReplaceFunction;
@@ -40,6 +45,7 @@ import org.hibernate.dialect.function.array.H2ArraySetFunction;
 import org.hibernate.dialect.function.array.HSQLArrayConstructorFunction;
 import org.hibernate.dialect.function.array.HSQLArrayFillFunction;
 import org.hibernate.dialect.function.array.HSQLArrayPositionFunction;
+import org.hibernate.dialect.function.array.HSQLArrayPositionsFunction;
 import org.hibernate.dialect.function.array.HSQLArrayRemoveFunction;
 import org.hibernate.dialect.function.array.HSQLArraySetFunction;
 import org.hibernate.dialect.function.array.OracleArrayConcatElementFunction;
@@ -49,6 +55,7 @@ import org.hibernate.dialect.function.array.OracleArrayOverlapsFunction;
 import org.hibernate.dialect.function.array.OracleArrayGetFunction;
 import org.hibernate.dialect.function.array.OracleArrayLengthFunction;
 import org.hibernate.dialect.function.array.OracleArrayPositionFunction;
+import org.hibernate.dialect.function.array.OracleArrayPositionsFunction;
 import org.hibernate.dialect.function.array.OracleArrayRemoveFunction;
 import org.hibernate.dialect.function.array.OracleArrayRemoveIndexFunction;
 import org.hibernate.dialect.function.array.OracleArrayReplaceFunction;
@@ -63,6 +70,7 @@ import org.hibernate.dialect.function.array.PostgreSQLArrayConstructorFunction;
 import org.hibernate.dialect.function.array.OracleArrayAggEmulation;
 import org.hibernate.dialect.function.array.OracleArrayConstructorFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsFunction;
+import org.hibernate.dialect.function.array.PostgreSQLArrayPositionsFunction;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -2739,6 +2747,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * H2 array_position() function
+	 */
+	public void arrayPosition_h2(int maximumArraySize) {
+		functionRegistry.register( "array_position", new H2ArrayPositionFunction( maximumArraySize, typeConfiguration ) );
+	}
+
+	/**
 	 * HSQL array_position() function
 	 */
 	public void arrayPosition_hsql() {
@@ -2750,6 +2765,62 @@ public class CommonFunctionFactory {
 	 */
 	public void arrayPosition_oracle() {
 		functionRegistry.register( "array_position", new OracleArrayPositionFunction( typeConfiguration ) );
+	}
+
+	/**
+	 * CockroachDB and PostgreSQL array_positions() function
+	 */
+	public void arrayPositions_postgresql() {
+		functionRegistry.register(
+				"array_positions",
+				new PostgreSQLArrayPositionsFunction( false, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_positions_list",
+				new PostgreSQLArrayPositionsFunction( true, typeConfiguration )
+		);
+	}
+
+	/**
+	 * H2 array_positions() function
+	 */
+	public void arrayPositions_h2(int maximumArraySize) {
+		functionRegistry.register(
+				"array_positions",
+				new H2ArrayPositionsFunction( false, maximumArraySize, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_positions_list",
+				new H2ArrayPositionsFunction( true, maximumArraySize, typeConfiguration )
+		);
+	}
+
+	/**
+	 * HSQL array_positions() function
+	 */
+	public void arrayPositions_hsql() {
+		functionRegistry.register(
+				"array_positions",
+				new HSQLArrayPositionsFunction( false, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_positions_list",
+				new HSQLArrayPositionsFunction( true, typeConfiguration )
+		);
+	}
+
+	/**
+	 * Oracle array_positions() function
+	 */
+	public void arrayPositions_oracle() {
+		functionRegistry.register(
+				"array_positions",
+				new OracleArrayPositionsFunction( false, typeConfiguration )
+		);
+		functionRegistry.register(
+				"array_positions_list",
+				new OracleArrayPositionsFunction( true, typeConfiguration )
+		);
 	}
 
 	/**

@@ -37,7 +37,6 @@ import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.annotations.common.reflection.java.generics.ParameterizedTypeImpl;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
@@ -74,6 +73,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 import jakarta.persistence.TemporalType;
 
@@ -703,6 +703,20 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	public <J> BasicType<J> standardBasicTypeForJavaType(Class<J> javaType) {
+		if ( javaType == null ) {
+			return null;
+		}
+
+		return standardBasicTypeForJavaType(
+				javaType,
+				javaTypeDescriptor -> new BasicTypeImpl<>(
+						javaTypeDescriptor,
+						javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() )
+				)
+		);
+	}
+
+	public BasicType<?> standardBasicTypeForJavaType(Type javaType) {
 		if ( javaType == null ) {
 			return null;
 		}

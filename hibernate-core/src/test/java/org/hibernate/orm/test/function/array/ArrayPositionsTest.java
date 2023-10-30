@@ -21,7 +21,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * @author Christian Beikov
@@ -33,13 +35,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 // otherwise we might run into ORA-21700: object does not exist or is marked for delete
 // because the JDBC connection or database session caches something that should have been invalidated
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = ""))
-public class ArrayPositionTest {
+public class ArrayPositionsTest {
 
 	@BeforeEach
 	public void prepareData(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			em.persist( new EntityWithArrays( 1L, new String[]{} ) );
-			em.persist( new EntityWithArrays( 2L, new String[]{ "abc", null, "def" } ) );
+			em.persist( new EntityWithArrays( 2L, new String[]{ "abc", null, "def", "abc" } ) );
 			em.persist( new EntityWithArrays( 3L, null ) );
 		} );
 	}
@@ -52,33 +54,52 @@ public class ArrayPositionTest {
 	}
 
 	@Test
-	public void testPosition(SessionFactoryScope scope) {
+	public void testPositions(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			//tag::hql-array-position-example[]
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_position(e.theArray, 'abc') = 1", EntityWithArrays.class )
+			//tag::hql-array-positions-example[]
+			List<int[]> results = em.createQuery( "select array_positions(e.theArray, 'abc') from EntityWithArrays e order by e.id", int[].class )
 					.getResultList();
-			//end::hql-array-position-example[]
-			assertEquals( 1, results.size() );
-			assertEquals( 2L, results.get( 0 ).getId() );
+			//end::hql-array-positions-example[]
+			assertEquals( 3, results.size() );
+			assertArrayEquals( new int[0], results.get( 0 ) );
+			assertArrayEquals( new int[]{ 1, 4 }, results.get( 1 ) );
+			assertNull( results.get( 2 ) );
 		} );
 	}
 
 	@Test
-	public void testPositionZero(SessionFactoryScope scope) {
+	public void testPositionsNotFound(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_position(e.theArray, 'xyz') = 0", EntityWithArrays.class )
+			List<int[]> results = em.createQuery( "select array_positions(e.theArray, 'xyz') from EntityWithArrays e order by e.id", int[].class )
 					.getResultList();
-			assertEquals( 2, results.size() );
+			assertEquals( 3, results.size() );
+			assertArrayEquals( new int[0], results.get( 0 ) );
+			assertArrayEquals( new int[0], results.get( 1 ) );
+			assertNull( results.get( 2 ) );
 		} );
 	}
 
 	@Test
-	public void testPositionNull(SessionFactoryScope scope) {
+	public void testPositionsNull(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_position(e.theArray, null) = 2", EntityWithArrays.class )
+			List<int[]> results = em.createQuery( "select array_positions(e.theArray, null) from EntityWithArrays e order by e.id", int[].class )
 					.getResultList();
-			assertEquals( 1, results.size() );
-			assertEquals( 2L, results.get( 0 ).getId() );
+			assertEquals( 3, results.size() );
+			assertArrayEquals( new int[0], results.get( 0 ) );
+			assertArrayEquals( new int[]{ 2 }, results.get( 1 ) );
+			assertNull( results.get( 2 ) );
+		} );
+	}
+
+	@Test
+	public void testPositionsList(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			List<List<Integer>> results = em.createQuery( "select array_positions_list(e.theArray, null) from EntityWithArrays e order by e.id" )
+					.getResultList();
+			assertEquals( 3, results.size() );
+			assertEquals( List.of(), results.get( 0 ) );
+			assertEquals( List.of( 2 ), results.get( 1 ) );
+			assertNull( results.get( 2 ) );
 		} );
 	}
 

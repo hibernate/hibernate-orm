@@ -735,6 +735,62 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	 */
 	<T> SqmExpression<T[]> arrayFill(T element, Integer elementCount);
 
+	/**
+	 * Determines all 1-based positions of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<int[]> arrayPositions(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<int[]> arrayPositions(SqmExpression<T[]> arrayExpression, T element);
+
+	/**
+	 * Determines all 1-based positions of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<int[]> arrayPositions(T[] array, SqmExpression<T> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<int[]> arrayPositions(T[] array, T element);
+
+	/**
+	 * Determines all 1-based positions of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<List<Integer>> arrayPositionsList(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<List<Integer>> arrayPositionsList(SqmExpression<T[]> arrayExpression, T element);
+
+	/**
+	 * Determines all 1-based positions of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<List<Integer>> arrayPositionsList(T[] array, SqmExpression<T> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in an array.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<List<Integer>> arrayPositionsList(T[] array, T element);
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
 
@@ -1332,6 +1388,62 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	 * @since 6.4
 	 */
 	<T> SqmExpression<Collection<T>> collectionFill(T element, Integer elementCount);
+
+	/**
+	 * Determines all 1-based positions of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<int[]> collectionPositions(SqmExpression<? extends Collection<? super T>> collectionExpression, SqmExpression<T> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<int[]> collectionPositions(SqmExpression<? extends Collection<? super T>> collectionExpression, T element);
+
+	/**
+	 * Determines all 1-based positions of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<int[]> collectionPositions(Collection<? super T> collection, SqmExpression<T> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<int[]> collectionPositions(Collection<? super T> collection, T element);
+
+	/**
+	 * Determines all 1-based positions of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<List<Integer>> collectionPositionsList(SqmExpression<? extends Collection<? super T>> collectionExpression, SqmExpression<T> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<List<Integer>> collectionPositionsList(SqmExpression<? extends Collection<? super T>> collectionExpression, T element);
+
+	/**
+	 * Determines all 1-based positions of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<List<Integer>> collectionPositionsList(Collection<? super T> collection, SqmExpression<T> elementExpression);
+
+	/**
+	 * Determines all 1-based positions of an element in a basic collection.
+	 *
+	 * @since 6.4
+	 */
+	<T> SqmExpression<List<Integer>> collectionPositionsList(Collection<? super T> collection, T element);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

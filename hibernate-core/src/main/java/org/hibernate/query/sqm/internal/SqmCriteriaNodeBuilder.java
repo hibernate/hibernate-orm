@@ -3686,6 +3686,82 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public <T> SqmExpression<int[]> arrayPositions(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
+				asList( arrayExpression, elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<int[]> arrayPositions(SqmExpression<T[]> arrayExpression, T element) {
+		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
+				asList( arrayExpression, value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<int[]> arrayPositions(T[] array, SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
+				asList( value( array ), elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<int[]> arrayPositions(T[] array, T element) {
+		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
+				asList( value( array ), value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<List<Integer>> arrayPositionsList(
+			SqmExpression<T[]> arrayExpression,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
+				asList( arrayExpression, elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<List<Integer>> arrayPositionsList(SqmExpression<T[]> arrayExpression, T element) {
+		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
+				asList( arrayExpression, value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<List<Integer>> arrayPositionsList(T[] array, SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
+				asList( value( array ), elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<List<Integer>> arrayPositionsList(T[] array, T element) {
+		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
+				asList( value( array ), value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
 	public <T> SqmExpression<Integer> arrayLength(SqmExpression<T[]> arrayExpression) {
 		return getFunctionDescriptor( "array_length" ).generateSqmExpression(
 				asList( arrayExpression ),
@@ -5380,6 +5456,90 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <T> SqmExpression<Collection<T>> collectionFill(T element, Integer elementCount) {
 		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
 				asList( value( element ), value( elementCount ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<int[]> collectionPositions(
+			SqmExpression<? extends Collection<? super T>> collectionExpression,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
+				asList( collectionExpression, elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<int[]> collectionPositions(
+			SqmExpression<? extends Collection<? super T>> collectionExpression,
+			T element) {
+		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
+				asList( collectionExpression, value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<int[]> collectionPositions(
+			Collection<? super T> collection,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
+				asList( value( collection ), elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<int[]> collectionPositions(Collection<? super T> collection, T element) {
+		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
+				asList( value( collection ), value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<List<Integer>> collectionPositionsList(
+			SqmExpression<? extends Collection<? super T>> collectionExpression,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
+				asList( collectionExpression, elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<List<Integer>> collectionPositionsList(
+			SqmExpression<? extends Collection<? super T>> collectionExpression,
+			T element) {
+		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
+				asList( collectionExpression, value( element ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<List<Integer>> collectionPositionsList(
+			Collection<? super T> collection,
+			SqmExpression<T> elementExpression) {
+		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
+				asList( value( collection ), elementExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<List<Integer>> collectionPositionsList(Collection<? super T> collection, T element) {
+		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
+				asList( value( collection ), value( element ) ),
 				null,
 				queryEngine
 		);

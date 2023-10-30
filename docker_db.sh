@@ -871,6 +871,24 @@ tidb_5_1() {
     fi
 }
 
+yugabytedb() {
+  $CONTAINER_CLI rm -f yugabyte || true
+  $CONTAINER_CLI run -d --name=yugabyte -p7000:7000 -p9000:9000 -p5433:5433 -p9042:9042 \
+    docker.io/yugabytedb/yugabyte:2.19.2.0-b121 bin/yugabyted start --daemon=false
+  # --advertise_address=127.0.0.1
+
+  OUTPUT=
+  while [[ $OUTPUT != *"Cluster started in an insecure mode"* ]]; do
+        echo "Waiting for YugabyteDB to start..."
+        # TOCO Should check for "YugabyteDB Started" instead?
+        sleep 5
+        # Note we need to redirect stderr to stdout to capture the logs
+        OUTPUT=$($CONTAINER_CLI logs yugabyte 2>&1)
+  done
+  echo "YugabyteDB successfully started"
+
+}
+
 if [ -z ${1} ]; then
     echo "No db name provided"
     echo "Provide one of:"
@@ -907,6 +925,7 @@ if [ -z ${1} ]; then
     echo -e "\tsybase"
     echo -e "\ttidb"
     echo -e "\ttidb_5_1"
+    echo -e "\tyugabytedb"
 else
     ${1}
 fi

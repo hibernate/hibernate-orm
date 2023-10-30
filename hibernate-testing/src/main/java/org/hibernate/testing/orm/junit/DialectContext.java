@@ -78,7 +78,7 @@ public final class DialectContext {
 					+ jdbcUrl + "' [" + sqle.getMessage() + "]", sqle );
 		}
 		catch (Exception e) {
-			throw new HibernateException( "Could not instantiate given dialect class: " + dialectName, e );
+			throw new HibernateException( "Could not instantiate given dialect class: " + dialectName + ", " + jdbcUrl + ", " + driver, e );
 		}
 	}
 

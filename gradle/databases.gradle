@@ -292,6 +292,16 @@ ext {
                         'jdbc.url'   : 'jdbc:firebirdsql://' + dbHost +'/hibernate_orm_test?charSet=utf-8;TRANSACTION_READ_COMMITTED=read_committed,rec_version,wait,lock_timeout=5',
                         'connection.init_sql' : ''
                 ],
+                yugabytedb : [
+                        'db.dialect' : 'org.hibernate.community.dialect.YugabyteDBDialect',
+                        // 'jdbc.driver': 'org.postgresql.Driver',
+                        'jdbc.driver': 'com.yugabyte.Driver',
+                        'jdbc.user'  : 'yugabyte',
+                        'jdbc.pass'  : 'yugabyte',
+                        // 'jdbc.url'   : 'jdbc:postgresql://' + dbHost + ':5433/hibernate_orm_test',
+                        'jdbc.url'   : 'jdbc:yugabytedb://' + dbHost + '/hibernate_orm_test',
+                        'connection.init_sql' : ''
+                ],
         ]
 }
 

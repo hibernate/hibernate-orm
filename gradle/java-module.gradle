@@ -103,6 +103,7 @@ dependencies {
 	testRuntimeOnly dbLibs.informix
 	testRuntimeOnly dbLibs.cockroachdb
 	testRuntimeOnly dbLibs.sybase
+	testRuntimeOnly dbLibs.yugabytedb
 	testRuntimeOnly rootProject.fileTree(dir: 'drivers', include: '*.jar')
 
 	// Since both the DB2 driver and HANA have a package "net.jpountz" we have to add dependencies conditionally

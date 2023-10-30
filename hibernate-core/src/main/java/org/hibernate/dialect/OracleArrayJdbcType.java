@@ -515,6 +515,32 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 						false
 				)
 		);
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_positions",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_positions(arr in " + arrayTypeName +
+										", elem in " + getRawTypeName( elementType ) + ") return sdo_ordinate_array deterministic is " +
+										"res sdo_ordinate_array:=sdo_ordinate_array(); begin " +
+										"if arr is null then return null; end if; " +
+										"if elem is null then " +
+										"for i in 1 .. arr.count loop " +
+										"if arr(i) is null then res.extend; res(res.last):=i; end if; " +
+										"end loop; " +
+										"else " +
+										"for i in 1 .. arr.count loop " +
+										"if arr(i)=elem then res.extend; res(res.last):=i; end if; " +
+										"end loop; " +
+										"end if; " +
+										"return res; " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_positions" },
+						emptySet(),
+						false
+				)
+		);
 	}
 
 	protected String createOrReplaceConcatFunction(String arrayTypeName) {

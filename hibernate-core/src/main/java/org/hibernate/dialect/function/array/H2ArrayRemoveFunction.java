@@ -37,7 +37,7 @@ public class H2ArrayRemoveFunction extends AbstractArrayRemoveFunction {
 		final Expression elementExpression = (Expression) sqlAstArguments.get( 1 );
 		sqlAppender.append( "case when ");
 		arrayExpression.accept( walker );
-		sqlAppender.append( " is null then null else coalesce((select array_agg(array_get(");
+		sqlAppender.append( " is not null then coalesce((select array_agg(array_get(");
 		arrayExpression.accept( walker );
 		sqlAppender.append(",i.idx)) from system_range(1," );
 		sqlAppender.append( Integer.toString( maximumArraySize ) );

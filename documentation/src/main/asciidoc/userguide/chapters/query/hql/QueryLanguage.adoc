@@ -1120,6 +1120,8 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array()` | Creates an array based on the passed arguments
 | `array_agg()` | Aggregates row values into an array
 | `array_position()` | Determines the position of an element in an array
+| `array_positions()` | Determines all positions of an element in an array
+| `array_positions_list()` | Like `array_positions`, but returns the result as `List<Integer>`
 | `array_length()` | Determines the length of an array
 | `array_concat()` | Concatenates array with each other in order
 | `array_prepend()` | Prepends element to array
@@ -1172,6 +1174,20 @@ Returns the 1-based position of an element in the array. Returns 0 if the elemen
 [source, JAVA, indent=0]
 ----
 include::{array-example-dir-hql}/ArrayPositionTest.java[tags=hql-array-position-example]
+----
+====
+
+[[hql-array-positions-functions]]
+===== `array_positions()` and `array_positions_list()`
+
+Returns an `int[]` of 1-based positions of matching elements in the array. Returns an empty array if the element is not found and `null` if the array is `null`.
+To retrieve the result as `List<Integer>`, use the `array_positions_list()` function.
+
+[[hql-array-positions-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{array-example-dir-hql}/ArrayPositionsTest.java[tags=hql-array-positions-example]
 ----
 ====
 

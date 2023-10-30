@@ -54,7 +54,7 @@ public class ArrayRemoveIndexUnnestFunction extends AbstractSqmSelfRenderingFunc
 		final Expression indexExpression = (Expression) sqlAstArguments.get( 1 );
 		sqlAppender.append( "case when ");
 		arrayExpression.accept( walker );
-		sqlAppender.append( " is null then null else coalesce((select array_agg(t.val) from unnest(" );
+		sqlAppender.append( " is not null then coalesce((select array_agg(t.val) from unnest(" );
 		arrayExpression.accept( walker );
 		sqlAppender.append( ") with ordinality t(val,idx) where t.idx is distinct from " );
 		indexExpression.accept( walker );

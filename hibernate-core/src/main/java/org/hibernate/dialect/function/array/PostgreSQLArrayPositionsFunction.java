@@ -13,13 +13,15 @@ import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
+import org.hibernate.type.spi.TypeConfiguration;
 
 /**
- * HSQLDB array_remove function.
+ * PostgreSQL variant of the function.
  */
-public class HSQLArrayRemoveFunction extends AbstractArrayRemoveFunction {
+public class PostgreSQLArrayPositionsFunction extends AbstractArrayPositionsFunction {
 
-	public HSQLArrayRemoveFunction() {
+	public PostgreSQLArrayPositionsFunction(boolean list, TypeConfiguration typeConfiguration) {
+		super( list, typeConfiguration );
 	}
 
 	@Override
@@ -30,12 +32,10 @@ public class HSQLArrayRemoveFunction extends AbstractArrayRemoveFunction {
 			SqlAstTranslator<?> walker) {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression elementExpression = (Expression) sqlAstArguments.get( 1 );
-		sqlAppender.append( "case when ");
+		sqlAppender.append( "array_positions(" );
 		arrayExpression.accept( walker );
-		sqlAppender.append( " is not null then coalesce((select array_agg(t.val) from unnest(" );
-		arrayExpression.accept( walker );
-		sqlAppender.append( ") with ordinality t(val,idx) where t.val is distinct from " );
+		sqlAppender.append( ',' );
 		elementExpression.accept( walker );
-		sqlAppender.append( "),array[]) end" );
+		sqlAppender.append( ')' );
 	}
 }

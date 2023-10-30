@@ -44,7 +44,7 @@ public class ArrayReplaceUnnestFunction extends AbstractSqmSelfRenderingFunction
 		final Expression newExpression = (Expression) sqlAstArguments.get( 2 );
 		sqlAppender.append( "case when ");
 		arrayExpression.accept( walker );
-		sqlAppender.append( " is null then null else coalesce((select array_agg(case when t.val is not distinct from " );
+		sqlAppender.append( " is not null then coalesce((select array_agg(case when t.val is not distinct from " );
 		oldExpression.accept( walker );
 		sqlAppender.append( " then " );
 		newExpression.accept( walker );

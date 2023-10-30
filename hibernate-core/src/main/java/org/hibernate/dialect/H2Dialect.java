@@ -311,6 +311,8 @@ public class H2Dialect extends Dialect {
 		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.array();
 		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_h2( getMaximumArraySize() );
+		functionFactory.arrayPositions_h2( getMaximumArraySize() );
 		functionFactory.arrayLength_cardinality();
 		functionFactory.arrayConcat_operator();
 		functionFactory.arrayPrepend_operator();

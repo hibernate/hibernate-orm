@@ -55,11 +55,11 @@ public class ArraySliceUnnestFunction extends AbstractSqmSelfRenderingFunctionDe
 		final Expression endIndexExpression = (Expression) sqlAstArguments.get( 2 );
 		sqlAppender.append( "case when ");
 		arrayExpression.accept( walker );
-		sqlAppender.append( " is null or ");
+		sqlAppender.append( " is not null and ");
 		startIndexExpression.accept( walker );
-		sqlAppender.append( " is null or ");
+		sqlAppender.append( " is not null and ");
 		endIndexExpression.accept( walker );
-		sqlAppender.append( " is null then null else coalesce((select array_agg(t.val) from unnest(" );
+		sqlAppender.append( " is not null then coalesce((select array_agg(t.val) from unnest(" );
 		arrayExpression.accept( walker );
 		sqlAppender.append( ") with ordinality t(val,idx) where t.idx between " );
 		startIndexExpression.accept( walker );

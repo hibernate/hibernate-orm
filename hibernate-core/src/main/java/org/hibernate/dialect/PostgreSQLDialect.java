@@ -632,6 +632,7 @@ public class PostgreSQLDialect extends Dialect {
 		functionFactory.array_postgresql();
 		functionFactory.arrayAggregate();
 		functionFactory.arrayPosition_postgresql();
+		functionFactory.arrayPositions_postgresql();
 		functionFactory.arrayLength_cardinality();
 		functionFactory.arrayConcat_postgresql();
 		functionFactory.arrayPrepend_postgresql();

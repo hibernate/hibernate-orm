@@ -1223,6 +1223,11 @@ public class ProcedureCallImpl<R>
 		return getResultList().stream();
 	}
 
+	@Override
+	public Stream stream() {
+		return getResultStream();
+	}
+
 	public ResultSetMapping getResultSetMapping() {
 		return resultSetMapping;
 	}

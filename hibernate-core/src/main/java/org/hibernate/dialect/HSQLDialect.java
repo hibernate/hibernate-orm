@@ -205,6 +205,7 @@ public class HSQLDialect extends Dialect {
 		functionFactory.arrayReplace_unnest();
 		functionFactory.arrayTrim_trim_array();
 		functionFactory.arrayFill_hsql();
+		functionFactory.arrayToString_hsql();
 	}
 
 	@Override

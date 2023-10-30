@@ -541,6 +541,29 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 						false
 				)
 		);
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_to_string",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_to_string(arr in " + arrayTypeName +
+										", sep in varchar2) return varchar2 deterministic is " +
+										"res varchar2(4000):=''; begin " +
+										"if arr is null or sep is null then return null; end if; " +
+										"for i in 1 .. arr.count loop " +
+										"if arr(i) is not null then " +
+										"if length(res)<>0 then res:=res||sep; end if; " +
+										"res:=res||arr(i); " +
+										"end if; " +
+										"end loop; " +
+										"return res; " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_to_string" },
+						emptySet(),
+						false
+				)
+		);
 	}
 
 	protected String createOrReplaceConcatFunction(String arrayTypeName) {

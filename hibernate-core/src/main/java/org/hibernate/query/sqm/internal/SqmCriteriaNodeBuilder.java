@@ -4437,6 +4437,44 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		);
 	}
 
+	@Override
+	public <T> SqmExpression<T[]> arrayFill(
+			SqmExpression<T> elementExpression,
+			SqmExpression<Integer> elementCountExpression) {
+		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
+				asList( elementExpression, elementCountExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayFill(SqmExpression<T> elementExpression, Integer elementCount) {
+		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
+				asList( elementExpression, value( elementCount ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayFill(T element, SqmExpression<Integer> elementCountExpression) {
+		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
+				asList( value( element ), elementCountExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<T[]> arrayFill(T element, Integer elementCount) {
+		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
+				asList( value( element ), value( elementCount ) ),
+				null,
+				queryEngine
+		);
+	}
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
 
@@ -5304,6 +5342,44 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	public <C extends Collection<?>> SqmExpression<C> collectionTrim(C collection, Integer index) {
 		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
 				asList( value( collection ), value( index ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<Collection<T>> collectionFill(
+			SqmExpression<T> elementExpression,
+			SqmExpression<Integer> elementCountExpression) {
+		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
+				asList( elementExpression, elementCountExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<Collection<T>> collectionFill(SqmExpression<T> elementExpression, Integer elementCount) {
+		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
+				asList( elementExpression, value( elementCount ) ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<Collection<T>> collectionFill(T element, SqmExpression<Integer> elementCountExpression) {
+		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
+				asList( value( element ), elementCountExpression ),
+				null,
+				queryEngine
+		);
+	}
+
+	@Override
+	public <T> SqmExpression<Collection<T>> collectionFill(T element, Integer elementCount) {
+		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
+				asList( value( element ), value( elementCount ) ),
 				null,
 				queryEngine
 		);

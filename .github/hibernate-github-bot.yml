@@ -2,3 +2,38 @@
 jira:
   projectKey: "HHH"
   insertLinksInPullRequests: true
+  ignoreFiles:
+    # Git
+    - ".git*"
+    - ".mailmap"
+    # Gradle
+    - "gradlew*"
+    - "gradle/"
+    - "local-build-plugins/"
+    - "build.gradle"
+    # NOT settings.gradle: contains dependency versions, changing those requires a Jira issue
+    - "utilities.gradle"
+    # CI
+    - ".github/"
+    - ".release/"
+    - "ci/"
+    - "databases/"
+    - "*.sh"
+    - "Jenkinsfile"
+    - "*/Jenkinsfile"
+    - "*.Jenkinsfile"
+    # In-repo documentation
+    - "design/"
+    - "README.adoc"
+    - "MAINTAINERS.md"
+    - "CONTRIBUTING.md"
+    # Misc. build files
+    - "checkerstubs/"
+    - "drivers/"
+    - "edb/"
+    - "etc/"
+    - "javadoc/"
+    - "patched-libs/"
+    - "release/"
+    - "rules/"
+    - "shared/"

@@ -7,6 +7,8 @@
 package org.hibernate.dialect.function.array;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
+import java.util.List;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.jdbc.Size;
@@ -16,11 +18,11 @@ import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
-import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.internal.ParameterizedTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 public class DdlTypeHelper {
@@ -29,6 +31,24 @@ public class DdlTypeHelper {
 		@SuppressWarnings("unchecked") final BasicPluralJavaType<Object> arrayJavaType = (BasicPluralJavaType<Object>) typeConfiguration.getJavaTypeRegistry()
 				.getDescriptor(
 						Array.newInstance( elementType.getBindableJavaType(), 0 ).getClass()
+				);
+		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
+		return arrayJavaType.resolveType(
+				typeConfiguration,
+				dialect,
+				(BasicType<Object>) elementType,
+				null,
+				typeConfiguration.getCurrentBaseSqlTypeIndicators()
+		);
+	}
+
+	@SuppressWarnings("unchecked")
+	public static BasicType<?> resolveListType(DomainType<?> elementType, TypeConfiguration typeConfiguration) {
+		@SuppressWarnings("unchecked") final BasicPluralJavaType<Object> arrayJavaType = (BasicPluralJavaType<Object>) typeConfiguration.getJavaTypeRegistry()
+				.getDescriptor( List.class )
+				.createJavaType(
+						new ParameterizedTypeImpl( List.class, new Type[]{ elementType.getBindableJavaType() }, null ),
+						typeConfiguration
 				);
 		final Dialect dialect = typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect();
 		return arrayJavaType.resolveType(

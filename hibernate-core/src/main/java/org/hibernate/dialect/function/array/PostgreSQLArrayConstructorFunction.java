@@ -23,8 +23,8 @@ import org.hibernate.type.BasicType;
  */
 public class PostgreSQLArrayConstructorFunction extends ArrayConstructorFunction {
 
-	public PostgreSQLArrayConstructorFunction() {
-		super( true );
+	public PostgreSQLArrayConstructorFunction(boolean list) {
+		super( list, true );
 	}
 
 	@Override

@@ -21,11 +21,13 @@ import org.hibernate.type.BasicPluralType;
  */
 public abstract class AbstractArrayFillFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 
-	public AbstractArrayFillFunction() {
+	public AbstractArrayFillFunction(boolean list) {
 		super(
-				"array_fill",
+				"array_fill" + ( list ? "_list" : "" ),
 				new ArgumentTypesValidator( null, FunctionParameterType.NO_UNTYPED, FunctionParameterType.INTEGER ),
-				ArrayViaElementArgumentReturnTypeResolver.DEFAULT_INSTANCE,
+				list
+						? ArrayViaElementArgumentReturnTypeResolver.VARARGS_LIST_INSTANCE
+						: ArrayViaElementArgumentReturnTypeResolver.VARARGS_INSTANCE,
 				ArrayFillArgumentsValidator.INSTANCE
 		);
 	}

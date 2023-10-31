@@ -7,6 +7,8 @@
 
 package org.hibernate.orm.test.function.array;
 
+import java.util.List;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -18,6 +20,9 @@ public class EntityWithArrays {
 
 	@Column(name = "the_array")
 	private String[] theArray;
+
+	@Column(name = "the_array", insertable = false, updatable = false)
+	private List<String> theCollection;
 
 	public EntityWithArrays() {
 	}
@@ -41,5 +46,13 @@ public class EntityWithArrays {
 
 	public void setTheArray(String[] theArray) {
 		this.theArray = theArray;
+	}
+
+	public List<String> getTheCollection() {
+		return theCollection;
+	}
+
+	public void setTheCollection(List<String> theCollection) {
+		this.theCollection = theCollection;
 	}
 }

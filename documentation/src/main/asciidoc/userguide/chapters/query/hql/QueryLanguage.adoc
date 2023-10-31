@@ -1118,6 +1118,7 @@ The following functions deal with SQL array types, which are not supported on ev
 | Function | Purpose
 
 | `array()` | Creates an array based on the passed arguments
+| `array_list()` | Like `array`, but returns the result as `List<?>`
 | `array_agg()` | Aggregates row values into an array
 | `array_position()` | Determines the position of an element in an array
 | `array_positions()` | Determines all positions of an element in an array
@@ -1138,12 +1139,15 @@ The following functions deal with SQL array types, which are not supported on ev
 | `array_replace()` | Creates array copy replacing a given element with another
 | `array_trim()` | Creates array copy trimming the last _N_ elements
 | `array_fill()` | Creates array filled with the same element _N_ times
+| `array_fill_list()` | Like `array_fill`, but returns the result as `List<?>`
 | `array_to_string()` | String representation of non-null array elements
 |===
 
-===== `array()`
+[[hql-array-constructor-functions]]
+===== `array()` and `array_list()`
 
 Creates an array based on the passed arguments, and infers the array type from the context if possible.
+To retrieve the result as `List<?>`, use the `array_list()` function.
 
 [[hql-array-constructor-example]]
 ====
@@ -1153,6 +1157,7 @@ include::{array-example-dir-hql}/ArrayConstructorTest.java[tags=hql-array-exampl
 ----
 ====
 
+[[hql-array-aggregate-functions]]
 ===== `array_agg()`
 
 An <<hql-aggregate-functions-orderedset,ordered set aggregate function>> that aggregates values to an array.
@@ -1404,6 +1409,7 @@ include::{array-example-dir-hql}/ArrayReplaceTest.java[tags=hql-array-replace-ex
 ----
 ====
 
+[[hql-array-trim-functions]]
 ===== `array_trim()`
 
 Returns an array copy without the last _N_ elements, specified by the second argument.
@@ -1417,10 +1423,12 @@ include::{array-example-dir-hql}/ArrayTrimTest.java[tags=hql-array-trim-example]
 ----
 ====
 
-===== `array_fill()`
+[[hql-array-fill-functions]]
+===== `array_fill()` and `array_fill_list()`
 
 Creates an array filled with the same element _N_ times as specified by the arguments.
 It is an error to supply an array length smaller than 0.
+To retrieve the result as `List<?>`, use the `array_fill_list()` function.
 
 [[hql-array-fill-example]]
 ====
@@ -1430,6 +1438,7 @@ include::{array-example-dir-hql}/ArrayFillTest.java[tags=hql-array-fill-example]
 ----
 ====
 
+[[hql-array-to-string-functions]]
 ===== `array_to_string()`
 
 Concatenates the non-null array elements with a separator, as specified by the arguments.

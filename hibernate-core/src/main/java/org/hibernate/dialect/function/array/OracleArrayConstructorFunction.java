@@ -18,8 +18,8 @@ import org.hibernate.type.BasicPluralType;
 
 public class OracleArrayConstructorFunction extends ArrayConstructorFunction {
 
-	public OracleArrayConstructorFunction() {
-		super( false );
+	public OracleArrayConstructorFunction(boolean list) {
+		super( list, false );
 	}
 
 	@Override

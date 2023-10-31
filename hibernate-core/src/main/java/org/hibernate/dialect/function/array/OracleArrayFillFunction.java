@@ -19,6 +19,10 @@ import org.hibernate.sql.ast.tree.expression.Expression;
  */
 public class OracleArrayFillFunction extends AbstractArrayFillFunction {
 
+	public OracleArrayFillFunction(boolean list) {
+		super( list );
+	}
+
 	@Override
 	public void render(
 			SqlAppender sqlAppender,

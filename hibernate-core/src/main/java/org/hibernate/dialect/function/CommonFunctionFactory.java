@@ -6,12 +6,9 @@
  */
 package org.hibernate.dialect.function;
 
-import java.lang.reflect.Type;
 import java.util.Date;
 import java.util.Arrays;
-import java.util.List;
 
-import org.hibernate.annotations.common.reflection.java.generics.ParameterizedTypeImpl;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.dialect.Dialect;
 
@@ -2604,35 +2601,40 @@ public class CommonFunctionFactory {
 	 * H2, HSQL array() constructor function
 	 */
 	public void array() {
-		functionRegistry.register( "array", new ArrayConstructorFunction( true ) );
+		functionRegistry.register( "array", new ArrayConstructorFunction( false, true ) );
+		functionRegistry.register( "array_list", new ArrayConstructorFunction( true, true ) );
 	}
 
 	/**
 	 * H2, HSQL array() constructor function
 	 */
 	public void array_hsql() {
-		functionRegistry.register( "array", new HSQLArrayConstructorFunction() );
+		functionRegistry.register( "array", new HSQLArrayConstructorFunction( false ) );
+		functionRegistry.register( "array_list", new HSQLArrayConstructorFunction( true ) );
 	}
 
 	/**
 	 * CockroachDB and PostgreSQL array() constructor function
 	 */
 	public void array_postgresql() {
-		functionRegistry.register( "array", new PostgreSQLArrayConstructorFunction() );
+		functionRegistry.register( "array", new PostgreSQLArrayConstructorFunction( false ) );
+		functionRegistry.register( "array_list", new PostgreSQLArrayConstructorFunction( true ) );
 	}
 
 	/**
 	 * Google Spanner array() constructor function
 	 */
 	public void array_spanner() {
-		functionRegistry.register( "array", new ArrayConstructorFunction( false ) );
+		functionRegistry.register( "array", new ArrayConstructorFunction( false, false ) );
+		functionRegistry.register( "array_list", new ArrayConstructorFunction( true, false ) );
 	}
 
 	/**
 	 * Oracle array() constructor function
 	 */
 	public void array_oracle() {
-		functionRegistry.register( "array", new OracleArrayConstructorFunction() );
+		functionRegistry.register( "array", new OracleArrayConstructorFunction( false ) );
+		functionRegistry.register( "array_list", new OracleArrayConstructorFunction( true ) );
 	}
 
 	/**
@@ -3175,28 +3177,32 @@ public class CommonFunctionFactory {
 	 * H2 array_fill() function
 	 */
 	public void arrayFill_h2() {
-		functionRegistry.register( "array_fill", new H2ArrayFillFunction() );
+		functionRegistry.register( "array_fill", new H2ArrayFillFunction( false ) );
+		functionRegistry.register( "array_fill_list", new H2ArrayFillFunction( true ) );
 	}
 
 	/**
 	 * HSQLDB array_fill() function
 	 */
 	public void arrayFill_hsql() {
-		functionRegistry.register( "array_fill", new HSQLArrayFillFunction() );
+		functionRegistry.register( "array_fill", new HSQLArrayFillFunction( false ) );
+		functionRegistry.register( "array_fill_list", new HSQLArrayFillFunction( true ) );
 	}
 
 	/**
 	 * PostgreSQL array_fill() function
 	 */
 	public void arrayFill_postgresql() {
-		functionRegistry.register( "array_fill", new PostgreSQLArrayFillFunction() );
+		functionRegistry.register( "array_fill", new PostgreSQLArrayFillFunction( false ) );
+		functionRegistry.register( "array_fill_list", new PostgreSQLArrayFillFunction( true ) );
 	}
 
 	/**
 	 * Oracle array_fill() function
 	 */
 	public void arrayFill_oracle() {
-		functionRegistry.register( "array_fill", new OracleArrayFillFunction() );
+		functionRegistry.register( "array_fill", new OracleArrayFillFunction( false ) );
+		functionRegistry.register( "array_fill_list", new OracleArrayFillFunction( true ) );
 	}
 
 	/**

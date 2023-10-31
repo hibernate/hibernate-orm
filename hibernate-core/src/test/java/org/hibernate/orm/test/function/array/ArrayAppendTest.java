@@ -6,10 +6,16 @@
  */
 package org.hibernate.orm.test.function.array;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.sqm.NodeBuilder;
 
+import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
@@ -22,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.Expression;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -84,6 +91,44 @@ public class ArrayAppendTest {
 			assertArrayEquals( new String[]{ "abc", null, "def", null }, results.get( 1 ).get( 1, String[].class ) );
 			assertEquals( 3L, results.get( 2 ).get( 0 ) );
 			assertNull( results.get( 2 ).get( 1, String[].class ) );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderArray(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.arrayAppend( root.<String[]>get( "theArray" ), cb.literal( "xyz" ) ),
+					cb.arrayAppend( root.get( "theArray" ), "xyz" )
+			);
+			em.createQuery( cq ).getResultList();
+
+			// Should all fail to compile
+//			cb.arrayAppend( root.<Integer[]>get( "theArray" ), cb.literal( "xyz" ) );
+//			cb.arrayAppend( root.<Integer[]>get( "theArray" ), "xyz" );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderCollection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.collectionAppend( root.<Collection<String>>get( "theCollection" ), cb.literal( "xyz" ) ),
+					cb.collectionAppend( root.get( "theCollection" ), "xyz" )
+			);
+			em.createQuery( cq ).getResultList();
+
+			// Should all fail to compile
+//			cb.collectionAppend( root.<Collection<Integer>>get( "theCollection" ), cb.literal( "xyz" ) );
+//			cb.collectionAppend( root.<Collection<Integer>>get( "theCollection" ), "xyz" );
 		} );
 	}
 

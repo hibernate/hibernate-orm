@@ -17,6 +17,9 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.OracleArrayJdbcType;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.ArrayJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
@@ -142,6 +145,19 @@ public class ArrayAggregateTest {
 			List<String[]> results = em.createQuery( "select 1 where array('abc','def',null) is not distinct from (select array_agg(e.theString) within group (order by e.theString asc nulls last) from EntityOfBasics e)", String[].class )
 					.getResultList();
 			assertEquals( 1, results.size() );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilder(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<String[]> cq = cb.createQuery( String[].class );
+			final JpaRoot<EntityOfBasics> root = cq.from( EntityOfBasics.class );
+			cq.select( cb.arrayAgg( cb.asc( root.get( "theString" ), false ), root.get( "theString" ) ) );
+			List<String[]> results = em.createQuery( cq ).getResultList();
+			assertEquals( 1, results.size() );
+			assertArrayEquals( new String[]{ "abc", "def", null }, results.get( 0 ) );
 		} );
 	}
 

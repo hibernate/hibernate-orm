@@ -6,9 +6,13 @@
  */
 package org.hibernate.orm.test.function.array;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.sqm.NodeBuilder;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -20,6 +24,8 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -100,6 +106,52 @@ public class ArrayPositionsTest {
 			assertEquals( List.of(), results.get( 0 ) );
 			assertEquals( List.of( 2 ), results.get( 1 ) );
 			assertNull( results.get( 2 ) );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderArray(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.arrayPositions( root.<String[]>get( "theArray" ), cb.literal( "xyz" ) ),
+					cb.arrayPositions( root.get( "theArray" ), "xyz" ),
+					cb.arrayPositionsList( root.<String[]>get( "theArray" ), cb.literal( "xyz" ) ),
+					cb.arrayPositionsList( root.get( "theArray" ), "xyz" )
+			);
+			em.createQuery( cq ).getResultList();
+
+			// Should all fail to compile
+//			cb.arrayPositions( root.<Integer[]>get( "theArray" ), cb.literal( "xyz" ) );
+//			cb.arrayPositions( root.<Integer[]>get( "theArray" ), "xyz" );
+//			cb.arrayPositionsList( root.<Integer[]>get( "theArray" ), cb.literal( "xyz" ) );
+//			cb.arrayPositionsList( root.<Integer[]>get( "theArray" ), "xyz" );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderCollection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.collectionPositions( root.<Collection<String>>get( "theCollection" ), cb.literal( "xyz" ) ),
+					cb.collectionPositions( root.get( "theCollection" ), "xyz" ),
+					cb.collectionPositionsList( root.<Collection<String>>get( "theCollection" ), cb.literal( "xyz" ) ),
+					cb.collectionPositionsList( root.get( "theCollection" ), "xyz" )
+			);
+			em.createQuery( cq ).getResultList();
+
+			// Should all fail to compile
+//			cb.collectionPositions( root.<Collection<Integer>>get( "theCollection" ), cb.literal( "xyz" ) );
+//			cb.collectionPositions( root.<Collection<Integer>>get( "theCollection" ), "xyz" );
+//			cb.collectionPositionsList( root.<Collection<Integer>>get( "theCollection" ), cb.literal( "xyz" ) );
+//			cb.collectionPositionsList( root.<Collection<Integer>>get( "theCollection" ), "xyz" );
 		} );
 	}
 

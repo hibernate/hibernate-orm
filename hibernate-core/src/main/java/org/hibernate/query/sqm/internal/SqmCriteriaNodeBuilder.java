@@ -34,6 +34,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 import org.hibernate.SessionFactory;
+import org.hibernate.dialect.function.array.DdlTypeHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
@@ -1778,6 +1779,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 		return inlineValue( value ) ? literal( value, typeInferenceSource ) : valueParameter( value, typeInferenceSource );
 	}
 
+	private <E> SqmExpression<? extends Collection<?>> collectionValue(Collection<E> value, SqmExpression<E> typeInferenceSource) {
+		return inlineValue( value ) ? collectionLiteral( value.toArray() ) : collectionValueParameter( value, typeInferenceSource );
+	}
+
 	@Override
 	public <T> SqmExpression<T> value(T value) {
 		if ( value instanceof Duration ) {
@@ -1838,6 +1843,29 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			// ignore typeInferenceSource and fall back the value type
 			return new ValueBindJpaCriteriaParameter<>( getParameterBindType( value ), value, this );
 		}
+	}
+
+	private <E> ValueBindJpaCriteriaParameter<? extends Collection<E>> collectionValueParameter(Collection<E> value, SqmExpression<E> elementTypeInferenceSource) {
+		BindableType<E> bindableType = null;
+		if ( elementTypeInferenceSource != null ) {
+			if ( elementTypeInferenceSource instanceof BindableType ) {
+				bindableType = (BindableType<E>) elementTypeInferenceSource;
+			}
+			else if ( elementTypeInferenceSource.getNodeType() != null ) {
+				bindableType = (BindableType<E>) elementTypeInferenceSource.getNodeType();
+			}
+		}
+		DomainType<E> elementType = null;
+		if ( bindableType != null ) {
+			final SqmExpressible<E> sqmExpressible = bindableType.resolveExpressible( getSessionFactory() );
+			elementType = sqmExpressible.getSqmType();
+		}
+		if ( elementType == null ) {
+			throw new UnsupportedOperationException( "Can't infer collection type based on element expression: " + elementTypeInferenceSource );
+		}
+		final BasicType<?> collectionType = DdlTypeHelper.resolveListType( elementType, getTypeConfiguration() );
+		//noinspection unchecked
+		return new ValueBindJpaCriteriaParameter<>( (BasicType<Collection<E>>) collectionType, value, this );
 	}
 
 	private <T> ValueBindJpaCriteriaParameter<T> valueParameter(T value) {
@@ -3633,22 +3661,22 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> JpaExpression<T[]> arrayAgg(JpaOrder order, Expression<? extends T> argument) {
+	public <T> SqmExpression<T[]> arrayAgg(JpaOrder order, Expression<? extends T> argument) {
 		return arrayAgg( order, null, null, argument );
 	}
 
 	@Override
-	public <T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaPredicate filter, Expression<? extends T> argument) {
+	public <T> SqmExpression<T[]> arrayAgg(JpaOrder order, JpaPredicate filter, Expression<? extends T> argument) {
 		return arrayAgg( order, filter, null, argument );
 	}
 
 	@Override
-	public <T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaWindow window, Expression<? extends T> argument) {
+	public <T> SqmExpression<T[]> arrayAgg(JpaOrder order, JpaWindow window, Expression<? extends T> argument) {
 		return arrayAgg( order, null, window, argument );
 	}
 
 	@Override
-	public <T> JpaExpression<T[]> arrayAgg(
+	public <T> SqmExpression<T[]> arrayAgg(
 			JpaOrder order,
 			JpaPredicate filter,
 			JpaWindow window,
@@ -3666,9 +3694,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> SqmExpression<Integer> arrayPosition(SqmExpression<T[]> arrayExpression, T element) {
+	public <T> SqmExpression<Integer> arrayPosition(Expression<T[]> arrayExpression, T element) {
 		return getFunctionDescriptor( "array_position" ).generateSqmExpression(
-				asList( arrayExpression, value( element ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( element ) ),
 				null,
 				queryEngine
 		);
@@ -3676,10 +3704,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<Integer> arrayPosition(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<T> elementExpression) {
+			Expression<T[]> arrayExpression,
+			Expression<T> elementExpression) {
 		return getFunctionDescriptor( "array_position" ).generateSqmExpression(
-				asList( arrayExpression, elementExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
@@ -3687,37 +3715,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<int[]> arrayPositions(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<T> elementExpression) {
+			Expression<T[]> arrayExpression,
+			Expression<T> elementExpression) {
 		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
-				asList( arrayExpression, elementExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<int[]> arrayPositions(SqmExpression<T[]> arrayExpression, T element) {
+	public <T> SqmExpression<int[]> arrayPositions(Expression<T[]> arrayExpression, T element) {
 		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
-				asList( arrayExpression, value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<int[]> arrayPositions(T[] array, SqmExpression<T> elementExpression) {
-		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
-				asList( value( array ), elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<int[]> arrayPositions(T[] array, T element) {
-		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
-				asList( value( array ), value( element ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( element ) ),
 				null,
 				queryEngine
 		);
@@ -3725,46 +3735,28 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<List<Integer>> arrayPositionsList(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<T> elementExpression) {
+			Expression<T[]> arrayExpression,
+			Expression<T> elementExpression) {
 		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
-				asList( arrayExpression, elementExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<List<Integer>> arrayPositionsList(SqmExpression<T[]> arrayExpression, T element) {
+	public <T> SqmExpression<List<Integer>> arrayPositionsList(Expression<T[]> arrayExpression, T element) {
 		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
-				asList( arrayExpression, value( element ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( element ) ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<List<Integer>> arrayPositionsList(T[] array, SqmExpression<T> elementExpression) {
-		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
-				asList( value( array ), elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<List<Integer>> arrayPositionsList(T[] array, T element) {
-		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
-				asList( value( array ), value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<Integer> arrayLength(SqmExpression<T[]> arrayExpression) {
+	public <T> SqmExpression<Integer> arrayLength(Expression<T[]> arrayExpression) {
 		return getFunctionDescriptor( "array_length" ).generateSqmExpression(
-				asList( arrayExpression ),
+				asList( (SqmExpression<?>) arrayExpression ),
 				null,
 				queryEngine
 		);
@@ -3772,145 +3764,91 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arrayConcat(
-			SqmExpression<T[]> arrayExpression1,
-			SqmExpression<T[]> arrayExpression2) {
+			Expression<T[]> arrayExpression1,
+			Expression<T[]> arrayExpression2) {
 		return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
-				asList( arrayExpression1, arrayExpression2 ),
+				asList( (SqmExpression<?>) arrayExpression1, (SqmExpression<?>) arrayExpression2 ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arrayConcat(SqmExpression<T[]> arrayExpression1, T[] array2) {
+	public <T> SqmExpression<T[]> arrayConcat(Expression<T[]> arrayExpression1, T[] array2) {
 		return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
-				asList( arrayExpression1, value( array2, arrayExpression1 ) ),
+				asList( (SqmExpression<?>) arrayExpression1, value( array2, (SqmExpression<?>) arrayExpression1 ) ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arrayConcat(T[] array1, SqmExpression<T[]> arrayExpression2) {
+	public <T> SqmExpression<T[]> arrayConcat(T[] array1, Expression<T[]> arrayExpression2) {
 		return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
-				asList( value( array1, arrayExpression2 ), arrayExpression2 ),
+				asList( value( array1, (SqmExpression<?>) arrayExpression2 ), (SqmExpression<?>) arrayExpression2 ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arrayConcat(T[] array1, T[] array2) {
-		return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
-				asList( value( array1 ), value( array2 ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayAppend(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression) {
+	public <T> SqmExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
 		return getFunctionDescriptor( "array_append" ).generateSqmExpression(
-				asList( arrayExpression, elementExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arrayAppend(SqmExpression<T[]> arrayExpression, T element) {
+	public <T> SqmExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, T element) {
 		return getFunctionDescriptor( "array_append" ).generateSqmExpression(
-				asList( arrayExpression, value( element ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( element ) ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arrayAppend(T[] array, SqmExpression<T> elementExpression) {
-		return getFunctionDescriptor( "array_append" ).generateSqmExpression(
-				asList( value( array ), elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayAppend(T[] array, T element) {
-		return getFunctionDescriptor( "array_append" ).generateSqmExpression(
-				asList( value( array ), value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayPrepend(SqmExpression<T> elementExpression, SqmExpression<T[]> arrayExpression) {
+	public <T> SqmExpression<T[]> arrayPrepend(Expression<T> elementExpression, Expression<T[]> arrayExpression) {
 		return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
-				asList( elementExpression, arrayExpression ),
+				asList( (SqmExpression<?>) elementExpression, (SqmExpression<?>) arrayExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arrayPrepend(T element, SqmExpression<T[]> arrayExpression) {
+	public <T> SqmExpression<T[]> arrayPrepend(T element, Expression<T[]> arrayExpression) {
 		return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
-				asList( value( element ), arrayExpression ),
+				asList( value( element ), (SqmExpression<?>) arrayExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arrayPrepend(SqmExpression<T> elementExpression, T[] array) {
-		return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
-				asList( elementExpression, value( array ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayPrepend(T element, T[] array) {
-		return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
-				asList( value( element ), value( array ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmPredicate arrayContains(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression) {
+	public <T> SqmPredicate arrayContains(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( arrayExpression, elementExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContains(SqmExpression<T[]> arrayExpression, T element) {
+	public <T> SqmPredicate arrayContains(Expression<T[]> arrayExpression, T element) {
 		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( arrayExpression, value( element ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( element ) ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContains(T[] array, SqmExpression<T> elementExpression) {
+	public <T> SqmPredicate arrayContains(T[] array, Expression<T> elementExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( value( array ), elementExpression ),
-				null,
-				queryEngine
-		) );
-	}
-
-	@Override
-	public <T> SqmPredicate arrayContains(T[] array, T element) {
-		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( value( array ), value( element ) ),
+				asList( value( array ), (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		) );
@@ -3918,37 +3856,28 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmPredicate arrayContainsNullable(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<T> elementExpression) {
+			Expression<T[]> arrayExpression,
+			Expression<T> elementExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( arrayExpression, elementExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContainsNullable(SqmExpression<T[]> arrayExpression, T element) {
+	public <T> SqmPredicate arrayContainsNullable(Expression<T[]> arrayExpression, T element) {
 		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( arrayExpression, value( element ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( element ) ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContainsNullable(T[] array, SqmExpression<T> elementExpression) {
+	public <T> SqmPredicate arrayContainsNullable(T[] array, Expression<T> elementExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( value( array ), elementExpression ),
-				null,
-				queryEngine
-		) );
-	}
-
-	@Override
-	public <T> SqmPredicate arrayContainsNullable(T[] array, T element) {
-		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( value( array ), value( element ) ),
+				asList( value( array ), (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		) );
@@ -3956,37 +3885,28 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmPredicate arrayContainsAll(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<T[]> subArrayExpression) {
+			Expression<T[]> arrayExpression,
+			Expression<T[]> subArrayExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( arrayExpression, subArrayExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) subArrayExpression ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContainsAll(SqmExpression<T[]> arrayExpression, T[] subArray) {
+	public <T> SqmPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray) {
 		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( arrayExpression, value( subArray, arrayExpression ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( subArray, (SqmExpression<?>) arrayExpression ) ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContainsAll(T[] array, SqmExpression<T[]> subArrayExpression) {
+	public <T> SqmPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( value( array, subArrayExpression ), subArrayExpression ),
-				null,
-				queryEngine
-		) );
-	}
-
-	@Override
-	public <T> SqmPredicate arrayContainsAll(T[] array, T[] subArray) {
-		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( value( array ), value( subArray ) ),
+				asList( value( array, (SqmExpression<?>) subArrayExpression ), (SqmExpression<?>) subArrayExpression ),
 				null,
 				queryEngine
 		) );
@@ -3994,73 +3914,55 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmPredicate arrayContainsAllNullable(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<T[]> subArrayExpression) {
+			Expression<T[]> arrayExpression,
+			Expression<T[]> subArrayExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( arrayExpression, subArrayExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) subArrayExpression ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContainsAllNullable(SqmExpression<T[]> arrayExpression, T[] subArray) {
+	public <T> SqmPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray) {
 		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( arrayExpression, value( subArray, arrayExpression ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( subArray, (SqmExpression<?>) arrayExpression ) ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContainsAllNullable(T[] array, SqmExpression<T[]> subArrayExpression) {
+	public <T> SqmPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( value( array, subArrayExpression ), subArrayExpression ),
+				asList( value( array, (SqmExpression<?>) subArrayExpression ), (SqmExpression<?>) subArrayExpression ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayContainsAllNullable(T[] array, T[] subArray) {
-		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( value( array ), value( subArray ) ),
-				null,
-				queryEngine
-		) );
-	}
-
-	@Override
-	public <T> SqmPredicate arrayOverlaps(SqmExpression<T[]> arrayExpression1, SqmExpression<T[]> arrayExpression2) {
+	public <T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
 		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
-				asList( arrayExpression1, arrayExpression2 ),
+				asList( (SqmExpression<?>) arrayExpression1, (SqmExpression<?>) arrayExpression2 ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayOverlaps(SqmExpression<T[]> arrayExpression1, T[] array2) {
+	public <T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2) {
 		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
-				asList( arrayExpression1, value( array2, arrayExpression1 ) ),
+				asList( (SqmExpression<?>) arrayExpression1, value( array2, (SqmExpression<?>) arrayExpression1 ) ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayOverlaps(T[] array1, SqmExpression<T[]> arrayExpression2) {
+	public <T> SqmPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2) {
 		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
-				asList( value( array1, arrayExpression2 ), arrayExpression2 ),
-				null,
-				queryEngine
-		) );
-	}
-
-	@Override
-	public <T> SqmPredicate arrayOverlaps(T[] array1, T[] array2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
-				asList( value( array1 ), value( array2 ) ),
+				asList( value( array1, (SqmExpression<?>) arrayExpression2 ), (SqmExpression<?>) arrayExpression2 ),
 				null,
 				queryEngine
 		) );
@@ -4068,73 +3970,46 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmPredicate arrayOverlapsNullable(
-			SqmExpression<T[]> arrayExpression1,
-			SqmExpression<T[]> arrayExpression2) {
+			Expression<T[]> arrayExpression1,
+			Expression<T[]> arrayExpression2) {
 		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
-				asList( arrayExpression1, arrayExpression2 ),
+				asList( (SqmExpression<?>) arrayExpression1, (SqmExpression<?>) arrayExpression2 ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayOverlapsNullable(SqmExpression<T[]> arrayExpression1, T[] array2) {
+	public <T> SqmPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2) {
 		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
-				asList( arrayExpression1, value( array2, arrayExpression1 ) ),
+				asList( (SqmExpression<?>) arrayExpression1, value( array2, (SqmExpression<?>) arrayExpression1 ) ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayOverlapsNullable(T[] array1, SqmExpression<T[]> arrayExpression2) {
+	public <T> SqmPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2) {
 		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
-				asList( value( array1, arrayExpression2 ), arrayExpression2 ),
+				asList( value( array1, (SqmExpression<?>) arrayExpression2 ), (SqmExpression<?>) arrayExpression2 ),
 				null,
 				queryEngine
 		) );
 	}
 
 	@Override
-	public <T> SqmPredicate arrayOverlapsNullable(T[] array1, T[] array2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
-				asList( value( array1 ), value( array2 ) ),
-				null,
-				queryEngine
-		) );
-	}
-
-	@Override
-	public <T> SqmExpression<T> arrayGet(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> indexExpression) {
+	public <T> SqmExpression<T> arrayGet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression) {
 		return getFunctionDescriptor( "array_get" ).generateSqmExpression(
-				asList( arrayExpression, indexExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) indexExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T> arrayGet(SqmExpression<T[]> arrayExpression, Integer index) {
+	public <T> SqmExpression<T> arrayGet(Expression<T[]> arrayExpression, Integer index) {
 		return getFunctionDescriptor( "array_get" ).generateSqmExpression(
-				asList( arrayExpression, value( index ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T> arrayGet(T[] array, SqmExpression<Integer> indexExpression) {
-		return getFunctionDescriptor( "array_get" ).generateSqmExpression(
-				asList( value( array ), indexExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T> arrayGet(T[] array, Integer index) {
-		return getFunctionDescriptor( "array_get" ).generateSqmExpression(
-				asList( value( array ), value( index ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( index ) ),
 				null,
 				queryEngine
 		);
@@ -4142,11 +4017,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arraySet(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<Integer> indexExpression,
-			SqmExpression<T> elementExpression) {
+			Expression<T[]> arrayExpression,
+			Expression<Integer> indexExpression,
+			Expression<T> elementExpression) {
 		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( arrayExpression, indexExpression, elementExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) indexExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
@@ -4154,11 +4029,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arraySet(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<Integer> indexExpression,
+			Expression<T[]> arrayExpression,
+			Expression<Integer> indexExpression,
 			T element) {
 		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( arrayExpression, indexExpression, value( element ) ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) indexExpression, value( element ) ),
 				null,
 				queryEngine
 		);
@@ -4166,95 +4041,38 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arraySet(
-			SqmExpression<T[]> arrayExpression,
+			Expression<T[]> arrayExpression,
 			Integer index,
-			SqmExpression<T> elementExpression) {
+			Expression<T> elementExpression) {
 		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( arrayExpression, value( index ), elementExpression ),
+				asList( (SqmExpression<?>) arrayExpression, value( index ), (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arraySet(SqmExpression<T[]> arrayExpression, Integer index, T element) {
+	public <T> SqmExpression<T[]> arraySet(Expression<T[]> arrayExpression, Integer index, T element) {
 		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( arrayExpression, value( index ), value( element ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( index ), value( element ) ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arraySet(
-			T[] array,
-			SqmExpression<Integer> indexExpression,
-			SqmExpression<T> elementExpression) {
-		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( value( array ), indexExpression, elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arraySet(T[] array, SqmExpression<Integer> indexExpression, T element) {
-		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( value( array ), indexExpression, value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arraySet(T[] array, Integer index, SqmExpression<T> elementExpression) {
-		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( value( array ), value( index ), elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arraySet(T[] array, Integer index, T element) {
-		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( value( array ), value( index ), value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayRemove(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression) {
+	public <T> SqmExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
 		return getFunctionDescriptor( "array_remove" ).generateSqmExpression(
-				asList( arrayExpression, elementExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arrayRemove(SqmExpression<T[]> arrayExpression, T element) {
+	public <T> SqmExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, T element) {
 		return getFunctionDescriptor( "array_remove" ).generateSqmExpression(
-				asList( arrayExpression, value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayRemove(T[] array, SqmExpression<T> elementExpression) {
-		return getFunctionDescriptor( "array_remove" ).generateSqmExpression(
-				asList( value( array ), elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayRemove(T[] array, T element) {
-		return getFunctionDescriptor( "array_remove" ).generateSqmExpression(
-				asList( value( array ), value( element ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( element ) ),
 				null,
 				queryEngine
 		);
@@ -4262,37 +4080,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arrayRemoveIndex(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<Integer> indexExpression) {
+			Expression<T[]> arrayExpression,
+			Expression<Integer> indexExpression) {
 		return getFunctionDescriptor( "array_remove_index" ).generateSqmExpression(
-				asList( arrayExpression, indexExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) indexExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arrayRemoveIndex(SqmExpression<T[]> arrayExpression, Integer index) {
+	public <T> SqmExpression<T[]> arrayRemoveIndex(Expression<T[]> arrayExpression, Integer index) {
 		return getFunctionDescriptor( "array_remove_index" ).generateSqmExpression(
-				asList( arrayExpression, value( index ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayRemoveIndex(T[] array, SqmExpression<Integer> indexExpression) {
-		return getFunctionDescriptor( "array_remove_index" ).generateSqmExpression(
-				asList( value( array ), indexExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayRemoveIndex(T[] array, Integer index) {
-		return getFunctionDescriptor( "array_remove_index" ).generateSqmExpression(
-				asList( value( array ), value( index ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( index ) ),
 				null,
 				queryEngine
 		);
@@ -4300,11 +4100,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arraySlice(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<Integer> lowerIndexExpression,
-			SqmExpression<Integer> upperIndexExpression) {
+			Expression<T[]> arrayExpression,
+			Expression<Integer> lowerIndexExpression,
+			Expression<Integer> upperIndexExpression) {
 		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( arrayExpression, lowerIndexExpression, upperIndexExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) lowerIndexExpression, (SqmExpression<?>) upperIndexExpression ),
 				null,
 				queryEngine
 		);
@@ -4312,11 +4112,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arraySlice(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<Integer> lowerIndexExpression,
+			Expression<T[]> arrayExpression,
+			Expression<Integer> lowerIndexExpression,
 			Integer upperIndex) {
 		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( arrayExpression, lowerIndexExpression, value( upperIndex ) ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) lowerIndexExpression, value( upperIndex ) ),
 				null,
 				queryEngine
 		);
@@ -4324,11 +4124,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arraySlice(
-			SqmExpression<T[]> arrayExpression,
+			Expression<T[]> arrayExpression,
 			Integer lowerIndex,
-			SqmExpression<Integer> upperIndexExpression) {
+			Expression<Integer> upperIndexExpression) {
 		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( arrayExpression, value( lowerIndex ), upperIndexExpression ),
+				asList( (SqmExpression<?>) arrayExpression, value( lowerIndex ), (SqmExpression<?>) upperIndexExpression ),
 				null,
 				queryEngine
 		);
@@ -4336,56 +4136,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arraySlice(
-			SqmExpression<T[]> arrayExpression,
+			Expression<T[]> arrayExpression,
 			Integer lowerIndex,
 			Integer upperIndex) {
 		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( arrayExpression, value( lowerIndex ), value( upperIndex ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arraySlice(
-			T[] array,
-			SqmExpression<Integer> lowerIndexExpression,
-			SqmExpression<Integer> upperIndexExpression) {
-		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( value( array ), lowerIndexExpression, upperIndexExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arraySlice(
-			T[] array,
-			SqmExpression<Integer> lowerIndexExpression,
-			Integer upperIndex) {
-		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( value( array ), lowerIndexExpression, value( upperIndex ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arraySlice(
-			T[] array,
-			Integer lowerIndex,
-			SqmExpression<Integer> upperIndexExpression) {
-		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( value( array ), value( lowerIndex ), upperIndexExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arraySlice(T[] array, Integer lowerIndex, Integer upperIndex) {
-		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( value( array ), value( lowerIndex ), value( upperIndex ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( lowerIndex ), value( upperIndex ) ),
 				null,
 				queryEngine
 		);
@@ -4393,11 +4148,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arrayReplace(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<T> oldElementExpression,
-			SqmExpression<T> newElementExpression) {
+			Expression<T[]> arrayExpression,
+			Expression<T> oldElementExpression,
+			Expression<T> newElementExpression) {
 		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( arrayExpression, oldElementExpression, newElementExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) oldElementExpression, (SqmExpression<?>) newElementExpression ),
 				null,
 				queryEngine
 		);
@@ -4405,11 +4160,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arrayReplace(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<T> oldElementExpression,
+			Expression<T[]> arrayExpression,
+			Expression<T> oldElementExpression,
 			T newElement) {
 		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( arrayExpression, oldElementExpression, value( newElement ) ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) oldElementExpression, value( newElement ) ),
 				null,
 				queryEngine
 		);
@@ -4417,59 +4172,20 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arrayReplace(
-			SqmExpression<T[]> arrayExpression,
+			Expression<T[]> arrayExpression,
 			T oldElement,
-			SqmExpression<T> newElementExpression) {
+			Expression<T> newElementExpression) {
 		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( arrayExpression, value( oldElement ), newElementExpression ),
+				asList( (SqmExpression<?>) arrayExpression, value( oldElement ), (SqmExpression<?>) newElementExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arrayReplace(SqmExpression<T[]> arrayExpression, T oldElement, T newElement) {
+	public <T> SqmExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, T oldElement, T newElement) {
 		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( arrayExpression, value( oldElement ), value( newElement ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayReplace(
-			T[] array,
-			SqmExpression<T> oldElementExpression,
-			SqmExpression<T> newElementExpression) {
-		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( value( array ), oldElementExpression, newElementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayReplace(T[] array, SqmExpression<T> oldElementExpression, T newElement) {
-		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( value( array ), oldElementExpression, value( newElement ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayReplace(T[] array, T oldElement, SqmExpression<T> newElementExpression) {
-		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( value( array ), value( oldElement ), newElementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayReplace(T[] array, T oldElement, T newElement) {
-		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( value( array ), value( oldElement ), value( newElement ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( oldElement ), value( newElement ) ),
 				null,
 				queryEngine
 		);
@@ -4477,37 +4193,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arrayTrim(
-			SqmExpression<T[]> arrayExpression,
-			SqmExpression<Integer> elementCountExpression) {
+			Expression<T[]> arrayExpression,
+			Expression<Integer> elementCountExpression) {
 		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
-				asList( arrayExpression, elementCountExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) elementCountExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arrayTrim(SqmExpression<T[]> arrayExpression, Integer elementCount) {
+	public <T> SqmExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Integer elementCount) {
 		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
-				asList( arrayExpression, value( elementCount ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayTrim(T[] array, SqmExpression<Integer> elementCountExpression) {
-		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
-				asList( value( array ), elementCountExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<T[]> arrayTrim(T[] array, Integer elementCount) {
-		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
-				asList( value( array ), value( elementCount ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( elementCount ) ),
 				null,
 				queryEngine
 		);
@@ -4515,28 +4213,28 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<T[]> arrayFill(
-			SqmExpression<T> elementExpression,
-			SqmExpression<Integer> elementCountExpression) {
+			Expression<T> elementExpression,
+			Expression<Integer> elementCountExpression) {
 		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
-				asList( elementExpression, elementCountExpression ),
+				asList( (SqmExpression<?>) elementExpression, (SqmExpression<?>) elementCountExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arrayFill(SqmExpression<T> elementExpression, Integer elementCount) {
+	public <T> SqmExpression<T[]> arrayFill(Expression<T> elementExpression, Integer elementCount) {
 		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
-				asList( elementExpression, value( elementCount ) ),
+				asList( (SqmExpression<?>) elementExpression, value( elementCount ) ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<T[]> arrayFill(T element, SqmExpression<Integer> elementCountExpression) {
+	public <T> SqmExpression<T[]> arrayFill(T element, Expression<Integer> elementCountExpression) {
 		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
-				asList( value( element ), elementCountExpression ),
+				asList( value( element ), (SqmExpression<?>) elementCountExpression ),
 				null,
 				queryEngine
 		);
@@ -4553,10 +4251,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<String> arrayToString(
-			SqmExpression<? extends Object[]> arrayExpression,
-			SqmExpression<String> separatorExpression) {
+			Expression<? extends Object[]> arrayExpression,
+			Expression<String> separatorExpression) {
 		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
-				asList( arrayExpression, separatorExpression ),
+				asList( (SqmExpression<?>) arrayExpression, (SqmExpression<?>) separatorExpression ),
 				null,
 				queryEngine
 		);
@@ -4564,28 +4262,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<String> arrayToString(
-			SqmExpression<? extends Object[]> arrayExpression,
+			Expression<? extends Object[]> arrayExpression,
 			String separator) {
 		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
-				asList( arrayExpression, value( separator ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<String> arrayToString(Object[] array, SqmExpression<String> separatorExpression) {
-		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
-				asList( value( array ), separatorExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<String> arrayToString(Object[] array, String separator) {
-		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
-				asList( value( array ), value( separator ) ),
+				asList( (SqmExpression<?>) arrayExpression, value( separator ) ),
 				null,
 				queryEngine
 		);
@@ -4596,8 +4276,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 
 	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionLiteral(E... elements) {
-		return getFunctionDescriptor( "array" ).generateSqmExpression(
+	public <E, C extends Collection<E>> SqmExpression<C> collectionLiteral(E... elements) {
+		return getFunctionDescriptor( "array_list" ).generateSqmExpression(
 				literals( elements ),
 				null,
 				queryEngine
@@ -4606,10 +4286,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmExpression<Integer> collectionPosition(
-			SqmExpression<? extends Collection<? extends E>> collectionExpression,
+			Expression<? extends Collection<? extends E>> collectionExpression,
 			E element) {
 		return getFunctionDescriptor( "array_position" ).generateSqmExpression(
-				asList( collectionExpression, value( element ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( element ) ),
 				null,
 				queryEngine
 		);
@@ -4617,10 +4297,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmExpression<Integer> collectionPosition(
-			SqmExpression<? extends Collection<? extends E>> collectionExpression,
-			SqmExpression<E> elementExpression) {
+			Expression<? extends Collection<? extends E>> collectionExpression,
+			Expression<E> elementExpression) {
 		return getFunctionDescriptor( "array_position" ).generateSqmExpression(
-				asList( collectionExpression, elementExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
@@ -4628,10 +4308,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<int[]> collectionPositions(
-			SqmExpression<? extends Collection<? super T>> collectionExpression,
-			SqmExpression<T> elementExpression) {
+			Expression<? extends Collection<? super T>> collectionExpression,
+			Expression<T> elementExpression) {
 		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
-				asList( collectionExpression, elementExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
@@ -4639,30 +4319,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<int[]> collectionPositions(
-			SqmExpression<? extends Collection<? super T>> collectionExpression,
+			Expression<? extends Collection<? super T>> collectionExpression,
 			T element) {
 		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
-				asList( collectionExpression, value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<int[]> collectionPositions(
-			Collection<? super T> collection,
-			SqmExpression<T> elementExpression) {
-		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
-				asList( value( collection ), elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<int[]> collectionPositions(Collection<? super T> collection, T element) {
-		return getFunctionDescriptor( "array_positions" ).generateSqmExpression(
-				asList( value( collection ), value( element ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( element ) ),
 				null,
 				queryEngine
 		);
@@ -4670,10 +4330,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<List<Integer>> collectionPositionsList(
-			SqmExpression<? extends Collection<? super T>> collectionExpression,
-			SqmExpression<T> elementExpression) {
+			Expression<? extends Collection<? super T>> collectionExpression,
+			Expression<T> elementExpression) {
 		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
-				asList( collectionExpression, elementExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
@@ -4681,39 +4341,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<List<Integer>> collectionPositionsList(
-			SqmExpression<? extends Collection<? super T>> collectionExpression,
+			Expression<? extends Collection<? super T>> collectionExpression,
 			T element) {
 		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
-				asList( collectionExpression, value( element ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( element ) ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<List<Integer>> collectionPositionsList(
-			Collection<? super T> collection,
-			SqmExpression<T> elementExpression) {
-		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
-				asList( value( collection ), elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<List<Integer>> collectionPositionsList(Collection<? super T> collection, T element) {
-		return getFunctionDescriptor( "array_positions_list" ).generateSqmExpression(
-				asList( value( collection ), value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public SqmExpression<Integer> collectionLength(SqmExpression<? extends Collection<?>> collectionExpression) {
+	public SqmExpression<Integer> collectionLength(Expression<? extends Collection<?>> collectionExpression) {
 		return getFunctionDescriptor( "array_length" ).generateSqmExpression(
-				asList( collectionExpression ),
+				asList( (SqmExpression<?>) collectionExpression ),
 				null,
 				queryEngine
 		);
@@ -4721,10 +4361,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(
-			SqmExpression<C> collectionExpression1,
-			SqmExpression<? extends Collection<? extends E>> collectionExpression2) {
+			Expression<C> collectionExpression1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
 		return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
-				asList( collectionExpression1, collectionExpression2 ),
+				asList( (SqmExpression<?>) collectionExpression1, (SqmExpression<?>) collectionExpression2 ),
 				null,
 				queryEngine
 		);
@@ -4732,10 +4372,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(
-			SqmExpression<C> collectionExpression1,
+			Expression<C> collectionExpression1,
 			Collection<? extends E> collection2) {
 		return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
-				asList( collectionExpression1, value( collection2, collectionExpression1 ) ),
+				asList( (SqmExpression<?>) collectionExpression1, value( collection2, (SqmExpression<?>) collectionExpression1 ) ),
 				null,
 				queryEngine
 		);
@@ -4744,20 +4384,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(
 			C collection1,
-			SqmExpression<? extends Collection<? extends E>> collectionExpression2) {
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
 		return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
-				asList( value( collection1, collectionExpression2 ), collectionExpression2 ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(
-			C collection1,
-			Collection<? extends E> collection2) {
-		return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
-				asList( value( collection1 ), value( collection2 ) ),
+				asList( value( collection1, (SqmExpression<?>) collectionExpression2 ), (SqmExpression<?>) collectionExpression2 ),
 				null,
 				queryEngine
 		);
@@ -4765,10 +4394,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(
-			SqmExpression<C> collectionExpression,
-			SqmExpression<? extends E> elementExpression) {
+			Expression<C> collectionExpression,
+			Expression<? extends E> elementExpression) {
 		return getFunctionDescriptor( "array_append" ).generateSqmExpression(
-				asList( collectionExpression, elementExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
@@ -4776,30 +4405,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(
-			SqmExpression<C> collectionExpression,
+			Expression<C> collectionExpression,
 			E element) {
 		return getFunctionDescriptor( "array_append" ).generateSqmExpression(
-				asList( collectionExpression, value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(
-			C collection,
-			SqmExpression<? extends E> elementExpression) {
-		return getFunctionDescriptor( "array_append" ).generateSqmExpression(
-				asList( value( collection ), elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(C collection, E element) {
-		return getFunctionDescriptor( "array_append" ).generateSqmExpression(
-				asList( value( collection ), value( element ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( element ) ),
 				null,
 				queryEngine
 		);
@@ -4807,10 +4416,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(
-			SqmExpression<? extends E> elementExpression,
-			SqmExpression<C> collectionExpression) {
+			Expression<? extends E> elementExpression,
+			Expression<C> collectionExpression) {
 		return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
-				asList( elementExpression, collectionExpression ),
+				asList( (SqmExpression<?>) elementExpression, (SqmExpression<?>) collectionExpression ),
 				null,
 				queryEngine
 		);
@@ -4819,29 +4428,9 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(
 			E element,
-			SqmExpression<C> collectionExpression) {
+			Expression<C> collectionExpression) {
 		return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
-				asList( value( element ), collectionExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(
-			SqmExpression<? extends E> elementExpression,
-			C collection) {
-		return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
-				asList( elementExpression, value( collection ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(E element, C collection) {
-		return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
-				asList( value( element ), value( collection ) ),
+				asList( value( element ), (SqmExpression<?>) collectionExpression ),
 				null,
 				queryEngine
 		);
@@ -4849,10 +4438,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionContains(
-			SqmExpression<? extends Collection<? super E>> collectionExpression,
-			SqmExpression<? extends E> elementExpression) {
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends E> elementExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( collectionExpression, elementExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		) );
@@ -4860,10 +4449,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionContains(
-			SqmExpression<? extends Collection<? super E>> collectionExpression,
+			Expression<? extends Collection<E>> collectionExpression,
 			E element) {
 		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( collectionExpression, value( element ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( element ) ),
 				null,
 				queryEngine
 		) );
@@ -4871,19 +4460,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionContains(
-			Collection<? super E> collection,
-			SqmExpression<? extends E> elementExpression) {
+			Collection<E> collection,
+			Expression<E> elementExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( value( collection ), elementExpression ),
-				null,
-				queryEngine
-		) );
-	}
-
-	@Override
-	public <E> SqmPredicate collectionContains(Collection<? super E> collection, E element) {
-		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( value( collection ), value( element ) ),
+				asList( collectionValue( collection, (SqmExpression<E>) elementExpression ), (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		) );
@@ -4891,10 +4471,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionContainsNullable(
-			SqmExpression<? extends Collection<? super E>> collectionExpression,
-			SqmExpression<? extends E> elementExpression) {
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends E> elementExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( collectionExpression, elementExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		) );
@@ -4902,10 +4482,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionContainsNullable(
-			SqmExpression<? extends Collection<? super E>> collectionExpression,
+			Expression<? extends Collection<E>> collectionExpression,
 			E element) {
 		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( collectionExpression, value( element ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( element ) ),
 				null,
 				queryEngine
 		) );
@@ -4913,19 +4493,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionContainsNullable(
-			Collection<? super E> collection,
-			SqmExpression<? extends E> elementExpression) {
+			Collection<E> collection,
+			Expression<E> elementExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( value( collection ), elementExpression ),
-				null,
-				queryEngine
-		) );
-	}
-
-	@Override
-	public <E> SqmPredicate collectionContainsNullable(Collection<? super E> collection, E element) {
-		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( value( collection ), value( element ) ),
+				asList( collectionValue( collection, (SqmExpression<E>) elementExpression ), (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		) );
@@ -4933,10 +4504,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionContainsAll(
-			SqmExpression<? extends Collection<? extends E>> collectionExpression,
-			SqmExpression<? extends Collection<? extends E>> subCollectionExpression) {
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( collectionExpression, subCollectionExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) subCollectionExpression ),
 				null,
 				queryEngine
 		) );
@@ -4944,10 +4515,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionContainsAll(
-			SqmExpression<? extends Collection<? extends E>> collectionExpression,
+			Expression<? extends Collection<E>> collectionExpression,
 			Collection<? extends E> subCollection) {
 		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( collectionExpression, value( subCollection, collectionExpression ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( subCollection, (SqmExpression<?>) collectionExpression ) ),
 				null,
 				queryEngine
 		) );
@@ -4955,19 +4526,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionContainsAll(
-			Collection<? extends E> collection,
-			SqmExpression<? extends Collection<? extends E>> subArrayExpression) {
+			Collection<E> collection,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( value( collection, subArrayExpression ), subArrayExpression ),
-				null,
-				queryEngine
-		) );
-	}
-
-	@Override
-	public <E> SqmPredicate collectionContainsAll(Collection<? extends E> collection, Collection<? extends E> subCollection) {
-		return isTrue( getFunctionDescriptor( "array_contains" ).generateSqmExpression(
-				asList( value( collection ), value( subCollection ) ),
+				asList( value( collection, (SqmExpression<?>) subCollectionExpression ), (SqmExpression<?>) subCollectionExpression ),
 				null,
 				queryEngine
 		) );
@@ -4975,10 +4537,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionContainsAllNullable(
-			SqmExpression<? extends Collection<? extends E>> collectionExpression,
-			SqmExpression<? extends Collection<? extends E>> subCollectionExpression) {
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( collectionExpression, subCollectionExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) subCollectionExpression ),
 				null,
 				queryEngine
 		) );
@@ -4986,10 +4548,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionContainsAllNullable(
-			SqmExpression<? extends Collection<? extends E>> collectionExpression,
+			Expression<? extends Collection<E>> collectionExpression,
 			Collection<? extends E> subCollection) {
 		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( collectionExpression, value( subCollection, collectionExpression ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( subCollection, (SqmExpression<?>) collectionExpression ) ),
 				null,
 				queryEngine
 		) );
@@ -4997,21 +4559,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionContainsAllNullable(
-			Collection<? extends E> collection,
-			SqmExpression<? extends Collection<? extends E>> subCollectionExpression) {
+			Collection<E> collection,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
 		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( value( collection, subCollectionExpression ), subCollectionExpression ),
-				null,
-				queryEngine
-		) );
-	}
-
-	@Override
-	public <E> SqmPredicate collectionContainsAllNullable(
-			Collection<? extends E> collection,
-			Collection<? extends E> subCollection) {
-		return isTrue( getFunctionDescriptor( "array_contains_nullable" ).generateSqmExpression(
-				asList( value( collection ), value( subCollection ) ),
+				asList( value( collection, (SqmExpression<?>) subCollectionExpression ), (SqmExpression<?>) subCollectionExpression ),
 				null,
 				queryEngine
 		) );
@@ -5019,10 +4570,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionOverlaps(
-			SqmExpression<? extends Collection<? extends E>> collectionExpression1,
-			SqmExpression<? extends Collection<? extends E>> collectionExpression2) {
+			Expression<? extends Collection<E>> collectionExpression1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
 		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
-				asList( collectionExpression1, collectionExpression2 ),
+				asList( (SqmExpression<?>) collectionExpression1, (SqmExpression<?>) collectionExpression2 ),
 				null,
 				queryEngine
 		) );
@@ -5030,10 +4581,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionOverlaps(
-			SqmExpression<? extends Collection<? extends E>> collectionExpression1,
+			Expression<? extends Collection<E>> collectionExpression1,
 			Collection<? extends E> collection2) {
 		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
-				asList( collectionExpression1, value( collection2, collectionExpression1 ) ),
+				asList( (SqmExpression<?>) collectionExpression1, value( collection2, (SqmExpression<?>) collectionExpression1 ) ),
 				null,
 				queryEngine
 		) );
@@ -5041,19 +4592,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionOverlaps(
-			Collection<? extends E> collection1,
-			SqmExpression<? extends Collection<? extends E>> collectionExpression2) {
+			Collection<E> collection1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
 		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
-				asList( value( collection1, collectionExpression2 ), collectionExpression2 ),
-				null,
-				queryEngine
-		) );
-	}
-
-	@Override
-	public <E> SqmPredicate collectionOverlaps(Collection<? extends E> collection1, Collection<? extends E> collection2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps" ).generateSqmExpression(
-				asList( value( collection1 ), value( collection2 ) ),
+				asList( value( collection1, (SqmExpression<?>) collectionExpression2 ), (SqmExpression<?>) collectionExpression2 ),
 				null,
 				queryEngine
 		) );
@@ -5061,10 +4603,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionOverlapsNullable(
-			SqmExpression<? extends Collection<? extends E>> collectionExpression1,
-			SqmExpression<? extends Collection<? extends E>> collectionExpression2) {
+			Expression<? extends Collection<E>> collectionExpression1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
 		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
-				asList( collectionExpression1, collectionExpression2 ),
+				asList( (SqmExpression<?>) collectionExpression1, (SqmExpression<?>) collectionExpression2 ),
 				null,
 				queryEngine
 		) );
@@ -5072,10 +4614,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionOverlapsNullable(
-			SqmExpression<? extends Collection<? extends E>> collectionExpression1,
+			Expression<? extends Collection<E>> collectionExpression1,
 			Collection<? extends E> collection2) {
 		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
-				asList( collectionExpression1, value( collection2, collectionExpression1 ) ),
+				asList( (SqmExpression<?>) collectionExpression1, value( collection2, (SqmExpression<?>) collectionExpression1 ) ),
 				null,
 				queryEngine
 		) );
@@ -5083,19 +4625,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmPredicate collectionOverlapsNullable(
-			Collection<? extends E> collection1,
-			SqmExpression<? extends Collection<? extends E>> collectionExpression2) {
+			Collection<E> collection1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
 		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
-				asList( value( collection1, collectionExpression2 ), collectionExpression2 ),
-				null,
-				queryEngine
-		) );
-	}
-
-	@Override
-	public <E> SqmPredicate collectionOverlapsNullable(Collection<? extends E> collection1, Collection<? extends E> collection2) {
-		return isTrue( getFunctionDescriptor( "array_overlaps_nullable" ).generateSqmExpression(
-				asList( value( collection1 ), value( collection2 ) ),
+				asList( value( collection1, (SqmExpression<?>) collectionExpression2 ), (SqmExpression<?>) collectionExpression2 ),
 				null,
 				queryEngine
 		) );
@@ -5103,37 +4636,19 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E> SqmExpression<E> collectionGet(
-			SqmExpression<? extends Collection<E>> collectionExpression,
-			SqmExpression<Integer> indexExpression) {
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<Integer> indexExpression) {
 		return getFunctionDescriptor( "array_get" ).generateSqmExpression(
-				asList( collectionExpression, indexExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) indexExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <E> SqmExpression<E> collectionGet(SqmExpression<? extends Collection<E>> collectionExpression, Integer index) {
+	public <E> SqmExpression<E> collectionGet(Expression<? extends Collection<E>> collectionExpression, Integer index) {
 		return getFunctionDescriptor( "array_get" ).generateSqmExpression(
-				asList( collectionExpression, value( index ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E> SqmExpression<E> collectionGet(Collection<E> collection, SqmExpression<Integer> indexExpression) {
-		return getFunctionDescriptor( "array_get" ).generateSqmExpression(
-				asList( value( collection ), indexExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E> SqmExpression<E> collectionGet(Collection<E> collection, Integer index) {
-		return getFunctionDescriptor( "array_get" ).generateSqmExpression(
-				asList( value( collection ), value( index ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( index ) ),
 				null,
 				queryEngine
 		);
@@ -5141,11 +4656,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionSet(
-			SqmExpression<C> collectionExpression,
-			SqmExpression<Integer> indexExpression,
-			SqmExpression<? extends E> elementExpression) {
+			Expression<C> collectionExpression,
+			Expression<Integer> indexExpression,
+			Expression<? extends E> elementExpression) {
 		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( collectionExpression, indexExpression, elementExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) indexExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
@@ -5153,11 +4668,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionSet(
-			SqmExpression<C> collectionExpression,
-			SqmExpression<Integer> indexExpression,
+			Expression<C> collectionExpression,
+			Expression<Integer> indexExpression,
 			E element) {
 		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( collectionExpression, indexExpression, value( element ) ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) indexExpression, value( element ) ),
 				null,
 				queryEngine
 		);
@@ -5165,11 +4680,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionSet(
-			SqmExpression<C> collectionExpression,
+			Expression<C> collectionExpression,
 			Integer index,
-			SqmExpression<? extends E> elementExpression) {
+			Expression<? extends E> elementExpression) {
 		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( collectionExpression, value( index ), elementExpression ),
+				asList( (SqmExpression<?>) collectionExpression, value( index ), (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
@@ -5177,56 +4692,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionSet(
-			SqmExpression<C> collectionExpression,
+			Expression<C> collectionExpression,
 			Integer index,
 			E element) {
 		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( collectionExpression, value( index ), value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionSet(
-			C collection,
-			SqmExpression<Integer> indexExpression,
-			SqmExpression<? extends E> elementExpression) {
-		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( value( collection ), indexExpression, elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionSet(
-			C collection,
-			SqmExpression<Integer> indexExpression,
-			E element) {
-		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( value( collection ), indexExpression, value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionSet(
-			C collection,
-			Integer index,
-			SqmExpression<? extends E> elementExpression) {
-		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( value( collection ), value( index ), elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionSet(C collection, Integer index, E element) {
-		return getFunctionDescriptor( "array_set" ).generateSqmExpression(
-				asList( value( collection ), value( index ), value( element ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( index ), value( element ) ),
 				null,
 				queryEngine
 		);
@@ -5234,10 +4704,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(
-			SqmExpression<C> collectionExpression,
-			SqmExpression<? extends E> elementExpression) {
+			Expression<C> collectionExpression,
+			Expression<? extends E> elementExpression) {
 		return getFunctionDescriptor( "array_remove" ).generateSqmExpression(
-				asList( collectionExpression, elementExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) elementExpression ),
 				null,
 				queryEngine
 		);
@@ -5245,30 +4715,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(
-			SqmExpression<C> collectionExpression,
+			Expression<C> collectionExpression,
 			E element) {
 		return getFunctionDescriptor( "array_remove" ).generateSqmExpression(
-				asList( collectionExpression, value( element ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(
-			C collection,
-			SqmExpression<? extends E> elementExpression) {
-		return getFunctionDescriptor( "array_remove" ).generateSqmExpression(
-				asList( value( collection ), elementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(C collection, E element) {
-		return getFunctionDescriptor( "array_remove" ).generateSqmExpression(
-				asList( value( collection ), value( element ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( element ) ),
 				null,
 				queryEngine
 		);
@@ -5276,10 +4726,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(
-			SqmExpression<C> collectionExpression,
-			SqmExpression<Integer> indexExpression) {
+			Expression<C> collectionExpression,
+			Expression<Integer> indexExpression) {
 		return getFunctionDescriptor( "array_remove_index" ).generateSqmExpression(
-				asList( collectionExpression, indexExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) indexExpression ),
 				null,
 				queryEngine
 		);
@@ -5287,30 +4737,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(
-			SqmExpression<C> collectionExpression,
+			Expression<C> collectionExpression,
 			Integer index) {
 		return getFunctionDescriptor( "array_remove_index" ).generateSqmExpression(
-				asList( collectionExpression, value( index ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(
-			C collection,
-			SqmExpression<Integer> indexExpression) {
-		return getFunctionDescriptor( "array_remove_index" ).generateSqmExpression(
-				asList( value( collection ), indexExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(C collection, Integer index) {
-		return getFunctionDescriptor( "array_remove_index" ).generateSqmExpression(
-				asList( value( collection ), value( index ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( index ) ),
 				null,
 				queryEngine
 		);
@@ -5318,11 +4748,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <C extends Collection<?>> SqmExpression<C> collectionSlice(
-			SqmExpression<C> collectionExpression,
-			SqmExpression<Integer> lowerIndexExpression,
-			SqmExpression<Integer> upperIndexExpression) {
+			Expression<C> collectionExpression,
+			Expression<Integer> lowerIndexExpression,
+			Expression<Integer> upperIndexExpression) {
 		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( collectionExpression, lowerIndexExpression, upperIndexExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) lowerIndexExpression, (SqmExpression<?>) upperIndexExpression ),
 				null,
 				queryEngine
 		);
@@ -5330,11 +4760,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <C extends Collection<?>> SqmExpression<C> collectionSlice(
-			SqmExpression<C> collectionExpression,
-			SqmExpression<Integer> lowerIndexExpression,
+			Expression<C> collectionExpression,
+			Expression<Integer> lowerIndexExpression,
 			Integer upperIndex) {
 		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( collectionExpression, lowerIndexExpression, value( upperIndex ) ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) lowerIndexExpression, value( upperIndex ) ),
 				null,
 				queryEngine
 		);
@@ -5342,11 +4772,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <C extends Collection<?>> SqmExpression<C> collectionSlice(
-			SqmExpression<C> collectionExpression,
+			Expression<C> collectionExpression,
 			Integer lowerIndex,
-			SqmExpression<Integer> upperIndexExpression) {
+			Expression<Integer> upperIndexExpression) {
 		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( collectionExpression, value( lowerIndex ), upperIndexExpression ),
+				asList( (SqmExpression<?>) collectionExpression, value( lowerIndex ), (SqmExpression<?>) upperIndexExpression ),
 				null,
 				queryEngine
 		);
@@ -5354,56 +4784,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <C extends Collection<?>> SqmExpression<C> collectionSlice(
-			SqmExpression<C> collectionExpression,
+			Expression<C> collectionExpression,
 			Integer lowerIndex,
 			Integer upperIndex) {
 		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( collectionExpression, value( lowerIndex ), value( upperIndex ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <C extends Collection<?>> SqmExpression<C> collectionSlice(
-			C collection,
-			SqmExpression<Integer> lowerIndexExpression,
-			SqmExpression<Integer> upperIndexExpression) {
-		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( value( collection ), lowerIndexExpression, upperIndexExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <C extends Collection<?>> SqmExpression<C> collectionSlice(
-			C collection,
-			SqmExpression<Integer> lowerIndexExpression,
-			Integer upperIndex) {
-		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( value( collection ), lowerIndexExpression, value( upperIndex ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <C extends Collection<?>> SqmExpression<C> collectionSlice(
-			C collection,
-			Integer lowerIndex,
-			SqmExpression<Integer> upperIndexExpression) {
-		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( value( collection ), value( lowerIndex ), upperIndexExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <C extends Collection<?>> SqmExpression<C> collectionSlice(C collection, Integer lowerIndex, Integer upperIndex) {
-		return getFunctionDescriptor( "array_slice" ).generateSqmExpression(
-				asList( value( collection ), value( lowerIndex ), value( upperIndex ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( lowerIndex ), value( upperIndex ) ),
 				null,
 				queryEngine
 		);
@@ -5411,11 +4796,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(
-			SqmExpression<C> collectionExpression,
-			SqmExpression<? extends E> oldElementExpression,
-			SqmExpression<? extends E> newElementExpression) {
+			Expression<C> collectionExpression,
+			Expression<? extends E> oldElementExpression,
+			Expression<? extends E> newElementExpression) {
 		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( collectionExpression, oldElementExpression, newElementExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) oldElementExpression, (SqmExpression<?>) newElementExpression ),
 				null,
 				queryEngine
 		);
@@ -5423,11 +4808,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(
-			SqmExpression<C> collectionExpression,
-			SqmExpression<? extends E> oldElementExpression,
+			Expression<C> collectionExpression,
+			Expression<? extends E> oldElementExpression,
 			E newElement) {
 		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( collectionExpression, oldElementExpression, value( newElement ) ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) oldElementExpression, value( newElement ) ),
 				null,
 				queryEngine
 		);
@@ -5435,11 +4820,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(
-			SqmExpression<C> collectionExpression,
+			Expression<C> collectionExpression,
 			E oldElement,
-			SqmExpression<? extends E> newElementExpression) {
+			Expression<? extends E> newElementExpression) {
 		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( collectionExpression, value( oldElement ), newElementExpression ),
+				asList( (SqmExpression<?>) collectionExpression, value( oldElement ), (SqmExpression<?>) newElementExpression ),
 				null,
 				queryEngine
 		);
@@ -5447,59 +4832,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(
-			SqmExpression<C> collectionExpression,
+			Expression<C> collectionExpression,
 			E oldElement,
 			E newElement) {
 		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( collectionExpression, value( oldElement ), value( newElement ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(
-			C collection,
-			SqmExpression<? extends E> oldElementExpression,
-			SqmExpression<? extends E> newElementExpression) {
-		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( value( collection ), oldElementExpression, newElementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(
-			C collection,
-			SqmExpression<? extends E> oldElementExpression,
-			E newElement) {
-		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( value( collection ), oldElementExpression, value( newElement ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(
-			C collection,
-			E oldElement,
-			SqmExpression<? extends E> newElementExpression) {
-		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( value( collection ), value( oldElement ), newElementExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(
-			C collection,
-			E oldElement,
-			E newElement) {
-		return getFunctionDescriptor( "array_replace" ).generateSqmExpression(
-				asList( value( collection ), value( oldElement ), value( newElement ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( oldElement ), value( newElement ) ),
 				null,
 				queryEngine
 		);
@@ -5507,10 +4844,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <C extends Collection<?>> SqmExpression<C> collectionTrim(
-			SqmExpression<C> collectionExpression,
-			SqmExpression<Integer> indexExpression) {
+			Expression<C> collectionExpression,
+			Expression<Integer> indexExpression) {
 		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
-				asList( collectionExpression, indexExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) indexExpression ),
 				null,
 				queryEngine
 		);
@@ -5518,30 +4855,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <C extends Collection<?>> SqmExpression<C> collectionTrim(
-			SqmExpression<C> collectionExpression,
+			Expression<C> collectionExpression,
 			Integer index) {
 		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
-				asList( collectionExpression, value( index ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <C extends Collection<?>> SqmExpression<C> collectionTrim(
-			C collection,
-			SqmExpression<Integer> indexExpression) {
-		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
-				asList( value( collection ), indexExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <C extends Collection<?>> SqmExpression<C> collectionTrim(C collection, Integer index) {
-		return getFunctionDescriptor( "array_trim" ).generateSqmExpression(
-				asList( value( collection ), value( index ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( index ) ),
 				null,
 				queryEngine
 		);
@@ -5549,28 +4866,28 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<Collection<T>> collectionFill(
-			SqmExpression<T> elementExpression,
-			SqmExpression<Integer> elementCountExpression) {
-		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
-				asList( elementExpression, elementCountExpression ),
+			Expression<T> elementExpression,
+			Expression<Integer> elementCountExpression) {
+		return getFunctionDescriptor( "array_fill_list" ).generateSqmExpression(
+				asList( (SqmExpression<?>) elementExpression, (SqmExpression<?>) elementCountExpression ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<Collection<T>> collectionFill(SqmExpression<T> elementExpression, Integer elementCount) {
-		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
-				asList( elementExpression, value( elementCount ) ),
+	public <T> SqmExpression<Collection<T>> collectionFill(Expression<T> elementExpression, Integer elementCount) {
+		return getFunctionDescriptor( "array_fill_list" ).generateSqmExpression(
+				asList( (SqmExpression<?>) elementExpression, value( elementCount ) ),
 				null,
 				queryEngine
 		);
 	}
 
 	@Override
-	public <T> SqmExpression<Collection<T>> collectionFill(T element, SqmExpression<Integer> elementCountExpression) {
-		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
-				asList( value( element ), elementCountExpression ),
+	public <T> SqmExpression<Collection<T>> collectionFill(T element, Expression<Integer> elementCountExpression) {
+		return getFunctionDescriptor( "array_fill_list" ).generateSqmExpression(
+				asList( value( element ), (SqmExpression<?>) elementCountExpression ),
 				null,
 				queryEngine
 		);
@@ -5578,7 +4895,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<Collection<T>> collectionFill(T element, Integer elementCount) {
-		return getFunctionDescriptor( "array_fill" ).generateSqmExpression(
+		return getFunctionDescriptor( "array_fill_list" ).generateSqmExpression(
 				asList( value( element ), value( elementCount ) ),
 				null,
 				queryEngine
@@ -5587,10 +4904,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<String> collectionToString(
-			SqmExpression<? extends Collection<?>> collectionExpression,
-			SqmExpression<String> separatorExpression) {
+			Expression<? extends Collection<?>> collectionExpression,
+			Expression<String> separatorExpression) {
 		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
-				asList( collectionExpression, separatorExpression ),
+				asList( (SqmExpression<?>) collectionExpression, (SqmExpression<?>) separatorExpression ),
 				null,
 				queryEngine
 		);
@@ -5598,30 +4915,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmExpression<String> collectionToString(
-			SqmExpression<? extends Collection<?>> collectionExpression,
+			Expression<? extends Collection<?>> collectionExpression,
 			String separator) {
 		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
-				asList( collectionExpression, value( separator ) ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<String> collectionToString(
-			Collection<?> collection,
-			SqmExpression<String> separatorExpression) {
-		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
-				asList( value( collection ), separatorExpression ),
-				null,
-				queryEngine
-		);
-	}
-
-	@Override
-	public <T> SqmExpression<String> collectionToString(Collection<?> collection, String separator) {
-		return getFunctionDescriptor( "array_to_string" ).generateSqmExpression(
-				asList( value( collection ), value( separator ) ),
+				asList( (SqmExpression<?>) collectionExpression, value( separator ) ),
 				null,
 				queryEngine
 		);

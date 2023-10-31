@@ -268,7 +268,10 @@ public class StandardFunctionReturnTypeResolvers {
 	}
 
 	private static SqmExpressible<?> getArgumentExpressible(SqmTypedNode<?> specifiedArgument) {
-		final SqmExpressible<?> specifiedArgType = specifiedArgument.getNodeType();
+		final SqmExpressible<?> expressible = specifiedArgument.getNodeType();
+		final SqmExpressible<?> specifiedArgType = expressible instanceof SqmTypedNode<?>
+				? ( (SqmTypedNode<?>) expressible ).getNodeType()
+				: expressible;
 		return specifiedArgType instanceof SqmPathSource ?
 				( (SqmPathSource<?>) specifiedArgType ).getSqmPathType() :
 				specifiedArgType;

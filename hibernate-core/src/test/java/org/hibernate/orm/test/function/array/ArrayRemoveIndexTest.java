@@ -6,9 +6,13 @@
  */
 package org.hibernate.orm.test.function.array;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.sqm.NodeBuilder;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -99,6 +103,36 @@ public class ArrayRemoveIndexTest {
 			assertArrayEquals( new String[] { "abc", null, "def" }, results.get( 1 ).get( 1, String[].class ) );
 			assertEquals( 3L, results.get( 2 ).get( 0 ) );
 			assertNull( results.get( 2 ).get( 1, String[].class ) );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderArray(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.arrayRemoveIndex( root.<String[]>get( "theArray" ), cb.literal( 1 ) ),
+					cb.arrayRemoveIndex( root.get( "theArray" ), 1 )
+			);
+			em.createQuery( cq ).getResultList();
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderCollection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.collectionRemoveIndex( root.<Collection<String>>get( "theCollection" ), cb.literal( 1 ) ),
+					cb.collectionRemoveIndex( root.get( "theCollection" ), 1 )
+			);
+			em.createQuery( cq ).getResultList();
 		} );
 	}
 

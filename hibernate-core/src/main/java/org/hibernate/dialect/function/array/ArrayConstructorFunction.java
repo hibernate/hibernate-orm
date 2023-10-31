@@ -29,11 +29,13 @@ public class ArrayConstructorFunction extends AbstractSqmSelfRenderingFunctionDe
 
 	private final boolean withKeyword;
 
-	public ArrayConstructorFunction(boolean withKeyword) {
+	public ArrayConstructorFunction(boolean list, boolean withKeyword) {
 		super(
-				"array",
+				"array" + ( list ? "_list" : "" ),
 				ArrayConstructorArgumentsValidator.INSTANCE,
-				ArrayViaElementArgumentReturnTypeResolver.VARARGS_INSTANCE,
+				list
+						? ArrayViaElementArgumentReturnTypeResolver.VARARGS_LIST_INSTANCE
+						: ArrayViaElementArgumentReturnTypeResolver.VARARGS_INSTANCE,
 				StandardFunctionArgumentTypeResolvers.NULL
 		);
 		this.withKeyword = withKeyword;

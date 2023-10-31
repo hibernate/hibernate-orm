@@ -6,9 +6,14 @@
  */
 package org.hibernate.orm.test.function.array;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.sqm.NodeBuilder;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -20,6 +25,8 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -79,6 +86,44 @@ public class ArrayPositionTest {
 					.getResultList();
 			assertEquals( 1, results.size() );
 			assertEquals( 2L, results.get( 0 ).getId() );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderArray(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.arrayPosition( root.<String[]>get( "theArray" ), cb.literal( "xyz" ) ),
+					cb.arrayPosition( root.get( "theArray" ), "xyz" )
+			);
+			em.createQuery( cq ).getResultList();
+
+			// Should all fail to compile
+//			cb.arrayPosition( root.<Integer[]>get( "theArray" ), cb.literal( "xyz" ) );
+//			cb.arrayPosition( root.<Integer[]>get( "theArray" ), "xyz" );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderCollection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.collectionPosition( root.<Collection<String>>get( "theCollection" ), cb.literal( "xyz" ) ),
+					cb.collectionPosition( root.get( "theCollection" ), "xyz" )
+			);
+			em.createQuery( cq ).getResultList();
+
+			// Should all fail to compile
+//			cb.collectionPosition( root.<Collection<Integer>>get( "theCollection" ), cb.literal( "xyz" ) );
+//			cb.collectionPosition( root.<Collection<Integer>>get( "theCollection" ), "xyz" );
 		} );
 	}
 

@@ -18,6 +18,10 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
  */
 public class H2ArrayFillFunction extends AbstractArrayFillFunction {
 
+	public H2ArrayFillFunction(boolean list) {
+		super( list );
+	}
+
 	@Override
 	public void render(
 			SqlAppender sqlAppender,

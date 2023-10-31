@@ -9,6 +9,9 @@ package org.hibernate.orm.test.function.array;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.sqm.NodeBuilder;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -21,6 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Tuple;
 import org.assertj.core.api.Assertions;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -65,6 +69,36 @@ public class ArrayToStringTest {
 			Assertions.assertThat( results.get( 0 ) ).isNullOrEmpty();
 			assertEquals( "abc,def", results.get( 1 ) );
 			assertNull( results.get( 2 ) );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderArray(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.arrayToString( root.get( "theArray" ), cb.literal( "," ) ),
+					cb.arrayToString( root.get( "theArray" ), "," )
+			);
+			em.createQuery( cq ).getResultList();
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderCollection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.collectionToString( root.get( "theCollection" ), cb.literal( "," ) ),
+					cb.collectionToString( root.get( "theCollection" ), "," )
+			);
+			em.createQuery( cq ).getResultList();
 		} );
 	}
 

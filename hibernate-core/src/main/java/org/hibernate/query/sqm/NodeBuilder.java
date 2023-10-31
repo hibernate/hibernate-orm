@@ -104,1402 +104,378 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for array types
 
-	/**
-	 * @see #arrayAgg(JpaOrder, JpaPredicate, JpaWindow, Expression)
-	 * @since 6.4
-	 */
-	<T> JpaExpression<T[]> arrayAgg(JpaOrder order, Expression<? extends T> argument);
+	@Override
+	<T> SqmExpression<T[]> arrayAgg(JpaOrder order, Expression<? extends T> argument);
 
-	/**
-	 * @see #arrayAgg(JpaOrder, JpaPredicate, JpaWindow, Expression)
-	 * @since 6.4
-	 */
-	<T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaPredicate filter, Expression<? extends T> argument);
+	@Override
+	<T> SqmExpression<T[]> arrayAgg(JpaOrder order, JpaPredicate filter, Expression<? extends T> argument);
 
-	/**
-	 * @see #arrayAgg(JpaOrder, JpaPredicate, JpaWindow, Expression)
-	 * @since 6.4
-	 */
-	<T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaWindow window, Expression<? extends T> argument);
+	@Override
+	<T> SqmExpression<T[]> arrayAgg(JpaOrder order, JpaWindow window, Expression<? extends T> argument);
 
-	/**
-	 * Create a {@code array_agg} ordered set-aggregate function expression.
-	 *
-	 * @param order order by clause used in within group
-	 * @param filter optional filter clause
-	 * @param window optional window over which to apply the function
-	 * @param argument values to aggregate
-	 *
-	 * @return ordered set-aggregate expression
-	 *
-	 * @see #functionWithinGroup(String, Class, JpaOrder, JpaPredicate, JpaWindow, Expression...)
-	 * @since 6.4
-	 */
-	<T> JpaExpression<T[]> arrayAgg(
+	@Override
+	<T> SqmExpression<T[]> arrayAgg(
 			JpaOrder order,
 			JpaPredicate filter,
 			JpaWindow window,
 			Expression<? extends T> argument);
 
-	/**
-	 * Creates an array literal with the {@code array} constructor function.
-	 *
-	 * @since 6.4
-	 */
+	@Override
 	<T> SqmExpression<T[]> arrayLiteral(T... elements);
 
-	/**
-	 * Determines the 1-based position of an element in an array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<Integer> arrayPosition(SqmExpression<T[]> arrayExpression, T element);
-
-	/**
-	 * Determines the 1-based position of an element in an array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<Integer> arrayPosition(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
-
-	/**
-	 * Determines the length of an array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<Integer> arrayLength(SqmExpression<T[]> arrayExpression);
-
-	/**
-	 * Concatenates arrays with each other in order.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayConcat(SqmExpression<T[]> arrayExpression1, SqmExpression<T[]> arrayExpression2);
-
-	/**
-	 * Concatenates arrays with each other in order.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayConcat(SqmExpression<T[]> arrayExpression1, T[] array2);
-
-	/**
-	 * Concatenates arrays with each other in order.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayConcat(T[] array1, SqmExpression<T[]> arrayExpression2);
-
-	/**
-	 * Concatenates arrays with each other in order.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayConcat(T[] array1, T[] array2);
-
-	/**
-	 * Appends element to array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayAppend(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
-
-	/**
-	 * Appends element to array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayAppend(SqmExpression<T[]> arrayExpression, T element);
-
-	/**
-	 * Appends element to array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayAppend(T[] array, SqmExpression<T> elementExpression);
-
-	/**
-	 * Appends element to array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayAppend(T[] array, T element);
-
-	/**
-	 * Prepends element to array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayPrepend(SqmExpression<T> elementExpression, SqmExpression<T[]> arrayExpression);
-
-	/**
-	 * Prepends element to array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayPrepend(T element, SqmExpression<T[]> arrayExpression);
-
-	/**
-	 * Prepends element to array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayPrepend(SqmExpression<T> elementExpression, T[] array);
-
-	/**
-	 * Prepends element to array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayPrepend(T element, T[] array);
-
-	/**
-	 * Whether an array contains an element.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContains(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
-
-	/**
-	 * Whether an array contains an element.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContains(SqmExpression<T[]> arrayExpression, T element);
-
-	/**
-	 * Whether an array contains an element.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContains(T[] array, SqmExpression<T> elementExpression);
-
-	/**
-	 * Whether an array contains an element.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContains(T[] array, T element);
-
-	/**
-	 * Whether an array contains a nullable element.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContainsNullable(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
-
-	/**
-	 * Whether an array contains a nullable element.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContainsNullable(SqmExpression<T[]> arrayExpression, T element);
-
-	/**
-	 * Whether an array contains a nullable element.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContainsNullable(T[] array, SqmExpression<T> elementExpression);
-
-	/**
-	 * Whether an array contains a nullable element.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContainsNullable(T[] array, T element);
-
-	/**
-	 * Whether an array contains another array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContainsAll(SqmExpression<T[]> arrayExpression, SqmExpression<T[]> subArrayExpression);
-
-	/**
-	 * Whether an array contains another array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContainsAll(SqmExpression<T[]> arrayExpression, T[] subArray);
-
-	/**
-	 * Whether an array contains another array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContainsAll(T[] array, SqmExpression<T[]> subArrayExpression);
-
-	/**
-	 * Whether an array contains another array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContainsAll(T[] array, T[] subArray);
-
-	/**
-	 * Whether an array contains another array with nullable elements.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContainsAllNullable(SqmExpression<T[]> arrayExpression, SqmExpression<T[]> subArrayExpression);
-
-	/**
-	 * Whether an array contains another array with nullable elements.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContainsAllNullable(SqmExpression<T[]> arrayExpression, T[] subArray);
-
-	/**
-	 * Whether an array contains another array with nullable elements.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContainsAllNullable(T[] array, SqmExpression<T[]> subArrayExpression);
-
-	/**
-	 * Whether an array contains another array with nullable elements.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayContainsAllNullable(T[] array, T[] subArray);
-
-	/**
-	 * Whether one array has any elements common with another array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayOverlaps(SqmExpression<T[]> arrayExpression1, SqmExpression<T[]> arrayExpression2);
-
-	/**
-	 * Whether one array has any elements common with another array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayOverlaps(SqmExpression<T[]> arrayExpression1, T[] array2);
-
-	/**
-	 * Whether one array has any elements common with another array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayOverlaps(T[] array1, SqmExpression<T[]> arrayExpression2);
-
-	/**
-	 * Whether one array has any elements common with another array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayOverlaps(T[] array1, T[] array2);
-
-	/**
-	 * Whether one array has any elements common with another array, supporting {@code null} elements.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayOverlapsNullable(SqmExpression<T[]> arrayExpression1, SqmExpression<T[]> arrayExpression2);
-
-	/**
-	 * Whether one array has any elements common with another array, supporting {@code null} elements.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayOverlapsNullable(SqmExpression<T[]> arrayExpression1, T[] array2);
-
-	/**
-	 * Whether one array has any elements common with another array, supporting {@code null} elements.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayOverlapsNullable(T[] array1, SqmExpression<T[]> arrayExpression2);
-
-	/**
-	 * Whether one array has any elements common with another array, supporting {@code null} elements.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmPredicate arrayOverlapsNullable(T[] array1, T[] array2);
-
-	/**
-	 * Accesses the element of an array by 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T> arrayGet(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> indexExpression);
-
-	/**
-	 * Accesses the element of an array by 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T> arrayGet(SqmExpression<T[]> arrayExpression, Integer index);
-
-	/**
-	 * Accesses the element of an array by 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T> arrayGet(T[] array, SqmExpression<Integer> indexExpression);
-
-	/**
-	 * Accesses the element of an array by 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T> arrayGet(T[] array, Integer index);
-
-	/**
-	 * Creates array copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySet(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> indexExpression, SqmExpression<T> elementExpression);
-	/**
-	 * Creates array copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySet(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> indexExpression, T element);
-
-	/**
-	 * Creates array copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySet(SqmExpression<T[]> arrayExpression, Integer index, SqmExpression<T> elementExpression);
-
-	/**
-	 * Creates array copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySet(SqmExpression<T[]> arrayExpression, Integer index, T element);
-
-	/**
-	 * Creates array copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySet(T[] array, SqmExpression<Integer> indexExpression, SqmExpression<T> elementExpression);
-
-	/**
-	 * Creates array copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySet(T[] array, SqmExpression<Integer> indexExpression, T element);
-
-	/**
-	 * Creates array copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySet(T[] array, Integer index, SqmExpression<T> elementExpression);
-
-	/**
-	 * Creates array copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySet(T[] array, Integer index, T element);
-
-	/**
-	 * Creates array copy with given element removed.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayRemove(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
-
-	/**
-	 * Creates array copy with given element removed.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayRemove(SqmExpression<T[]> arrayExpression, T element);
-
-	/**
-	 * Creates array copy with given element removed.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayRemove(T[] array, SqmExpression<T> elementExpression);
-
-	/**
-	 * Creates array copy with given element removed.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayRemove(T[] array, T element);
-
-	/**
-	 * Creates array copy with the element at the given 1-based index removed.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayRemoveIndex(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> indexExpression);
-
-	/**
-	 * Creates array copy with the element at the given 1-based index removed.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayRemoveIndex(SqmExpression<T[]> arrayExpression, Integer index);
-
-	/**
-	 * Creates array copy with the element at the given 1-based index removed.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayRemoveIndex(T[] array, SqmExpression<Integer> indexExpression);
-
-	/**
-	 * Creates array copy with the element at the given 1-based index removed.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayRemoveIndex(T[] array, Integer index);
-
-	/**
-	 * Creates a sub-array of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySlice(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> lowerIndexExpression, SqmExpression<Integer> upperIndexExpression);
-
-	/**
-	 * Creates a sub-array of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySlice(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> lowerIndexExpression, Integer upperIndex);
-	/**
-	 * Creates a sub-array of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySlice(SqmExpression<T[]> arrayExpression, Integer lowerIndex, SqmExpression<Integer> upperIndexExpression);
-
-	/**
-	 * Creates a sub-array of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySlice(SqmExpression<T[]> arrayExpression, Integer lowerIndex, Integer upperIndex);
-
-	/**
-	 * Creates a sub-array of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySlice(T[] array, SqmExpression<Integer> lowerIndexExpression, SqmExpression<Integer> upperIndexExpression);
-
-	/**
-	 * Creates a sub-array of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySlice(T[] array, SqmExpression<Integer> lowerIndexExpression, Integer upperIndex);
-
-	/**
-	 * Creates a sub-array of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySlice(T[] array, Integer lowerIndex, SqmExpression<Integer> upperIndexExpression);
-
-	/**
-	 * Creates a sub-array of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arraySlice(T[] array, Integer lowerIndex, Integer upperIndex);
-
-	/**
-	 * Creates array copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayReplace(SqmExpression<T[]> arrayExpression, SqmExpression<T> oldElementExpression, SqmExpression<T> newElementExpression);
-
-	/**
-	 * Creates array copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayReplace(SqmExpression<T[]> arrayExpression, SqmExpression<T> oldElementExpression, T newElement);
-
-	/**
-	 * Creates array copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayReplace(SqmExpression<T[]> arrayExpression, T oldElement, SqmExpression<T> newElementExpression);
-
-	/**
-	 * Creates array copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayReplace(SqmExpression<T[]> arrayExpression, T oldElement, T newElement);
-
-	/**
-	 * Creates array copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayReplace(T[] array, SqmExpression<T> oldElementExpression, SqmExpression<T> newElementExpression);
-
-	/**
-	 * Creates array copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayReplace(T[] array, SqmExpression<T> oldElementExpression, T newElement);
-
-	/**
-	 * Creates array copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayReplace(T[] array, T oldElement, SqmExpression<T> newElementExpression);
-
-	/**
-	 * Creates array copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayReplace(T[] array, T oldElement, T newElement);
-
-	/**
-	 * Creates array copy without the last N elements, specified by the second argument.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayTrim(SqmExpression<T[]> arrayExpression, SqmExpression<Integer> elementCountExpression);
-
-	/**
-	 * Creates array copy without the last N elements, specified by the second argument.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayTrim(SqmExpression<T[]> arrayExpression, Integer elementCount);
-
-	/**
-	 * Creates array copy without the last N elements, specified by the second argument.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayTrim(T[] array, SqmExpression<Integer> elementCountExpression);
-
-	/**
-	 * Creates array copy without the last N elements, specified by the second argument.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayTrim(T[] array, Integer elementCount);
-
-	/**
-	 * Creates array with the same element N times, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayFill(SqmExpression<T> elementExpression, SqmExpression<Integer> elementCountExpression);
-
-	/**
-	 * Creates array with the same element N times, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayFill(SqmExpression<T> elementExpression, Integer elementCount);
-
-	/**
-	 * Creates array with the same element N times, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<T[]> arrayFill(T element, SqmExpression<Integer> elementCountExpression);
-
-	/**
-	 * Creates array with the same element N times, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
+	@Override
+	<T> SqmExpression<Integer> arrayLength(Expression<T[]> arrayExpression);
+
+	@Override
+	<T> SqmExpression<Integer> arrayPosition(Expression<T[]> arrayExpression, T element);
+
+	@Override
+	<T> SqmExpression<Integer> arrayPosition(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+
+	@Override
+	<T> SqmExpression<int[]> arrayPositions(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+
+	@Override
+	<T> SqmExpression<int[]> arrayPositions(Expression<T[]> arrayExpression, T element);
+
+	@Override
+	<T> SqmExpression<List<Integer>> arrayPositionsList(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+
+	@Override
+	<T> SqmExpression<List<Integer>> arrayPositionsList(Expression<T[]> arrayExpression, T element);
+
+	@Override
+	<T> SqmExpression<T[]> arrayConcat(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+
+	@Override
+	<T> SqmExpression<T[]> arrayConcat(Expression<T[]> arrayExpression1, T[] array2);
+
+	@Override
+	<T> SqmExpression<T[]> arrayConcat(T[] array1, Expression<T[]> arrayExpression2);
+
+	@Override
+	<T> SqmExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, T element);
+
+	@Override
+	<T> SqmExpression<T[]> arrayPrepend(Expression<T> elementExpression, Expression<T[]> arrayExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arrayPrepend(T element, Expression<T[]> arrayExpression);
+
+	@Override
+	<T> SqmExpression<T> arrayGet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression);
+
+	@Override
+	<T> SqmExpression<T> arrayGet(Expression<T[]> arrayExpression, Integer index);
+
+	@Override
+	<T> SqmExpression<T[]> arraySet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression, Expression<T> elementExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arraySet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression, T element);
+
+	@Override
+	<T> SqmExpression<T[]> arraySet(Expression<T[]> arrayExpression, Integer index, Expression<T> elementExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arraySet(Expression<T[]> arrayExpression, Integer index, T element);
+
+	@Override
+	<T> SqmExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, Expression<T> elementExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, T element);
+
+	@Override
+	<T> SqmExpression<T[]> arrayRemoveIndex(Expression<T[]> arrayExpression, Expression<Integer> indexExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arrayRemoveIndex(Expression<T[]> arrayExpression, Integer index);
+
+	@Override
+	<T> SqmExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Expression<Integer> lowerIndexExpression, Expression<Integer> upperIndexExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Expression<Integer> lowerIndexExpression, Integer upperIndex);
+
+	@Override
+	<T> SqmExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Integer lowerIndex, Expression<Integer> upperIndexExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Integer lowerIndex, Integer upperIndex);
+
+	@Override
+	<T> SqmExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, Expression<T> oldElementExpression, Expression<T> newElementExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, Expression<T> oldElementExpression, T newElement);
+
+	@Override
+	<T> SqmExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, T oldElement, Expression<T> newElementExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, T oldElement, T newElement);
+
+	@Override
+	<T> SqmExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Expression<Integer> elementCountExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Integer elementCount);
+
+	@Override
+	<T> SqmExpression<T[]> arrayFill(Expression<T> elementExpression, Expression<Integer> elementCountExpression);
+
+	@Override
+	<T> SqmExpression<T[]> arrayFill(Expression<T> elementExpression, Integer elementCount);
+
+	@Override
+	<T> SqmExpression<T[]> arrayFill(T element, Expression<Integer> elementCountExpression);
+
+	@Override
 	<T> SqmExpression<T[]> arrayFill(T element, Integer elementCount);
 
-	/**
-	 * Determines all 1-based positions of an element in an array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<int[]> arrayPositions(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
+	@Override
+	<T> SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, Expression<String> separatorExpression);
 
-	/**
-	 * Determines all 1-based positions of an element in an array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<int[]> arrayPositions(SqmExpression<T[]> arrayExpression, T element);
+	@Override
+	<T> SqmExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
 
-	/**
-	 * Determines all 1-based positions of an element in an array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<int[]> arrayPositions(T[] array, SqmExpression<T> elementExpression);
+	@Override
+	<T> SqmPredicate arrayContains(Expression<T[]> arrayExpression, Expression<T> elementExpression);
 
-	/**
-	 * Determines all 1-based positions of an element in an array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<int[]> arrayPositions(T[] array, T element);
+	@Override
+	<T> SqmPredicate arrayContains(Expression<T[]> arrayExpression, T element);
 
-	/**
-	 * Determines all 1-based positions of an element in an array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<List<Integer>> arrayPositionsList(SqmExpression<T[]> arrayExpression, SqmExpression<T> elementExpression);
+	@Override
+	<T> SqmPredicate arrayContains(T[] array, Expression<T> elementExpression);
 
-	/**
-	 * Determines all 1-based positions of an element in an array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<List<Integer>> arrayPositionsList(SqmExpression<T[]> arrayExpression, T element);
+	@Override
+	<T> SqmPredicate arrayContainsNullable(Expression<T[]> arrayExpression, Expression<T> elementExpression);
 
-	/**
-	 * Determines all 1-based positions of an element in an array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<List<Integer>> arrayPositionsList(T[] array, SqmExpression<T> elementExpression);
+	@Override
+	<T> SqmPredicate arrayContainsNullable(Expression<T[]> arrayExpression, T element);
 
-	/**
-	 * Determines all 1-based positions of an element in an array.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<List<Integer>> arrayPositionsList(T[] array, T element);
+	@Override
+	<T> SqmPredicate arrayContainsNullable(T[] array, Expression<T> elementExpression);
 
-	/**
-	 * Concatenates the non-null array elements with a separator, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<String> arrayToString(SqmExpression<? extends Object[]> arrayExpression, SqmExpression<String> separatorExpression);
+	@Override
+	<T> SqmPredicate arrayContainsAll(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
 
-	/**
-	 * Concatenates the non-null array elements with a separator, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<String> arrayToString(SqmExpression<? extends Object[]> arrayExpression, String separator);
+	@Override
+	<T> SqmPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray);
 
-	/**
-	 * Concatenates the non-null array elements with a separator, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<String> arrayToString(Object[] array, SqmExpression<String> separatorExpression);
+	@Override
+	<T> SqmPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression);
 
-	/**
-	 * Concatenates the non-null array elements with a separator, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<String> arrayToString(Object[] array, String separator);
+	@Override
+	<T> SqmPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression);
+
+	@Override
+	<T> SqmPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray);
+
+	@Override
+	<T> SqmPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression);
+
+	@Override
+	<T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+
+	@Override
+	<T> SqmPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2);
+
+	@Override
+	<T> SqmPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2);
+
+	@Override
+	<T> SqmPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2);
+
+	@Override
+	<T> SqmPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2);
+
+	@Override
+	<T> SqmPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Array functions for collection types
 
-	/**
-	 * Creates a basic collection literal with the {@code array} constructor function.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionLiteral(E... elements);
-
-	/**
-	 * Determines the 1-based position of an element in a basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmExpression<Integer> collectionPosition(SqmExpression<? extends Collection<? extends E>> collectionExpression, E element);
-
-	/**
-	 * Determines the 1-based position of an element in a basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmExpression<Integer> collectionPosition(SqmExpression<? extends Collection<? extends E>> collectionExpression, SqmExpression<E> elementExpression);
-
-	/**
-	 * Determines the length of a basic collection.
-	 *
-	 * @since 6.4
-	 */
-	SqmExpression<Integer> collectionLength(SqmExpression<? extends Collection<?>> collectionExpression);
-
-	/**
-	 * Concatenates basic collections with each other in order.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(SqmExpression<C> collectionExpression1, SqmExpression<? extends Collection<? extends E>> collectionExpression2);
-
-	/**
-	 * Concatenates basic collections with each other in order.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(SqmExpression<C> collectionExpression1, Collection<? extends E> collection2);
-
-	/**
-	 * Concatenates basic collections with each other in order.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(C collection1, SqmExpression<? extends Collection<? extends E>> collectionExpression2);
-
-	/**
-	 * Concatenates basic collections with each other in order.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(C collection1, Collection<? extends E> collection2);
-
-	/**
-	 * Appends element to basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(SqmExpression<C> collectionExpression, SqmExpression<? extends E> elementExpression);
-
-	/**
-	 * Appends element to basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(SqmExpression<C> collectionExpression, E element);
-
-	/**
-	 * Appends element to basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(C collection, SqmExpression<? extends E> elementExpression);
-
-	/**
-	 * Appends element to basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(C collection, E element);
-
-	/**
-	 * Prepends element to basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(SqmExpression<? extends E> elementExpression, SqmExpression<C> collectionExpression);
-
-	/**
-	 * Prepends element to basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(E element, SqmExpression<C> collectionExpression);
-
-	/**
-	 * Prepends element to basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(SqmExpression<? extends E> elementExpression, C collection);
-
-	/**
-	 * Prepends element to basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(E element, C collection);
-
-	/**
-	 * Whether a basic collection contains an element.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContains(SqmExpression<? extends Collection<? super E>> collectionExpression, SqmExpression<? extends E> elementExpression);
-
-	/**
-	 * Whether a basic collection contains an element.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContains(SqmExpression<? extends Collection<? super E>> collectionExpression, E element);
-
-	/**
-	 * Whether a basic collection contains an element.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContains(Collection<? super E> collection, SqmExpression<? extends E> elementExpression);
-
-	/**
-	 * Whether a basic collection contains an element.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContains(Collection<? super E> collection, E element);
-
-	/**
-	 * Whether a basic collection contains a nullable element.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContainsNullable(SqmExpression<? extends Collection<? super E>> collectionExpression, SqmExpression<? extends E> elementExpression);
-
-	/**
-	 * Whether a basic collection contains a nullable element.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContainsNullable(SqmExpression<? extends Collection<? super E>> collectionExpression, E element);
-
-	/**
-	 * Whether a basic collection contains a nullable element.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContainsNullable(Collection<? super E> collection, SqmExpression<? extends E> elementExpression);
-
-	/**
-	 * Whether a basic collection contains a nullable element.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContainsNullable(Collection<? super E> collection, E element);
-
-	/**
-	 * Whether a basic collection contains another basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContainsAll(SqmExpression<? extends Collection<? extends E>> collectionExpression, SqmExpression<? extends Collection<? extends E>> subCollectionExpression);
-
-	/**
-	 * Whether a basic collection contains another basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContainsAll(SqmExpression<? extends Collection<? extends E>> collectionExpression, Collection<? extends E> subCollection);
-
-	/**
-	 * Whether a basic collection contains another basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContainsAll(Collection<? extends E> collection, SqmExpression<? extends Collection<? extends E>> subArrayExpression);
-
-	/**
-	 * Whether a basic collection contains another basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContainsAll(Collection<? extends E> collection, Collection<? extends E> subCollection);
-
-	/**
-	 * Whether a basic collection contains another basic collection with nullable elements.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContainsAllNullable(SqmExpression<? extends Collection<? extends E>> collectionExpression, SqmExpression<? extends Collection<? extends E>> subCollectionExpression);
-
-	/**
-	 * Whether a basic collection contains another basic collection with nullable elements.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContainsAllNullable(SqmExpression<? extends Collection<? extends E>> collectionExpression, Collection<? extends E> subCollection);
-
-	/**
-	 * Whether a basic collection contains another basic collection with nullable elements.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContainsAllNullable(Collection<? extends E> collection, SqmExpression<? extends Collection<? extends E>> subCollectionExpression);
-
-	/**
-	 * Whether a basic collection contains another basic collection with nullable elements.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionContainsAllNullable(Collection<? extends E> collection, Collection<? extends E> subCollection);
-
-	/**
-	 * Whether one basic collection has any elements common with another basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionOverlaps(SqmExpression<? extends Collection<? extends E>> collectionExpression1, SqmExpression<? extends Collection<? extends E>> collectionExpression2);
-
-	/**
-	 * Whether one basic collection has any elements common with another basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionOverlaps(SqmExpression<? extends Collection<? extends E>> collectionExpression1, Collection<? extends E> collection2);
-
-	/**
-	 * Whether one basic collection has any elements common with another basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionOverlaps(Collection<? extends E> collection1, SqmExpression<? extends Collection<? extends E>> collectionExpression2);
-
-	/**
-	 * Whether one basic collection has any elements common with another basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionOverlaps(Collection<? extends E> collection1, Collection<? extends E> collection2);
-
-	/**
-	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionOverlapsNullable(SqmExpression<? extends Collection<? extends E>> collectionExpression1, SqmExpression<? extends Collection<? extends E>> collectionExpression2);
-
-	/**
-	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionOverlapsNullable(SqmExpression<? extends Collection<? extends E>> collectionExpression1, Collection<? extends E> collection2);
-
-	/**
-	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionOverlapsNullable(Collection<? extends E> collection1, SqmExpression<? extends Collection<? extends E>> collectionExpression2);
-
-	/**
-	 * Whether one basic collection has any elements common with another basic collection, supporting {@code null} elements.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmPredicate collectionOverlapsNullable(Collection<? extends E> collection1, Collection<? extends E> collection2);
-
-	/**
-	 * Accesses the element of the basic collection by 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmExpression<E> collectionGet(SqmExpression<? extends Collection<E>> collectionExpression, SqmExpression<Integer> indexExpression);
-
-	/**
-	 * Accesses the element of the basic collection by 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmExpression<E> collectionGet(SqmExpression<? extends Collection<E>> collectionExpression, Integer index);
-
-	/**
-	 * Accesses the element of the basic collection by 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmExpression<E> collectionGet(Collection<E> collection, SqmExpression<Integer> indexExpression);
-
-	/**
-	 * Accesses the element of the basic collection by 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<E> SqmExpression<E> collectionGet(Collection<E> collection, Integer index);
-
-	/**
-	 * Creates basic collection copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(SqmExpression<C> collectionExpression, SqmExpression<Integer> indexExpression, SqmExpression<? extends E> elementExpression);
-	/**
-	 * Creates basic collection copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(SqmExpression<C> collectionExpression, SqmExpression<Integer> indexExpression, E element);
-
-	/**
-	 * Creates basic collection copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(SqmExpression<C> collectionExpression, Integer index, SqmExpression<? extends E> elementExpression);
-
-	/**
-	 * Creates basic collection copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(SqmExpression<C> collectionExpression, Integer index, E element);
-
-	/**
-	 * Creates basic collection copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(C collection, SqmExpression<Integer> indexExpression, SqmExpression<? extends E> elementExpression);
-
-	/**
-	 * Creates basic collection copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(C collection, SqmExpression<Integer> indexExpression, E element);
-
-	/**
-	 * Creates basic collection copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(C collection, Integer index, SqmExpression<? extends E> elementExpression);
-
-	/**
-	 * Creates basic collection copy with given element at given 1-based index.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(C collection, Integer index, E element);
-
-	/**
-	 * Creates basic collection copy with given element removed.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(SqmExpression<C> collectionExpression, SqmExpression<? extends E> elementExpression);
-
-	/**
-	 * Creates basic collection copy with given element removed.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(SqmExpression<C> collectionExpression, E element);
-
-	/**
-	 * Creates basic collection copy with given element removed.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(C collection, SqmExpression<? extends E> elementExpression);
-
-	/**
-	 * Creates basic collection copy with given element removed.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(C collection, E element);
-
-	/**
-	 * Creates basic collection copy with the element at the given 1-based index removed.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(SqmExpression<C> collectionExpression, SqmExpression<Integer> indexExpression);
-
-	/**
-	 * Creates basic collection copy with the element at the given 1-based index removed.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(SqmExpression<C> collectionExpression, Integer index);
-
-	/**
-	 * Creates basic collection copy with the element at the given 1-based index removed.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(C collection, SqmExpression<Integer> indexExpression);
-
-	/**
-	 * Creates basic collection copy with the element at the given 1-based index removed.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(C collection, Integer index);
-
-	/**
-	 * Creates a sub-collection of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionSlice(SqmExpression<C> collectionExpression, SqmExpression<Integer> lowerIndexExpression, SqmExpression<Integer> upperIndexExpression);
-
-	/**
-	 * Creates a sub-collection of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionSlice(SqmExpression<C> collectionExpression, SqmExpression<Integer> lowerIndexExpression, Integer upperIndex);
-
-	/**
-	 * Creates a sub-collection of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionSlice(SqmExpression<C> collectionExpression, Integer lowerIndex, SqmExpression<Integer> upperIndexExpression);
-
-	/**
-	 * Creates a sub-collection of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionSlice(SqmExpression<C> collectionExpression, Integer lowerIndex, Integer upperIndex);
-
-	/**
-	 * Creates a sub-collection of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionSlice(C collection, SqmExpression<Integer> lowerIndexExpression, SqmExpression<Integer> upperIndexExpression);
-
-	/**
-	 * Creates a sub-collection of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionSlice(C collection, SqmExpression<Integer> lowerIndexExpression, Integer upperIndex);
-
-	/**
-	 * Creates a sub-collection of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionSlice(C collection, Integer lowerIndex, SqmExpression<Integer> upperIndexExpression);
-
-	/**
-	 * Creates a sub-collection of the based on 1-based lower and upper index.
-	 * Both indexes are inclusive.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionSlice(C collection, Integer lowerIndex, Integer upperIndex);
-
-	/**
-	 * Creates basic collection copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(SqmExpression<C> collectionExpression, SqmExpression<? extends E> oldElementExpression, SqmExpression<? extends E> newElementExpression);
-
-	/**
-	 * Creates basic collection copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(SqmExpression<C> collectionExpression, SqmExpression<? extends E> oldElementExpression, E newElement);
-
-	/**
-	 * Creates basic collection copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(SqmExpression<C> collectionExpression, E oldElement, SqmExpression<? extends E> newElementExpression);
-
-	/**
-	 * Creates basic collection copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(SqmExpression<C> collectionExpression, E oldElement, E newElement);
-
-	/**
-	 * Creates basic collection copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(C collection, SqmExpression<? extends E> oldElementExpression, SqmExpression<? extends E> newElementExpression);
-
-	/**
-	 * Creates basic collection copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(C collection, SqmExpression<? extends E> oldElementExpression, E newElement);
-
-	/**
-	 * Creates basic collection copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(C collection, E oldElement, SqmExpression<? extends E> newElementExpression);
-
-	/**
-	 * Creates basic collection copy replacing a given element with another.
-	 *
-	 * @since 6.4
-	 */
-	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(C collection, E oldElement, E newElement);
-
-	/**
-	 * Creates basic collection copy without the last N elements, specified by the second argument.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionTrim(SqmExpression<C> arrayExpression, SqmExpression<Integer> elementCountExpression);
-
-	/**
-	 * Creates basic collection copy without the last N elements, specified by the second argument.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionTrim(SqmExpression<C> arrayExpression, Integer elementCount);
-
-	/**
-	 * Creates basic collection copy without the last N elements, specified by the second argument.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionTrim(C collection, SqmExpression<Integer> elementCountExpression);
-
-	/**
-	 * Creates basic collection copy without the last N elements, specified by the second argument.
-	 *
-	 * @since 6.4
-	 */
-	<C extends Collection<?>> SqmExpression<C> collectionTrim(C collection, Integer elementCount);
-
-	/**
-	 * Creates basic collection with the same element N times, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<Collection<T>> collectionFill(SqmExpression<T> elementExpression, SqmExpression<Integer> elementCountExpression);
-
-	/**
-	 * Creates basic collection with the same element N times, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<Collection<T>> collectionFill(SqmExpression<T> elementExpression, Integer elementCount);
-
-	/**
-	 * Creates basic collection with the same element N times, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<Collection<T>> collectionFill(T element, SqmExpression<Integer> elementCountExpression);
-
-	/**
-	 * Creates basic collection with the same element N times, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
+	@Override
+	<E, C extends Collection<E>> SqmExpression<C> collectionLiteral(E... elements);
+
+	@Override
+	SqmExpression<Integer> collectionLength(Expression<? extends Collection<?>> collectionExpression);
+
+	@Override
+	<E> SqmExpression<Integer> collectionPosition(Expression<? extends Collection<? extends E>> collectionExpression, E element);
+
+	@Override
+	<E> SqmExpression<Integer> collectionPosition(Expression<? extends Collection<? extends E>> collectionExpression, Expression<E> elementExpression);
+
+	@Override
+	<T> SqmExpression<int[]> collectionPositions(Expression<? extends Collection<? super T>> collectionExpression, Expression<T> elementExpression);
+
+	@Override
+	<T> SqmExpression<int[]> collectionPositions(Expression<? extends Collection<? super T>> collectionExpression, T element);
+
+	@Override
+	<T> SqmExpression<List<Integer>> collectionPositionsList(Expression<? extends Collection<? super T>> collectionExpression, Expression<T> elementExpression);
+
+	@Override
+	<T> SqmExpression<List<Integer>> collectionPositionsList(Expression<? extends Collection<? super T>> collectionExpression, T element);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(Expression<C> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(Expression<C> collectionExpression1, Collection<? extends E> collection2);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionConcat(C collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(Expression<C> collectionExpression, Expression<? extends E> elementExpression);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionAppend(Expression<C> collectionExpression, E element);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(Expression<? extends E> elementExpression, Expression<C> collectionExpression);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionPrepend(E element, Expression<C> collectionExpression);
+
+	@Override
+	<E> SqmExpression<E> collectionGet(Expression<? extends Collection<E>> collectionExpression, Expression<Integer> indexExpression);
+
+	@Override
+	<E> SqmExpression<E> collectionGet(Expression<? extends Collection<E>> collectionExpression, Integer index);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(Expression<C> collectionExpression, Expression<Integer> indexExpression, Expression<? extends E> elementExpression);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(Expression<C> collectionExpression, Expression<Integer> indexExpression, E element);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(Expression<C> collectionExpression, Integer index, Expression<? extends E> elementExpression);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionSet(Expression<C> collectionExpression, Integer index, E element);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(Expression<C> collectionExpression, Expression<? extends E> elementExpression);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionRemove(Expression<C> collectionExpression, E element);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(Expression<C> collectionExpression, Expression<Integer> indexExpression);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionRemoveIndex(Expression<C> collectionExpression, Integer index);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(Expression<C> collectionExpression, Expression<Integer> lowerIndexExpression, Expression<Integer> upperIndexExpression);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(Expression<C> collectionExpression, Expression<Integer> lowerIndexExpression, Integer upperIndex);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(Expression<C> collectionExpression, Integer lowerIndex, Expression<Integer> upperIndexExpression);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionSlice(Expression<C> collectionExpression, Integer lowerIndex, Integer upperIndex);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(Expression<C> collectionExpression, Expression<? extends E> oldElementExpression, Expression<? extends E> newElementExpression);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(Expression<C> collectionExpression, Expression<? extends E> oldElementExpression, E newElement);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(Expression<C> collectionExpression, E oldElement, Expression<? extends E> newElementExpression);
+
+	@Override
+	<E, C extends Collection<? super E>> SqmExpression<C> collectionReplace(Expression<C> collectionExpression, E oldElement, E newElement);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionTrim(Expression<C> arrayExpression, Expression<Integer> elementCountExpression);
+
+	@Override
+	<C extends Collection<?>> SqmExpression<C> collectionTrim(Expression<C> arrayExpression, Integer elementCount);
+
+	@Override
+	<T> SqmExpression<Collection<T>> collectionFill(Expression<T> elementExpression, Expression<Integer> elementCountExpression);
+
+	@Override
+	<T> SqmExpression<Collection<T>> collectionFill(Expression<T> elementExpression, Integer elementCount);
+
+	@Override
+	<T> SqmExpression<Collection<T>> collectionFill(T element, Expression<Integer> elementCountExpression);
+
+	@Override
 	<T> SqmExpression<Collection<T>> collectionFill(T element, Integer elementCount);
 
-	/**
-	 * Determines all 1-based positions of an element in a basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<int[]> collectionPositions(SqmExpression<? extends Collection<? super T>> collectionExpression, SqmExpression<T> elementExpression);
+	@Override
+	<T> SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, Expression<String> separatorExpression);
 
-	/**
-	 * Determines all 1-based positions of an element in a basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<int[]> collectionPositions(SqmExpression<? extends Collection<? super T>> collectionExpression, T element);
+	@Override
+	<T> SqmExpression<String> collectionToString(Expression<? extends Collection<?>> collectionExpression, String separator);
 
-	/**
-	 * Determines all 1-based positions of an element in a basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<int[]> collectionPositions(Collection<? super T> collection, SqmExpression<T> elementExpression);
+	@Override
+	<E> SqmPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, Expression<? extends E> elementExpression);
 
-	/**
-	 * Determines all 1-based positions of an element in a basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<int[]> collectionPositions(Collection<? super T> collection, T element);
+	@Override
+	<E> SqmPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, E element);
 
-	/**
-	 * Determines all 1-based positions of an element in a basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<List<Integer>> collectionPositionsList(SqmExpression<? extends Collection<? super T>> collectionExpression, SqmExpression<T> elementExpression);
+	@Override
+	<E> SqmPredicate collectionContains(Collection<E> collection, Expression<E> elementExpression);
 
-	/**
-	 * Determines all 1-based positions of an element in a basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<List<Integer>> collectionPositionsList(SqmExpression<? extends Collection<? super T>> collectionExpression, T element);
+	@Override
+	<E> SqmPredicate collectionContainsNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends E> elementExpression);
 
-	/**
-	 * Determines all 1-based positions of an element in a basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<List<Integer>> collectionPositionsList(Collection<? super T> collection, SqmExpression<T> elementExpression);
+	@Override
+	<E> SqmPredicate collectionContainsNullable(Expression<? extends Collection<E>> collectionExpression, E element);
 
-	/**
-	 * Determines all 1-based positions of an element in a basic collection.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<List<Integer>> collectionPositionsList(Collection<? super T> collection, T element);
+	@Override
+	<E> SqmPredicate collectionContainsNullable(Collection<E> collection, Expression<E> elementExpression);
 
-	/**
-	 * Concatenates the non-null basic collection elements with a separator, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<String> collectionToString(SqmExpression<? extends Collection<?>> collectionExpression, SqmExpression<String> separatorExpression);
+	@Override
+	<E> SqmPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
 
-	/**
-	 * Concatenates the non-null basic collection elements with a separator, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<String> collectionToString(SqmExpression<? extends Collection<?>> collectionExpression, String separator);
+	@Override
+	<E> SqmPredicate collectionContainsAll(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
 
-	/**
-	 * Concatenates the non-null basic collection elements with a separator, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<String> collectionToString(Collection<?> collection, SqmExpression<String> separatorExpression);
+	@Override
+	<E> SqmPredicate collectionContainsAll(Collection<E> collection, Expression<? extends Collection<? extends E>> subArrayExpression);
 
-	/**
-	 * Concatenates the non-null basic collection elements with a separator, as specified by the arguments.
-	 *
-	 * @since 6.4
-	 */
-	<T> SqmExpression<String> collectionToString(Collection<?> collection, String separator);
+	@Override
+	<E> SqmPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Expression<? extends Collection<? extends E>> subCollectionExpression);
+
+	@Override
+	<E> SqmPredicate collectionContainsAllNullable(Expression<? extends Collection<E>> collectionExpression, Collection<? extends E> subCollection);
+
+	@Override
+	<E> SqmPredicate collectionContainsAllNullable(Collection<E> collection, Expression<? extends Collection<? extends E>> subCollectionExpression);
+
+	@Override
+	<E> SqmPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	@Override
+	<E> SqmPredicate collectionOverlaps(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+
+	@Override
+	<E> SqmPredicate collectionOverlaps(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	@Override
+	<E> SqmPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+	@Override
+	<E> SqmPredicate collectionOverlapsNullable(Expression<? extends Collection<E>> collectionExpression1, Collection<? extends E> collection2);
+
+	@Override
+	<E> SqmPredicate collectionOverlapsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

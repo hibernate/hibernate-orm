@@ -6,9 +6,13 @@
  */
 package org.hibernate.orm.test.function.array;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.sqm.NodeBuilder;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -20,6 +24,8 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -71,14 +77,36 @@ public class ArrayConstructorTest {
 	}
 
 	@Test
-	public void testMultipleArguments(SessionFactoryScope scope) {
+	public void testNodeBuilderArray(SessionFactoryScope scope) {
 		scope.inSession( em -> {
-			//tag::hql-array-example[]
-			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where e.theArray is not distinct from array('abc', null, 'def')", EntityWithArrays.class )
-					.getResultList();
-			//end::hql-array-example[]
-			assertEquals( 1, results.size() );
-			assertEquals( 2L, results.get( 0 ).getId() );
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.arrayLiteral( "xyz" )
+			);
+			final List<Tuple> result = em.createQuery( cq ).getResultList();
+			assertEquals( 3, result.size() );
+			assertEquals( 1, result.get( 0 ).get( 1, String[].class ).length );
+			assertEquals( "xyz", result.get( 0 ).get( 1, String[].class )[0] );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderCollection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.collectionLiteral( "xyz" )
+			);
+			final List<Tuple> result = em.createQuery( cq ).getResultList();
+			assertEquals( 3, result.size() );
+			assertEquals( 1, result.get( 0 ).get( 1, Collection.class ).size() );
+			assertEquals( "xyz", result.get( 0 ).get( 1, Collection.class ).iterator().next() );
 		} );
 	}
 

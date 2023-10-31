@@ -7,6 +7,7 @@
 package org.hibernate.dialect.function.array;
 
 import java.util.List;
+import java.util.Objects;
 
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.sqm.SqmExpressible;
@@ -46,7 +47,7 @@ public class ArraysOfSameTypeArgumentValidator implements ArgumentsValidator {
 					}
 					arrayType = (BasicPluralType<?, ?>) sqmType;
 				}
-				else if ( !arrayType.equals( sqmType ) ) {
+				else if ( !isCompatible( arrayType, sqmType ) ) {
 					throw new FunctionArgumentException(
 							String.format(
 									"Parameter %d of function '%s()' requires an array type %s, but argument is of type '%s'",
@@ -59,6 +60,11 @@ public class ArraysOfSameTypeArgumentValidator implements ArgumentsValidator {
 				}
 			}
 		}
+	}
+
+	private static boolean isCompatible(BasicPluralType<?,?> arrayType, DomainType<?> sqmType) {
+		return arrayType == sqmType || sqmType instanceof BasicPluralType<?, ?>
+				&& Objects.equals( arrayType.getElementType(), ( (BasicPluralType<?, ?>) sqmType ).getElementType() );
 	}
 
 	@Override

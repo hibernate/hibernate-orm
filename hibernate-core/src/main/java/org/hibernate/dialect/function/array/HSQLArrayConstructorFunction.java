@@ -8,11 +8,8 @@ package org.hibernate.dialect.function.array;
 
 import java.util.List;
 
-import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.sql.ast.SqlAstTranslator;
-import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -20,8 +17,8 @@ import org.hibernate.type.BottomType;
 
 public class HSQLArrayConstructorFunction extends ArrayConstructorFunction {
 
-	public HSQLArrayConstructorFunction() {
-		super( true );
+	public HSQLArrayConstructorFunction(boolean list) {
+		super( list, true );
 	}
 
 	@Override

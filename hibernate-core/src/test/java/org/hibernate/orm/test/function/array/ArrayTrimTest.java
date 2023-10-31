@@ -7,9 +7,13 @@
 package org.hibernate.orm.test.function.array;
 
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.sqm.NodeBuilder;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -93,6 +97,38 @@ public class ArrayTrimTest {
 			catch (PersistenceException ex) {
 				assertInstanceOf( SQLException.class, ex.getCause() );
 			}
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderArray(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.where( root.get( "id" ).equalTo( 2L ) );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.arrayTrim( root.<String[]>get( "theArray" ), cb.literal( 1 ) ),
+					cb.arrayTrim( root.get( "theArray" ), 1 )
+			);
+			em.createQuery( cq ).getResultList();
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderCollection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.where( root.get( "id" ).equalTo( 2L ) );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.collectionTrim( root.<Collection<String>>get( "theCollection" ), cb.literal( 1 ) ),
+					cb.collectionTrim( root.get( "theCollection" ), 1 )
+			);
+			em.createQuery( cq ).getResultList();
 		} );
 	}
 

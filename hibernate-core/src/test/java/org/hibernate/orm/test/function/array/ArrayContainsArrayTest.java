@@ -6,10 +6,15 @@
  */
 package org.hibernate.orm.test.function.array;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.sqm.NodeBuilder;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -22,6 +27,9 @@ import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.Expression;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -137,6 +145,64 @@ public class ArrayContainsArrayTest {
 					EntityWithArrays.class
 			).setParameter( "param", null ).getResultList();
 			assertEquals( 0, results.size() );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderArray(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.arrayContainsAll( root.get( "theArray" ), cb.arrayLiteral( "xyz" ) ),
+					cb.arrayContainsAll( root.get( "theArray" ), new String[]{ "xyz" } ),
+					cb.arrayContainsAll( new String[]{ "abc", "xyz" }, cb.arrayLiteral( "xyz" ) ),
+					cb.arrayContainsAllNullable( root.get( "theArray" ), cb.arrayLiteral( "xyz" ) ),
+					cb.arrayContainsAllNullable( root.get( "theArray" ), new String[]{ "xyz" } ),
+					cb.arrayContainsAllNullable( new String[]{ "abc", "xyz" }, cb.arrayLiteral( "xyz" ) )
+			);
+			em.createQuery( cq ).getResultList();
+
+			// Should all fail to compile
+//			cb.arrayContainsAll( root.<Integer[]>get( "theArray" ), cb.arrayLiteral( "xyz" ) );
+//			cb.arrayContainsAll( root.<Integer[]>get( "theArray" ), new String[]{ "xyz" } );
+//			cb.arrayContainsAll( new String[0], cb.literal( 1 ) );
+//			cb.arrayContainsAll( new Integer[0], cb.literal( "" ) );
+//			cb.arrayContainsAllNullable( root.<Integer[]>get( "theArray" ), cb.arrayLiteral( "xyz" ) );
+//			cb.arrayContainsAllNullable( root.<Integer[]>get( "theArray" ), new String[]{ "xyz" } );
+//			cb.arrayContainsAllNullable( new String[0], cb.literal( 1 ) );
+//			cb.arrayContainsAllNullable( new Integer[0], cb.literal( "" ) );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderCollection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.collectionContainsAll( root.<Collection<String>>get( "theCollection" ), cb.collectionLiteral( "xyz" ) ),
+					cb.collectionContainsAll( root.get( "theCollection" ), List.of( "xyz" ) ),
+					cb.collectionContainsAll( List.of( "abc", "xyz" ), cb.collectionLiteral( "xyz" ) ),
+					cb.collectionContainsAllNullable( root.<Collection<String>>get( "theCollection" ), cb.collectionLiteral( "xyz" ) ),
+					cb.collectionContainsAllNullable( root.get( "theCollection" ), List.of( "xyz" ) ),
+					cb.collectionContainsAllNullable( List.of( "abc", "xyz" ), cb.collectionLiteral( "xyz" ) )
+			);
+			em.createQuery( cq ).getResultList();
+
+			// Should all fail to compile
+//			cb.collectionContainsAll( root.<Collection<Integer>>get( "theCollection" ), cb.collectionLiteral( "xyz" ) );
+//			cb.collectionContainsAll( root.<Collection<Integer>>get( "theCollection" ), List.of( "xyz" ) );
+//			cb.collectionContainsAll( Collections.<String>emptyList(), cb.literal( 1 ) );
+//			cb.collectionContainsAll( Collections.<Integer>emptyList(), cb.literal( "" ) );
+//			cb.collectionContainsAllNullable( root.<Collection<Integer>>get( "theCollection" ), cb.collectionLiteral( "xyz" ) );
+//			cb.collectionContainsAllNullable( root.<Collection<Integer>>get( "theCollection" ), List.of( "xyz" ) );
+//			cb.collectionContainsAllNullable( Collections.<String>emptyList(), cb.literal( 1 ) );
+//			cb.collectionContainsAllNullable( Collections.<Integer>emptyList(), cb.literal( "" ) );
 		} );
 	}
 

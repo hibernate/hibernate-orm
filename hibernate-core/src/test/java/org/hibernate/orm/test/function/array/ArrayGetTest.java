@@ -6,9 +6,13 @@
  */
 package org.hibernate.orm.test.function.array;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaRoot;
+import org.hibernate.query.sqm.NodeBuilder;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -20,6 +24,8 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Tuple;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -79,6 +85,36 @@ public class ArrayGetTest {
 			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where array_get(e.theArray,100) is null", EntityWithArrays.class )
 					.getResultList();
 			assertEquals( 3, results.size() );
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderArray(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.arrayGet( root.get( "theArray" ), cb.literal( 1 ) ),
+					cb.arrayGet( root.get( "theArray" ), 1 )
+			);
+			em.createQuery( cq ).getResultList();
+		} );
+	}
+
+	@Test
+	public void testNodeBuilderCollection(SessionFactoryScope scope) {
+		scope.inSession( em -> {
+			final NodeBuilder cb = (NodeBuilder) em.getCriteriaBuilder();
+			final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
+			final JpaRoot<EntityWithArrays> root = cq.from( EntityWithArrays.class );
+			cq.multiselect(
+					root.get( "id" ),
+					cb.collectionGet( root.get( "theCollection" ), cb.literal( 1 ) ),
+					cb.collectionGet( root.get( "theCollection" ), 1 )
+			);
+			em.createQuery( cq ).getResultList();
 		} );
 	}
 

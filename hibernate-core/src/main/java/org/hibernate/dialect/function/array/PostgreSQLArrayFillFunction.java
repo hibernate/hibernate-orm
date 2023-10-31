@@ -20,6 +20,10 @@ import org.hibernate.sql.ast.tree.expression.Literal;
  */
 public class PostgreSQLArrayFillFunction extends AbstractArrayFillFunction {
 
+	public PostgreSQLArrayFillFunction(boolean list) {
+		super( list );
+	}
+
 	@Override
 	public void render(
 			SqlAppender sqlAppender,

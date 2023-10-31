@@ -25,6 +25,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -99,7 +100,8 @@ public class TypecheckUtil {
 	 * @see #isTypeAssignable(SqmPathSource, SqmExpressible, SessionFactoryImplementor)
 	 */
 	public static boolean areTypesComparable(
-			SqmExpressible<?> lhsType, SqmExpressible<?> rhsType,
+			SqmExpressible<?> lhsType,
+			SqmExpressible<?> rhsType,
 			SessionFactoryImplementor factory) {
 
 		if ( lhsType == null || rhsType == null || lhsType == rhsType ) {
@@ -118,7 +120,10 @@ public class TypecheckUtil {
 		// for embeddables, the embeddable class must match exactly
 
 		if ( lhsType instanceof EmbeddedSqmPathSource && rhsType instanceof EmbeddedSqmPathSource ) {
-			return areEmbeddableTypesComparable( (EmbeddedSqmPathSource<?>) lhsType, (EmbeddedSqmPathSource<?>) rhsType );
+			return areEmbeddableTypesComparable(
+					(EmbeddedSqmPathSource<?>) lhsType,
+					(EmbeddedSqmPathSource<?>) rhsType
+			);
 		}
 
 		// for tuple constructors, we must check each element
@@ -186,12 +191,17 @@ public class TypecheckUtil {
 		return false;
 	}
 
-	private static boolean areEmbeddableTypesComparable(EmbeddedSqmPathSource<?> lhsType, EmbeddedSqmPathSource<?> rhsType) {
+	private static boolean areEmbeddableTypesComparable(
+			EmbeddedSqmPathSource<?> lhsType,
+			EmbeddedSqmPathSource<?> rhsType) {
 		// no polymorphism for embeddable types
 		return rhsType.getNodeJavaType() == lhsType.getNodeJavaType();
 	}
 
-	private static boolean areTupleTypesComparable(SessionFactoryImplementor factory, TupleType<?> lhsTuple, TupleType<?> rhsTuple) {
+	private static boolean areTupleTypesComparable(
+			SessionFactoryImplementor factory,
+			TupleType<?> lhsTuple,
+			TupleType<?> rhsTuple) {
 		if ( rhsTuple.componentCount() != lhsTuple.componentCount() ) {
 			return false;
 		}
@@ -387,16 +397,18 @@ public class TypecheckUtil {
 						if ( !Number.class.isAssignableFrom( rightJavaType )
 								// we can scale a duration by a number
 								&& !TemporalAmount.class.isAssignableFrom( rightJavaType ) ) {
-							throw new SemanticException( "Operand of " + op.getOperatorSqlText()
-									+ " is of type '" + rightNodeType.getTypeName() + "' which is not a numeric type"
-									+ " (it is not an instance of 'java.lang.Number' or 'java.time.TemporalAmount')" );
+							throw new SemanticException(
+									"Operand of " + op.getOperatorSqlText() + " is of type '" + rightNodeType.getTypeName() +
+											"' which is not a numeric type (it is not an instance of 'java.lang.Number' or 'java.time.TemporalAmount')"
+							);
 						}
 						break;
 					default:
 						if ( !Number.class.isAssignableFrom( rightJavaType ) ) {
-							throw new SemanticException( "Operand of " + op.getOperatorSqlText()
-									+ " is of type '" + rightNodeType.getTypeName() + "' which is not a numeric type"
-									+ " (it is not an instance of 'java.lang.Number')" );
+							throw new SemanticException(
+									"Operand of " + op.getOperatorSqlText() + " is of type '" + rightNodeType.getTypeName() +
+											"' which is not a numeric type (it is not an instance of 'java.lang.Number')"
+							);
 						}
 						break;
 				}
@@ -408,15 +420,17 @@ public class TypecheckUtil {
 					case SUBTRACT:
 						// we can add/subtract durations
 						if ( !TemporalAmount.class.isAssignableFrom( rightJavaType ) ) {
-							throw new SemanticException( "Operand of " + op.getOperatorSqlText()
-									+ " is of type '" + rightNodeType.getTypeName() + "' which is not a temporal amount"
-									+ " (it is not an instance of 'java.time.TemporalAmount')" );
+							throw new SemanticException(
+									"Operand of " + op.getOperatorSqlText() + " is of type '" + rightNodeType.getTypeName() +
+											"' which is not a temporal amount (it is not an instance of 'java.time.TemporalAmount')"
+							);
 						}
 						break;
 					default:
-						throw new SemanticException( "Operand of " + op.getOperatorSqlText()
-								+ " is of type '" + leftNodeType.getTypeName() + "' which is not a numeric type"
-								+ " (it is not an instance of 'java.lang.Number')" );
+						throw new SemanticException(
+								"Operand of " + op.getOperatorSqlText() + " is of type '" + leftNodeType.getTypeName() +
+										"' which is not a numeric type (it is not an instance of 'java.lang.Number')"
+						);
 				}
 			}
 			else if ( Temporal.class.isAssignableFrom( leftJavaType )
@@ -426,9 +440,10 @@ public class TypecheckUtil {
 					case ADD:
 						// we can add a duration to date, time, or datetime
 						if ( !TemporalAmount.class.isAssignableFrom( rightJavaType ) ) {
-							throw new SemanticException( "Operand of " + op.getOperatorSqlText()
-									+ " is of type '" + rightNodeType.getTypeName() + "' which is not a temporal amount"
-									+ " (it is not an instance of 'java.time.TemporalAmount')" );
+							throw new SemanticException(
+									"Operand of " + op.getOperatorSqlText() + " is of type '" + rightNodeType.getTypeName() +
+											"' which is not a temporal amount (it is not an instance of 'java.time.TemporalAmount')"
+							);
 						}
 						break;
 					case SUBTRACT:
@@ -437,23 +452,46 @@ public class TypecheckUtil {
 								&& !java.util.Date.class.isAssignableFrom( rightJavaType )
 								// we can subtract a duration from a date, time, or datetime
 								&& !TemporalAmount.class.isAssignableFrom( rightJavaType ) ) {
-							throw new SemanticException( "Operand of " + op.getOperatorSqlText()
-									+ " is of type '" + rightNodeType.getTypeName() + "' which is not a temporal amount"
-									+ " (it is not an instance of 'java.time.TemporalAmount')" );
+							throw new SemanticException(
+									"Operand of " + op.getOperatorSqlText() + " is of type '" + rightNodeType.getTypeName() +
+											"' which is not a temporal amount (it is not an instance of 'java.time.TemporalAmount')"
+							);
 						}
 						break;
 					default:
-						throw new SemanticException( "Operand of " + op.getOperatorSqlText()
-								+ " is of type '" + leftNodeType.getTypeName() + "' which is not a numeric type"
-								+ " (it is not an instance of 'java.lang.Number')" );
+						throw new SemanticException(
+								"Operand of " + op.getOperatorSqlText() + " is of type '" + leftNodeType.getTypeName() +
+										"' which is not a numeric type (it is not an instance of 'java.lang.Number')"
+						);
+				}
+			}
+			else if ( isNumberArray( leftNodeType ) ) {
+				// left operand is a number
+				if ( !isNumberArray( rightNodeType ) ) {
+					throw new SemanticException(
+							"Operand of " + op.getOperatorSqlText() + " is of type '" + rightNodeType.getTypeName() +
+									"' which is not a numeric array type" + " (it is not an instance of 'java.lang.Number[]')"
+					);
 				}
 			}
 			else {
-				throw new SemanticException( "Operand of " + op.getOperatorSqlText()
-						+ " is of type '" + leftNodeType.getTypeName() + "' which is not a numeric type"
-						+ " (it is not an instance of 'java.lang.Number', 'java.time.Temporal', or 'java.time.TemporalAmount')" );
+				throw new SemanticException(
+						"Operand of " + op.getOperatorSqlText()
+								+ " is of type '" + leftNodeType.getTypeName() + "' which is not a numeric type"
+								+ " (it is not an instance of 'java.lang.Number', 'java.time.Temporal', or 'java.time.TemporalAmount')"
+				);
 			}
 		}
+	}
+
+	private static boolean isNumberArray(SqmExpressible<?> expressible) {
+		final DomainType<?> domainType;
+		if ( expressible != null && ( domainType = expressible.getSqmType() ) != null ) {
+			return domainType instanceof BasicPluralType<?, ?> && Number.class.isAssignableFrom(
+					( (BasicPluralType<?, ?>) domainType ).getElementType().getJavaType()
+			);
+		}
+		return false;
 	}
 
 	public static void assertString(SqmExpression<?> expression) {
@@ -461,8 +499,10 @@ public class TypecheckUtil {
 		if ( nodeType != null ) {
 			final Class<?> javaType = nodeType.getExpressibleJavaType().getJavaTypeClass();
 			if ( javaType != String.class && javaType != char[].class ) {
-				throw new SemanticException( "Operand of 'like' is of type '" + nodeType.getTypeName() + "' which is not a string"
-						+ " (it is not an instance of 'java.lang.String' or 'char[]')" );
+				throw new SemanticException(
+						"Operand of 'like' is of type '" + nodeType.getTypeName() +
+								"' which is not a string (it is not an instance of 'java.lang.String' or 'char[]')"
+				);
 			}
 		}
 	}
@@ -487,8 +527,10 @@ public class TypecheckUtil {
 		if ( nodeType != null ) {
 			final Class<?> javaType = nodeType.getExpressibleJavaType().getJavaTypeClass();
 			if ( !TemporalAmount.class.isAssignableFrom( javaType ) ) {
-				throw new SemanticException( "Operand of 'by' is of type '" + nodeType.getTypeName() + "' which is not a duration"
-						+ " (it is not an instance of 'java.time.TemporalAmount')" );
+				throw new SemanticException(
+						"Operand of 'by' is of type '" + nodeType.getTypeName() +
+								"' which is not a duration (it is not an instance of 'java.time.TemporalAmount')"
+				);
 			}
 		}
 	}
@@ -498,9 +540,10 @@ public class TypecheckUtil {
 		if ( nodeType != null ) {
 			final Class<?> javaType = nodeType.getExpressibleJavaType().getJavaTypeClass();
 			if ( !Number.class.isAssignableFrom( javaType ) ) {
-				throw new SemanticException( "Operand of " + op.getOperatorChar()
-						+ " is of type '" + nodeType.getTypeName() + "' which is not a numeric type"
-						+ " (it is not an instance of 'java.lang.Number')" );
+				throw new SemanticException(
+						"Operand of " + op.getOperatorChar() + " is of type '" + nodeType.getTypeName() +
+								"' which is not a numeric type (it is not an instance of 'java.lang.Number')"
+				);
 			}
 		}
 	}

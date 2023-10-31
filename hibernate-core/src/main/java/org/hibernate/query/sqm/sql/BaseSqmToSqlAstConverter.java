@@ -388,6 +388,8 @@ import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.JavaTypeHelper;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
@@ -5861,7 +5863,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// Only use the inferred mapping as parameter type when the JavaType accepts values of the bind type
 				if ( inferredJdbcMapping.getMappedJavaType().isWider( paramJdbcMapping.getMappedJavaType() )
 						// and the bind type is not explicit or the bind type has the same JDBC type
-						&& ( !bindingTypeExplicit || paramJdbcMapping.getJdbcType() == inferredJdbcMapping.getJdbcType() ) ) {
+						&& ( !bindingTypeExplicit || canUseInferredType( paramJdbcMapping, inferredJdbcMapping ) ) ) {
 					return resolveInferredValueMappingForParameter( inferredValueMapping );
 				}
 			}
@@ -5950,6 +5952,15 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			return basicTypeForJavaType;
 		}
 		throw new ConversionException( "Could not determine ValueMapping for SqmParameter: " + sqmParameter );
+	}
+
+	private static boolean canUseInferredType(JdbcMapping bindJdbcMapping, JdbcMapping inferredJdbcMapping) {
+		final JdbcType bindJdbcType = bindJdbcMapping.getJdbcType();
+		final JdbcType inferredJdbcType = inferredJdbcMapping.getJdbcType();
+		// If the bind type has a different JDBC type, we prefer that over the inferred type.
+		return bindJdbcType == inferredJdbcType
+				|| bindJdbcType instanceof ArrayJdbcType && inferredJdbcType instanceof ArrayJdbcType
+				&& ( (ArrayJdbcType) bindJdbcType ).getElementJdbcType() == ( (ArrayJdbcType) inferredJdbcType ).getElementJdbcType();
 	}
 
 	private MappingModelExpressible<?> resolveInferredValueMappingForParameter(MappingModelExpressible<?> inferredValueMapping) {
@@ -6335,6 +6346,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( nodeType != null ) {
 			if ( nodeType instanceof BasicValuedMapping ) {
 				return (BasicValuedMapping) nodeType;
+			}
+			else if ( nodeType.getSqmType() instanceof BasicValuedMapping ) {
+				return (BasicValuedMapping) nodeType.getSqmType();
 			}
 			else {
 				return getTypeConfiguration().getBasicTypeForJavaType(

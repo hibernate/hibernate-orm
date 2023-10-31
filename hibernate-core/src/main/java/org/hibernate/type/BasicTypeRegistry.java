@@ -212,7 +212,7 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	public void register(BasicType<?> type, String key) {
-		typesByName.put( key, type );
+		register( type, new String[]{ key } );
 	}
 
 	public void register(BasicType<?> type, String... keys) {

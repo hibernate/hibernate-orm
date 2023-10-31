@@ -2009,11 +2009,11 @@ public class CommonFunctionFactory {
 				.setExactArgumentCount( 1 )
 				.register();
 
+
 		functionRegistry.namedAggregateDescriptorBuilder( "avg" )
 				.setArgumentRenderingMode( inferenceArgumentRenderingMode )
-				.setInvariantType(doubleType)
-				.setExactArgumentCount( 1 )
-				.setParameterTypes(NUMERIC)
+				.setArgumentsValidator( AvgFunction.Validator.INSTANCE )
+				.setReturnTypeResolver( new AvgFunction.ReturnTypeResolver( typeConfiguration ) )
 				.register();
 
 		functionRegistry.register(

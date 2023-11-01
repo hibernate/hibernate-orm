@@ -9,6 +9,7 @@ package org.hibernate.query.sqm.tree.select;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -64,12 +65,17 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
 import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.ParameterExpression;
 import jakarta.persistence.criteria.PluralJoin;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.EntityType;
+
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
 
 /**
  * @author Steve Ebersole
@@ -109,6 +115,15 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 		super( resultType, builder );
 		this.parent = parent;
 		applyInferableType( resultType );
+	}
+
+	public SqmSubQuery(
+			SqmQuery<?> parent,
+			EntityType<T> resultType,
+			NodeBuilder builder) {
+		super( resultType.getJavaType(), builder );
+		this.parent = parent;
+		applyInferableType( resultType.getJavaType() );
 	}
 
 	public SqmSubQuery(
@@ -518,9 +533,8 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public <X> SqmEntityJoin<X> correlate(JpaEntityJoin<X> parentEntityJoin) {
-		final SqmCorrelatedEntityJoin<X> correlated =
-				((SqmEntityJoin<X>) parentEntityJoin).createCorrelation();
+	public <X> JpaEntityJoin<T, X> correlate(JpaEntityJoin<T, X> parentEntityJoin) {
+		final SqmCorrelatedEntityJoin<T,X> correlated = ((SqmEntityJoin<T,X>) parentEntityJoin).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
@@ -571,12 +585,12 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public SqmPredicate equalTo(Expression<T> that) {
+	public SqmPredicate equalTo(Expression<?> that) {
 		return nodeBuilder().equal( this, that );
 	}
 
 	@Override
-	public SqmPredicate equalTo(T that) {
+	public SqmPredicate equalTo(Object that) {
 		return nodeBuilder().equal( this, that );
 	}
 
@@ -679,6 +693,46 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	@Override
 	public <U> SqmSubQuery<U> subquery(Class<U> type) {
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
+	}
+
+	@Override
+	public <U> Subquery<U> subquery(EntityType<U> type) {
+		return new SqmSubQuery<>( this, type, nodeBuilder() );
+	}
+
+	@Override
+	public Subquery<T> where(List<Predicate> restrictions) {
+		//noinspection rawtypes,unchecked
+		getQuerySpec().getWhereClause().applyPredicates( (List) restrictions );
+		return this;
+	}
+
+	@Override
+	public Subquery<T> having(List<Predicate> restrictions) {
+		//noinspection unchecked,rawtypes
+		final SqmPredicate combined = combinePredicates( getQuerySpec().getHavingClausePredicate(), (List) restrictions );
+		getQuerySpec().setHavingClausePredicate( combined );
+		return this;
+	}
+
+	@Override
+	public Set<ParameterExpression<?>> getParameters() {
+		return Collections.emptySet();
+	}
+
+	@Override
+	public Predicate notEqualTo(Expression<?> value) {
+		return nodeBuilder().notEqual( this, value );
+	}
+
+	@Override
+	public Predicate notEqualTo(Object value) {
+		return nodeBuilder().notEqual( this, value );
+	}
+
+	@Override
+	public <X> Expression<X> cast(Class<X> targetType) {
+		return nodeBuilder().cast( this, targetType );
 	}
 
 	@Override

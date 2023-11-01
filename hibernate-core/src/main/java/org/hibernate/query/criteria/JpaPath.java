@@ -9,6 +9,7 @@ package org.hibernate.query.criteria;
 import java.util.Collection;
 import java.util.Map;
 
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
@@ -55,10 +56,10 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	<Y> JpaPath<Y> get(SingularAttribute<? super T, Y> attribute);
 
 	@Override
-	<E, C extends Collection<E>> JpaExpression<C> get(PluralAttribute<T, C, E> collection);
+	<E, C extends Collection<E>> Expression<C> get(PluralAttribute<? super T, C, E> collection);
 
 	@Override
-	<K, V, M extends Map<K, V>> JpaExpression<M> get(MapAttribute<T, K, V> map);
+	<K, V, M extends Map<K, V>> Expression<M> get(MapAttribute<? super T, K, V> map);
 
 	@Override
 	JpaExpression<Class<? extends T>> type();

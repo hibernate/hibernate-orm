@@ -9,18 +9,20 @@ package org.hibernate;
 import java.util.List;
 import java.util.function.Consumer;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
-import jakarta.persistence.LockModeType;
-import jakarta.persistence.PessimisticLockScope;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.jdbc.Work;
 import org.hibernate.query.Query;
 import org.hibernate.stat.SessionStatistics;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.ConnectionConsumer;
+import jakarta.persistence.ConnectionFunction;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.FlushModeType;
+import jakarta.persistence.LockModeType;
+import jakarta.persistence.PessimisticLockScope;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -1599,4 +1601,32 @@ public interface Session extends SharedSessionContract, EntityManager {
 	 */
 	@Override @Deprecated(since = "6.0") @SuppressWarnings("rawtypes")
 	Query createQuery(CriteriaUpdate updateQuery);
+
+
+	@Override
+	default <C> void runWithConnection(ConnectionConsumer<C> action) {
+		doWork( connection -> {
+			try {
+				//noinspection unchecked
+				action.accept( (C) connection );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		} );
+	}
+
+	@Override
+	default <C, T> T callWithConnection(ConnectionFunction<C, T> function) {
+		return doReturningWork( (connection) -> {
+			try {
+				//noinspection unchecked
+				return function.apply( (C) connection );
+			}
+			catch (Exception e) {
+				throw new RuntimeException( e );
+			}
+		} );
+	}
+
 }

@@ -165,7 +165,7 @@ public interface SemanticQueryWalker<T> {
 
 	T visitPluralPartJoin(SqmPluralPartJoin<?, ?> joinedFromElement);
 
-	T visitQualifiedEntityJoin(SqmEntityJoin<?> joinedFromElement);
+	T visitQualifiedEntityJoin(SqmEntityJoin<?,?> joinedFromElement);
 
 	T visitQualifiedAttributeJoin(SqmAttributeJoin<?, ?> joinedFromElement);
 
@@ -173,7 +173,7 @@ public interface SemanticQueryWalker<T> {
 		return visitCrossJoin( join );
 	}
 
-	default T visitCorrelatedEntityJoin(SqmCorrelatedEntityJoin<?> join) {
+	default T visitCorrelatedEntityJoin(SqmCorrelatedEntityJoin<?,?> join) {
 		return visitQualifiedEntityJoin( join );
 	}
 

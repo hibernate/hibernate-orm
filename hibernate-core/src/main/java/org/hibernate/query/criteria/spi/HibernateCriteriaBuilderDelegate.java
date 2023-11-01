@@ -23,8 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.hibernate.Incubating;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
@@ -56,22 +56,25 @@ import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaValues;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.TemporalUnit;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CollectionJoin;
+import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Nulls;
+import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.TemporalField;
 
 public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilder {
 	private final HibernateCriteriaBuilder criteriaBuilder;
@@ -314,6 +317,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <N, T extends Temporal> Expression<N> extract(TemporalField<N, T> field, Expression<T> temporal) {
+		return null;
+	}
+
+	@Override
 	public <P, F> JpaExpression<F> fk(Path<P> path) {
 		return criteriaBuilder.fk( path );
 	}
@@ -326,6 +334,36 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public <X, T extends X> JpaRoot<T> treat(Root<X> root, Class<T> type) {
 		return criteriaBuilder.treat( root, type );
+	}
+
+	@Override
+	public <T> CriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+		return criteriaBuilder.union( left, right );
+	}
+
+	@Override
+	public <T> CriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+		return criteriaBuilder.unionAll( left, right );
+	}
+
+	@Override
+	public <T> CriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+		return criteriaBuilder.intersect( left, right );
+	}
+
+	@Override
+	public <T> CriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+		return criteriaBuilder.intersectAll( left, right );
+	}
+
+	@Override
+	public <T> CriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+		return criteriaBuilder.except( left, right );
+	}
+
+	@Override
+	public <T> CriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+		return criteriaBuilder.exceptAll( left, right );
 	}
 
 	@Override
@@ -824,12 +862,22 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public Predicate and(List<Predicate> restrictions) {
+		return null;
+	}
+
+	@Override
 	public JpaPredicate or(Expression<Boolean> x, Expression<Boolean> y) {
 		return criteriaBuilder.or( x, y );
 	}
 
 	@Override
 	public JpaPredicate or(Predicate... restrictions) {
+		return criteriaBuilder.or( restrictions );
+	}
+
+	@Override
+	public Predicate or(List<Predicate> restrictions) {
 		return criteriaBuilder.or( restrictions );
 	}
 
@@ -1130,6 +1178,11 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public Expression<String> concat(List<Expression<String>> expressions) {
+		return criteriaBuilder.concat( expressions );
+	}
+
+	@Override
 	public JpaPredicate notIlike(Expression<String> x, Expression<String> pattern) {
 		return criteriaBuilder.notIlike( x, pattern );
 	}
@@ -1232,6 +1285,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public JpaOrder desc(Expression<?> x) {
 		return criteriaBuilder.desc( x );
+	}
+
+	@Override
+	public Order asc(Expression<?> expression, Nulls nullPrecedence) {
+		return criteriaBuilder.asc( expression, nullPrecedence );
+	}
+
+	@Override
+	public Order desc(Expression<?> expression, Nulls nullPrecedence) {
+		return criteriaBuilder.desc( expression, nullPrecedence );
 	}
 
 	@Override

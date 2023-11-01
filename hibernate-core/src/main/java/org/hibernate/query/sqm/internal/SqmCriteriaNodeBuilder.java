@@ -172,12 +172,15 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Nulls;
+import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.TemporalField;
 import jakarta.persistence.metamodel.Bindable;
 
 import static java.util.Arrays.asList;
@@ -542,6 +545,42 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public <T> CriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+		// todo (jpa 3.2) : implement
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <T> CriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+		// todo (jpa 3.2) : implement
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <T> CriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+		// todo (jpa 3.2) : implement
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <T> CriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+		// todo (jpa 3.2) : implement
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <T> CriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+		// todo (jpa 3.2) : implement
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <T> CriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+		// todo (jpa 3.2) : implement
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
 	public <X, T, V extends T> SqmSingularJoin<X, V> treat(Join<X, T> join, Class<V> type) {
 		return ( (SqmSingularJoin<X, T>) join ).treatAs( type );
 	}
@@ -594,6 +633,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmSortSpecification desc(Expression<?> x) {
 		return new SqmSortSpecification( (SqmExpression<?>) x, SortDirection.DESCENDING );
+	}
+
+	@Override
+	public Order asc(Expression<?> expression, Nulls nullPrecedence) {
+		return new SqmSortSpecification( (SqmExpression<?>) expression, SortDirection.ASCENDING, NullPrecedence.fromJpaValue( nullPrecedence ) );
+	}
+
+	@Override
+	public Order desc(Expression<?> expression, Nulls nullPrecedence) {
+		return new SqmSortSpecification( (SqmExpression<?>) expression, SortDirection.DESCENDING, NullPrecedence.fromJpaValue( nullPrecedence ) );
 	}
 
 	@Override
@@ -1747,6 +1796,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public <N, T extends Temporal> Expression<N> extract(TemporalField<N, T> field, Expression<T> temporal) {
+		return null;
+	}
+
+	@Override
 	public <T> SqmFunction<T> function(String name, Class<T> type, Expression<?>[] args) {
 		final BasicType<T> resultType = getTypeConfiguration().standardBasicTypeForJavaType( type );
 		return getFunctionTemplate( name, resultType ).generateSqmExpression(
@@ -2066,6 +2120,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public Predicate and(List<Predicate> restrictions) {
+		return null;
+	}
+
+	@Override
 	public SqmPredicate or(Expression<Boolean> x, Expression<Boolean> y) {
 		return new SqmJunctionPredicate(
 				Predicate.BooleanOperator.OR,
@@ -2086,6 +2145,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			predicates.add( (SqmPredicate) expression );
 		}
 		return new SqmJunctionPredicate( Predicate.BooleanOperator.OR, predicates, this );
+	}
+
+	@Override
+	public Predicate or(List<Predicate> restrictions) {
+		return null;
 	}
 
 	@Override
@@ -2608,6 +2672,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public SqmPredicate notLike(Expression<String> x, String pattern, char escapeChar) {
 		return not( like( x, pattern, escapeChar ) );
+	}
+
+	@Override
+	public Expression<String> concat(List<Expression<String>> expressions) {
+		return null;
 	}
 
 	@Override

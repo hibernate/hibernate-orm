@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 import jakarta.persistence.criteria.Expression;
@@ -21,6 +22,15 @@ import jakarta.persistence.criteria.Expression;
 public class SqmJunctionPredicate extends AbstractSqmPredicate {
 	private final BooleanOperator booleanOperator;
 	private final List<SqmPredicate> predicates;
+
+	public SqmJunctionPredicate(
+			BooleanOperator booleanOperator,
+			SqmExpressible<Boolean> expressible,
+			NodeBuilder nodeBuilder) {
+		super( expressible, nodeBuilder );
+		this.booleanOperator = booleanOperator;
+		this.predicates = new ArrayList<>();
+	}
 
 	public SqmJunctionPredicate(
 			BooleanOperator booleanOperator,

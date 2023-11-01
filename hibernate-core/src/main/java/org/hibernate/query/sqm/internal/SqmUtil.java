@@ -61,7 +61,6 @@ import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
-import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
@@ -200,16 +199,11 @@ public class SqmUtil {
 	 * or one that has an explicit on clause predicate.
 	 */
 	public static boolean isFkOptimizationAllowed(SqmPath<?> sqmPath) {
-		if ( sqmPath instanceof SqmJoin<?, ?> ) {
-			final SqmJoin<?, ?> sqmJoin = (SqmJoin<?, ?>) sqmPath;
-			switch ( sqmJoin.getSqmJoinType() ) {
-				case INNER:
-				case LEFT:
-					return !( sqmJoin instanceof SqmQualifiedJoin<?, ?>)
-							|| ( (SqmQualifiedJoin<?, ?>) sqmJoin ).getJoinPredicate() == null;
-				default:
-					return false;
-			}
+		if ( sqmPath instanceof SqmJoin<?, ?> sqmJoin ) {
+			return switch ( sqmJoin.getSqmJoinType() ) {
+				case INNER, LEFT -> sqmJoin.getJoinPredicate() == null;
+				default -> false;
+			};
 		}
 		return false;
 	}

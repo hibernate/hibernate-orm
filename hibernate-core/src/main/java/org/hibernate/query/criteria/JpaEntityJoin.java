@@ -7,26 +7,18 @@
 package org.hibernate.query.criteria;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedEntityJoin;
 
 /**
  * @author Steve Ebersole
  */
-public interface JpaEntityJoin<L,R> extends JpaJoinedFrom<L,R> {
+public interface JpaEntityJoin<L,R> extends JpaJoin<L,R> {
 	@Override
 	EntityDomainType<R> getModel();
 
 	@Override
-	JpaEntityJoin<L,R> on(JpaExpression<Boolean> restriction);
+	<S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatAsType);
 
 	@Override
-	JpaEntityJoin<L,R> on(Expression<Boolean> restriction);
-
-	@Override
-	JpaEntityJoin<L,R> on(JpaPredicate... restrictions);
-
-	@Override
-	JpaEntityJoin<L,R> on(Predicate... restrictions);
+	<S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatAsType);
 }

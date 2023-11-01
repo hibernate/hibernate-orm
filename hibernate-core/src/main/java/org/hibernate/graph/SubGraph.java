@@ -73,6 +73,7 @@ public interface SubGraph<J> extends Graph<J>, Subgraph<J> {
 		return addSubGraph( name, type );
 	}
 
+
 	@Override
 	default <X> SubGraph<X> addKeySubgraph(Attribute<J, X> attribute) {
 		return addKeySubGraph( (PersistentAttribute<J, X>) attribute );

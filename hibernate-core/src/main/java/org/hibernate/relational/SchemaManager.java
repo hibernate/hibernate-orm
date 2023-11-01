@@ -21,7 +21,7 @@ import org.hibernate.Incubating;
  * @author Gavin King
  */
 @Incubating
-public interface SchemaManager {
+public interface SchemaManager extends jakarta.persistence.SchemaManager {
 	/**
 	 * Export database objects mapped by Hibernate entities.
 	 * <p>
@@ -60,4 +60,14 @@ public interface SchemaManager {
 	 * Programmatic way to run {@link org.hibernate.tool.schema.spi.SchemaTruncator}.
 	 */
 	void truncateMappedObjects();
+
+	@Override
+	default void create(boolean createSchemas) {
+		exportMappedObjects( createSchemas );
+	}
+
+	@Override
+	default void drop(boolean dropSchemas) {
+		drop( dropSchemas );
+	}
 }

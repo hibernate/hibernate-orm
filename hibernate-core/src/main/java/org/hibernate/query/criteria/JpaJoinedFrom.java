@@ -19,15 +19,15 @@ import jakarta.persistence.criteria.Predicate;
  *
  * @author Steve Ebersole
  */
-public interface JpaJoinedFrom<O,T> extends JpaFrom<O, T> {
+public interface JpaJoinedFrom<L, R> extends JpaFrom<L,R>, JpaJoin<L,R> {
 
-	JpaJoinedFrom<O, T> on(JpaExpression<Boolean> restriction);
+	JpaJoinedFrom<L, R> on(JpaExpression<Boolean> restriction);
 
-	JpaJoinedFrom<O, T> on(Expression<Boolean> restriction);
+	JpaJoinedFrom<L, R> on(Expression<Boolean> restriction);
 
-	JpaJoinedFrom<O, T> on(JpaPredicate... restrictions);
+	JpaJoinedFrom<L, R> on(JpaPredicate... restrictions);
 
-	JpaJoinedFrom<O, T> on(Predicate... restrictions);
+	JpaJoinedFrom<L, R> on(Predicate... restrictions);
 
 	JpaPredicate getOn();
 

@@ -8,6 +8,7 @@ package org.hibernate.boot.model.internal;
 
 import java.lang.annotation.Annotation;
 
+import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.JoinColumn;
@@ -60,6 +61,11 @@ public class MapKeyJoinColumnDelegator implements JoinColumn {
 	}
 
 	@Override
+	public String options() {
+		return column.options();
+	}
+
+	@Override
 	public String table() {
 		return column.table();
 	}
@@ -67,6 +73,16 @@ public class MapKeyJoinColumnDelegator implements JoinColumn {
 	@Override
 	public ForeignKey foreignKey() {
 		return column.foreignKey();
+	}
+
+	@Override
+	public CheckConstraint[] check() {
+		return new CheckConstraint[0];
+	}
+
+	@Override
+	public String comment() {
+		return "";
 	}
 
 	@Override

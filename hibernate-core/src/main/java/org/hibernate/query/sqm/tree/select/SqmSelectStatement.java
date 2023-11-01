@@ -13,17 +13,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Order;
-import jakarta.persistence.criteria.ParameterExpression;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Selection;
-
-import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -34,8 +27,19 @@ import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.metamodel.EntityType;
+
+import static org.hibernate.query.sqm.spi.SqmCreationHelper.combinePredicates;
 import static org.hibernate.query.sqm.SqmQuerySource.CRITERIA;
 import static org.hibernate.query.sqm.tree.SqmCopyContext.noParamCopyContext;
 import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
@@ -263,6 +267,26 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 		return getSqmParameters().stream()
 				.filter( parameterExpression -> !( parameterExpression instanceof ValueBindJpaCriteriaParameter ) )
 				.collect( Collectors.toSet() );
+	}
+
+	@Override
+	public <U> SqmSubQuery<U> subquery(EntityType<U> type) {
+		return new SqmSubQuery<>( this, type, nodeBuilder() );
+	}
+
+	@Override
+	public CriteriaQuery<T> where(List<Predicate> restrictions) {
+		//noinspection rawtypes,unchecked
+		getQuerySpec().getWhereClause().applyPredicates( (List) restrictions );
+		return this;
+	}
+
+	@Override
+	public CriteriaQuery<T> having(List<Predicate> restrictions) {
+		//noinspection unchecked,rawtypes
+		final SqmPredicate combined = combinePredicates( getQuerySpec().getHavingClausePredicate(), (List) restrictions );
+		getQuerySpec().setHavingClausePredicate( combined );
+		return this;
 	}
 
 	@Override

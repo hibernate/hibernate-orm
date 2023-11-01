@@ -109,6 +109,7 @@ import jakarta.persistence.Parameter;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
@@ -1200,6 +1201,15 @@ public class NativeQueryImpl<R>
 	@Override
 	public NativeQueryImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
 		super.setCacheStoreMode( cacheStoreMode );
+		return this;
+	}
+
+	@Override
+	public TypedQuery<R> setTimeout(Integer timeout) {
+		if ( timeout == null ) {
+			timeout = -1;
+		}
+		super.setTimeout( (int) timeout );
 		return this;
 	}
 

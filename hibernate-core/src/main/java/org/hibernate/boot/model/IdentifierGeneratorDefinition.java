@@ -208,6 +208,11 @@ public class IdentifierGeneratorDefinition implements Serializable {
 					}
 
 					@Override
+					public String options() {
+						return "";
+					}
+
+					@Override
 					public Class<? extends Annotation> annotationType() {
 						return TableGenerator.class;
 					}
@@ -250,6 +255,11 @@ public class IdentifierGeneratorDefinition implements Serializable {
 					@Override
 					public int allocationSize() {
 						return 50;
+					}
+
+					@Override
+					public String options() {
+						return "";
 					}
 
 					@Override

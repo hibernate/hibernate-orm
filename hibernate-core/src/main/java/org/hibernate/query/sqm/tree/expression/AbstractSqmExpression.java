@@ -20,6 +20,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.query.internal.QueryHelper.highestPrecedenceType2;
@@ -112,13 +113,28 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 	}
 
 	@Override
-	public SqmPredicate equalTo(Expression<T> that) {
-		return nodeBuilder().equal( this, that );
+	public SqmPredicate equalTo(Expression<?> value) {
+		return nodeBuilder().equal( this, value );
 	}
 
 	@Override
-	public SqmPredicate equalTo(T that) {
-		return nodeBuilder().equal( this, that );
+	public SqmPredicate equalTo(Object value) {
+		return nodeBuilder().equal( this, value );
+	}
+
+	@Override
+	public Predicate notEqualTo(Expression<?> value) {
+		return nodeBuilder().notEqual( this, value );
+	}
+
+	@Override
+	public Predicate notEqualTo(Object value) {
+		return nodeBuilder().notEqual( this, value );
+	}
+
+	@Override
+	public <X> Expression<X> cast(Class<X> castTarget) {
+		return nodeBuilder().cast( this, castTarget );
 	}
 
 	@Override

@@ -8,7 +8,7 @@ package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.PathException;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaJoinedFrom;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -20,6 +20,9 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.spi.NavigablePath;
+
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.JoinType;
 
 /**
  * @author Christian Beikov
@@ -115,27 +118,32 @@ public class SqmCteJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements Jpa
 	// JPA
 
 	@Override
-	public SqmCorrelatedEntityJoin<T> createCorrelation() {
+	public SqmCorrelatedEntityJoin<T,T> createCorrelation() {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public <S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType) throws PathException {
-		throw new UnsupportedOperationException( "CTE joins can not be treated" );
+	public PersistentAttribute<? super T, ?> getAttribute() {
+		return null;
 	}
+
 	@Override
-	public <S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+	public <S extends T> SqmQualifiedJoin<T, S> treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "CTE joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends T> SqmQualifiedJoin<T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "CTE joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
-		throw new UnsupportedOperationException( "CTE joins can not be treated" );
+	public From<?, T> getParent() {
+		return getCorrelationParent();
 	}
 
+	@Override
+	public JoinType getJoinType() {
+		return getSqmJoinType().getCorrespondingJpaJoinType();
+	}
 }

@@ -84,6 +84,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.NoResultException;
@@ -1100,6 +1102,15 @@ public class ProcedureCallImpl<R>
 	}
 
 	@Override
+	public ProcedureCallImplementor<R> setTimeout(Integer timeout) {
+		if ( timeout == null ) {
+			timeout = -1;
+		}
+		super.setTimeout( (int) timeout );
+		return this;
+	}
+
+	@Override
 	public LockModeType getLockMode() {
 		// the JPA spec requires IllegalStateException here, even
 		// though it's logically an UnsupportedOperationException
@@ -1244,4 +1255,13 @@ public class ProcedureCallImpl<R>
 		return resultSetMapping;
 	}
 
+	@Override
+	public ProcedureCallImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode) {
+		return (ProcedureCallImplementor<R>) super.setCacheRetrieveMode( cacheRetrieveMode );
+	}
+
+	@Override
+	public ProcedureCallImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode) {
+		return (ProcedureCallImplementor<R>) super.setCacheStoreMode( cacheStoreMode );
+	}
 }

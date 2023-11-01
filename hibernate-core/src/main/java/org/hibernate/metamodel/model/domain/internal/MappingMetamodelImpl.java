@@ -489,7 +489,7 @@ public class MappingMetamodelImpl extends QueryParameterBindingTypeResolverImpl
 	}
 
 	@Override
-	public <X> EntityDomainType<X> entity(String entityName) {
+	public EntityDomainType<?> entity(String entityName) {
 		return jpaMetamodel.entity( entityName );
 	}
 

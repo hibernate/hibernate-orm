@@ -7,34 +7,35 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.Map;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
-import org.hibernate.query.sqm.SemanticQueryWalker;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaMapJoin;
 import org.hibernate.query.criteria.JpaPredicate;
-import org.hibernate.query.sqm.NodeBuilder;
-import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
+import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SemanticQueryWalker;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
+import org.hibernate.spi.NavigablePath;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmMapJoin<O, K, V>
-		extends AbstractSqmPluralJoin<O, Map<K, V>, V>
-		implements JpaMapJoin<O, K, V> {
+public class SqmMapJoin<L, K, V>
+		extends AbstractSqmPluralJoin<L, Map<K, V>, V>
+		implements JpaMapJoin<L, K, V> {
 	public SqmMapJoin(
-			SqmFrom<?,O> lhs,
-			MapPersistentAttribute<O, K, V> pluralValuedNavigable,
+			SqmFrom<?, L> lhs,
+			MapPersistentAttribute<L, K, V> pluralValuedNavigable,
 			String alias,
 			SqmJoinType sqmJoinType,
 			boolean fetched,
@@ -43,9 +44,9 @@ public class SqmMapJoin<O, K, V>
 	}
 
 	protected SqmMapJoin(
-			SqmFrom<?, O> lhs,
+			SqmFrom<?, L> lhs,
 			NavigablePath navigablePath,
-			MapPersistentAttribute<O, K, V> pluralValuedNavigable,
+			MapPersistentAttribute<L, K, V> pluralValuedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
@@ -54,13 +55,13 @@ public class SqmMapJoin<O, K, V>
 	}
 
 	@Override
-	public SqmMapJoin<O, K, V> copy(SqmCopyContext context) {
-		final SqmMapJoin<O, K, V> existing = context.getCopy( this );
+	public SqmMapJoin<L, K, V> copy(SqmCopyContext context) {
+		final SqmMapJoin<L, K, V> existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmFrom<?, O> lhsCopy = getLhs().copy( context );
-		final SqmMapJoin<O, K, V> path = context.registerCopy(
+		final SqmFrom<?, L> lhsCopy = getLhs().copy( context );
+		final SqmMapJoin<L, K, V> path = context.registerCopy(
 				this,
 				new SqmMapJoin<>(
 						lhsCopy,
@@ -77,8 +78,8 @@ public class SqmMapJoin<O, K, V>
 	}
 
 	@Override
-	public MapPersistentAttribute<O, K, V> getModel() {
-		return (MapPersistentAttribute<O, K, V>) super.getModel();
+	public MapPersistentAttribute<L, K, V> getModel() {
+		return (MapPersistentAttribute<L, K, V>) super.getModel();
 	}
 
 	@Override
@@ -87,7 +88,7 @@ public class SqmMapJoin<O, K, V>
 	}
 
 	@Override
-	public MapPersistentAttribute<O, K, V> getAttribute() {
+	public MapPersistentAttribute<L, K, V> getAttribute() {
 		return getModel();
 	}
 
@@ -112,54 +113,44 @@ public class SqmMapJoin<O, K, V>
 	}
 
 	@Override
-	public SqmMapJoin<O, K, V> on(JpaExpression<Boolean> restriction) {
-		return (SqmMapJoin<O, K, V>) super.on( restriction );
+	public SqmMapJoin<L, K, V> on(JpaExpression<Boolean> restriction) {
+		return (SqmMapJoin<L, K, V>) super.on( restriction );
 	}
 
 	@Override
-	public SqmMapJoin<O, K, V> on(Expression<Boolean> restriction) {
-		return (SqmMapJoin<O, K, V>) super.on( restriction );
+	public SqmMapJoin<L, K, V> on(Expression<Boolean> restriction) {
+		return (SqmMapJoin<L, K, V>) super.on( restriction );
 	}
 
 	@Override
-	public SqmMapJoin<O, K, V> on(JpaPredicate... restrictions) {
-		return (SqmMapJoin<O, K, V>) super.on( restrictions );
+	public SqmMapJoin<L, K, V> on(JpaPredicate... restrictions) {
+		return (SqmMapJoin<L, K, V>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmMapJoin<O, K, V> on(Predicate... restrictions) {
-		return (SqmMapJoin<O, K, V>) super.on( restrictions );
+	public SqmMapJoin<L, K, V> on(Predicate... restrictions) {
+		return (SqmMapJoin<L, K, V>) super.on( restrictions );
 	}
 
 	@Override
-	public SqmCorrelatedMapJoin<O, K, V> createCorrelation() {
+	public SqmCorrelatedMapJoin<L, K, V> createCorrelation() {
 		return new SqmCorrelatedMapJoin<>( this );
 	}
 
 	@Override
-	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(Class<S> treatJavaType) {
+	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(Class<S> treatJavaType) {
 		return treatAs( treatJavaType, null );
 	}
 
 	@Override
-	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(EntityDomainType<S> treatTarget) {
-		return treatAs( treatTarget, null );
-	}
-
-	@Override
-	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(Class<S> treatJavaType, String alias) {
 		return treatAs( treatJavaType, alias, false );
 	}
 
 	@Override
-	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
-		return treatAs( treatTarget, alias, false );
-	}
-
-	@Override
-	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
 		final ManagedDomainType<S> treatTarget = nodeBuilder().getDomainModel().managedType( treatJavaType );
-		final SqmTreatedMapJoin<O, K, V, S> treat = findTreat( treatTarget, alias );
+		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			if ( treatTarget instanceof TreatableDomainType<?> ) {
 				return addTreat( new SqmTreatedMapJoin<>( this, (TreatableDomainType<S>) treatTarget, alias, fetch ) );
@@ -172,8 +163,13 @@ public class SqmMapJoin<O, K, V>
 	}
 
 	@Override
-	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
-		final SqmTreatedMapJoin<O, K, V, S> treat = findTreat( treatTarget, alias );
+	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(EntityDomainType<S> treatTarget) {
+		return treatAs( treatTarget, null );
+	}
+
+	@Override
+	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
 			return addTreat( new SqmTreatedMapJoin<>( this, treatTarget, alias, fetch ) );
 		}
@@ -181,7 +177,16 @@ public class SqmMapJoin<O, K, V>
 	}
 
 	@Override
-	public SqmMapJoin<O, K, V> makeCopy(SqmCreationProcessingState creationProcessingState) {
+	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			return addTreat( new SqmTreatedMapJoin<>( this, treatTarget, alias ) );
+		}
+		return treat;
+	}
+
+	@Override
+	public SqmMapJoin<L, K, V> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		return new SqmMapJoin<>(
 				creationProcessingState.getPathRegistry().findFromByPath( getLhs().getNavigablePath() ),
 				getAttribute(),

@@ -9,33 +9,32 @@ package org.hibernate.query.sqm.tree.from;
 import org.hibernate.Incubating;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.query.criteria.JpaJoinedFrom;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
-import org.hibernate.query.sqm.tree.domain.AbstractSqmQualifiedJoin;
+import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedJoin;
 import org.hibernate.spi.NavigablePath;
 
-import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.JoinType;
 
 /**
  * @author Christian Beikov
  */
 @Incubating
-public class SqmCteJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements JpaJoinedFrom<T, T> {
+public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
 	private final SqmCteStatement<T> cte;
 
 	public SqmCteJoin(
 			SqmCteStatement<T> cte,
 			String alias,
 			SqmJoinType joinType,
-			SqmRoot<?> sqmRoot) {
+			SqmRoot<T> sqmRoot) {
+		//noinspection unchecked
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<cte>>", alias ),
 				cte,
@@ -52,7 +51,7 @@ public class SqmCteJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements Jpa
 			SqmPathSource<T> pathSource,
 			String alias,
 			SqmJoinType joinType,
-			SqmRoot<?> sqmRoot) {
+			SqmRoot<T> sqmRoot) {
 		super(
 				navigablePath,
 				pathSource,
@@ -75,6 +74,7 @@ public class SqmCteJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements Jpa
 		if ( existing != null ) {
 			return existing;
 		}
+		//noinspection unchecked
 		final SqmCteJoin<T> path = context.registerCopy(
 				this,
 				new SqmCteJoin<>(
@@ -83,7 +83,7 @@ public class SqmCteJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements Jpa
 						getReferencedPathSource(),
 						getExplicitAlias(),
 						getSqmJoinType(),
-						findRoot().copy( context )
+						(SqmRoot<T>) findRoot().copy( context )
 				)
 		);
 		copyTo( path, context );
@@ -104,7 +104,7 @@ public class SqmCteJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements Jpa
 	}
 
 	@Override
-	public SqmPath<?> getLhs() {
+	public SqmFrom<?,T> getLhs() {
 		// A cte-join has no LHS
 		return null;
 	}
@@ -128,17 +128,17 @@ public class SqmCteJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements Jpa
 	}
 
 	@Override
-	public <S extends T> SqmQualifiedJoin<T, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "CTE joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmQualifiedJoin<T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "CTE joins can not be treated" );
 	}
 
 	@Override
-	public From<?, T> getParent() {
+	public SqmFrom<?, T> getParent() {
 		return getCorrelationParent();
 	}
 

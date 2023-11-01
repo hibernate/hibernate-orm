@@ -6,6 +6,7 @@
  */
 package org.hibernate.boot.model.internal;
 
+import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.ForeignKey;
 import jakarta.persistence.MapsId;
 import jakarta.persistence.PrimaryKeyJoinColumn;
@@ -365,6 +366,21 @@ class ColumnsBuilder {
 
 		@Override
 		public String table() {
+			return "";
+		}
+
+		@Override
+		public String options() {
+			return column.options();
+		}
+
+		@Override
+		public CheckConstraint[] check() {
+			return new CheckConstraint[0];
+		}
+
+		@Override
+		public String comment() {
 			return "";
 		}
 

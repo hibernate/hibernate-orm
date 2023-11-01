@@ -15,7 +15,6 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
@@ -108,22 +107,22 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	}
 
 	@Override
-	public <S extends T> SqmFrom<T, S> treatAs(Class<S> treatJavaType) throws PathException {
+	public <S extends T> SqmTreatedFrom<T, T, S> treatAs(Class<S> treatJavaType) throws PathException {
 		throw new UnsupportedOperationException( "Derived roots can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmFrom<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+	public <S extends T> SqmTreatedFrom<T, T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		throw new UnsupportedOperationException( "Derived roots can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmFrom<T, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends T> SqmTreatedFrom<T, T, S> treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "Derived roots can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmFrom<T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends T> SqmTreatedFrom<T, T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "Derived roots can not be treated" );
 	}
 }

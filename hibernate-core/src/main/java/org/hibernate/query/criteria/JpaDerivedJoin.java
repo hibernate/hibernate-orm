@@ -15,7 +15,7 @@ import jakarta.persistence.criteria.Predicate;
  * @author Christian Beikov
  */
 @Incubating
-public interface JpaDerivedJoin<T> extends JpaDerivedFrom<T>, JpaJoinedFrom<T,T> {
+public interface JpaDerivedJoin<T> extends JpaDerivedFrom<T>, JpaJoin<T,T> {
 	/**
 	 * Specifies whether the subquery part can access previous from node aliases.
 	 * Normally, subqueries in the from clause are unable to access other from nodes,

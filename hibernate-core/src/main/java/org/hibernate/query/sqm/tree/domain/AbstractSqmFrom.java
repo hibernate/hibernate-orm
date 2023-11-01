@@ -29,7 +29,6 @@ import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaDerivedJoin;
 import org.hibernate.query.criteria.JpaEntityJoin;
-import org.hibernate.query.criteria.JpaJoinedFrom;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -71,7 +70,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	private String alias;
 
 	private List<SqmJoin<T, ?>> joins;
-	private List<SqmFrom<?, ?>> treats;
+	private List<SqmTreatedFrom<?,?,?>> treats;
 
 	protected AbstractSqmFrom(
 			NavigablePath navigablePath,
@@ -137,7 +136,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		}
 		if ( treats != null ) {
 			target.treats = new ArrayList<>( treats.size() );
-			for ( SqmFrom<?, ?> treat : treats ) {
+			for ( SqmTreatedFrom<?,?,?> treat : treats ) {
 				target.treats.add( treat.copy( context ) );
 			}
 		}
@@ -268,11 +267,11 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public List<SqmFrom<?, ?>> getSqmTreats() {
+	public List<SqmTreatedFrom<?,?,?>> getSqmTreats() {
 		return treats == null ? Collections.emptyList() : treats;
 	}
 
-	protected <S, X extends SqmFrom<T, S>> X findTreat(EntityDomainType<S> targetType, String alias) {
+	protected <S extends T, X extends SqmTreatedFrom<O,T,S>> X findTreat(EntityDomainType<S> targetType, String alias) {
 		if ( treats != null ) {
 			for ( SqmFrom<?, ?> treat : treats ) {
 				if ( treat.getModel() == targetType ) {
@@ -287,7 +286,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return null;
 	}
 
-	protected <X extends SqmFrom<?, ?>> X addTreat(X treat) {
+	protected <X extends SqmTreatedFrom<?,?,?>> X addTreat(X treat) {
 		if ( treats == null ) {
 			treats = new ArrayList<>();
 		}
@@ -589,25 +588,27 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	public <X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral, String alias) {
 		validateComplianceFromSubQuery();
-		final JpaDerivedJoin<X> join = new SqmDerivedJoin<>( (SqmSubQuery<X>) subquery, alias, joinType, lateral, findRoot() );
+		//noinspection unchecked
+		final JpaDerivedJoin<X> join = new SqmDerivedJoin<>( (SqmSubQuery<X>) subquery, alias, joinType, lateral, (SqmRoot<X>) findRoot() );
 		//noinspection unchecked
 		addSqmJoin( (SqmJoin<T, ?>) join );
 		return join;
 	}
 
 	@Override
-	public <X> JpaJoinedFrom<?, X> join(JpaCteCriteria<X> cte) {
+	public <X> SqmJoin<?, X> join(JpaCteCriteria<X> cte) {
 		return join( cte, SqmJoinType.INNER, null );
 	}
 
 	@Override
-	public <X> JpaJoinedFrom<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType) {
+	public <X> SqmJoin<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType) {
 		return join( cte, joinType, null );
 	}
 
-	public <X> JpaJoinedFrom<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType, String alias) {
+	public <X> SqmJoin<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType, String alias) {
 		validateComplianceFromSubQuery();
-		final JpaJoinedFrom<?, X> join = new SqmCteJoin<>( ( SqmCteStatement<X> ) cte, alias, joinType, findRoot() );
+		//noinspection unchecked
+		final SqmJoin<?, X> join = new SqmCteJoin<>( ( SqmCteStatement<X> ) cte, alias, joinType, (SqmRoot<X>) findRoot() );
 		//noinspection unchecked
 		addSqmJoin( (SqmJoin<T, ?>) join );
 		return join;
@@ -628,7 +629,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 
 	@Override
 	public <X> JpaCrossJoin<X> crossJoin(EntityDomainType<X> entity) {
-		final SqmCrossJoin<X> crossJoin = new SqmCrossJoin<>( entity, null, findRoot() );
+		//noinspection unchecked
+		final SqmCrossJoin<X> crossJoin = new SqmCrossJoin<>( entity, null, (SqmRoot<X>) findRoot() );
 		// noinspection unchecked
 		addSqmJoin( (SqmJoin<T, ?>) crossJoin );
 		return crossJoin;

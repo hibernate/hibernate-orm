@@ -33,8 +33,8 @@ public interface JpaListJoin<O, T> extends JpaPluralJoin<O, List<T>, T>, ListJoi
 	JpaListJoin<O, T> on(Predicate... restrictions);
 
 	@Override
-	<S extends T> JpaListJoin<O, S> treatAs(Class<S> treatAsType);
+	<S extends T> JpaTreatedJoin<O,T, S> treatAs(Class<S> treatAsType);
 
 	@Override
-	<S extends T> JpaListJoin<O, S> treatAs(EntityDomainType<S> treatAsType);
+	<S extends T> JpaTreatedJoin<O,T, S> treatAs(EntityDomainType<S> treatAsType);
 }

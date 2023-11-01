@@ -18,14 +18,13 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.domain.AbstractSqmQualifiedJoin;
+import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedJoin;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
 import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 
@@ -33,7 +32,7 @@ import jakarta.persistence.criteria.Predicate;
  * @author Christian Beikov
  */
 @Incubating
-public class SqmDerivedJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements JpaDerivedJoin<T> {
+public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDerivedJoin<T> {
 	private final SqmSubQuery<T> subQuery;
 	private final boolean lateral;
 
@@ -42,7 +41,7 @@ public class SqmDerivedJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements
 			String alias,
 			SqmJoinType joinType,
 			boolean lateral,
-			SqmRoot<?> sqmRoot) {
+			SqmRoot<T> sqmRoot) {
 		this(
 				SqmCreationHelper.buildRootNavigablePath( "<<derived>>", alias ),
 				subQuery,
@@ -61,7 +60,7 @@ public class SqmDerivedJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements
 			SqmPathSource<T> pathSource,
 			String alias,
 			SqmJoinType joinType,
-			SqmRoot<?> sqmRoot) {
+			SqmRoot<T> sqmRoot) {
 		super(
 				navigablePath,
 				pathSource,
@@ -98,6 +97,7 @@ public class SqmDerivedJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements
 		if ( existing != null ) {
 			return existing;
 		}
+		//noinspection unchecked
 		final SqmDerivedJoin<T> path = context.registerCopy(
 				this,
 				new SqmDerivedJoin<>(
@@ -107,7 +107,7 @@ public class SqmDerivedJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements
 						getReferencedPathSource(),
 						getExplicitAlias(),
 						getSqmJoinType(),
-						findRoot().copy( context )
+						(SqmRoot<T>) findRoot().copy( context )
 				)
 		);
 		copyTo( path, context );
@@ -134,7 +134,7 @@ public class SqmDerivedJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements
 	}
 
 	@Override
-	public SqmPath<?> getLhs() {
+	public SqmFrom<?,T> getLhs() {
 		// A derived-join has no LHS
 		return null;
 	}
@@ -173,22 +173,22 @@ public class SqmDerivedJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements
 	}
 
 	@Override
-	public <S extends T> SqmCorrelatedEntityJoin<T, S> treatAs(Class<S> treatAsType) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatTarget) {
 		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmCorrelatedEntityJoin<T, S> treatAs(EntityDomainType<S> treatAsType) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget) {
 		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmCorrelatedEntityJoin<T, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmCorrelatedEntityJoin<T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "Derived joins can not be treated" );
 	}
 
@@ -199,9 +199,9 @@ public class SqmDerivedJoin<T> extends AbstractSqmQualifiedJoin<T, T> implements
 	}
 
 	@Override
-	public From<?, T> getParent() {
+	public SqmFrom<?, T> getParent() {
 		//noinspection unchecked
-		return (From<?, T>) getRoot();
+		return (SqmFrom<?, T>) getRoot();
 	}
 
 	@Override

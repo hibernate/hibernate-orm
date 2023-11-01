@@ -18,7 +18,7 @@ import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
+import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -30,7 +30,7 @@ import jakarta.persistence.criteria.JoinType;
  * @author Steve Ebersole
  */
 public abstract class AbstractSqmAttributeJoin<L, R>
-		extends AbstractSqmQualifiedJoin<L, R>
+		extends AbstractSqmJoin<L, R>
 		implements SqmAttributeJoin<L, R> {
 
 	private final boolean fetched;
@@ -75,8 +75,7 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 
 	@Override
 	public SqmFrom<?, L> getLhs() {
-		//noinspection unchecked
-		return (SqmFrom<?, L>) super.getLhs();
+		return super.getLhs();
 	}
 
 	@Override
@@ -87,6 +86,8 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 	public boolean isFetched() {
 		return fetched;
 	}
+
+
 
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
@@ -124,12 +125,16 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 	}
 
 	@Override
-	public <S extends R> SqmAttributeJoin<L, S> treatAs(Class<S> treatTarget) {
-		return (SqmAttributeJoin<L, S>) super.treatAs( treatTarget );
-	}
+	public abstract <S extends R> SqmTreatedAttributeJoin<L,R,S> treatAs(Class<S> treatJavaType);
 
 	@Override
-	public <S extends R> SqmAttributeJoin<L, S> treatAs(EntityDomainType<S> treatTarget) {
-		return (SqmAttributeJoin<L, S>) super.treatAs( treatTarget );
-	}
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(Class<S> treatJavaType, String alias);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, String alias);
+
+
 }

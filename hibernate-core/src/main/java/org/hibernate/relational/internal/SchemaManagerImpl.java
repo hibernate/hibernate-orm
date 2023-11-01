@@ -16,6 +16,8 @@ import org.hibernate.tool.schema.spi.SchemaManagementToolCoordinator;
 import java.util.HashMap;
 import java.util.Map;
 
+import jakarta.persistence.SchemaValidationException;
+
 /**
  * Implementation of {@link SchemaManager}, backed by a {@link SessionFactoryImplementor}
  * and {@link SchemaManagementToolCoordinator}.
@@ -88,4 +90,13 @@ public class SchemaManagerImpl implements SchemaManager {
 		);
 	}
 
+	@Override
+	public void validate() throws SchemaValidationException {
+		validateMappedObjects();
+	}
+
+	@Override
+	public void truncate() {
+		truncateMappedObjects();
+	}
 }

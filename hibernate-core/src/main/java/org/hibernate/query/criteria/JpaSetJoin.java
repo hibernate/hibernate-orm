@@ -33,8 +33,8 @@ public interface JpaSetJoin<O, T> extends JpaPluralJoin<O, Set<T>, T>, SetJoin<O
 	JpaSetJoin<O, T> on(Predicate... restrictions);
 
 	@Override
-	<S extends T> JpaSetJoin<O, S> treatAs(Class<S> treatAsType);
+	<S extends T> JpaTreatedJoin<O,T,S> treatAs(Class<S> treatAsType);
 
 	@Override
-	<S extends T> JpaSetJoin<O, S> treatAs(EntityDomainType<S> treatAsType);
+	<S extends T> JpaTreatedJoin<O,T,S> treatAs(EntityDomainType<S> treatAsType);
 }

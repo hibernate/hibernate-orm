@@ -16,13 +16,21 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 
 /**
+ * Base support for joins to plural attributes
+ *
+ * @param <L> The left-hand side of the join
+ * @param <C> The collection type
+ * @param <E> The collection's element type
+ *
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmPluralJoin<O,C,E> extends AbstractSqmAttributeJoin<O,E> implements JpaJoin<O,E>, PluralJoin<O,C,E> {
+public abstract class AbstractSqmPluralJoin<L,C,E>
+		extends AbstractSqmAttributeJoin<L,E>
+		implements JpaJoin<L,E>, PluralJoin<L,C,E> {
 
 	public AbstractSqmPluralJoin(
-			SqmFrom<?, O> lhs,
-			PluralPersistentAttribute<O,C,E> joinedNavigable,
+			SqmFrom<?, L> lhs,
+			PluralPersistentAttribute<L,C,E> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
@@ -31,9 +39,9 @@ public abstract class AbstractSqmPluralJoin<O,C,E> extends AbstractSqmAttributeJ
 	}
 
 	protected AbstractSqmPluralJoin(
-			SqmFrom<?, O> lhs,
+			SqmFrom<?, L> lhs,
 			NavigablePath navigablePath,
-			PluralPersistentAttribute<O,C,E> joinedNavigable,
+			PluralPersistentAttribute<L,C,E> joinedNavigable,
 			String alias,
 			SqmJoinType joinType,
 			boolean fetched,
@@ -42,7 +50,7 @@ public abstract class AbstractSqmPluralJoin<O,C,E> extends AbstractSqmAttributeJ
 	}
 
 	@Override
-	public PluralPersistentAttribute<O, C, E> getModel() {
-		return (PluralPersistentAttribute<O, C, E>) super.getNodeType();
+	public PluralPersistentAttribute<L, C, E> getModel() {
+		return (PluralPersistentAttribute<L, C, E>) super.getNodeType();
 	}
 }

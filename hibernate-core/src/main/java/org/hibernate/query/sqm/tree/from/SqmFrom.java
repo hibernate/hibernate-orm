@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.metamodel.CollectionAttribute;
@@ -64,21 +65,21 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	void visitSqmJoins(Consumer<SqmJoin<R, ?>> consumer);
 
 	@Override
-	<S extends R> SqmFrom<L, S> treatAs(Class<S> treatAsType);
+	<S extends R> SqmTreatedFrom<L,R,S> treatAs(Class<S> treatJavaType);
 
 	@Override
-	<S extends R> SqmFrom<L, S> treatAs(EntityDomainType<S> treatAsType);
+	<S extends R> SqmTreatedFrom<L,R,S> treatAs(EntityDomainType<S> treatTarget);
 
-	<S extends R> SqmFrom<L, S> treatAs(Class<S> treatJavaType, String alias);
+	<S extends R> SqmTreatedFrom<L,R,S> treatAs(Class<S> treatJavaType, String alias);
 
-	<S extends R> SqmFrom<L, S> treatAs(EntityDomainType<S> treatTarget, String alias);
+	<S extends R> SqmTreatedFrom<L,R,S> treatAs(EntityDomainType<S> treatTarget, String alias);
 
 	boolean hasTreats();
 
 	/**
 	 * The treats associated with this SqmFrom
 	 */
-	List<SqmFrom<?,?>> getSqmTreats();
+	List<SqmTreatedFrom<?,?,?>> getSqmTreats();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

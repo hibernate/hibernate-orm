@@ -1146,6 +1146,15 @@ public class QuerySqmImpl<R>
 	}
 
 	@Override
+	public SqmQueryImplementor<R> setTimeout(Integer timeout) {
+		if ( timeout == null ) {
+			timeout = -1;
+		}
+		setTimeout( (int) timeout );
+		return this;
+	}
+
+	@Override
 	public SqmQueryImplementor<R> setCacheable(boolean cacheable) {
 		super.setCacheable( cacheable );
 		return this;

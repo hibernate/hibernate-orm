@@ -157,6 +157,26 @@ public class SqmMapEntryReference<K,V>
 	}
 
 	@Override
+	public Predicate equalTo(Expression<?> value) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate equalTo(Object value) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate notEqualTo(Expression<?> value) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public Predicate notEqualTo(Object value) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
 	public Predicate in(Object... values) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
@@ -178,6 +198,11 @@ public class SqmMapEntryReference<K,V>
 
 	@Override
 	public <X> Expression<X> as(Class<X> type) {
+		throw new UnsupportedOperationException( "Whatever JPA" );
+	}
+
+	@Override
+	public <X> Expression<X> cast(Class<X> type) {
 		throw new UnsupportedOperationException( "Whatever JPA" );
 	}
 }

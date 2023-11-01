@@ -149,7 +149,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 	}
 
 	@Override
-	public <E> void replace(SqmEntityJoin<E> sqmJoin, SqmRoot<E> sqmRoot) {
+	public <E> void replace(SqmEntityJoin<?,E> sqmJoin, SqmRoot<E> sqmRoot) {
 		final String alias = sqmJoin.getExplicitAlias();
 		if ( alias != null ) {
 			final String aliasToUse = jpaCompliance.isJpaQueryComplianceEnabled()
@@ -241,8 +241,8 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 				else if ( parentRegistered instanceof SqmCrossJoin<?> ) {
 					correlated = selectQuery.correlate( (SqmCrossJoin<?>) parentRegistered );
 				}
-				else if ( parentRegistered instanceof SqmEntityJoin<?> ) {
-					correlated = selectQuery.correlate( (SqmEntityJoin<?>) parentRegistered );
+				else if ( parentRegistered instanceof SqmEntityJoin<?,?> ) {
+					correlated = selectQuery.correlate( (SqmEntityJoin<?,?>) parentRegistered );
 				}
 				else {
 					throw new UnsupportedOperationException( "Can't correlate from node: " + parentRegistered );

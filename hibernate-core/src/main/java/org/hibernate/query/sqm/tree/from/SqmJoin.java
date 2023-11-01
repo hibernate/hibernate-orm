@@ -8,13 +8,14 @@ package org.hibernate.query.sqm.tree.from;
 
 import jakarta.persistence.criteria.JoinType;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 
 /**
  * @author Steve Ebersole
  */
-public interface SqmJoin<O,T> extends SqmFrom<O,T> {
+public interface SqmJoin<L, R> extends SqmFrom<L, R> {
 	/**
 	 * The type of join - inner, cross, etc
 	 */
@@ -32,5 +33,17 @@ public interface SqmJoin<O,T> extends SqmFrom<O,T> {
 	<X, Y> SqmAttributeJoin<X, Y> join(String attributeName, JoinType jt);
 
 	@Override
-	SqmJoin<O, T> copy(SqmCopyContext context);
+	SqmJoin<L, R> copy(SqmCopyContext context);
+
+	@Override
+	<S extends R> SqmJoin<L, S> treatAs(Class<S> treatAsType);
+
+	@Override
+	<S extends R> SqmJoin<L, S> treatAs(EntityDomainType<S> treatAsType);
+
+	@Override
+	<S extends R> SqmJoin<L, S> treatAs(Class<S> treatJavaType, String alias);
+
+	@Override
+	<S extends R> SqmJoin<L, S> treatAs(EntityDomainType<S> treatTarget, String alias);
 }

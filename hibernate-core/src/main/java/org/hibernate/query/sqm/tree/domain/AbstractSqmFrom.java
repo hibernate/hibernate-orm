@@ -24,17 +24,12 @@ import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
 import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaDerivedJoin;
-import org.hibernate.query.criteria.JpaJoinedFrom;
-import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
-import org.hibernate.query.sqm.tree.from.SqmCteJoin;
-import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
-import org.hibernate.query.sqm.tree.select.SqmSubQuery;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaEntityJoin;
+import org.hibernate.query.criteria.JpaJoinedFrom;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -43,18 +38,24 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
+import org.hibernate.query.sqm.tree.from.SqmCteJoin;
+import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Fetch;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.CollectionAttribute;
+import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ListAttribute;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
@@ -222,8 +223,8 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 //			if ( lhs instanceof SqmRoot<?> ) {
 //				entityName = ( (SqmRoot<?>) lhs ).getEntityName();
 //			}
-//			else if ( lhs instanceof SqmEntityJoin<?> ) {
-//				entityName = ( (SqmEntityJoin<?>) lhs ).getEntityName();
+//			else if ( lhs instanceof SqmEntityJoin<?,?> ) {
+//				entityName = ( (SqmEntityJoin<?,?>) lhs ).getEntityName();
 //			}
 //			else {
 //				assert lhs instanceof SqmCrossJoin<?>;
@@ -291,7 +292,7 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return treats == null ? Collections.emptyList() : treats;
 	}
 
-	protected <S, X extends SqmFrom<?, S>> X findTreat(ManagedDomainType<S> targetType, String alias) {
+	protected <S, X extends SqmFrom<T, S>> X findTreat(ManagedDomainType<S> targetType, String alias) {
 		if ( treats != null ) {
 			for ( SqmFrom<?, ?> treat : treats ) {
 				if ( treat.getModel() == targetType ) {
@@ -557,25 +558,25 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
-	public <X> JpaEntityJoin<X> join(Class<X> entityJavaType) {
+	public <R> JpaEntityJoin<T, R> join(Class<R> entityJavaType) {
 		return join( nodeBuilder().getDomainModel().entity( entityJavaType ) );
 	}
 
 	@Override
-	public <X> JpaEntityJoin<X> join(EntityDomainType<X> entity) {
-		return join( entity, SqmJoinType.INNER );
+	public <R> JpaEntityJoin<T, R> join(EntityType<R> entityType) {
+		return join( entityType, JoinType.INNER );
 	}
 
 	@Override
-	public <X> JpaEntityJoin<X> join(Class<X> entityJavaType, SqmJoinType joinType) {
+	public <Y> JpaEntityJoin<T, Y> join(Class<Y> entityJavaType, JoinType joinType) {
 		return join( nodeBuilder().getDomainModel().entity( entityJavaType ), joinType );
 	}
 
 	@Override
-	public <X> JpaEntityJoin<X> join(EntityDomainType<X> entity, SqmJoinType joinType) {
-		final SqmEntityJoin<X> join = new SqmEntityJoin<>( entity, null, joinType, findRoot() );
+	public <Y> JpaEntityJoin<T, Y> join(EntityType<Y> entity, JoinType joinType) {
 		//noinspection unchecked
-		addSqmJoin( (SqmJoin<T, ?>) join );
+		final SqmEntityJoin<T,Y> join = new SqmEntityJoin<>( entity, null, joinType, (SqmRoot<T>) findRoot() );
+		addSqmJoin( join );
 		return join;
 	}
 

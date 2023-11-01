@@ -6735,7 +6735,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private boolean isNullsFirst(SortSpecification sortSpecification) {
-		NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
+		NullPrecedence nullPrecedence = sortSpecification.getHibernateNullPrecedence();
 		if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
 			switch ( dialect.getNullOrdering() ) {
 				case FIRST:

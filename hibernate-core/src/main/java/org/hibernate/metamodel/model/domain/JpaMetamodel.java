@@ -57,12 +57,12 @@ public interface JpaMetamodel extends Metamodel {
 	/**
 	 * Access to an entity supporting Hibernate's entity-name feature
 	 */
-	<X> EntityDomainType<X> entity(String entityName);
+	EntityDomainType<?> entity(String entityName);
 
 	/**
 	 * Access to an embeddable type from FQN
 	 */
-	<X> EmbeddableDomainType<X> embeddable(String embeddableName);
+	EmbeddableDomainType<?> embeddable(String embeddableName);
 
 	/**
 	 * Specialized handling for resolving entity-name references in

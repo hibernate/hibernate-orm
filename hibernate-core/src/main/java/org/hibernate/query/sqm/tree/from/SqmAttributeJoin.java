@@ -11,6 +11,7 @@ import org.hibernate.Remove;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaFetch;
 import org.hibernate.query.criteria.JpaJoin;
+import org.hibernate.query.criteria.JpaJoinedFrom;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -21,7 +22,7 @@ import org.hibernate.type.descriptor.java.JavaType;
  *
  * @author Steve Ebersole
  */
-public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O,T>, JpaJoin<O,T> {
+public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O,T>, JpaJoinedFrom<O,T>, JpaJoin<O,T> {
 	@Override
 	SqmFrom<?,O> getLhs();
 
@@ -50,17 +51,13 @@ public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O
 	<S extends T> SqmAttributeJoin<O, S> treatAs(Class<S> treatJavaType);
 
 	@Override
-	<S extends T> SqmAttributeJoin<O, S> treatAs(EntityDomainType<S> treatTarget);
-
-	@Override
 	<S extends T> SqmAttributeJoin<O, S> treatAs(Class<S> treatJavaType, String alias);
 
 	@Override
-	<S extends T> SqmAttributeJoin<O, S> treatAs(EntityDomainType<S> treatJavaType, String alias);
+	<S extends T> SqmAttributeJoin<O, S> treatAs(EntityDomainType<S> treatTarget);
 
-	<S extends T> SqmAttributeJoin<O, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch);
-
-	<S extends T> SqmAttributeJoin<O, S> treatAs(EntityDomainType<S> treatJavaType, String alias, boolean fetch);
+	@Override
+	<S extends T> SqmAttributeJoin<O, S> treatAs(EntityDomainType<S> treatTarget, String alias);
 
 	/*
 		@deprecated not used anymore

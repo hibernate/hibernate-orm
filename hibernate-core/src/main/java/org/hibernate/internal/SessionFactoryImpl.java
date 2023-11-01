@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
@@ -124,7 +126,9 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import jakarta.persistence.EntityGraph;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
+import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
 import jakarta.persistence.SynchronizationType;
@@ -977,6 +981,14 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	@Override
+	public PersistenceUnitTransactionType getTransactionType() {
+		return fastSessionServices.transactionCoordinatorBuilder.isJta()
+				? PersistenceUnitTransactionType.JTA
+				: PersistenceUnitTransactionType.RESOURCE_LOCAL;
+
+	}
+
+	@Override
 	public void addNamedQuery(String name, Query query) {
 		validateNotClosed();
 
@@ -1072,6 +1084,18 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	@Override
 	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
 		getMappingMetamodel().addNamedEntityGraph( graphName, (RootGraphImplementor<T>) entityGraph );
+	}
+
+	@Override
+	public void runInTransaction(Consumer<EntityManager> work) {
+		//noinspection unchecked,rawtypes
+		inTransaction( (Consumer) work );
+	}
+
+	@Override
+	public <R> R callInTransaction(Function<EntityManager, R> work) {
+		//noinspection unchecked,rawtypes
+		return (R) fromTransaction( (Function) work );
 	}
 
 	@Override

@@ -108,22 +108,22 @@ public class SqmDerivedRoot<T> extends SqmRoot<T> implements JpaDerivedRoot<T> {
 	}
 
 	@Override
-	public <S extends T> SqmTreatedRoot<T, S> treatAs(Class<S> treatJavaType) throws PathException {
+	public <S extends T> SqmFrom<T, S> treatAs(Class<S> treatJavaType) throws PathException {
 		throw new UnsupportedOperationException( "Derived roots can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedRoot<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+	public <S extends T> SqmFrom<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
 		throw new UnsupportedOperationException( "Derived roots can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends T> SqmFrom<T, S> treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "Derived roots can not be treated" );
 	}
 
 	@Override
-	public <S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends T> SqmFrom<T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "Derived roots can not be treated" );
 	}
 }

@@ -178,7 +178,7 @@ public class NamedProcedureCallDefinitionImpl implements NamedProcedureCallDefin
 			this.position = position;
 			this.name = normalize( annotation.name() );
 			this.parameterMode = annotation.mode();
-			this.type = annotation.type();
+			this.type = (Class<T>) annotation.type();
 		}
 
 		public ParameterMemento toMemento(SessionFactoryImplementor sessionFactory) {

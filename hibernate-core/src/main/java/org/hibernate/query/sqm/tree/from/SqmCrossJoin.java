@@ -8,8 +8,6 @@ package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaCrossJoin;
-import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.PathException;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.sqm.SemanticQueryWalker;
@@ -19,6 +17,7 @@ import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedCrossJoin;
+import org.hibernate.spi.NavigablePath;
 
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePath;
 
@@ -118,30 +117,33 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 		return new SqmCorrelatedCrossJoin<>( this );
 	}
 
-// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JPA
 
+
 	@Override
-	public <S extends T> SqmTreatedCrossJoin<T,S> treatAs(Class<S> treatJavaType) throws PathException {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	public <S extends T> SqmJoin<T, S> treatAs(Class<S> treatTarget) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatTarget ) );
 	}
 
 	@Override
-	public <S extends T> SqmTreatedCrossJoin<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		final SqmTreatedCrossJoin<T, S> treat = findTreat( treatTarget, null );
+	public <S extends T> SqmJoin<T, S> treatAs(EntityDomainType<S> treatTarget) {
+		final SqmJoin<T, S> treat = findTreat( treatTarget, null );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedCrossJoin<>( this, treatTarget, null ) );
+			//noinspection unchecked
+			return addTreat( (SqmJoin<T, S>) new SqmTreatedCrossJoin<>( this, treatTarget, null ) );
 		}
 		return treat;
 	}
 
 	@Override
-	public <S extends T> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends T> SqmJoin<T, S> treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "Cross join treats can not be aliased" );
 	}
 
 	@Override
-	public <S extends T> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends T> SqmJoin<T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "Cross join treats can not be aliased" );
 	}
 

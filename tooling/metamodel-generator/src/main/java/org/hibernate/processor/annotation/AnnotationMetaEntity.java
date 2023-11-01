@@ -2576,7 +2576,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				}
 			}
 			else if ( selection instanceof JpaEntityJoin ) {
-				final JpaEntityJoin<?> from = (JpaEntityJoin<?>) selection;
+				final JpaEntityJoin<?,?> from = (JpaEntityJoin<?,?>) selection;
 				returnTypeCorrect = checkReturnedEntity( from.getModel(), returnType );
 			}
 			else if ( selection instanceof JpaRoot ) {

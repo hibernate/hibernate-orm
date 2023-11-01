@@ -15,9 +15,12 @@ import org.hibernate.query.spi.ProcedureParameterMetadataImplementor;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.type.BasicTypeReference;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.Parameter;
 import jakarta.persistence.ParameterMode;
+import jakarta.persistence.StoredProcedureQuery;
 import jakarta.persistence.TemporalType;
 
 /**
@@ -77,6 +80,15 @@ public interface ProcedureCallImplementor<R> extends ProcedureCall, QueryImpleme
 
 	@Override
 	ProcedureCallImplementor<R> setFlushMode(FlushModeType flushMode);
+
+	@Override
+	ProcedureCallImplementor<R> setCacheRetrieveMode(CacheRetrieveMode cacheRetrieveMode);
+
+	@Override
+	ProcedureCallImplementor<R> setCacheStoreMode(CacheStoreMode cacheStoreMode);
+
+	@Override
+	ProcedureCallImplementor<R> setTimeout(Integer timeout);
 
 	@Override
 	ProcedureCallImplementor<R> registerStoredProcedureParameter(int position, Class type, ParameterMode mode);

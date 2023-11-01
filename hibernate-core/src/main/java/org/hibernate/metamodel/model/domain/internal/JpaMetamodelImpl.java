@@ -138,7 +138,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 	}
 
 	@Override
-	public <X> EntityDomainType<X> entity(String entityName) {
+	public EntityDomainType<?> entity(String entityName) {
 		if ( entityName == null ) {
 			return null;
 		}
@@ -146,12 +146,11 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		if ( !( managedType instanceof EntityDomainType<?> ) ) {
 			return null;
 		}
-		//noinspection unchecked
-		return (EntityDomainType<X>) managedType;
+		return (EntityDomainType<?>) managedType;
 	}
 
 	@Override
-	public <X> EmbeddableDomainType<X> embeddable(String embeddableName) {
+	public EmbeddableDomainType<?> embeddable(String embeddableName) {
 		if ( embeddableName == null ) {
 			return null;
 		}
@@ -159,8 +158,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		if ( !( managedType instanceof EmbeddableDomainType<?> ) ) {
 			return null;
 		}
-		//noinspection unchecked
-		return (EmbeddableDomainType<X>) managedType;
+		return (EmbeddableDomainType<?>) managedType;
 	}
 
 	@Override
@@ -172,9 +170,10 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			entityName = importInfo.importedName;
 		}
 
-		final EntityDomainType<X> entityDescriptor = entity( entityName );
+		final EntityDomainType<?> entityDescriptor = entity( entityName );
 		if ( entityDescriptor != null ) {
-			return entityDescriptor;
+			//noinspection unchecked
+			return (EntityDomainType<X>) entityDescriptor;
 		}
 
 		if ( loadedClass == null ) {
@@ -428,7 +427,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 					definition.getEntityName(),
 					definition.getJpaEntityName()
 			);
-			final EntityDomainType<Object> entityType = entity( definition.getEntityName() );
+			final EntityDomainType<Object> entityType = (EntityDomainType<Object>) entity( definition.getEntityName() );
 			if ( entityType == null ) {
 				throw new IllegalArgumentException(
 						"Attempted to register named entity graph [" + definition.getRegisteredName()
@@ -520,7 +519,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 		{
 			final String proxyEntityName = entityProxyInterfaceMap.get( javaType );
 			if ( proxyEntityName != null ) {
-				return entity( proxyEntityName );
+				return (EntityDomainType<T>) entity( proxyEntityName );
 			}
 		}
 

@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -289,16 +290,17 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <E, C extends java.util.Collection<E>> SqmPath<C> get(PluralAttribute<T, C, E> attribute) {
+	public <E, C extends Collection<E>> SqmExpression<C> get(PluralAttribute<? super T, C, E> attribute) {
+		//noinspection unchecked
 		return resolvePath( (PersistentAttribute<T, C>) attribute );
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	public <K, V, M extends Map<K, V>> SqmPath<M> get(MapAttribute<T, K, V> map) {
-		return resolvePath( (PersistentAttribute<T, M>) map );
+	public <K, V, M extends Map<K, V>> SqmExpression<M> get(MapAttribute<? super T, K, V> attribute) {
+		//noinspection unchecked
+		return resolvePath( (PersistentAttribute<T, M>) attribute );
 	}
+
 
 	@Override
 	public String toString() {

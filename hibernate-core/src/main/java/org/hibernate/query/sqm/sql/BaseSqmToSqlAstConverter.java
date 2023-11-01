@@ -3286,8 +3286,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else if ( sqmJoin instanceof SqmCrossJoin<?> ) {
 			return consumeCrossJoin( ( (SqmCrossJoin<?>) sqmJoin ), lhsTableGroup, transitive );
 		}
-		else if ( sqmJoin instanceof SqmEntityJoin<?> ) {
-			return consumeEntityJoin( ( (SqmEntityJoin<?>) sqmJoin ), lhsTableGroup, transitive );
+		else if ( sqmJoin instanceof SqmEntityJoin<?,?> ) {
+			return consumeEntityJoin( ( (SqmEntityJoin<?,?>) sqmJoin ), lhsTableGroup, transitive );
 		}
 		else if ( sqmJoin instanceof SqmDerivedJoin<?> ) {
 			return consumeDerivedJoin( ( (SqmDerivedJoin<?>) sqmJoin ), lhsTableGroup, transitive );
@@ -3487,7 +3487,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		return tableGroup;
 	}
 
-	private TableGroup consumeEntityJoin(SqmEntityJoin<?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
+	private TableGroup consumeEntityJoin(SqmEntityJoin<?,?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
 
 		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
@@ -4093,7 +4093,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
-	public Expression visitQualifiedEntityJoin(SqmEntityJoin<?> sqmJoin) {
+	public Expression visitQualifiedEntityJoin(SqmEntityJoin<?,?> sqmJoin) {
 		final TableGroup existing = getFromClauseAccess().findTableGroup( sqmJoin.getNavigablePath() );
 		if ( existing != null ) {
 			log.tracef( "SqmEntityJoin [%s] resolved to existing TableGroup [%s]", sqmJoin, existing );

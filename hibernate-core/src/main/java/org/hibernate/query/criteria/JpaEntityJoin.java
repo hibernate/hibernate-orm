@@ -14,19 +14,19 @@ import jakarta.persistence.criteria.Predicate;
 /**
  * @author Steve Ebersole
  */
-public interface JpaEntityJoin<T> extends JpaJoinedFrom<T,T> {
+public interface JpaEntityJoin<L,R> extends JpaJoinedFrom<L,R> {
 	@Override
-	EntityDomainType<T> getModel();
+	EntityDomainType<R> getModel();
 
 	@Override
-	JpaEntityJoin<T> on(JpaExpression<Boolean> restriction);
+	JpaEntityJoin<L,R> on(JpaExpression<Boolean> restriction);
 
 	@Override
-	JpaEntityJoin<T> on(Expression<Boolean> restriction);
+	JpaEntityJoin<L,R> on(Expression<Boolean> restriction);
 
 	@Override
-	JpaEntityJoin<T> on(JpaPredicate... restrictions);
+	JpaEntityJoin<L,R> on(JpaPredicate... restrictions);
 
 	@Override
-	JpaEntityJoin<T> on(Predicate... restrictions);
+	JpaEntityJoin<L,R> on(Predicate... restrictions);
 }

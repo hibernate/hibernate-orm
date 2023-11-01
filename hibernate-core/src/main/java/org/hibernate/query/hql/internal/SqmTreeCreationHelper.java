@@ -46,7 +46,7 @@ public class SqmTreeCreationHelper {
 		SqmTreeCreationLogger.LOGGER.debugf( "Handling secondary root path as cross-join - %s", sqmRoot.getEntityName() );
 
 		final String alias = extractAlias( fromRootContext.variable(), sqmBuilder );
-		final SqmEntityJoin<E> pseudoCrossJoin = new SqmEntityJoin<>(
+		final SqmEntityJoin<?,E> pseudoCrossJoin = new SqmEntityJoin<>(
 				sqmRoot.getManagedType(),
 				alias,
 				SqmJoinType.CROSS,

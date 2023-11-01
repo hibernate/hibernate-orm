@@ -34,8 +34,8 @@ public interface JpaCollectionJoin<O, T> extends JpaPluralJoin<O, Collection<T>,
 	JpaCollectionJoin<O, T> on(Predicate... restrictions);
 
 	@Override
-	<S extends T> JpaCollectionJoin<O, S> treatAs(Class<S> treatAsType);
+	<S extends T> JpaTreatedJoin<O,T, S> treatAs(Class<S> treatAsType);
 
 	@Override
-	<S extends T> JpaCollectionJoin<O, S> treatAs(EntityDomainType<S> treatAsType);
+	<S extends T> JpaTreatedJoin<O,T, S> treatAs(EntityDomainType<S> treatAsType);
 }

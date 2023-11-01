@@ -35,8 +35,8 @@ public interface JpaPluralJoin<O, C, E> extends JpaJoin<O, E>, PluralJoin<O, C, 
 	JpaPluralJoin<O, ? extends C, E> on(Predicate... restrictions);
 
 	@Override
-	<S extends E> JpaPluralJoin<O, ?, S> treatAs(Class<S> treatAsType);
+	<S extends E> JpaTreatedJoin<O, E, S> treatAs(Class<S> treatAsType);
 
 	@Override
-	<S extends E> JpaPluralJoin<O, ?, S> treatAs(EntityDomainType<S> treatAsType);
+	<S extends E> JpaTreatedJoin<O, E, S> treatAs(EntityDomainType<S> treatAsType);
 }

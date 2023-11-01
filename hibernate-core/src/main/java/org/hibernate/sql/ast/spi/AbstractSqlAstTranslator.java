@@ -4375,7 +4375,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitSortSpecification(SortSpecification sortSpecification) {
 		final Expression sortExpression = sortSpecification.getSortExpression();
-		final NullPrecedence nullPrecedence = sortSpecification.getNullPrecedence();
+		final NullPrecedence nullPrecedence = sortSpecification.getHibernateNullPrecedence();
 		final SortDirection sortOrder = sortSpecification.getSortOrder();
 		final boolean ignoreCase = sortSpecification.isIgnoreCase();
 		final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( sortExpression );

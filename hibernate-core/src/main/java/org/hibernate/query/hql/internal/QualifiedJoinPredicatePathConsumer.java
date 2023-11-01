@@ -16,7 +16,7 @@ import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
 import org.hibernate.query.sqm.tree.select.SqmSelectQuery;
@@ -29,10 +29,10 @@ import org.hibernate.query.sqm.tree.select.SqmSubQuery;
  * @author Steve Ebersole
  */
 public class QualifiedJoinPredicatePathConsumer extends BasicDotIdentifierConsumer {
-	private final SqmQualifiedJoin<?, ?> sqmJoin;
+	private final SqmJoin<?, ?> sqmJoin;
 
 	public QualifiedJoinPredicatePathConsumer(
-			SqmQualifiedJoin<?, ?> sqmJoin,
+			SqmJoin<?, ?> sqmJoin,
 			SqmCreationState creationState) {
 		super( creationState );
 		this.sqmJoin = sqmJoin;

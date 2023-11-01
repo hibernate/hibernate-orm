@@ -14,7 +14,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 /**
  * @author Steve Ebersole
  */
-public class SqmWhereClause {
+public class SqmWhereClause implements SqmPredicateCollection {
 	private final NodeBuilder nodeBuilder;
 
 	private SqmPredicate predicate;
@@ -35,14 +35,17 @@ public class SqmWhereClause {
 		);
 	}
 
+	@Override
 	public SqmPredicate getPredicate() {
 		return predicate;
 	}
 
+	@Override
 	public void setPredicate(SqmPredicate predicate) {
 		this.predicate = predicate;
 	}
 
+	@Override
 	public void applyPredicate(SqmPredicate predicate) {
 		if ( this.predicate == null ) {
 			this.predicate = predicate;
@@ -52,12 +55,14 @@ public class SqmWhereClause {
 		}
 	}
 
+	@Override
 	public void applyPredicates(SqmPredicate... predicates) {
 		for ( SqmPredicate sqmPredicate : predicates ) {
 			applyPredicate( sqmPredicate );
 		}
 	}
 
+	@Override
 	public void applyPredicates(Collection<SqmPredicate> predicates) {
 		for ( SqmPredicate sqmPredicate : predicates ) {
 			applyPredicate( sqmPredicate );

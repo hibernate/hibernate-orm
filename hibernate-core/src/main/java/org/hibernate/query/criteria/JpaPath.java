@@ -37,12 +37,14 @@ public interface JpaPath<T> extends JpaExpression<T>, Path<T> {
 	/**
 	 * Support for JPA's explicit (TREAT) down-casting.
 	 */
-	<S extends T> JpaPath<S> treatAs(Class<S> treatJavaType);
+	<S extends T> JpaTreatedPath<T,S> treatAs(Class<S> treatJavaType);
 
 	/**
 	 * Support for JPA's explicit (TREAT) down-casting.
 	 */
-	<S extends T> JpaPath<S> treatAs(EntityDomainType<S> treatJavaType);
+	<S extends T> JpaTreatedPath<T,S> treatAs(EntityDomainType<S> treatJavaType);
+
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Covariant overrides

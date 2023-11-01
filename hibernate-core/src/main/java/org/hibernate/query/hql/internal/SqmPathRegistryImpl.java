@@ -16,6 +16,7 @@ import java.util.function.Function;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
+import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
@@ -238,8 +239,8 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 				else if ( parentRegistered instanceof Join<?, ?> ) {
 					correlated = selectQuery.correlate( (Join<?, ?>) parentRegistered );
 				}
-				else if ( parentRegistered instanceof SqmCrossJoin<?> ) {
-					correlated = selectQuery.correlate( (SqmCrossJoin<?>) parentRegistered );
+				else if ( parentRegistered instanceof SqmCrossJoin ) {
+					correlated = selectQuery.correlate( (JpaCrossJoin) parentRegistered );
 				}
 				else if ( parentRegistered instanceof SqmEntityJoin<?,?> ) {
 					correlated = selectQuery.correlate( (SqmEntityJoin<?,?>) parentRegistered );

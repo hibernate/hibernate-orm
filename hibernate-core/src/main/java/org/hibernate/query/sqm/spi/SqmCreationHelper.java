@@ -11,12 +11,11 @@ import java.util.List;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
-import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.criteria.JpaPredicate;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.predicate.SqmJunctionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
-import org.hibernate.sql.ast.tree.predicate.Junction;
 
 import jakarta.persistence.criteria.Predicate;
 
@@ -85,6 +84,30 @@ public class SqmCreationHelper {
 		SqmPredicate combined = combinePredicates( null, baseRestriction );
 		for ( int i = 0; i < incomingRestrictions.size(); i++ ) {
 			combined = combinePredicates( combined, incomingRestrictions.get(i) );
+		}
+		return combined;
+	}
+
+	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, JpaPredicate... incomingRestrictions) {
+		if ( CollectionHelper.isEmpty( incomingRestrictions ) ) {
+			return baseRestriction;
+		}
+
+		SqmPredicate combined = combinePredicates( null, baseRestriction );
+		for ( int i = 0; i < incomingRestrictions.length; i++ ) {
+			combined = combinePredicates( combined, incomingRestrictions[i] );
+		}
+		return combined;
+	}
+
+	public static SqmPredicate combinePredicates(SqmPredicate baseRestriction, Predicate... incomingRestrictions) {
+		if ( CollectionHelper.isEmpty( incomingRestrictions ) ) {
+			return baseRestriction;
+		}
+
+		SqmPredicate combined = combinePredicates( null, baseRestriction );
+		for ( int i = 0; i < incomingRestrictions.length; i++ ) {
+			combined = combinePredicates( combined, incomingRestrictions[i] );
 		}
 		return combined;
 	}

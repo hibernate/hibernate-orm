@@ -19,8 +19,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.SemanticException;
-import org.hibernate.query.criteria.JpaExpression;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.spi.SemanticPathPart;
 import org.hibernate.query.hql.spi.SqmCreationState;
@@ -30,7 +28,12 @@ import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * Models a reference to a part of the application's domain model as part of an SQM tree.
@@ -117,10 +120,10 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	}
 
 	@Override
-	<S extends T> SqmPath<S> treatAs(Class<S> treatJavaType);
+	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType);
 
 	@Override
-	<S extends T> SqmPath<S> treatAs(EntityDomainType<S> treatTarget);
+	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget);
 
 	default SqmRoot<?> findRoot() {
 		final SqmPath<?> lhs = getLhs();

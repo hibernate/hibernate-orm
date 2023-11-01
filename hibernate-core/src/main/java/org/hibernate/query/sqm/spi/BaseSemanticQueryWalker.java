@@ -33,6 +33,7 @@ import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.expression.SqmAggregateFunction;
@@ -298,7 +299,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 					consumeExplicitJoin( sqmJoin, true );
 				}
 		);
-		final List<SqmFrom<?, ?>> sqmTreats = sqmFrom.getSqmTreats();
+		final List<SqmTreatedFrom<?,?,?>> sqmTreats = sqmFrom.getSqmTreats();
 		if ( !sqmTreats.isEmpty() ) {
 			for ( SqmFrom<?, ?> sqmTreat : sqmTreats ) {
 				consumeTreat( sqmTreat );

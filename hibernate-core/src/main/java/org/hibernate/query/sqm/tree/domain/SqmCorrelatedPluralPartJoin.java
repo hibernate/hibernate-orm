@@ -22,7 +22,7 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 
 	public SqmCorrelatedPluralPartJoin(SqmPluralPartJoin<O, T> correlationParent) {
 		super(
-				(SqmFrom<?, O>) correlationParent.getLhs(),
+				correlationParent.getLhs(),
 				correlationParent.getNavigablePath(),
 				correlationParent.getReferencedPathSource(),
 				correlationParent.getExplicitAlias(),
@@ -50,11 +50,6 @@ public class SqmCorrelatedPluralPartJoin<O, T> extends SqmPluralPartJoin<O, T> i
 	@Override
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitCorrelatedPluralPartJoin( this );
-	}
-
-	@Override
-	public SqmFrom<?, T> getLhs() {
-		return (SqmFrom<?, T>) super.getLhs();
 	}
 
 	@Override

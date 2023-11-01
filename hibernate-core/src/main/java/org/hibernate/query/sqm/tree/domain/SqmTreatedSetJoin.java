@@ -9,16 +9,22 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.TreatableDomainType;
 import org.hibernate.metamodel.model.domain.SetPersistentAttribute;
+import org.hibernate.query.criteria.JpaExpression;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
+import org.hibernate.query.sqm.tree.from.SqmTreatedAttributeJoin;
 import org.hibernate.spi.NavigablePath;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * @author Steve Ebersole
  */
-public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> implements SqmTreatedPath<T,S> {
+public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> implements SqmTreatedAttributeJoin<O,T,S> {
 	private final SqmSetJoin<O,T> wrappedPath;
 	private final TreatableDomainType<S> treatTarget;
 
@@ -127,5 +133,25 @@ public class SqmTreatedSetJoin<O,T, S extends T> extends SqmSetJoin<O,S> impleme
 		sb.append( " as " );
 		sb.append( treatTarget.getTypeName() );
 		sb.append( ')' );
+	}
+
+	@Override
+	public SqmTreatedSetJoin<O, T, S> on(JpaExpression<Boolean> restriction) {
+		return (SqmTreatedSetJoin<O, T, S>) super.on( restriction );
+	}
+
+	@Override
+	public SqmTreatedSetJoin<O, T, S> on(Expression<Boolean> restriction) {
+		return (SqmTreatedSetJoin<O, T, S>) super.on( restriction );
+	}
+
+	@Override
+	public SqmTreatedSetJoin<O, T, S> on(JpaPredicate... restrictions) {
+		return (SqmTreatedSetJoin<O, T, S>) super.on( restrictions );
+	}
+
+	@Override
+	public SqmTreatedSetJoin<O, T, S> on(Predicate... restrictions) {
+		return (SqmTreatedSetJoin<O, T, S>) super.on( restrictions );
 	}
 }

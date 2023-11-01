@@ -7,6 +7,7 @@
 package org.hibernate.query.sqm.tree.from;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.criteria.JpaCrossJoin;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
@@ -15,17 +16,36 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
-import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedCrossJoin;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.query.sqm.tree.predicate.SqmPredicateCollection;
+import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.spi.NavigablePath;
+
+import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.JoinType;
 
 import static org.hibernate.query.sqm.spi.SqmCreationHelper.buildRootNavigablePath;
 
 /**
+ * Stuff and things
+ *
+ * @apiNote {@linkplain SqmCrossJoin} and its offspring are largely de-typed to account
+ *         for {@linkplain SqmCrossJoin} having only one type argument for the right-hand
+ *         side.  To properly handle the type parameters in the hierarchy we would need to
+ *         change this to accept type parameter for the left-handle side as well.
+ *         <p/>
+ *         Another option is to not make it a join as in `SqmJoin`.  Instead, model it
+ *         as a root with its predicate(s) added to an internal `SqmPredicateCollection` (ansi join predicate)
+ *         or to the query where clause (theta joins).
+ *
+ * @implNote IMPL NOTE
+ *
  * @author Steve Ebersole
  */
 public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJoin<T>, SqmJoin<T, T> {
 	private final SqmRoot<?> sqmRoot;
+	private final SqmPredicateCollection sqmJoinPredicates;
 
 	public SqmCrossJoin(
 			EntityDomainType<T> joinedEntityDescriptor,
@@ -52,11 +72,22 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 				sqmRoot.nodeBuilder()
 		);
 		this.sqmRoot = sqmRoot;
+		this.sqmJoinPredicates = new SqmWhereClause( nodeBuilder() );
 	}
 
 	@Override
 	public boolean isImplicitlySelectable() {
 		return true;
+	}
+
+	@Override
+	public JoinType getJoinType() {
+		return null;
+	}
+
+	@Override
+	public SqmJoinType getSqmJoinType() {
+		return SqmJoinType.CROSS;
 	}
 
 	@Override
@@ -83,7 +114,7 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	}
 
 	@Override
-	public SqmPath<?> getLhs() {
+	public SqmFrom<?, T> getLhs() {
 		// a cross-join has no LHS
 		return null;
 	}
@@ -95,11 +126,6 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 
 	public String getEntityName() {
 		return getReferencedPathSource().getHibernateEntityName();
-	}
-
-	@Override
-	public SqmJoinType getSqmJoinType() {
-		return SqmJoinType.CROSS;
 	}
 
 	@Override
@@ -117,36 +143,6 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 		return new SqmCorrelatedCrossJoin<>( this );
 	}
 
-
-	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-	// JPA
-
-
-	@Override
-	public <S extends T> SqmJoin<T, S> treatAs(Class<S> treatTarget) {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatTarget ) );
-	}
-
-	@Override
-	public <S extends T> SqmJoin<T, S> treatAs(EntityDomainType<S> treatTarget) {
-		final SqmJoin<T, S> treat = findTreat( treatTarget, null );
-		if ( treat == null ) {
-			//noinspection unchecked
-			return addTreat( (SqmJoin<T, S>) new SqmTreatedCrossJoin<>( this, treatTarget, null ) );
-		}
-		return treat;
-	}
-
-	@Override
-	public <S extends T> SqmJoin<T, S> treatAs(Class<S> treatJavaType, String alias) {
-		throw new UnsupportedOperationException( "Cross join treats can not be aliased" );
-	}
-
-	@Override
-	public <S extends T> SqmJoin<T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
-		throw new UnsupportedOperationException( "Cross join treats can not be aliased" );
-	}
-
 	public SqmCrossJoin<T> makeCopy(SqmCreationProcessingState creationProcessingState) {
 		final SqmPathRegistry pathRegistry = creationProcessingState.getPathRegistry();
 		return new SqmCrossJoin<>(
@@ -154,5 +150,54 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 				getExplicitAlias(),
 				pathRegistry.findFromByPath( getRoot().getNavigablePath() )
 		);
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// JPA
+
+
+
+	@Override
+	public PersistentAttribute<? super T, ?> getAttribute() {
+		return null;
+	}
+
+	@Override
+	public SqmPredicate getJoinPredicate() {
+		return sqmJoinPredicates.getPredicate();
+	}
+
+	@Override
+	public void setJoinPredicate(SqmPredicate predicate) {
+		sqmJoinPredicates.setPredicate( predicate );
+	}
+
+	@Override
+	public From<?, T> getParent() {
+		return getLhs();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <S extends T> SqmTreatedCrossJoin treatAs(Class<S> treatJavaType, String alias) {
+		throw new UnsupportedOperationException( "Cross join treats can not be aliased" );
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <S extends T> SqmTreatedCrossJoin treatAs(EntityDomainType<S> treatTarget, String alias) {
+		throw new UnsupportedOperationException( "Cross join treats can not be aliased" );
+	}
+	@SuppressWarnings("unchecked")
+	@Override
+	public <S extends T> SqmTreatedCrossJoin treatAs(Class<S> treatAsType) {
+		return treatAs( treatAsType, null );
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <S extends T> SqmTreatedCrossJoin treatAs(EntityDomainType<S> treatAsType) {
+		return treatAs( treatAsType, null );
 	}
 }

@@ -349,7 +349,8 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 				if ( joinedEntityType == null ) {
 					final SqmCteStatement<?> cteStatement = creationState.findCteStatement( fullPath );
 					if ( cteStatement != null ) {
-						join = new SqmCteJoin<>( cteStatement, alias, joinType, sqmRoot );
+						//noinspection rawtypes,unchecked
+						join = new SqmCteJoin( cteStatement, alias, joinType, sqmRoot );
 						creationState.getCurrentProcessingState().getPathRegistry().register( join );
 						return;
 					}

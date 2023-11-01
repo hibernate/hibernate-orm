@@ -6,6 +6,8 @@
  */
 package org.hibernate.query.sqm.tree.select;
 
+import java.util.Objects;
+
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.criteria.JpaExpression;
@@ -13,19 +15,20 @@ import org.hibernate.query.criteria.JpaOrder;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
-import java.util.Objects;
+import jakarta.persistence.criteria.Nulls;
 
 /**
  * @author Steve Ebersole
  */
 public class SqmSortSpecification implements JpaOrder {
+	@SuppressWarnings("rawtypes")
 	private final SqmExpression sortExpression;
 	private final SortDirection sortOrder;
 	private final boolean ignoreCase;
 	private NullPrecedence nullPrecedence;
 
 	public SqmSortSpecification(
-			SqmExpression sortExpression,
+			@SuppressWarnings("rawtypes") SqmExpression sortExpression,
 			SortDirection sortOrder,
 			NullPrecedence nullPrecedence) {
 		this( sortExpression, sortOrder, nullPrecedence, false );
@@ -45,10 +48,12 @@ public class SqmSortSpecification implements JpaOrder {
 		this.ignoreCase = ignoreCase;
 	}
 
+	@SuppressWarnings("rawtypes")
 	public SqmSortSpecification(SqmExpression sortExpression) {
 		this( sortExpression, SortDirection.ASCENDING, NullPrecedence.NONE );
 	}
 
+	@SuppressWarnings("rawtypes")
 	public SqmSortSpecification(SqmExpression sortExpression, SortDirection sortOrder) {
 		this( sortExpression, sortOrder, NullPrecedence.NONE );
 	}
@@ -75,14 +80,14 @@ public class SqmSortSpecification implements JpaOrder {
 	// JPA
 
 	@Override
-	public JpaOrder nullPrecedence(NullPrecedence nullPrecedence) {
-		this.nullPrecedence = nullPrecedence;
+	public JpaOrder nullPrecedence(Nulls nullPrecedence) {
+		this.nullPrecedence = NullPrecedence.fromJpaValue( nullPrecedence );
 		return this;
 	}
 
 	@Override
-	public NullPrecedence getNullPrecedence() {
-		return nullPrecedence;
+	public Nulls getNullPrecedence() {
+		return nullPrecedence.getJpaValue();
 	}
 
 	@Override

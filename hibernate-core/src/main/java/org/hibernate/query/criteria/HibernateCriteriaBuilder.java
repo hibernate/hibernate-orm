@@ -35,6 +35,7 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
+import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -1003,6 +1004,11 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence, boolean ignoreCase);
 	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence);
+
+	default JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
+		return sort( sortExpression, sortOrder, NullPrecedence.fromJpaValue( nullPrecedence ) );
+	}
+
 	JpaOrder sort(JpaExpression<?> sortExpression, SortDirection sortOrder);
 	JpaOrder sort(JpaExpression<?> sortExpression);
 
@@ -2695,7 +2701,6 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	@Incubating
 	JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator);
-	
 	/**
 	 * Whether an array contains an element.
 	 *

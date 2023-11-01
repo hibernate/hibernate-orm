@@ -11,12 +11,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.SemanticException;
+import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.criteria.JpaPath;
 import org.hibernate.query.hql.spi.SemanticPathPart;
@@ -153,10 +155,10 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	<Y> SqmPath<Y> get(SingularAttribute<? super T, Y> attribute);
 
 	@Override
-	<E, C extends Collection<E>> SqmExpression<C> get(PluralAttribute<T, C, E> collection);
+	<E, C extends Collection<E>> SqmExpression<C> get(PluralAttribute<? super T, C, E> collection);
 
 	@Override
-	<K, V, M extends Map<K, V>> SqmExpression<M> get(MapAttribute<T, K, V> map);
+	<K, V, M extends Map<K, V>> SqmExpression<M> get(MapAttribute<? super T, K, V> map);
 
 	@Override
 	SqmExpression<Class<? extends T>> type();
@@ -166,4 +168,6 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 
 	@Override
 	SqmPath<T> copy(SqmCopyContext context);
+
+
 }

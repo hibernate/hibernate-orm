@@ -671,8 +671,8 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
 				appendJoins( sqmJoin, sb );
 			}
-			else if ( sqmJoin instanceof SqmEntityJoin<?> ) {
-				final SqmEntityJoin<?> sqmEntityJoin = (SqmEntityJoin<?>) sqmJoin;
+			else if ( sqmJoin instanceof SqmEntityJoin<?,?> ) {
+				final SqmEntityJoin<?,?> sqmEntityJoin = (SqmEntityJoin<?,?>) sqmJoin;
 				sb.append( ( sqmEntityJoin ).getEntityName() );
 				sb.append( ' ' ).append( sqmJoin.resolveAlias() );
 				if ( sqmEntityJoin.getJoinPredicate() != null ) {

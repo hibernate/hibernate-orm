@@ -10,6 +10,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.PersistenceConfiguration;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.spi.LoadState;
 import jakarta.persistence.spi.PersistenceProvider;
@@ -193,6 +194,12 @@ public class HibernatePersistenceProvider implements PersistenceProvider {
 			return PersistenceUtilHelper.getLoadState( object );
 		}
 	};
+
+	@Override
+	public EntityManagerFactory createEntityManagerFactory(PersistenceConfiguration configuration) {
+		// todo (jpa 3.2) : implement this
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
 
 	@Override
 	public ProviderUtil getProviderUtil() {

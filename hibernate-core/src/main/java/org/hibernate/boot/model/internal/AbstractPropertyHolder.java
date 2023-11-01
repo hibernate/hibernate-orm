@@ -38,6 +38,7 @@ import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.AssociationOverrides;
 import jakarta.persistence.AttributeOverride;
 import jakarta.persistence.AttributeOverrides;
+import jakarta.persistence.CheckConstraint;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
@@ -742,6 +743,11 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		}
 
 		@Override
+		public String options() {
+			return "";
+		}
+
+		@Override
 		public String table() {
 			return table;
 		}
@@ -759,6 +765,16 @@ public abstract class AbstractPropertyHolder implements PropertyHolder {
 		@Override
 		public int scale() {
 			return 0;
+		}
+
+		@Override
+		public CheckConstraint[] check() {
+			return new CheckConstraint[0];
+		}
+
+		@Override
+		public String comment() {
+			return "";
 		}
 
 		@Override

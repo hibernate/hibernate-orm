@@ -43,10 +43,15 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.stat.SessionStatistics;
 
+import jakarta.persistence.ConnectionConsumer;
+import jakarta.persistence.ConnectionFunction;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FindOption;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockOption;
+import jakarta.persistence.RefreshOption;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -547,6 +552,16 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <C> void runWithConnection(ConnectionConsumer<C> action) {
+
+	}
+
+	@Override
+	public <C, T> T callWithConnection(ConnectionFunction<C, T> function) {
+		return null;
+	}
+
+	@Override
 	public <R> Query<R> createQuery(String queryString, Class<R> resultClass) {
 		return this.lazySession.get().createQuery( queryString, resultClass );
 	}
@@ -835,6 +850,16 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
+		return this.lazySession.get().find( entityClass, primaryKey, options );
+	}
+
+	@Override
+	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
+		return this.lazySession.get().find( entityGraph, primaryKey, options );
+	}
+
+	@Override
 	public void lock(Object entity, LockModeType lockMode) {
 		this.lazySession.get().lock( entity, lockMode );
 	}
@@ -842,6 +867,11 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public void lock(Object entity, LockModeType lockMode, Map<String, Object> properties) {
 		this.lazySession.get().lock( entity, lockMode, properties );
+	}
+
+	@Override
+	public void lock(Object entity, LockModeType lockMode, LockOption... options) {
+		this.lazySession.get().lock( entity, lockMode, options );
 	}
 
 	@Override
@@ -857,6 +887,11 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public void refresh(Object entity, LockModeType lockMode, Map<String, Object> properties) {
 		this.lazySession.get().refresh( entity, lockMode, properties );
+	}
+
+	@Override
+	public void refresh(Object entity, RefreshOption... options) {
+		this.lazySession.get().refresh( entity, options );
 	}
 
 	@Override

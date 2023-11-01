@@ -99,6 +99,7 @@ public class SqmTreatedCrossJoin<T, S extends T> extends SqmCrossJoin<S> impleme
 		return treatTarget;
 	}
 
+
 	@Override
 	public void appendHqlString(StringBuilder sb) {
 		sb.append( "treat(" );

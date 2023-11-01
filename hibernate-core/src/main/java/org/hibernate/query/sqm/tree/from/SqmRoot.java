@@ -191,26 +191,27 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	}
 
 	@Override
-	public <S extends E> SqmTreatedRoot<E, S> treatAs(Class<S> treatJavaType) throws PathException {
+	public <S extends E> SqmFrom<E, S> treatAs(Class<S> treatJavaType) throws PathException {
 		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override
-	public <S extends E> SqmTreatedRoot<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		final SqmTreatedRoot<E, S> treat = findTreat( treatTarget, null );
+	public <S extends E> SqmFrom<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		final SqmFrom<E, S> treat = findTreat( treatTarget, null );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedRoot<>( this, treatTarget ) );
+			//noinspection rawtypes,unchecked
+			return addTreat( new SqmTreatedRoot( this, treatTarget ) );
 		}
 		return treat;
 	}
 
 	@Override
-	public <S extends E> SqmFrom<?, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends E> SqmFrom<E, S> treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "Root treats can not be aliased" );
 	}
 
 	@Override
-	public <S extends E> SqmFrom<?, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends E> SqmFrom<E, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "Root treats can not be aliased" );
 	}
 

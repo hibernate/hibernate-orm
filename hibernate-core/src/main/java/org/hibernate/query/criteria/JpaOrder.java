@@ -6,9 +6,9 @@
  */
 package org.hibernate.query.criteria;
 
+import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.criteria.Order;
 
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 
 /**
@@ -24,12 +24,12 @@ public interface JpaOrder extends Order, JpaCriteriaNode {
 	/**
 	 * Set the precedence of nulls for this order element
 	 */
-	JpaOrder nullPrecedence(NullPrecedence precedence);
+	JpaOrder nullPrecedence(Nulls precedence);
 
 	/**
 	 * The precedence for nulls for this order element
 	 */
-	NullPrecedence getNullPrecedence();
+	Nulls getNullPrecedence();
 
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

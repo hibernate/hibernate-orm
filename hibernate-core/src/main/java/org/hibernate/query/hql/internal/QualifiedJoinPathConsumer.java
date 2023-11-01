@@ -289,7 +289,8 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 		}
 
 		private <T> EntityDomainType<T> treatTarget(String entityName) {
-			return creationState.getCreationContext().getJpaMetamodel().entity(entityName);
+			//noinspection unchecked
+			return (EntityDomainType<T>) creationState.getCreationContext().getJpaMetamodel().entity( entityName);
 		}
 
 		@Override

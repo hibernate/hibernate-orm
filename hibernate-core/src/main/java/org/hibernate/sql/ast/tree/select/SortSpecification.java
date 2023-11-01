@@ -12,6 +12,8 @@ import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
+import jakarta.persistence.criteria.Nulls;
+
 /**
  * @author Steve Ebersole
  */
@@ -33,6 +35,10 @@ public class SortSpecification implements SqlAstNode {
 		this.nullPrecedence = nullPrecedence;
 	}
 
+	public SortSpecification(Expression sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
+		this( sortExpression,sortOrder, NullPrecedence.fromJpaValue( nullPrecedence ) );
+	}
+
 	public Expression getSortExpression() {
 		return sortExpression;
 	}
@@ -41,8 +47,12 @@ public class SortSpecification implements SqlAstNode {
 		return sortOrder;
 	}
 
-	public NullPrecedence getNullPrecedence() {
+	public NullPrecedence getHibernateNullPrecedence() {
 		return nullPrecedence;
+	}
+
+	public Nulls getNullPrecedence() {
+		return nullPrecedence.getJpaValue();
 	}
 
 	@Override

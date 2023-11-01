@@ -9,6 +9,8 @@ package org.hibernate.query;
 import org.hibernate.AssertionFailure;
 import org.hibernate.dialect.NullOrdering;
 
+import jakarta.persistence.criteria.Nulls;
+
 /**
  * Enumerates the possibilities for the precedence of null values within
  * query result sets sorted by an {@code ORDER BY} clause.
@@ -19,15 +21,21 @@ public enum NullPrecedence {
 	/**
 	 * Null precedence not specified. Relies on the RDBMS implementation.
 	 */
-	NONE,
+	NONE( Nulls.NONE ),
 	/**
 	 * Null values appear at the beginning of the sorted collection.
 	 */
-	FIRST,
+	FIRST( Nulls.FIRST ),
 	/**
 	 * Null values appear at the end of the sorted collection.
 	 */
-	LAST;
+	LAST( Nulls.LAST );
+
+	private final Nulls jpaValue;
+
+	NullPrecedence(Nulls jpaValue) {
+		this.jpaValue = jpaValue;
+	}
 
 	/**
 	 * Is this null precedence the default for the given sort order and null ordering.
@@ -95,5 +103,25 @@ public enum NullPrecedence {
 	public static NullPrecedence parse(String name, NullPrecedence defaultValue) {
 		final NullPrecedence value = parse( name );
 		return value != null ? value : defaultValue;
+	}
+
+	public Nulls getJpaValue() {
+		return jpaValue;
+	}
+
+	public static NullPrecedence fromJpaValue(Nulls jpaValue) {
+		switch ( jpaValue ) {
+			case NONE: {
+				return NullPrecedence.NONE;
+			}
+			case FIRST: {
+				return NullPrecedence.FIRST;
+			}
+			case LAST: {
+				return NullPrecedence.LAST;
+			}
+		}
+
+		throw new IllegalArgumentException( "Unexpected JPA Nulls - " + jpaValue );
 	}
 }

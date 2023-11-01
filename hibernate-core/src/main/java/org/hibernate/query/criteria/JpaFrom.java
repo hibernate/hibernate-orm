@@ -11,9 +11,11 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 
 import jakarta.persistence.criteria.From;
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Subquery;
 import jakarta.persistence.metamodel.CollectionAttribute;
+import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.ListAttribute;
 import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.SetAttribute;
@@ -28,13 +30,27 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	@Override
 	JpaFrom<O,T> getCorrelationParent();
 
-	<X> JpaEntityJoin<X> join(Class<X> entityJavaType);
+	@Override
+	<Y> JpaEntityJoin<T, Y> join(Class<Y> entityClass);
 
-	<X> JpaEntityJoin<X> join(EntityDomainType<X> entity);
+	@Override
+	<Y> JpaJoin<T, Y> join(Class<Y> entityClass, JoinType joinType);
 
-	<X> JpaEntityJoin<X> join(Class<X> entityJavaType, SqmJoinType joinType);
+	@Override
+	<Y> JpaJoin<T, Y> join(EntityType<Y> entity);
 
-	<X> JpaEntityJoin<X> join(EntityDomainType<X> entity, SqmJoinType joinType);
+	@Override
+	<Y> JpaJoin<T, Y> join(EntityType<Y> entity, JoinType joinType);
+
+	//
+//	@Override
+//	<Y> JpaEntityJoin<Y> join(Class<Y> entityClass);
+//
+//	<X> JpaEntityJoin<X> join(EntityDomainType<X> entity);
+//
+//	<X> JpaEntityJoin<X> join(Class<X> entityJavaType, SqmJoinType joinType);
+//
+//	<X> JpaEntityJoin<X> join(EntityDomainType<X> entity, SqmJoinType joinType);
 
 	@Incubating
 	<X> JpaDerivedJoin<X> join(Subquery<X> subquery);
@@ -124,4 +140,10 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 
 	@Override
 	<X, K, V> JpaMapJoin<X, K, V> joinMap(String attributeName, JoinType jt);
+
+	@Override
+	<S extends T> JpaFrom<O,S> treatAs(Class<S> treatJavaType);
+
+	@Override
+	<S extends T> JpaFrom<O,S> treatAs(EntityDomainType<S> treatJavaType);
 }

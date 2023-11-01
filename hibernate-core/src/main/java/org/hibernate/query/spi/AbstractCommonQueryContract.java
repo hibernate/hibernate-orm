@@ -560,6 +560,7 @@ public abstract class AbstractCommonQueryContract implements CommonQueryContract
 		return getQueryOptions().getTimeout();
 	}
 
+
 	@Override
 	public CommonQueryContract setTimeout(int timeout) {
 		getQueryOptions().setTimeout( timeout );

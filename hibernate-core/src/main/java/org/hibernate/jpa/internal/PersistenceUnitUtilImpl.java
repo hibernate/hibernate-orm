@@ -8,6 +8,7 @@ package org.hibernate.jpa.internal;
 
 import java.io.Serializable;
 import jakarta.persistence.PersistenceUnitUtil;
+import jakarta.persistence.metamodel.Attribute;
 
 import org.hibernate.Hibernate;
 import org.hibernate.MappingException;
@@ -55,10 +56,44 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 	}
 
 	@Override
+	public <E> boolean isLoaded(E entity, Attribute<? super E, ?> attribute) {
+		return Hibernate.isPropertyInitialized( entity, attribute.getName() );
+	}
+
+	@Override
 	public boolean isLoaded(Object entity) {
 		// added log message to help with HHH-7454, if state == LoadState,NOT_LOADED, returning true or false is not accurate.
 		log.debug( "PersistenceUnitUtil#isLoaded is not always accurate; consider using EntityManager#contains instead" );
 		return getLoadState( entity ) != NOT_LOADED;
+	}
+
+	@Override
+	public void load(Object entity, String attributeName) {
+		// todo (jpa 3.2) : implement this
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <E> void load(E entity, Attribute<? super E, ?> attribute) {
+		// todo (jpa 3.2) : implement this
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public void load(Object entity) {
+		Hibernate.initialize( entity );
+	}
+
+	@Override
+	public boolean isInstance(Object entity, Class<?> entityClass) {
+		// todo (jpa 3.2) : implement this
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <T> Class<? extends T> getClass(T entity) {
+		// todo (jpa 3.2) : implement this
+		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	@Override
@@ -90,6 +125,12 @@ public class PersistenceUnitUtilImpl implements PersistenceUnitUtil, Serializabl
 			);
 			return getIdentifierFromPersister( entity );
 		}
+	}
+
+	@Override
+	public Object getVersion(Object entity) {
+		// todo (jpa 3.2) : implement this
+		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	private Object getIdentifierFromPersister(Object entity) {

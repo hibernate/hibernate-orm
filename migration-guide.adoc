@@ -1,20 +1,32 @@
-= 6.6 Migration Guide
+= 7.0 Migration Guide
 :toc:
 :toclevels: 4
 :docsBase: https://docs.jboss.org/hibernate/orm
-:versionDocBase: {docsBase}/6.6
+:versionDocBase: {docsBase}/6.4
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 :javadocsBase: {versionDocBase}/javadocs
 
-This guide discusses migration to Hibernate ORM version 6.6. For migration from
+
+This guide discusses migration to Hibernate ORM version 7.0. For migration from
 earlier versions, see any other pertinent migration guides as well.
 
-* link:{docsBase}/6.5/migration-guide/migration-guide.html[6.5 Migration guide]
-* link:{docsBase}/6.4/migration-guide/migration-guide.html[6.4 Migration guide]
-* link:{docsBase}/6.3/migration-guide/migration-guide.html[6.3 Migration guide]
-* link:{docsBase}/6.2/migration-guide/migration-guide.html[6.2 Migration guide]
-* link:{docsBase}/6.1/migration-guide/migration-guide.html[6.1 Migration guide]
-* link:{docsBase}/6.0/migration-guide/migration-guide.html[6.0 Migration guide]
+[[jpa-32]]
+== JPA 3.2
+
+7.0 migrates to JPA 3.2 which is fairly disruptive, mainly around:
+
+* type parameters
+    * Affects much of the Criteria API - especially roots, joins, paths
+    * Affects much of the Graph API
+* new JPA features colliding with previous Hibernate extension features
+    * `Nulls` (JPA) v. `NullPrecedence` (Hibernate), including JPA's new `Order#getNullPrecedence()` returning `Nulls`
+        colliding with Hibernate's `SqmSortSpecification#getNullPrecedence` returning `NullPrecedence`.  Hibernate's form
+        was renamed to `SqmSortSpecification#getHibernateNullPrecedence` to avoid the collision.
+    * `SchemaManager` is now also a JPA contract exposed as `EntityManagerFactory#getSchemaManager` which leads to type issues for
+        Hibernate's `SessionFactory#getSchemaManager`.  Hibernate's `SchemaManager` now extends the new JPA `SchemaManager`.
+        But that is a bytecode incompatibility.
+    * JPA has added support in its Graph API for things Hibernate has supported for some time.  Some of those are collisions
+        requiring changes to the Hibernate API.
 
 [[oracle-implicit-array-types]]
 == Oracle implicit array types

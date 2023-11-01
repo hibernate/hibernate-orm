@@ -78,7 +78,7 @@ import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
-import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
+import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
 import org.hibernate.query.sqm.tree.insert.SqmConflictUpdateAction;
@@ -602,7 +602,7 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 
 	private boolean inJoinPredicate;
 
-	private void processJoinPredicate(SqmQualifiedJoin<?, ?> joinedFromElement) {
+	private void processJoinPredicate(SqmJoin<?, ?> joinedFromElement) {
 		if ( joinedFromElement.getJoinPredicate() != null ) {
 			boolean oldInJoinPredicate = inJoinPredicate;
 			inJoinPredicate = true;

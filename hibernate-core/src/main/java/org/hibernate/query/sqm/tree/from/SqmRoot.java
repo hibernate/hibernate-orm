@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaRoot;
@@ -191,27 +192,27 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 	}
 
 	@Override
-	public <S extends E> SqmFrom<E, S> treatAs(Class<S> treatJavaType) throws PathException {
-		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(Class<S> treatJavaType) throws PathException {
+		return (SqmTreatedFrom<E, E, S>) treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override
-	public <S extends E> SqmFrom<E, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-		final SqmFrom<E, S> treat = findTreat( treatTarget, null );
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		final SqmTreatedFrom<E,E,S> treat = findTreat( treatTarget, null );
 		if ( treat == null ) {
 			//noinspection rawtypes,unchecked
-			return addTreat( new SqmTreatedRoot( this, treatTarget ) );
+			return addTreat( (SqmTreatedFrom) new SqmTreatedRoot( this, treatTarget ) );
 		}
 		return treat;
 	}
 
 	@Override
-	public <S extends E> SqmFrom<E, S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "Root treats can not be aliased" );
 	}
 
 	@Override
-	public <S extends E> SqmFrom<E, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "Root treats can not be aliased" );
 	}
 

@@ -6,9 +6,29 @@
  */
 package org.hibernate.query.sqm.sql;
 
-import jakarta.persistence.TemporalType;
-import jakarta.persistence.metamodel.SingularAttribute;
-import jakarta.persistence.metamodel.Type;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
+
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
@@ -173,6 +193,7 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmSimplePath;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.query.sqm.tree.expression.Conversion;
 import org.hibernate.query.sqm.tree.expression.JpaCriteriaParameter;
@@ -403,30 +424,12 @@ import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 import org.hibernate.usertype.UserVersionType;
 import org.hibernate.usertype.internal.AbstractTimeZoneStorageCompositeUserType;
+
 import org.jboss.logging.Logger;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Supplier;
+import jakarta.persistence.TemporalType;
+import jakarta.persistence.metamodel.SingularAttribute;
+import jakarta.persistence.metamodel.Type;
 
 import static jakarta.persistence.metamodel.Type.PersistenceType.ENTITY;
 import static java.util.Collections.singletonList;
@@ -3253,7 +3256,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					consumeExplicitJoin( sqmJoin, actualTableGroup, actualTableGroup, true );
 				}
 		);
-		final List<SqmFrom<?, ?>> sqmTreats = sqmFrom.getSqmTreats();
+		final List<SqmTreatedFrom<?,?,?>> sqmTreats = sqmFrom.getSqmTreats();
 		if ( !sqmTreats.isEmpty() ) {
 			final SqlAstQueryPartProcessingState queryPartProcessingState = (SqlAstQueryPartProcessingState) getCurrentProcessingState();
 			queryPartProcessingState.registerTreatedFrom( sqmFrom );

@@ -9,20 +9,24 @@ package org.hibernate.query.sqm.tree.from;
 import org.hibernate.Internal;
 import org.hibernate.Remove;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaFetch;
 import org.hibernate.query.criteria.JpaJoin;
-import org.hibernate.query.criteria.JpaJoinedFrom;
+import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.hql.spi.SqmCreationProcessingState;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Predicate;
 
 /**
  * Models a join based on a mapped attribute reference.
  *
  * @author Steve Ebersole
  */
-public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O,T>, JpaJoinedFrom<O,T>, JpaJoin<O,T> {
+public interface SqmAttributeJoin<O,T> extends SqmJoin<O,T>, JpaFetch<O,T>, JpaJoin<O,T> {
 	@Override
 	SqmFrom<?,O> getLhs();
 
@@ -48,21 +52,44 @@ public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O
 	void setJoinPredicate(SqmPredicate predicate);
 
 	@Override
-	<S extends T> SqmAttributeJoin<O, S> treatAs(Class<S> treatJavaType);
+	default SqmJoin<O, T> on(JpaExpression<Boolean> restriction) {
+		return SqmJoin.super.on( restriction );
+	}
 
 	@Override
-	<S extends T> SqmAttributeJoin<O, S> treatAs(Class<S> treatJavaType, String alias);
+	default SqmJoin<O, T> on(Expression<Boolean> restriction) {
+		return SqmJoin.super.on( restriction );
+	}
 
 	@Override
-	<S extends T> SqmAttributeJoin<O, S> treatAs(EntityDomainType<S> treatTarget);
+	default SqmJoin<O, T> on(JpaPredicate... restrictions) {
+		return SqmJoin.super.on( restrictions );
+	}
 
 	@Override
-	<S extends T> SqmAttributeJoin<O, S> treatAs(EntityDomainType<S> treatTarget, String alias);
+	default SqmJoin<O, T> on(Predicate... restrictions) {
+		return SqmJoin.super.on( restrictions );
+	}
+
+	@Override
+	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(Class<S> treatJavaType);
+
+	@Override
+	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(Class<S> treatJavaType, String alias);
+
+	@Override
+	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget);
+
+	@Override
+	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget, String alias);
+
+	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch);
+	<S extends T> SqmTreatedAttributeJoin<O,T,S> treatAs(Class<S> treatTarget, String alias, boolean fetch);
 
 	/*
 		@deprecated not used anymore
 	 */
 	@Deprecated
 	@Remove
-	SqmAttributeJoin makeCopy( SqmCreationProcessingState creationProcessingState );
+	SqmAttributeJoin<O,T> makeCopy( SqmCreationProcessingState creationProcessingState );
 }

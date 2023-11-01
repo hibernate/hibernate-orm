@@ -9,12 +9,8 @@ package org.hibernate.query.sqm.tree.domain;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.metamodel.model.domain.ListPersistentAttribute;
-import org.hibernate.metamodel.model.domain.MapPersistentAttribute;
-import org.hibernate.metamodel.model.domain.PluralPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.BasicSqmPathSource;
 import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
-import org.hibernate.query.NotIndexedCollectionException;
 import org.hibernate.query.hql.spi.SqmCreationState;
 import org.hibernate.query.hql.spi.SqmPathRegistry;
 import org.hibernate.query.spi.QueryEngine;
@@ -22,14 +18,11 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
-import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
-import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmFunction;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
-import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
@@ -161,12 +154,12 @@ public class SqmFunctionPath<T> extends AbstractSqmPath<T> {
 	}
 
 	@Override
-	public <S extends T> SqmPath<S> treatAs(Class<S> treatJavaType) {
+	public <S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType) {
 		throw new FunctionArgumentException( "Embeddable paths cannot be TREAT-ed" );
 	}
 
 	@Override
-	public <S extends T> SqmPath<S> treatAs(EntityDomainType<S> treatTarget) {
+	public <S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget) {
 		throw new FunctionArgumentException( "Embeddable paths cannot be TREAT-ed" );
 	}
 }

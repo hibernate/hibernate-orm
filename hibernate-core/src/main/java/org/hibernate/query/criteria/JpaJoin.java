@@ -35,8 +35,8 @@ public interface JpaJoin<L, R> extends JpaFrom<L,R>, Join<L,R> {
 	JpaJoin<L, R> on(Predicate... restrictions);
 
 	@Override
-	<S extends R> JpaJoin<L, S> treatAs(Class<S> treatAsType);
+	<S extends R> JpaTreatedJoin<L,R,S> treatAs(Class<S> treatAsType);
 
 	@Override
-	<S extends R> JpaJoin<L, S> treatAs(EntityDomainType<S> treatAsType);
+	<S extends R> JpaTreatedJoin<L,R,S> treatAs(EntityDomainType<S> treatAsType);
 }

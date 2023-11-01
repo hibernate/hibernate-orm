@@ -18,7 +18,7 @@ import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.spi.SqmCreationHelper;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
-import org.hibernate.query.sqm.tree.domain.AbstractSqmQualifiedJoin;
+import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedEntityJoin;
@@ -26,7 +26,6 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.EntityType;
@@ -34,7 +33,7 @@ import jakarta.persistence.metamodel.EntityType;
 /**
  * @author Steve Ebersole
  */
-public class SqmEntityJoin<L,R> extends AbstractSqmQualifiedJoin<L,R> implements JpaEntityJoin<L,R> {
+public class SqmEntityJoin<L,R> extends AbstractSqmJoin<L,R> implements JpaEntityJoin<L,R> {
 	private final SqmRoot<L> sqmRoot;
 
 	public SqmEntityJoin(
@@ -99,7 +98,7 @@ public class SqmEntityJoin<L,R> extends AbstractSqmQualifiedJoin<L,R> implements
 	}
 
 	@Override
-	public From<?, L> getParent() {
+	public SqmFrom<?, L> getParent() {
 		return getRoot();
 	}
 
@@ -127,7 +126,7 @@ public class SqmEntityJoin<L,R> extends AbstractSqmQualifiedJoin<L,R> implements
 	}
 
 	@Override
-	public SqmPath<?> getLhs() {
+	public SqmFrom<?,L> getLhs() {
 		// An entity-join has no LHS
 		return null;
 	}
@@ -184,26 +183,13 @@ public class SqmEntityJoin<L,R> extends AbstractSqmQualifiedJoin<L,R> implements
 		return treat;
 	}
 
-	//	@Override
-//	public <S extends T> SqmTreatedEntityJoin<T,S> treatAs(Class<S> treatJavaType) throws PathException {
-//		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
-//	}
-//	@Override
-//	public <S extends T> SqmTreatedEntityJoin<T,S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
-//		final SqmTreatedEntityJoin<T,S> treat = findTreat( treatTarget, null );
-//		if ( treat == null ) {
-//			return addTreat( new SqmTreatedEntityJoin<>( this, treatTarget, null ) );
-//		}
-//		return treat;
-//	}
-
 	@Override
-	public <S extends R> SqmEntityJoin<L,S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 
 	@Override
-	public <S extends R> SqmEntityJoin<L,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
 	}
 

@@ -170,7 +170,6 @@ import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
-import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
 import org.hibernate.query.sqm.tree.insert.SqmConflictUpdateAction;
@@ -227,7 +226,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
 
-import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.metamodel.Bindable;
 import jakarta.persistence.metamodel.SingularAttribute;
@@ -2220,7 +2218,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 		dotIdentifierConsumerStack.push( new QualifiedJoinPathConsumer( sqmRoot, joinType, fetch, alias, this ) );
 		try {
-			final SqmQualifiedJoin<X, ?> join = getJoin( sqmRoot, joinType, qualifiedJoinTargetContext, alias, fetch );
+			final SqmJoin<X, ?> join = getJoin( sqmRoot, joinType, qualifiedJoinTargetContext, alias, fetch );
 			final HqlParser.JoinRestrictionContext joinRestrictionContext = parserJoin.joinRestriction();
 			if ( join instanceof SqmEntityJoin<?,?> || join instanceof SqmDerivedJoin<?> || join instanceof SqmCteJoin<?> ) {
 				sqmRoot.addSqmJoin( join );
@@ -2268,7 +2266,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@SuppressWarnings("unchecked")
-	private <X> SqmQualifiedJoin<X, ?> getJoin(
+	private <X> SqmJoin<X, ?> getJoin(
 			SqmRoot<X> sqmRoot,
 			SqmJoinType joinType,
 			HqlParser.JoinTargetContext joinTargetContext,
@@ -2276,7 +2274,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			boolean fetch) {
 		if ( joinTargetContext instanceof HqlParser.JoinPathContext ) {
 			final HqlParser.JoinPathContext joinPathContext = (HqlParser.JoinPathContext) joinTargetContext;
-			return (SqmQualifiedJoin<X, ?>) joinPathContext.path().accept( this );
+			return (SqmJoin<X, ?>) joinPathContext.path().accept( this );
 		}
 		else if ( joinTargetContext instanceof HqlParser.JoinSubqueryContext ) {
 			if ( fetch ) {
@@ -2295,7 +2293,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			final DotIdentifierConsumer identifierConsumer = dotIdentifierConsumerStack.pop();
 			final SqmSubQuery<X> subQuery = (SqmSubQuery<X>) joinSubqueryContext.subquery().accept( this );
 			dotIdentifierConsumerStack.push( identifierConsumer );
-			final SqmQualifiedJoin<X, ?> join = new SqmDerivedJoin<>( subQuery, alias, joinType, lateral, sqmRoot );
+			final SqmJoin<X, ?> join = new SqmDerivedJoin<>( subQuery, alias, joinType, lateral, sqmRoot );
 			processingStateStack.getCurrent().getPathRegistry().register( join );
 			return join;
 		}

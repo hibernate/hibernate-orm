@@ -15,7 +15,7 @@ import org.hibernate.spi.NavigablePath;
 /**
  * @author Steve Ebersole
  */
-public class SqmTreatedPluralPartJoin<O,T, S extends T> extends SqmPluralPartJoin<O,S> implements SqmTreatedPath<T,S> {
+public class SqmTreatedPluralPartJoin<O,T, S extends T> extends SqmPluralPartJoin<O,S> implements SqmTreatedJoin<O,T,S> {
 	private final SqmPluralPartJoin<O,T> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
@@ -100,6 +100,28 @@ public class SqmTreatedPluralPartJoin<O,T, S extends T> extends SqmPluralPartJoi
 	public SqmPathSource<?> getResolvedModel() {
 		return treatTarget;
 	}
+
+	@Override
+	public <S1 extends S> SqmTreatedPluralPartJoin<O, S, S1> treatAs(Class<S1> treatJavaType) {
+		return super.treatAs( treatJavaType );
+	}
+
+	@Override
+	public <S1 extends S> SqmTreatedPluralPartJoin<O, S, S1> treatAs(EntityDomainType<S1> treatTarget) {
+		return (SqmTreatedPluralPartJoin<O, S, S1>) super.treatAs( treatTarget );
+	}
+
+	@Override
+	public <S1 extends S> SqmTreatedPluralPartJoin<O, S, S1> treatAs(Class<S1> treatJavaType, String alias) {
+		return (SqmTreatedPluralPartJoin<O, S, S1>) super.treatAs( treatJavaType, alias );
+	}
+
+	@Override
+	public <S1 extends S> SqmTreatedPluralPartJoin<O, S, S1> treatAs(EntityDomainType<S1> treatTarget, String alias) {
+		return (SqmTreatedPluralPartJoin<O, S, S1>) super.treatAs( treatTarget, alias );
+	}
+
+
 
 	@Override
 	public void appendHqlString(StringBuilder sb) {

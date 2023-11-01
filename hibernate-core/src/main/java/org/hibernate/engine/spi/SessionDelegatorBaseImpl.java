@@ -12,8 +12,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.UUID;
 
-import jakarta.persistence.CacheRetrieveMode;
-import jakarta.persistence.CacheStoreMode;
 import org.hibernate.CacheMode;
 import org.hibernate.Filter;
 import org.hibernate.FlushMode;
@@ -63,10 +61,15 @@ import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.stat.SessionStatistics;
 
+import jakarta.persistence.CacheRetrieveMode;
+import jakarta.persistence.CacheStoreMode;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.FindOption;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockOption;
+import jakarta.persistence.RefreshOption;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.CriteriaUpdate;
@@ -306,6 +309,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void lock(Object entity, LockModeType lockMode, Map<String, Object> properties) {
 		delegate.lock( entity, lockMode, properties );
+	}
+
+	@Override
+	public void lock(Object entity, LockModeType lockMode, LockOption... options) {
+
 	}
 
 	@Override
@@ -909,6 +917,16 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
+		return delegate.find( entityClass, primaryKey, options );
+	}
+
+	@Override
+	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
+		return delegate.find( entityGraph, primaryKey, options );
+	}
+
+	@Override
 	public <T> T getReference(Class<T> entityClass, Object id) {
 		return delegate.getReference( entityClass, id );
 	}
@@ -976,6 +994,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public void refresh(Object entity, LockModeType lockMode, Map<String, Object> properties) {
 		delegate.refresh( entity, lockMode, properties );
+	}
+
+	@Override
+	public void refresh(Object entity, RefreshOption... options) {
+		delegate.refresh( entity, options );
 	}
 
 	@Override

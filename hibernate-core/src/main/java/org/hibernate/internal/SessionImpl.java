@@ -138,11 +138,15 @@ import org.hibernate.type.descriptor.WrapperOptions;
 
 import jakarta.persistence.CacheRetrieveMode;
 import jakarta.persistence.CacheStoreMode;
+import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.FindOption;
 import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
+import jakarta.persistence.LockOption;
 import jakarta.persistence.PersistenceException;
+import jakarta.persistence.RefreshOption;
 import jakarta.persistence.TransactionRequiredException;
 import jakarta.persistence.metamodel.Metamodel;
 
@@ -171,9 +175,9 @@ import static org.hibernate.event.spi.LoadEventListener.INTERNAL_LOAD_NULLABLE;
 import static org.hibernate.jpa.HibernateHints.HINT_BATCH_FETCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_ENABLE_SUBSELECT_FETCH;
 import static org.hibernate.jpa.HibernateHints.HINT_FETCH_PROFILE;
+import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.HibernateHints.HINT_JDBC_BATCH_SIZE;
 import static org.hibernate.jpa.HibernateHints.HINT_READ_ONLY;
-import static org.hibernate.jpa.HibernateHints.HINT_FLUSH_MODE;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_LOCK_TIMEOUT;
 import static org.hibernate.jpa.LegacySpecHints.HINT_JAVAEE_QUERY_TIMEOUT;
 import static org.hibernate.jpa.SpecHints.HINT_SPEC_LOCK_TIMEOUT;
@@ -2518,6 +2522,18 @@ public class SessionImpl
 		}
 	}
 
+	@Override
+	public <T> T find(Class<T> entityClass, Object primaryKey, FindOption... options) {
+		// todo (jpa 3.2) : implement
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <T> T find(EntityGraph<T> entityGraph, Object primaryKey, FindOption... options) {
+		// todo (jpa 3.2) : implement
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
 	private void checkTransactionNeededForLock(LockModeType lockModeType) {
 		if ( lockModeType != LockModeType.NONE ) {
 			checkTransactionNeededForUpdateOperation();
@@ -2596,7 +2612,7 @@ public class SessionImpl
 
 	@Override
 	public void lock(Object entity, LockModeType lockModeType) {
-		lock( entity, lockModeType, null );
+		lock( entity, lockModeType, (Map<String,Object>) null );
 	}
 
 	@Override
@@ -2615,6 +2631,12 @@ public class SessionImpl
 		catch (RuntimeException e) {
 			throw getExceptionConverter().convert( e, lockOptions );
 		}
+	}
+
+	@Override
+	public void lock(Object entity, LockModeType lockMode, LockOption... options) {
+		// todo (jpa 3.2) : implement
+		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	@Override
@@ -2660,6 +2682,12 @@ public class SessionImpl
 		finally {
 			setCacheMode( previousCacheMode );
 		}
+	}
+
+	@Override
+	public void refresh(Object entity, RefreshOption... options) {
+		// todo (jpa 3.2) : implement
+		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	private LockOptions buildLockOptions(LockModeType lockModeType, Map<String, Object> properties) {

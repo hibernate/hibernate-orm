@@ -11,10 +11,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import javax.naming.NamingException;
 import javax.naming.Reference;
 import jakarta.persistence.EntityGraph;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceUnitTransactionType;
 import jakarta.persistence.PersistenceUnitUtil;
 import jakarta.persistence.Query;
 import jakarta.persistence.SynchronizationType;
@@ -147,6 +150,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public PersistenceUnitTransactionType getTransactionType() {
+		return delegate.getTransactionType();
+	}
+
+	@Override
 	public void addNamedQuery(String name, Query query) {
 		delegate.addNamedQuery( name, query );
 	}
@@ -159,6 +167,16 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	@Override
 	public <T> void addNamedEntityGraph(String graphName, EntityGraph<T> entityGraph) {
 		delegate.addNamedEntityGraph( graphName, entityGraph );
+	}
+
+	@Override
+	public void runInTransaction(Consumer<EntityManager> work) {
+		delegate.runInTransaction( work );
+	}
+
+	@Override
+	public <R> R callInTransaction(Function<EntityManager, R> work) {
+		return delegate.callInTransaction( work );
 	}
 
 	@Override

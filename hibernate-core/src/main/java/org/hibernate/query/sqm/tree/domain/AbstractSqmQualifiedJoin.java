@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree.domain;
 
+import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaJoinedFrom;
 import org.hibernate.query.criteria.JpaPredicate;
@@ -24,18 +25,18 @@ import jakarta.persistence.criteria.Predicate;
 /**
  * @author Steve Ebersole
  */
-public abstract class AbstractSqmQualifiedJoin<O, T> extends AbstractSqmJoin<O,T> implements SqmQualifiedJoin<O, T>, JpaJoinedFrom<O, T> {
+public abstract class AbstractSqmQualifiedJoin<L, R> extends AbstractSqmJoin<L,R> implements SqmQualifiedJoin<L,R>, JpaJoinedFrom<L, R> {
 
 	private SqmPredicate onClausePredicate;
 
 	public AbstractSqmQualifiedJoin(
 			NavigablePath navigablePath,
-			SqmPathSource<T> referencedNavigable,
+			SqmPathSource<R> referencedNavigable,
 			SqmFrom<?, ?> lhs, String alias, SqmJoinType joinType, NodeBuilder nodeBuilder) {
 		super( navigablePath, referencedNavigable, lhs, alias, joinType, nodeBuilder );
 	}
 
-	protected void copyTo(AbstractSqmQualifiedJoin<O, T> target, SqmCopyContext context) {
+	protected void copyTo(AbstractSqmQualifiedJoin<L, R> target, SqmCopyContext context) {
 		super.copyTo( target, context );
 		target.onClausePredicate = onClausePredicate == null ? null : onClausePredicate.copy( context );
 	}
@@ -49,6 +50,8 @@ public abstract class AbstractSqmQualifiedJoin<O, T> extends AbstractSqmJoin<O,T
 	public SqmPredicate getJoinPredicate() {
 		return onClausePredicate;
 	}
+
+
 
 	@Override
 	public void setJoinPredicate(SqmPredicate predicate) {
@@ -73,25 +76,35 @@ public abstract class AbstractSqmQualifiedJoin<O, T> extends AbstractSqmJoin<O,T
 	}
 
 	@Override
-	public JpaJoinedFrom<O, T> on(JpaExpression<Boolean> restriction) {
+	public <S extends R> SqmQualifiedJoin<L, S> treatAs(Class<S> treatAsType) {
+		return treatAs( treatAsType, null );
+	}
+
+	@Override
+	public <S extends R> SqmQualifiedJoin<L, S> treatAs(EntityDomainType<S> treatAsType) {
+		return treatAs( treatAsType, null );
+	}
+
+	@Override
+	public JpaJoinedFrom<L, R> on(JpaExpression<Boolean> restriction) {
 		applyRestriction( nodeBuilder().wrap( restriction ) );
 		return this;
 	}
 
 	@Override
-	public JpaJoinedFrom<O, T> on(Expression<Boolean> restriction) {
+	public JpaJoinedFrom<L, R> on(Expression<Boolean> restriction) {
 		applyRestriction( nodeBuilder().wrap( restriction ) );
 		return this;
 	}
 
 	@Override
-	public JpaJoinedFrom<O, T> on(JpaPredicate... restrictions) {
+	public JpaJoinedFrom<L, R> on(JpaPredicate... restrictions) {
 		applyRestriction( nodeBuilder().wrap( restrictions ) );
 		return this;
 	}
 
 	@Override
-	public JpaJoinedFrom<O, T> on(Predicate... restrictions) {
+	public JpaJoinedFrom<L, R> on(Predicate... restrictions) {
 		applyRestriction( nodeBuilder().wrap( restrictions ) );
 		return this;
 	}

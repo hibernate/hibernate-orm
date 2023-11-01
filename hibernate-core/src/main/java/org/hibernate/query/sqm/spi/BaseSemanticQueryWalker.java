@@ -22,14 +22,14 @@ import org.hibernate.query.sqm.tree.domain.SqmBasicValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmCteRoot;
 import org.hibernate.query.sqm.tree.domain.SqmDerivedRoot;
+import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmFkExpression;
+import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmFunctionPath;
 import org.hibernate.query.sqm.tree.domain.SqmIndexedCollectionAccessPath;
 import org.hibernate.query.sqm.tree.domain.SqmMapEntryReference;
-import org.hibernate.query.sqm.tree.domain.SqmElementAggregateFunction;
-import org.hibernate.query.sqm.tree.domain.SqmIndexAggregateFunction;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPluralPartJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPluralValuedSimplePath;
@@ -319,8 +319,8 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		else if ( sqmJoin instanceof SqmCrossJoin<?> ) {
 			consumeCrossJoin( ( (SqmCrossJoin<?>) sqmJoin ), transitive );
 		}
-		else if ( sqmJoin instanceof SqmEntityJoin<?> ) {
-			consumeEntityJoin( ( (SqmEntityJoin<?>) sqmJoin ), transitive );
+		else if ( sqmJoin instanceof SqmEntityJoin<?,?> ) {
+			consumeEntityJoin( ( (SqmEntityJoin<?,?>) sqmJoin ), transitive );
 		}
 		else if ( sqmJoin instanceof SqmDerivedJoin<?> ) {
 			consumeDerivedJoin( ( (SqmDerivedJoin<?>) sqmJoin ), transitive );
@@ -351,7 +351,7 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		}
 	}
 
-	protected void consumeEntityJoin(SqmEntityJoin<?> sqmJoin, boolean transitive) {
+	protected void consumeEntityJoin(SqmEntityJoin<?,?> sqmJoin, boolean transitive) {
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			sqmJoin.getJoinPredicate().accept( this );
 		}
@@ -414,9 +414,11 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 	}
 
 	@Override
-	public Object visitQualifiedEntityJoin(SqmEntityJoin<?> joinedFromElement) {
+	public Object visitQualifiedEntityJoin(SqmEntityJoin<?,?> joinedFromElement) {
 		return joinedFromElement;
 	}
+
+
 
 	@Override
 	public Object visitQualifiedAttributeJoin(SqmAttributeJoin<?,?> joinedFromElement) {

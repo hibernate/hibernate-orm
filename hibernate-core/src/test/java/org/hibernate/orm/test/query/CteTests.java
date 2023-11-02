@@ -528,7 +528,7 @@ public class CteTests {
 							selfType -> {
 								final JpaCriteriaQuery<Tuple> recursiveQuery = cb.createTupleQuery();
 								final JpaRoot<Tuple> recursiveRoot = recursiveQuery.from( selfType );
-								final JpaEntityJoin<Contact> contact = recursiveRoot.join( Contact.class );
+								final JpaEntityJoin<Tuple,Contact> contact = recursiveRoot.join( Contact.class );
 								contact.on( cb.equal( recursiveRoot.get( "altId" ), contact.get( "id" ) ) );
 								recursiveQuery.multiselect(
 										contact.get( "id" ).alias( "id" ),
@@ -545,7 +545,7 @@ public class CteTests {
 					);
 
 					final JpaRoot<Tuple> root = cq.from( alternativeContacts );
-					final JpaEntityJoin<Contact> alt = root.join( Contact.class );
+					final JpaEntityJoin<Tuple,Contact> alt = root.join( Contact.class );
 					alt.on( cb.equal( root.get( "id" ), alt.get( "id" ) ) );
 					cq.multiselect( alt );
 					cq.orderBy( cb.asc( root.get( "orderAttr" ) ) );

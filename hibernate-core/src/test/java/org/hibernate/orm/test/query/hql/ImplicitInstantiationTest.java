@@ -55,7 +55,7 @@ public class ImplicitInstantiationTest {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
-					Record result = session.createNativeQuery("select id, upper(name) as name from thingy_table", Record.class)
+					Record result = (Record) session.createNativeQuery( "select id, upper(name) as name from thingy_table", Record.class)
 							.addSynchronizedEntityClass(Thing.class)
 							.getSingleResult();
 					assertEquals( result.id(), 1L );
@@ -148,7 +148,7 @@ public class ImplicitInstantiationTest {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
-					Tuple result = session.createNativeQuery("select id as id, upper(name) as name from thingy_table", Tuple.class)
+					Tuple result = (Tuple) session.createNativeQuery( "select id as id, upper(name) as name from thingy_table", Tuple.class)
 							.addSynchronizedEntityClass(Thing.class)
 							.getSingleResult();
 					assertEquals( result.get("id"), 1L );
@@ -163,7 +163,7 @@ public class ImplicitInstantiationTest {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
-					Map result = session.createNativeQuery("select id as id, upper(name) as name from thingy_table", Map.class)
+					Map result = (Map) session.createNativeQuery( "select id as id, upper(name) as name from thingy_table", Map.class)
 							.addSynchronizedEntityClass(Thing.class)
 							.getSingleResult();
 					assertEquals( result.get("id"), 1L );
@@ -178,7 +178,7 @@ public class ImplicitInstantiationTest {
 		scope.inTransaction(
 				session -> {
 					session.persist(new Thing(1L, "thing"));
-					List result = session.createNativeQuery("select id, upper(name) as name from thingy_table", List.class)
+					List result = (List) session.createNativeQuery( "select id, upper(name) as name from thingy_table", List.class)
 							.addSynchronizedEntityClass(Thing.class)
 							.getSingleResult();
 					assertEquals( result.get(0), 1L );

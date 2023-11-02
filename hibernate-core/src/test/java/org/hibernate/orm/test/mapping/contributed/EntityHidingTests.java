@@ -46,7 +46,7 @@ public class EntityHidingTests {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final RuntimeMetamodels runtimeMetamodels = sessionFactory.getRuntimeMetamodels();
 
-		final EntityDomainType<Object> jpaModelDescriptor = runtimeMetamodels.getJpaMetamodel().entity( "DynamicEntity" );
+		final EntityDomainType<?> jpaModelDescriptor = runtimeMetamodels.getJpaMetamodel().entity( "DynamicEntity" );
 		assertThat( jpaModelDescriptor, nullValue() );
 
 		final EntityPersister mappingModelDescriptor = runtimeMetamodels.getMappingMetamodel()

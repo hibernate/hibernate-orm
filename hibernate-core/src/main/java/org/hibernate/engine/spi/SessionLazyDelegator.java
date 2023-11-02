@@ -554,12 +554,12 @@ public class SessionLazyDelegator implements Session {
 
 	@Override
 	public <C> void runWithConnection(ConnectionConsumer<C> action) {
-
+		this.lazySession.get().runWithConnection( action );
 	}
 
 	@Override
 	public <C, T> T callWithConnection(ConnectionFunction<C, T> function) {
-		return null;
+		return this.lazySession.get().callWithConnection( function );
 	}
 
 	@Override

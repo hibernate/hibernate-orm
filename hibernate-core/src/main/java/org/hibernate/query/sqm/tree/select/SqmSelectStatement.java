@@ -275,14 +275,14 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 	}
 
 	@Override
-	public CriteriaQuery<T> where(List<Predicate> restrictions) {
+	public SqmSelectStatement<T> where(List<Predicate> restrictions) {
 		//noinspection rawtypes,unchecked
 		getQuerySpec().getWhereClause().applyPredicates( (List) restrictions );
 		return this;
 	}
 
 	@Override
-	public CriteriaQuery<T> having(List<Predicate> restrictions) {
+	public SqmSelectStatement<T> having(List<Predicate> restrictions) {
 		//noinspection unchecked,rawtypes
 		final SqmPredicate combined = combinePredicates( getQuerySpec().getHavingClausePredicate(), (List) restrictions );
 		getQuerySpec().setHavingClausePredicate( combined );

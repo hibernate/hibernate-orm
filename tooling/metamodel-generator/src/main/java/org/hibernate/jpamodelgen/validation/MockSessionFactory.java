@@ -764,7 +764,7 @@ public abstract class MockSessionFactory
 		}
 
 		@Override
-		public <X> EntityDomainType<X> entity(String entityName) {
+		public EntityDomainType<?> entity(String entityName) {
 			if ( isEntityDefined(entityName) ) {
 				return new MockEntityDomainType<>(entityName);
 			}

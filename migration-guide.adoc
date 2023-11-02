@@ -17,7 +17,9 @@ earlier versions, see any other pertinent migration guides as well.
 
 * type parameters
     * Affects much of the Criteria API - especially roots, joins, paths
-    * Affects much of the Graph API
+    * Affects much of the Graph API -
+        * org.hibernate.graph.Graph.addAttributeNode(java.lang.String) defines a return while
+                1jakarta.persistence.Graph.addAttributeNode(java.lang.String)` does not.
 * new JPA features colliding with previous Hibernate extension features
     * `Nulls` (JPA) v. `NullPrecedence` (Hibernate), including JPA's new `Order#getNullPrecedence()` returning `Nulls`
         colliding with Hibernate's `SqmSortSpecification#getNullPrecedence` returning `NullPrecedence`.  Hibernate's form

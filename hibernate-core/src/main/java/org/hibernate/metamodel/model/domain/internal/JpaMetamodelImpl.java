@@ -460,7 +460,7 @@ public class JpaMetamodelImpl implements JpaMetamodelImplementor, Serializable {
 			GraphImplementor<?> graphNode) {
 		for ( NamedAttributeNode namedAttributeNode : namedAttributeNodes ) {
 			final String value = namedAttributeNode.value();
-			AttributeNodeImplementor<?> attributeNode = graphNode.addAttributeNode( value );
+			AttributeNodeImplementor<?> attributeNode = graphNode.findOrCreateAttributeNode( value );
 			if ( StringHelper.isNotEmpty( namedAttributeNode.subgraph() ) ) {
 				final SubGraphImplementor<?> subgraph = attributeNode.makeSubGraph();
 				applyNamedSubgraphs(

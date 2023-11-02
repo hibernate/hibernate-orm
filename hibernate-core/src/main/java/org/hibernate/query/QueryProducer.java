@@ -164,7 +164,7 @@ public interface QueryProducer {
 	 *
 	 * @see jakarta.persistence.EntityManager#createNativeQuery(String,Class)
 	 */
-	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass);
+	NativeQuery<?> createNativeQuery(String sqlString, Class<?> resultClass);
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native SQL query

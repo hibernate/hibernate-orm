@@ -82,7 +82,7 @@ public class SecondaryRowTest {
 
 	private static void verifySecondaryRows(String table, int expectedCount, SessionImplementor session) {
 		final String sql = "select count(1) from " + table;
-		final int count = session.createNativeQuery( sql, Integer.class ).getSingleResult();
+		final int count = (int) session.createNativeQuery( sql, Integer.class ).getSingleResult();
 		assertThat( count ).isEqualTo( expectedCount );
 	}
 }

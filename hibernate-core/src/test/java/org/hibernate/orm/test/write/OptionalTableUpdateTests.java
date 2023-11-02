@@ -47,7 +47,7 @@ public class OptionalTableUpdateTests {
 	private static void verifySecondaryRows(String table, int expectedCount, SessionFactoryScope sfScope) {
 		final String sql = "select count(1) from " + table;
 		sfScope.inTransaction( (session) -> {
-			final int count = session.createNativeQuery( sql, Integer.class ).getSingleResult();
+			final int count = (int) session.createNativeQuery( sql, Integer.class ).getSingleResult();
 			assertThat( count ).isEqualTo( expectedCount );
 		} );
 	}

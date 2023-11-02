@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 public class OracleNumericTypesTest {
 	@Test void test(SessionFactoryScope scope) {
 		String sql = "SELECT 012345678901234567890123456789, cast(1234567890123.456 as number(30,5)), cast(1234567890123.456 as double precision), cast(1234567890123.456 as float(32)), cast(1234567890123.456 as float(24)) from dual";
-		Object[] values = scope.fromSession( s -> s.createNativeQuery(sql, Object[].class).getSingleResult());
+		Object[] values = (Object[]) scope.fromSession( s -> s.createNativeQuery( sql, Object[].class).getSingleResult());
 		assertInstanceOf(BigDecimal.class, values[0]);
 		assertInstanceOf(BigDecimal.class, values[1]);
 		assertInstanceOf(BigDecimal.class, values[2]);

@@ -45,9 +45,7 @@ earlier versions, see any other pertinent migration guides as well.
         for {@linkplain SqmCrossJoin} having only one type argument for the right-hand
         side.  To properly handle the type parameters in the hierarchy we need to change this to
         accept type parameter for the left-handle side as well - breaking change.
-
-
-[[SupportedDialects]]
-== Supported Dialects
-
-Please also do have a look at the link:{versionDocBase}/dialect/dialect.html[Supported Dialects] document to check for potential upgrades to the minimum version of the databases underpinning the dialects that Hibernate currently supports.
+* The changes in `jakarta.persistence.EntityManager#createNativeQuery(java.lang.String, java.lang.Class<?>)` are really unfortunate.
+        Previously that signature was `(java.lang.String, java.lang.Class)` and our override of that was able to be
+        `<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass)`.  JPA adding that wildcard means our
+        override is no longer valid.  I had to change that to ``

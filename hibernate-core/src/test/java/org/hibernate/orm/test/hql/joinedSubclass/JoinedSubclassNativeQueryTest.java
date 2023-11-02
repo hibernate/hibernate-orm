@@ -56,7 +56,7 @@ public class JoinedSubclassNativeQueryTest {
 	public void testJoinedInheritanceNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Person p = session.createNativeQuery( "select p.*, 0 as clazz_ from Person p", Person.class ).getSingleResult();
+					Person p = (Person) session.createNativeQuery( "select p.*, 0 as clazz_ from Person p", Person.class ).getSingleResult();
 					Assertions.assertNotNull( p );
 					Assertions.assertEquals( p.getFirstName(), "Jan" );
 				}

@@ -97,7 +97,7 @@ public class CriteriaQualifiedJoinTest {
 			final HibernateCriteriaBuilder cb = entityManager.unwrap( Session.class ).getCriteriaBuilder();
 			final JpaCriteriaQuery<Tuple> query = cb.createTupleQuery();
 			final JpaRoot<Primary> root = query.from( Primary.class );
-			final JpaEntityJoin<Secondary> entityJoin = root.join( Secondary.class, SqmJoinType.INNER );
+			final JpaEntityJoin<Primary,Secondary> entityJoin = root.join( Secondary.class, SqmJoinType.INNER );
 			final JpaPath<Integer> id = root.get( "id" );
 			entityJoin.on( cb.equal( id, entityJoin.get( "id" ) ) );
 			final JpaPath<String> name = entityJoin.get( "name" );

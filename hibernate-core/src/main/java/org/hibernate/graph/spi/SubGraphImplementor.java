@@ -36,10 +36,10 @@ public interface SubGraphImplementor<J> extends SubGraph<J>, GraphImplementor<J>
 	<AJ> SubGraphImplementor<AJ> addKeySubGraph(String attributeName);
 
 	@Override
-	<AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttribute<? extends J, AJ> attribute);
+	<AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttribute<? super J, AJ> attribute);
 
 	@Override
-	default <AJ> SubGraphImplementor<? extends AJ> addKeySubGraph(PersistentAttribute<? extends J, AJ> attribute, Class<? extends AJ> subType)
+	default <AJ> SubGraphImplementor<? extends AJ> addKeySubGraph(PersistentAttribute<? super J, AJ> attribute, Class<? extends AJ> subType)
 			throws CannotContainSubGraphException {
 		return null;
 	}

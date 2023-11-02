@@ -288,6 +288,21 @@ public abstract class CriteriaDefinition<R>
 	}
 
 	@Override
+	public JpaCriteriaQuery<R> where(List<Predicate> restrictions) {
+		return query.where( restrictions );
+	}
+
+	@Override
+	public JpaCriteriaQuery<R> having(List<Predicate> restrictions) {
+		return query.having( restrictions );
+	}
+
+	@Override
+	public <U> JpaSubQuery<U> subquery(EntityType<U> type) {
+		return query.subquery( type );
+	}
+
+	@Override
 	public JpaExpression<Number> getOffset() {
 		return query.getOffset();
 	}

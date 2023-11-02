@@ -548,37 +548,37 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <T> CriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+	public <T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
 		// todo (jpa 3.2) : implement
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	@Override
-	public <T> CriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+	public <T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
 		// todo (jpa 3.2) : implement
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	@Override
-	public <T> CriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+	public <T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
 		// todo (jpa 3.2) : implement
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	@Override
-	public <T> CriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+	public <T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
 		// todo (jpa 3.2) : implement
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	@Override
-	public <T> CriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+	public <T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right) {
 		// todo (jpa 3.2) : implement
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
 
 	@Override
-	public <T> CriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+	public <T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right) {
 		// todo (jpa 3.2) : implement
 		throw new UnsupportedOperationException( "Not yet implemented" );
 	}
@@ -1800,7 +1800,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <N, T extends Temporal> Expression<N> extract(TemporalField<N, T> field, Expression<T> temporal) {
+	public <N, T extends Temporal> SqmExpression<N> extract(TemporalField<N, T> field, Expression<T> temporal) {
 		return null;
 	}
 
@@ -2124,7 +2124,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public Predicate and(List<Predicate> restrictions) {
+	public SqmPredicate and(List<Predicate> restrictions) {
 		return null;
 	}
 
@@ -2152,7 +2152,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public Predicate or(List<Predicate> restrictions) {
+	public SqmPredicate or(List<Predicate> restrictions) {
 		return null;
 	}
 
@@ -2679,7 +2679,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public Expression<String> concat(List<Expression<String>> expressions) {
+	public SqmExpression<String> concat(List<Expression<String>> expressions) {
 		return null;
 	}
 

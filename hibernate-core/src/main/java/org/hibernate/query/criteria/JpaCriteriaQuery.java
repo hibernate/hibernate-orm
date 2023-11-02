@@ -8,6 +8,9 @@ package org.hibernate.query.criteria;
 
 import java.util.List;
 import java.util.Set;
+
+import org.hibernate.query.sqm.FetchClauseType;
+
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;
@@ -16,8 +19,6 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.metamodel.EntityType;
-
-import org.hibernate.query.sqm.FetchClauseType;
 
 /**
  * Extension of the JPA {@link CriteriaQuery}
@@ -108,6 +109,9 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	JpaCriteriaQuery<T> where(Predicate... restrictions);
 
 	@Override
+	JpaCriteriaQuery<T> where(List<Predicate> restrictions);
+
+	@Override
 	JpaCriteriaQuery<T> groupBy(Expression<?>... grouping);
 
 	@Override
@@ -120,8 +124,14 @@ public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCrite
 	JpaCriteriaQuery<T> having(Predicate... restrictions);
 
 	@Override
+	JpaCriteriaQuery<T> having(List<Predicate> restrictions);
+
+	@Override
 	JpaCriteriaQuery<T> orderBy(Order... o);
 
 	@Override
 	JpaCriteriaQuery<T> orderBy(List<Order> o);
+
+	@Override
+	<U> JpaSubQuery<U> subquery(EntityType<U> type);
 }

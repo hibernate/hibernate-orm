@@ -55,8 +55,8 @@ public class RuntimeModelSmokeTests {
 		final EntityPersister mappingType = runtimeMetamodels.getMappingMetamodel().findEntityDescriptor( FULL_NAME );
 		assertThat( mappingType, notNullValue() );
 
-		final EntityDomainType<Object> jpaType = runtimeMetamodels.getJpaMetamodel().entity( SIMPLE_NAME );
-		assertThat( mappingType, notNullValue() );
+		final EntityDomainType<?> jpaType = runtimeMetamodels.getJpaMetamodel().entity( SIMPLE_NAME );
+		assertThat( jpaType, notNullValue() );
 	}
 
 	@Entity( name = "SimpleEntity" )

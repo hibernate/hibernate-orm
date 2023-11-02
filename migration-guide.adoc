@@ -30,69 +30,22 @@ earlier versions, see any other pertinent migration guides as well.
     * JPA has added support in its Graph API for things Hibernate has supported for some time.  Some of those are collisions
         requiring changes to the Hibernate API.
 
-[[oracle-implicit-array-types]]
-== Oracle implicit array types
 
-The names for implicitly created array types on Oracle have slightly changed to account for converted types.
-Previously, the naming of implicit array types was only using the Java type simple name which could conflict
-when the same Java type is used with different JDBC type codes or converters.
-To avoid name clashes, the naming of implicitly created array types now also includes
-the preferred Java type simple name of the JDBC type in case the preferred Java type differs from the field type.
-In case of converted types, the converter Java class simple name is used instead.
+[[cleanup]]
+== Some Cleanup
 
-The array type for a persistent property of type `BigInteger[]` was previously `BigIntegerArray`
-and would now be `BigIntegerBigDecimalArray`, because the preferred Java type for the `NUMERIC`/`DECIMAL` JDBC type is `BigDecimal`.
-To specify a custom array type name, annotate the persistent property with `@Column(columnDefinition = "BigIntegerArray")`.
+* Removed `SqmQualifiedJoin`.  All joins are qualified.
 
-[[user-defined-type]]
-== Changes to `UserDefinedType`
 
-`UserDefinedType` was renamed to `UserDefinedObjectType` and everything except access to column information
-was abstracted in a new interface named `UserDefinedType`. This was done to allow modelling dependencies between
-named arrays, modeled as `UserDefinedArrayType` extending the new `UserDefinedType` interface,
-and `UserDefinedObjectType` i.e. arrays of structs.
+[[todo]]
+== Todos
 
-`UserDefinedType` was not explicitly annotated with `@Incubating` before,
-but it was introduced for the incubating `@Struct` feature in ORM 6.2,
-which made it effectively incubating as well. To make this more clear,
-the types were now also explicitly marked as `@Incubating`.
-
-The changes affect users which previously queried or created `UserDefinedType` in a `Namespace`.
-Methods that return or operate on `UserDefinedType` have been marked as `@Incubating`
-to make it clear that these contracts might still evolve.
-
-Another change is to the already incubating `ColumnOrderingStrategy`,
-where the argument type of `orderUserDefinedTypeColumns` was changed from `UserDefinedType` to `UserDefinedObjectType`.
-
-[[array-contains-array-deprecation]]
-== Subset check for arrays to use `array_includes`
-
-Support for `array_contains()` to accept an array as element argument is deprecated and will emit a warning.
-To check if an array is a subset of another array, use the `array_includes()` function,
-or the new `INCLUDES` predicate i.e. `array INCLUDES subarray`.
-
-[[merge-versioned-deleted]]
-=== Merge versioned entity when row is deleted
-Previously, merging a detached entity resulted in a SQL `insert` whenever there was no matching row in the database (for example, if the object had been deleted in another transaction).
-This behavior was unexpected and violated the rules of optimistic locking.
-
-An `OptimisticLockException` is now thrown when it is possible to determine that an entity is definitely detached, but there is no matching row.
-For this determination to be possible, the entity must have either:
-
-- a generated `@Id` field, or
-- a non-primitive `@Version` field.
-
-For entities which have neither, it's impossible to distinguish a new instance from a deleted detached instance, and there is no change from the previous behavior.
-
-[[embeddable-treated-paths]]
-== Changes to the `SqmTreatedPath` interface
-
-ORM 6.6 introduced support for `@Embeddable` type inheritance.
-With it, we also enabled the `type()` and `treat()` functions to work with embeddable-typed paths.
-As a consequence, the `SqmTreatedPath#getTreatTarget()` method will now return a generic `ManagedDomainType` object,
-which could in turn be an `EntityDomainType` (as it was before) or also an `EmbeddableDomainType` instance.
-
-[[h2-dialect]]
-== H2 database and bulk mutation strategy
-
-With ORM 6.6 when a bulk mutation involves multiple tables, H2 dialect will make use of global temporary tables instead of local ones.
+* Deprecate `SqmQualifiedJoin` in 6.x
+* {@linkplain SqmCrossJoin} and its offspring are largely de-typed to account
+        for {@linkplain SqmCrossJoin} having only one type argument for the right-hand
+        side.  To properly handle the type parameters in the hierarchy we need to change this to
+        accept type parameter for the left-handle side as well - breaking change.
+* The changes in `jakarta.persistence.EntityManager#createNativeQuery(java.lang.String, java.lang.Class<?>)` are really unfortunate.
+        Previously that signature was `(java.lang.String, java.lang.Class)` and our override of that was able to be
+        `<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass)`.  JPA adding that wildcard means our
+        override is no longer valid.  I had to change that to ``

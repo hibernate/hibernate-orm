@@ -40,6 +40,8 @@ earlier versions, see any other pertinent migration guides as well.
 [[todo]]
 == Todos
 
+NOTE:: Look for `// todo (jpa 3.2)`
+
 * Deprecate `SqmQualifiedJoin` in 6.x
 * {@linkplain SqmCrossJoin} and its offspring are largely de-typed to account
         for {@linkplain SqmCrossJoin} having only one type argument for the right-hand

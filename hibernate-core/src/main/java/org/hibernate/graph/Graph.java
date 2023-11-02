@@ -8,6 +8,9 @@ package org.hibernate.graph;
 
 import java.util.List;
 
+import jakarta.persistence.Subgraph;
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.MapAttribute;
 import jakarta.persistence.metamodel.PluralAttribute;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
@@ -29,7 +32,7 @@ import org.hibernate.metamodel.model.domain.PersistentAttribute;
  * @see jakarta.persistence.EntityGraph
  * @see jakarta.persistence.Subgraph
  */
-public interface Graph<J> extends GraphNode<J> {
+public interface Graph<J> extends GraphNode<J>, jakarta.persistence.Graph<J> {
 
 	/**
 	 * Add a subgraph rooted at a plural attribute, allowing further
@@ -41,7 +44,7 @@ public interface Graph<J> extends GraphNode<J> {
 	 *
 	 * @since 6.3
 	 */
-	default <AJ> SubGraph<AJ> addPluralSubgraph(PluralAttribute<? extends J, ?, AJ> attribute) {
+	default <AJ> SubGraph<AJ> addPluralSubgraph(PluralAttribute<? super J, ?, AJ> attribute) {
 		return addSubGraph( attribute.getName() );
 	}
 
@@ -92,7 +95,7 @@ public interface Graph<J> extends GraphNode<J> {
 	 * Find an already existing AttributeNode by corresponding attribute
 	 * reference, within this container.
 	 */
-	<AJ> AttributeNode<AJ> findAttributeNode(PersistentAttribute<? extends J, AJ> attribute);
+	<AJ> AttributeNode<AJ> findAttributeNode(PersistentAttribute<? super J, AJ> attribute);
 
 	/**
 	 * Get a list of all existing AttributeNodes within this container.
@@ -101,15 +104,9 @@ public interface Graph<J> extends GraphNode<J> {
 
 	/**
 	 * Add an {@link AttributeNode} (with no associated {@link SubGraph})
-	 * to this container by attribute name.
-	 */
-	<AJ> AttributeNode<AJ> addAttributeNode(String attributeName);
-
-	/**
-	 * Add an {@link AttributeNode} (with no associated {@link SubGraph})
 	 * to this container by attribute reference.
 	 */
-	<AJ> AttributeNode<AJ> addAttributeNode(PersistentAttribute<? extends J,AJ> attribute);
+	<AJ> AttributeNode<AJ> addAttributeNode(PersistentAttribute<? super J,AJ> attribute);
 
 
 
@@ -134,10 +131,10 @@ public interface Graph<J> extends GraphNode<J> {
 	 *
 	 * @apiNote If no such AttributeNode exists yet, it is created.
 	 */
-	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? extends J, AJ> attribute)
+	<AJ> SubGraph<AJ> addSubGraph(PersistentAttribute<? super J, AJ> attribute)
 			throws CannotContainSubGraphException;
 
-	<AJ> SubGraph<? extends AJ> addSubGraph(PersistentAttribute<? extends J, AJ> attribute, Class<? extends AJ> type)
+	<AJ> SubGraph<? extends AJ> addSubGraph(PersistentAttribute<? super J, AJ> attribute, Class<? extends AJ> type)
 			throws CannotContainSubGraphException;
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,8 +145,18 @@ public interface Graph<J> extends GraphNode<J> {
 	<AJ> SubGraph<AJ> addKeySubGraph(String attributeName, Class<AJ> type)
 			throws CannotContainSubGraphException;
 
-	<AJ> SubGraph<AJ> addKeySubGraph(PersistentAttribute<? extends J,AJ> attribute)
+	<AJ> SubGraph<AJ> addKeySubGraph(PersistentAttribute<? super J,AJ> attribute)
 			throws CannotContainSubGraphException;
-	<AJ> SubGraph<? extends AJ> addKeySubGraph(PersistentAttribute<? extends J,AJ> attribute, Class<? extends AJ> type)
+	<AJ> SubGraph<? extends AJ> addKeySubGraph(PersistentAttribute<? super J,AJ> attribute, Class<? extends AJ> type)
 			throws CannotContainSubGraphException;
+
+
+	@Override
+	<Y> SubGraph<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type);
+
+	@Override
+	<E> SubGraph<E> addTreatedElementSubgraph(PluralAttribute<? super J, ?, ? super E> attribute, Class<E> type);
+
+	@Override
+	<K> SubGraph<K> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super K, ?> attribute, Class<K> type);
 }

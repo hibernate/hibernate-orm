@@ -9,6 +9,10 @@ package org.hibernate.graph.internal;
 import org.hibernate.graph.spi.SubGraphImplementor;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 
+import jakarta.persistence.metamodel.Attribute;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.PluralAttribute;
+
 /**
  * Implementation of the JPA-defined {@link jakarta.persistence.Subgraph} interface.
  *
@@ -39,4 +43,40 @@ public class SubGraphImpl<J> extends AbstractGraph<J> implements SubGraphImpleme
 		return super.addKeySubGraph( attributeName );
 	}
 
+	@Override
+	public <Y> SubGraphImplementor<Y> addTreatedSubgraph(Attribute<? super J, ? super Y> attribute, Class<Y> type) {
+		return null;
+	}
+
+	@Override
+	public <E> SubGraphImplementor<E> addTreatedElementSubgraph(
+			PluralAttribute<? super J, ?, ? super E> attribute,
+			Class<E> type) {
+		return null;
+	}
+
+	@Override
+	public <K> SubGraphImplementor<K> addTreatedMapKeySubgraph(MapAttribute<? super J, ? super K, ?> attribute, Class<K> type) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <E> SubGraphImplementor<E> addElementSubgraph(PluralAttribute<? super J, ?, E> attribute) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <X> SubGraphImplementor<X> addElementSubgraph(String attributeName) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <X> SubGraphImplementor<X> addElementSubgraph(String attributeName, Class<X> type) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+	@Override
+	public <K> SubGraphImplementor<K> addMapKeySubgraph(MapAttribute<? super J, K, ?> attribute) {
+		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
 }

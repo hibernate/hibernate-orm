@@ -139,7 +139,7 @@ public class GraphParser extends GraphLanguageParserBaseVisitor {
 		final GraphImplementor<?> currentGraph = graphStack.getCurrent();
 		assert currentGraph != null;
 
-		final AttributeNodeImplementor attributeNode = currentGraph.addAttributeNode( attributeName );
+		final AttributeNodeImplementor attributeNode = currentGraph.findOrCreateAttributeNode( attributeName );
 		assert attributeNode != null;
 
 		return attributeNode;

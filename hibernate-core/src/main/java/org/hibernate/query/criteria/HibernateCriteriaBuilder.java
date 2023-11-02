@@ -187,30 +187,8 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	@Override
 	<T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
 
-	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	default <T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
-		// for now at least...
-		assert left instanceof SqmSelectStatement;
-		final SqmSelectStatement<? extends T> leftSqm = (SqmSelectStatement<? extends T>) left;
-		final SqmSelectStatement<? extends T> rightSqm = (SqmSelectStatement<? extends T>) right;
-
-
-		// SqmQueryGroup is the UNION ALL between the two
-		final SqmQueryGroup sqmQueryGroup = new SqmQueryGroup(
-				leftSqm.nodeBuilder(),
-				SetOperator.UNION_ALL,
-				List.of( leftSqm.getQueryPart(), rightSqm.getQueryPart() )
-		);
-
-		final SqmSelectStatement sqmSelectStatement = new SqmSelectStatement<>(
-				leftSqm.getResultType(),
-				SqmQuerySource.CRITERIA,
-				leftSqm.nodeBuilder()
-		);
-		sqmSelectStatement.setQueryPart( sqmQueryGroup );
-		return sqmSelectStatement;
-	}
+	<T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
 
 	default <T> JpaSubQuery<T> union(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return union( false, query1, queries );

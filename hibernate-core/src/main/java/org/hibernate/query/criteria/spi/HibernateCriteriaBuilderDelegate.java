@@ -256,6 +256,8 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 		return criteriaBuilder.except( all, query1, queries );
 	}
 
+
+
 	@Override
 	public JpaExpression<Integer> sign(Expression<? extends Number> x) {
 		return criteriaBuilder.sign( x );
@@ -317,7 +319,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <N, T extends Temporal> Expression<N> extract(TemporalField<N, T> field, Expression<T> temporal) {
+	public <N, T extends Temporal> JpaExpression<N> extract(TemporalField<N, T> field, Expression<T> temporal) {
 		return null;
 	}
 
@@ -337,32 +339,32 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public <T> CriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+	public <T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
 		return criteriaBuilder.union( left, right );
 	}
 
 	@Override
-	public <T> CriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+	public <T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
 		return criteriaBuilder.unionAll( left, right );
 	}
 
 	@Override
-	public <T> CriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+	public <T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
 		return criteriaBuilder.intersect( left, right );
 	}
 
 	@Override
-	public <T> CriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
+	public <T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
 		return criteriaBuilder.intersectAll( left, right );
 	}
 
 	@Override
-	public <T> CriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+	public <T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right) {
 		return criteriaBuilder.except( left, right );
 	}
 
 	@Override
-	public <T> CriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right) {
+	public <T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right) {
 		return criteriaBuilder.exceptAll( left, right );
 	}
 
@@ -862,7 +864,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public Predicate and(List<Predicate> restrictions) {
+	public JpaPredicate and(List<Predicate> restrictions) {
 		return null;
 	}
 
@@ -877,7 +879,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public Predicate or(List<Predicate> restrictions) {
+	public JpaPredicate or(List<Predicate> restrictions) {
 		return criteriaBuilder.or( restrictions );
 	}
 
@@ -1178,7 +1180,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public Expression<String> concat(List<Expression<String>> expressions) {
+	public JpaExpression<String> concat(List<Expression<String>> expressions) {
 		return criteriaBuilder.concat( expressions );
 	}
 

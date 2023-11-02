@@ -42,6 +42,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import jakarta.persistence.criteria.SetJoin;
 import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.criteria.TemporalField;
 
 /**
  * A JPA {@link CriteriaBuilder} is a source of objects which may be composed
@@ -179,11 +180,25 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 		return union( true, query1, queries );
 	}
 
+	@Override
+	<T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
+
+	@Override
+	default <T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+		return null;
+	}
+
 	default <T> JpaSubQuery<T> union(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return union( false, query1, queries );
 	}
 
 	<T> JpaSubQuery<T> union(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
+
+	@Override
+	<T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right);
+
+	@Override
+	<T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right);
 
 	default <T> JpaSubQuery<T> intersectAll(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return intersect( true, query1, queries );
@@ -194,6 +209,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	}
 
 	<T> JpaSubQuery<T> intersect(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
+
+	@Override
+	<T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right);
+
+	@Override
+	<T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right);
 
 	default <T> JpaSubQuery<T> exceptAll(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return except( true, query1, queries );
@@ -3611,4 +3632,17 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	 */
 	@Incubating
 	<E> JpaPredicate collectionIntersectsNullable(Collection<E> collection1, Expression<? extends Collection<? extends E>> collectionExpression2);
+
+
+	@Override
+	JpaPredicate and(List<Predicate> restrictions);
+
+	@Override
+	JpaPredicate or(List<Predicate> restrictions);
+
+	@Override
+	JpaExpression<String> concat(List<Expression<String>> expressions);
+
+	@Override
+	<N, T extends Temporal> JpaExpression<N> extract(TemporalField<N, T> field, Expression<T> temporal);
 }

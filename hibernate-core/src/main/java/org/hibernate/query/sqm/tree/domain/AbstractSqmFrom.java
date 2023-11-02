@@ -200,43 +200,6 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		return sqmPath;
 	}
 
-//	private ModelPartContainer findModelPartContainer(SqmAttributeJoin<?, ?> attributeJoin, SqmCreationState creationState) {
-//		final SqmFrom<?, ?> lhs = attributeJoin.getLhs();
-//		if ( lhs instanceof SqmAttributeJoin<?, ?> ) {
-//			final SqmAttributeJoin<?, ?> lhsAttributeJoin = (SqmAttributeJoin<?, ?>) lhs;
-//			if ( lhsAttributeJoin.getReferencedPathSource() instanceof EntityDomainType<?> ) {
-//				final String entityName = ( (EntityDomainType<?>) lhsAttributeJoin.getReferencedPathSource() ).getHibernateEntityName();
-//				return (ModelPartContainer) creationState.getCreationContext()
-//						.getJpaMetamodel()
-//						.getMappingMetamodel()
-//						.getEntityDescriptor( entityName )
-//						.findSubPart( attributeJoin.getAttribute().getName(), null );
-//			}
-//			else {
-//				return (ModelPartContainer) findModelPartContainer( lhsAttributeJoin, creationState )
-//						.findSubPart( attributeJoin.getAttribute().getName(), null );
-//			}
-//		}
-//		else {
-//			final String entityName;
-//			if ( lhs instanceof SqmRoot<?> ) {
-//				entityName = ( (SqmRoot<?>) lhs ).getEntityName();
-//			}
-//			else if ( lhs instanceof SqmEntityJoin<?,?> ) {
-//				entityName = ( (SqmEntityJoin<?,?>) lhs ).getEntityName();
-//			}
-//			else {
-//				assert lhs instanceof SqmCrossJoin<?>;
-//				entityName = ( (SqmCrossJoin<?>) lhs ).getEntityName();
-//			}
-//			return (ModelPartContainer) creationState.getCreationContext()
-//					.getJpaMetamodel()
-//					.getMappingMetamodel()
-//					.getEntityDescriptor( entityName )
-//					.findSubPart( attributeJoin.getAttribute().getName(), null );
-//		}
-//	}
-
 	@Override
 	public boolean hasJoins() {
 		return joins != null && !joins.isEmpty();
@@ -352,6 +315,30 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 		final SqmSingularJoin<T, A> join = buildSingularJoin( (SingularPersistentAttribute<? super T, A>) attribute, SqmJoinType.from( jt ), false );
 		addSqmJoin( join );
 		return join;
+	}
+
+	@Override
+	public <X> SqmEntityJoin<T, X> join(Class<X> targetEntityClass, SqmJoinType joinType) {
+		return join( nodeBuilder().getJpaMetamodel().entity( targetEntityClass ) );
+	}
+
+	@Override
+	public <X> SqmEntityJoin<T, X> join(EntityDomainType<X> targetEntityDescriptor) {
+		return join( targetEntityDescriptor, SqmJoinType.INNER );
+	}
+
+	@Override
+	public <X> SqmEntityJoin<T, X> join(EntityDomainType<X> targetEntityDescriptor, SqmJoinType joinType) {
+		//noinspection unchecked
+		final SqmRoot<T> root = (SqmRoot<T>) findRoot();
+		final SqmEntityJoin<T, X> sqmEntityJoin = new SqmEntityJoin<>(
+				targetEntityDescriptor,
+				null,
+				joinType,
+				root
+		);
+		root.addSqmJoin( sqmEntityJoin );
+		return sqmEntityJoin;
 	}
 
 	@Override

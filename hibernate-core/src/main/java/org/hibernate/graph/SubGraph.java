@@ -40,25 +40,24 @@ public interface SubGraph<J> extends Graph<J>, Subgraph<J> {
 	}
 
 	@Override
-	@SuppressWarnings("unchecked")
-	default void addAttributeNodes(Attribute<J, ?>... attribute) {
+	default void addAttributeNodes(Attribute<? super J, ?>... attribute) {
 		if ( attribute == null ) {
 			return;
 		}
 
-		for ( Attribute<J, ?> node : attribute ) {
+		for ( Attribute<? super J, ?> node : attribute ) {
 			assert node instanceof PersistentAttribute;
-			addAttributeNode( (PersistentAttribute<J, ?>) node );
+			addAttributeNode( node );
 		}
 	}
 
 	@Override
-	default <X> SubGraph<X> addSubgraph(Attribute<J, X> attribute) {
-		return addSubGraph( (PersistentAttribute<J, X>) attribute );
+	default <X> SubGraph<X> addSubgraph(Attribute<? super J, X> attribute) {
+		return addSubGraph( (PersistentAttribute<? super J, X>) attribute );
 	}
 
 	@Override
-	default <X> SubGraph<? extends X> addSubgraph(Attribute<J, X> attribute, Class<? extends X> type) {
+	default <X> SubGraph<? extends X> addSubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
 		return addSubGraph( (PersistentAttribute<J, X>) attribute, type );
 	}
 
@@ -75,13 +74,13 @@ public interface SubGraph<J> extends Graph<J>, Subgraph<J> {
 
 
 	@Override
-	default <X> SubGraph<X> addKeySubgraph(Attribute<J, X> attribute) {
-		return addKeySubGraph( (PersistentAttribute<J, X>) attribute );
+	default <X> SubGraph<X> addKeySubgraph(Attribute<? super J, X> attribute) {
+		return addKeySubGraph( (PersistentAttribute<? super J, X>) attribute );
 	}
 
 	@Override
-	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<J, X> attribute, Class<? extends X> type) {
-		return addKeySubGraph( (PersistentAttribute<J, X>) attribute, type );
+	default <X> SubGraph<? extends X> addKeySubgraph(Attribute<? super J, X> attribute, Class<? extends X> type) {
+		return addKeySubGraph( (PersistentAttribute<? super J, X>) attribute, type );
 	}
 
 	@Override

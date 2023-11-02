@@ -549,43 +549,117 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
-		// todo (jpa 3.2) : implement
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		return createUnionSet( SetOperator.UNION, left, right );
 	}
 
 	@Override
 	public <T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
-		// todo (jpa 3.2) : implement
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		return createUnionSet( SetOperator.UNION_ALL, left, right );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static <T> JpaCriteriaQuery<T> createUnionSet(
+			SetOperator operator,
+			CriteriaQuery<? extends T> left,
+			CriteriaQuery<? extends T> right) {
+		assert operator == SetOperator.UNION || operator == SetOperator.UNION_ALL;
+		assert left instanceof SqmSelectStatement;
+		assert right instanceof SqmSelectStatement;
+		final SqmSelectStatement<? extends T> leftSqm = (SqmSelectStatement<? extends T>) left;
+		final SqmSelectStatement<? extends T> rightSqm = (SqmSelectStatement<? extends T>) right;
+
+		// SqmQueryGroup is the UNION ALL between the two
+		final SqmQueryGroup sqmQueryGroup = new SqmQueryGroup(
+				leftSqm.nodeBuilder(),
+				operator,
+				List.of( leftSqm.getQueryPart(), rightSqm.getQueryPart() )
+		);
+
+		final SqmSelectStatement sqmSelectStatement = new SqmSelectStatement<>(
+				leftSqm.getResultType(),
+				SqmQuerySource.CRITERIA,
+				leftSqm.nodeBuilder()
+		);
+		sqmSelectStatement.setQueryPart( sqmQueryGroup );
+		return sqmSelectStatement;
 	}
 
 	@Override
 	public <T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
-		// todo (jpa 3.2) : implement
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		return createIntersectSet( SetOperator.INTERSECT, left, right );
 	}
 
 	@Override
 	public <T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
-		// todo (jpa 3.2) : implement
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		return createIntersectSet( SetOperator.INTERSECT_ALL, left, right );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static <T> JpaCriteriaQuery<T> createIntersectSet(
+			SetOperator operator,
+			CriteriaQuery<? super T> left,
+			CriteriaQuery<? super T> right) {
+		assert operator == SetOperator.INTERSECT || operator == SetOperator.INTERSECT_ALL;
+		assert left instanceof SqmSelectStatement;
+		assert right instanceof SqmSelectStatement;
+		final SqmSelectStatement<? extends T> leftSqm = (SqmSelectStatement<? extends T>) left;
+		final SqmSelectStatement<? extends T> rightSqm = (SqmSelectStatement<? extends T>) right;
+
+		// SqmQueryGroup is the UNION ALL between the two
+		final SqmQueryGroup sqmQueryGroup = new SqmQueryGroup(
+				leftSqm.nodeBuilder(),
+				operator,
+				List.of( leftSqm.getQueryPart(), rightSqm.getQueryPart() )
+		);
+
+		final SqmSelectStatement sqmSelectStatement = new SqmSelectStatement<>(
+				leftSqm.getResultType(),
+				SqmQuerySource.CRITERIA,
+				leftSqm.nodeBuilder()
+		);
+		sqmSelectStatement.setQueryPart( sqmQueryGroup );
+		return sqmSelectStatement;
 	}
 
 	@Override
 	public <T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right) {
-		// todo (jpa 3.2) : implement
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		return createExceptSet( SetOperator.EXCEPT, left, right );
 	}
 
 	@Override
 	public <T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right) {
-		// todo (jpa 3.2) : implement
-		throw new UnsupportedOperationException( "Not yet implemented" );
+		return createExceptSet( SetOperator.EXCEPT_ALL, left, right );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private static <T> JpaCriteriaQuery<T> createExceptSet(
+			SetOperator operator,
+			CriteriaQuery<T> left,
+			CriteriaQuery<?> right) {
+		assert operator == SetOperator.EXCEPT || operator == SetOperator.EXCEPT_ALL;
+		assert left instanceof SqmSelectStatement;
+		assert right instanceof SqmSelectStatement;
+		final SqmSelectStatement<? extends T> leftSqm = (SqmSelectStatement<? extends T>) left;
+		final SqmSelectStatement<? extends T> rightSqm = (SqmSelectStatement<? extends T>) right;
+
+		// SqmQueryGroup is the UNION ALL between the two
+		final SqmQueryGroup sqmQueryGroup = new SqmQueryGroup(
+				leftSqm.nodeBuilder(),
+				operator,
+				List.of( leftSqm.getQueryPart(), rightSqm.getQueryPart() )
+		);
+
+		final SqmSelectStatement sqmSelectStatement = new SqmSelectStatement<>(
+				leftSqm.getResultType(),
+				SqmQuerySource.CRITERIA,
+				leftSqm.nodeBuilder()
+		);
+		sqmSelectStatement.setQueryPart( sqmQueryGroup );
+		return sqmSelectStatement;
 	}
 
 	@Override
 	public <X, T, V extends T> SqmSingularJoin<X, V> treat(Join<X, T> join, Class<V> type) {
-		//noinspection unchecked
 		return (SqmTreatedSingularJoin<X,T,V>) ( (SqmSingularJoin<X, T>) join ).treatAs( type );
 	}
 

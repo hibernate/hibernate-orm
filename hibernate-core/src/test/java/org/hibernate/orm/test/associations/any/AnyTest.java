@@ -91,7 +91,7 @@ public class AnyTest extends BaseCoreFunctionalTestCase {
             final PropertyHolder2 propertyHolder = session.get( PropertyHolder2.class, 2L );
             assertEquals( "name2", propertyHolder.getProperty().getName() );
             assertEquals( "Mario Rossi", propertyHolder.getProperty().getValue() );
-            final String propertyType = session.createNativeQuery(
+            final String propertyType = (String) session.createNativeQuery(
                     "select property_type from property_holder2",
                     String.class
             ).getSingleResult();

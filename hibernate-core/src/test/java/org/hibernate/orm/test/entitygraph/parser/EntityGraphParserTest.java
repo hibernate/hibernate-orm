@@ -206,7 +206,7 @@ public class EntityGraphParserTest extends AbstractEntityGraphTest {
 
 		assertEquals( subGraph.getGraphedType().getJavaType(), GraphParsingTestSubEntity.class );
 
-		final AttributeNodeImplementor<Object> subTypeAttrNode = subGraph.addAttributeNode( "sub" );
+		final AttributeNodeImplementor<Object> subTypeAttrNode = subGraph.findOrCreateAttributeNode( "sub" );
 		assert subTypeAttrNode != null;
 	}
 

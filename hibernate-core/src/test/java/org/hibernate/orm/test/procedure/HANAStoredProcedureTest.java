@@ -282,7 +282,7 @@ public class HANAStoredProcedureTest {
 	@JiraKey( "HHH-12138")
 	public void testStoredProcedureReturnValue(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
-			Integer phoneCount = session
+			Integer phoneCount = (Integer) session
 					.createNativeQuery( "SELECT fn_count_phones(:personId) FROM SYS.DUMMY", Integer.class )
 					.setParameter( "personId", 1 )
 					.getSingleResult();

@@ -109,7 +109,7 @@ public class CompositeUserTypeTest {
 					session.persist( f );
 					session.flush();
 					// Test value conversion during insert
-					BigDecimal amountViaSql = session.createNativeQuery(
+					BigDecimal amountViaSql = (BigDecimal) session.createNativeQuery(
 									"select amount_millions from MutualFund", BigDecimal.class )
 							.uniqueResult();
 					assertEquals( AMOUNT_MILLIONS.doubleValue(), amountViaSql.doubleValue(), 0.01d );

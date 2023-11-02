@@ -33,7 +33,11 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	<Y> JpaEntityJoin<T, Y> join(Class<Y> entityClass);
 
 	@Override
-	<Y> JpaJoin<T, Y> join(Class<Y> entityClass, JoinType joinType);
+	<Y> JpaEntityJoin<T, Y> join(Class<Y> entityClass, JoinType joinType);
+
+	default <X> JpaEntityJoin<T, X> join(Class<X> entityJavaType, SqmJoinType joinType) {
+		return join( entityJavaType, joinType.getCorrespondingJpaJoinType() );
+	}
 
 	@Override
 	<Y> JpaJoin<T, Y> join(EntityType<Y> entity);
@@ -41,15 +45,9 @@ public interface JpaFrom<O,T> extends JpaPath<T>, JpaFetchParent<O,T>, From<O,T>
 	@Override
 	<Y> JpaJoin<T, Y> join(EntityType<Y> entity, JoinType joinType);
 
-	//
-//	@Override
-//	<Y> JpaEntityJoin<Y> join(Class<Y> entityClass);
-//
-//	<X> JpaEntityJoin<X> join(EntityDomainType<X> entity);
-//
-//	<X> JpaEntityJoin<X> join(Class<X> entityJavaType, SqmJoinType joinType);
-//
-//	<X> JpaEntityJoin<X> join(EntityDomainType<X> entity, SqmJoinType joinType);
+	<X> JpaEntityJoin<T,X> join(EntityDomainType<X> entity);
+
+	<X> JpaEntityJoin<T,X> join(EntityDomainType<X> entity, SqmJoinType joinType);
 
 	@Incubating
 	<X> JpaDerivedJoin<X> join(Subquery<X> subquery);

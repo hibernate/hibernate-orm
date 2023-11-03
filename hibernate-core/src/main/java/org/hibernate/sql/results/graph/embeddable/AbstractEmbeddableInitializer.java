@@ -8,6 +8,7 @@ package org.hibernate.sql.results.graph.embeddable;
 
 import org.hibernate.engine.internal.ManagedTypeHelper;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
@@ -123,7 +124,7 @@ public abstract class AbstractEmbeddableInitializer extends AbstractFetchParentA
 
 	@Override
 	public FetchParentAccess findFirstEntityDescriptorAccess() {
-		if ( fetchParentAccess == null ) {
+		if ( fetchParentAccess == null || embedded instanceof CollectionPart ) {
 			return null;
 		}
 		return fetchParentAccess.findFirstEntityDescriptorAccess();

@@ -13,6 +13,7 @@ import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -57,6 +58,16 @@ public class InferenceTest extends BaseCoreFunctionalTestCase {
             query.setParameter("param", 10);
             List<Person> resultList = query.getResultList();
             assertThat(resultList, hasItem(person));
+        } );
+
+    }
+
+    @Test
+    @JiraKey("HHH-17386")
+    public void testInferenceSourceResetForOnClause() {
+        doInHibernate( this::sessionFactory, session -> {
+            session.createQuery( "from Person p where p in (select p2 from Person p2 join Person p3 on exists (select 1 from Person p4))", Person.class )
+                .getResultList();
         } );
 
     }

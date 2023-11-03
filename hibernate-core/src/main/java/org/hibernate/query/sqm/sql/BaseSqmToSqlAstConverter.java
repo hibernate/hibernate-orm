@@ -6866,9 +6866,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		Expression otherwise = null;
 		for ( SqmCaseSearched.WhenFragment<?> whenFragment : expression.getWhenFragments() ) {
-			inferrableTypeAccessStack.push( () -> null );
 			final Predicate whenPredicate = visitNestedTopLevelPredicate( whenFragment.getPredicate() );
-			inferrableTypeAccessStack.pop();
 			final MappingModelExpressible<?> alreadyKnown = resolved;
 			inferrableTypeAccessStack.push(
 					() -> alreadyKnown == null && inferenceSupplier != null ? inferenceSupplier.get() : alreadyKnown
@@ -7056,7 +7054,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			originalConjunctTableGroupTreatUsages = new IdentityHashMap<>( tableGroupEntityNameUses );
 		}
 		tableGroupEntityNameUses.clear();
+		inferrableTypeAccessStack.push( this::getBooleanType );
 		final Predicate result = (Predicate) predicate.accept( this );
+		inferrableTypeAccessStack.pop();
 		final Predicate finalPredicate = combinePredicates(
 				result,
 				consumeConjunctTreatTypeRestrictions()
@@ -7866,7 +7866,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitBooleanExpressionPredicate(SqmBooleanExpressionPredicate predicate) {
+		inferrableTypeAccessStack.push( this::getBooleanType );
 		final Expression booleanExpression = (Expression) predicate.getBooleanExpression().accept( this );
+		inferrableTypeAccessStack.pop();
 		if ( booleanExpression instanceof SelfRenderingExpression ) {
 			final Predicate sqlPredicate = new SelfRenderingPredicate( (SelfRenderingExpression) booleanExpression );
 			if ( predicate.isNegated() ) {
@@ -7895,11 +7897,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Object visitExistsPredicate(SqmExistsPredicate predicate) {
-		return new ExistsPredicate(
-				(SelectStatement) predicate.getExpression().accept( this ),
-				predicate.isNegated(),
-				getBooleanType()
-		);
+		inferrableTypeAccessStack.push( () -> null );
+		final SelectStatement selectStatement = (SelectStatement) predicate.getExpression().accept( this );
+		inferrableTypeAccessStack.pop();
+		return new ExistsPredicate( selectStatement, predicate.isNegated(), getBooleanType() );
 	}
 
 	@Override

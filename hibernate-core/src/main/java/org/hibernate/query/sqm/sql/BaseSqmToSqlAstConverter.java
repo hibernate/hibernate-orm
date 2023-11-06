@@ -3573,10 +3573,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private <X> X prepareReusablePath(SqmPath<?> sqmPath, Supplier<X> supplier) {
-		return prepareReusablePath( sqmPath, fromClauseIndexStack.getCurrent(), supplier );
+		return prepareReusablePath( sqmPath, fromClauseIndexStack.getCurrent(), supplier, false );
 	}
 
-	private <X> X prepareReusablePath(SqmPath<?> sqmPath, FromClauseIndex fromClauseIndex, Supplier<X> supplier) {
+	private <X> X prepareReusablePath(
+			SqmPath<?> sqmPath,
+			FromClauseIndex fromClauseIndex,
+			Supplier<X> supplier,
+			boolean allowLeftJoins) {
 		final Consumer<TableGroup> implicitJoinChecker;
 		if ( getCurrentClauseStack().getCurrent() != Clause.SET_EXPRESSION ) {
 			implicitJoinChecker = tg -> {};
@@ -3599,7 +3603,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							fromClauseIndex.getTableGroup( sqmPath.getLhs().getNavigablePath() ),
 							sqmPath
 						),
-						sqmPath
+						sqmPath,
+						allowLeftJoins
 				);
 				if ( createdTableGroup != null ) {
 					if ( sqmPath instanceof SqmTreatedPath<?, ?> ) {
@@ -3653,7 +3658,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 			else {
 				newTableGroup = getActualTableGroup(
-						createTableGroup( createdParentTableGroup, parentPath ),
+						createTableGroup( createdParentTableGroup, parentPath, false ),
 						sqmPath
 				);
 			}
@@ -3667,9 +3672,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			fromClauseIndex.register( sqmPath, parentTableGroup );
 		}
 
-		if ( parentPath instanceof SqmSimplePath<?>
+		upgradeToInnerJoinIfNeeded( parentTableGroup, sqmPath, parentPath, fromClauseIndex );
+
+		registerPathAttributeEntityNameUsage( sqmPath, parentTableGroup );
+
+		return parentTableGroup;
+	}
+
+	private void upgradeToInnerJoinIfNeeded(
+			TableGroup parentTableGroup,
+			SqmPath<?> sqmPath,
+			SqmPath<?> parentPath,
+			FromClauseIndex fromClauseIndex) {
+		if ( getCurrentClauseStack().getCurrent() != Clause.SELECT
+				&& parentPath instanceof SqmSimplePath<?>
 				&& CollectionPart.Nature.fromName( parentPath.getNavigablePath().getLocalName() ) == null
-				&& getCurrentClauseStack().getCurrent() != Clause.SELECT
 				&& parentPath.getParentPath() != null
 				&& parentTableGroup.getModelPart() instanceof ToOneAttributeMapping ) {
 			// we need to handle the case of an implicit path involving a to-one
@@ -3693,9 +3710,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 			}
 		}
-		registerPathAttributeEntityNameUsage( sqmPath, parentTableGroup );
-
-		return parentTableGroup;
 	}
 
 	private void prepareForSelection(SqmPath<?> selectionPath) {
@@ -3721,7 +3735,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// But only create it for paths that are not handled by #prepareReusablePath anyway
 				final TableGroup createdTableGroup = createTableGroup(
 						getActualTableGroup( fromClauseIndex.getTableGroup( path.getLhs().getNavigablePath() ), path ),
-						path
+						path,
+						false
 				);
 				if ( createdTableGroup != null ) {
 					registerEntityNameProjectionUsage( path, createdTableGroup );
@@ -3742,7 +3757,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		}
 	}
 
-	private TableGroup createTableGroup(TableGroup parentTableGroup, SqmPath<?> joinedPath) {
+	private TableGroup createTableGroup(TableGroup parentTableGroup, SqmPath<?> joinedPath, boolean allowLeftJoins) {
 		final SqmPath<?> lhsPath = joinedPath.getLhs();
 		final FromClauseIndex fromClauseIndex = getFromClauseIndex();
 		final ModelPart subPart = parentTableGroup.getModelPart().findSubPart(
@@ -3774,18 +3789,30 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				querySpec.getFromClause().addRoot( tableGroup );
 			}
 			else {
-				// Check if we can reuse a table group join of the parent
-				final TableGroup compatibleTableGroup = parentTableGroup.findCompatibleJoinedGroup(
-						joinProducer,
-						SqlAstJoinType.INNER
-				);
+				final TableGroupJoin compatibleLeftJoin;
+				final SqlAstJoinType sqlAstJoinType;
+				if ( isMappedByOrNotFoundToOne( joinProducer ) ) {
+					compatibleLeftJoin = parentTableGroup.findCompatibleJoin(
+							joinProducer,
+							SqlAstJoinType.LEFT
+					);
+					sqlAstJoinType = SqlAstJoinType.LEFT;
+				}
+				else {
+					compatibleLeftJoin = null;
+					sqlAstJoinType = null;
+				}
+
+				final TableGroup compatibleTableGroup = compatibleLeftJoin != null ?
+						compatibleLeftJoin.getJoinedGroup() :
+						parentTableGroup.findCompatibleJoinedGroup( joinProducer, SqlAstJoinType.INNER );
 				if ( compatibleTableGroup == null ) {
 					final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
 							joinedPath.getNavigablePath(),
 							parentTableGroup,
 							null,
 							null,
-							null,
+							allowLeftJoins ? sqlAstJoinType : null,
 							false,
 							false,
 							this
@@ -3805,6 +3832,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					// Also register the table group under its original navigable path, which possibly contains an alias
 					// This is important, as otherwise we might create new joins in subqueries which are unnecessary
 					fromClauseIndex.registerTableGroup( tableGroup.getNavigablePath(), tableGroup );
+					// Upgrade the join type to inner if the context doesn't allow left joins
+					if ( compatibleLeftJoin != null && !allowLeftJoins ) {
+						compatibleLeftJoin.setJoinType( SqlAstJoinType.INNER );
+					}
 				}
 			}
 
@@ -3815,6 +3846,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			tableGroup = null;
 		}
 		return tableGroup;
+	}
+
+	private boolean isMappedByOrNotFoundToOne(TableGroupJoinProducer joinProducer) {
+		if ( joinProducer instanceof ToOneAttributeMapping ) {
+			final ToOneAttributeMapping toOne = (ToOneAttributeMapping) joinProducer;
+			if ( toOne.hasNotFoundAction() || toOne.getReferencedPropertyName() != null ) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private boolean isRecursiveCte(TableGroup tableGroup) {
@@ -7660,11 +7701,30 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public NullnessPredicate visitIsNullPredicate(SqmNullnessPredicate predicate) {
-		return new NullnessPredicate(
-				(Expression) visitWithInferredType( predicate.getExpression(), () -> basicType( Object.class )),
-				predicate.isNegated(),
-				getBooleanType()
-		);
+		final SqmExpression<?> sqmExpression = predicate.getExpression();
+		final Expression expression;
+		if ( sqmExpression instanceof SqmEntityValuedSimplePath<?> ) {
+			final SqmEntityValuedSimplePath<?> entityValuedPath = (SqmEntityValuedSimplePath<?>) sqmExpression;
+			inferrableTypeAccessStack.push( () -> basicType( Object.class ) );
+			expression = withTreatRestriction( prepareReusablePath(
+					entityValuedPath,
+					fromClauseIndexStack.getCurrent(),
+					() -> EntityValuedPathInterpretation.from(
+							entityValuedPath,
+							getInferredValueMapping(),
+							this
+					),
+					true
+			), entityValuedPath );
+			inferrableTypeAccessStack.pop();
+		}
+		else {
+			expression = (Expression) visitWithInferredType(
+					predicate.getExpression(),
+					() -> basicType( Object.class )
+			);
+		}
+		return new NullnessPredicate( expression, predicate.isNegated(), getBooleanType() );
 	}
 
 	@Override

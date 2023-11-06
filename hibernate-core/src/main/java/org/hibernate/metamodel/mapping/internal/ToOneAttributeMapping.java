@@ -1534,7 +1534,7 @@ public class ToOneAttributeMapping
 						if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 							// If the key side is non-nullable we also need to add the keyResult
 							// to be able to manually check invalid foreign key references
-							if ( notFoundAction != null || !isInternalLoadNullable ) {
+							if ( hasNotFoundAction() || !isInternalLoadNullable ) {
 								keyResult = foreignKeyDescriptor.createKeyDomainResult(
 										fetchablePath,
 										tableGroup,
@@ -1543,7 +1543,7 @@ public class ToOneAttributeMapping
 								);
 							}
 						}
-						else if ( notFoundAction != null
+						else if ( hasNotFoundAction()
 								|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null ) {
 							// For the target side only add keyResult when a not-found action is present
 							keyResult = foreignKeyDescriptor.createTargetDomainResult(

@@ -302,4 +302,9 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		// Introduction of PERCENT support https://github.com/h2database/h2database/commit/f45913302e5f6ad149155a73763c0c59d8205849
 		return getDialect().getVersion().isSameOrAfter( 1, 4, 198 );
 	}
+
+	@Override
+	protected boolean supportsJoinInMutationStatementSubquery() {
+		return false;
+	}
 }

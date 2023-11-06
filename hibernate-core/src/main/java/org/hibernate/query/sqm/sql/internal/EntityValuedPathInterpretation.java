@@ -221,12 +221,8 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			}
 			else {
 				// If the mapping is an inverse association, use the PK and disallow FK optimizations
-				resultModelPart = ( (EntityAssociationMapping) mapping ).getAssociatedEntityMappingType().getIdentifierMapping();
+				resultModelPart = associationMapping.getAssociatedEntityMappingType().getIdentifierMapping();
 				resultTableGroup = tableGroup;
-
-				// todo (not-found) : in the case of not-found=ignore, we want to do the join, however -
-				//  	* use a left join when the association is the path terminus (`root.association`)
-				//  	* use an inner join when it is further de-referenced (`root.association.stuff`)
 			}
 		}
 		else if ( mapping instanceof AnonymousTupleEntityValuedModelPart ) {

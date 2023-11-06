@@ -13,16 +13,15 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
-import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
 import org.hibernate.testing.orm.junit.Jira;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -99,10 +98,6 @@ public class IsNullAndNotFoundTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected(
-			jiraKey = "HHH-17143",
-			message = "Conceptually this should render as a left join because of the path terminal; currently uses inner join"
-	)
 	public void testAssociationIsNullInWhereClause() {
 		inTransaction(
 				session -> {
@@ -126,6 +121,33 @@ public class IsNullAndNotFoundTest extends BaseNonConfigCoreFunctionalTestCase {
 					assertThat( inspector.getSqlQueries() ).hasSize( 1 );
 					assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( " left join " );
 					assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( ".id is null" );
+				}
+		);
+	}
+
+	@Test
+	public void testFetchedAssociationIsNullInWhereClause() {
+		inTransaction(
+				session -> {
+					inspector.clear();
+
+					// should produce an inner join to ACCOUNT_TABLE since it's explicitly selected
+					//
+					//	...
+					//	from PERSON p
+					//		join ACCOUNT_TABLE a
+					//			on p.account_id = a.id
+					//	where a.id is null
+
+					final List<Account> results = session.createQuery(
+									"select p.account from Person p where p.account is null", Account.class )
+							.getResultList();
+
+					assertThat( results ).isEmpty();
+
+					assertThat( inspector.getSqlQueries() ).hasSize( 1 );
+					assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( "join" );
+					assertThat( inspector.getSqlQueries().get( 0 ) ).doesNotContainIgnoringCase( " left join " );
 				}
 		);
 	}
@@ -225,8 +247,22 @@ public class IsNullAndNotFoundTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertThat( inspector.getSqlQueries() ).hasSize( 1 );
 			// could physically be a join or exists sub-query
 			assertThat( inspector.getSqlQueries().get( 0 ) )
-					.matches( (sql) -> sql.contains( "left join" ) || sql.contains( "where exists" ) );
-			assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( ".id is null" );
+					.matches( (sql) -> sql.contains( "left join" ) || sql.contains( "not exists" ) );
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17384" )
+	public void testDeleteAdditionalPredicate() {
+		inspector.clear();
+
+		inTransaction( (entityManager) -> {
+			entityManager.createQuery( "delete from Person p where p.account is null and p.lazyAccount.code <>'aaa'" ).executeUpdate();
+
+			assertThat( inspector.getSqlQueries() ).hasSize( 1 );
+			// could physically be a join or exists sub-query
+			assertThat( inspector.getSqlQueries().get( 0 ) )
+					.matches( (sql) -> sql.contains( "left join" ) || sql.contains( "not exists" ) );
 		} );
 	}
 
@@ -240,8 +276,7 @@ public class IsNullAndNotFoundTest extends BaseNonConfigCoreFunctionalTestCase {
 			assertThat( inspector.getSqlQueries() ).hasSize( 1 );
 			// could physically be a join or exists sub-query
 			assertThat( inspector.getSqlQueries().get( 0 ) )
-					.matches( (sql) -> sql.contains( "left join" ) || sql.contains( "where exists" ) );
-			assertThat( inspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( ".id is null" );
+					.matches( (sql) -> sql.contains( "left join" ) || sql.contains( "not exists" ) );
 		} );
 	}
 
@@ -270,6 +305,9 @@ public class IsNullAndNotFoundTest extends BaseNonConfigCoreFunctionalTestCase {
 		@OneToOne
 		@NotFound(action = NotFoundAction.IGNORE)
 		private Account account;
+
+		@OneToOne(fetch = FetchType.LAZY)
+		private Account lazyAccount;
 
 		Person() {
 		}

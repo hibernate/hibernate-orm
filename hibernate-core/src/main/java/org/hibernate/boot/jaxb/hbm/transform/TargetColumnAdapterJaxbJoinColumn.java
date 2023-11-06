@@ -6,19 +6,19 @@
  */
 package org.hibernate.boot.jaxb.hbm.transform;
 
-import org.hibernate.boot.jaxb.mapping.JaxbJoinColumn;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbJoinColumnImpl;
 
 /**
  * @author Steve Ebersole
  */
 public class TargetColumnAdapterJaxbJoinColumn implements TargetColumnAdapter {
-	private final JaxbJoinColumn jaxbColumn;
+	private final JaxbJoinColumnImpl jaxbColumn;
 
 	public TargetColumnAdapterJaxbJoinColumn(ColumnDefaults columnDefaults) {
-		this( new JaxbJoinColumn(), columnDefaults );
+		this( new JaxbJoinColumnImpl(), columnDefaults );
 	}
 
-	public TargetColumnAdapterJaxbJoinColumn(JaxbJoinColumn jaxbColumn, ColumnDefaults columnDefaults) {
+	public TargetColumnAdapterJaxbJoinColumn(JaxbJoinColumnImpl jaxbColumn, ColumnDefaults columnDefaults) {
 		this.jaxbColumn = jaxbColumn;
 		this.jaxbColumn.setNullable( columnDefaults.isNullable() );
 		this.jaxbColumn.setUnique( columnDefaults.isUnique() );
@@ -26,7 +26,7 @@ public class TargetColumnAdapterJaxbJoinColumn implements TargetColumnAdapter {
 		this.jaxbColumn.setUpdatable( columnDefaults.isUpdateable() );
 	}
 
-	public JaxbJoinColumn getTargetColumn() {
+	public JaxbJoinColumnImpl getTargetColumn() {
 		return jaxbColumn;
 	}
 

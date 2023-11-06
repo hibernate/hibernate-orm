@@ -6,19 +6,20 @@
  */
 package org.hibernate.boot.jaxb.hbm.transform;
 
-import org.hibernate.boot.jaxb.mapping.JaxbColumn;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbCheckConstraintImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
 
 /**
  * @author Steve Ebersole
  */
 public class TargetColumnAdapterJaxbColumn implements TargetColumnAdapter {
-	private final JaxbColumn jaxbColumn;
+	private final JaxbColumnImpl jaxbColumn;
 
 	public TargetColumnAdapterJaxbColumn(ColumnDefaults columnDefaults) {
-		this( new JaxbColumn(), columnDefaults );
+		this( new JaxbColumnImpl(), columnDefaults );
 	}
 
-	public TargetColumnAdapterJaxbColumn(JaxbColumn jaxbColumn, ColumnDefaults columnDefaults) {
+	public TargetColumnAdapterJaxbColumn(JaxbColumnImpl jaxbColumn, ColumnDefaults columnDefaults) {
 		this.jaxbColumn = jaxbColumn;
 		this.jaxbColumn.setLength( columnDefaults.getLength() );
 		this.jaxbColumn.setScale( columnDefaults.getScale() );
@@ -29,7 +30,7 @@ public class TargetColumnAdapterJaxbColumn implements TargetColumnAdapter {
 		this.jaxbColumn.setUpdatable( columnDefaults.isUpdateable() );
 	}
 
-	public JaxbColumn getTargetColumn() {
+	public JaxbColumnImpl getTargetColumn() {
 		return jaxbColumn;
 	}
 
@@ -104,7 +105,9 @@ public class TargetColumnAdapterJaxbColumn implements TargetColumnAdapter {
 
 	@Override
 	public void setCheck(String value) {
-		jaxbColumn.setCheck( value );
+		final JaxbCheckConstraintImpl checkConstraint = new JaxbCheckConstraintImpl();
+		checkConstraint.setConstraint( value );
+		jaxbColumn.getCheckConstraints().add( checkConstraint );
 	}
 
 	@Override

@@ -11,32 +11,32 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
-import org.hibernate.boot.jaxb.mapping.AttributesContainer;
-import org.hibernate.boot.jaxb.mapping.JaxbAttributes;
-import org.hibernate.boot.jaxb.mapping.JaxbBasic;
-import org.hibernate.boot.jaxb.mapping.JaxbElementCollection;
-import org.hibernate.boot.jaxb.mapping.JaxbEmbedded;
-import org.hibernate.boot.jaxb.mapping.JaxbEmbeddedId;
-import org.hibernate.boot.jaxb.mapping.JaxbEntity;
-import org.hibernate.boot.jaxb.mapping.JaxbId;
-import org.hibernate.boot.jaxb.mapping.JaxbManyToMany;
-import org.hibernate.boot.jaxb.mapping.JaxbManyToOne;
-import org.hibernate.boot.jaxb.mapping.JaxbOneToMany;
-import org.hibernate.boot.jaxb.mapping.JaxbOneToOne;
-import org.hibernate.boot.jaxb.mapping.JaxbPostLoad;
-import org.hibernate.boot.jaxb.mapping.JaxbPostPersist;
-import org.hibernate.boot.jaxb.mapping.JaxbPostRemove;
-import org.hibernate.boot.jaxb.mapping.JaxbPostUpdate;
-import org.hibernate.boot.jaxb.mapping.JaxbPrePersist;
-import org.hibernate.boot.jaxb.mapping.JaxbPreRemove;
-import org.hibernate.boot.jaxb.mapping.JaxbPreUpdate;
-import org.hibernate.boot.jaxb.mapping.JaxbTenantId;
-import org.hibernate.boot.jaxb.mapping.JaxbTransient;
-import org.hibernate.boot.jaxb.mapping.JaxbVersion;
-import org.hibernate.boot.jaxb.mapping.LifecycleCallback;
-import org.hibernate.boot.jaxb.mapping.LifecycleCallbackContainer;
-import org.hibernate.boot.jaxb.mapping.ManagedType;
-import org.hibernate.boot.jaxb.mapping.PersistentAttribute;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainerImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbElementCollectionImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedIdImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddedImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbIdImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallback;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbLifecycleCallbackContainer;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToManyImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbManyToOneImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToManyImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbOneToOneImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistentAttribute;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPostLoadImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPostPersistImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPostRemoveImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPostUpdateImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPrePersistImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPreRemoveImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPreUpdateImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbTenantIdImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbTransientImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbVersionImpl;
 
 
 /**
@@ -48,31 +48,31 @@ import org.hibernate.boot.jaxb.mapping.PersistentAttribute;
  * </ul>
  */
 public final class PropertyMappingElementCollector {
-	public static final Function<PersistentAttribute, String> PERSISTENT_ATTRIBUTE_NAME = PersistentAttribute::getName;
-	public static final Function<JaxbTransient, String> JAXB_TRANSIENT_NAME = JaxbTransient::getName;
-	static final Function<LifecycleCallback, String> LIFECYCLE_CALLBACK_NAME = LifecycleCallback::getMethodName;
+	public static final Function<JaxbPersistentAttribute, String> PERSISTENT_ATTRIBUTE_NAME = JaxbPersistentAttribute::getName;
+	public static final Function<JaxbTransientImpl, String> JAXB_TRANSIENT_NAME = JaxbTransientImpl::getName;
+	static final Function<JaxbLifecycleCallback, String> LIFECYCLE_CALLBACK_NAME = JaxbLifecycleCallback::getMethodName;
 
 	private final String propertyName;
 
-	private List<JaxbId> id;
-	private List<JaxbEmbeddedId> embeddedId;
-	private List<JaxbVersion> version;
-	private List<JaxbBasic> basic;
-	private List<JaxbEmbedded> embedded;
-	private List<JaxbOneToOne> oneToOne;
-	private List<JaxbManyToOne> manyToOne;
-	private List<JaxbElementCollection> elementCollection;
-	private List<JaxbOneToMany> oneToMany;
-	private List<JaxbManyToMany> manyToMany;
-	private List<JaxbTransient> _transient;
+	private List<JaxbIdImpl> id;
+	private List<JaxbEmbeddedIdImpl> embeddedId;
+	private List<JaxbVersionImpl> version;
+	private List<JaxbBasicImpl> basic;
+	private List<JaxbEmbeddedImpl> embedded;
+	private List<JaxbOneToOneImpl> oneToOne;
+	private List<JaxbManyToOneImpl> manyToOne;
+	private List<JaxbElementCollectionImpl> elementCollection;
+	private List<JaxbOneToManyImpl> oneToMany;
+	private List<JaxbManyToManyImpl> manyToMany;
+	private List<JaxbTransientImpl> _transient;
 
-	private List<JaxbPrePersist> prePersist;
-	private List<JaxbPostPersist> postPersist;
-	private List<JaxbPreRemove> preRemove;
-	private List<JaxbPostRemove> postRemove;
-	private List<JaxbPreUpdate> preUpdate;
-	private List<JaxbPostUpdate> postUpdate;
-	private List<JaxbPostLoad> postLoad;
+	private List<JaxbPrePersistImpl> prePersist;
+	private List<JaxbPostPersistImpl> postPersist;
+	private List<JaxbPreRemoveImpl> preRemove;
+	private List<JaxbPostRemoveImpl> postRemove;
+	private List<JaxbPreUpdateImpl> preUpdate;
+	private List<JaxbPostUpdateImpl> postUpdate;
+	private List<JaxbPostLoadImpl> postLoad;
 
 	public PropertyMappingElementCollector(String propertyName) {
 		this.propertyName = propertyName;
@@ -97,11 +97,10 @@ public final class PropertyMappingElementCollector {
 		return list == null ? Collections.emptyList() : list;
 	}
 
-	public void collectPersistentAttributesIfMatching(AttributesContainer container) {
-		if ( container instanceof JaxbAttributes ) {
-			final JaxbAttributes jaxbAttributes = (JaxbAttributes) container;
-			id = collectIfMatching( id, jaxbAttributes.getId(), PERSISTENT_ATTRIBUTE_NAME );
-			embeddedId = collectIfMatching( embeddedId, jaxbAttributes.getEmbeddedId(), PERSISTENT_ATTRIBUTE_NAME );
+	public void collectPersistentAttributesIfMatching(JaxbAttributesContainer container) {
+		if ( container instanceof JaxbAttributesContainerImpl jaxbAttributes ) {
+			id = collectIfMatching( id, jaxbAttributes.getIdAttributes(), PERSISTENT_ATTRIBUTE_NAME );
+			embeddedId = collectIfMatching( embeddedId, jaxbAttributes.getEmbeddedIdAttribute(), PERSISTENT_ATTRIBUTE_NAME );
 			version = collectIfMatching( version, jaxbAttributes.getVersion(), PERSISTENT_ATTRIBUTE_NAME );
 		}
 		basic = collectIfMatching( basic, container.getBasicAttributes(), PERSISTENT_ATTRIBUTE_NAME );
@@ -114,7 +113,7 @@ public final class PropertyMappingElementCollector {
 		_transient = collectIfMatching( _transient, container.getTransients(), JAXB_TRANSIENT_NAME );
 	}
 
-	public void collectLifecycleCallbacksIfMatching(LifecycleCallbackContainer container) {
+	public void collectLifecycleCallbacksIfMatching(JaxbLifecycleCallbackContainer container) {
 		prePersist = collectIfMatching( prePersist, container.getPrePersist(), LIFECYCLE_CALLBACK_NAME );
 		postPersist = collectIfMatching( postPersist, container.getPostPersist(), LIFECYCLE_CALLBACK_NAME );
 		preRemove = collectIfMatching( preRemove, container.getPreRemove(), LIFECYCLE_CALLBACK_NAME );
@@ -124,9 +123,9 @@ public final class PropertyMappingElementCollector {
 		postLoad = collectIfMatching( postLoad, container.getPostLoad(), LIFECYCLE_CALLBACK_NAME );
 	}
 
-	public void collectTenantIdIfMatching(ManagedType managedType) {
-		if ( managedType instanceof JaxbEntity ) {
-			JaxbTenantId tenantId = ( (JaxbEntity) managedType ).getTenantId();
+	public void collectTenantIdIfMatching(JaxbManagedType managedType) {
+		if ( managedType instanceof JaxbEntityImpl ) {
+			JaxbTenantIdImpl tenantId = ( (JaxbEntityImpl) managedType ).getTenantId();
 			basic = collectIfMatching( basic, tenantId, PERSISTENT_ATTRIBUTE_NAME );
 		}
 	}
@@ -151,75 +150,75 @@ public final class PropertyMappingElementCollector {
 		return result;
 	}
 
-	public List<JaxbId> getId() {
+	public List<JaxbIdImpl> getId() {
 		return defaultToEmpty( id );
 	}
 
-	public List<JaxbEmbeddedId> getEmbeddedId() {
+	public List<JaxbEmbeddedIdImpl> getEmbeddedId() {
 		return defaultToEmpty( embeddedId );
 	}
 
-	public List<JaxbBasic> getBasic() {
+	public List<JaxbBasicImpl> getBasic() {
 		return defaultToEmpty( basic );
 	}
 
-	public List<JaxbVersion> getVersion() {
+	public List<JaxbVersionImpl> getVersion() {
 		return defaultToEmpty( version );
 	}
 
-	public List<JaxbManyToOne> getManyToOne() {
+	public List<JaxbManyToOneImpl> getManyToOne() {
 		return defaultToEmpty( manyToOne );
 	}
 
-	public List<JaxbOneToMany> getOneToMany() {
+	public List<JaxbOneToManyImpl> getOneToMany() {
 		return defaultToEmpty( oneToMany );
 	}
 
-	public List<JaxbOneToOne> getOneToOne() {
+	public List<JaxbOneToOneImpl> getOneToOne() {
 		return defaultToEmpty( oneToOne );
 	}
 
-	public List<JaxbManyToMany> getManyToMany() {
+	public List<JaxbManyToManyImpl> getManyToMany() {
 		return defaultToEmpty( manyToMany );
 	}
 
-	public List<JaxbElementCollection> getElementCollection() {
+	public List<JaxbElementCollectionImpl> getElementCollection() {
 		return defaultToEmpty( elementCollection );
 	}
 
-	public List<JaxbEmbedded> getEmbedded() {
+	public List<JaxbEmbeddedImpl> getEmbedded() {
 		return defaultToEmpty( embedded );
 	}
 
-	public List<JaxbTransient> getTransient() {
+	public List<JaxbTransientImpl> getTransient() {
 		return defaultToEmpty( _transient );
 	}
 
-	public List<JaxbPrePersist> getPrePersist() {
+	public List<JaxbPrePersistImpl> getPrePersist() {
 		return defaultToEmpty( prePersist );
 	}
 
-	public List<JaxbPostPersist> getPostPersist() {
+	public List<JaxbPostPersistImpl> getPostPersist() {
 		return defaultToEmpty( postPersist );
 	}
 
-	public List<JaxbPreRemove> getPreRemove() {
+	public List<JaxbPreRemoveImpl> getPreRemove() {
 		return defaultToEmpty( preRemove );
 	}
 
-	public List<JaxbPostRemove> getPostRemove() {
+	public List<JaxbPostRemoveImpl> getPostRemove() {
 		return defaultToEmpty( postRemove );
 	}
 
-	public List<JaxbPreUpdate> getPreUpdate() {
+	public List<JaxbPreUpdateImpl> getPreUpdate() {
 		return defaultToEmpty( preUpdate );
 	}
 
-	public List<JaxbPostUpdate> getPostUpdate() {
+	public List<JaxbPostUpdateImpl> getPostUpdate() {
 		return defaultToEmpty( postUpdate );
 	}
 
-	public List<JaxbPostLoad> getPostLoad() {
+	public List<JaxbPostLoadImpl> getPostLoad() {
 		return defaultToEmpty( postLoad );
 	}
 }

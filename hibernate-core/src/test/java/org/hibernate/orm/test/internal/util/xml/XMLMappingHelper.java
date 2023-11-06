@@ -12,7 +12,7 @@ import java.io.InputStream;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 
 import org.hibernate.testing.boot.ClassLoaderServiceTestingImpl;
@@ -28,17 +28,17 @@ public final class XMLMappingHelper {
 		binder = new MappingBinder( ClassLoaderServiceTestingImpl.INSTANCE, MappingBinder.VALIDATING );
 	}
 
-	public JaxbEntityMappings readOrmXmlMappings(String name) throws IOException {
+	public JaxbEntityMappingsImpl readOrmXmlMappings(String name) throws IOException {
 		try ( InputStream is = ClassLoaderServiceTestingImpl.INSTANCE.locateResourceStream( name ) ) {
 			return readOrmXmlMappings( is, name );
 		}
 	}
 
-	public JaxbEntityMappings readOrmXmlMappings(InputStream is, String name) {
+	public JaxbEntityMappingsImpl readOrmXmlMappings(InputStream is, String name) {
 		try {
 			Assert.assertNotNull( "Resource not found: " + name, is );
 			Binding<?> binding = binder.bind( is, new Origin( SourceType.JAR, name ) );
-			return (JaxbEntityMappings) binding.getRoot();
+			return (JaxbEntityMappingsImpl) binding.getRoot();
 		}
 		catch (RuntimeException e) {
 			throw new IllegalStateException( "Could not parse orm.xml mapping '" + name + "': " + e.getMessage(), e );

@@ -628,7 +628,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	}
 
-	private Object resolveInstance(
+	/**
+	 * Used by Hibernate Reactive
+	 */
+	protected Object resolveInstance(
 			Object entityIdentifier,
 			EntityHolder holder,
 			RowProcessingState rowProcessingState) {

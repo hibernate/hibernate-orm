@@ -107,6 +107,7 @@ import org.hibernate.generator.internal.VersionGeneration;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
+import org.hibernate.id.ForeignGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -4124,13 +4125,16 @@ public abstract class AbstractEntityPersister
 							return false;
 						}
 					}
-					final Boolean unsaved = identifierMapping.getUnsavedStrategy().isUnsaved( id );
-					if ( unsaved != null && !unsaved ) {
-						throw new PropertyValueException(
-								"Detached entity with generated id '" + id + "' has an uninitialized version value '" + version + "'",
-								getEntityName(),
-								getVersionColumnName()
-						);
+					final Generator identifierGenerator = getGenerator();
+					if ( identifierGenerator != null && !( identifierGenerator instanceof ForeignGenerator ) ) {
+						final Boolean unsaved = identifierMapping.getUnsavedStrategy().isUnsaved( id );
+						if ( unsaved != null && !unsaved ) {
+							throw new PropertyValueException(
+									"Detached entity with generated id '" + id + "' has an uninitialized version value '" + version + "'",
+									getEntityName(),
+									getVersionColumnName()
+							);
+						}
 					}
 				}
 				return isUnsaved;

@@ -58,8 +58,8 @@ dependencyResolutionManagement {
 
     versionCatalogs {
         jdks {
-            version "baseline", "11"
-            version "compatible", "11, 17 or 21"
+            version "baseline", "17"
+            version "compatible", "17 or 21"
             version "jdbc", "4.2" // Bundled with JDK 11
 
             // Gradle does bytecode transformation on tests.

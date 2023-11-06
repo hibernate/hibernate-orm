@@ -10,7 +10,7 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AnnotatedElement;
 
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.internal.JPAXMLOverriddenAnnotationReader;
 import org.hibernate.boot.model.internal.XMLContext;
 import org.hibernate.orm.test.internal.util.xml.XMLMappingHelper;
@@ -81,7 +81,7 @@ public abstract class Ejb3XmlTestCase extends BaseUnitTestCase {
 
 	protected XMLContext getContext(InputStream is, String resourceName) throws Exception {
 		XMLMappingHelper xmlHelper = new XMLMappingHelper();
-		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings( is, resourceName );
+		JaxbEntityMappingsImpl mappings = xmlHelper.readOrmXmlMappings( is, resourceName );
 		XMLContext context = new XMLContext( bootstrapContext );
 		context.addDocument( mappings );
 		return context;

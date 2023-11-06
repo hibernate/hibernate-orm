@@ -79,3 +79,14 @@ To get rid of that error:
    see {userGuideBase}#tooling-gradle-modelgen[here for Gradle] or {userGuideBase}#tooling-maven-modelgen[here for Maven].
 2. If the annotation processor classpath doesn't work in your case (e.g. because you use Maven and need the version of `hibernate-jpamodelgen` managed through a BOM),
    upgrade to a newer version of Hibernate ORM that fixes https://hibernate.atlassian.net/browse/HHH-17362[HHH-17362].
+
+[[hql-null-literal-comparison]]
+== HQL null literal comparison
+
+In prior versions of Hibernate it was possible to compare expressions against a `null` literal with the `=` and `<>`/`!=`
+operators. This is counter-intuitive as the comparison against a parameter or expression that resolves to a `null` would
+always yield `false` i.e. no results.
+
+As of Hibernate ORM 6.3, this special treatment in HQL was removed without a way to retain backwards compatibility.
+Users should migrate queries to use the `is null` and `is not null` predicate syntax instead.
+

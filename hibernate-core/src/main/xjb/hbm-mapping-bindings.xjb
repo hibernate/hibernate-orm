@@ -85,7 +85,7 @@
 
 
         <jaxb:bindings node="//xsd:element[@name='hibernate-mapping']/xsd:complexType">
-        	<inheritance:implements>org.hibernate.boot.jaxb.spi.BindableMappingDescriptor</inheritance:implements>
+        	<inheritance:implements>org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor</inheritance:implements>
 		</jaxb:bindings>
 
 		<jaxb:bindings node="//xsd:complexType[@name='ToolingHintContainer']">

@@ -23,7 +23,7 @@ import org.hibernate.Internal;
 import org.hibernate.boot.archive.spi.InputStreamAccess;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.jaxb.internal.XmlSources;
-import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.jaxb.spi.XmlSource;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -65,7 +65,7 @@ public class MetadataSources implements Serializable {
 
 	private XmlMappingBinderAccess xmlMappingBinderAccess;
 
-	private List<Binding<BindableMappingDescriptor>> xmlBindings;
+	private List<Binding<JaxbBindableMappingDescriptor>> xmlBindings;
 	private LinkedHashSet<Class<?>> annotatedClasses;
 	private LinkedHashSet<String> annotatedClassNames;
 	private LinkedHashSet<String> annotatedPackages;
@@ -121,7 +121,7 @@ public class MetadataSources implements Serializable {
 		return xmlMappingBinderAccess;
 	}
 
-	public List<Binding<BindableMappingDescriptor>> getXmlBindings() {
+	public List<Binding<JaxbBindableMappingDescriptor>> getXmlBindings() {
 		return xmlBindings == null ? Collections.emptyList() : xmlBindings;
 	}
 
@@ -373,7 +373,7 @@ public class MetadataSources implements Serializable {
 	 */
 	public MetadataSources addXmlBinding(Binding<?> binding) {
 		//noinspection unchecked
-		getXmlBindingsForWrite().add( (Binding<BindableMappingDescriptor>) binding );
+		getXmlBindingsForWrite().add( (Binding<JaxbBindableMappingDescriptor>) binding );
 		return this;
 	}
 
@@ -549,7 +549,7 @@ public class MetadataSources implements Serializable {
 		return this;
 	}
 
-	private List<Binding<BindableMappingDescriptor>> getXmlBindingsForWrite() {
+	private List<Binding<JaxbBindableMappingDescriptor>> getXmlBindingsForWrite() {
 		if ( xmlBindings == null ) {
 			xmlBindings = new ArrayList<>();
 		}

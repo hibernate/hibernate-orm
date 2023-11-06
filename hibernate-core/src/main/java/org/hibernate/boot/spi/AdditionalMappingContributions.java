@@ -10,7 +10,7 @@ import java.io.InputStream;
 
 import org.hibernate.Incubating;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Sequence;
 import org.hibernate.mapping.Table;
@@ -38,7 +38,7 @@ public interface AdditionalMappingContributions {
 	 * Contribute mappings in the form of {@code hbm.xml} JAXB bindings.
 	 *
 	 * @deprecated {@code hbm.xml} mapping file support is deprecated.  Use
-	 * {@linkplain #contributeBinding(JaxbEntityMappings) extended orm.xml}
+	 * {@linkplain #contributeBinding(org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl) extended orm.xml}
 	 * bindings instead.
 	 */
 	@Deprecated
@@ -47,7 +47,7 @@ public interface AdditionalMappingContributions {
 	/**
 	 * Contribute mappings in the form of (extended) {@code orm.xml} JAXB bindings
 	 */
-	void contributeBinding(JaxbEntityMappings mappingJaxbBinding);
+	void contributeBinding(JaxbEntityMappingsImpl mappingJaxbBinding);
 
 	/**
 	 * Contribute a materialized Table

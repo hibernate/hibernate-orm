@@ -16,9 +16,9 @@ import java.util.Map;
 import org.hibernate.annotations.common.reflection.AnnotationReader;
 import org.hibernate.annotations.common.reflection.MetadataProvider;
 import org.hibernate.annotations.common.reflection.java.JavaMetadataProvider;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
-import org.hibernate.boot.jaxb.mapping.JaxbSequenceGenerator;
-import org.hibernate.boot.jaxb.mapping.JaxbTableGenerator;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbSequenceGeneratorImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbTableGeneratorImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
 import org.hibernate.boot.spi.ClassLoaderAccess;
@@ -115,24 +115,24 @@ public class JPAXMLOverriddenMetadataProvider implements MetadataProvider {
 					}
 				}
 				defaults.put( EntityListeners.class, entityListeners );
-				for ( JaxbEntityMappings entityMappings : xmlContext.getAllDocuments() ) {
-					List<JaxbSequenceGenerator> jaxbSequenceGenerators = entityMappings.getSequenceGenerators();
+				for ( JaxbEntityMappingsImpl entityMappings : xmlContext.getAllDocuments() ) {
+					List<JaxbSequenceGeneratorImpl> jaxbSequenceGenerators = entityMappings.getSequenceGenerators();
 					List<SequenceGenerator> sequenceGenerators = (List<SequenceGenerator>) defaults.get( SequenceGenerator.class );
 					if ( sequenceGenerators == null ) {
 						sequenceGenerators = new ArrayList<>();
 						defaults.put( SequenceGenerator.class, sequenceGenerators );
 					}
-					for ( JaxbSequenceGenerator element : jaxbSequenceGenerators ) {
+					for ( JaxbSequenceGeneratorImpl element : jaxbSequenceGenerators ) {
 						sequenceGenerators.add( JPAXMLOverriddenAnnotationReader.buildSequenceGeneratorAnnotation( element ) );
 					}
 
-					List<JaxbTableGenerator> jaxbTableGenerators = entityMappings.getTableGenerators();
+					List<JaxbTableGeneratorImpl> jaxbTableGenerators = entityMappings.getTableGenerators();
 					List<TableGenerator> tableGenerators = (List<TableGenerator>) defaults.get( TableGenerator.class );
 					if ( tableGenerators == null ) {
 						tableGenerators = new ArrayList<>();
 						defaults.put( TableGenerator.class, tableGenerators );
 					}
-					for ( JaxbTableGenerator element : jaxbTableGenerators ) {
+					for ( JaxbTableGeneratorImpl element : jaxbTableGenerators ) {
 						tableGenerators.add(
 								JPAXMLOverriddenAnnotationReader.buildTableGeneratorAnnotation(
 										element,

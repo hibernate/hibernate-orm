@@ -12,15 +12,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import jakarta.persistence.AttributeConverter;
-import jakarta.persistence.Converter;
-import jakarta.persistence.Entity;
-import jakarta.persistence.MappedSuperclass;
 import org.hibernate.annotations.common.reflection.MetadataProviderInjector;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XClass;
 import org.hibernate.boot.internal.MetadataBuildingContextRootImpl;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.convert.spi.ConverterRegistry;
 import org.hibernate.boot.model.internal.AnnotationBinder;
@@ -36,6 +32,11 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.jboss.jandex.IndexView;
 import org.jboss.logging.Logger;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.MappedSuperclass;
 
 /**
  * @author Steve Ebersole
@@ -85,10 +86,10 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 					( (MetadataProviderInjector) reflectionManager ).getMetadataProvider();
 			for ( Binding<?> xmlBinding : managedResources.getXmlMappingBindings() ) {
 				Object root = xmlBinding.getRoot();
-				if ( !( root instanceof JaxbEntityMappings ) ) {
+				if ( !( root instanceof JaxbEntityMappingsImpl ) ) {
 					continue;
 				}
-				final JaxbEntityMappings entityMappings = (JaxbEntityMappings) xmlBinding.getRoot();
+				final JaxbEntityMappingsImpl entityMappings = (JaxbEntityMappingsImpl) xmlBinding.getRoot();
 
 				final List<String> classNames = jpaMetadataProvider.getXMLContext().addDocument( entityMappings );
 				for ( String className : classNames ) {
@@ -115,7 +116,7 @@ public class AnnotationMetadataSourceProcessorImpl implements MetadataSourceProc
 	 */
 	public static void processAdditionalMappings(
 			List<Class<?>> additionalClasses,
-			List<JaxbEntityMappings> additionalJaxbMappings,
+			List<JaxbEntityMappingsImpl> additionalJaxbMappings,
 			MetadataBuildingContextRootImpl rootMetadataBuildingContext) {
 		final AnnotationMetadataSourceProcessorImpl processor = new AnnotationMetadataSourceProcessorImpl( rootMetadataBuildingContext );
 

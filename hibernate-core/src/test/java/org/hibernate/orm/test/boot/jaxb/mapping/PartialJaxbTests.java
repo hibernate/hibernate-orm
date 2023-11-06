@@ -9,8 +9,8 @@ package org.hibernate.orm.test.boot.jaxb.mapping;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
-import org.hibernate.boot.jaxb.mapping.JaxbEntity;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 
@@ -30,17 +30,17 @@ public class PartialJaxbTests {
 		final MappingBinder mappingBinder = new MappingBinder( scope.getRegistry() );
 		scope.withService( ClassLoaderService.class, (cls) -> {
 			//noinspection unchecked
-			final Binding<JaxbEntityMappings> binding = mappingBinder.bind(
+			final Binding<JaxbEntityMappingsImpl> binding = mappingBinder.bind(
 					cls.locateResourceStream( "xml/jaxb/mapping/partial/caching.xml" ),
 					new Origin( SourceType.RESOURCE, "xml/jaxb/mapping/partial/caching.xml" )
 			);
 
-			final JaxbEntityMappings entityMappings = binding.getRoot();
+			final JaxbEntityMappingsImpl entityMappings = binding.getRoot();
 			assertThat( entityMappings ).isNotNull();
 			assertThat( entityMappings.getEntities() ).hasSize( 1 );
 			assertThat( entityMappings.getPackage() ).isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping" );
 
-			final JaxbEntity ormEntity = entityMappings.getEntities().get( 0 );
+			final JaxbEntityImpl ormEntity = entityMappings.getEntities().get( 0 );
 			assertThat( ormEntity.getName() ).isNull();
 			assertThat( ormEntity.getClazz() ).isEqualTo( "SimpleEntity" );
 			assertThat( ormEntity.isCacheable() ).isTrue();

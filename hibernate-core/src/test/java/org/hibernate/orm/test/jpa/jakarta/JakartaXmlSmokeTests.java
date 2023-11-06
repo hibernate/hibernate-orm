@@ -16,11 +16,11 @@ import javax.xml.transform.stream.StreamSource;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
-import org.hibernate.boot.jaxb.mapping.JaxbEntity;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityListener;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
-import org.hibernate.boot.jaxb.mapping.JaxbPersistenceUnitDefaults;
-import org.hibernate.boot.jaxb.mapping.JaxbPersistenceUnitMetadata;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitDefaultsImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.jpa.boot.internal.ParsedPersistenceXmlDescriptor;
@@ -43,19 +43,19 @@ public class JakartaXmlSmokeTests {
 		final MappingBinder mappingBinder = new MappingBinder( cls, MappingBinder.VALIDATING );
 		final InputStream inputStream = cls.locateResourceStream( "xml/jakarta/simple/orm.xml" );
 		try {
-			final Binding<JaxbEntityMappings> binding = mappingBinder.bind( new StreamSource( inputStream ), new Origin( SourceType.RESOURCE, "xml/jakarta/simple/orm.xml" ) );
+			final Binding<JaxbEntityMappingsImpl> binding = mappingBinder.bind( new StreamSource( inputStream ), new Origin( SourceType.RESOURCE, "xml/jakarta/simple/orm.xml" ) );
 
 			assertThat( binding.getRoot()
 					.getEntities()
 					.stream()
-					.map( JaxbEntity::getClazz ) ).containsOnly( "Lighter", "ApplicationServer" );
+					.map( JaxbEntityImpl::getClazz ) ).containsOnly( "Lighter", "ApplicationServer" );
 
-			final JaxbPersistenceUnitMetadata puMetadata = binding.getRoot().getPersistenceUnitMetadata();
-			final JaxbPersistenceUnitDefaults puDefaults = puMetadata.getPersistenceUnitDefaults();
+			final JaxbPersistenceUnitMetadataImpl puMetadata = binding.getRoot().getPersistenceUnitMetadata();
+			final JaxbPersistenceUnitDefaultsImpl puDefaults = puMetadata.getPersistenceUnitDefaults();
 			final Stream<String> listenerNames = puDefaults.getEntityListeners()
 					.getEntityListener()
 					.stream()
-					.map( JaxbEntityListener::getClazz );
+					.map( JaxbEntityListenerImpl::getClazz );
 			assertThat( listenerNames ).containsOnly( "org.hibernate.jpa.test.pack.defaultpar.IncrementListener" );
 		}
 		finally {

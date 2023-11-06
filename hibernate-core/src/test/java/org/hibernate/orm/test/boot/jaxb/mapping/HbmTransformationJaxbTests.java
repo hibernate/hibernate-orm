@@ -17,8 +17,8 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.transform.HbmXmlTransformer;
 import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
-import org.hibernate.boot.jaxb.mapping.JaxbEntity;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
 import org.hibernate.orm.test.boot.jaxb.JaxbHelper;
@@ -56,7 +56,7 @@ public class HbmTransformationJaxbTests {
 					assertThat( hbmMapping ).isNotNull();
 					assertThat( hbmMapping.getClazz() ).hasSize( 1 );
 
-					final JaxbEntityMappings transformed = HbmXmlTransformer.transform(
+					final JaxbEntityMappingsImpl transformed = HbmXmlTransformer.transform(
 							hbmMapping,
 							new Origin( SourceType.RESOURCE, resourceName ),
 							() -> UnsupportedFeatureHandling.ERROR
@@ -66,19 +66,19 @@ public class HbmTransformationJaxbTests {
 					assertThat( transformed.getEntities() ).hasSize( 1 );
 					assertThat( transformed.getPackage() ).isEqualTo( "org.hibernate.orm.test.boot.jaxb.mapping" );
 
-					final JaxbEntity ormEntity = transformed.getEntities().get( 0 );
+					final JaxbEntityImpl ormEntity = transformed.getEntities().get( 0 );
 					assertThat( ormEntity.getName() ).isNull();
 					assertThat( ormEntity.getClazz() ).isEqualTo( "SimpleEntity" );
 
-					assertThat( ormEntity.getAttributes().getId() ).hasSize( 1 );
+					assertThat( ormEntity.getAttributes().getIdAttributes() ).hasSize( 1 );
 					assertThat( ormEntity.getAttributes().getBasicAttributes() ).hasSize( 1 );
 					assertThat( ormEntity.getAttributes().getEmbeddedAttributes() ).isEmpty();
 					assertThat( ormEntity.getAttributes().getOneToOneAttributes() ).isEmpty();
 					assertThat( ormEntity.getAttributes().getManyToOneAttributes() ).isEmpty();
-					assertThat( ormEntity.getAttributes().getDiscriminatedAssociations() ).isEmpty();
+					assertThat( ormEntity.getAttributes().getAnyMappingAttributes() ).isEmpty();
 					assertThat( ormEntity.getAttributes().getOneToManyAttributes() ).isEmpty();
 					assertThat( ormEntity.getAttributes().getManyToManyAttributes() ).isEmpty();
-					assertThat( ormEntity.getAttributes().getPluralDiscriminatedAssociations() ).isEmpty();
+					assertThat( ormEntity.getAttributes().getPluralAnyMappingAttributes() ).isEmpty();
 				}
 				catch (JAXBException e) {
 					throw new RuntimeException( "Error during JAXB processing", e );

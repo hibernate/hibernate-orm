@@ -29,8 +29,8 @@ import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.SourceType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.internal.MappingBinder;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
-import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.boot.model.TypeContributor;
@@ -406,7 +406,7 @@ public class MetadataBuildingProcess {
 		private final EntityHierarchyBuilder hierarchyBuilder = new EntityHierarchyBuilder();
 
 		private List<Class<?>> additionalEntityClasses;
-		private List<JaxbEntityMappings> additionalJaxbMappings;
+		private List<JaxbEntityMappingsImpl> additionalJaxbMappings;
 		private boolean extraHbmXml = false;
 
 		private String currentContributor;
@@ -437,19 +437,19 @@ public class MetadataBuildingProcess {
 		@Override
 		public void contributeBinding(InputStream xmlStream) {
 			final Origin origin = new Origin( SourceType.INPUT_STREAM, null );
-			final Binding<BindableMappingDescriptor> binding = mappingBinder.bind( xmlStream, origin );
+			final Binding<JaxbBindableMappingDescriptor> binding = mappingBinder.bind( xmlStream, origin );
 
-			final BindableMappingDescriptor bindingRoot = binding.getRoot();
+			final JaxbBindableMappingDescriptor bindingRoot = binding.getRoot();
 			if ( bindingRoot instanceof JaxbHbmHibernateMapping ) {
 				contributeBinding( (JaxbHbmHibernateMapping) bindingRoot );
 			}
 			else {
-				contributeBinding( (JaxbEntityMappings) bindingRoot );
+				contributeBinding( (JaxbEntityMappingsImpl) bindingRoot );
 			}
 		}
 
 		@Override
-		public void contributeBinding(JaxbEntityMappings mappingJaxbBinding) {
+		public void contributeBinding(JaxbEntityMappingsImpl mappingJaxbBinding) {
 			if ( ! options.isXmlMappingEnabled() ) {
 				return;
 			}

@@ -17,15 +17,9 @@ import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 
 /**
- * Special array constructor function that also applies a cast to the array literal,
- * based on the inferred result type. PostgreSQL needs this,
- * because by default it assumes a {@code text[]}, which is not compatible with {@code varchar[]}.
+ * PostgreSQL array_trim emulation, since the function was only introduced in version 14.
  */
-public class PostgreSQLArrayConstructorFunction extends ArrayConstructorFunction {
-
-	public PostgreSQLArrayConstructorFunction(boolean list) {
-		super( list, true );
-	}
+public class PostgreSQLArrayTrimEmulation extends AbstractArrayTrimFunction {
 
 	@Override
 	public void render(
@@ -33,6 +27,15 @@ public class PostgreSQLArrayConstructorFunction extends ArrayConstructorFunction
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
+		final SqlAstNode arrayExpression = sqlAstArguments.get( 0 );
+		final SqlAstNode elementCountExpression = sqlAstArguments.get( 1 );
+		sqlAppender.append( "coalesce((select array_agg(t.val order by t.idx) from unnest(" );
+		arrayExpression.accept( walker );
+		sqlAppender.append( ") with ordinality t(val,idx) where t.idx<=cardinality(" );
+		arrayExpression.accept( walker );
+		sqlAppender.append( ")-" );
+		elementCountExpression.accept( walker );
+
 		String arrayTypeName = null;
 		if ( returnType != null ) {
 			final DomainType<?> type = returnType.getSqmType();
@@ -43,15 +46,16 @@ public class PostgreSQLArrayConstructorFunction extends ArrayConstructorFunction
 							returnType,
 							walker.getSessionFactory().getTypeConfiguration()
 					);
-					sqlAppender.append( "cast(" );
 				}
 			}
 		}
-		super.render( sqlAppender, sqlAstArguments, returnType, walker );
 		if ( arrayTypeName != null ) {
-			sqlAppender.appendSql( " as " );
+			sqlAppender.append( "),cast(array[] as " );
 			sqlAppender.appendSql( arrayTypeName );
-			sqlAppender.appendSql( ')' );
+			sqlAppender.appendSql( "))" );
+		}
+		else {
+			sqlAppender.append( "),array[])" );
 		}
 	}
 

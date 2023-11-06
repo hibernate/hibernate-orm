@@ -9,6 +9,7 @@ package org.hibernate.dialect.function.array;
 import java.util.List;
 
 import org.hibernate.query.ReturnableType;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -35,9 +36,9 @@ public class PostgreSQLArrayPositionFunction extends AbstractArrayPositionFuncti
 		sqlAppender.append( "case when " );
 		arrayExpression.accept( walker );
 		sqlAppender.append( " is not null then coalesce(array_position(" );
-		arrayExpression.accept( walker );
+		walker.render( arrayExpression, SqlAstNodeRenderingMode.DEFAULT );
 		sqlAppender.append( ',' );
-		elementExpression.accept( walker );
+		walker.render( elementExpression, SqlAstNodeRenderingMode.DEFAULT );
 		if ( sqlAstArguments.size() > 2 ) {
 			sqlAppender.append( ',' );
 			sqlAstArguments.get( 2 ).accept( walker );

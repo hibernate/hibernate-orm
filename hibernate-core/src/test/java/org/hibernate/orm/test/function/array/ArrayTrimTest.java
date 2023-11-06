@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -22,6 +23,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -87,6 +89,7 @@ public class ArrayTrimTest {
 	}
 
 	@Test
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 12, reason = "The PostgreSQL emulation for version < 14 doesn't throw an error")
 	public void testTrimOutOfRange(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			try {

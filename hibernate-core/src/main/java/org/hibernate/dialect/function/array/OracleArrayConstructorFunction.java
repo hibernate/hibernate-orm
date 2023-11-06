@@ -40,7 +40,10 @@ public class OracleArrayConstructorFunction extends ArrayConstructorFunction {
 			);
 		}
 		final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) type;
-		final String arrayTypeName = DdlTypeHelper.getCastTypeName( pluralType, walker );
+		final String arrayTypeName = DdlTypeHelper.getCastTypeName(
+				pluralType,
+				walker.getSessionFactory().getTypeConfiguration()
+		);
 		sqlAppender.appendSql( arrayTypeName );
 		final int size = sqlAstArguments.size();
 		if ( size == 0 ) {

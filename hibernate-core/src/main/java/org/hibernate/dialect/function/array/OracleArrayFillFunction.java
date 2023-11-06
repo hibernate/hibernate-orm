@@ -29,7 +29,10 @@ public class OracleArrayFillFunction extends AbstractArrayFillFunction {
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		final String arrayTypeName = DdlTypeHelper.getTypeName( returnType, walker );
+		final String arrayTypeName = DdlTypeHelper.getTypeName(
+				returnType,
+				walker.getSessionFactory().getTypeConfiguration()
+		);
 		sqlAppender.append( arrayTypeName );
 		sqlAppender.append( "_fill(" );
 		sqlAstArguments.get( 0 ).accept( walker );

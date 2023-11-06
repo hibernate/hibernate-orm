@@ -28,7 +28,10 @@ public class OracleArrayPositionFunction extends AbstractArrayPositionFunction {
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
-		final String arrayTypeName = DdlTypeHelper.getTypeName( arrayExpression.getExpressionType(), walker );
+		final String arrayTypeName = DdlTypeHelper.getTypeName(
+				arrayExpression.getExpressionType(),
+				walker.getSessionFactory().getTypeConfiguration()
+		);
 		sqlAppender.appendSql( arrayTypeName );
 		sqlAppender.append( "_position(" );
 		arrayExpression.accept( walker );

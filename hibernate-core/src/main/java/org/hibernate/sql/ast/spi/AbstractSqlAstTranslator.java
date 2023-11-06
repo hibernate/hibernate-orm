@@ -218,6 +218,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
+import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
@@ -6248,16 +6249,24 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 	@Override
 	public void visitCastTarget(CastTarget castTarget) {
-		appendSql( getCastTypeName( castTarget, sessionFactory ) );
+		appendSql( getCastTypeName( castTarget, sessionFactory.getTypeConfiguration() ) );
 	}
 
+	/**
+	 * @deprecated Use {@link #getSqlTypeName(SqlTypedMapping, TypeConfiguration)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public static String getSqlTypeName(SqlTypedMapping castTarget, SessionFactoryImplementor factory) {
+		return getSqlTypeName( castTarget, factory.getTypeConfiguration() );
+	}
+
+	public static String getSqlTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
 		if ( castTarget.getColumnDefinition() != null ) {
 			return castTarget.getColumnDefinition();
 		}
 		else {
 			final Size castTargetSize = castTarget.toSize();
-			final DdlTypeRegistry ddlTypeRegistry = factory.getTypeConfiguration().getDdlTypeRegistry();
+			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 			final BasicType<?> expressionType = (BasicType<?>) castTarget.getJdbcMapping();
 			DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
 			if ( ddlType == null ) {
@@ -6270,13 +6279,21 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
+	/**
+	 * @deprecated Use {@link #getCastTypeName(SqlTypedMapping, TypeConfiguration)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public static String getCastTypeName(SqlTypedMapping castTarget, SessionFactoryImplementor factory) {
+		return getCastTypeName( castTarget, factory.getTypeConfiguration() );
+	}
+
+	public static String getCastTypeName(SqlTypedMapping castTarget, TypeConfiguration typeConfiguration) {
 		if ( castTarget.getColumnDefinition() != null ) {
 			return castTarget.getColumnDefinition();
 		}
 		else {
 			final Size castTargetSize = castTarget.toSize();
-			final DdlTypeRegistry ddlTypeRegistry = factory.getTypeConfiguration().getDdlTypeRegistry();
+			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 			final BasicType<?> expressionType = (BasicType<?>) castTarget.getJdbcMapping();
 			DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
 			if ( ddlType == null ) {

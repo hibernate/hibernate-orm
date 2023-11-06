@@ -29,7 +29,10 @@ public class HSQLArrayConstructorFunction extends ArrayConstructorFunction {
 			SqlAstTranslator<?> walker) {
 		final String castTypeName;
 		if ( returnType != null && hasOnlyBottomArguments( arguments ) ) {
-			castTypeName = DdlTypeHelper.getCastTypeName( returnType, walker );
+			castTypeName = DdlTypeHelper.getCastTypeName(
+					returnType,
+					walker.getSessionFactory().getTypeConfiguration()
+			);
 			sqlAppender.append( "cast(" );
 		}
 		else {

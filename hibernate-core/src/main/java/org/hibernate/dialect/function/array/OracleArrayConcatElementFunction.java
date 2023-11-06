@@ -34,7 +34,7 @@ public class OracleArrayConcatElementFunction extends ArrayConcatElementFunction
 		final String arrayTypeName = DdlTypeHelper.getTypeName(
 				prepend ? secondArgument.getExpressionType()
 						: firstArgument.getExpressionType(),
-				walker
+				walker.getSessionFactory().getTypeConfiguration()
 		);
 		sqlAppender.append( arrayTypeName );
 		sqlAppender.append( "_concat(" );

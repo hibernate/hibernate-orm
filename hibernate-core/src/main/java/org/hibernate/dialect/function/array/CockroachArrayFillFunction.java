@@ -16,11 +16,11 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 
 /**
- * Custom casting for the array fill function.
+ * Implement the array fill function by using {@code generate_series}.
  */
-public class PostgreSQLArrayFillFunction extends AbstractArrayFillFunction {
+public class CockroachArrayFillFunction extends AbstractArrayFillFunction {
 
-	public PostgreSQLArrayFillFunction(boolean list) {
+	public CockroachArrayFillFunction(boolean list) {
 		super( list );
 	}
 
@@ -30,7 +30,9 @@ public class PostgreSQLArrayFillFunction extends AbstractArrayFillFunction {
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		sqlAppender.append( "array_fill(" );
+		sqlAppender.append( "coalesce(case when " );
+		sqlAstArguments.get( 1 ).accept( walker );
+		sqlAppender.append( "<>0 then (select array_agg(" );
 		final String elementCastType;
 		final Expression elementExpression = (Expression) sqlAstArguments.get( 0 );
 		if ( needsElementCasting( elementExpression ) ) {
@@ -49,9 +51,9 @@ public class PostgreSQLArrayFillFunction extends AbstractArrayFillFunction {
 			sqlAppender.append( elementCastType );
 			sqlAppender.append( ')' );
 		}
-		sqlAppender.append( ",array[" );
+		sqlAppender.append( ") from generate_series(1," );
 		sqlAstArguments.get( 1 ).accept( walker );
-		sqlAppender.append( "])" );
+		sqlAppender.append( ",1))) end,array[])" );
 	}
 
 	private static boolean needsElementCasting(Expression elementExpression) {

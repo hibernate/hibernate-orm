@@ -34,7 +34,10 @@ public class OracleArrayContainsFunction extends AbstractArrayContainsFunction {
 		final Expression needleExpression = (Expression) sqlAstArguments.get( 1 );
 		final JdbcMappingContainer needleTypeContainer = needleExpression.getExpressionType();
 		final JdbcMapping needleType = needleTypeContainer == null ? null : needleTypeContainer.getSingleJdbcMapping();
-		final String arrayTypeName = DdlTypeHelper.getTypeName( haystackExpression.getExpressionType(), walker );
+		final String arrayTypeName = DdlTypeHelper.getTypeName(
+				haystackExpression.getExpressionType(),
+				walker.getSessionFactory().getTypeConfiguration()
+		);
 		sqlAppender.appendSql( arrayTypeName );
 		if ( needleType == null || needleType instanceof BasicPluralType<?, ?> ) {
 			sqlAppender.append( "_contains(" );

@@ -18,7 +18,6 @@ import org.hibernate.Filter;
 import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.annotations.ConcreteProxy;
-import org.hibernate.boot.jaxb.mapping.JaxbEntity;
 import org.hibernate.engine.OptimisticLockStyle;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -66,7 +65,7 @@ public interface EntityMappingType
 	 * <p/>
 	 * For most entities, this will be the fully-qualified name
 	 * of the entity class.  The alternative is an explicit
-	 * {@linkplain JaxbEntity#getName() entity-name} which takes precedence if provided
+	 * {@linkplain org.hibernate.boot.jaxb.mapping.spi.JaxbEntity#getName() entity-name} which takes precedence if provided
 	 *
 	 * @apiNote Different from {@link Entity#name()}, which is just a glorified
 	 * SQM "import" name

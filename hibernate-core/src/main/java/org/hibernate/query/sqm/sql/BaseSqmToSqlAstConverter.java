@@ -5830,11 +5830,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final QueryParameterBinding<?> binding = domainParameterBindings.getBinding( queryParameter );
 
 		BindableType<?> paramType = binding.getBindType();
+		final boolean bindingTypeExplicit;
+		bindingTypeExplicit = binding.getExplicitTemporalPrecision() != null;
 		if ( paramType == null ) {
 			paramType = queryParameter.getHibernateType();
 			if ( paramType == null ) {
 				paramType = sqmParameter.getAnticipatedType();
 			}
+//			bindingTypeExplicit = false;
+		}
+		else {
+//			bindingTypeExplicit = binding.getExplicitTemporalPrecision() != null;
 		}
 
 		if ( paramType == null ) {
@@ -5852,8 +5858,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			if ( inferredValueMapping instanceof ModelPart ) {
 				final JdbcMapping paramJdbcMapping = paramModelType.getSingleJdbcMapping();
 				final JdbcMapping inferredJdbcMapping = inferredValueMapping.getSingleJdbcMapping();
-				// If the bind type has a different JDBC type, we prefer that
-				if ( paramJdbcMapping.getJdbcType() == inferredJdbcMapping.getJdbcType() ) {
+				// Only use the inferred mapping as parameter type when the JavaType accepts values of the bind type
+				if ( inferredJdbcMapping.getMappedJavaType().isWider( paramJdbcMapping.getMappedJavaType() )
+						// and the bind type is not explicit or the bind type has the same JDBC type
+						&& ( !bindingTypeExplicit || paramJdbcMapping.getJdbcType() == inferredJdbcMapping.getJdbcType() ) ) {
 					return resolveInferredValueMappingForParameter( inferredValueMapping );
 				}
 			}

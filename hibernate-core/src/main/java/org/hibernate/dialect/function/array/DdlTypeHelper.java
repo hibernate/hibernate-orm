@@ -16,7 +16,6 @@ import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.query.ReturnableType;
-import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
@@ -60,71 +59,91 @@ public class DdlTypeHelper {
 		);
 	}
 
-	public static String getTypeName(BasicType<?> type, SqlAstTranslator<?> walker) {
-		return getTypeName( (JdbcMappingContainer) type, walker );
+	public static String getTypeName(BasicType<?> type, TypeConfiguration typeConfiguration) {
+		return getTypeName( (JdbcMappingContainer) type, typeConfiguration );
 	}
 
-	public static String getTypeName(JdbcMappingContainer type, SqlAstTranslator<?> walker) {
+	public static String getTypeName(BasicType<?> type, Size size, TypeConfiguration typeConfiguration) {
+		return getTypeName( (JdbcMappingContainer) type, size, typeConfiguration );
+	}
+
+	public static String getTypeName(JdbcMappingContainer type, TypeConfiguration typeConfiguration) {
+		return getTypeName( type, Size.nil(), typeConfiguration );
+	}
+
+	public static String getTypeName(JdbcMappingContainer type, Size size, TypeConfiguration typeConfiguration) {
 		if ( type instanceof SqlTypedMapping ) {
-			return AbstractSqlAstTranslator.getSqlTypeName( (SqlTypedMapping) type, walker.getSessionFactory() );
+			return AbstractSqlAstTranslator.getSqlTypeName( (SqlTypedMapping) type, typeConfiguration );
 		}
 		else {
 			final BasicType<?> basicType = (BasicType<?>) type.getSingleJdbcMapping();
-			final TypeConfiguration typeConfiguration = walker.getSessionFactory().getTypeConfiguration();
 			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 			final DdlType ddlType = ddlTypeRegistry.getDescriptor(
 					basicType.getJdbcType().getDdlTypeCode()
 			);
-			return ddlType.getTypeName( Size.nil(), basicType, ddlTypeRegistry );
+			return ddlType.getTypeName( size, basicType, ddlTypeRegistry );
 		}
 	}
 
-	public static String getTypeName(ReturnableType<?> type, SqlAstTranslator<?> walker) {
+	public static String getTypeName(ReturnableType<?> type, TypeConfiguration typeConfiguration) {
+		return getTypeName( type, Size.nil(), typeConfiguration );
+	}
+
+	public static String getTypeName(ReturnableType<?> type, Size size, TypeConfiguration typeConfiguration) {
 		if ( type instanceof SqlTypedMapping ) {
-			return AbstractSqlAstTranslator.getSqlTypeName( (SqlTypedMapping) type, walker.getSessionFactory() );
+			return AbstractSqlAstTranslator.getSqlTypeName( (SqlTypedMapping) type, typeConfiguration );
 		}
 		else {
 			final BasicType<?> basicType = (BasicType<?>) ( (JdbcMappingContainer) type ).getSingleJdbcMapping();
-			final TypeConfiguration typeConfiguration = walker.getSessionFactory().getTypeConfiguration();
 			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 			final DdlType ddlType = ddlTypeRegistry.getDescriptor(
 					basicType.getJdbcType().getDdlTypeCode()
 			);
-			return ddlType.getTypeName( Size.nil(), basicType, ddlTypeRegistry );
+			return ddlType.getTypeName( size, basicType, ddlTypeRegistry );
 		}
 	}
 
-	public static String getCastTypeName(BasicType<?> type, SqlAstTranslator<?> walker) {
-		return getCastTypeName( (JdbcMappingContainer) type, walker );
+	public static String getCastTypeName(BasicType<?> type, TypeConfiguration typeConfiguration) {
+		return getCastTypeName( (JdbcMappingContainer) type, typeConfiguration );
 	}
 
-	public static String getCastTypeName(JdbcMappingContainer type, SqlAstTranslator<?> walker) {
+	public static String getCastTypeName(BasicType<?> type, Size size, TypeConfiguration typeConfiguration) {
+		return getCastTypeName( (JdbcMappingContainer) type, size, typeConfiguration );
+	}
+
+	public static String getCastTypeName(JdbcMappingContainer type, TypeConfiguration typeConfiguration) {
+		return getCastTypeName( type, Size.nil(), typeConfiguration );
+	}
+
+	public static String getCastTypeName(JdbcMappingContainer type, Size size, TypeConfiguration typeConfiguration) {
 		if ( type instanceof SqlTypedMapping ) {
-			return AbstractSqlAstTranslator.getCastTypeName( (SqlTypedMapping) type, walker.getSessionFactory() );
+			return AbstractSqlAstTranslator.getCastTypeName( (SqlTypedMapping) type, typeConfiguration );
 		}
 		else {
 			final BasicType<?> basicType = (BasicType<?>) type.getSingleJdbcMapping();
-			final TypeConfiguration typeConfiguration = walker.getSessionFactory().getTypeConfiguration();
 			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 			final DdlType ddlType = ddlTypeRegistry.getDescriptor(
 					basicType.getJdbcType().getDdlTypeCode()
 			);
-			return ddlType.getCastTypeName( Size.nil(), basicType, ddlTypeRegistry );
+			return ddlType.getCastTypeName( size, basicType, ddlTypeRegistry );
 		}
 	}
 
-	public static String getCastTypeName(ReturnableType<?> type, SqlAstTranslator<?> walker) {
+	public static String getCastTypeName(ReturnableType<?> type, TypeConfiguration typeConfiguration) {
+		return getCastTypeName( type, Size.nil(), typeConfiguration );
+	}
+
+	public static String getCastTypeName(ReturnableType<?> type, Size size, TypeConfiguration typeConfiguration) {
 		if ( type instanceof SqlTypedMapping ) {
-			return AbstractSqlAstTranslator.getCastTypeName( (SqlTypedMapping) type, walker.getSessionFactory() );
+			return AbstractSqlAstTranslator.getCastTypeName( (SqlTypedMapping) type, typeConfiguration );
 		}
 		else {
 			final BasicType<?> basicType = (BasicType<?>) ( (JdbcMappingContainer) type ).getSingleJdbcMapping();
-			final TypeConfiguration typeConfiguration = walker.getSessionFactory().getTypeConfiguration();
 			final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
 			final DdlType ddlType = ddlTypeRegistry.getDescriptor(
 					basicType.getJdbcType().getDdlTypeCode()
 			);
-			return ddlType.getCastTypeName( Size.nil(), basicType, ddlTypeRegistry );
+			return ddlType.getCastTypeName( size, basicType, ddlTypeRegistry );
 		}
 	}
 

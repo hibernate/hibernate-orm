@@ -29,7 +29,10 @@ public class OracleArrayConcatFunction extends ArrayConcatFunction {
 			List<? extends SqlAstNode> sqlAstArguments,
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		final String arrayTypeName = DdlTypeHelper.getTypeName( (JdbcMappingContainer) returnType, walker );
+		final String arrayTypeName = DdlTypeHelper.getTypeName(
+				(JdbcMappingContainer) returnType,
+				walker.getSessionFactory().getTypeConfiguration()
+		);
 		sqlAppender.append( arrayTypeName );
 		sqlAppender.append( "_concat" );
 		super.render( sqlAppender, sqlAstArguments, returnType, walker );

@@ -51,6 +51,12 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 	}
 
 	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		// Support binding single element value
+		return this == javaType || componentJavaType == javaType;
+	}
+
+	@Override
 	public BasicType<?> resolveType(
 			TypeConfiguration typeConfiguration,
 			Dialect dialect,

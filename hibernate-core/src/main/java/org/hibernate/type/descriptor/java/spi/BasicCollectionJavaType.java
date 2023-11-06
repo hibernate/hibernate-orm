@@ -87,6 +87,12 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 	}
 
 	@Override
+	public boolean isWider(JavaType<?> javaType) {
+		// Support binding single element value
+		return this == javaType || componentJavaType == javaType;
+	}
+
+	@Override
 	public BasicType<?> resolveType(
 			TypeConfiguration typeConfiguration,
 			Dialect dialect,

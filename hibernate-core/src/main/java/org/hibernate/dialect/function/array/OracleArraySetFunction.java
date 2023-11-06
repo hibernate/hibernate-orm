@@ -30,7 +30,7 @@ public class OracleArraySetFunction extends ArraySetUnnestFunction {
 			SqlAstTranslator<?> walker) {
 		final String arrayTypeName = DdlTypeHelper.getTypeName(
 				( (Expression) sqlAstArguments.get( 0 ) ).getExpressionType(),
-				walker
+				walker.getSessionFactory().getTypeConfiguration()
 		);
 		sqlAppender.append( arrayTypeName );
 		sqlAppender.append( "_set(" );

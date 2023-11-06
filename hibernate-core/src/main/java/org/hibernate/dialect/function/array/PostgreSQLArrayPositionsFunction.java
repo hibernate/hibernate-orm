@@ -9,6 +9,7 @@ package org.hibernate.dialect.function.array;
 import java.util.List;
 
 import org.hibernate.query.ReturnableType;
+import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.tree.SqlAstNode;
@@ -33,9 +34,9 @@ public class PostgreSQLArrayPositionsFunction extends AbstractArrayPositionsFunc
 		final Expression arrayExpression = (Expression) sqlAstArguments.get( 0 );
 		final Expression elementExpression = (Expression) sqlAstArguments.get( 1 );
 		sqlAppender.append( "array_positions(" );
-		arrayExpression.accept( walker );
+		walker.render( arrayExpression, SqlAstNodeRenderingMode.DEFAULT );
 		sqlAppender.append( ',' );
-		elementExpression.accept( walker );
+		walker.render( elementExpression, SqlAstNodeRenderingMode.DEFAULT );
 		sqlAppender.append( ')' );
 	}
 }

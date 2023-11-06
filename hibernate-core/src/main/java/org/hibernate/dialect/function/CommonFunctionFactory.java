@@ -30,6 +30,7 @@ import org.hibernate.dialect.function.array.ArraySetUnnestFunction;
 import org.hibernate.dialect.function.array.ArraySliceUnnestFunction;
 import org.hibernate.dialect.function.array.ArrayToStringFunction;
 import org.hibernate.dialect.function.array.ArrayViaArgumentReturnTypeResolver;
+import org.hibernate.dialect.function.array.CockroachArrayFillFunction;
 import org.hibernate.dialect.function.array.ElementViaArrayArgumentReturnTypeResolver;
 import org.hibernate.dialect.function.array.H2ArrayContainsFunction;
 import org.hibernate.dialect.function.array.H2ArrayFillFunction;
@@ -72,6 +73,7 @@ import org.hibernate.dialect.function.array.OracleArrayAggEmulation;
 import org.hibernate.dialect.function.array.OracleArrayConstructorFunction;
 import org.hibernate.dialect.function.array.OracleArrayContainsFunction;
 import org.hibernate.dialect.function.array.PostgreSQLArrayPositionsFunction;
+import org.hibernate.dialect.function.array.PostgreSQLArrayTrimEmulation;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -3167,6 +3169,13 @@ public class CommonFunctionFactory {
 	}
 
 	/**
+	 * PostgreSQL array_trim() emulation for versions before 14
+	 */
+	public void arrayTrim_unnest() {
+		functionRegistry.register( "array_trim", new PostgreSQLArrayTrimEmulation() );
+	}
+
+	/**
 	 * Oracle array_trim() function
 	 */
 	public void arrayTrim_oracle() {
@@ -3195,6 +3204,14 @@ public class CommonFunctionFactory {
 	public void arrayFill_postgresql() {
 		functionRegistry.register( "array_fill", new PostgreSQLArrayFillFunction( false ) );
 		functionRegistry.register( "array_fill_list", new PostgreSQLArrayFillFunction( true ) );
+	}
+
+	/**
+	 * Cockroach array_fill() function
+	 */
+	public void arrayFill_cockroachdb() {
+		functionRegistry.register( "array_fill", new CockroachArrayFillFunction( false ) );
+		functionRegistry.register( "array_fill_list", new CockroachArrayFillFunction( true ) );
 	}
 
 	/**

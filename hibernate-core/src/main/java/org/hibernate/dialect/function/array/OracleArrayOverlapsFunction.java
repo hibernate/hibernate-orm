@@ -28,7 +28,10 @@ public class OracleArrayOverlapsFunction extends AbstractArrayOverlapsFunction {
 			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final Expression haystackExpression = (Expression) sqlAstArguments.get( 0 );
-		final String arrayTypeName = DdlTypeHelper.getTypeName( haystackExpression.getExpressionType(), walker );
+		final String arrayTypeName = DdlTypeHelper.getTypeName(
+				haystackExpression.getExpressionType(),
+				walker.getSessionFactory().getTypeConfiguration()
+		);
 		sqlAppender.appendSql( arrayTypeName );
 		sqlAppender.append( "_overlaps(" );
 		haystackExpression.accept( walker );

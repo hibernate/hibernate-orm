@@ -65,7 +65,7 @@ public class ArrayContainsOperatorFunction extends ArrayContainsUnnestFunction {
 					sqlAppender.append( "] as " );
 					sqlAppender.append( DdlTypeHelper.getCastTypeName(
 							haystackExpression.getExpressionType(),
-							walker
+							walker.getSessionFactory().getTypeConfiguration()
 					) );
 					sqlAppender.append( ')' );
 				}

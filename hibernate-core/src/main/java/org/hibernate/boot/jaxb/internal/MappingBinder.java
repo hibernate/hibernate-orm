@@ -23,8 +23,8 @@ import org.hibernate.boot.jaxb.hbm.transform.UnsupportedFeatureHandling;
 import org.hibernate.boot.jaxb.internal.stax.HbmEventReader;
 import org.hibernate.boot.jaxb.internal.stax.JpaOrmXmlEventReader;
 import org.hibernate.boot.jaxb.internal.stax.MappingEventReader;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
-import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.xsd.MappingXsdSupport;
@@ -48,7 +48,7 @@ import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
  *
  * @author Steve Ebersole
  */
-public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
+public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor> {
 	private static final Logger log = Logger.getLogger( MappingBinder.class );
 
 	private final XMLEventFactory xmlEventFactory = XMLEventFactory.newInstance();
@@ -200,7 +200,7 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 	}
 
 	@Override
-	protected <X extends BindableMappingDescriptor> Binding<X> doBind(
+	protected <X extends JaxbBindableMappingDescriptor> Binding<X> doBind(
 			XMLEventReader staxEventReader,
 			StartElement rootElementStartEvent,
 			Origin origin) {
@@ -230,7 +230,7 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 				log.debugf( "Performing JAXB binding of orm.xml document : %s", origin.toString() );
 
 				final XMLEventReader reader = new MappingEventReader( staxEventReader, xmlEventFactory );
-				final JaxbEntityMappings bindingRoot = jaxb( reader, MappingXsdSupport.latestDescriptor()
+				final JaxbEntityMappingsImpl bindingRoot = jaxb( reader, MappingXsdSupport.latestDescriptor()
 						.getSchema(), mappingJaxbContext(), origin );
 				//noinspection unchecked
 				return new Binding<>( (X) bindingRoot, origin );
@@ -257,7 +257,7 @@ public class MappingBinder extends AbstractBinder<BindableMappingDescriptor> {
 	public JAXBContext mappingJaxbContext() {
 		if ( entityMappingsJaxbContext == null ) {
 			try {
-				entityMappingsJaxbContext = JAXBContext.newInstance( JaxbEntityMappings.class );
+				entityMappingsJaxbContext = JAXBContext.newInstance( JaxbEntityMappingsImpl.class );
 			}
 			catch (JAXBException e) {
 				throw new ConfigurationException( "Unable to build orm.xml JAXBContext", e );

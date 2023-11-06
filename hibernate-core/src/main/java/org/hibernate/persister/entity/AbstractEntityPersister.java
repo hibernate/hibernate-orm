@@ -83,6 +83,8 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.ValueInclusion;
+import org.hibernate.id.Assigned;
+import org.hibernate.id.ForeignGenerator;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.PostInsertIdentifierGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
@@ -4731,14 +4733,18 @@ public abstract class AbstractEntityPersister
 					.getUnsavedValue().isUnsaved( version );
 			if ( isUnsaved != null ) {
 				if ( isUnsaved ) {
-					final Boolean unsaved = entityMetamodel.getIdentifierProperty()
+					final IdentifierGenerator identifierGenerator = getIdentifierGenerator();
+					if ( identifierGenerator != null && !( identifierGenerator instanceof ForeignGenerator )
+							&& !( identifierGenerator instanceof Assigned ) ) {
+						final Boolean unsaved = entityMetamodel.getIdentifierProperty()
 							.getUnsavedValue().isUnsaved( id );
-					if ( unsaved != null && !unsaved ) {
-						throw new PropertyValueException(
-								"Detached entity with generated id '" + id + "' has an uninitialized version value '" + version + "'",
-								getEntityName(),
-								getVersionColumnName()
-						);
+						if ( unsaved != null && !unsaved ) {
+							throw new PropertyValueException(
+									"Detached entity with generated id '" + id + "' has an uninitialized version value '" + version + "'",
+									getEntityName(),
+									getVersionColumnName()
+							);
+						}
 					}
 				}
 

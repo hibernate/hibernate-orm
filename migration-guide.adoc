@@ -70,3 +70,9 @@ have been added to:
 
 In addition, the `SelfRenderingSqmFunction.getRenderingSupport()` method was deprecated in favor of the new `SelfRenderingSqmFunction.getFunctionRenderer()` method.
 Finally, the `SelfRenderingFunctionSqlAstExpression.getRenderer()` method was deprecated in favor of the new `SelfRenderingFunctionSqlAstExpression.getFunctionRenderer()` method.
+
+
+[[SupportedDialects]]
+== Supported Dialects
+
+Please also do have a look at the link:{versionDocBase}/dialect/dialect.html[Supported Dialects] document to check for potential upgrades to the minimum version of the databases underpinning the dialects that Hibernate currently supports.

@@ -557,6 +557,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		private final boolean connectionProviderDisablesAutoCommit;
 		private final PhysicalConnectionHandlingMode connectionHandlingMode;
 		private final JpaCompliance jpaCompliance;
+		private static final EmptyJdbcObserver EMPTY_JDBC_OBSERVER = EmptyJdbcObserver.INSTANCE;
 		TransactionCoordinator transactionCoordinator;
 
 		public TemporaryJdbcSessionOwner(
@@ -691,7 +692,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 		@Override
 		public JdbcObserver getObserver() {
-			return null;
+			return EMPTY_JDBC_OBSERVER;
 		}
 
 		@Override
@@ -717,6 +718,61 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		@Override
 		public boolean isActive() {
 			return true;
+		}
+
+		private static class EmptyJdbcObserver implements JdbcObserver{
+
+			public static final EmptyJdbcObserver INSTANCE = new EmptyJdbcObserver();
+
+			@Override
+			public void jdbcConnectionAcquisitionStart() {
+
+			}
+
+			@Override
+			public void jdbcConnectionAcquisitionEnd(Connection connection) {
+
+			}
+
+			@Override
+			public void jdbcConnectionReleaseStart() {
+
+			}
+
+			@Override
+			public void jdbcConnectionReleaseEnd() {
+
+			}
+
+			@Override
+			public void jdbcPrepareStatementStart() {
+
+			}
+
+			@Override
+			public void jdbcPrepareStatementEnd() {
+
+			}
+
+			@Override
+			public void jdbcExecuteStatementStart() {
+
+			}
+
+			@Override
+			public void jdbcExecuteStatementEnd() {
+
+			}
+
+			@Override
+			public void jdbcExecuteBatchStart() {
+
+			}
+
+			@Override
+			public void jdbcExecuteBatchEnd() {
+
+			}
 		}
 	}
 }

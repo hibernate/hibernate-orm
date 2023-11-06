@@ -1521,7 +1521,7 @@ public class ToOneAttributeMapping
 						if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 							// If the key side is non-nullable we also need to add the keyResult
 							// to be able to manually check invalid foreign key references
-							if ( notFoundAction != null || !isInternalLoadNullable ) {
+							if ( hasNotFoundAction() || !isInternalLoadNullable ) {
 								keyResult = foreignKeyDescriptor.createKeyDomainResult(
 										fetchablePath,
 										tableGroup,

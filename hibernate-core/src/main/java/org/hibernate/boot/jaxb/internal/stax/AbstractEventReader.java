@@ -146,13 +146,15 @@ public abstract class AbstractEventReader extends EventReaderDelegate {
 	}
 
 	private Namespace mapNamespace(Namespace originalNamespace) {
-		if ( XsdHelper.shouldBeMappedToLatestJpaDescriptor( originalNamespace.getNamespaceURI() ) ) {
+		if ( shouldBeMappedToLatestJpaDescriptor( originalNamespace.getNamespaceURI() ) ) {
 			// this is a namespace "to map" so map it
 			return xmlEventFactory.createNamespace( originalNamespace.getPrefix(), xsdDescriptor.getNamespaceUri() );
 		}
 
 		return originalNamespace;
 	}
+
+	protected abstract boolean shouldBeMappedToLatestJpaDescriptor(String uri);
 
 	private XMLEvent wrap(EndElement endElement) {
 		final List<Namespace> targetNamespaces = mapNamespaces( existingXmlNamespacesIterator( endElement ) );

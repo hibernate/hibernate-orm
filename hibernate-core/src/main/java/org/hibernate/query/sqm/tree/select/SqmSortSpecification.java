@@ -25,12 +25,12 @@ public class SqmSortSpecification implements JpaOrder {
 	private final SqmExpression sortExpression;
 	private final SortDirection sortOrder;
 	private final boolean ignoreCase;
-	private NullPrecedence nullPrecedence;
+	private Nulls nullPrecedence;
 
 	public SqmSortSpecification(
 			@SuppressWarnings("rawtypes") SqmExpression sortExpression,
 			SortDirection sortOrder,
-			NullPrecedence nullPrecedence) {
+			Nulls nullPrecedence) {
 		this( sortExpression, sortOrder, nullPrecedence, false );
 	}
 
@@ -48,14 +48,25 @@ public class SqmSortSpecification implements JpaOrder {
 		this.ignoreCase = ignoreCase;
 	}
 
+	/**
+	 * @deprecated Use {@link SqmSortSpecification#SqmSortSpecification(SqmExpression, SortDirection, Nulls)} instead
+	 */
+	@Deprecated
+	public SqmSortSpecification(
+			@SuppressWarnings("rawtypes") SqmExpression sortExpression,
+			SortDirection sortOrder,
+			NullPrecedence nullPrecedence) {
+		this( sortExpression, sortOrder, nullPrecedence.getJpaValue() );
+	}
+
 	@SuppressWarnings("rawtypes")
 	public SqmSortSpecification(SqmExpression sortExpression) {
-		this( sortExpression, SortDirection.ASCENDING, NullPrecedence.NONE );
+		this( sortExpression, SortDirection.ASCENDING, Nulls.NONE );
 	}
 
 	@SuppressWarnings("rawtypes")
 	public SqmSortSpecification(SqmExpression sortExpression, SortDirection sortOrder) {
-		this( sortExpression, sortOrder, NullPrecedence.NONE );
+		this( sortExpression, sortOrder, Nulls.NONE );
 	}
 
 	public SqmSortSpecification copy(SqmCopyContext context) {
@@ -81,13 +92,13 @@ public class SqmSortSpecification implements JpaOrder {
 
 	@Override
 	public JpaOrder nullPrecedence(Nulls nullPrecedence) {
-		this.nullPrecedence = NullPrecedence.fromJpaValue( nullPrecedence );
+		this.nullPrecedence = nullPrecedence;
 		return this;
 	}
 
 	@Override
 	public Nulls getNullPrecedence() {
-		return nullPrecedence.getJpaValue();
+		return nullPrecedence;
 	}
 
 	@Override
@@ -111,7 +122,7 @@ public class SqmSortSpecification implements JpaOrder {
 		if ( sortOrder == SortDirection.DESCENDING ) {
 			sb.append( " desc" );
 			if ( nullPrecedence != null ) {
-				if ( nullPrecedence == NullPrecedence.FIRST ) {
+				if ( nullPrecedence == Nulls.FIRST ) {
 					sb.append( " nulls first" );
 				}
 				else {
@@ -121,7 +132,7 @@ public class SqmSortSpecification implements JpaOrder {
 		}
 		else if ( nullPrecedence != null ) {
 			sb.append( " asc" );
-			if ( nullPrecedence == NullPrecedence.FIRST ) {
+			if ( nullPrecedence == Nulls.FIRST ) {
 				sb.append( " nulls first" );
 			}
 			else {

@@ -865,7 +865,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 
 	@Override
 	public JpaPredicate and(List<Predicate> restrictions) {
-		return null;
+		return criteriaBuilder.and( restrictions );
 	}
 
 	@Override

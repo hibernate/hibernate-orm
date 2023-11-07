@@ -211,8 +211,12 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 			}
 
 			final XMLEventReader hbmReader = new HbmEventReader( staxEventReader, xmlEventFactory );
-			final JaxbHbmHibernateMapping hbmBindings = jaxb( hbmReader, MappingXsdSupport.INSTANCE.hbmXsd()
-					.getSchema(), hbmJaxbContext(), origin );
+			final JaxbHbmHibernateMapping hbmBindings = jaxb(
+					hbmReader,
+					MappingXsdSupport.INSTANCE.hbmXsd().getSchema(),
+					hbmJaxbContext(),
+					origin
+			);
 
 			if ( optionsAccess.get().transformHbmMappings() ) {
 				JaxbLogger.JAXB_LOGGER.tracef( "Performing on-the-fly hbm.xml -> mapping.xml transformation - %s ", origin );
@@ -230,8 +234,12 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 				log.debugf( "Performing JAXB binding of orm.xml document : %s", origin.toString() );
 
 				final XMLEventReader reader = new MappingEventReader( staxEventReader, xmlEventFactory );
-				final JaxbEntityMappingsImpl bindingRoot = jaxb( reader, MappingXsdSupport.latestDescriptor()
-						.getSchema(), mappingJaxbContext(), origin );
+				final JaxbEntityMappingsImpl bindingRoot = jaxb(
+						reader,
+						MappingXsdSupport.latestDescriptor().getSchema(),
+						mappingJaxbContext(),
+						origin
+				);
 				//noinspection unchecked
 				return new Binding<>( (X) bindingRoot, origin );
 			}

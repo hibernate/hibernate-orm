@@ -168,6 +168,10 @@ public class FloatPrimitiveArrayJavaType extends AbstractArrayJavaType<float[], 
 			}
 			return wrapped;
 		}
+		else if ( value instanceof Float ) {
+			// Support binding a single element as parameter value
+			return new float[]{ (float) value };
+		}
 
 		throw unknownWrap( value.getClass() );
 	}

@@ -6,10 +6,8 @@
  */
 package org.hibernate.type;
 
-import java.lang.reflect.Array;
 import java.util.Objects;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -76,20 +74,6 @@ public class ConvertedBasicArrayType<T,S,E>
 		//  also, maybe move that logic into the ArrayJdbcType
 		//noinspection unchecked
 		return (BasicType<X>) this;
-	}
-
-	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( value == null ) {
-			return null;
-		}
-		if ( baseDescriptor.isInstance( (E) value ) ) {
-			// Support binding a single element as parameter value
-			final Object array = Array.newInstance( baseDescriptor.getJavaType(), 1 );
-			Array.set( array, 0, value );
-			return array;
-		}
-		return value;
 	}
 
 	@Override

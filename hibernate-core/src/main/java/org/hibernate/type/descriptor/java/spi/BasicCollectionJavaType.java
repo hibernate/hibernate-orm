@@ -463,6 +463,13 @@ public class BasicCollectionJavaType<C extends Collection<E>, E> extends Abstrac
 			}
 			return wrapped;
 		}
+		else if ( getElementJavaType().isInstance( value ) ) {
+			// Support binding a single element as parameter value
+			final C wrapped = semantics.instantiateRaw( 1, null );
+			//noinspection unchecked
+			wrapped.add( (E) value );
+			return wrapped;
+		}
 
 		throw unknownWrap( value.getClass() );
 	}

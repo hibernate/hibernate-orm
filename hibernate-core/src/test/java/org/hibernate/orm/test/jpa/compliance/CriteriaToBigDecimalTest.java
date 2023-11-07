@@ -101,6 +101,35 @@ public class CriteriaToBigDecimalTest {
 		);
 	}
 
+	@Test
+	public void testToBigDecimal3(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+					final CriteriaQuery<Object> query = criteriaBuilder.createQuery();
+					final Root<Person> person = query.from( Person.class );
+					query.select( criteriaBuilder.sum( person.get( "ageAsBigDecimal" ), 1 ) );
+
+					BigDecimal result = (BigDecimal) entityManager.createQuery( query ).getSingleResult();
+
+					assertEquals( new BigDecimal( "21" ), result.stripTrailingZeros() );
+				}
+		);
+	}
+
+	@Test
+	public void testToBigDecimal4(EntityManagerFactoryScope scope) {
+		scope.inTransaction(
+				entityManager -> {
+					BigDecimal result = (BigDecimal) entityManager.createQuery( "select p.ageAsBigDecimal + :val from Person p" )
+							.setParameter( "val", 1 )
+							.getSingleResult();
+
+					assertEquals( new BigDecimal( "21" ), result.stripTrailingZeros() );
+				}
+		);
+	}
+
 	@Entity(name = "Person")
 	public static class Person {
 		@Id
@@ -109,6 +138,7 @@ public class CriteriaToBigDecimalTest {
 		private String name;
 
 		private Integer age;
+		private BigDecimal ageAsBigDecimal;
 
 		Person() {
 		}
@@ -117,6 +147,7 @@ public class CriteriaToBigDecimalTest {
 			this.id = id;
 			this.name = name;
 			this.age = age;
+			this.ageAsBigDecimal = new BigDecimal( age );
 		}
 	}
 }

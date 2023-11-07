@@ -320,6 +320,14 @@ public class ArrayJavaType<T> extends AbstractArrayJavaType<T[], T> {
 			// When the value is a BinaryStream, this is a deserialization request
 			return fromBytes( ( (BinaryStream) value ).getBytes() );
 		}
+		else if ( getElementJavaType().isInstance( value ) ) {
+			// Support binding a single element as parameter value
+			//noinspection unchecked
+			final T[] wrapped = (T[]) java.lang.reflect.Array.newInstance( getElementJavaType().getJavaTypeClass(), 1 );
+			//noinspection unchecked
+			wrapped[0] = (T) value;
+			return wrapped;
+		}
 
 		throw unknownWrap( value.getClass() );
 	}

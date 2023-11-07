@@ -6,10 +6,8 @@
  */
 package org.hibernate.type;
 
-import java.lang.reflect.Array;
 import java.util.Objects;
 
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -54,20 +52,6 @@ public class BasicArrayType<T,E>
 		//  also, maybe move that logic into the ArrayJdbcType
 		//noinspection unchecked
 		return (BasicType<X>) this;
-	}
-
-	@Override
-	public Object disassemble(Object value, SharedSessionContractImplementor session) {
-		if ( value == null ) {
-			return null;
-		}
-		if ( baseDescriptor.isInstance( (E) value ) ) {
-			// Support binding a single element as parameter value
-			final Object array = Array.newInstance( baseDescriptor.getJavaType(), 1 );
-			Array.set( array, 0, value );
-			return array;
-		}
-		return value;
 	}
 
 	@Override

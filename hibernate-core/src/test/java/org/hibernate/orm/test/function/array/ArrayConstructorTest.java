@@ -70,8 +70,10 @@ public class ArrayConstructorTest {
 	@Test
 	public void testNonExisting(SessionFactoryScope scope) {
 		scope.inSession( em -> {
+			//tag::hql-array-example[]
 			List<EntityWithArrays> results = em.createQuery( "from EntityWithArrays e where e.theArray = array('abc')", EntityWithArrays.class )
 					.getResultList();
+			//end::hql-array-example[]
 			assertEquals( 0, results.size() );
 		} );
 	}

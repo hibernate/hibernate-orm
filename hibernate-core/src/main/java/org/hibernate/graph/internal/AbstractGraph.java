@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 import org.hibernate.graph.AttributeNode;
 import org.hibernate.graph.CannotBecomeEntityGraphException;
@@ -95,6 +96,42 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// AttributeNode handling
 
+
+	@Override
+	public <Y> AttributeNodeImplementor<Y> getAttributeNode(String attributeName) {
+		if ( attrNodeMap == null ) {
+			return null;
+		}
+		final PersistentAttribute<? super J, ?> attribute = managedType.findAttributeInSuperTypes( attributeName );
+		//noinspection unchecked
+		return (AttributeNodeImplementor<Y>) attrNodeMap.get( attribute );
+	}
+
+	@Override
+	public <Y> AttributeNodeImplementor<Y> getAttributeNode(Attribute<? super J, Y> attribute) {
+		return null;
+	}
+
+	@Override
+	public void visitAttributeNodes(Consumer<AttributeNodeImplementor<?>> consumer) {
+		if ( attrNodeMap == null ) {
+			return;
+		}
+		attrNodeMap.forEach( (persistentAttribute, attributeNodeImplementor) -> {
+			consumer.accept( attributeNodeImplementor );
+		} );
+	}
+
+	@Override
+	public List<AttributeNode<?>> getAttributeNodeList() {
+		if ( attrNodeMap == null ) {
+			return emptyList();
+		}
+		final List<AttributeNode<?>> result = new ArrayList<>();
+		visitAttributeNodes( result::add );
+		return result;
+	}
+
 	@Override
 	public AttributeNodeImplementor<?> addAttributeNode(AttributeNodeImplementor<?> incomingAttributeNode) {
 		verifyMutability();
@@ -151,8 +188,8 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public void addAttributeNode(String attributeName) throws CannotContainSubGraphException {
-		findOrCreateAttributeNode( attributeName );
+	public <AJ> AttributeNodeImplementor<AJ> addAttributeNode(String attributeName) throws CannotContainSubGraphException {
+		return findOrCreateAttributeNode( attributeName );
 	}
 
 	@Override
@@ -162,8 +199,9 @@ public abstract class AbstractGraph<J> extends AbstractGraphNode<J> implements G
 	}
 
 	@Override
-	public void addAttributeNode(Attribute<? super J, ?> attribute) {
-		findOrCreateAttributeNode( (PersistentAttribute<? super J, ?>) attribute );
+	public <Y> AttributeNodeImplementor<Y> addAttributeNode(Attribute<? super J, Y> attribute) {
+		//noinspection unchecked
+		return (AttributeNodeImplementor<Y>) findOrCreateAttributeNode( (PersistentAttribute<? super J, ?>) attribute );
 	}
 
 	@Override

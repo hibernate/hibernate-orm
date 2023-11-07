@@ -17,10 +17,13 @@ import org.hibernate.event.spi.PersistContext;
 import org.hibernate.event.spi.RefreshContext;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 import org.hibernate.resource.transaction.spi.TransactionCoordinatorBuilder;
 import org.hibernate.type.descriptor.WrapperOptions;
+
+import jakarta.persistence.criteria.CriteriaSelect;
 
 /**
  * Defines the "internal contract" between {@link Session} and other parts of Hibernate
@@ -76,6 +79,9 @@ public interface SessionImplementor extends Session, SharedSessionContractImplem
 
 	@Override
 	RootGraphImplementor<?> getEntityGraph(String graphName);
+
+	@Override
+	<T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery);
 
 	/**
 	 * Get the {@link ActionQueue} associated with this session.

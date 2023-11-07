@@ -19,6 +19,7 @@ public class XsdHelper {
 
 	public static boolean shouldBeMappedToLatestJpaDescriptor(String uri) {
 		// JPA 1.0 and 2.0 share the same namespace URI
+		// JPA 2.1 and 2.2 share the same namespace URI
 		return MappingXsdSupport.jpa10.getNamespaceUri().equals( uri );
 	}
 }

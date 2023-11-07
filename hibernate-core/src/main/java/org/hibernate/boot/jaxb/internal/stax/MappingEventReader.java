@@ -24,4 +24,8 @@ public class MappingEventReader extends AbstractEventReader {
 		super( ROOT_ELEMENT_NAME, MappingXsdSupport.latestDescriptor(), reader, xmlEventFactory );
 	}
 
+	@Override
+	protected boolean shouldBeMappedToLatestJpaDescriptor(String uri) {
+		return !MappingXsdSupport.latestDescriptor().getNamespaceUri().equals( uri );
+	}
 }

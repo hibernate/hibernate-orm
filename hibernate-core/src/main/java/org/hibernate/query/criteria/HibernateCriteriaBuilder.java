@@ -24,11 +24,7 @@ import org.hibernate.Incubating;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.FrameKind;
-import org.hibernate.query.sqm.SetOperator;
-import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
-import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.AbstractQuery;
@@ -188,16 +184,15 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
 
 	@Override
-	<T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
+	default <T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
+		return null;
+	}
 
 	default <T> JpaSubQuery<T> union(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return union( false, query1, queries );
 	}
 
-	default <T> JpaSubQuery<T> union(boolean all, Subquery<? extends T> query1, Subquery<?>... queries) {
-		assert query1 instanceof SqmSelectStatement<?>;
-		return null;
-	}
+	<T> JpaSubQuery<T> union(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
 
 	@Override
 	<T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right);

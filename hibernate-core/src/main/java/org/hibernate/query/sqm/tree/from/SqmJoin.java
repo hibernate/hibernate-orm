@@ -9,13 +9,29 @@ package org.hibernate.query.sqm.tree.from;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Subquery;
+import jakarta.persistence.metamodel.CollectionAttribute;
+import jakarta.persistence.metamodel.EntityType;
+import jakarta.persistence.metamodel.ListAttribute;
+import jakarta.persistence.metamodel.MapAttribute;
+import jakarta.persistence.metamodel.SetAttribute;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.JpaCrossJoin;
+import org.hibernate.query.criteria.JpaCteCriteria;
+import org.hibernate.query.criteria.JpaDerivedJoin;
+import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaJoin;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
+import org.hibernate.query.sqm.tree.domain.SqmListJoin;
+import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedJoin;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
@@ -110,4 +126,102 @@ public interface SqmJoin<L, R> extends SqmFrom<L, R>, JpaJoin<L,R> {
 		) );
 		return this;
 	}
+
+	@Override
+	default <X> JpaEntityJoin<R, X> join(Class<X> entityJavaType, SqmJoinType joinType) {
+		return SqmFrom.super.join( entityJavaType, joinType );
+	}
+
+	@Override
+	<Y> JpaJoin<R, Y> join(EntityType<Y> entity);
+
+	@Override
+	<Y> JpaJoin<R, Y> join(EntityType<Y> entity, JoinType joinType);
+
+	@Override
+	<X> JpaEntityJoin<R, X> join(EntityDomainType<X> entity);
+
+	@Override
+	<X> JpaEntityJoin<R, X> join(EntityDomainType<X> entity, SqmJoinType joinType);
+
+	@Override
+	<X> JpaDerivedJoin<X> join(Subquery<X> subquery);
+
+	@Override
+	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType);
+
+	@Override
+	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery);
+
+	@Override
+	<X> JpaDerivedJoin<X> joinLateral(Subquery<X> subquery, SqmJoinType joinType);
+
+	@Override
+	<X> JpaDerivedJoin<X> join(Subquery<X> subquery, SqmJoinType joinType, boolean lateral);
+
+	@Override
+	<X> JpaJoin<?, X> join(JpaCteCriteria<X> cte);
+
+	@Override
+	<X> JpaJoin<?, X> join(JpaCteCriteria<X> cte, SqmJoinType joinType);
+
+	@Override
+	<X> JpaCrossJoin<X> crossJoin(Class<X> entityJavaType);
+
+	@Override
+	<X> JpaCrossJoin<X> crossJoin(EntityDomainType<X> entity);
+
+	@Override
+	<A> SqmSingularJoin<R, A> join(SingularAttribute<? super R, A> attribute);
+
+	@Override
+	<A> SqmSingularJoin<R, A> join(SingularAttribute<? super R, A> attribute, JoinType jt);
+
+	@Override
+	<E> SqmBagJoin<R, E> join(CollectionAttribute<? super R, E> attribute);
+
+	@Override
+	<E> SqmBagJoin<R, E> join(CollectionAttribute<? super R, E> attribute, JoinType jt);
+
+	@Override
+	<E> SqmSetJoin<R, E> join(SetAttribute<? super R, E> set);
+
+	@Override
+	<E> SqmSetJoin<R, E> join(SetAttribute<? super R, E> set, JoinType jt);
+
+	@Override
+	<E> SqmListJoin<R, E> join(ListAttribute<? super R, E> list);
+
+	@Override
+	<E> SqmListJoin<R, E> join(ListAttribute<? super R, E> list, JoinType jt);
+
+	@Override
+	<K, V> SqmMapJoin<R, K, V> join(MapAttribute<? super R, K, V> map);
+
+	@Override
+	<K, V> SqmMapJoin<R, K, V> join(MapAttribute<? super R, K, V> map, JoinType jt);
+
+	@Override
+	<X, Y> SqmBagJoin<X, Y> joinCollection(String attributeName);
+
+	@Override
+	<X, Y> SqmBagJoin<X, Y> joinCollection(String attributeName, JoinType jt);
+
+	@Override
+	<X, Y> SqmSetJoin<X, Y> joinSet(String attributeName);
+
+	@Override
+	<X, Y> SqmSetJoin<X, Y> joinSet(String attributeName, JoinType jt);
+
+	@Override
+	<X, Y> SqmListJoin<X, Y> joinList(String attributeName);
+
+	@Override
+	<X, Y> SqmListJoin<X, Y> joinList(String attributeName, JoinType jt);
+
+	@Override
+	<X, K, V> SqmMapJoin<X, K, V> joinMap(String attributeName);
+
+	@Override
+	<X, K, V> SqmMapJoin<X, K, V> joinMap(String attributeName, JoinType jt);
 }

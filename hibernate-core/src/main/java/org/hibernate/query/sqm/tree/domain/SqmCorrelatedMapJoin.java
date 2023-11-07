@@ -19,7 +19,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 /**
  * @author Christian Beikov
  */
-public class SqmCorrelatedMapJoin<L,K,V> extends SqmMapJoin<L,K,V> implements SqmCorrelation<L,V> {
+public class SqmCorrelatedMapJoin<L,K,V> extends SqmMapJoin<L,K,V> implements SqmCorrelatedJoin<L,V> {
 
 	private final SqmCorrelatedRootJoin<L> correlatedRootJoin;
 	private final SqmMapJoin<L, K, V> correlationParent;

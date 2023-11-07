@@ -9,12 +9,16 @@ package org.hibernate.query.sqm.tree;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.internal.ParameterCollector;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
+
+import jakarta.persistence.criteria.ParameterExpression;
 
 import static org.hibernate.query.sqm.tree.jpa.ParameterCollector.collectParameters;
 
@@ -81,5 +85,18 @@ public abstract class AbstractSqmStatement<T> extends AbstractSqmNode implements
 	@Override
 	public ParameterResolutions resolveParameters() {
 		return SqmUtil.resolveParameters( this );
+	}
+
+	@Override
+	public Set<ParameterExpression<?>> getParameters() {
+		// At this level, the number of parameters may still be growing as
+		// nodes are added to the Criteria - so we re-calculate this every
+		// time.
+		//
+		// for a "finalized" set of parameters, use `#resolveParameters` instead
+		assert getQuerySource() == SqmQuerySource.CRITERIA;
+		return getSqmParameters().stream()
+				.filter( parameterExpression -> !( parameterExpression instanceof ValueBindJpaCriteriaParameter ) )
+				.collect( Collectors.toSet() );
 	}
 }

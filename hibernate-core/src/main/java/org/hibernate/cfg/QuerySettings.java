@@ -105,7 +105,7 @@ public interface QuerySettings {
 	 * The default is {@code none}.
 	 *
 	 * @see NullPrecedence
-	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultNullPrecedence(NullPrecedence)
+	 * @see org.hibernate.boot.SessionFactoryBuilder#applyDefaultNullPrecedence(jakarta.persistence.criteria.Nulls)
 	 */
 	String DEFAULT_NULL_ORDERING = "hibernate.order_by.default_null_ordering";
 

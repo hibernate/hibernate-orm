@@ -13,6 +13,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
+import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
@@ -135,5 +136,15 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 	public SqmJoin<L, R> on(Predicate... restrictions) {
 		applyRestriction( nodeBuilder().wrap( restrictions ) );
 		return this;
+	}
+
+	@Override
+	public <X> SqmEntityJoin<R, X> join(Class<X> targetEntityClass) {
+		return super.join( targetEntityClass, joinType );
+	}
+
+	@Override
+	public <X> SqmEntityJoin<R, X> join(Class<X> targetEntityClass, SqmJoinType joinType) {
+		return super.join( targetEntityClass, joinType );
 	}
 }

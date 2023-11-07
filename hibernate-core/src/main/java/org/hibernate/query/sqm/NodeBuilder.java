@@ -64,7 +64,6 @@ import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
 import jakarta.persistence.criteria.MapJoin;
-import jakarta.persistence.criteria.Nulls;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
@@ -636,13 +635,13 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	JpaCompoundSelection<Tuple> tuple(Selection<?>[] selections);
 
 	@Override
-	JpaCompoundSelection<Tuple> tuple(List<? extends JpaSelection<?>> selections);
+	JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections);
 
 	@Override
 	JpaCompoundSelection<Object[]> array(Selection<?>[] selections);
 
 	@Override
-	JpaCompoundSelection<Object[]> array(List<? extends JpaSelection<?>> selections);
+	JpaCompoundSelection<Object[]> array(List<Selection<?>> selections);
 
 	@Override
 	<T> SqmUpdateStatement<T> createCriteriaUpdate(Class<T> targetEntity);

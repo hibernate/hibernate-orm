@@ -36,6 +36,12 @@ public class BasicMappingJaxbTests {
 	public void simpleUnifiedJaxbTest(ServiceRegistryScope scope) {
 		scope.withService( ClassLoaderService.class, (cls) -> {
 			verify( "xml/jaxb/mapping/basic/unified.xml", cls, scope );
+		} );
+	}
+
+	@Test
+	public void ormBaselineTest(ServiceRegistryScope scope) {
+		scope.withService( ClassLoaderService.class, (cls) -> {
 			verify( "xml/jaxb/mapping/basic/orm.xml", cls, scope );
 		} );
 	}
@@ -47,7 +53,11 @@ public class BasicMappingJaxbTests {
 				final XMLEventReader reader = new MappingEventReader( staxEventReader, xmlEventFactory );
 				try {
 					final JAXBContext jaxbCtx = JAXBContext.newInstance( JaxbEntityMappingsImpl.class );
-					final JaxbEntityMappingsImpl entityMappings = JaxbHelper.VALIDATING.jaxb( reader, MappingXsdSupport._310.getSchema(), jaxbCtx );
+					final JaxbEntityMappingsImpl entityMappings = JaxbHelper.VALIDATING.jaxb(
+							reader,
+							MappingXsdSupport.latestDescriptor().getSchema(),
+							jaxbCtx
+					);
 					assertThat( entityMappings ).isNotNull();
 					assertThat( entityMappings.getEntities() ).hasSize( 1 );
 				}

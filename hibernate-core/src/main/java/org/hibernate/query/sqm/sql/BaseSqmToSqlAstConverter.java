@@ -2338,7 +2338,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			sqmPosition = aliasedNodeOrdinal - 1;
 			path = aliasedNodeRef.getNavigablePath();
 		}
-		else if ( statement.getQuerySource() == SqmQuerySource.CRITERIA ) {
+		else if ( statement.getQuerySource() == SqmQuerySource.CRITERIA && currentClauseStack.getCurrent() != Clause.OVER ) {
 			// In JPA Criteria we could be using the same expression object for the group/order by and select item
 			// We try to find the select item position for this expression here which is not necessarily just an optimization.
 			// This is vital to enable the support for parameters in these expressions.

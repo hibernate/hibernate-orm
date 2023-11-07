@@ -23,9 +23,9 @@ import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
 import org.hibernate.jpamodelgen.model.Metamodel;
-import org.hibernate.jpamodelgen.util.AccessType;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 
+import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.lang.Boolean.parseBoolean;

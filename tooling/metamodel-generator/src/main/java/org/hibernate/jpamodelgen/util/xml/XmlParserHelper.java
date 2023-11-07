@@ -22,9 +22,10 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 
+import org.hibernate.boot.jaxb.cfg.spi.ObjectFactory;
+
 import org.hibernate.jpamodelgen.Context;
 import org.hibernate.jpamodelgen.util.NullnessUtil;
-import org.hibernate.jpamodelgen.xml.jaxb.ObjectFactory;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.xml.sax.SAXException;

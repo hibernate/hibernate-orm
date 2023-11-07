@@ -33,7 +33,11 @@ dependencyResolutionManagement {
         maven {
             url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
         }
-        // Needed for the SNAPSHOT versions of Jakarta Persistence
+        // Needed for the Beta versions of Jakarta Persistence (grr)
+        maven {
+            url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
+        }
+        // Needed for the SNAPSHOT versions of Jakarta Persistence (wtf)
         maven {
             url "https://jakarta.oss.sonatype.org/content/repositories/snapshots/"
         }

@@ -140,7 +140,7 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 
 		boolean fullyAnnotationConfigured = handleSettings( processingEnvironment );
 		if ( !fullyAnnotationConfigured ) {
-			new JpaDescriptorParser( context ).parseXml();
+			new JpaDescriptorParser( context ).parseMappingXml();
 			if ( context.isFullyXmlConfigured() ) {
 				createMetaModelClasses();
 			}

@@ -1,47 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
 <!--
-    Copyright (c) 2008, 2020 Oracle and/or its affiliates. All rights reserved.
-
-    This program and the accompanying materials are made available under the
-    terms of the Eclipse Public License v. 2.0 which is available at
-    http://www.eclipse.org/legal/epl-2.0,
-    or the Eclipse Distribution License v. 1.0 which is available at
-    http://www.eclipse.org/org/documents/edl-v10.php.
-
-    SPDX-License-Identifier: EPL-2.0 OR BSD-3-Clause
-
--->
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+  ~ See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+  -->
 
 <!-- persistence.xml schema -->
-<xsd:schema targetNamespace="https://jakarta.ee/xml/ns/persistence" 
-  xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-  xmlns:persistence="https://jakarta.ee/xml/ns/persistence"
-  elementFormDefault="qualified" 
-  attributeFormDefault="unqualified" 
-  version="3.0">
+<xsd:schema
+        xmlns="http://www.hibernate.org/xsd/orm/configuration"
+        xmlns:persistence="http://www.hibernate.org/xsd/orm/configuration"
+        targetNamespace="http://www.hibernate.org/xsd/orm/configuration"
+        xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+        elementFormDefault="qualified"
+        version="3.2">
 
    <xsd:annotation>
      <xsd:documentation><![CDATA[
+        XSD which "extends" the JPA `persistence.xml` XSD adding support
+        for Hibernate specific features.
 
-     This is the XML Schema for the persistence configuration file.
-     The file must be named "META-INF/persistence.xml" in the 
-     persistence archive.
-
-     Persistence configuration files must indicate
-     the persistence schema by using the persistence namespace:
-
-     https://jakarta.ee/xml/ns/persistence
-
-     and indicate the version of the schema by
-     using the version element as shown below:
-
-      <persistence xmlns="https://jakarta.ee/xml/ns/persistence"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="https://jakarta.ee/xml/ns/persistence
-          https://jakarta.ee/xml/ns/persistence/persistence_3_0.xsd"
-        version="3.0">
-          ...
-      </persistence>
+        <persistence xmlns="http://www.hibernate.org/xsd/orm/configuration"
+                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                version="3.2">
+            ...
+        </persistence>
 
     ]]></xsd:documentation>
   </xsd:annotation>
@@ -186,7 +170,7 @@
               <!-- **************************************************** -->
 
               <xsd:element name="shared-cache-mode" 
-                           type="persistence:persistence-unit-caching-type" 
+                           type="persistence:persistence-unit-caching-type"
                            minOccurs="0">
                 <xsd:annotation>
                   <xsd:documentation>
@@ -283,7 +267,7 @@
         </xsd:element>
       </xsd:sequence>
       <xsd:attribute name="version" type="persistence:versionType" 
-                     fixed="3.0" use="required"/>
+                     fixed="3.1" use="required"/>
     </xsd:complexType>
   </xsd:element>
 

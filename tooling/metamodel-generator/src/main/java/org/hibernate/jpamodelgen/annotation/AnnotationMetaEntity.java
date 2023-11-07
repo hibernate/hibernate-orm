@@ -35,7 +35,6 @@ import org.hibernate.jpamodelgen.ProcessLaterException;
 import org.hibernate.jpamodelgen.model.ImportContext;
 import org.hibernate.jpamodelgen.model.MetaAttribute;
 import org.hibernate.jpamodelgen.model.Metamodel;
-import org.hibernate.jpamodelgen.util.AccessType;
 import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.jpamodelgen.util.Constants;
 import org.hibernate.jpamodelgen.validation.ProcessorSessionFactory;
@@ -48,6 +47,8 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+
+import jakarta.persistence.AccessType;
 
 import static java.beans.Introspector.decapitalize;
 import static java.lang.Boolean.FALSE;

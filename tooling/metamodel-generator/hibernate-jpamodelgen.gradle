@@ -4,19 +4,27 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-plugins {
-    id 'org.hibernate.build.xjc-jakarta'
-}
-
 description = 'Annotation Processor to generate JPA 2 static metamodel classes'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'version-injection'
 
-ext {
-	xjcTargetDir = file( "${buildDir}/generated/sources/xjc/main" )
-	xsdDir = file( "${projectDir}/src/main/xsd" )
+java {
+    sourceCompatibility = jdks.versions.getBaseline(  )
+    targetCompatibility = 17
 }
+
+//configurations {
+//    modelImplementation {
+//        extendsFrom implementation
+//    }
+//    modelAnnotationProcessor {
+//        extendsFrom annotationProcessor
+//    }
+//    testImplementation {
+//        extendsFrom modelImplementation
+//    }
+//}
 
 dependencies {
     // api - ewww... but Maven needs them this way
@@ -28,81 +36,43 @@ dependencies {
     api libs.antlrRuntime
     api libs.byteBuddy
 
-    xjc jakartaLibs.xjc
-    xjc jakartaLibs.jaxb
-    xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
 }
 
 sourceSets.main {
-    java.srcDir xjcTargetDir
+	java.srcDir xjcTargetDir
 	resources.srcDir xsdDir
 }
 
 compileTestJava {
-    options.compilerArgs += [
-            "-proc:none"
-    ]
+	options.compilerArgs += [
+			"-proc:none"
+	]
 }
-
-
-// Tests with records
-if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
-    // We need to configure the source and target version to 17
-    //compileTestJava17Java {
-    compileTestJava {
-        javaCompiler = javaToolchains.compilerFor {
-            languageVersion = jdkVersions.test.compile
-        }
-        sourceCompatibility = 17
-        targetCompatibility = 17
-    }
-
-    test {
-        javaLauncher = javaToolchains.launcherFor {
-            languageVersion = jdkVersions.test.launcher
-        }
-
-        if ( jdkVersions.test.launcher.asInt() >= 19 ) {
-            logger.warn( "The version of Java bytecode that will be tested is not supported by Bytebuddy by default. " +
-                                 " Setting 'net.bytebuddy.experimental=true'." )
-            systemProperty 'net.bytebuddy.experimental', true
-        }
-    }
-} else {
-    sourceSets {
-        test {
-            java {
-                exclude '**/records/*.java'
-            }
-        }
-    }
-}
-
 
 task jaxb {
-    // configure Gradle up-to-date checking
-    inputs.dir( xsdDir ).withPropertyName("xsdDir" ).withPathSensitivity( PathSensitivity.RELATIVE )
-    outputs.dir( xjcTargetDir )
-    outputs.cacheIf { true }
+	// configure Gradle up-to-date checking
+	inputs.dir( xsdDir ).withPropertyName("xsdDir" ).withPathSensitivity( PathSensitivity.RELATIVE )
+	outputs.dir( xjcTargetDir )
+	outputs.cacheIf { true }
 
-    // perform actions
-    doLast {
-        xjcTargetDir.mkdirs()
+	// perform actions
+	doLast {
+		xjcTargetDir.mkdirs()
 
-        ant.taskdef(name: 'xjc', classname: 'org.jvnet.jaxb2_commons.xjc.XJC2Task', classpath: configurations.xjc.asPath)
+		ant.taskdef(name: 'xjc', classname: 'org.jvnet.jaxb2_commons.xjc.XJC2Task', classpath: configurations.xjc.asPath)
 
-        ant.xjc(
-                destdir: ( xjcTargetDir as File ).absolutePath,
-                package: 'org.hibernate.jpamodelgen.xml.jaxb',
-                extension: 'true'
-        ) {
-            project.ant.arg line: '-no-header'
-            project.ant.arg line: '-npa'
-            schema( dir: xsdDir.path, includes: "*.xsd" )
-        }
-    }
+		ant.xjc(
+				destdir: ( xjcTargetDir as File ).absolutePath,
+				package: 'org.hibernate.jpamodelgen.xml.jaxb',
+				extension: 'true'
+		) {
+			project.ant.arg line: '-no-header'
+			project.ant.arg line: '-npa'
+			schema( dir: xsdDir.path, includes: "*.xsd" )
+		}
+	}
 }
-tasks.sourcesJar.dependsOn jaxb
+
 tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
 tasks.compileJava.dependsOn jaxb

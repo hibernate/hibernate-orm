@@ -26,14 +26,15 @@ public class ConfigXsdSupport {
 	 * Needs synchronization on any access.
 	 * Custom keys:
 	 * 0: cfgXml
-	 * 1: JPA 1.0
-	 * 2: JPA 2.0
-	 * 3: JPA 2.1
-	 * 4: JPA 2.2 (default)
-	 * 5: Jakarta Persistence 3.0
-	 * 6: Jakarta Persistence 3.1
+	 * 1: configurationXML
+	 * 2: JPA 1.0
+	 * 3: JPA 2.0
+	 * 4: JPA 2.1
+	 * 5: JPA 2.2 (default)
+	 * 6: Jakarta Persistence 3.0
+	 * 7: Jakarta Persistence 3.1
 	 */
-	private static final XsdDescriptor[] xsdCache = new XsdDescriptor[7];
+	private static final XsdDescriptor[] xsdCache = new XsdDescriptor[8];
 
 	public XsdDescriptor latestJpaDescriptor() {
 		return getJPA31();
@@ -64,6 +65,9 @@ public class ConfigXsdSupport {
 			case "3.1": {
 				return getJPA31();
 			}
+			case "3.2": {
+				return getJPA32();
+			}
 			default: {
 				throw new IllegalArgumentException( "Unrecognized JPA persistence.xml XSD version : `" + version + "`" );
 			}
@@ -86,8 +90,24 @@ public class ConfigXsdSupport {
 		}
 	}
 
-	public static XsdDescriptor getJPA10() {
+	public static XsdDescriptor configurationXsd() {
 		final int index = 1;
+		synchronized ( xsdCache ) {
+			XsdDescriptor cfgXml = xsdCache[index];
+			if ( cfgXml == null ) {
+				cfgXml = LocalXsdResolver.buildXsdDescriptor(
+						"org/hibernate/xsd/cfg/configuration-3.2.0.xsd",
+						"3.2.0" ,
+						"http://www.hibernate.org/xsd/orm/configuration"
+				);
+				xsdCache[index] = cfgXml;
+			}
+			return cfgXml;
+		}
+	}
+
+	public static XsdDescriptor getJPA10() {
+		final int index = 2;
 		synchronized ( xsdCache ) {
 			XsdDescriptor jpa10 = xsdCache[index];
 			if ( jpa10 == null ) {
@@ -119,7 +139,7 @@ public class ConfigXsdSupport {
 	}
 
 	public static XsdDescriptor getJPA21() {
-		final int index = 3;
+		final int index = 4;
 		synchronized ( xsdCache ) {
 			XsdDescriptor jpa21 = xsdCache[index];
 			if ( jpa21 == null ) {
@@ -135,7 +155,7 @@ public class ConfigXsdSupport {
 	}
 
 	public static XsdDescriptor getJPA22() {
-		final int index = 4;
+		final int index = 5;
 		synchronized ( xsdCache ) {
 			XsdDescriptor jpa22 = xsdCache[index];
 			if ( jpa22 == null ) {
@@ -151,7 +171,7 @@ public class ConfigXsdSupport {
 	}
 
 	public static XsdDescriptor getJPA30() {
-		final int index = 5;
+		final int index = 6;
 		synchronized ( xsdCache ) {
 			XsdDescriptor jpa30 = xsdCache[index];
 			if ( jpa30 == null ) {
@@ -167,7 +187,7 @@ public class ConfigXsdSupport {
 	}
 
 	public static XsdDescriptor getJPA31() {
-		final int index = 6;
+		final int index = 7;
 		synchronized ( xsdCache ) {
 			XsdDescriptor jpa31 = xsdCache[index];
 			if ( jpa31 == null ) {
@@ -179,6 +199,22 @@ public class ConfigXsdSupport {
 				xsdCache[index] = jpa31;
 			}
 			return jpa31;
+		}
+	}
+
+	public static XsdDescriptor getJPA32() {
+		final int index = 8;
+		synchronized ( xsdCache ) {
+			XsdDescriptor jpa32 = xsdCache[index];
+			if ( jpa32 == null ) {
+				jpa32 = LocalXsdResolver.buildXsdDescriptor(
+						"org/hibernate/jpa/persistence_3_2.xsd",
+						"3.2",
+						"https://jakarta.ee/xml/ns/persistence"
+				);
+				xsdCache[index] = jpa32;
+			}
+			return jpa32;
 		}
 	}
 	

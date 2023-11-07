@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.testing.TestForIssue;
 import org.junit.Test;
 
-import static org.hibernate.query.NullPrecedence.FIRST;
+import static jakarta.persistence.criteria.Nulls.FIRST;
 import static org.hibernate.query.SortDirection.ASCENDING;
 import static org.hibernate.query.SortDirection.DESCENDING;
 import static org.junit.Assert.assertEquals;

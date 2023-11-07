@@ -113,19 +113,6 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
-	public Set<ParameterExpression<?>> getParameters() {
-		// At this level, the number of parameters may still be growing as
-		// nodes are added to the Criteria - so we re-calculate this every
-		// time.
-		//
-		// for a "finalized" set of parameters, use `#resolveParameters` instead
-		assert getQuerySource() == SqmQuerySource.CRITERIA;
-		return getSqmParameters().stream()
-				.filter( parameterExpression -> !( parameterExpression instanceof ValueBindJpaCriteriaParameter ) )
-				.collect( Collectors.toSet() );
-	}
-
-	@Override
 	public void appendHqlString(StringBuilder sb) {
 		super.appendHqlString( sb );
 		sb.append( ' ' );

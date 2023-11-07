@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaFrom;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -87,6 +88,12 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 
 	@Override
 	SqmFrom<L, R> getCorrelationParent();
+
+	@Override
+	<Y> SqmEntityJoin<R, Y> join(Class<Y> entityClass);
+
+	@Override
+	<Y> SqmEntityJoin<R, Y> join(Class<Y> entityClass, JoinType joinType);
 
 	@Override
 	<A> SqmSingularJoin<R, A> join(SingularAttribute<? super R, A> attribute);

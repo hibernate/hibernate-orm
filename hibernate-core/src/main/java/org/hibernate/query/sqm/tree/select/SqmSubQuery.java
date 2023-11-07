@@ -36,16 +36,18 @@ import org.hibernate.query.sqm.tree.domain.SqmBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedBagJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSingularValuedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
-import org.hibernate.query.sqm.tree.domain.SqmSingularJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
@@ -477,7 +479,7 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 	}
 
 	@Override
-	public <X, Y> SqmAttributeJoin<X, Y> correlate(Join<X, Y> join) {
+	public <X, Y> SqmCorrelatedJoin<X, Y> correlate(Join<X, Y> join) {
 		if ( join instanceof PluralJoin<?, ?, ?> ) {
 			final PluralJoin<?, ?, ?> pluralJoin = (PluralJoin<?, ?, ?>) join;
 			switch ( pluralJoin.getModel().getCollectionType() ) {
@@ -491,41 +493,41 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 					return correlate( (MapJoin<X, ?, Y>) join );
 			}
 		}
-		final SqmCorrelatedSingularJoin<X, Y> correlated = ( (SqmSingularJoin<X, Y>) join ).createCorrelation();
+		final SqmCorrelatedSingularValuedJoin<X, Y> correlated = ( (SqmSingularValuedJoin<X, Y>) join ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
-	public <X, Y> SqmBagJoin<X, Y> correlate(CollectionJoin<X, Y> parentCollection) {
+	public <X, Y> SqmCorrelatedBagJoin<X, Y> correlate(CollectionJoin<X, Y> parentCollection) {
 		final SqmCorrelatedBagJoin<X, Y> correlated = ( (SqmBagJoin<X, Y>) parentCollection ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
-	public <X, Y> SqmSetJoin<X, Y> correlate(SetJoin<X, Y> parentSet) {
+	public <X, Y> SqmCorrelatedSetJoin<X, Y> correlate(SetJoin<X, Y> parentSet) {
 		final SqmCorrelatedSetJoin<X, Y> correlated = ( (SqmSetJoin<X, Y>) parentSet ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
-	public <X, Y> SqmListJoin<X, Y> correlate(ListJoin<X, Y> parentList) {
+	public <X, Y> SqmCorrelatedListJoin<X, Y> correlate(ListJoin<X, Y> parentList) {
 		final SqmCorrelatedListJoin<X, Y> correlated = ( (SqmListJoin<X, Y>) parentList ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
-	public <X, K, V> SqmMapJoin<X, K, V> correlate(MapJoin<X, K, V> parentMap) {
+	public <X, K, V> SqmCorrelatedMapJoin<X, K, V> correlate(MapJoin<X, K, V> parentMap) {
 		final SqmCorrelatedMapJoin<X, K, V> correlated = ( (SqmMapJoin<X, K, V>) parentMap ).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );
 		return correlated;
 	}
 
 	@Override
-	public <X> SqmCrossJoin<X> correlate(JpaCrossJoin<X> parentCrossJoin) {
+	public <X> SqmCorrelatedCrossJoin<X> correlate(JpaCrossJoin<X> parentCrossJoin) {
 		final SqmCorrelatedCrossJoin<X> correlated =
 				((SqmCrossJoin<X>) parentCrossJoin).createCorrelation();
 		getQuerySpec().addRoot( correlated.getCorrelatedRoot() );

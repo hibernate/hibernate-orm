@@ -139,47 +139,27 @@ public class SqmMapJoin<L, K, V>
 
 	@Override
 	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(Class<S> treatJavaType) {
-		return null;
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
 	}
 
 	@Override
 	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(EntityDomainType<S> treatTarget) {
-		return null;
+		return treatAs( treatTarget, null );
 	}
 
 	@Override
 	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(Class<S> treatJavaType, String alias) {
-		return null;
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
 	}
 
 	@Override
 	public <S extends V> SqmTreatedMapJoin<L, K, V, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
-		return null;
+		final SqmTreatedMapJoin<L, K, V, S> treat = findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			return addTreat( new SqmTreatedMapJoin<>( this, treatTarget, alias ) );
+		}
+		return treat;
 	}
-
-	//	@Override
-//	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(Class<S> treatJavaType) {
-//		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
-//	}
-//
-//	@Override
-//	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(EntityDomainType<S> treatTarget) {
-//		return treatAs( treatTarget, null );
-//	}
-//
-//	@Override
-//	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(Class<S> treatJavaType, String alias) {
-//		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
-//	}
-//
-//	@Override
-//	public <S extends V> SqmTreatedMapJoin<O, K, V, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
-//		final SqmTreatedMapJoin<O, K, V, S> treat = findTreat( treatTarget, alias );
-//		if ( treat == null ) {
-//			return addTreat( new SqmTreatedMapJoin<>( this, treatTarget, alias ) );
-//		}
-//		return treat;
-//	}
 
 	@Override
 	public SqmMapJoin<L, K, V> makeCopy(SqmCreationProcessingState creationProcessingState) {

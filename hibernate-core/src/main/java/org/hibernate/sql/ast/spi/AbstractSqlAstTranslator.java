@@ -28,8 +28,8 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.QueryException;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.SelectItemReferenceStrategy;
 import org.hibernate.engine.jdbc.Size;
@@ -60,8 +60,10 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.Loadable;
 import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.query.IllegalQueryOperationException;
+import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.SortDirection;
+import org.hibernate.query.internal.NullPrecedenceHelper;
 import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.Limit;
 import org.hibernate.query.spi.QueryOptions;
@@ -71,7 +73,6 @@ import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.FrameExclusion;
 import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.FrameMode;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -222,6 +223,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
+
+import jakarta.persistence.criteria.Nulls;
 
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.sql.ast.SqlTreePrinter.logSqlAst;
@@ -2058,12 +2061,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( searchBySpecification.getCteColumn().getColumnExpression() );
 				final SortDirection sortOrder = searchBySpecification.getSortOrder();
 				if ( sortOrder != null ) {
-					NullPrecedence nullPrecedence = searchBySpecification.getNullPrecedence();
-					if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
+					Nulls nullPrecedence = searchBySpecification.getNullPrecedence();
+					if ( nullPrecedence == null || nullPrecedence == Nulls.NONE ) {
 						nullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
 					}
-					final boolean renderNullPrecedence = nullPrecedence != null &&
-							!nullPrecedence.isDefaultOrdering( sortOrder, dialect.getNullOrdering() );
+					final boolean renderNullPrecedence = nullPrecedence != null
+							&& !NullPrecedenceHelper.isDefaultOrdering( nullPrecedence, sortOrder, dialect.getNullOrdering() );
 					if ( sortOrder == SortDirection.DESCENDING ) {
 						appendSql( " desc" );
 					}
@@ -2071,7 +2074,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 						appendSql( " asc" );
 					}
 					if ( renderNullPrecedence ) {
-						if ( searchBySpecification.getNullPrecedence() == NullPrecedence.FIRST ) {
+						if ( searchBySpecification.getNullPrecedence() == Nulls.FIRST ) {
 							appendSql( " nulls first" );
 						}
 						else {
@@ -2195,7 +2198,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2227,7 +2230,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2254,7 +2257,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2276,7 +2279,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2337,7 +2340,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2375,7 +2378,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2414,7 +2417,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -2453,7 +2456,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					if ( searchBySpecification.getSortOrder() == SortDirection.DESCENDING ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for descending search specifications" );
 					}
-					if ( searchBySpecification.getNullPrecedence() != NullPrecedence.NONE ) {
+					if ( searchBySpecification.getNullPrecedence() != Nulls.NONE ) {
 						throw new IllegalArgumentException( "Can't emulate search clause for search specifications with explicit null precedence" );
 					}
 					final int selectionIndex = currentCteStatement.getCteTable()
@@ -3837,7 +3840,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	@Override
 	public void visitSortSpecification(SortSpecification sortSpecification) {
 		final Expression sortExpression = sortSpecification.getSortExpression();
-		final NullPrecedence nullPrecedence = sortSpecification.getHibernateNullPrecedence();
+		final Nulls nullPrecedence = sortSpecification.getNullPrecedence();
 		final SortDirection sortOrder = sortSpecification.getSortOrder();
 		final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( sortExpression );
 		if ( sqlTuple != null ) {
@@ -3853,12 +3856,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 	}
 
-	protected void visitSortSpecification(Expression sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
-		if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
+	protected void visitSortSpecification(Expression sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
+		if ( nullPrecedence == null || nullPrecedence == Nulls.NONE ) {
 			nullPrecedence = sessionFactory.getSessionFactoryOptions().getDefaultNullPrecedence();
 		}
-		final boolean renderNullPrecedence = nullPrecedence != null &&
-				!nullPrecedence.isDefaultOrdering( sortOrder, dialect.getNullOrdering() );
+		final boolean renderNullPrecedence = nullPrecedence != null
+				&& !NullPrecedenceHelper.isDefaultOrdering( nullPrecedence, sortOrder, dialect.getNullOrdering() );
 		final boolean supportsNullPrecedence = renderNullPrecedence && supportsNullPrecedence();
 		if ( renderNullPrecedence && !supportsNullPrecedence ) {
 			emulateSortSpecificationNullPrecedence( sortExpression, nullPrecedence );
@@ -3880,7 +3883,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 
 		if ( renderNullPrecedence && supportsNullPrecedence ) {
 			appendSql( " nulls " );
-			appendSql( nullPrecedence == NullPrecedence.LAST ? "last" : "first" );
+			appendSql( nullPrecedence == Nulls.LAST ? "last" : "first" );
 		}
 	}
 
@@ -3888,12 +3891,12 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		return dialect.supportsNullPrecedence();
 	}
 
-	protected void emulateSortSpecificationNullPrecedence(Expression sortExpression, NullPrecedence nullPrecedence) {
+	protected void emulateSortSpecificationNullPrecedence(Expression sortExpression, Nulls nullPrecedence) {
 		// TODO: generate "virtual" select items and use them here positionally
 		appendSql( "case when (" );
 		resolveAliasedExpression( sortExpression ).accept( this );
 		appendSql( ") is null then " );
-		if ( nullPrecedence == NullPrecedence.FIRST ) {
+		if ( nullPrecedence == Nulls.FIRST ) {
 			appendSql( "0 else 1" );
 		}
 		else {
@@ -6074,28 +6077,28 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	private boolean isNullsFirst(SortSpecification sortSpecification) {
-		NullPrecedence nullPrecedence = sortSpecification.getHibernateNullPrecedence();
-		if ( nullPrecedence == null || nullPrecedence == NullPrecedence.NONE ) {
+		Nulls nullPrecedence = sortSpecification.getNullPrecedence();
+		if ( nullPrecedence == null || nullPrecedence == Nulls.NONE ) {
 			switch ( dialect.getNullOrdering() ) {
 				case FIRST:
-					nullPrecedence = NullPrecedence.FIRST;
+					nullPrecedence = Nulls.FIRST;
 					break;
 				case LAST:
-					nullPrecedence = NullPrecedence.LAST;
+					nullPrecedence = Nulls.LAST;
 					break;
 				case SMALLEST:
 					nullPrecedence = sortSpecification.getSortOrder() == SortDirection.ASCENDING
-							? NullPrecedence.FIRST
-							: NullPrecedence.LAST;
+							? Nulls.FIRST
+							: Nulls.LAST;
 					break;
 				case GREATEST:
 					nullPrecedence = sortSpecification.getSortOrder() == SortDirection.DESCENDING
-							? NullPrecedence.FIRST
-							: NullPrecedence.LAST;
+							? Nulls.FIRST
+							: Nulls.LAST;
 					break;
 			}
 		}
-		return nullPrecedence == NullPrecedence.FIRST;
+		return nullPrecedence == Nulls.FIRST;
 	}
 
 	private int getSortSelectionIndex(QuerySpec querySpec, SortSpecification sortSpecification) {

@@ -2168,7 +2168,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate or(List<Predicate> restrictions) {
-		return null;
+		if ( restrictions == null || restrictions.isEmpty() ) {
+			return disjunction();
+		}
+
+		final List<SqmPredicate> predicates = new ArrayList<>( restrictions.size() );
+		for ( Predicate expression : restrictions ) {
+			predicates.add( (SqmPredicate) expression );
+		}
+		return new SqmJunctionPredicate( Predicate.BooleanOperator.OR, predicates, this );
 	}
 
 	@Override

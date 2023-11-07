@@ -20,23 +20,23 @@ import jakarta.persistence.criteria.Nulls;
 public class SortSpecification implements SqlAstNode {
 	private final Expression sortExpression;
 	private final SortDirection sortOrder;
-	private final NullPrecedence nullPrecedence;
+	private final Nulls nullPrecedence;
 
 	public SortSpecification(Expression sortExpression, SortDirection sortOrder) {
-		this( sortExpression, sortOrder, NullPrecedence.NONE );
+		this( sortExpression, sortOrder, Nulls.NONE );
 	}
 
 	public SortSpecification(Expression sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
+		this( sortExpression, sortOrder, nullPrecedence.getJpaValue() );
+	}
+
+	public SortSpecification(Expression sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
 		assert sortExpression != null;
 		assert sortOrder != null;
 		assert nullPrecedence != null;
 		this.sortExpression = sortExpression;
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;
-	}
-
-	public SortSpecification(Expression sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
-		this( sortExpression,sortOrder, NullPrecedence.fromJpaValue( nullPrecedence ) );
 	}
 
 	public Expression getSortExpression() {
@@ -47,12 +47,8 @@ public class SortSpecification implements SqlAstNode {
 		return sortOrder;
 	}
 
-	public NullPrecedence getHibernateNullPrecedence() {
-		return nullPrecedence;
-	}
-
 	public Nulls getNullPrecedence() {
-		return nullPrecedence.getJpaValue();
+		return nullPrecedence;
 	}
 
 	@Override

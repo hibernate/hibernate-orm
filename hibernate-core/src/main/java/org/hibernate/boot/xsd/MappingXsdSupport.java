@@ -29,6 +29,12 @@ public class MappingXsdSupport {
 			"http://www.hibernate.org/xsd/orm/mapping"
 	);
 
+	public static final XsdDescriptor _320 = LocalXsdResolver.buildXsdDescriptor(
+			"org/hibernate/xsd/mapping/mapping-3.2.0.xsd",
+			"3.2",
+			"http://www.hibernate.org/xsd/orm/mapping"
+	);
+
 	public static final XsdDescriptor jpa10 = LocalXsdResolver.buildXsdDescriptor(
 			"org/hibernate/jpa/orm_1_0.xsd",
 			"1.0",
@@ -65,6 +71,12 @@ public class MappingXsdSupport {
 			"https://jakarta.ee/xml/ns/persistence/orm"
 	);
 
+	public static final XsdDescriptor jpa32 = LocalXsdResolver.buildXsdDescriptor(
+			"org/hibernate/jpa/orm_3_2.xsd",
+			"3.2",
+			"https://jakarta.ee/xml/ns/persistence/orm"
+	);
+
 	public static final XsdDescriptor hbmXml = LocalXsdResolver.buildXsdDescriptor(
 			"org/hibernate/xsd/mapping/legacy-mapping-4.0.xsd",
 			"4.0",
@@ -82,11 +94,11 @@ public class MappingXsdSupport {
 	}
 
 	public static XsdDescriptor latestDescriptor() {
-		return _310;
+		return _320;
 	}
 
 	public static XsdDescriptor latestJpaDescriptor() {
-		return jpa22;
+		return jpa32;
 	}
 
 	public static boolean shouldBeMappedToLatestJpaDescriptor(String uri) {
@@ -102,6 +114,7 @@ public class MappingXsdSupport {
 			case "2.2":
 			case "3.0":
 			case "3.1":
+			case "3.2":
 				return true;
 			default:
 				return false;
@@ -127,6 +140,9 @@ public class MappingXsdSupport {
 			}
 			case "3.1:": {
 				return jpa31;
+			}
+			case "3.2:": {
+				return jpa32;
 			}
 			default: {
 				throw new IllegalArgumentException( "Unrecognized JPA orm.xml XSD version : `" + version + "`" );

@@ -18,7 +18,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
 /**
  * @author Christian Beikov
  */
-public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements SqmCorrelation<L, R> {
+public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements SqmCorrelatedSingularValuedJoin<L, R> {
 
 	private final SqmCorrelatedRootJoin<L> correlatedRootJoin;
 	private final SqmEntityJoin<L,R> correlationParent;
@@ -96,6 +96,11 @@ public class SqmCorrelatedEntityJoin<L,R> extends SqmEntityJoin<L,R> implements 
 	@Override
 	public SqmRoot<L> getCorrelatedRoot() {
 		return correlatedRootJoin;
+	}
+
+	@Override
+	public SqmCorrelatedEntityJoin<L,R> createCorrelation() {
+		return new SqmCorrelatedEntityJoin<>( this );
 	}
 
 	@Override

@@ -20,6 +20,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedEntityJoin;
+import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedEntityJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
@@ -33,7 +34,7 @@ import jakarta.persistence.metamodel.EntityType;
 /**
  * @author Steve Ebersole
  */
-public class SqmEntityJoin<L,R> extends AbstractSqmJoin<L,R> implements JpaEntityJoin<L,R> {
+public class SqmEntityJoin<L,R> extends AbstractSqmJoin<L,R> implements SqmSingularValuedJoin<L,R>, JpaEntityJoin<L,R> {
 	private final SqmRoot<L> sqmRoot;
 
 	public SqmEntityJoin(
@@ -213,4 +214,6 @@ public class SqmEntityJoin<L,R> extends AbstractSqmJoin<L,R> implements JpaEntit
 				pathRegistry.findFromByPath( getRoot().getNavigablePath() )
 		);
 	}
+
+
 }

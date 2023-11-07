@@ -7,11 +7,11 @@
   -->
 
 <!-- Jakarta Persistence API object/relational mapping file schema -->
-<xsd:schema targetNamespace="https://jakarta.ee/xml/ns/persistence/orm"
-            xmlns:orm="https://jakarta.ee/xml/ns/persistence/orm"
-            xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+            xmlns="http://www.hibernate.org/xsd/orm/mapping"
+            xmlns:orm="http://www.hibernate.org/xsd/orm/mapping"
+            targetNamespace="http://www.hibernate.org/xsd/orm/mapping"
             elementFormDefault="qualified"
-            attributeFormDefault="unqualified"
             version="3.2">
     <xsd:annotation>
         <xsd:documentation><![CDATA[
@@ -20,7 +20,7 @@
 
         <entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                version="3.1">
+                version="3.2">
             ...
         </entity-mappings>
         ]]></xsd:documentation>

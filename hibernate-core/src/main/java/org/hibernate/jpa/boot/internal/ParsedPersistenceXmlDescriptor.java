@@ -9,16 +9,16 @@ package org.hibernate.jpa.boot.internal;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Properties;
+
+import org.hibernate.boot.archive.internal.ArchiveHelper;
+import org.hibernate.bytecode.enhance.spi.EnhancementContext;
+import org.hibernate.bytecode.spi.ClassTransformer;
+
 import jakarta.persistence.SharedCacheMode;
 import jakarta.persistence.ValidationMode;
 import jakarta.persistence.spi.PersistenceUnitTransactionType;
-
-import org.hibernate.bytecode.enhance.spi.EnhancementContext;
-import org.hibernate.bytecode.spi.ClassTransformer;
 
 /**
  * Describes the information gleaned from a {@code <persistence-unit/>} element in a {@code persistence.xml} file
@@ -130,8 +130,12 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 		return validationMode;
 	}
 
+	public void setValidationMode(ValidationMode validationMode) {
+		this.validationMode = validationMode;
+	}
+
 	public void setValidationMode(String validationMode) {
-		this.validationMode = ValidationMode.valueOf( validationMode );
+		setValidationMode( ValidationMode.valueOf( validationMode ) );
 	}
 
 	@Override
@@ -139,8 +143,12 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 		return sharedCacheMode;
 	}
 
+	public void setSharedCacheMode(SharedCacheMode sharedCacheMode) {
+		this.sharedCacheMode = sharedCacheMode;
+	}
+
 	public void setSharedCacheMode(String sharedCacheMode) {
-		this.sharedCacheMode = SharedCacheMode.valueOf( sharedCacheMode );
+		setSharedCacheMode( SharedCacheMode.valueOf( sharedCacheMode ) );
 	}
 
 	@Override
@@ -176,6 +184,12 @@ public class ParsedPersistenceXmlDescriptor implements org.hibernate.jpa.boot.sp
 
 	public void addJarFileUrl(URL jarFileUrl) {
 		jarFileUrls.add( jarFileUrl );
+	}
+
+	public void addJarFileUrls(List<String> jarFiles) {
+		jarFiles.forEach( (jarFile) -> {
+			addJarFileUrl( ArchiveHelper.getURLFromPath( jarFile ) );
+		} );
 	}
 
 	@Override

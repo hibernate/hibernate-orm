@@ -20,9 +20,14 @@ public class ConfigurationEventReader extends AbstractEventReader {
 	public ConfigurationEventReader(XMLEventReader reader, XMLEventFactory xmlEventFactory) {
 		super(
 				ROOT_ELEMENT_NAME,
-				ConfigXsdSupport.getJPA32(),
+				ConfigXsdSupport.configurationXsd(),
 				reader,
 				xmlEventFactory
 		);
+	}
+
+	@Override
+	protected boolean shouldBeMappedToLatestJpaDescriptor(String uri) {
+		return !ConfigXsdSupport.configurationXsd().getNamespaceUri().equals( uri );
 	}
 }

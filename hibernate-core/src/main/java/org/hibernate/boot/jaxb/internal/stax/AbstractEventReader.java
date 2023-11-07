@@ -2,7 +2,7 @@
  * Hibernate, Relational Persistence for Idiomatic Java
  *
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
- * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
 package org.hibernate.boot.jaxb.internal.stax;
 
@@ -20,36 +20,27 @@ import javax.xml.stream.events.StartElement;
 import javax.xml.stream.events.XMLEvent;
 import javax.xml.stream.util.EventReaderDelegate;
 
-import org.hibernate.boot.xsd.MappingXsdSupport;
+import org.hibernate.boot.xsd.XsdDescriptor;
 import org.hibernate.boot.xsd.XsdHelper;
 
 /**
- * StAX EVentReader which handles a few oddities specific to JPA {@code orm.xml}
- *
- * Mainly we handle the namespace change.
- *
- * Ultimately we should handle "upgrading" the documents as well.  The idea being that
- * we'd always treat all versions as the latest.
- *
- * {@see HHH-8108} for more discussion.
- *
- * @author Strong Liu
  * @author Steve Ebersole
- * @author Hardy Ferentschik
  */
-public class JpaOrmXmlEventReader extends EventReaderDelegate {
-
-	private static final String ROOT_ELEMENT_NAME = "entity-mappings";
+public abstract class AbstractEventReader extends EventReaderDelegate {
 	private static final String VERSION_ATTRIBUTE_NAME = "version";
 
+	private final String rootElementName;
+	private final XsdDescriptor xsdDescriptor;
 	private final XMLEventFactory xmlEventFactory;
 
-	public JpaOrmXmlEventReader(XMLEventReader reader) {
-		this( reader, XMLEventFactory.newInstance() );
-	}
-
-	public JpaOrmXmlEventReader(XMLEventReader reader, XMLEventFactory xmlEventFactory) {
+	public AbstractEventReader(
+			String rootElementName,
+			XsdDescriptor xsdDescriptor,
+			XMLEventReader reader,
+			XMLEventFactory xmlEventFactory) {
 		super( reader );
+		this.rootElementName = rootElementName;
+		this.xsdDescriptor = xsdDescriptor;
 		this.xmlEventFactory = xmlEventFactory;
 	}
 
@@ -83,10 +74,14 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 		// so that the event we ask it to generate for us has the same location info
 		xmlEventFactory.setLocation( startElement.getLocation() );
 		return xmlEventFactory.createStartElement(
-				new QName( MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri(), startElement.getName().getLocalPart() ),
+				new QName( xsdDescriptor.getNamespaceUri(), startElement.getName().getLocalPart() ),
 				newElementAttributeList.iterator(),
 				newNamespaceList.iterator()
 		);
+	}
+
+	private Iterator<Attribute> existingXmlAttributesIterator(StartElement startElement) {
+		return startElement.getAttributes();
 	}
 
 	private List<Attribute> mapAttributes(StartElement startElement) {
@@ -102,29 +97,24 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 		return mappedAttributes;
 	}
 
-	@SuppressWarnings("unchecked")
-	private Iterator<Attribute> existingXmlAttributesIterator(StartElement startElement) {
-		return startElement.getAttributes();
-	}
-
 	private Attribute mapAttribute(StartElement startElement, Attribute originalAttribute) {
-		// Here we look to see if this attribute is the JPA version attribute, and if so do 2 things:
-		//		1) validate its version attribute is valid
-		//		2) update its version attribute to the default version if not already
+		// Here we look to see if this attribute is the JPA version attribute, and if so do the following:
+		//		1) validate its version attribute is valid per our "latest XSD"
+		//		2) update its version attribute to the latest version if not already
 		//
 		// NOTE : atm this is a very simple check using just the attribute's local name
 		// rather than checking its qualified name.  It is possibly (though unlikely)
 		// that this could match on "other" version attributes in the same element
 
-		if ( ROOT_ELEMENT_NAME.equals( startElement.getName().getLocalPart() ) ) {
+		if ( rootElementName.equals( startElement.getName().getLocalPart() ) ) {
 			if ( VERSION_ATTRIBUTE_NAME.equals( originalAttribute.getName().getLocalPart() ) ) {
 				final String specifiedVersion = originalAttribute.getValue();
 
-				if ( ! XsdHelper.isValidJpaVersion( specifiedVersion ) ) {
+				if ( !XsdHelper.isValidJpaVersion( specifiedVersion ) ) {
 					throw new BadVersionException( specifiedVersion );
 				}
 
-				return xmlEventFactory.createAttribute( VERSION_ATTRIBUTE_NAME, MappingXsdSupport.latestJpaDescriptor().getVersion() );
+				return xmlEventFactory.createAttribute( VERSION_ATTRIBUTE_NAME, xsdDescriptor.getVersion() );
 			}
 		}
 
@@ -145,13 +135,12 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 		}
 
 		if ( mappedNamespaces.isEmpty() ) {
-			mappedNamespaces.add( xmlEventFactory.createNamespace( MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri() ) );
+			mappedNamespaces.add( xmlEventFactory.createNamespace( xsdDescriptor.getNamespaceUri() ) );
 		}
 
 		return mappedNamespaces;
 	}
 
-	@SuppressWarnings("unchecked")
 	private Iterator<Namespace> existingXmlNamespacesIterator(StartElement startElement) {
 		return startElement.getNamespaces();
 	}
@@ -159,10 +148,7 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 	private Namespace mapNamespace(Namespace originalNamespace) {
 		if ( XsdHelper.shouldBeMappedToLatestJpaDescriptor( originalNamespace.getNamespaceURI() ) ) {
 			// this is a namespace "to map" so map it
-			return xmlEventFactory.createNamespace(
-					originalNamespace.getPrefix(),
-					MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri()
-			);
+			return xmlEventFactory.createNamespace( originalNamespace.getPrefix(), xsdDescriptor.getNamespaceUri() );
 		}
 
 		return originalNamespace;
@@ -175,12 +161,11 @@ public class JpaOrmXmlEventReader extends EventReaderDelegate {
 		// so that the event we ask it to generate for us has the same location info
 		xmlEventFactory.setLocation( endElement.getLocation() );
 		return xmlEventFactory.createEndElement(
-				new QName( MappingXsdSupport.INSTANCE.latestJpaDescriptor().getNamespaceUri(), endElement.getName().getLocalPart() ),
+				new QName( xsdDescriptor.getNamespaceUri(), endElement.getName().getLocalPart() ),
 				targetNamespaces.iterator()
 		);
 	}
 
-	@SuppressWarnings("unchecked")
 	private Iterator<Namespace> existingXmlNamespacesIterator(EndElement endElement) {
 		return endElement.getNamespaces();
 	}

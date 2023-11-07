@@ -10,10 +10,6 @@ plugins {
     id 'org.hibernate.build.xjc-jakarta'
 }
 
-repositories {
-    gradlePluginPortal()
-}
-
 description = 'Hibernate\'s core ORM functionality'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )

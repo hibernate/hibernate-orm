@@ -28,11 +28,12 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.internal.SessionFactoryImpl;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.format.FormatMapper;
+
+import jakarta.persistence.criteria.Nulls;
 
 /**
  * @author Gail Badner
@@ -239,7 +240,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyDefaultNullPrecedence(NullPrecedence nullPrecedence) {
+	public SessionFactoryBuilder applyDefaultNullPrecedence(Nulls nullPrecedence) {
 		this.optionsBuilder.applyDefaultNullPrecedence( nullPrecedence );
 		return this;
 	}

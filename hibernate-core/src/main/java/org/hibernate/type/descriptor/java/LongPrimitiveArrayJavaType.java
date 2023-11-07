@@ -168,6 +168,10 @@ public class LongPrimitiveArrayJavaType extends AbstractArrayJavaType<long[], Lo
 			}
 			return wrapped;
 		}
+		else if ( value instanceof Long ) {
+			// Support binding a single element as parameter value
+			return new long[]{ (long) value };
+		}
 
 		throw unknownWrap( value.getClass() );
 	}

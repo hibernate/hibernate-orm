@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.function.BiConsumer;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.Bindable;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.internal.BindingTypeHelper;
@@ -74,8 +75,15 @@ public interface JdbcParameterBindings {
 			Bindable bindable,
 			JdbcParametersList jdbcParameters,
 			SharedSessionContractImplementor session) {
+		final Object valueToBind;
+		if ( bindable instanceof BasicValuedMapping ) {
+			valueToBind = ( (BasicValuedMapping) bindable ).getJdbcMapping().getMappedJavaType().wrap( value, session );
+		}
+		else {
+			valueToBind = value;
+		}
 		return bindable.forEachJdbcValue(
-				value,
+				valueToBind,
 				offset,
 				jdbcParameters,
 				session.getFactory().getTypeConfiguration(),

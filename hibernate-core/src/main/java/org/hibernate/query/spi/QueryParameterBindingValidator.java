@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryArgumentException;
 import org.hibernate.query.sqm.SqmExpressible;
-import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 
 import jakarta.persistence.TemporalType;
@@ -141,13 +140,6 @@ public class QueryParameterBindingValidator {
 					|| value instanceof Calendar;
 
 			return parameterDeclarationIsTemporal && bindIsTemporal;
-		}
-		// Allow binding a single element for a basic plural parameter type
-		else if ( expectedJavaType instanceof BasicPluralJavaType<?> ) {
-			final JavaType<?> elementJavaType = ( (BasicPluralJavaType<?>) expectedJavaType ).getElementJavaType();
-			if ( elementJavaType.isInstance( value ) ) {
-				return true;
-			}
 		}
 
 		return false;

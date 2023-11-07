@@ -27,10 +27,13 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 
+import org.hibernate.jpamodelgen.model.Metamodel;
+import org.hibernate.jpamodelgen.util.AccessTypeInformation;
 import org.hibernate.processor.model.Metamodel;
 import org.hibernate.processor.util.AccessType;
 import org.hibernate.processor.util.AccessTypeInformation;
 
+import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.lang.Boolean.parseBoolean;
@@ -412,7 +415,7 @@ public final class Context {
 	public void setUsesQuarkusOrm(boolean b) {
 		usesQuarkusOrm = b;
 	}
-	
+
 	public boolean usesQuarkusOrm() {
 		return usesQuarkusOrm;
 	}
@@ -420,7 +423,7 @@ public final class Context {
 	public void setUsesQuarkusReactive(boolean b) {
 		usesQuarkusReactive = b;
 	}
-	
+
 	public boolean usesQuarkusReactive() {
 		return usesQuarkusReactive;
 	}

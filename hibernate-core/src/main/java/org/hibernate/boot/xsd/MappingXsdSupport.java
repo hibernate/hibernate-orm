@@ -101,26 +101,6 @@ public class MappingXsdSupport {
 		return jpa32;
 	}
 
-	public static boolean shouldBeMappedToLatestJpaDescriptor(String uri) {
-		// JPA 1.0 and 2.0 share the same namespace URI
-		return jpa10.getNamespaceUri().equals( uri );
-	}
-
-	public static boolean isValidJpaVersion(String version) {
-		switch ( version ) {
-			case "1.0":
-			case "2.0":
-			case "2.1":
-			case "2.2":
-			case "3.0":
-			case "3.1":
-			case "3.2":
-				return true;
-			default:
-				return false;
-		}
-	}
-
 	public XsdDescriptor jpaXsd(String version) {
 		switch ( version ) {
 			case "1.0": {

@@ -39,6 +39,7 @@ import org.jboss.logging.Logger;
 
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 
@@ -113,7 +114,7 @@ public class MappingBinder extends AbstractBinder<JaxbBindableMappingDescriptor>
 
 	public MappingBinder(
 			ResourceStreamLocator resourceStreamLocator,
-			Function<String, Object> settingsAccess) {
+			@Nullable Function<String, Object> settingsAccess) {
 		super( resourceStreamLocator == null ? MappingBinder.class.getClassLoader()::getResourceAsStream : resourceStreamLocator );
 
 		if ( settingsAccess == null ) {

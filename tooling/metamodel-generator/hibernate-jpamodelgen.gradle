@@ -4,19 +4,27 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
-plugins {
-    id 'org.hibernate.build.xjc-jakarta'
-}
-
 description = 'Hibernate compile-time tooling'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'version-injection'
 
-ext {
-	xjcTargetDir = file( "${buildDir}/generated/sources/xjc/main" )
-	xsdDir = file( "${projectDir}/src/main/xsd" )
+java {
+    sourceCompatibility = jdks.versions.getBaseline(  )
+    targetCompatibility = 17
 }
+
+//configurations {
+//    modelImplementation {
+//        extendsFrom implementation
+//    }
+//    modelAnnotationProcessor {
+//        extendsFrom annotationProcessor
+//    }
+//    testImplementation {
+//        extendsFrom modelImplementation
+//    }
+//}
 
 sourceSets {
 	quarkusOrmPanache {
@@ -63,10 +71,6 @@ dependencies {
     api libs.antlrRuntime
     api libs.byteBuddy
 	api libs.logging
-
-    xjc jakartaLibs.xjc
-    xjc jakartaLibs.jaxb
-    xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
 
 	quarkusOrmPanacheImplementation "io.quarkus:quarkus-hibernate-orm-panache:3.6.2"
 	quarkusHrPanacheImplementation "io.quarkus:quarkus-hibernate-reactive-panache:3.6.2"
@@ -121,14 +125,14 @@ test.dependsOn quarkusHrPanacheTestTask
 test.dependsOn quarkusOrmPanacheTestTask
 
 sourceSets.main {
-    java.srcDir xjcTargetDir
+	java.srcDir xjcTargetDir
 	resources.srcDir xsdDir
 }
 
 compileTestJava {
-    options.compilerArgs += [
-            "-proc:none",
-            "-AsuppressJakartaDataMetamodel=true"
+	options.compilerArgs += [
+			"-proc:none",
+	"-AsuppressJakartaDataMetamodel=true"
     ]
 }
 
@@ -193,29 +197,29 @@ else {
 
 
 task jaxb {
-    // configure Gradle up-to-date checking
-    inputs.dir( xsdDir ).withPropertyName("xsdDir" ).withPathSensitivity( PathSensitivity.RELATIVE )
-    outputs.dir( xjcTargetDir )
-    outputs.cacheIf { true }
+	// configure Gradle up-to-date checking
+	inputs.dir( xsdDir ).withPropertyName("xsdDir" ).withPathSensitivity( PathSensitivity.RELATIVE )
+	outputs.dir( xjcTargetDir )
+	outputs.cacheIf { true }
 
-    // perform actions
-    doLast {
-        xjcTargetDir.mkdirs()
+	// perform actions
+	doLast {
+		xjcTargetDir.mkdirs()
 
-        ant.taskdef(name: 'xjc', classname: 'org.jvnet.jaxb2_commons.xjc.XJC2Task', classpath: configurations.xjc.asPath)
+		ant.taskdef(name: 'xjc', classname: 'org.jvnet.jaxb2_commons.xjc.XJC2Task', classpath: configurations.xjc.asPath)
 
-        ant.xjc(
-                destdir: ( xjcTargetDir as File ).absolutePath,
-                package: 'org.hibernate.processor.xml.jaxb',
-                extension: 'true'
-        ) {
-            project.ant.arg line: '-no-header'
-            project.ant.arg line: '-npa'
-            schema( dir: xsdDir.path, includes: "*.xsd" )
-        }
-    }
+		ant.xjc(
+				destdir: ( xjcTargetDir as File ).absolutePath,
+				package: 'org.hibernate.processor.xml.jaxb',
+				extension: 'true'
+		) {
+			project.ant.arg line: '-no-header'
+			project.ant.arg line: '-npa'
+			schema( dir: xsdDir.path, includes: "*.xsd" )
+		}
+	}
 }
-tasks.sourcesJar.dependsOn jaxb
+
 tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
 tasks.compileJava.dependsOn jaxb

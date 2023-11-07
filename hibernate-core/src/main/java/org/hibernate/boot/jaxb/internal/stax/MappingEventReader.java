@@ -93,10 +93,9 @@ public class MappingEventReader extends EventReaderDelegate {
 	}
 
 	private Attribute mapAttribute(StartElement startElement, Attribute originalAttribute) {
-		// Here we look to see if this attribute is the JPA version attribute, and if so do 3 things:
+		// Here we look to see if this attribute is the JPA version attribute, and if so do the following:
 		//		1) validate its version attribute is valid per our "latest XSD"
 		//		2) update its version attribute to the latest version if not already
-		//		3) if the latest XSD version is not in the XML list of valid versions, add it to avoid validation errors
 		//
 		// NOTE : atm this is a very simple check using just the attribute's local name
 		// rather than checking its qualified name.  It is possibly (though unlikely)

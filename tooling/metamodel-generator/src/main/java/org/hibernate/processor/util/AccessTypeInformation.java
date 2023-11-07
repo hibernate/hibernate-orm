@@ -6,6 +6,7 @@
  */
 package org.hibernate.processor.util;
 
+import jakarta.persistence.AccessType;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**

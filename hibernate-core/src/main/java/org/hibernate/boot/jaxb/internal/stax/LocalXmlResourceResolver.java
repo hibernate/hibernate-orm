@@ -40,8 +40,8 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 
 		if ( namespace != null ) {
 			log.debugf( "Interpreting namespace : %s", namespace );
-			if ( MappingXsdSupport._310.getNamespaceUri().matches( namespace ) ) {
-				return openUrlStream( MappingXsdSupport._310 );
+			if ( MappingXsdSupport.latestDescriptor().getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( MappingXsdSupport.latestDescriptor() );
 			}
 			if ( MappingXsdSupport.jpa10.getNamespaceUri().matches( namespace ) ) {
 				// JPA 1.0 and 2.0 share the same namespace URI
@@ -56,6 +56,9 @@ public class LocalXmlResourceResolver implements javax.xml.stream.XMLResolver {
 			}
 			else if ( MappingXsdSupport.jpa31.getNamespaceUri().matches( namespace ) ) {
 				return openUrlStream( MappingXsdSupport.jpa31 );
+			}
+			else if ( MappingXsdSupport.jpa32.getNamespaceUri().matches( namespace ) ) {
+				return openUrlStream( MappingXsdSupport.jpa32 );
 			}
 			else if ( ConfigXsdSupport.getJPA10().getNamespaceUri().matches( namespace ) ) {
 				// JPA 1.0 and 2.0 share the same namespace URI

@@ -58,6 +58,7 @@ import org.hibernate.query.criteria.HibernateCriteriaBuilder;
 import org.hibernate.query.criteria.JpaCoalesce;
 import org.hibernate.query.criteria.JpaCompoundSelection;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
+import org.hibernate.query.criteria.JpaCriteriaSelect;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaFunction;
@@ -170,6 +171,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
@@ -407,13 +409,39 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
+	public <T> JpaCriteriaSelect<T> union(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+		if ( left instanceof Subquery<?> ) {
+			assert right instanceof Subquery<?>;
+			//noinspection unchecked
+			return setOperation( SetOperator.UNION, (Subquery<T>) left, (Subquery<T>) right );
+		}
+		//noinspection unchecked
+		return setOperation( SetOperator.UNION, (JpaCriteriaQuery<T>) left, (JpaCriteriaQuery<T>) right );
+	}
+
+	@Override
 	public <T> JpaSubQuery<T> union(boolean all, Subquery<? extends T> query1, Subquery<?>... queries) {
 		return setOperation( all ? SetOperator.UNION_ALL : SetOperator.UNION, query1, queries );
 	}
 
 	@Override
+	public <T> CriteriaSelect<T> unionAll(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+		return null;
+	}
+
+	@Override
 	public <T> JpaSubQuery<T> intersect(boolean all, Subquery<? extends T> query1, Subquery<?>... queries) {
 		return setOperation( all ? SetOperator.INTERSECT_ALL : SetOperator.INTERSECT, query1, queries );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> except(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+		return null;
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> exceptAll(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+		return null;
 	}
 
 	@Override
@@ -555,6 +583,16 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right) {
 		return createUnionSet( SetOperator.UNION_ALL, left, right );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> intersect(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+		return null;
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> intersectAll(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+		return null;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
@@ -786,13 +824,18 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public JpaCompoundSelection<Tuple> tuple(Selection<?>[] selections) {
-		//noinspection unchecked
-		return tuple( (List<SqmSelectableNode<?>>) (List<?>) Arrays.asList( selections ) );
+		return tuple( Arrays.asList( selections ) );
 	}
 
 	@Override
-	public JpaCompoundSelection<Tuple> tuple(List<? extends JpaSelection<?>> selections) {
-		return null;
+	public JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections) {
+		checkMultiselect( selections );
+		//noinspection unchecked,rawtypes
+		return new SqmJpaCompoundSelection<>(
+				(List) selections,
+				getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Tuple.class ),
+				this
+		);
 	}
 
 	@Override
@@ -825,13 +868,13 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public JpaCompoundSelection<Object[]> array(Selection<?>[] selections) {
-		//noinspection unchecked
-		return array( (List<SqmSelectableNode<?>>) (List<?>) Arrays.asList( selections ) );
+		return array( Arrays.asList( selections ) );
 	}
 
 	@Override
-	public JpaCompoundSelection<Object[]> array(List<? extends JpaSelection<?>> selections) {
-		return array( Object[].class, selections );
+	public JpaCompoundSelection<Object[]> array(List<Selection<?>> selections) {
+		//noinspection unchecked,rawtypes
+		return array( Object[].class, (List) selections );
 	}
 
 	@Override
@@ -842,7 +885,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends JpaSelection<?>> selections) {
-		checkMultiselect( selections );
+		//noinspection rawtypes,unchecked
+		checkMultiselect( (List) selections );
 		final JavaType<Y> javaType = getTypeConfiguration().getJavaTypeRegistry().getDescriptor( resultClass );
 		//noinspection unchecked
 		return new SqmJpaCompoundSelection<>( (List<SqmSelectableNode<?>>) selections, javaType, this );
@@ -856,7 +900,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <Y> JpaCompoundSelection<Y> construct(Class<Y> resultClass, List<? extends JpaSelection<?>> arguments) {
-		checkMultiselect( arguments );
+		//noinspection unchecked,rawtypes
+		checkMultiselect( (List) arguments );
 		final SqmDynamicInstantiation<Y> instantiation;
 		if ( List.class.equals( resultClass ) ) {
 			//noinspection unchecked
@@ -891,10 +936,11 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	 * <i>&quot;An argument to the multiselect method must not be a tuple-
 	 * or array-valued compound selection item.&quot;</i>
 	 */
-	void checkMultiselect(List<? extends JpaSelection<?>> selections) {
+	void checkMultiselect(List<Selection<?>> selections) {
 		final HashSet<String> aliases = new HashSet<>( CollectionHelper.determineProperSizing( selections.size() ) );
 
-		for ( JpaSelection<?> selection : selections ) {
+		for ( Selection<?> it : selections ) {
+			final JpaSelection<?> selection = (JpaSelection<?>) it;
 			if ( selection.isCompoundSelection() ) {
 				if ( selection.getJavaType().isArray() ) {
 					throw new IllegalArgumentException(

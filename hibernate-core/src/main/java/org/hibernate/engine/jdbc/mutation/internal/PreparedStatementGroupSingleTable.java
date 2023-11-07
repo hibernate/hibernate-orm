@@ -12,6 +12,7 @@ import java.util.function.Predicate;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.sql.model.PreparableMutationOperation;
 import org.hibernate.sql.model.TableMapping;
 
@@ -30,8 +31,15 @@ public class PreparedStatementGroupSingleTable implements PreparedStatementGroup
 	public PreparedStatementGroupSingleTable(
 			PreparableMutationOperation jdbcMutation,
 			SharedSessionContractImplementor session) {
+		this( jdbcMutation, null, session );
+	}
+
+	public PreparedStatementGroupSingleTable(
+			PreparableMutationOperation jdbcMutation,
+			GeneratedValuesMutationDelegate delegate,
+			SharedSessionContractImplementor session) {
 		this.jdbcMutation = jdbcMutation;
-		this.statementDetails = ModelMutationHelper.standardPreparation( jdbcMutation, session );
+		this.statementDetails = ModelMutationHelper.standardPreparation( jdbcMutation, delegate, session );
 		this.session = session;
 	}
 

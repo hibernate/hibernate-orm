@@ -44,6 +44,9 @@ import org.hibernate.sql.ast.tree.select.SelectClause;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
+
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 
 /**
  * A legacy SQL AST translator for H2.
@@ -60,12 +63,47 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 
 	@Override
 	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
-		if ( CollectionHelper.isNotEmpty( tableInsert.getReturningColumns() ) ) {
-			visitReturningInsertStatement( tableInsert );
+		if ( getDialect().getVersion().isSameOrAfter( 2 )
+				|| CollectionHelper.isEmpty( tableInsert.getReturningColumns() ) ) {
+			final boolean closeWrapper = renderReturningClause( tableInsert.getReturningColumns() );
+			super.visitStandardTableInsert( tableInsert );
+			if ( closeWrapper ) {
+				appendSql( ')' );
+			}
 		}
 		else {
-			super.visitStandardTableInsert( tableInsert );
+			visitReturningInsertStatement( tableInsert );
 		}
+	}
+
+	@Override
+	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
+		final boolean closeWrapper = renderReturningClause( tableUpdate.getReturningColumns() );
+		super.visitStandardTableUpdate( tableUpdate );
+		if ( closeWrapper ) {
+			appendSql( ')' );
+		}
+	}
+
+	protected boolean renderReturningClause(List<ColumnReference> returningColumns) {
+		if ( isEmpty( returningColumns ) ) {
+			return false;
+		}
+		appendSql( "select " );
+		for ( int i = 0; i < returningColumns.size(); i++ ) {
+			if ( i > 0 ) {
+				appendSql( ", " );
+			}
+			appendSql( returningColumns.get( i ).getColumnExpression() );
+		}
+		appendSql( " from final table (" );
+		return true;
+	}
+
+
+	@Override
+	protected void visitReturningColumns(List<ColumnReference> returningColumns) {
+		// do nothing - this is handled via `#renderReturningClause`
 	}
 
 	public void visitReturningInsertStatement(TableInsertStandard tableInsert) {
@@ -143,11 +181,6 @@ public class H2LegacySqlAstTranslator<T extends JdbcOperation> extends AbstractS
 				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
 			}
 		}
-	}
-
-	@Override
-	protected void visitReturningColumns(List<ColumnReference> returningColumns) {
-		// do nothing - this is handled via `#visitReturningInsertStatement`
 	}
 
 	@Override

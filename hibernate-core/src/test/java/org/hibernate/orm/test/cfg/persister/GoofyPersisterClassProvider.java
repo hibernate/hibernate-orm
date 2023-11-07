@@ -36,6 +36,8 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -56,11 +58,13 @@ import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
+import org.hibernate.metamodel.mapping.ValuedModelPart;
 import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
+import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -399,11 +403,12 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void insert(Object id, Object[] fields, Object object, SharedSessionContractImplementor session) {
+		public GeneratedValues insertReturning(Object id, Object[] fields, Object object, SharedSessionContractImplementor session) {
+			return null;
 		}
 
 		@Override
-		public Serializable insert(Object[] fields, Object object, SharedSessionContractImplementor session) {
+		public GeneratedValues insertReturning(Object[] fields, Object object, SharedSessionContractImplementor session) {
 			return null;
 		}
 
@@ -412,7 +417,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void update(
+		public GeneratedValues updateReturning(
 				Object id,
 				Object[] fields,
 				int[] dirtyFields,
@@ -422,6 +427,7 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 				Object object,
 				Object rowId,
 				SharedSessionContractImplementor session) {
+			return null;
 		}
 
 		@Override
@@ -605,11 +611,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public void processInsertGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
+		public void processInsertGeneratedProperties(Object id, Object entity, Object[] state, GeneratedValues generatedValues, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public void processUpdateGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
+		public void processUpdateGeneratedProperties(Object id, Object entity, Object[] state, GeneratedValues generatedValues, SharedSessionContractImplementor session) {
 		}
 
 		@Override
@@ -760,6 +766,31 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
+		public String getSelectByUniqueKeyString(String propertyName) {
+			return null;
+		}
+
+		@Override
+		public String getSelectByUniqueKeyString(String[] propertyNames, String[] columnNames) {
+			return null;
+		}
+
+		@Override
+		public String[] getRootTableKeyColumnNames() {
+			return new String[0];
+		}
+
+		@Override
+		public String getIdentitySelectString() {
+			return null;
+		}
+
+		@Override
+		public String[] getIdentifierColumnNames() {
+			return new String[0];
+		}
+
+		@Override
 		public boolean isAffectedByEnabledFilters(LoadQueryInfluencers influencers) {
 			return false;
 		}
@@ -786,6 +817,51 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		@Override
 		public JavaType getMappedJavaType() {
+			return null;
+		}
+
+		@Override
+		public EntityMappingType getTargetPart() {
+			return null;
+		}
+
+		@Override
+		public void forEachMutableTable(Consumer<EntityTableMapping> consumer) {
+
+		}
+
+		@Override
+		public void forEachMutableTableReverse(Consumer<EntityTableMapping> consumer) {
+
+		}
+
+		@Override
+		public String getIdentifierTableName() {
+			return null;
+		}
+
+		@Override
+		public EntityTableMapping getIdentifierTableMapping() {
+			return null;
+		}
+
+		@Override
+		public ModelPart getIdentifierDescriptor() {
+			return null;
+		}
+
+		@Override
+		public boolean hasSkippableTables() {
+			return false;
+		}
+
+		@Override
+		public GeneratedValuesMutationDelegate getInsertDelegate() {
+			return null;
+		}
+
+		@Override
+		public GeneratedValuesMutationDelegate getUpdateDelegate() {
 			return null;
 		}
 	}

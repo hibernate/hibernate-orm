@@ -28,6 +28,7 @@ import org.hibernate.event.spi.PostUpdateEvent;
 import org.hibernate.event.spi.PostUpdateEventListener;
 import org.hibernate.event.spi.PreUpdateEvent;
 import org.hibernate.event.spi.PreUpdateEventListener;
+import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
@@ -165,12 +166,22 @@ public class EntityUpdateAction extends EntityAction {
 			final Object instance = getInstance();
 			final Object previousVersion = getPreviousVersion();
 			final Object ck = lockCacheItem( previousVersion );
-			persister.update( id, state, dirtyFields, hasDirtyCollection, previousState, previousVersion, instance, rowId, session );
+			final GeneratedValues generatedValues = persister.updateReturning(
+					id,
+					state,
+					dirtyFields,
+					hasDirtyCollection,
+					previousState,
+					previousVersion,
+					instance,
+					rowId,
+					session
+			);
 			final EntityEntry entry = session.getPersistenceContextInternal().getEntry( instance );
 			if ( entry == null ) {
 				throw new AssertionFailure( "possible non thread safe access to session" );
 			}
-			handleGeneratedProperties( entry );
+			handleGeneratedProperties( entry, generatedValues );
 			handleDeleted( entry );
 			updateCacheItem( previousVersion, ck, entry );
 			handleNaturalIdResolutions( persister, session, id );
@@ -228,7 +239,7 @@ public class EntityUpdateAction extends EntityAction {
 			|| session.getCacheMode() == CacheMode.IGNORE;
 	}
 
-	private void handleGeneratedProperties(EntityEntry entry) {
+	private void handleGeneratedProperties(EntityEntry entry, GeneratedValues generatedValues) {
 		final EntityPersister persister = getPersister();
 		if ( entry.getStatus() == Status.MANAGED || persister.isVersionPropertyGenerated() ) {
 			final SharedSessionContractImplementor session = getSession();
@@ -247,7 +258,7 @@ public class EntityUpdateAction extends EntityAction {
 			if ( persister.hasUpdateGeneratedProperties() ) {
 				// this entity defines property generation, so process those generated
 				// values...
-				persister.processUpdateGeneratedProperties( id, instance, state, session );
+				persister.processUpdateGeneratedProperties( id, instance, state, generatedValues, session );
 			}
 			// have the entity entry doAfterTransactionCompletion post-update processing, passing it the
 			// update state and the new version (if one).

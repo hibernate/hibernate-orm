@@ -45,6 +45,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.type.SqlTypes;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
@@ -434,12 +435,34 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 				appendSql( returningColumns.get( i ).getColumnExpression() );
 			}
 
-			appendSql( " from new table ( " ); // 'from final table' does not seem to play well with triggers
+			appendSql( " from new table (" ); // 'from final table' does not seem to play well with triggers
 			super.visitStandardTableInsert( tableInsert );
 			appendSql( ")" );
 		}
 		else {
 			super.visitStandardTableInsert( tableInsert );
+		}
+	}
+
+	@Override
+	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
+		final List<ColumnReference> returningColumns = tableUpdate.getReturningColumns();
+		if ( isNotEmpty( returningColumns ) ) {
+			appendSql( "select " );
+
+			for ( int i = 0; i < returningColumns.size(); i++ ) {
+				if ( i > 0 ) {
+					appendSql( ", " );
+				}
+				appendSql( returningColumns.get( i ).getColumnExpression() );
+			}
+
+			appendSql( " from final table (" );
+			super.visitStandardTableUpdate( tableUpdate );
+			appendSql( ")" );
+		}
+		else {
+			super.visitStandardTableUpdate( tableUpdate );
 		}
 	}
 

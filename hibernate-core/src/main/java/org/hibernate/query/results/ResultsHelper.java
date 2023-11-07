@@ -67,6 +67,24 @@ public class ResultsHelper {
 		);
 	}
 
+	public static Expression resolveSqlExpression(
+			DomainResultCreationStateImpl resolver,
+			TableReference tableReference,
+			SelectableMapping selectableMapping,
+			int valuesArrayPosition) {
+		return resolver.resolveSqlExpression(
+				createColumnReferenceKey(
+						tableReference,
+						selectableMapping.getSelectablePath(),
+						selectableMapping.getJdbcMapping()
+				),
+				processingState -> new ResultSetMappingSqlSelection(
+						valuesArrayPosition,
+						selectableMapping.getJdbcMapping()
+				)
+		);
+	}
+
 	private ResultsHelper() {
 	}
 

@@ -1753,6 +1753,23 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		);
 	}
 
+	@Override
+	public void replaceEntityEntryRowId(Object entity, Object rowId) {
+		final EntityEntry oldEntry = entityEntryContext.removeEntityEntry( entity );
+		addEntry(
+				entity,
+				oldEntry.getStatus(),
+				oldEntry.getLoadedState(),
+				rowId,
+				oldEntry.getId(),
+				oldEntry.getVersion(),
+				oldEntry.getLockMode(),
+				oldEntry.isExistsInDatabase(),
+				oldEntry.getPersister(),
+				oldEntry.isBeingReplicated()
+		);
+	}
+
 	/**
 	 * Used by the owning session to explicitly control serialization of the
 	 * persistence context.

@@ -57,15 +57,12 @@ public interface PreparableMutationOperation extends MutationOperation {
 			return false;
 		}
 
-		if ( getMutationType() == MutationType.INSERT ) {
-			// we cannot batch inserts which generate id values post-insert (IDENTITY, TRIGGER, etc)
-			if ( getTableDetails().isIdentifierTable()
-					&& getMutationTarget() instanceof EntityMutationTarget
-					&& ( (EntityMutationTarget) getMutationTarget() ).getIdentityInsertDelegate() != null ) {
-				return false;
-			}
-		}
-		else if ( getMutationType() == MutationType.UPDATE ) {
+		// This should already be guaranteed by the batchKey being null
+		assert !getTableDetails().isIdentifierTable() ||
+				!( getMutationTarget() instanceof EntityMutationTarget
+						&& ( (EntityMutationTarget) getMutationTarget() ).getMutationDelegate( getMutationType() ) != null );
+
+		if ( getMutationType() == MutationType.UPDATE ) {
 			// we cannot batch updates against optional tables
 			if ( getTableDetails().isOptional() ) {
 				return false;

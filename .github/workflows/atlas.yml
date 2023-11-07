@@ -31,7 +31,7 @@ jobs:
   build:
     permissions:
       contents: read
-    name: Java 11
+    name: Java 17
     #    runs-on: ubuntu-latest
     runs-on: [self-hosted, Linux, X64, OCI]
     strategy:
@@ -68,7 +68,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
           RUNID: ${{ github.run_number }}
         run: ci/database-start.sh
-      - name: Set up Java 11
+      - name: Set up Java 17
         uses: graalvm/setup-graalvm@v1
         with:
           distribution: 'graalvm'

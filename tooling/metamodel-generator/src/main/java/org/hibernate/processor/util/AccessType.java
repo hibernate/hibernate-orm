@@ -10,6 +10,27 @@ package org.hibernate.processor.util;
  * @author Hardy Ferentschik
  */
 public enum AccessType {
-	PROPERTY,
-	FIELD
+	PROPERTY( jakarta.persistence.AccessType.PROPERTY ),
+	FIELD( jakarta.persistence.AccessType.FIELD );
+
+	private final jakarta.persistence.AccessType jpaAccessType;
+
+	AccessType(jakarta.persistence.AccessType jpaAccessType) {
+		this.jpaAccessType = jpaAccessType;
+	}
+
+	public jakarta.persistence.AccessType getJpaAccessType() {
+		return jpaAccessType;
+	}
+
+	public static AccessType fromJpaAccessType(jakarta.persistence.AccessType jpaAccessType) {
+		if ( jpaAccessType == jakarta.persistence.AccessType.FIELD ) {
+			return FIELD;
+		}
+		if ( jpaAccessType == jakarta.persistence.AccessType.PROPERTY ) {
+			return PROPERTY;
+		}
+
+		throw new IllegalArgumentException( "Unknown JPA AccessType - " + jpaAccessType.name() );
+	}
 }

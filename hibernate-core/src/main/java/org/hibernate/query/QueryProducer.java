@@ -166,8 +166,7 @@ public interface QueryProducer {
 	 *
 	 * @apiNote Changes in JPA 3.2 required de-typing this to be compilable with their changes
 	 */
-	@SuppressWarnings("rawtypes")
-	NativeQuery createNativeQuery(String sqlString, Class<?> resultClass);
+	<R> NativeQuery<R> createNativeQuery(String sqlString, Class<R> resultClass);
 
 	/**
 	 * Create a {@link NativeQuery} instance for the given native SQL query

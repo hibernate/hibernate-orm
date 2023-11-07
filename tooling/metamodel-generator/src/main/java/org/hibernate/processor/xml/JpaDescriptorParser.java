@@ -70,9 +70,6 @@ public class JpaDescriptorParser {
 	private static final String DEFAULT_ORM_XML_LOCATION = "/META-INF/orm.xml";
 	private static final String SERIALIZATION_FILE_NAME = "Hibernate-Static-Metamodel-Generator.tmp";
 
-	private static final String PERSISTENCE_SCHEMA = "org/hibernate/xsd/cfg/persistence_3_0.xsd";
-
-
 	private final Context context;
 	private final List<JaxbEntityMappingsImpl> entityMappings;
 	private final XmlParserHelper xmlParserHelper;
@@ -121,7 +118,7 @@ public class JpaDescriptorParser {
 			// get mapping file names from persistence.xml
 			List<JaxbPersistenceImpl.JaxbPersistenceUnitImpl> persistenceUnits = persistence.getPersistenceUnit();
 			for ( JaxbPersistenceImpl.JaxbPersistenceUnitImpl unit : persistenceUnits ) {
-				mappingFileNames.addAll( unit.getMappingFile() );
+				mappingFileNames.addAll( unit.getMappingFiles() );
 			}
 		}
 

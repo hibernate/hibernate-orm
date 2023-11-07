@@ -20,6 +20,49 @@
                 <anonymousTypeName prefix="Jaxb" suffix="Impl"/>
             </nameXmlTransform>
         </schemaBindings>
-    </bindings>
 
+        <bindings node="//xsd:element[@name='persistence-unit']/xsd:complexType">
+            <bindings node=".//xsd:element[@name='mapping-file']">
+                <property name="mappingFiles"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='class']">
+                <property name="classes"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='jar-file']">
+                <property name="jarFiles"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='properties']">
+                <property name="propertyContainer"/>
+                <bindings node=".//xsd:element[@name='property']">
+                    <property name="properties"/>
+                </bindings>
+            </bindings>
+        </bindings>
+
+
+        <!--
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+            ~ Marshalling of enum values
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        -->
+
+        <bindings node="//xsd:simpleType[@name='persistence-unit-transaction-type']">
+            <javaType name="jakarta.persistence.spi.PersistenceUnitTransactionType"
+                      parseMethod="org.hibernate.boot.jaxb.cfg.internal.TransactionTypeMarshalling.fromXml"
+                      printMethod="org.hibernate.boot.jaxb.cfg.internal.TransactionTypeMarshalling.toXml" />
+        </bindings>
+
+        <bindings node="//xsd:simpleType[@name='persistence-unit-caching-type']">
+            <javaType name="jakarta.persistence.SharedCacheMode"
+                      parseMethod="org.hibernate.boot.jaxb.cfg.internal.SharedCacheModeMarshalling.fromXml"
+                      printMethod="org.hibernate.boot.jaxb.cfg.internal.SharedCacheModeMarshalling.toXml" />
+        </bindings>
+
+        <bindings node="//xsd:simpleType[@name='persistence-unit-validation-mode-type']">
+            <javaType name="jakarta.persistence.ValidationMode"
+                      parseMethod="org.hibernate.boot.jaxb.cfg.internal.ValidationModeMarshalling.fromXml"
+                      printMethod="org.hibernate.boot.jaxb.cfg.internal.ValidationModeMarshalling.toXml" />
+        </bindings>
+
+    </bindings>
 </bindings>

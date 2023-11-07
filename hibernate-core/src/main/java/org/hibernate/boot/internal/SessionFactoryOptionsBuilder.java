@@ -59,7 +59,7 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.hql.HqlTranslator;
-import org.hibernate.query.NullPrecedence;
+import org.hibernate.query.internal.NullPrecedenceHelper;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -73,6 +73,8 @@ import org.hibernate.type.format.FormatMapper;
 import org.hibernate.type.format.jackson.JacksonIntegration;
 import org.hibernate.type.format.jakartajson.JakartaJsonIntegration;
 import org.hibernate.type.format.jaxb.JaxbXmlFormatMapper;
+
+import jakarta.persistence.criteria.Nulls;
 
 import static org.hibernate.cfg.AvailableSettings.ALLOW_JTA_TRANSACTION_ACCESS;
 import static org.hibernate.cfg.AvailableSettings.ALLOW_REFRESH_DETACHED_ENTITY;
@@ -203,7 +205,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private int defaultBatchFetchSize;
 	private Integer maximumFetchDepth;
 	private boolean subselectFetchEnabled;
-	private NullPrecedence defaultNullPrecedence;
+	private Nulls defaultNullPrecedence;
 	private boolean orderUpdatesEnabled;
 	private boolean orderInsertsEnabled;
 	private boolean collectionsInDefaultFetchGroupEnabled = true;
@@ -388,13 +390,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 			this.defaultNullPrecedence = (NullPrecedence) defaultNullPrecedence;
 		}
 		else if ( defaultNullPrecedence instanceof String ) {
-			this.defaultNullPrecedence = NullPrecedence.parse( (String) defaultNullPrecedence );
+			this.defaultNullPrecedence = NullPrecedenceHelper.parse( (String) defaultNullPrecedence );
 		}
 		else if ( defaultNullPrecedence != null ) {
 			throw new IllegalArgumentException( "Configuration property " + DEFAULT_NULL_ORDERING
 					+ " value [" + defaultNullPrecedence + "] is not supported" );
 		}
-
 		this.orderUpdatesEnabled = getBoolean( ORDER_UPDATES, configurationSettings );
 		this.orderInsertsEnabled = getBoolean( ORDER_INSERTS, configurationSettings );
 
@@ -1046,7 +1047,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public NullPrecedence getDefaultNullPrecedence() {
+	public Nulls getDefaultNullPrecedence() {
 		return defaultNullPrecedence;
 	}
 
@@ -1462,7 +1463,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.subselectFetchEnabled = subselectFetchEnabled;
 	}
 
-	public void applyDefaultNullPrecedence(NullPrecedence nullPrecedence) {
+	public void applyDefaultNullPrecedence(Nulls nullPrecedence) {
 		this.defaultNullPrecedence = nullPrecedence;
 	}
 

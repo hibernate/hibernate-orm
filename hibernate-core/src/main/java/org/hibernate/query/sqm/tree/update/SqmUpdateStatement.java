@@ -264,11 +264,6 @@ public class SqmUpdateStatement<T>
 		return new SqmSubQuery<>( this, type, nodeBuilder() );
 	}
 
-	@Override
-	public Set<ParameterExpression<?>> getParameters() {
-		return null;
-	}
-
 	public <Y> void applyAssignment(SqmPath<Y> targetPath, SqmExpression<? extends Y> value) {
 		applyAssignment( new SqmAssignment<>( targetPath, value ) );
 	}

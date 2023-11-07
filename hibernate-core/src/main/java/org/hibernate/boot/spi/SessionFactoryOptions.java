@@ -29,13 +29,14 @@ import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.query.ImmutableEntityUpdateQueryHandlingMode;
 import org.hibernate.query.criteria.ValueHandlingMode;
 import org.hibernate.query.spi.QueryEngineOptions;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.stat.Statistics;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.ObjectJavaType;
 import org.hibernate.type.format.FormatMapper;
+
+import jakarta.persistence.criteria.Nulls;
 
 /**
  * Aggregator of special options used to build the {@link org.hibernate.SessionFactory}.
@@ -149,7 +150,7 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isSubselectFetchEnabled();
 
-	NullPrecedence getDefaultNullPrecedence();
+	Nulls getDefaultNullPrecedence();
 
 	boolean isOrderUpdatesEnabled();
 

@@ -21,6 +21,7 @@ import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -130,6 +131,48 @@ public class CriteriaWindowFunctionTest {
 					assertEquals( 3L, resultList.get( 2 ) );
 					assertEquals( 4L, resultList.get( 3 ) );
 					assertEquals( 5L, resultList.get( 4 ) );
+				}
+		);
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17391" )
+	public void testRowNumberMultiSelectGroupBy(final SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					final CriteriaQuery<Tuple> cr = cb.createQuery( Tuple.class );
+					final Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
+
+					final JpaWindow window = cb.createWindow();
+					window.partitionBy( root.get( "id" ) ).orderBy( cb.asc( root.get( "id" ) ) );
+					final JpaExpression<Long> rowNumber = cb.rowNumber( window );
+
+					cr.multiselect( root.get( "id" ), rowNumber ).groupBy( root.get( "id" ) );
+					final List<Tuple> resultList = session.createQuery( cr ).getResultList();
+					assertEquals( 5, resultList.size() );
+					resultList.forEach( tuple -> assertEquals( 1L, tuple.get( 1, Long.class ) ) );
+				}
+		);
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17392" )
+	public void testRowNumberMultiSelect(final SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
+					final CriteriaQuery<Tuple> cr = cb.createQuery( Tuple.class );
+					final Root<EntityOfBasics> root = cr.from( EntityOfBasics.class );
+
+					final JpaWindow window = cb.createWindow();
+					window.partitionBy( root.get( "id" ) ).orderBy( cb.asc( root.get( "id" ) ) );
+					final JpaExpression<Long> rowNumber = cb.rowNumber( window );
+
+					cr.multiselect( root.get( "id" ), rowNumber );
+					final List<Tuple> resultList = session.createQuery( cr ).getResultList();
+					assertEquals( 5, resultList.size() );
+					resultList.forEach( tuple -> assertEquals( 1L, tuple.get( 1, Long.class ) ) );
 				}
 		);
 	}

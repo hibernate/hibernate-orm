@@ -29,7 +29,7 @@ jobs:
   build:
     permissions:
       contents: read
-    name: Java 11
+    name: Java 17
     #    runs-on: ubuntu-latest
     runs-on: [self-hosted, Linux, X64, OCI]
     strategy:
@@ -51,11 +51,11 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
           RUNID: ${{ github.run_number }}
         run: ci/database-start.sh
-      - name: Set up Java 11
+      - name: Set up Java 17
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
-          java-version: '11'
+          java-version: '17'
       - name: Get year/month for cache key
         id: get-date
         run: echo "yearmonth=$(/bin/date -u "+%Y-%m")" >> $GITHUB_OUTPUT

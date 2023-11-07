@@ -124,6 +124,11 @@ import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.query.Query;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.UnknownSqlResultSetMappingException;
+import org.hibernate.query.criteria.CriteriaDefinition;
+import org.hibernate.query.spi.QueryImplementor;
+import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
+import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
@@ -148,6 +153,7 @@ import jakarta.persistence.LockOption;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.RefreshOption;
 import jakarta.persistence.TransactionRequiredException;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.metamodel.Metamodel;
 
 import static java.lang.Boolean.parseBoolean;
@@ -1717,6 +1723,35 @@ public class SessionImpl
 	public SessionFactoryImplementor getSessionFactory() {
 //		checkTransactionSynchStatus();
 		return getFactory();
+	}
+
+	@Override
+	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
+		checkOpen();
+		if ( selectQuery instanceof CriteriaDefinition ) {
+			return (QueryImplementor<T>) ((CriteriaDefinition<T>) selectQuery).createSelectionQuery(this);
+		}
+		else {
+			try {
+				final SqmSelectStatement<T> selectStatement = (SqmSelectStatement<T>) selectQuery;
+				if ( ! ( selectStatement.getQueryPart() instanceof SqmQueryGroup ) ) {
+					final SqmQuerySpec<T> querySpec = selectStatement.getQuerySpec();
+					if ( querySpec.getSelectClause().getSelections().isEmpty() ) {
+						if ( querySpec.getFromClause().getRoots().size() == 1 ) {
+							querySpec.getSelectClause().setSelection( querySpec.getFromClause().getRoots().get(0) );
+						}
+					}
+				}
+
+				return createCriteriaQuery( selectStatement, selectStatement.getResultType() );
+			}
+			catch (RuntimeException e) {
+				if ( getSessionFactory().getJpaMetamodel().getJpaCompliance().isJpaTransactionComplianceEnabled() ) {
+					markForRollbackOnly();
+				}
+				throw getExceptionConverter().convert( e );
+			}
+		}
 	}
 
 	@Override

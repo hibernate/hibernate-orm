@@ -41,7 +41,6 @@ import org.hibernate.query.sqm.tree.domain.SqmCorrelatedListJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedRoot;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSetJoin;
-import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSingularJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedSingularValuedJoin;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelation;
 import org.hibernate.query.sqm.tree.domain.SqmListJoin;
@@ -49,7 +48,6 @@ import org.hibernate.query.sqm.tree.domain.SqmMapJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSetJoin;
 import org.hibernate.query.sqm.tree.domain.SqmSingularValuedJoin;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
-import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCrossJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
@@ -276,12 +274,12 @@ public class SqmSubQuery<T> extends AbstractSqmSelectQuery<T> implements SqmSele
 					break;
 				}
 				default: {
-					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
+					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selectionList );
 				}
 			}
 		}
 		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
-			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selections );
+			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selectionList );
 		}
 		else if ( resultType.isArray() ) {
 			resultSelection = nodeBuilder().array( resultType, selections );

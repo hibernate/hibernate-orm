@@ -141,17 +141,4 @@ public class SqmDeleteStatement<T>
 	public <U> Subquery<U> subquery(EntityType<U> type) {
 		throw new UnsupportedOperationException( "DELETE query cannot be sub-query" );
 	}
-
-	@Override
-	public Set<ParameterExpression<?>> getParameters() {
-		// At this level, the number of parameters may still be growing as
-		// nodes are added to the Criteria - so we re-calculate this every
-		// time.
-		//
-		// for a "finalized" set of parameters, use `#resolveParameters` instead
-		assert getQuerySource() == SqmQuerySource.CRITERIA;
-		return getSqmParameters().stream()
-				.filter( parameterExpression -> !( parameterExpression instanceof ValueBindJpaCriteriaParameter ) )
-				.collect( Collectors.toSet() );
-	}
 }

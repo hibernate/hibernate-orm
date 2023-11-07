@@ -20,11 +20,12 @@ import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.jpa.spi.JpaCompliance;
 import org.hibernate.loader.BatchFetchStyle;
 import org.hibernate.proxy.EntityNotFoundDelegate;
-import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.function.SqmFunctionDescriptor;
 import org.hibernate.resource.jdbc.spi.PhysicalConnectionHandlingMode;
 import org.hibernate.resource.jdbc.spi.StatementInspector;
 import org.hibernate.type.format.FormatMapper;
+
+import jakarta.persistence.criteria.Nulls;
 
 /**
  * The contract for building a {@link SessionFactory} given a specified set of options.
@@ -335,7 +336,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#DEFAULT_NULL_ORDERING
 	 */
-	SessionFactoryBuilder applyDefaultNullPrecedence(NullPrecedence nullPrecedence);
+	SessionFactoryBuilder applyDefaultNullPrecedence(Nulls nullPrecedence);
 
 	/**
 	 * Specify whether ordering of inserts should be enabled.

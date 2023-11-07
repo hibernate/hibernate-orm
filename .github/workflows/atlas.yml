@@ -29,7 +29,7 @@ jobs:
   build:
     permissions:
       contents: read
-    name: Java 17
+    name: Hibernate ORM
     #    runs-on: ubuntu-latest
     runs-on: [self-hosted, Linux, X64, OCI]
     strategy:
@@ -51,7 +51,7 @@ jobs:
           RDBMS: ${{ matrix.rdbms }}
           RUNID: ${{ github.run_number }}
         run: ci/database-start.sh
-      - name: Set up Java 17
+      - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'

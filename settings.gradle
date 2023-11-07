@@ -30,16 +30,15 @@ dependencyResolutionManagement {
             url( rootProject.property( "mavenMirror" ) )
         }
         mavenCentral()
-        if (System.getProperty('JPA_PREVIEW') != null) {
-            // Needed for the RC versions of Jakarta Persistence
-            maven {
-                url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
-            }
-            // Needed for the SNAPSHOT versions of Jakarta Persistence
-            maven {
-                url "https://jakarta.oss.sonatype.org/content/repositories/snapshots/"
-            }
-        }
+        if (System.getProperty('JPA_PREVIEW') != null) {            // Needed for the RC versions of Jakarta Persistence
+			maven {
+				url "https://jakarta.oss.sonatype.org/content/repositories/releases/"
+			}
+			// Needed for the SNAPSHOT versions of Jakarta Persistence
+			maven {
+				url "https://jakarta.oss.sonatype.org/content/repositories/snapshots/"
+			}
+		}
 
         //Allow loading additional dependencies from a local path;
         //useful to load JDBC drivers which can not be distributed in public.

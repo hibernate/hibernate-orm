@@ -29,7 +29,7 @@ import org.hibernate.spi.NavigablePath;
 /**
  * @author Steve Ebersole
  */
-public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> {
+public class SqmSingularJoin<O,T> extends AbstractSqmAttributeJoin<O,T> implements SqmSingularValuedJoin<O,T> {
 	public SqmSingularJoin(
 			SqmFrom<?,O> lhs,
 			SingularPersistentAttribute<O, T> joinedNavigable,

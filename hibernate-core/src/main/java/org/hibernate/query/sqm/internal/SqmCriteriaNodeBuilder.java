@@ -772,13 +772,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public JpaCompoundSelection<Tuple> tuple(List<? extends JpaSelection<?>> selections) {
-		checkMultiselect( selections );
-		//noinspection unchecked
-		return new SqmJpaCompoundSelection<>(
-				(List<SqmSelectableNode<?>>) selections,
-				getTypeConfiguration().getJavaTypeRegistry().getDescriptor( Tuple.class ),
-				this
-		);
+		return null;
 	}
 
 	@Override
@@ -2207,7 +2201,15 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public SqmPredicate or(List<Predicate> restrictions) {
-		return null;
+		if ( restrictions == null || restrictions.isEmpty() ) {
+			return disjunction();
+		}
+
+		final List<SqmPredicate> predicates = new ArrayList<>( restrictions.size() );
+		for ( Predicate expression : restrictions ) {
+			predicates.add( (SqmPredicate) expression );
+		}
+		return new SqmJunctionPredicate( Predicate.BooleanOperator.OR, predicates, this );
 	}
 
 	@Override

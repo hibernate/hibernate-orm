@@ -8,6 +8,7 @@ package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.sql.model.MutationOperationGroup;
 
 /**
@@ -21,7 +22,7 @@ import org.hibernate.sql.model.MutationOperationGroup;
 public interface UpdateCoordinator {
 	MutationOperationGroup getStaticUpdateGroup();
 
-	void coordinateUpdate(
+	GeneratedValues coordinateUpdate(
 			Object entity,
 			Object id,
 			Object rowId,

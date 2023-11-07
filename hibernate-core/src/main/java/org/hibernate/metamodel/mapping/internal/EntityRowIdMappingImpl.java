@@ -9,6 +9,7 @@ package org.hibernate.metamodel.mapping.internal;
 import java.util.function.BiConsumer;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -25,6 +26,9 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
+import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchOptions;
+import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -246,5 +250,36 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	@Override
 	public JdbcMapping getJdbcMapping() {
 		return rowIdType.getJdbcMapping();
+	}
+
+	@Override
+	public MappingType getMappedType() {
+		return rowIdType;
+	}
+
+	@Override
+	public String getFetchableName() {
+		return rowIdName;
+	}
+
+	@Override
+	public int getFetchableKey() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public FetchOptions getMappedFetchOptions() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Fetch generateFetch(
+			FetchParent fetchParent,
+			NavigablePath fetchablePath,
+			FetchTiming fetchTiming,
+			boolean selected,
+			String resultVariable,
+			DomainResultCreationState creationState) {
+		throw new UnsupportedOperationException();
 	}
 }

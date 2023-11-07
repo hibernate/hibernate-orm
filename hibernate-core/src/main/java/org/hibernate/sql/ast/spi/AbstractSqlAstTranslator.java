@@ -8680,6 +8680,10 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			if ( tableUpdate.getWhereFragment() != null ) {
 				sqlBuffer.append( " and (" ).append( tableUpdate.getWhereFragment() ).append( ")" );
 			}
+
+			if ( tableUpdate.getNumberOfReturningColumns() > 0 ) {
+				visitReturningColumns( tableUpdate::getReturningColumns );
+			}
 		}
 		finally {
 			getCurrentClauseStack().pop();

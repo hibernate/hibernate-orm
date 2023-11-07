@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.MutationTarget;
@@ -85,5 +86,15 @@ public class TableUpdateNoSet
 
 	@Override
 	public void forEachParameter(Consumer<ColumnValueParameter> consumer) {
+	}
+
+	@Override
+	public List<ColumnReference> getReturningColumns() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public void forEachReturningColumn(BiConsumer<Integer, ColumnReference> consumer) {
+		// nothing to do
 	}
 }

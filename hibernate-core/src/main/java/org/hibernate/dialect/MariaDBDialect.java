@@ -12,6 +12,8 @@ import java.sql.SQLException;
 import org.hibernate.boot.model.FunctionContributions;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.function.CommonFunctionFactory;
+import org.hibernate.dialect.identity.IdentityColumnSupport;
+import org.hibernate.dialect.identity.MariaDBIdentityColumnSupport;
 import org.hibernate.dialect.sequence.MariaDBSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
@@ -246,6 +248,16 @@ public class MariaDBDialect extends MySQLDialect {
 	@Override
 	public boolean supportsInsertReturning() {
 		return getVersion().isSameOrAfter( 10, 5 );
+	}
+
+	@Override
+	public boolean supportsUpdateReturning() {
+		return false;
+	}
+
+	@Override
+	public IdentityColumnSupport getIdentityColumnSupport() {
+		return MariaDBIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override

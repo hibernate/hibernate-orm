@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.model.ast.builder;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -76,7 +77,8 @@ public class CollectionRowDeleteByUpdateSetNullBuilder<O extends MutationOperati
 				getKeyRestrictionBindings(),
 				getOptimisticLockBindings(),
 				getWhereFragment(),
-				null
+				null,
+				Collections.emptyList()
 		) {
 			@Override
 			public Expectation getExpectation() {

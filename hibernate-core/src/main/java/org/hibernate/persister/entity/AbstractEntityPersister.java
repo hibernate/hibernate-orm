@@ -104,6 +104,9 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.internal.VersionGeneration;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.internal.GeneratedValuesHelper;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
@@ -112,7 +115,6 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.enhanced.Optimizer;
-import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -162,7 +164,6 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
@@ -316,6 +317,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toObjectArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toTypeArray;
+import static org.hibernate.internal.util.collections.CollectionHelper.combine;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallList;
@@ -426,10 +428,13 @@ public abstract class AbstractEntityPersister
 	private final FilterHelper filterHelper;
 	private volatile Set<String> affectingFetchProfileNames;
 
+	protected List<? extends ModelPart> insertGeneratedProperties;
+	protected List<? extends ModelPart> updateGeneratedProperties;
 	private GeneratedValuesProcessor insertGeneratedValuesProcessor;
 	private GeneratedValuesProcessor updateGeneratedValuesProcessor;
 
-	private InsertGeneratedIdentifierDelegate identityDelegate;
+	private GeneratedValuesMutationDelegate insertDelegate;
+	private GeneratedValuesMutationDelegate updateDelegate;
 	private String identitySelectString;
 
 	private boolean[] tableHasColumns;
@@ -2008,8 +2013,10 @@ public abstract class AbstractEntityPersister
 		return select.addRestriction( rootTableKeyColumnNames ).toStatementString();
 	}
 
-	private GeneratedValuesProcessor createGeneratedValuesProcessor(EventType timing) {
-		return new GeneratedValuesProcessor( this, timing, getFactory() );
+	private GeneratedValuesProcessor createGeneratedValuesProcessor(
+			EventType timing,
+			List<AttributeMapping> generatedAttributes) {
+		return new GeneratedValuesProcessor( this, generatedAttributes, timing, getFactory() );
 	}
 
 	@Override
@@ -2793,11 +2800,22 @@ public abstract class AbstractEntityPersister
 		return select.toStatementString();
 	}
 
+	@Override
+	public String getSelectByUniqueKeyString(String[] propertyNames, String[] columnNames) {
+		final SimpleSelect select = new SimpleSelect( getFactory() )
+				.setTableName( getTableName( 0 ) )
+				.addColumns( columnNames );
+		for ( final String propertyName : propertyNames ) {
+			select.addRestriction( getPropertyColumnNames( propertyName ) );
+		}
+		return select.toStatementString();
+	}
+
 	/**
 	 * Update an object
 	 */
 	@Override
-	public void update(
+	public GeneratedValues updateReturning(
 			final Object id,
 			final Object[] values,
 			int[] dirtyAttributeIndexes,
@@ -2807,7 +2825,7 @@ public abstract class AbstractEntityPersister
 			final Object object,
 			final Object rowId,
 			final SharedSessionContractImplementor session) throws HibernateException {
-		updateCoordinator.coordinateUpdate(
+		return updateCoordinator.coordinateUpdate(
 				object,
 				id,
 				rowId,
@@ -2859,18 +2877,23 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public InsertGeneratedIdentifierDelegate getIdentityInsertDelegate() {
-		return identityDelegate;
+	public GeneratedValuesMutationDelegate getInsertDelegate() {
+		return insertDelegate;
 	}
 
 	@Override
-	public Object insert(Object[] fields, Object object, SharedSessionContractImplementor session) {
+	public GeneratedValuesMutationDelegate getUpdateDelegate() {
+		return updateDelegate;
+	}
+
+	@Override
+	public GeneratedValues insertReturning(Object[] fields, Object object, SharedSessionContractImplementor session) {
 		return insertCoordinator.coordinateInsert( null, fields, object, session );
 	}
 
 	@Override
-	public void insert(Object id, Object[] fields, Object object, SharedSessionContractImplementor session) {
-		insertCoordinator.coordinateInsert( id, fields, object, session );
+	public GeneratedValues insertReturning(Object id, Object[] fields, Object object, SharedSessionContractImplementor session) {
+		return insertCoordinator.coordinateInsert( id, fields, object, session );
 	}
 
 	protected EntityTableMapping[] getTableMappings() {
@@ -3402,13 +3425,36 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void doLateInit() {
+		tableMappings = buildTableMappings();
+
+		final List<AttributeMapping> insertGeneratedAttributes = hasInsertGeneratedProperties() ?
+				GeneratedValuesProcessor.getGeneratedAttributes( this, INSERT )
+				: Collections.emptyList();
+		final List<AttributeMapping> updateGeneratedAttributes = hasUpdateGeneratedProperties() ?
+				GeneratedValuesProcessor.getGeneratedAttributes( this, UPDATE )
+				: Collections.emptyList();
+
+		insertGeneratedProperties = initInsertGeneratedProperties( insertGeneratedAttributes );
+		updateGeneratedProperties = initUpdateGeneratedProperties( updateGeneratedAttributes );
+
 		if ( isIdentifierAssignedByInsert() ) {
 			final OnExecutionGenerator generator = (OnExecutionGenerator) getGenerator();
-			identityDelegate = generator.getGeneratedIdentifierDelegate( this );
+			insertDelegate = generator.getGeneratedIdentifierDelegate( this );
 			identitySelectString = getIdentitySelectString( factory.getJdbcServices().getDialect() );
 		}
+		else {
+			insertDelegate = GeneratedValuesHelper.getGeneratedValuesDelegate( this, INSERT );
+		}
 
-		tableMappings = buildTableMappings();
+		updateDelegate = GeneratedValuesHelper.getGeneratedValuesDelegate( this, UPDATE );
+
+		if ( hasInsertGeneratedProperties() ) {
+			insertGeneratedValuesProcessor = createGeneratedValuesProcessor( INSERT, insertGeneratedAttributes );
+		}
+		if ( hasUpdateGeneratedProperties() ) {
+			updateGeneratedValuesProcessor = createGeneratedValuesProcessor( UPDATE, updateGeneratedAttributes );
+		}
+
 		insertCoordinator = buildInsertCoordinator();
 		updateCoordinator = buildUpdateCoordinator();
 		deleteCoordinator = buildDeleteCoordinator();
@@ -4664,11 +4710,39 @@ public abstract class AbstractEntityPersister
 			Object id,
 			Object entity,
 			Object[] state,
+			GeneratedValues generatedValues,
 			SharedSessionContractImplementor session) {
 		if ( insertGeneratedValuesProcessor == null ) {
 			throw new UnsupportedOperationException( "Entity has no insert-generated properties - `" + getEntityName() + "`" );
 		}
-		insertGeneratedValuesProcessor.processGeneratedValues( entity, id, state, session );
+		insertGeneratedValuesProcessor.processGeneratedValues( entity, id, state, generatedValues, session );
+	}
+
+	protected List<? extends ModelPart> initInsertGeneratedProperties(List<AttributeMapping> generatedAttributes) {
+		final int originalSize = generatedAttributes.size();
+		final List<ModelPart> generatedBasicAttributes = new ArrayList<>( originalSize );
+		for ( AttributeMapping generatedAttribute : generatedAttributes ) {
+			// todo (7.0) : support non selectable mappings? Component, ToOneAttributeMapping, ...
+			if ( generatedAttribute instanceof BasicValuedModelPart
+					&& generatedAttribute.getContainingTableExpression().equals( getSubclassTableName( 0 ) ) ) {
+				generatedBasicAttributes.add( generatedAttribute );
+			}
+		}
+
+		final List<ModelPart> identifierList = isIdentifierAssignedByInsert() ?
+				List.of( getIdentifierMapping() ) :
+				Collections.emptyList();
+		if ( originalSize > 0 && generatedBasicAttributes.size() == originalSize ) {
+			return Collections.unmodifiableList( combine( identifierList, generatedBasicAttributes ) );
+		}
+		else  {
+			return identifierList;
+		}
+	}
+
+	@Override
+	public List<? extends ModelPart> getInsertGeneratedProperties() {
+		return insertGeneratedProperties;
 	}
 
 	@Override
@@ -4676,11 +4750,35 @@ public abstract class AbstractEntityPersister
 			Object id,
 			Object entity,
 			Object[] state,
+			GeneratedValues generatedValues,
 			SharedSessionContractImplementor session) {
 		if ( updateGeneratedValuesProcessor == null ) {
 			throw new AssertionFailure( "Entity has no update-generated properties - `" + getEntityName() + "`" );
 		}
-		updateGeneratedValuesProcessor.processGeneratedValues( entity, id, state, session );
+		updateGeneratedValuesProcessor.processGeneratedValues( entity, id, state, generatedValues, session );
+	}
+
+	protected List<? extends ModelPart> initUpdateGeneratedProperties(List<AttributeMapping> generatedAttributes) {
+		final int originalSize = generatedAttributes.size();
+		final List<ModelPart> generatedBasicAttributes = new ArrayList<>( originalSize );
+		for ( AttributeMapping generatedAttribute : generatedAttributes ) {
+			if ( generatedAttribute instanceof SelectableMapping
+					&& ( (SelectableMapping) generatedAttribute ).getContainingTableExpression().equals( getSubclassTableName( 0 ) ) ) {
+				generatedBasicAttributes.add( generatedAttribute );
+			}
+		}
+
+		if ( generatedBasicAttributes.size() == originalSize ) {
+			return Collections.unmodifiableList( generatedBasicAttributes );
+		}
+		else  {
+			return Collections.emptyList();
+		}
+	}
+
+	@Override
+	public List<? extends ModelPart> getUpdateGeneratedProperties() {
+		return updateGeneratedProperties;
 	}
 
 	@Override
@@ -4996,12 +5094,6 @@ public abstract class AbstractEntityPersister
 					visitSubTypeAttributeMappings( builder::add );
 					assert superMappingType != null || builder.assertFetchableIndexes();
 					staticFetchableList = builder.build();
-					if ( hasInsertGeneratedProperties() ) {
-						insertGeneratedValuesProcessor = createGeneratedValuesProcessor( INSERT );
-					}
-					if ( hasUpdateGeneratedProperties() ) {
-						updateGeneratedValuesProcessor = createGeneratedValuesProcessor( UPDATE );
-					}
 					return true;
 				}
 		);

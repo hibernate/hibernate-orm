@@ -17,7 +17,7 @@ import org.hibernate.spi.NavigablePath;
 /**
  * @author Steve Ebersole
  */
-public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTreatedPath<T,S> {
+public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTreatedFrom<S,T,S> {
 	private final SqmRoot<T> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
@@ -53,7 +53,7 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 	}
 
 	@Override
-	public SqmRoot<S> copy(SqmCopyContext context) {
+	public SqmTreatedRoot<T,S> copy(SqmCopyContext context) {
 		final SqmTreatedRoot<T, S> existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;

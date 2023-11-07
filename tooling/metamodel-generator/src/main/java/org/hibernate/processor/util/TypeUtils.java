@@ -31,6 +31,10 @@ import javax.lang.model.util.ElementFilter;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.SimpleTypeVisitor8;
 import javax.tools.Diagnostic;
+
+import jakarta.persistence.AccessType;
+import org.hibernate.jpamodelgen.Context;
+import org.hibernate.jpamodelgen.MetaModelGenerationException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;

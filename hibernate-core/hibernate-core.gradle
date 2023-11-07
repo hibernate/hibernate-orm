@@ -119,6 +119,11 @@ xjc {
             xjcBindingFile = file( 'src/main/xjb/hbm-mapping-bindings.xjb' )
             xjcExtensions += ['inheritance', 'simplify']
         }
+        configuration {
+            xsdFile = file( 'src/main/resources/org/hibernate/xsd/cfg/configuration-3.2.0.xsd' )
+            xjcBindingFile = file( 'src/main/xjb/configuration-bindings.xjb' )
+            xjcExtensions += ['inheritance', 'simplify']
+        }
         mapping {
             xsdFile = file( 'src/main/resources/org/hibernate/xsd/mapping/mapping-3.2.0.xsd' )
             xjcBindingFile = file( 'src/main/xjb/mapping-bindings.xjb' )

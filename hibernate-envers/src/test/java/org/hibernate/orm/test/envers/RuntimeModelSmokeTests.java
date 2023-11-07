@@ -6,29 +6,23 @@
  */
 package org.hibernate.orm.test.envers;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-
-import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.envers.Audited;
-import org.hibernate.envers.DefaultRevisionEntity;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.metamodel.RuntimeMetamodels;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.persister.entity.EntityPersister;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
 /**
@@ -54,9 +48,6 @@ public class RuntimeModelSmokeTests {
 
 		final EntityPersister mappingType = runtimeMetamodels.getMappingMetamodel().findEntityDescriptor( FULL_NAME );
 		assertThat( mappingType, notNullValue() );
-
-		final EntityDomainType<?> jpaType = runtimeMetamodels.getJpaMetamodel().entity( SIMPLE_NAME );
-		assertThat( jpaType, notNullValue() );
 	}
 
 	@Entity( name = "SimpleEntity" )

@@ -20,18 +20,18 @@ import jakarta.persistence.criteria.Nulls;
 public class SortSpecification implements SqlAstNode {
 	private final Expression sortExpression;
 	private final SortDirection sortOrder;
-	private final NullPrecedence nullPrecedence;
+	private final Nulls nullPrecedence;
 	private final boolean ignoreCase;
 
 	public SortSpecification(Expression sortExpression, SortDirection sortOrder) {
-		this( sortExpression, sortOrder, NullPrecedence.NONE );
+		this( sortExpression, sortOrder, Nulls.NONE, false );
 	}
 
 	public SortSpecification(Expression sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence) {
-		this(sortExpression, sortOrder, nullPrecedence, false);
+		this( sortExpression, sortOrder, nullPrecedence.getJpaValue(), false );
 	}
 
-	public SortSpecification(Expression sortExpression, SortDirection sortOrder, NullPrecedence nullPrecedence, boolean ignoreCase) {
+	public SortSpecification(Expression sortExpression, SortDirection sortOrder, Nulls nullPrecedence, boolean ignoreCase) {
 		assert sortExpression != null;
 		assert sortOrder != null;
 		assert nullPrecedence != null;
@@ -39,10 +39,6 @@ public class SortSpecification implements SqlAstNode {
 		this.sortOrder = sortOrder;
 		this.nullPrecedence = nullPrecedence;
 		this.ignoreCase = ignoreCase;
-	}
-
-	public SortSpecification(Expression sortExpression, SortDirection sortOrder, Nulls nullPrecedence) {
-		this( sortExpression,sortOrder, NullPrecedence.fromJpaValue( nullPrecedence ) );
 	}
 
 	public Expression getSortExpression() {
@@ -53,12 +49,8 @@ public class SortSpecification implements SqlAstNode {
 		return sortOrder;
 	}
 
-	public NullPrecedence getHibernateNullPrecedence() {
-		return nullPrecedence;
-	}
-
 	public Nulls getNullPrecedence() {
-		return nullPrecedence.getJpaValue();
+		return nullPrecedence;
 	}
 
 	public boolean isIgnoreCase() {

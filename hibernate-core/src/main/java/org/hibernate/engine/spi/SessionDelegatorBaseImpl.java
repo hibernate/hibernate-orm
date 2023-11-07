@@ -70,6 +70,7 @@ import jakarta.persistence.LockOption;
 import jakarta.persistence.RefreshOption;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.Metamodel;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -492,6 +493,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public RootGraphImplementor<?> getEntityGraph(String graphName) {
 		return delegate.getEntityGraph( graphName );
+	}
+
+	@Override
+	public <T> QueryImplementor<T> createQuery(CriteriaSelect<T> selectQuery) {
+		return delegate.createQuery( selectQuery );
 	}
 
 	@Override

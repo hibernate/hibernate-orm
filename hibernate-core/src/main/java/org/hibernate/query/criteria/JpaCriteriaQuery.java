@@ -25,7 +25,7 @@ import jakarta.persistence.metamodel.EntityType;
  *
  * @author Steve Ebersole
  */
-public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCriteria<T>, JpaSelectCriteria<T> {
+public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCriteria<T>, JpaSelectCriteria<T>, JpaCriteriaSelect<T> {
 
 	/**
 	 * Wraps this query in a subquery and returns a count query based on that subquery in the from clause.

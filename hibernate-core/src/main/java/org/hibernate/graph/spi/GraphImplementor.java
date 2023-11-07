@@ -15,6 +15,8 @@ import org.hibernate.graph.CannotContainSubGraphException;
 import org.hibernate.graph.Graph;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 
+import jakarta.persistence.metamodel.Attribute;
+
 /**
  * Integration version of the {@link Graph} contract
  *
@@ -48,6 +50,16 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 		getAttributeNodeImplementors().forEach( consumer );
 	}
 
+	@Override
+	default boolean hasAttributeNode(String attributeName) {
+		return getAttributeNode( attributeName ) != null;
+	}
+
+	@Override
+	default boolean hasAttributeNode(Attribute<? super J, ?> attribute) {
+		return getAttributeNode( attribute ) != null;
+	}
+
 	AttributeNodeImplementor<?> addAttributeNode(AttributeNodeImplementor<?> makeCopy);
 
 	List<AttributeNodeImplementor<?>> getAttributeNodeImplementors();
@@ -65,7 +77,10 @@ public interface GraphImplementor<J> extends Graph<J>, GraphNodeImplementor<J> {
 	<AJ> AttributeNodeImplementor<AJ> findAttributeNode(PersistentAttribute<? super J, AJ> attribute);
 
 	@Override
-	void addAttributeNode(String attributeName) throws CannotContainSubGraphException;
+	<AJ> AttributeNodeImplementor<AJ> addAttributeNode(String attributeName) throws CannotContainSubGraphException;
+
+	@Override
+	<Y> AttributeNodeImplementor<Y> addAttributeNode(Attribute<? super J, Y> attribute);
 
 	@Override
 	<AJ> AttributeNodeImplementor<AJ> addAttributeNode(PersistentAttribute<? super J, AJ> attribute)

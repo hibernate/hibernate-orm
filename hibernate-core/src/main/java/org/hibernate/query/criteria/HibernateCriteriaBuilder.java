@@ -24,10 +24,7 @@ import org.hibernate.Incubating;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.sqm.FrameKind;
-import org.hibernate.query.sqm.SetOperator;
-import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.tree.select.SqmQueryGroup;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
 import jakarta.persistence.Tuple;
@@ -35,6 +32,7 @@ import jakarta.persistence.criteria.AbstractQuery;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
@@ -174,15 +172,10 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<T> JpaCriteriaQuery<T> except(boolean all, CriteriaQuery<? extends T> query1, CriteriaQuery<?>... queries);
 
-	default <T> JpaSubQuery<T> unionAll(Subquery<? extends T> query1, Subquery<?>... queries) {
-		return union( true, query1, queries );
-	}
-
 	@Override
+	<T> CriteriaSelect<T> union(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right);
+
 	<T> JpaCriteriaQuery<T> union(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
-
-	@Override
-	<T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
 
 	default <T> JpaSubQuery<T> union(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return union( false, query1, queries );
@@ -193,10 +186,23 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 		return null;
 	}
 
-	@Override
-	<T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right);
+	default <T> JpaSubQuery<T> unionAll(Subquery<? extends T> query1, Subquery<?>... queries) {
+		return union( true, query1, queries );
+	}
 
 	@Override
+	<T> CriteriaSelect<T> unionAll(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right);
+
+	<T> JpaCriteriaQuery<T> unionAll(CriteriaQuery<? extends T> left, CriteriaQuery<? extends T> right);
+
+	@Override
+	<T> CriteriaSelect<T> intersect(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right);
+
+	@Override
+	<T> CriteriaSelect<T> intersectAll(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right);
+
+	<T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right);
+
 	<T> JpaCriteriaQuery<T> intersectAll(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right);
 
 	default <T> JpaSubQuery<T> intersectAll(Subquery<? extends T> query1, Subquery<?>... queries) {
@@ -210,9 +216,13 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<T> JpaSubQuery<T> intersect(boolean all, Subquery<? extends T> query1, Subquery<?>... queries);
 
 	@Override
-	<T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right);
+	<T> CriteriaSelect<T> except(CriteriaSelect<T> left, CriteriaSelect<?> right);
 
 	@Override
+	<T> CriteriaSelect<T> exceptAll(CriteriaSelect<T> left, CriteriaSelect<?> right);
+
+	<T> JpaCriteriaQuery<T> except(CriteriaQuery<T> left, CriteriaQuery<?> right);
+
 	<T> JpaCriteriaQuery<T> exceptAll(CriteriaQuery<T> left, CriteriaQuery<?> right);
 
 	default <T> JpaSubQuery<T> exceptAll(Subquery<? extends T> query1, Subquery<?>... queries) {
@@ -367,11 +377,11 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	@Override
 	JpaCompoundSelection<Tuple> tuple(Selection<?>... selections);
-	JpaCompoundSelection<Tuple> tuple(List<? extends JpaSelection<?>> selections);
+	JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections);
 
 	@Override
 	JpaCompoundSelection<Object[]> array(Selection<?>... selections);
-	JpaCompoundSelection<Object[]> array(List<? extends JpaSelection<?>> selections);
+	JpaCompoundSelection<Object[]> array(List<Selection<?>> selections);
 
 	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, Selection<?>... selections);
 	<Y> JpaCompoundSelection<Y> array(Class<Y> resultClass, List<? extends JpaSelection<?>> selections);

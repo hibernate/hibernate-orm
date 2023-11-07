@@ -56,12 +56,12 @@ import org.hibernate.query.criteria.JpaSubQuery;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.sqm.TemporalUnit;
-import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CollectionJoin;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.ListJoin;
@@ -200,8 +200,18 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <T> CriteriaSelect<T> union(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+		return criteriaBuilder.union( left, right );
+	}
+
+	@Override
 	public <T> JpaSubQuery<T> unionAll(Subquery<? extends T> query1, Subquery<?>... queries) {
 		return criteriaBuilder.unionAll( query1, queries );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> unionAll(CriteriaSelect<? extends T> left, CriteriaSelect<? extends T> right) {
+		return criteriaBuilder.unionAll( left, right );
 	}
 
 	@Override
@@ -227,6 +237,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public <T> JpaSubQuery<T> intersect(boolean all, Subquery<? extends T> query1, Subquery<?>... queries) {
 		return criteriaBuilder.intersect( all, query1, queries );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> except(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+		return criteriaBuilder.except( left, right );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> exceptAll(CriteriaSelect<T> left, CriteriaSelect<?> right) {
+		return criteriaBuilder.exceptAll( left, right );
 	}
 
 	@Override
@@ -337,6 +357,16 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
+	public <T> CriteriaSelect<T> intersect(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+		return criteriaBuilder.intersect( left, right );
+	}
+
+	@Override
+	public <T> CriteriaSelect<T> intersectAll(CriteriaSelect<? super T> left, CriteriaSelect<? super T> right) {
+		return criteriaBuilder.intersectAll( left, right );
+	}
+
+	@Override
 	public <T> JpaCriteriaQuery<T> intersect(CriteriaQuery<? super T> left, CriteriaQuery<? super T> right) {
 		return criteriaBuilder.intersect( left, right );
 	}
@@ -397,7 +427,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public JpaCompoundSelection<Tuple> tuple(List<? extends JpaSelection<?>> selections) {
+	public JpaCompoundSelection<Tuple> tuple(List<Selection<?>> selections) {
 		return criteriaBuilder.tuple( selections );
 	}
 
@@ -407,7 +437,7 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	}
 
 	@Override
-	public JpaCompoundSelection<Object[]> array(List<? extends JpaSelection<?>> selections) {
+	public JpaCompoundSelection<Object[]> array(List<Selection<?>> selections) {
 		return criteriaBuilder.array( selections );
 	}
 

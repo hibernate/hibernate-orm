@@ -20,7 +20,7 @@ public class ConfigurationEventReader extends AbstractEventReader {
 	public ConfigurationEventReader(XMLEventReader reader, XMLEventFactory xmlEventFactory) {
 		super(
 				ROOT_ELEMENT_NAME,
-				ConfigXsdSupport.configurationXsd(),
+				ConfigXsdSupport.getJPA32(),
 				reader,
 				xmlEventFactory
 		);

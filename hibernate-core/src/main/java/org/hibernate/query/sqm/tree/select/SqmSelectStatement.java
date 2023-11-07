@@ -34,7 +34,6 @@ import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 
 import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Order;
 import jakarta.persistence.criteria.ParameterExpression;
@@ -321,7 +320,8 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 
 		final Selection<? extends T> resultSelection;
 		final Class<T> resultType = getResultType();
-		final List<? extends JpaSelection<?>> selections = (List<? extends JpaSelection<?>>) (List<?>) selectionList;
+		//noinspection rawtypes
+		final List<? extends JpaSelection<?>> selections = (List) selectionList;
 		if ( resultType == null || resultType == Object.class ) {
 			switch ( selections.size() ) {
 				case 0: {
@@ -335,12 +335,12 @@ public class SqmSelectStatement<T> extends AbstractSqmSelectQuery<T> implements 
 				}
 				default: {
 					setResultType( (Class<T>) Object[].class );
-					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selections );
+					resultSelection = ( Selection<? extends T> ) nodeBuilder().array( selectionList );
 				}
 			}
 		}
 		else if ( Tuple.class.isAssignableFrom( resultType ) ) {
-			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selections );
+			resultSelection = ( Selection<? extends T> ) nodeBuilder().tuple( selectionList );
 		}
 		else if ( resultType.isArray() ) {
 			resultSelection = nodeBuilder().array( resultType, selections );

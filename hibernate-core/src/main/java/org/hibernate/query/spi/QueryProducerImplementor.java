@@ -47,9 +47,8 @@ public interface QueryProducerImplementor extends QueryProducer {
 	@Override @Deprecated @SuppressWarnings("rawtypes")
 	NativeQueryImplementor createNativeQuery(String sqlString);
 
-	@SuppressWarnings("rawtypes")
 	@Override
-	NativeQueryImplementor createNativeQuery(String sqlString, Class<?> resultClass);
+	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass);
 
 	@Override
 	<R> NativeQueryImplementor<R> createNativeQuery(String sqlString, Class<R> resultClass, String tableAlias);

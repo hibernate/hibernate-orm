@@ -53,8 +53,10 @@ import jakarta.persistence.FlushModeType;
 import jakarta.persistence.LockModeType;
 import jakarta.persistence.LockOption;
 import jakarta.persistence.RefreshOption;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaDelete;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.CriteriaSelect;
 import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.metamodel.Metamodel;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -589,6 +591,11 @@ public class SessionLazyDelegator implements Session {
 	@Override
 	public <R> Query<R> createQuery(CriteriaQuery<R> criteriaQuery) {
 		return this.lazySession.get().createQuery( criteriaQuery );
+	}
+
+	@Override
+	public <T> TypedQuery<T> createQuery(CriteriaSelect<T> selectQuery) {
+		return this.lazySession.get().createQuery( selectQuery );
 	}
 
 	@SuppressWarnings("rawtypes")

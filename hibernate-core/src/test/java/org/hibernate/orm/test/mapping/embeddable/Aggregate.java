@@ -466,4 +466,11 @@ public class Aggregate {
 		}
 		return Objects.equals( mutableValue, that.mutableValue );
 	}
+
+	@Override
+	public int hashCode() {
+		int result = Objects.hash(theBoolean, theNumericBoolean, theStringBoolean, theString, theInteger, theInt, theDouble, theUrl, theClob, theDate, theTime, theTimestamp, theInstant, theUuid, gender, convertedGender, ordinalGender, theDuration, theLocalDateTime, theLocalDate, theLocalTime, theZonedDateTime, theOffsetDateTime, mutableValue);
+		result = 31 * result + Arrays.hashCode(theBinary);
+		return result;
+	}
 }

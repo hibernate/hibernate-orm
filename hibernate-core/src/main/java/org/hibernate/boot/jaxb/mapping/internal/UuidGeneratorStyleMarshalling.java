@@ -6,8 +6,6 @@
  */
 package org.hibernate.boot.jaxb.mapping.internal;
 
-import java.util.Locale;
-
 import org.hibernate.annotations.UuidGenerator;
 
 /**
@@ -15,10 +13,10 @@ import org.hibernate.annotations.UuidGenerator;
  */
 public class UuidGeneratorStyleMarshalling {
 	public static UuidGenerator.Style fromXml(String name) {
-		return name == null ? null : UuidGenerator.Style.valueOf( name.toUpperCase( Locale.ROOT ) );
+		return name == null ? null : UuidGenerator.Style.valueOf( name );
 	}
 
 	public static String toXml(UuidGenerator.Style style) {
-		return style == null ? null : style.name().toLowerCase( Locale.ROOT );
+		return style == null ? null : style.name();
 	}
 }

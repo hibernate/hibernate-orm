@@ -38,8 +38,8 @@ public interface JaxbEntity extends JaxbEntityOrMappedSuperclass {
 	String getSqlRestriction();
 	void setSqlRestriction(String value);
 
-	JaxbCustomLoaderImpl getLoader();
-	void setLoader(JaxbCustomLoaderImpl value);
+	JaxbSqlSelectImpl getSqlSelect();
+	String getHqlSelect();
 
 	JaxbCustomSqlImpl getSqlInsert();
 	void setSqlInsert(JaxbCustomSqlImpl value);

@@ -16,7 +16,7 @@ import org.hibernate.cache.spi.access.AccessType;
  */
 public class CacheAccessTypeMarshalling {
 	public static AccessType fromXml(String name) {
-		return name == null ? null : AccessType.fromExternalName( name );
+		return name == null ? null : AccessType.valueOf( name );
 	}
 
 	public static String toXml(AccessType accessType) {

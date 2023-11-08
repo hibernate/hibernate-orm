@@ -17,6 +17,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.LockMode;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.Transaction;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
@@ -423,6 +424,11 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public Object immediateLoad(String entityName, Object id) throws HibernateException {
 		return delegate.immediateLoad( entityName, id );
+	}
+
+	@Override
+	public Object immediateLoad(String entityName, Object id, LockMode lockMode) throws HibernateException {
+		return delegate.immediateLoad( entityName, id, lockMode );
 	}
 
 	@Override

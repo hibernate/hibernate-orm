@@ -7,6 +7,7 @@
 package org.hibernate.envers.internal.entities.mapper.relation.lazy;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionDelegatorBaseImpl;
 import org.hibernate.engine.spi.SessionImplementor;
 
@@ -22,6 +23,11 @@ public abstract class AbstractDelegateSessionImplementor extends SessionDelegato
 
 	@Override
 	public Object immediateLoad(String entityName, Object id) throws HibernateException {
+		return doImmediateLoad( entityName );
+	}
+
+	@Override
+	public Object immediateLoad(String entityName, Object id, LockMode lockMode) throws HibernateException {
 		return doImmediateLoad( entityName );
 	}
 }

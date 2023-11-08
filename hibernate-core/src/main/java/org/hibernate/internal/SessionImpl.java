@@ -565,7 +565,7 @@ public class SessionImpl
 		if ( lazyInitializer != null ) {
 			object = lazyInitializer.getImplementation( this );
 			if ( object == null ) {
-				return LockMode.NONE;
+				return lazyInitializer.getLockMode();
 			}
 		}
 
@@ -1061,6 +1061,29 @@ public class SessionImpl
 		fireLoadNoChecks( event, IMMEDIATE_LOAD );
 		final Object result = event.getResult();
 		finishWithEventInstance( event );
+		final LazyInitializer lazyInitializer = extractLazyInitializer( result );
+		return lazyInitializer != null ? lazyInitializer.getImplementation() : result;
+	}
+
+	/**
+	 * Load the data for the object with the specified id into a newly created object.
+	 * This is only called when lazily initializing a proxy.
+	 * Do NOT return a proxy.
+	 */
+	@Override
+	public Object immediateLoad(String entityName, Object id, LockMode lockMode) throws HibernateException {
+		if ( lockMode == null || lockMode == LockMode.NONE ) {
+			return immediateLoad( entityName, id );
+		}
+		if ( log.isDebugEnabled() ) {
+			final EntityPersister persister = getFactory().getMappingMetamodel()
+					.getEntityDescriptor( entityName );
+			log.debugf( "Initializing proxy: %s", MessageHelper.infoString( persister, id, getFactory() ) );
+		}
+
+		final LoadEvent event = new LoadEvent( id, entityName, true, this, getReadOnlyFromLoadQueryInfluencers(), lockMode );
+		fireLoadNoChecks( event, IMMEDIATE_LOAD );
+		final Object result = event.getResult();
 		final LazyInitializer lazyInitializer = extractLazyInitializer( result );
 		return lazyInitializer != null ? lazyInitializer.getImplementation() : result;
 	}

@@ -16,6 +16,7 @@ import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
+import org.hibernate.LockMode;
 import org.hibernate.StatelessSession;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.event.spi.EventSource;
@@ -300,6 +301,16 @@ public interface SharedSessionContractImplementor
 	 * Do not return the proxy.
 	 */
 	Object immediateLoad(String entityName, Object id) throws HibernateException;
+
+
+	/**
+	 * Load an instance immediately.
+	 * This method is only called when lazily initializing a proxy.
+	 * Do not return the proxy.
+	 */
+	default Object immediateLoad(String entityName, Object id, LockMode lockMode) throws HibernateException {
+		return immediateLoad( entityName, id );
+	}
 
 
 	/**

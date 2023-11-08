@@ -43,6 +43,18 @@ public class LoadEvent extends AbstractEvent {
 		this( entityId, entityClassName, null, LockMode.NONE.toLockOptions(), isAssociationFetch, source, readOnly );
 	}
 
+	public LoadEvent(Object entityId, String entityClassName, boolean isAssociationFetch, EventSource source, Boolean readOnly, LockMode lockMode) {
+		this(
+				entityId,
+				entityClassName,
+				null,
+				lockMode == null ? LockMode.NONE.toLockOptions() : lockMode.toLockOptions(),
+				isAssociationFetch,
+				source,
+				readOnly
+		);
+	}
+
 	private LoadEvent(
 			Object entityId,
 			String entityClassName,

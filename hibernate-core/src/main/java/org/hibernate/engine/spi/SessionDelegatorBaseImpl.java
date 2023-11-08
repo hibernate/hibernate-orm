@@ -167,6 +167,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	}
 
 	@Override
+	public Object immediateLoad(String entityName, Object id, LockMode lockMode) throws HibernateException {
+		return delegate.immediateLoad( entityName, id, lockMode );
+	}
+
+	@Override
 	public SessionFactoryImplementor getFactory() {
 		return delegate.getFactory();
 	}

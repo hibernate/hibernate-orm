@@ -9,9 +9,9 @@ package org.hibernate.proxy;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
+import org.hibernate.LockMode;
 import org.hibernate.SessionException;
 import org.hibernate.TransientObjectException;
-import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -43,6 +43,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private String sessionFactoryUuid;
 	private String sessionFactoryName;
 	private boolean allowLoadOutsideTransaction;
+	private LockMode requestedLockMode;
 
 	/**
 	 * Main constructor.
@@ -100,6 +101,18 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	@Override
 	public final SharedSessionContractImplementor getSession() {
 		return session;
+	}
+
+	@Override
+	public final void setLockMode(LockMode lockMode) {
+		assert isUninitialized();
+		this.requestedLockMode = lockMode;
+	}
+
+	@Override
+	public final LockMode getLockMode() {
+		assert isUninitialized();
+		return requestedLockMode == null ? LockMode.NONE : requestedLockMode;
 	}
 
 	@Override
@@ -171,7 +184,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 					throw new LazyInitializationException( "could not initialize proxy [" + entityName + "#" + id + "] - the owning Session is disconnected" );
 				}
 				else {
-					target = session.immediateLoad( entityName, id );
+					target = session.immediateLoad( entityName, id, requestedLockMode );
 					initialized = true;
 					checkTargetState( session );
 				}
@@ -496,4 +509,5 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	public void setUnwrap(boolean unwrap) {
 		this.unwrap = unwrap;
 	}
+
 }

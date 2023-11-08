@@ -7,6 +7,7 @@
 package org.hibernate.proxy;
 
 import org.hibernate.HibernateException;
+import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 
 /**
@@ -159,6 +160,22 @@ public interface LazyInitializer {
 	 * @see org.hibernate.Session#setReadOnly(Object entityOrProxy, boolean readOnly)
 	 */
 	void setReadOnly(boolean readOnly);
+
+	/**
+	 * The LockMode the proxy target has to be set after the proxy has been initialized
+	 *
+	 * @param lockMode the lock mode
+	 */
+	default void setLockMode(LockMode lockMode){
+	}
+
+	/**
+	 * Return the LockMode the proxy target has to be set when the proxy is initialized
+	 *
+	 */
+	default LockMode getLockMode(){
+		return LockMode.NONE;
+	}
 
 	/**
 	 * Get the session to which this proxy is associated, or null if it is not attached.

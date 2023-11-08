@@ -319,6 +319,15 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 	}
 
 	@Override
+	public Object immediateLoad(String entityName, Object id, LockMode lockMode) throws HibernateException {
+		if ( getPersistenceContextInternal().isLoadFinished() ) {
+			throw new SessionException( "proxies cannot be fetched by a stateless session" );
+		}
+		// unless we are still in the process of handling a top-level load
+		return get( entityName, id, lockMode );
+	}
+
+	@Override
 	public void initializeCollection(
 			PersistentCollection<?> collection,
 			boolean writing) throws HibernateException {

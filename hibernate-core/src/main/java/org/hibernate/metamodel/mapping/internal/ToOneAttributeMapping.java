@@ -1995,7 +1995,7 @@ public class ToOneAttributeMapping
 							true,
 							creationState
 					);
-					if ( getAssociatedEntityMappingType().getSuperMappingType() != null && !creationState.supportsEntityNameUsage() ) {
+					if ( getAssociatedEntityMappingType().getSuperMappingType() != null /*&& !creationState.supportsEntityNameUsage()*/ ) {
 						getAssociatedEntityMappingType().applyDiscriminator( null, null, tableGroup, creationState );
 					}
 

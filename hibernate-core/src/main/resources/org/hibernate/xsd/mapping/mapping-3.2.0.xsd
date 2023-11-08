@@ -282,10 +282,8 @@
             <xsd:choice minOccurs="0">
                 <!-- Physical table -->
                 <xsd:element name="table" type="orm:table"/>
-                <!-- hbm : @Subselect -->
+                <!-- hbm : @Subselect / @View -->
                 <xsd:element name="table-expression" type="xsd:string"/>
-                <!-- hbm : @View -->
-                <xsd:element name="view" type="orm:view"/>
             </xsd:choice>
 
             <xsd:element name="secondary-table" type="orm:secondary-table"
@@ -308,7 +306,11 @@
             <!-- hbm : declare a SQL fragment to append to SELECT queries as a filter for this entity : @SQLRestriction  -->
             <xsd:element name="sql-restriction" type="xsd:string" minOccurs="0"/>
 
-            <xsd:element name="loader" type="orm:custom-loader" minOccurs="0"/>
+            <xsd:choice minOccurs="0">
+                <xsd:element name="sql-select" type="orm:sql-select"/>
+                <xsd:element name="hql-select" type="xsd:string"/>
+            </xsd:choice>
+
             <xsd:element name="sql-insert" type="orm:custom-sql" minOccurs="0"/>
             <xsd:element name="sql-update" type="orm:custom-sql" minOccurs="0"/>
             <xsd:element name="sql-delete" type="orm:custom-sql" minOccurs="0"/>
@@ -1062,6 +1064,13 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
+            <xsd:element name="target" type="xsd:string" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>
+                        See `@org.hibernate.boot.internal.Target`
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
             <xsd:element name="attribute-override" type="orm:attribute-override"
                          minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="association-override"
@@ -1088,6 +1097,13 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
+            <xsd:element name="target" type="xsd:string" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>
+                        See `@org.hibernate.boot.internal.Target`
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
             <xsd:element name="attribute-override" type="orm:attribute-override"
                          minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
@@ -2723,24 +2739,24 @@
         </xsd:annotation>
 
         <xsd:sequence>
+            <xsd:element name="default-condition" type="xsd:string" minOccurs="0"/>
             <xsd:element name="filter-param" minOccurs="0" maxOccurs="unbounded">
                 <xsd:complexType>
                     <xsd:annotation>
                         <xsd:documentation>
-                            Used to identify all bind parameters in the condition elemement
+                            Used to identify all bind parameters in the condition element
                         </xsd:documentation>
                     </xsd:annotation>
                     <xsd:attribute name="name" use="required" type="xsd:string"/>
                     <xsd:attribute name="type" use="required" type="xsd:string"/>
                 </xsd:complexType>
             </xsd:element>
-            <xsd:element name="condition" type="xsd:string" minOccurs="0"/>
         </xsd:sequence>
 
         <xsd:attribute name="name" use="required" type="xsd:string"/>
     </xsd:complexType>
 
-    <xsd:complexType name="hbm-filter" mixed="true">
+    <xsd:complexType name="hbm-filter">
         <xsd:annotation>
             <xsd:documentation>
                 Applies a filter defined by hbm-filter-def usage
@@ -2748,6 +2764,7 @@
         </xsd:annotation>
 
         <xsd:sequence>
+            <xsd:element name="condition" type="xsd:string" minOccurs="0"/>
             <xsd:element name="aliases" minOccurs="0" maxOccurs="unbounded">
                 <xsd:complexType>
                     <xsd:simpleContent>
@@ -2759,12 +2776,10 @@
                     </xsd:simpleContent>
                 </xsd:complexType>
             </xsd:element>
-            <xsd:element name="condition" type="xsd:string" />
         </xsd:sequence>
 
         <xsd:attribute name="name" use="required" type="xsd:string"/>
         <xsd:attribute name="autoAliasInjection" type="xsd:boolean"/>
-        <xsd:attribute name="condition" type="xsd:string"/>
     </xsd:complexType>
 
 
@@ -2878,33 +2893,50 @@
 
     <!-- **************************************************** -->
 
-    <xsd:complexType name="custom-loader">
+    <xsd:complexType name="sql-select">
         <xsd:annotation>
             <xsd:documentation>
-                The loader element allows specification of a named query to be used for fetching
-                an entity or collection
+                @org.hibernate.annotations.SQLSelect
             </xsd:documentation>
         </xsd:annotation>
-        <xsd:attribute name="query-ref" use="required" type="xsd:string"/>
+        <xsd:sequence>
+            <xsd:element name="sql" type="xsd:string"/>
+            <xsd:element name="result-set-mapping" type="orm:sql-result-set-mapping"/>
+            <xsd:element name="synchronize" type="orm:synchronized-table" maxOccurs="unbounded"/>
+        </xsd:sequence>
     </xsd:complexType>
 
 
     <!-- **************************************************** -->
 
     <xsd:complexType name="custom-sql" mixed="true">
+        <xsd:annotation>
+            <xsd:documentation>
+                org.hibernate.annotations.SQLInsert
+                org.hibernate.annotations.SQLUpdate
+                org.hibernate.annotations.SQLDelete
+                org.hibernate.annotations.SQLDeleteAll
+            </xsd:documentation>
+        </xsd:annotation>
         <xsd:simpleContent>
             <xsd:extension base="xsd:string">
                 <xsd:attribute name="callable" type="xsd:boolean" default="false" />
                 <xsd:attribute name="result-check" type="orm:custom-sql-result-check-type"/>
+                <xsd:attribute name="table" type="xsd:string"/>
             </xsd:extension>
         </xsd:simpleContent>
     </xsd:complexType>
 
     <xsd:simpleType name="custom-sql-result-check-type">
+        <xsd:annotation>
+            <xsd:documentation>
+                org.hibernate.annotations.ResultCheckStyle enum values
+            </xsd:documentation>
+        </xsd:annotation>
         <xsd:restriction base="xsd:token">
             <xsd:enumeration value="NONE"/>
             <xsd:enumeration value="PARAM"/>
-            <xsd:enumeration value="ROWCOUNT"/>
+            <xsd:enumeration value="COUNT"/>
         </xsd:restriction>
     </xsd:simpleType>
 
@@ -2913,23 +2945,16 @@
     <xsd:complexType name="caching">
         <xsd:annotation>
             <xsd:documentation>
-                Corresponds to the org.hibernate.annotations.Cache annotation.
+                See @org.hibernate.annotations.Cache
 
                 Used to specify Hibernate-specific extra control over the caching
                 of entity and collection state.
             </xsd:documentation>
         </xsd:annotation>
-        <xsd:attribute name="include" type="orm:cache-inclusion-type" default="ALL"/>
         <xsd:attribute name="region" type="xsd:string"/>
         <xsd:attribute name="access" use="required" type="orm:cache-access-type" />
+        <xsd:attribute name="includeLazy" type="xsd:boolean" default="true"/>
     </xsd:complexType>
-
-    <xsd:simpleType name="cache-inclusion-type">
-        <xsd:restriction base="xsd:token">
-            <xsd:enumeration value="ALL"/>
-            <xsd:enumeration value="NON_LAZY"/>
-        </xsd:restriction>
-    </xsd:simpleType>
 
     <xsd:simpleType name="cache-access-type">
         <xsd:annotation>
@@ -2959,18 +2984,6 @@
             <xsd:enumeration value="REFRESH"/>
         </xsd:restriction>
     </xsd:simpleType>
-
-
-    <!-- **************************************************** -->
-
-
-    <xsd:complexType name="view">
-        <xsd:simpleContent>
-            <xsd:extension base="xsd:string">
-                <xsd:attribute name="name" type="xsd:string"/>
-            </xsd:extension>
-        </xsd:simpleContent>
-    </xsd:complexType>
 
 
     <!-- **************************************************** -->
@@ -3374,6 +3387,9 @@
         <xsd:restriction base="xsd:token">
             <xsd:enumeration value="NO_ACTION"/>
             <xsd:enumeration value="CASCADE"/>
+            <xsd:enumeration value="RESTRICT"/>
+            <xsd:enumeration value="SET_NULL"/>
+            <xsd:enumeration value="SET_DEFAULT"/>
         </xsd:restriction>
     </xsd:simpleType>
 

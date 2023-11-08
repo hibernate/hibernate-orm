@@ -92,14 +92,12 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainer;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAttributesContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbBasicImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbCacheInclusionTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCachingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCascadeTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCheckConstraintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTableImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnResultImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbCustomLoaderImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCustomSqlImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDatabaseObjectImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbDatabaseObjectScopeImpl;
@@ -336,7 +334,7 @@ public class HbmXmlTransformer {
 					final String condition = ( (String) content ).trim();
 					if (! StringHelper.isEmpty( condition )) {
 						foundCondition = true;
-						filterDef.setCondition( condition );
+						filterDef.setDefaultCondition( condition );
 					}
 				}
 				else {
@@ -349,7 +347,7 @@ public class HbmXmlTransformer {
 			}
 
 			if ( !foundCondition ) {
-				filterDef.setCondition( hbmFilterDef.getCondition() );
+				filterDef.setDefaultCondition( hbmFilterDef.getCondition() );
 			}
 		}
 	}
@@ -839,9 +837,9 @@ public class HbmXmlTransformer {
 		}
 
 		if ( hbmClass.getLoader() != null ) {
-			entity.setLoader( new JaxbCustomLoaderImpl() );
-			entity.getLoader().setQueryRef( hbmClass.getLoader().getQueryRef() );
+			throw new UnsupportedOperationException( "<loader/> is not supported in mapping.xsd - use <sql-select/> or <hql-select/> instead" );
 		}
+
 		if ( hbmClass.getSqlInsert() != null ) {
 			entity.setSqlInsert( new JaxbCustomSqlImpl() );
 			entity.getSqlInsert().setValue( hbmClass.getSqlInsert().getValue() );
@@ -953,20 +951,20 @@ public class HbmXmlTransformer {
 		entity.setCaching( new JaxbCachingImpl() );
 		entity.getCaching().setRegion( hbmClass.getCache().getRegion() );
 		entity.getCaching().setAccess( hbmClass.getCache().getUsage() );
-		entity.getCaching().setInclude( convert( hbmClass.getCache().getInclude() ) );
+		entity.getCaching().setIncludeLazy( convert( hbmClass.getCache().getInclude() ) );
 	}
 
-	private JaxbCacheInclusionTypeImpl convert(JaxbHbmCacheInclusionEnum hbmInclusion) {
+	private boolean convert(JaxbHbmCacheInclusionEnum hbmInclusion) {
 		if ( hbmInclusion == null ) {
-			return null;
+			return true;
 		}
 
 		if ( hbmInclusion == JaxbHbmCacheInclusionEnum.NON_LAZY ) {
-			return JaxbCacheInclusionTypeImpl.NON_LAZY;
+			return false;
 		}
 
 		if ( hbmInclusion == JaxbHbmCacheInclusionEnum.ALL ) {
-			return JaxbCacheInclusionTypeImpl.ALL;
+			return true;
 		}
 
 		throw new IllegalArgumentException( "Unrecognized cache-inclusions value : " + hbmInclusion );
@@ -2511,7 +2509,7 @@ public class HbmXmlTransformer {
 				aliasMapping.setAlias( hbmAliasMapping.getAlias() );
 				aliasMapping.setEntity( hbmAliasMapping.getEntity() );
 				aliasMapping.setTable( hbmAliasMapping.getTable() );
-				filter.getContent().add( aliasMapping );
+				filter.getAliases().add( aliasMapping );
 			}
 		}
 

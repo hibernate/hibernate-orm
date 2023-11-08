@@ -5,7 +5,7 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 
-description = 'Hibernate\'s type extensions'
+description = 'Hibernate\'s extensions for vector support'
 
 apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 

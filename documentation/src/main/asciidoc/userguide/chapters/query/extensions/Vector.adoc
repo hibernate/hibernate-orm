@@ -1,32 +1,36 @@
-[[types-module]]
-== Hibernate Types module
+[[vector-module]]
+== Hibernate Vector module
 :root-project-dir: ../../../../../../../..
-:types-project-dir: {root-project-dir}/hibernate-types
-:example-dir-types: {types-project-dir}/src/test/java/org/hibernate/types
+:vector-project-dir: {root-project-dir}/hibernate-vector
+:example-dir-vector: {vector-project-dir}/src/test/java/org/hibernate/vector
 :extrasdir: extras
 
-[[types-module-overview]]
+[[vector-module-overview]]
 === Overview
 
-The Hibernate ORM core module tries to be as minimal as possible and only model functionality
-that is somewhat "standard" in the SQL space or can only be modeled as part of the core module.
-To avoid growing that module further unnecessarily, support for certain special SQL types or functions
-is separated out into the Hibernate ORM types module.
+The Hibernate ORM Vector module contains support for mathematical vector types and functions.
+This is useful for AI/ML topics like vector similarity search.
+The module comes with support for a special `vector` data type that essentially represents an array of floats.
 
-[[types-module-setup]]
+So far, only the PostgreSQL extension `pgvector` is supported, but in theory,
+the vector specific functions could be implemented to work with every database that supports arrays.
+
+For further details, refer to the https://github.com/pgvector/pgvector#querying[pgvector documentation].
+
+[[vector-module-setup]]
 === Setup
 
-You need to include the `hibernate-types` dependency in your build environment.
+You need to include the `hibernate-vector` dependency in your build environment.
 For Maven, you need to add the following dependency:
 
-[[types-module-setup-maven-example]]
+[[vector-module-setup-maven-example]]
 .Maven dependency
 ====
 [source,xml]
 ----
 <dependency>
     <groupId>org.hibernate.orm</groupId>
-    <artifactId>hibernate-types</artifactId>
+    <artifactId>hibernate-vector</artifactId>
     <version>${hibernate.version}</version>
 </dependency>
 ----
@@ -35,37 +39,27 @@ For Maven, you need to add the following dependency:
 The module contains service implementations that are picked up by the Java `ServiceLoader` automatically,
 so no further configuration is necessary to make the features available.
 
-[[types-module-vector]]
-=== Vector type support
-
-The Hibernate ORM types module comes with support for a special `vector` data type that essentially represents an array of floats.
-
-So far, only the PostgreSQL extension `pgvector` is supported, but in theory,
-the vector specific functions could be implemented to work with every database that supports arrays.
-
-For further details, refer to the https://github.com/pgvector/pgvector#querying[pgvector documentation].
-
-[[types-module-vector-usage]]
+[[vector-module-usage]]
 ==== Usage
 
 Annotate a persistent attribute with `@JdbcTypeCode(SqlTypes.VECTOR)` and specify the vector length with `@Array(length = ...)`.
 
-[[types-module-vector-usage-example]]
+[[vector-module-usage-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-types}/vector/PGVectorTest.java[tags=usage-example]
+include::{example-dir-vector}/PGVectorTest.java[tags=usage-example]
 ----
 ====
 
 To cast the string representation of a vector to the vector data type, simply use an HQL cast i.e. `cast('[1,2,3]' as vector)`.
 
-[[types-module-vector-functions]]
+[[vector-module-functions]]
 ==== Functions
 
 Expressions of the vector type can be used with various vector functions.
 
-[[types-module-vector-functions-overview]]
+[[vector-module-functions-overview]]
 |===
 | Function | Purpose
 
@@ -88,89 +82,89 @@ In addition to these special vector functions, it is also possible to use vector
 `sum(<vector1>) = <vector2>`:: Aggregate function support for element-wise summation of vectors.
 `avg(<vector1>) = <vector2>`:: Aggregate function support for element-wise average of vectors.
 
-[[types-module-vector-functions-cosine-distance]]
+[[vector-module-functions-cosine-distance]]
 ===== `cosine_distance()`
 
 Computes the https://en.wikipedia.org/wiki/Cosine_similarity[cosine distance] between two vectors,
 which is `1 - inner_product( v1, v2 ) / ( vector_norm( v1 ) * vector_norm( v2 ) )`. Maps to the `<``=``>` pgvector operator.
 
-[[types-module-vector-functions-cosine-distance-example]]
+[[vector-module-functions-cosine-distance-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-types}/vector/PGVectorTest.java[tags=cosine-distance-example]
+include::{example-dir-vector}/PGVectorTest.java[tags=cosine-distance-example]
 ----
 ====
 
-[[types-module-vector-functions-euclidean-distance]]
+[[vector-module-functions-euclidean-distance]]
 ===== `euclidean_distance()` and `l2_distance()`
 
 Computes the https://en.wikipedia.org/wiki/Euclidean_distance[euclidean distance] between two vectors,
 which is `sqrt( sum( (v1_i - v2_i)^2 ) )`. Maps to the `<``-``>` pgvector operator.
 The `l2_distance()` function is an alias.
 
-[[types-module-vector-functions-euclidean-distance-example]]
+[[vector-module-functions-euclidean-distance-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-types}/vector/PGVectorTest.java[tags=euclidean-distance-example]
+include::{example-dir-vector}/PGVectorTest.java[tags=euclidean-distance-example]
 ----
 ====
 
-[[types-module-vector-functions-taxicab-distance]]
+[[vector-module-functions-taxicab-distance]]
 ===== `taxicab_distance()` and `l1_distance()`
 
 Computes the https://en.wikipedia.org/wiki/Taxicab_geometry[taxicab distance] between two vectors,
 which is `vector_norm(v1) - vector_norm(v2)`.
 The `l1_distance()` function is an alias.
 
-[[types-module-vector-functions-taxicab-distance-example]]
+[[vector-module-functions-taxicab-distance-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-types}/vector/PGVectorTest.java[tags=taxicab-distance-example]
+include::{example-dir-vector}/PGVectorTest.java[tags=taxicab-distance-example]
 ----
 ====
 
-[[types-module-vector-functions-inner-product]]
+[[vector-module-functions-inner-product]]
 ===== `inner_product()` and `negative_inner_product()`
 
 Computes the https://en.wikipedia.org/wiki/Inner_product_space[inner product] between two vectors,
 which is `sum( v1_i * v2_i )`. The `negative_inner_product()` function maps to the `<``#``>` pgvector operator,
 and the `inner_product()` function as well, but multiplies the result time `-1`.
 
-[[types-module-vector-functions-inner-product-example]]
+[[vector-module-functions-inner-product-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-types}/vector/PGVectorTest.java[tags=inner-product-example]
+include::{example-dir-vector}/PGVectorTest.java[tags=inner-product-example]
 ----
 ====
 
-[[types-module-vector-functions-vector-dims]]
+[[vector-module-functions-vector-dims]]
 ===== `vector_dims()`
 
 Determines the dimensions of a vector.
 
-[[types-module-vector-functions-vector-dims-example]]
+[[vector-module-functions-vector-dims-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-types}/vector/PGVectorTest.java[tags=vector-dims-example]
+include::{example-dir-vector}/PGVectorTest.java[tags=vector-dims-example]
 ----
 ====
 
-[[types-module-vector-functions-vector-norm]]
+[[vector-module-functions-vector-norm]]
 ===== `vector_norm()`
 
 Computes the https://en.wikipedia.org/wiki/Euclidean_space#Euclidean_norm[Euclidean norm] of a vector,
 which is `sqrt( sum( v_i^2 ) )`.
 
-[[types-module-vector-functions-vector-norm-example]]
+[[vector-module-functions-vector-norm-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-types}/vector/PGVectorTest.java[tags=vector-norm-example]
+include::{example-dir-vector}/PGVectorTest.java[tags=vector-norm-example]
 ----
 ====
 

@@ -6,8 +6,6 @@
  */
 package org.hibernate.boot.jaxb.mapping.internal;
 
-import java.util.Locale;
-
 import org.hibernate.tuple.GenerationTiming;
 
 /**
@@ -17,12 +15,10 @@ import org.hibernate.tuple.GenerationTiming;
  */
 public class GenerationTimingMarshalling {
 	public static GenerationTiming fromXml(String name) {
-		return name == null ? null : GenerationTiming.parseFromName( name );
+		return name == null ? null : GenerationTiming.valueOf( name );
 	}
 
 	public static String toXml(GenerationTiming generationTiming) {
-		return ( null == generationTiming ) ?
-				null :
-				generationTiming.name().toLowerCase( Locale.ENGLISH );
+		return null == generationTiming ? null : generationTiming.name();
 	}
 }

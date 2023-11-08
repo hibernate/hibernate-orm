@@ -21,7 +21,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
  * @author Kabir Khan
  * @author Steve Ebersole
  */
-class ListenerCallback extends AbstractCallback {
+public class ListenerCallback extends AbstractCallback {
 
 	public static class Definition implements CallbackDefinition {
 		private final Class<?> listenerClass;

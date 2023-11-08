@@ -20,7 +20,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
  * @author Kabir Khan
  * @author Steve Ebersole
  */
-final class EntityCallback extends AbstractCallback {
+public class EntityCallback extends AbstractCallback {
 
 	public static class Definition implements CallbackDefinition {
 		private final Method callbackMethod;

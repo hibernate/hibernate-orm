@@ -20,7 +20,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
  *
  * @author Vlad Mihalcea
  */
-final class EmbeddableCallback extends AbstractCallback {
+public class EmbeddableCallback extends AbstractCallback {
 
 	public static class Definition implements CallbackDefinition {
 		private final Getter embeddableGetter;

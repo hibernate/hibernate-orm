@@ -152,6 +152,7 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	private TemporalType temporalPrecision;
 	private TimeZoneStorageType timeZoneStorageType;
 	private boolean partitionKey;
+	private Integer jdbcTypeCode;
 
 	private Table table;
 	private AnnotatedColumns columns;
@@ -1072,6 +1073,12 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 			return null;
 		};
 
+		final org.hibernate.annotations.JdbcTypeCode jdbcType =
+				findAnnotation( attributeXProperty, org.hibernate.annotations.JdbcTypeCode.class );
+		if ( jdbcType != null ) {
+			jdbcTypeCode = jdbcType.value();
+		}
+
 		normalJdbcTypeDetails( attributeXProperty);
 		normalMutabilityDetails( attributeXProperty );
 
@@ -1221,6 +1228,10 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 
 		if ( temporalPrecision != null ) {
 			basicValue.setTemporalPrecision( temporalPrecision );
+		}
+
+		if ( jdbcTypeCode != null ) {
+			basicValue.setExplicitJdbcTypeCode( jdbcTypeCode );
 		}
 
 		linkWithValue();

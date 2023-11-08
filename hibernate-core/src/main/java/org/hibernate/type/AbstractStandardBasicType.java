@@ -30,6 +30,7 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.MutableMutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
@@ -242,7 +243,9 @@ public abstract class AbstractStandardBasicType<T>
 	}
 
 	protected final boolean isDirty(Object old, Object current) {
-		return !isSame( old, current );
+		// MutableMutabilityPlan.INSTANCE is a special plan for which we always have to assume the value is dirty,
+		// because we can't actually copy a value, but have no knowledge about the mutability of the java type
+		return getMutabilityPlan() == MutableMutabilityPlan.INSTANCE || !isSame( old, current );
 	}
 
 	@Override

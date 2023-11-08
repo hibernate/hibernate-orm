@@ -12,6 +12,7 @@ import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.Incubating;
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.TimeZoneStorageStrategy;
@@ -46,6 +47,7 @@ import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.CustomType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.Type;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -53,6 +55,10 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
+import org.hibernate.type.descriptor.java.spi.JsonJavaType;
+import org.hibernate.type.descriptor.java.spi.RegistryHelper;
+import org.hibernate.type.descriptor.java.spi.XmlJavaType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.internal.BasicTypeImpl;
@@ -97,6 +103,7 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Resolved state - available after `#resolve`
 	private Resolution<?> resolution;
+	private Integer jdbcTypeCode;
 
 
 	public BasicValue(MetadataBuildingContext buildingContext) {
@@ -495,15 +502,15 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	private JavaType<?> determineJavaType(JavaType<?> explicitJavaType) {
 		JavaType<?> javaType = explicitJavaType;
-
-		if ( javaType == null ) {
-			if ( implicitJavaTypeAccess != null ) {
-				final java.lang.reflect.Type implicitJtd = implicitJavaTypeAccess.apply( getTypeConfiguration() );
-				if ( implicitJtd != null ) {
-					javaType = getTypeConfiguration().getJavaTypeRegistry().getDescriptor( implicitJtd );
-				}
-			}
-		}
+//
+//		if ( javaType == null ) {
+//			if ( implicitJavaTypeAccess != null ) {
+//				final java.lang.reflect.Type implicitJtd = implicitJavaTypeAccess.apply( getTypeConfiguration() );
+//				if ( implicitJtd != null ) {
+//					javaType = getTypeConfiguration().getJavaTypeRegistry().getDescriptor( implicitJtd );
+//				}
+//			}
+//		}
 
 		if ( javaType == null ) {
 			final JavaType<?> reflectedJtd = determineReflectedJavaType();
@@ -518,11 +525,12 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	private JavaType<?> determineReflectedJavaType() {
 		final java.lang.reflect.Type impliedJavaType;
 
+		final TypeConfiguration typeConfiguration = getTypeConfiguration();
 		if ( resolvedJavaType != null ) {
 			impliedJavaType = resolvedJavaType;
 		}
 		else if ( implicitJavaTypeAccess != null ) {
-			impliedJavaType = implicitJavaTypeAccess.apply( getTypeConfiguration() );
+			impliedJavaType = implicitJavaTypeAccess.apply( typeConfiguration );
 		}
 		else if ( ownerName != null && propertyName != null ) {
 			impliedJavaType = ReflectHelper.reflectedPropertyType(
@@ -541,7 +549,40 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 			return null;
 		}
 
-		return getTypeConfiguration().getJavaTypeRegistry().resolveDescriptor( impliedJavaType );
+		final JavaTypeRegistry javaTypeRegistry = typeConfiguration.getJavaTypeRegistry();
+		final JavaType<Object> javaType = javaTypeRegistry.findDescriptor( impliedJavaType );
+		final MutabilityPlan<Object> explicitMutabilityPlan = explicitMutabilityPlanAccess != null
+				? explicitMutabilityPlanAccess.apply( typeConfiguration )
+				: null;
+		final MutabilityPlan<Object> determinedMutabilityPlan = explicitMutabilityPlan != null
+				? explicitMutabilityPlan
+				: RegistryHelper.INSTANCE.determineMutabilityPlan( impliedJavaType, typeConfiguration );
+		if ( javaType == null ) {
+			if ( jdbcTypeCode != null ) {
+				// Construct special JavaType instances for JSON/XML types which can report recommended JDBC types
+				// and implement toString/fromString as well as copying based on FormatMapper operations
+				switch ( jdbcTypeCode ) {
+					case SqlTypes.JSON:
+						final JavaType<Object> jsonJavaType = new JsonJavaType<>(
+								impliedJavaType,
+								determinedMutabilityPlan,
+								typeConfiguration
+						);
+						javaTypeRegistry.addDescriptor( jsonJavaType );
+						return jsonJavaType;
+					case SqlTypes.SQLXML:
+						final JavaType<Object> xmlJavaType = new XmlJavaType<>(
+								impliedJavaType,
+								determinedMutabilityPlan,
+								typeConfiguration
+						);
+						javaTypeRegistry.addDescriptor( xmlJavaType );
+						return xmlJavaType;
+				}
+			}
+			return javaTypeRegistry.resolveDescriptor( impliedJavaType );
+		}
+		return javaType;
 	}
 
 	private static Resolution<?> interpretExplicitlyNamedType(
@@ -869,6 +910,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	private boolean isWrapperByteOrCharacterArray() {
 		final Class<?> javaTypeClass = getResolution().getDomainJavaType().getJavaTypeClass();
 		return javaTypeClass == Byte[].class || javaTypeClass == Character[].class;
+	}
+
+	@Incubating
+	public void setExplicitJdbcTypeCode(Integer jdbcTypeCode) {
+		this.jdbcTypeCode = jdbcTypeCode;
 	}
 
 	/**

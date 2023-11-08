@@ -17,15 +17,10 @@ import org.hibernate.CacheMode;
  */
 public class CacheModeMarshalling {
 	public static CacheMode fromXml(String name) {
-		for ( CacheMode mode : CacheMode.values() ) {
-			if ( mode.name().equalsIgnoreCase( name ) ) {
-				return mode;
-			}
-		}
-		return CacheMode.NORMAL;
+		return name == null ? CacheMode.NORMAL : CacheMode.valueOf( name );
 	}
 
 	public static String toXml(CacheMode cacheMode) {
-		return cacheMode == null ? null : cacheMode.name().toLowerCase( Locale.ENGLISH );
+		return cacheMode == null ? null : cacheMode.name();
 	}
 }

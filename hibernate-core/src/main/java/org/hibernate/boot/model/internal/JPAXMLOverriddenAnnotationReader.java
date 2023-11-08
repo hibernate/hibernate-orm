@@ -1257,7 +1257,7 @@ public class JPAXMLOverriddenAnnotationReader implements AnnotationReader {
 				final AnnotationDescriptor ad = new AnnotationDescriptor( Cache.class );
 				ad.setValue( "usage", CacheConcurrencyStrategy.fromAccessType( caching.getAccess() ) );
 				ad.setValue( "region", caching.getRegion() );
-				ad.setValue( "include", caching.getInclude().value() );
+				ad.setValue( "includeLazy", caching.isIncludeLazy() );
 				return AnnotationFactory.create( ad );
 			}
 		}

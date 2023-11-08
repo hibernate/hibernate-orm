@@ -32,6 +32,8 @@ import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -64,10 +66,21 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			if ( isTransient( event, source, object ) ) {
 				source.setReadOnly( object, source.isDefaultReadOnly() );
 			}
+
+			final EntityEntry entry = persistenceContext.getEntry( object );
+			if ( entry != null ) {
+				setRequestedLockMode( event, entry );
+			}
+			else {
+				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+				if ( lazyInitializer != null ) {
+					lazyInitializer.setLockMode( event.getLockOptions().getLockMode() );
+				}
+			}
 		}
 		else {
 			final Object entity = persistenceContext.unproxyAndReassociate( object );
-			if ( refreshedAlready.add( entity) ) {
+			if ( refreshedAlready.add( entity ) ) {
 				refresh( event, refreshedAlready, entity );
 			}
 			else {
@@ -76,9 +89,23 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		}
 	}
 
+	private static void setRequestedLockMode(RefreshEvent event, EntityEntry entry) {
+		final LockMode requestedLockMode = event.getLockOptions().getLockMode();
+		final LockMode currentLockMode = entry.getLockMode();
+		if ( currentLockMode.greaterThan( requestedLockMode )
+				&& ( currentLockMode == LockMode.WRITE
+				|| currentLockMode == LockMode.PESSIMISTIC_WRITE
+				|| currentLockMode == LockMode.PESSIMISTIC_READ ) ) {
+			entry.setLockMode( currentLockMode );
+		}
+		else {
+			entry.setLockMode( requestedLockMode );
+		}
+	}
+
 	private static boolean isTransient(RefreshEvent event, EventSource source, Object object) {
 		final String entityName = event.getEntityName();
-		return entityName != null ? !source.contains( entityName, object) : !source.contains(object);
+		return entityName != null ? !source.contains( entityName, object ) : !source.contains( object );
 	}
 
 	private static void refresh(RefreshEvent event, RefreshContext refreshedAlready, Object object) {
@@ -251,15 +278,15 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final MappingMetamodelImplementor metamodel = factory.getRuntimeMetamodels().getMappingMetamodel();
 		for ( Type type : types ) {
 			if ( type.isCollectionType() ) {
-				final String role = ((CollectionType) type).getRole();
+				final String role = ( (CollectionType) type ).getRole();
 				final CollectionPersister collectionPersister = metamodel.getCollectionDescriptor( role );
 				if ( collectionPersister.hasCache() ) {
 					final CollectionDataAccess cache = collectionPersister.getCacheAccessStrategy();
 					final Object ck = cache.generateCacheKey(
-						id,
-						collectionPersister,
-						factory,
-						source.getTenantIdentifier()
+							id,
+							collectionPersister,
+							factory,
+							source.getTenantIdentifier()
 					);
 					final SoftLock lock = cache.lockItem( source, ck, null );
 					cache.remove( source, ck );

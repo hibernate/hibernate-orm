@@ -9,9 +9,10 @@ package org.hibernate.proxy;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
+import org.hibernate.LockMode;
 import org.hibernate.SessionException;
 import org.hibernate.TransientObjectException;
-import org.hibernate.boot.spi.SessionFactoryOptions;
+import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -43,6 +44,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	private String sessionFactoryUuid;
 	private String sessionFactoryName;
 	private boolean allowLoadOutsideTransaction;
+	private LockMode requestedLockMode;
 
 	/**
 	 * Main constructor.
@@ -100,6 +102,19 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	@Override
 	public final SharedSessionContractImplementor getSession() {
 		return session;
+	}
+
+	@Override
+	public final void setLockMode(LockMode lockMode) {
+		this.requestedLockMode = lockMode;
+	}
+
+	@Override
+	public final LockMode getLockMode() {
+		if ( requestedLockMode == null ) {
+			return LockMode.NONE;
+		}
+		return requestedLockMode;
 	}
 
 	@Override
@@ -173,6 +188,7 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 				else {
 					target = session.immediateLoad( entityName, id );
 					initialized = true;
+					setLockMode( session, target, requestedLockMode );
 					checkTargetState( session );
 				}
 			}
@@ -495,5 +511,24 @@ public abstract class AbstractLazyInitializer implements LazyInitializer {
 	@Override
 	public void setUnwrap(boolean unwrap) {
 		this.unwrap = unwrap;
+	}
+
+	private static void setLockMode(
+			SharedSessionContractImplementor session,
+			Object target,
+			LockMode requestedLockMode) {
+		if ( requestedLockMode != null && target != null ) {
+			EntityEntry entry = session.getPersistenceContext().getEntry( target );
+			final LockMode currentLockMode = entry.getLockMode();
+			if ( currentLockMode.greaterThan( requestedLockMode )
+					&& ( currentLockMode == LockMode.WRITE
+					|| currentLockMode == LockMode.PESSIMISTIC_WRITE
+					|| currentLockMode == LockMode.PESSIMISTIC_READ ) ) {
+				entry.setLockMode( currentLockMode );
+			}
+			else {
+				entry.setLockMode( requestedLockMode );
+			}
+		}
 	}
 }

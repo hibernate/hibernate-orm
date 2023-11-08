@@ -565,7 +565,7 @@ public class SessionImpl
 		if ( lazyInitializer != null ) {
 			object = lazyInitializer.getImplementation( this );
 			if ( object == null ) {
-				return LockMode.NONE;
+				return lazyInitializer.getLockMode();
 			}
 		}
 

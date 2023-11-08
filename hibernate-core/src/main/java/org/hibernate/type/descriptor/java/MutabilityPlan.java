@@ -9,6 +9,7 @@ package org.hibernate.type.descriptor.java;
 import java.io.Serializable;
 
 import org.hibernate.SharedSessionContract;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * Describes the mutability aspects of a given Java type.
@@ -66,6 +67,18 @@ public interface MutabilityPlan<T> extends Serializable {
 	 * @return The deep copy.
 	 */
 	T deepCopy(T value);
+
+	/**
+	 * Return a deep copy of the value.
+	 *
+	 * @param value The value to deep copy
+	 * @param wrapperOptions WrapperOptions for retrieving session options
+	 *
+	 * @return The deep copy.
+	 */
+	default T deepCopy(T value, WrapperOptions wrapperOptions) {
+		return deepCopy(value);
+	}
 
 	/**
 	 * Return a disassembled representation of the value.

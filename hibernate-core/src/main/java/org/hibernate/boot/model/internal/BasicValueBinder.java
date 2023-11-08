@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+import jakarta.persistence.Embedded;
 import org.hibernate.AnnotationException;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
@@ -67,11 +68,14 @@ import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.SerializableToBlobType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.Immutability;
 import org.hibernate.type.descriptor.java.ImmutableMutabilityPlan;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.JsonAggregateMutabilityPlan;
+import org.hibernate.type.descriptor.java.spi.XmlAggregateMutabilityPlan;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -1032,6 +1036,16 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 				final Immutable customTypeImmutableAnn = customTypeImpl.getAnnotation( Immutable.class );
 				if ( customTypeImmutableAnn != null ) {
 					return ImmutableMutabilityPlan.instance();
+				}
+			}
+
+			final Embedded embeddedAnn = findAnnotation( attributeXProperty, Embedded.class );
+			if (jdbcTypeCode != null && embeddedAnn == null && !attributeXProperty.isCollection() && !attributeXProperty.isArray()) {
+				if (jdbcTypeCode == SqlTypes.JSON) {
+					return JsonAggregateMutabilityPlan.getInstance();
+				}
+				else if (jdbcTypeCode == SqlTypes.SQLXML) {
+					return XmlAggregateMutabilityPlan.getInstance();
 				}
 			}
 

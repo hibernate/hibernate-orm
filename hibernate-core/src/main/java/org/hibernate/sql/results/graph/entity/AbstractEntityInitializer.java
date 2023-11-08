@@ -185,24 +185,24 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private static void deepCopy(ManagedMappingType containerDescriptor, Object[] source, Object[] target) {
+	private static void deepCopy(ManagedMappingType containerDescriptor, Object[] source, Object[] target, SharedSessionContractImplementor session) {
 		final int numberOfAttributeMappings = containerDescriptor.getNumberOfAttributeMappings();
 		for ( int i = 0; i < numberOfAttributeMappings; i++ ) {
 			final AttributeMapping attributeMapping = containerDescriptor.getAttributeMapping( i );
 			final AttributeMetadata attributeMetadata = attributeMapping.getAttributeMetadata();
 			if ( attributeMetadata.isUpdatable() ) {
 				final int position = attributeMapping.getStateArrayPosition();
-				target[position] = copy( attributeMetadata, source[position] );
+				target[position] = copy( attributeMetadata, source[position], session );
 			}
 		}
 	}
 
 	@SuppressWarnings("unchecked")
-	private static Object copy(AttributeMetadata attributeMetadata, Object sourceValue) {
+	private static Object copy(AttributeMetadata attributeMetadata, Object sourceValue, SharedSessionContractImplementor session) {
 		return sourceValue == LazyPropertyInitializer.UNFETCHED_PROPERTY
 					|| sourceValue == PropertyAccessStrategyBackRefImpl.UNKNOWN
 				? sourceValue
-				: attributeMetadata.getMutabilityPlan().deepCopy( sourceValue );
+				: attributeMetadata.getMutabilityPlan().deepCopy( sourceValue, session );
 	}
 
 	@Override
@@ -932,7 +932,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 		else {
 			//take a snapshot
-			deepCopy( concreteDescriptor, resolvedEntityState, resolvedEntityState );
+			deepCopy( concreteDescriptor, resolvedEntityState, resolvedEntityState, session );
 			persistenceContext.setEntryStatus( entityEntry, Status.MANAGED );
 		}
 	}

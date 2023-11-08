@@ -19,10 +19,10 @@ import jakarta.persistence.AccessType;
  */
 public class LimitedCollectionClassificationMarshalling {
 	public static LimitedCollectionClassification fromXml(String name) {
-		return name == null ? null : LimitedCollectionClassification.valueOf( name.toUpperCase( Locale.ROOT ) );
+		return name == null ? null : LimitedCollectionClassification.valueOf( name );
 	}
 
 	public static String toXml(LimitedCollectionClassification classification) {
-		return classification == null ? null : classification.name().toLowerCase( Locale.ROOT );
+		return classification == null ? null : classification.name();
 	}
 }

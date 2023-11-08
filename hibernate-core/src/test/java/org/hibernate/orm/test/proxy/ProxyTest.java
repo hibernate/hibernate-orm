@@ -24,8 +24,8 @@ import org.hibernate.internal.SessionImpl;
 import org.hibernate.internal.util.SerializationHelper;
 import org.hibernate.proxy.HibernateProxy;
 
-import org.hibernate.testing.FailureExpected;
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -539,7 +539,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-1645", message = "Session.refresh with LockOptions does not work on uninitialized proxies" )
+	@JiraKey( "HHH-1645" )
 	public void testRefreshLockUninitializedProxy() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();
@@ -568,7 +568,7 @@ public class ProxyTest extends BaseCoreFunctionalTestCase {
 	}
 
 	@Test
-	@FailureExpected( jiraKey = "HHH-1645", message = "Session.refresh with LockOptions does not work on uninitialized proxies" )
+	@JiraKey( "HHH-1645" )
 	public void testRefreshLockUninitializedProxyThenRead() {
 		Session s = openSession();
 		Transaction t = s.beginTransaction();

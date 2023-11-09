@@ -319,6 +319,11 @@ include 'hibernate-integrationtest-java-modules'
 include 'documentation'
 include 'release'
 
+// Not all JDK implementations support JFR
+if ( "OpenJDK Runtime Environment".equals( System.getProperty( "java.runtime.name" ) ) ) {
+    include 'hibernate-jfr'
+}
+
 include 'metamodel-generator'
 project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")
 project(':metamodel-generator').name = 'hibernate-jpamodelgen'
@@ -332,7 +337,6 @@ project(':hibernate-enhance-maven-plugin').projectDir = new File(rootProject.pro
 include 'hibernate-ant'
 project(':hibernate-ant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-ant")
 
-
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"
     assert project.projectDir.isDirectory()
@@ -340,4 +344,3 @@ rootProject.children.each { project ->
     assert project.buildFile.isFile()
 }
 include 'hibernate-platform'
-

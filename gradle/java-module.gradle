@@ -89,8 +89,6 @@ dependencies {
 
 	testImplementation testLibs.byteman
 
-	testImplementation testLibs.jfrUnit
-
 	testRuntimeOnly testLibs.log4j2
 	testRuntimeOnly libs.byteBuddy
 

@@ -26,6 +26,8 @@ import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.internal.EmptyEventManager;
+import org.hibernate.event.spi.EventManager;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
@@ -633,6 +635,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		@Override
 		public Integer getJdbcBatchSize() {
 			return null;
+		}
+
+		@Override
+		public EventManager getEventManager() {
+			return EmptyEventManager.INSTANCE;
 		}
 
 		@Override

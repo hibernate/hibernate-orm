@@ -43,6 +43,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.event.spi.EventManager;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -176,6 +177,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
+
 		fastSessionServices = factory.getFastSessionServices();
 		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
 		flushMode = options.getInitialSessionFlushMode();
@@ -1326,6 +1328,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	public Integer getJdbcBatchSize() {
 		return jdbcBatchSize;
+	}
+
+	@Override
+	public EventManager getEventManager() {
+		return fastSessionServices.getEventManager();
 	}
 
 	@Override

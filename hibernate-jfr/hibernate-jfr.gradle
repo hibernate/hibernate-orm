@@ -1,0 +1,27 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
+ */
+
+description = 'Integration for JDK JFR into Hibernate O/RM'
+
+apply from: rootProject.file( 'gradle/published-java-module.gradle' )
+
+dependencies {
+    implementation project( ':hibernate-core' )
+
+    testImplementation project( ':hibernate-testing' )
+    testImplementation testLibs.jfrUnit
+}
+
+
+// JfrUnit requires JDJ 17
+compileTestJava.onlyIf{
+    jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit
+}
+
+test.onlyIf {
+    jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit
+}

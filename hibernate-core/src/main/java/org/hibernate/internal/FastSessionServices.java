@@ -6,6 +6,7 @@
  */
 package org.hibernate.internal;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -24,6 +25,8 @@ import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.jdbc.mutation.spi.MutationExecutorService;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.internal.EmptyEventManager;
+import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.service.spi.EventListenerRegistry;
 import org.hibernate.event.spi.AutoFlushEventListener;
@@ -184,6 +187,7 @@ public final class FastSessionServices {
 	private final FormatMapper xmlFormatMapper;
 	private final MutationExecutorService mutationExecutorService;
 	private final JdbcValuesMappingProducerProvider jdbcValuesMappingProducerProvider;
+	private final EventManager eventManager;
 
 	FastSessionServices(SessionFactoryImplementor sessionFactory) {
 		Objects.requireNonNull( sessionFactory );
@@ -269,6 +273,10 @@ public final class FastSessionServices {
 		this.jsonFormatMapper = sessionFactoryOptions.getJsonFormatMapper();
 		this.xmlFormatMapper = sessionFactoryOptions.getXmlFormatMapper();
 		this.batchBuilder = serviceRegistry.getService( BatchBuilder.class );
+		final Collection<EventManager> eventManagers = classLoaderService.loadJavaServices( EventManager.class );
+		this.eventManager = eventManagers.isEmpty()
+				? EmptyEventManager.INSTANCE
+				: eventManagers.iterator().next();
 	}
 
 	private static FlushMode initializeDefaultFlushMode(Map<String, Object> defaultSessionProperties) {
@@ -375,6 +383,10 @@ public final class FastSessionServices {
 
 	public JdbcValuesMappingProducerProvider getJdbcValuesMappingProducerProvider() {
 		return this.jdbcValuesMappingProducerProvider;
+	}
+
+	public EventManager getEventManager() {
+		return eventManager;
 	}
 
 	public boolean useStreamForLobBinding() {

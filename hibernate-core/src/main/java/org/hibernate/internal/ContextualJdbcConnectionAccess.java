@@ -15,9 +15,8 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.jfr.internal.JfrEventManager;
-import org.hibernate.event.jfr.JdbcConnectionAcquisitionEvent;
-import org.hibernate.event.jfr.JdbcConnectionReleaseEvent;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateEvent;
 
 /**
  * @author Steve Ebersole
@@ -46,13 +45,14 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 			throw new HibernateException( "Tenant identifier required" );
 		}
 
-		final JdbcConnectionAcquisitionEvent jdbcConnectionAcquisitionEvent = JfrEventManager.beginJdbcConnectionAcquisitionEvent();
+		final EventManager eventManager = session.getEventManager();
+		final HibernateEvent jdbcConnectionAcquisitionEvent = eventManager.beginJdbcConnectionAcquisitionEvent();
 		try {
 			listener.jdbcConnectionAcquisitionStart();
 			return connectionProvider.getConnection( tenantIdentifier );
 		}
 		finally {
-			JfrEventManager.completeJdbcConnectionAcquisitionEvent(
+			eventManager.completeJdbcConnectionAcquisitionEvent(
 					jdbcConnectionAcquisitionEvent,
 					session,
 					tenantIdentifier
@@ -67,13 +67,14 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 			throw new HibernateException( "Tenant identifier required" );
 		}
 
-		final JdbcConnectionReleaseEvent jdbcConnectionReleaseEvent = JfrEventManager.beginJdbcConnectionReleaseEvent();
+		final EventManager eventManager = session.getEventManager();
+		final HibernateEvent jdbcConnectionReleaseEvent = eventManager.beginJdbcConnectionReleaseEvent();
 		try {
 			listener.jdbcConnectionReleaseStart();
 			connectionProvider.releaseConnection( tenantIdentifier, connection );
 		}
 		finally {
-			JfrEventManager.completeJdbcConnectionReleaseEvent( jdbcConnectionReleaseEvent, session, tenantIdentifier );
+			eventManager.completeJdbcConnectionReleaseEvent( jdbcConnectionReleaseEvent, session, tenantIdentifier );
 			listener.jdbcConnectionReleaseEnd();
 		}
 	}

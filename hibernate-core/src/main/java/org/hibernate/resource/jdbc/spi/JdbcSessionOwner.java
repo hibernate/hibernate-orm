@@ -7,6 +7,7 @@
 package org.hibernate.resource.jdbc.spi;
 
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
+import org.hibernate.event.spi.EventManager;
 import org.hibernate.resource.transaction.spi.TransactionCoordinator;
 
 /**
@@ -69,4 +70,6 @@ public interface JdbcSessionOwner {
 	 * @since 5.2
 	 */
 	Integer getJdbcBatchSize();
+
+	EventManager getEventManager();
 }

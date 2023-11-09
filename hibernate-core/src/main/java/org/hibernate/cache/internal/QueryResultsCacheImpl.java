@@ -17,9 +17,8 @@ import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.jfr.CacheGetEvent;
-import org.hibernate.event.jfr.CachePutEvent;
-import org.hibernate.event.jfr.internal.JfrEventManager;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateEvent;
 
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
@@ -64,18 +63,19 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 				deepCopy( results )
 		);
 
-		final CachePutEvent cachePutEvent = JfrEventManager.beginCachePutEvent();
+		final EventManager eventManager = session.getEventManager();
+		final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
 		try {
 			session.getEventListenerManager().cachePutStart();
 			cacheRegion.putIntoCache( key, cacheItem, session );
 		}
 		finally {
-			JfrEventManager.completeCachePutEvent(
+			eventManager.completeCachePutEvent(
 					cachePutEvent,
 					session,
 					cacheRegion,
 					true,
-					JfrEventManager.CacheActionDescription.QUERY_RESULT
+					EventManager.CacheActionDescription.QUERY_RESULT
 			);
 			session.getEventListenerManager().cachePutEnd();
 		}
@@ -153,13 +153,14 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 
 	private CacheItem getCachedData(QueryKey key, SharedSessionContractImplementor session) {
 		CacheItem cachedItem = null;
-		final CacheGetEvent cacheGetEvent = JfrEventManager.beginCacheGetEvent();
+		final EventManager eventManager = session.getEventManager();
+		final HibernateEvent cacheGetEvent = eventManager.beginCacheGetEvent();
 		try {
 			session.getEventListenerManager().cacheGetStart();
 			cachedItem = (CacheItem) cacheRegion.getFromCache( key, session );
 		}
 		finally {
-			JfrEventManager.completeCacheGetEvent(
+			eventManager.completeCacheGetEvent(
 					cacheGetEvent,
 					session,
 					cacheRegion,

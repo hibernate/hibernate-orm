@@ -20,8 +20,9 @@ import org.hibernate.dialect.pagination.NoopLimitHandler;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.event.jfr.JdbcPreparedStatementExecutionEvent;
-import org.hibernate.event.jfr.internal.JfrEventManager;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.query.spi.Limit;
@@ -223,6 +224,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 	private void executeQuery() {
 		final LogicalConnectionImplementor logicalConnection = getPersistenceContext().getJdbcCoordinator().getLogicalConnection();
 
+		final SharedSessionContractImplementor session = executionContext.getSession();
 		try {
 			LOG.tracef( "Executing query to retrieve ResultSet : %s", finalSql );
 			// prepare the query
@@ -230,20 +232,21 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 
 			bindParameters( preparedStatement );
 
-			final SessionEventListenerManager eventListenerManager = executionContext.getSession()
+			final SessionEventListenerManager eventListenerManager = session
 					.getEventListenerManager();
 
 			long executeStartNanos = 0;
 			if ( sqlStatementLogger.getLogSlowQuery() > 0 ) {
 				executeStartNanos = System.nanoTime();
 			}
-			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
+			final EventManager eventManager = session.getEventManager();
+			final HibernateEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				eventListenerManager.jdbcExecuteStatementStart();
 				resultSet = wrapResultSet( preparedStatement.executeQuery() );
 			}
 			finally {
-				JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
+				eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
 				eventListenerManager.jdbcExecuteStatementEnd();
 				sqlStatementLogger.logSlowQuery( finalSql, executeStartNanos, context() );
 			}
@@ -259,7 +262,7 @@ public class DeferredResultSetAccess extends AbstractResultSetAccess {
 			catch (RuntimeException e2) {
 				e.addSuppressed( e2 );
 			}
-			throw executionContext.getSession().getJdbcServices().getSqlExceptionHelper().convert(
+			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					e,
 					"JDBC exception executing SQL [" + finalSql + "]"
 			);

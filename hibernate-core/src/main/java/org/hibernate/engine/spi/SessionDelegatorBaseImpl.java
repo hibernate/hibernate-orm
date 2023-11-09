@@ -38,6 +38,7 @@ import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
+import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.spi.DeleteContext;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.MergeContext;
@@ -1221,6 +1222,11 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 	@Override
 	public Integer getJdbcBatchSize() {
 		return delegate.getJdbcBatchSize();
+	}
+
+	@Override
+	public EventManager getEventManager() {
+		return delegate.getEventManager();
 	}
 
 	@Override

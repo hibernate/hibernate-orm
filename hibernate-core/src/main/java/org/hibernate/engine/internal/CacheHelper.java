@@ -12,8 +12,8 @@ import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.jfr.CacheGetEvent;
-import org.hibernate.event.jfr.internal.JfrEventManager;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateEvent;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -46,12 +46,13 @@ public final class CacheHelper {
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		Object cachedValue = null;
 		eventListenerManager.cacheGetStart();
-		final CacheGetEvent cacheGetEvent = JfrEventManager.beginCacheGetEvent();
+		final EventManager eventManager = session.getEventManager();
+		final HibernateEvent cacheGetEvent = eventManager.beginCacheGetEvent();
 		try {
 			cachedValue = cacheAccess.get( session, cacheKey );
 		}
 		finally {
-			JfrEventManager.completeCacheGetEvent(
+			eventManager.completeCacheGetEvent(
 					cacheGetEvent,
 					session,
 					cacheAccess.getRegion(),
@@ -72,12 +73,13 @@ public final class CacheHelper {
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		Object cachedValue = null;
 		eventListenerManager.cacheGetStart();
-		final CacheGetEvent cacheGetEvent = JfrEventManager.beginCacheGetEvent();
+		final EventManager eventManager = session.getEventManager();
+		final HibernateEvent cacheGetEvent = eventManager.beginCacheGetEvent();
 		try {
 			cachedValue = cacheAccess.get( session, cacheKey );
 		}
 		finally {
-			JfrEventManager.completeCacheGetEvent(
+			eventManager.completeCacheGetEvent(
 					cacheGetEvent,
 					session,
 					cacheAccess.getRegion(),

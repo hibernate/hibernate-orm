@@ -26,9 +26,8 @@ import org.hibernate.engine.jdbc.internal.FormatStyle;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.jfr.JdbcPreparedStatementExecutionEvent;
-import org.hibernate.event.jfr.internal.JfrEventManager;
-import org.hibernate.event.jfr.JdbcPreparedStatementCreationEvent;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateEvent;
 import org.hibernate.id.ExportableColumn;
 import org.hibernate.id.IdentifierGenerationException;
 import org.hibernate.id.IdentifierGeneratorHelper;
@@ -144,9 +143,15 @@ public class TableStructure implements DatabaseStructure {
 											connection,
 											selectQuery,
 											statementLogger,
-											statsCollector
+											statsCollector,
+											session
 									)) {
-										final ResultSet selectRS = executeQuery( selectStatement, statsCollector, selectQuery );
+										final ResultSet selectRS = executeQuery(
+												selectStatement,
+												statsCollector,
+												selectQuery,
+												session
+										);
 										if ( !selectRS.next() ) {
 											final String err = "could not read a hi value - you need to populate the table: " + physicalTableName;
 											LOG.error( err );
@@ -165,13 +170,14 @@ public class TableStructure implements DatabaseStructure {
 											connection,
 											updateQuery,
 											statementLogger,
-											statsCollector
+											statsCollector,
+											session
 									)) {
 										final int increment = applyIncrementSizeToSourceValues ? incrementSize : 1;
 										final IntegralDataTypeHolder updateValue = value.copy().add( increment );
 										updateValue.bind( updatePS, 1 );
 										value.bind( updatePS, 2 );
-										rows = executeUpdate( updatePS, statsCollector, updateQuery );
+										rows = executeUpdate( updatePS, statsCollector, updateQuery, session );
 									}
 									catch (SQLException e) {
 										LOG.unableToUpdateQueryHiValue( physicalTableName.render(), e );
@@ -199,40 +205,52 @@ public class TableStructure implements DatabaseStructure {
 			Connection connection,
 			String sql,
 			SqlStatementLogger statementLogger,
-			SessionEventListenerManager statsCollector) throws SQLException {
+			SessionEventListenerManager statsCollector,
+			SharedSessionContractImplementor session) throws SQLException {
 		statementLogger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
-		final JdbcPreparedStatementCreationEvent jdbcPreparedStatementCreation = JfrEventManager.beginJdbcPreparedStatementCreationEvent();
+		final EventManager eventManager = session.getEventManager();
+		final HibernateEvent jdbcPreparedStatementCreation = eventManager.beginJdbcPreparedStatementCreationEvent();
 		try {
 			statsCollector.jdbcPrepareStatementStart();
 			return connection.prepareStatement( sql );
 		}
 		finally {
-			JfrEventManager.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
+			eventManager.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
 			statsCollector.jdbcPrepareStatementEnd();
 		}
 	}
 
-	private int executeUpdate(PreparedStatement ps, SessionEventListenerManager statsCollector, String sql ) throws SQLException {
-		final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
+	private int executeUpdate(
+			PreparedStatement ps,
+			SessionEventListenerManager statsCollector,
+			String sql,
+			SharedSessionContractImplementor session) throws SQLException {
+		final EventManager eventManager = session.getEventManager();
+		final HibernateEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeUpdate();
 		}
 		finally {
-			JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+			eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 			statsCollector.jdbcExecuteStatementEnd();
 		}
 
 	}
 
-	private ResultSet executeQuery(PreparedStatement ps, SessionEventListenerManager statsCollector, String sql ) throws SQLException {
-		final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = JfrEventManager.beginJdbcPreparedStatementExecutionEvent();
+	private ResultSet executeQuery(
+			PreparedStatement ps,
+			SessionEventListenerManager statsCollector,
+			String sql,
+			SharedSessionContractImplementor session) throws SQLException {
+		final EventManager eventManager = session.getEventManager();
+		final HibernateEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			statsCollector.jdbcExecuteStatementStart();
 			return ps.executeQuery();
 		}
 		finally {
-			JfrEventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
+			eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, sql );
 			statsCollector.jdbcExecuteStatementEnd();
 		}
 	}

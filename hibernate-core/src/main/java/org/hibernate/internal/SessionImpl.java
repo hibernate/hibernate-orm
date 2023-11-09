@@ -68,9 +68,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
-import org.hibernate.event.jfr.internal.JfrEventManager;
-import org.hibernate.event.jfr.SessionClosedEvent;
-import org.hibernate.event.jfr.SessionOpenEvent;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateEvent;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEvent;
@@ -228,7 +227,7 @@ public class SessionImpl
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
-		final SessionOpenEvent sessionOpenEvent = JfrEventManager.beginSessionOpenEvent();
+		final HibernateEvent sessionOpenEvent = getEventManager().beginSessionOpenEvent();
 
 		persistenceContext = createPersistenceContext();
 		actionQueue = createActionQueue();
@@ -275,7 +274,7 @@ public class SessionImpl
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), currentTimeMillis() );
 		}
 
-		JfrEventManager.completeSessionOpenEvent( sessionOpenEvent, this );
+		getEventManager().completeSessionOpenEvent( sessionOpenEvent, this );
 	}
 
 	private FlushMode getInitialFlushMode() {
@@ -417,7 +416,8 @@ public class SessionImpl
 			log.tracef( "Closing session [%s]", getSessionIdentifier() );
 		}
 
-		final SessionClosedEvent sessionClosedEvent = JfrEventManager.beginSessionClosedEvent();
+		final EventManager eventManager = getEventManager();
+		final HibernateEvent sessionClosedEvent = eventManager.beginSessionClosedEvent();
 
 		// todo : we want this check if usage is JPA, but not native Hibernate usage
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
@@ -442,7 +442,7 @@ public class SessionImpl
 			statistics.closeSession();
 		}
 
-		JfrEventManager.completeSessionClosedEvent( sessionClosedEvent, this );
+		eventManager.completeSessionClosedEvent( sessionClosedEvent, this );
 	}
 
 	private boolean isTransactionInProgressAndNotMarkedForRollback() {

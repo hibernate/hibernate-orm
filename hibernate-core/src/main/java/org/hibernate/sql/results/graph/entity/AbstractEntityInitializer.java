@@ -28,8 +28,8 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
-import org.hibernate.event.jfr.CachePutEvent;
-import org.hibernate.event.jfr.internal.JfrEventManager;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.StringHelper;
@@ -985,9 +985,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		// 		2) Session#clear + some form of load
 		//
 		// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
+		final EventManager eventManager = session.getEventManager();
 		if ( persistenceContext.wasInsertedDuringTransaction( concreteDescriptor, entityIdentifier) ) {
 			boolean update = false;
-			final CachePutEvent cachePutEvent = JfrEventManager.beginCachePutEvent();
+			final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
 			try {
 				update = cacheAccess.update(
 						session,
@@ -998,20 +999,20 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				);
 			}
 			finally {
-				JfrEventManager.completeCachePutEvent(
+				eventManager.completeCachePutEvent(
 						cachePutEvent,
 						session,
 						cacheAccess,
 						concreteDescriptor,
 						update,
-						JfrEventManager.CacheActionDescription.ENTITY_UPDATE
+						EventManager.CacheActionDescription.ENTITY_UPDATE
 				);
 			}
 		}
 		else {
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 			boolean put = false;
-			final CachePutEvent cachePutEvent = JfrEventManager.beginCachePutEvent();
+			final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 				put = cacheAccess.putFromLoad(
@@ -1024,13 +1025,13 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				);
 			}
 			finally {
-				JfrEventManager.completeCachePutEvent(
+				eventManager.completeCachePutEvent(
 						cachePutEvent,
 						session,
 						cacheAccess,
 						concreteDescriptor,
 						put,
-						JfrEventManager.CacheActionDescription.ENTITY_LOAD
+						EventManager.CacheActionDescription.ENTITY_LOAD
 				);
 				final StatisticsImplementor statistics = factory.getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {

@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
@@ -90,6 +91,7 @@ public class ArrayTrimTest {
 
 	@Test
 	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 12, reason = "The PostgreSQL emulation for version < 14 doesn't throw an error")
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "The Cockroach emulation doesn't throw an error")
 	public void testTrimOutOfRange(SessionFactoryScope scope) {
 		scope.inSession( em -> {
 			try {

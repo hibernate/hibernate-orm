@@ -53,7 +53,7 @@ public class CockroachArrayFillFunction extends AbstractArrayFillFunction {
 		}
 		sqlAppender.append( ") from generate_series(1," );
 		sqlAstArguments.get( 1 ).accept( walker );
-		sqlAppender.append( ",1))) end,array[])" );
+		sqlAppender.append( ",1)) end,array[])" );
 	}
 
 	private static boolean needsElementCasting(Expression elementExpression) {

@@ -28,11 +28,21 @@ public class LimitLimitHandler extends AbstractSimpleLimitHandler {
 		return hasFirstRow ? " limit ?,?" : " limit ?";
 	}
 
+	@Override
+	protected String offsetOnlyClause() {
+		return " limit ?," + Integer.MAX_VALUE;
+	}
+
 	private static final Pattern FOR_UPDATE_PATTERN =
 			compile("\\s+for\\s+update\\b|\\s+lock\\s+in\\s+shared\\s+mode\\b|\\s*(;|$)", CASE_INSENSITIVE);
 
 	@Override
 	protected Pattern getForUpdatePattern() {
 		return FOR_UPDATE_PATTERN;
+	}
+
+	@Override
+	public boolean supportsOffset() {
+		return true;
 	}
 }

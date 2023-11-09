@@ -168,7 +168,6 @@ public class OracleDialect extends Dialect {
 
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 19 );
 
-	private final LimitHandler limitHandler = Oracle12LimitHandler.INSTANCE;
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	// Is it an Autonomous Database Cloud Service?
@@ -939,7 +938,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return limitHandler;
+		return Oracle12LimitHandler.INSTANCE;
 	}
 
 	@Override

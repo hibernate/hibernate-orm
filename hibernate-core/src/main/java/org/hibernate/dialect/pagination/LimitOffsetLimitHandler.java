@@ -15,6 +15,12 @@ package org.hibernate.dialect.pagination;
 public class LimitOffsetLimitHandler extends AbstractSimpleLimitHandler {
 
 	public static LimitOffsetLimitHandler INSTANCE = new LimitOffsetLimitHandler();
+	public static LimitOffsetLimitHandler OFFSET_ONLY_INSTANCE = new LimitOffsetLimitHandler() {
+		@Override
+		protected String offsetOnlyClause() {
+			return " offset ?";
+		}
+	};
 
 	@Override
 	protected String limitClause(boolean hasFirstRow) {
@@ -22,7 +28,17 @@ public class LimitOffsetLimitHandler extends AbstractSimpleLimitHandler {
 	}
 
 	@Override
+	protected String offsetOnlyClause() {
+		return " limit " + Integer.MAX_VALUE + " offset ?";
+	}
+
+	@Override
 	public final boolean bindLimitParametersInReverseOrder() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsOffset() {
 		return true;
 	}
 }

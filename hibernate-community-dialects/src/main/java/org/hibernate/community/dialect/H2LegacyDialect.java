@@ -146,7 +146,7 @@ public class H2LegacyDialect extends Dialect {
 		// https://github.com/h2database/h2database/commit/b2cdf84e0b84eb8a482fa7dccdccc1ab95241440
 		limitHandler = version.isSameOrAfter( 1, 4, 195 )
 				? OffsetFetchLimitHandler.INSTANCE
-				: LimitOffsetLimitHandler.INSTANCE;
+				: LimitOffsetLimitHandler.OFFSET_ONLY_INSTANCE;
 
 		if ( version.isBefore( 1, 2, 139 ) ) {
 			LOG.unsupportedMultiTableBulkHqlJpaql( version.getMajor(), version.getMinor(), version.getMicro() );

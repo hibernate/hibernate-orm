@@ -33,18 +33,23 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 
 	@Override
 	public String processSql(String sql, Limit limit, QueryOptions queryOptions) {
-		final boolean hasMaxRows = hasMaxRows( limit );
-		if ( !hasMaxRows ) {
-			return sql;
-		}
 		return processSql(
 				sql,
 				hasFirstRow( limit ),
+				hasMaxRows( limit ),
 				queryOptions.getLockOptions()
 		);
 	}
 
+	/**
+	 * @deprecated Use {@link #processSql(String, boolean, boolean, LockOptions)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	protected String processSql(String sql, boolean hasFirstRow, LockOptions lockOptions) {
+		return processSql( sql, hasFirstRow, true, lockOptions );
+	}
+
+	protected String processSql(String sql, boolean hasFirstRow, boolean hasMaxRows, LockOptions lockOptions) {
 		if ( lockOptions != null ) {
 			final LockMode lockMode = lockOptions.getLockMode();
 			switch ( lockMode ) {
@@ -53,42 +58,59 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 				case UPGRADE_NOWAIT:
 				case PESSIMISTIC_FORCE_INCREMENT:
 				case UPGRADE_SKIPLOCKED: {
-					return processSql( sql, getForUpdateIndex( sql ), hasFirstRow );
+					return processSql( sql, getForUpdateIndex( sql ), hasFirstRow, hasMaxRows );
 				}
 				default: {
-					return processSqlOffsetFetch( sql, hasFirstRow );
+					return processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows );
 				}
 			}
 		}
-		return processSqlOffsetFetch( sql, hasFirstRow );
+		return processSqlOffsetFetch( sql, hasFirstRow, hasMaxRows );
 	}
 
+	/**
+	 * @deprecated Use {@link #processSqlOffsetFetch(String, boolean, boolean)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	protected String processSqlOffsetFetch(String sql, boolean hasFirstRow) {
+		return processSqlOffsetFetch( sql, hasFirstRow, true );
+	}
+
+	protected String processSqlOffsetFetch(String sql, boolean hasFirstRow, boolean hasMaxRows) {
 
 		final int forUpdateLastIndex = getForUpdateIndex( sql );
 
 		if ( forUpdateLastIndex > -1 ) {
-			return processSql( sql, forUpdateLastIndex, hasFirstRow );
+			return processSql( sql, forUpdateLastIndex, hasFirstRow, hasMaxRows );
 		}
 
 		bindLimitParametersInReverseOrder = false;
 		useMaxForLimit = false;
 		supportOffset = true;
 
-		final int offsetFetchLength;
 		final String offsetFetchString;
-		if ( hasFirstRow ) {
+		if ( hasFirstRow && hasMaxRows ) {
 			offsetFetchString = " offset ? rows fetch next ? rows only";
+		}
+		else if ( hasFirstRow ) {
+			offsetFetchString = " offset ? rows";
 		}
 		else {
 			offsetFetchString = " fetch first ? rows only";
 		}
-		offsetFetchLength = sql.length() + offsetFetchString.length();
 
 		return sql + offsetFetchString;
 	}
 
+	/**
+	 * @deprecated Use {@link #processSql(String, int, boolean, boolean)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	protected String processSql(String sql, int forUpdateIndex, boolean hasFirstRow) {
+		return processSql( sql, forUpdateIndex, hasFirstRow, true );
+	}
+
+	protected String processSql(String sql, int forUpdateIndex, boolean hasFirstRow, boolean hasMaxRows) {
 		bindLimitParametersInReverseOrder = true;
 		useMaxForLimit = true;
 		supportOffset = false;
@@ -112,11 +134,17 @@ public class Oracle12LimitHandler extends AbstractLimitHandler {
 			forUpdateClauseLength = forUpdateClause.length() + 1;
 		}
 
-		if ( hasFirstRow ) {
+		if ( hasFirstRow && hasMaxRows ) {
 			pagingSelect = new StringBuilder( sql.length() + forUpdateClauseLength + 98 );
 			pagingSelect.append( "select * from (select row_.*,rownum rownum_ from (" );
 			pagingSelect.append( sql );
 			pagingSelect.append( ") row_ where rownum<=?) where rownum_>?" );
+		}
+		else if ( hasFirstRow ) {
+			pagingSelect = new StringBuilder( sql.length() + forUpdateClauseLength + 98 );
+			pagingSelect.append( "select * from (" );
+			pagingSelect.append( sql );
+			pagingSelect.append( ") row_ where rownum>?" );
 		}
 		else {
 			pagingSelect = new StringBuilder( sql.length() + forUpdateClauseLength + 37 );

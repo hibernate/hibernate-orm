@@ -18,9 +18,17 @@ public abstract class AbstractSimpleLimitHandler extends AbstractLimitHandler {
 
 	protected abstract String limitClause(boolean hasFirstRow);
 
+	protected String offsetOnlyClause() {
+		return null;
+	}
+
 	@Override
 	public String processSql(String sql, Limit limit) {
 		if ( !hasMaxRows( limit ) ) {
+			final String offsetOnlyClause = offsetOnlyClause();
+			if ( offsetOnlyClause != null && hasFirstRow( limit ) ) {
+				return insert( offsetOnlyClause, sql );
+			}
 			return sql;
 		}
 		return insert( limitClause( hasFirstRow( limit ) ), sql );
@@ -38,5 +46,10 @@ public abstract class AbstractSimpleLimitHandler extends AbstractLimitHandler {
 	@Override
 	public final boolean supportsVariableLimit() {
 		return true;
+	}
+
+	@Override
+	public boolean supportsOffset() {
+		return super.supportsOffset();
 	}
 }

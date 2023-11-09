@@ -16,6 +16,7 @@ import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.CommonFunctionFactory;
 import org.hibernate.dialect.pagination.LimitHandler;
+import org.hibernate.dialect.pagination.LimitLimitHandler;
 import org.hibernate.dialect.pagination.LimitOffsetLimitHandler;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
@@ -130,7 +131,7 @@ public class MaxDBDialect extends Dialect {
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return LimitOffsetLimitHandler.INSTANCE;
+		return LimitLimitHandler.INSTANCE;
 	}
 
 	@Override

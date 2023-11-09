@@ -750,7 +750,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return getVersion().isBefore( 8, 4 )
-				? LimitOffsetLimitHandler.INSTANCE
+				? LimitOffsetLimitHandler.OFFSET_ONLY_INSTANCE
 				: OffsetFetchLimitHandler.INSTANCE;
 	}
 

@@ -422,7 +422,7 @@ public class HSQLLegacyDialect extends Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return getVersion().isBefore( 2 ) ? LegacyHSQLLimitHandler.INSTANCE
-				: getVersion().isBefore( 2, 5 ) ? LimitOffsetLimitHandler.INSTANCE
+				: getVersion().isBefore( 2, 5 ) ? LimitOffsetLimitHandler.OFFSET_ONLY_INSTANCE
 				: OffsetFetchLimitHandler.INSTANCE;
 	}
 

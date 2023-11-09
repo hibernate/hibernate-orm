@@ -32,6 +32,11 @@ public class RowsLimitHandler extends AbstractSimpleLimitHandler {
 	}
 
 	@Override
+	protected String offsetOnlyClause() {
+		return " rows ? to " + Integer.MAX_VALUE;
+	}
+
+	@Override
 	public final boolean useMaxForLimit() {
 		return true;
 	}
@@ -47,5 +52,10 @@ public class RowsLimitHandler extends AbstractSimpleLimitHandler {
 	@Override
 	protected Pattern getForUpdatePattern() {
 		return FOR_UPDATE_PATTERN;
+	}
+
+	@Override
+	public boolean supportsOffset() {
+		return true;
 	}
 }

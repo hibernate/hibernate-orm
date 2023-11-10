@@ -8,7 +8,6 @@ package org.hibernate.query.sqm.tree.domain;
 
 import java.util.Map;
 import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
@@ -67,7 +66,7 @@ public class SqmMapJoin<O, K, V>
 						getAttribute(),
 						getExplicitAlias(),
 						getSqmJoinType(),
-						isFetched(),
+						context.copyFetchedFlag() && isFetched(),
 						nodeBuilder()
 				)
 		);

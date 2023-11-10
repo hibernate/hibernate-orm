@@ -65,7 +65,7 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 						getAttribute(),
 						getExplicitAlias(),
 						getSqmJoinType(),
-						isFetched(),
+						context.copyFetchedFlag() && isFetched(),
 						nodeBuilder()
 				)
 		);

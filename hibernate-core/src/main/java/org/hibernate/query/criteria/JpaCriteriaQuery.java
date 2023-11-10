@@ -26,6 +26,13 @@ import org.hibernate.query.sqm.FetchClauseType;
  */
 public interface JpaCriteriaQuery<T> extends CriteriaQuery<T>, JpaQueryableCriteria<T>, JpaSelectCriteria<T> {
 
+	/**
+	 * Wraps this query in a subquery and returns a count query based on that subquery in the from clause.
+	 *
+	 * @since 6.4
+	 */
+	JpaCriteriaQuery<Long> createCountQuery();
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// Limit/Offset/Fetch clause
 

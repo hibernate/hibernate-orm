@@ -7,28 +7,24 @@
 package org.hibernate.orm.test.function.array;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
-import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.query.criteria.JpaCriteriaQuery;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 
-import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Tuple;
-import jakarta.persistence.criteria.Expression;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -40,10 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 @DomainModel(annotatedClasses = EntityWithArrays.class)
 @SessionFactory
 @RequiresDialectFeature( feature = DialectFeatureChecks.SupportsStructuralArrays.class)
-// Make sure this stuff runs on a dedicated connection pool,
-// otherwise we might run into ORA-21700: object does not exist or is marked for delete
-// because the JDBC connection or database session caches something that should have been invalidated
-@ServiceRegistry(settings = @Setting(name = AvailableSettings.CONNECTION_PROVIDER, value = ""))
+// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+@BootstrapServiceRegistry(integrators = SharedDriverManagerTypeCacheClearingIntegrator.class)
 public class ArrayAppendTest {
 
 	@BeforeEach

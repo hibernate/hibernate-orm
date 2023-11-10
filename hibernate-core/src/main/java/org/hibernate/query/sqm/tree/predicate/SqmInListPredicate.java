@@ -99,9 +99,9 @@ public class SqmInListPredicate<T> extends AbstractNegatableSqmPredicate impleme
 	public SqmInPredicate<T> value(Object value) {
 		if ( value instanceof Collection ) {
 			//noinspection unchecked
-			( (Collection<T>) value ).forEach(
-					v -> addExpression( nodeBuilder().value( v, testExpression ) )
-			);
+			for ( T v : ( (Collection<T>) value ) ) {
+				addExpression( nodeBuilder().value( v, testExpression ) );
+			}
 		}
 		else {
 			//noinspection unchecked

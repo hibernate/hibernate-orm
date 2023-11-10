@@ -1776,6 +1776,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	 * Creates an expression for the value with the given "type inference" information
 	 */
 	public <T> SqmExpression<T> value(T value, SqmExpression<? extends T> typeInferenceSource) {
+		if ( value instanceof SqmExpression<?> ) {
+			//noinspection unchecked
+			return (SqmExpression<T>) value;
+		}
 		return inlineValue( value ) ? literal( value, typeInferenceSource ) : valueParameter( value, typeInferenceSource );
 	}
 
@@ -1792,6 +1796,10 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 					: duration( duration.getNano() + duration.getSeconds() * 1_000_000_000, TemporalUnit.NANOSECOND );
 			//noinspection unchecked
 			return (SqmExpression<T>) expression;
+		}
+		else if ( value instanceof SqmExpression<?> ) {
+			//noinspection unchecked
+			return (SqmExpression<T>) value;
 		}
 		else {
 			return inlineValue( value ) ? literal( value ) : valueParameter( value );

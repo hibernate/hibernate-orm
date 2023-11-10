@@ -26,6 +26,14 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 			SqmBagJoin<O, T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			String alias) {
+		this( wrappedPath, treatTarget, alias, false );
+	}
+
+	public SqmTreatedBagJoin(
+			SqmBagJoin<O, T> wrappedPath,
+			EntityDomainType<S> treatTarget,
+			String alias,
+			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
@@ -35,7 +43,7 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 				(BagPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
-				wrappedPath.isFetched(),
+				fetched,
 				wrappedPath.nodeBuilder()
 		);
 		this.treatTarget = treatTarget;
@@ -46,7 +54,8 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 			NavigablePath navigablePath,
 			SqmBagJoin<O, T> wrappedPath,
 			EntityDomainType<S> treatTarget,
-			String alias) {
+			String alias,
+			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
@@ -76,7 +85,8 @@ public class SqmTreatedBagJoin<O,T, S extends T> extends SqmBagJoin<O,S> impleme
 						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
-						getExplicitAlias()
+						getExplicitAlias(),
+						isFetched()
 				)
 		);
 		copyTo( path, context );

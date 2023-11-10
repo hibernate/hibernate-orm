@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.tree;
 
+import org.hibernate.Incubating;
 import org.hibernate.query.sqm.internal.NoParamSqmCopyContext;
 import org.hibernate.query.sqm.internal.SimpleSqmCopyContext;
 
@@ -17,6 +18,16 @@ public interface SqmCopyContext {
 	<T> T getCopy(T original);
 
 	<T> T registerCopy(T original, T copy);
+
+	/**
+	 * Returns whether the {@code fetch} flag for attribute joins should be copied over.
+	 *
+	 * @since 6.4
+	 */
+	@Incubating
+	default boolean copyFetchedFlag() {
+		return true;
+	}
 
 	static SqmCopyContext simpleContext() {
 		return new SimpleSqmCopyContext();

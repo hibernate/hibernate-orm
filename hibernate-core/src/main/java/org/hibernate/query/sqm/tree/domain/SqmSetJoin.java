@@ -67,7 +67,7 @@ public class SqmSetJoin<O, E>
 						getModel(),
 						getExplicitAlias(),
 						getSqmJoinType(),
-						isFetched(),
+						context.copyFetchedFlag() && isFetched(),
 						nodeBuilder()
 				)
 		);

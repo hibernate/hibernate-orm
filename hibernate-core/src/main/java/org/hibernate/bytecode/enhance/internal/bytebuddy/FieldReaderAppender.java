@@ -54,55 +54,64 @@ abstract class FieldReaderAppender implements ByteCodeAppender {
 		TypeDescription dispatcherType = persistentFieldAsDefined.getType().isPrimitive()
 				? persistentFieldAsDefined.getType().asErasure()
 				: TypeDescription.OBJECT;
-		// if ( this.$$_hibernate_getInterceptor() != null )
-		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-		methodVisitor.visitMethodInsn(
-				Opcodes.INVOKEVIRTUAL,
-				managedCtClass.getInternalName(),
-				EnhancerConstants.INTERCEPTOR_GETTER_NAME,
-				Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
-				false
-		);
-		Label skip = new Label();
-		methodVisitor.visitJumpInsn( Opcodes.IFNULL, skip );
-		// this (for field write)
-		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-		// this.$$_hibernate_getInterceptor();
-		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-		methodVisitor.visitMethodInsn(
-				Opcodes.INVOKEVIRTUAL,
-				managedCtClass.getInternalName(),
-				EnhancerConstants.INTERCEPTOR_GETTER_NAME,
-				Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
-				false
-		);
-		// .readXXX( self, fieldName, field );
-		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-		methodVisitor.visitLdcInsn( persistentFieldAsDefined.getName() );
-		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
-		fieldRead( methodVisitor );
-		methodVisitor.visitMethodInsn(
-				Opcodes.INVOKEINTERFACE,
-				Type.getInternalName( PersistentAttributeInterceptor.class ),
-				"read" + EnhancerImpl.capitalize( dispatcherType.getSimpleName() ),
-				Type.getMethodDescriptor(
-						Type.getType( dispatcherType.getDescriptor() ),
-						Type.getType( Object.class ),
-						Type.getType( String.class ),
-						Type.getType( dispatcherType.getDescriptor() )
-				),
-				true
-		);
-		// field = (cast) XXX
-		if ( !dispatcherType.isPrimitive() ) {
-			methodVisitor.visitTypeInsn( Opcodes.CHECKCAST, persistentFieldAsDefined.getType().asErasure().getInternalName() );
+		// From `PersistentAttributeTransformer`:
+		//     Final fields will only be written to from the constructor,
+		//     so there's no point trying to replace final field writes with a method call.
+		// as a result if a field is final then there will be no write method, and we don't want to have this block:
+		if ( !persistentField.asDefined().isFinal() ) {
+			// if ( this.$$_hibernate_getInterceptor() != null )
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+			methodVisitor.visitMethodInsn(
+					Opcodes.INVOKEVIRTUAL,
+					managedCtClass.getInternalName(),
+					EnhancerConstants.INTERCEPTOR_GETTER_NAME,
+					Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
+					false
+			);
+			Label skip = new Label();
+			methodVisitor.visitJumpInsn( Opcodes.IFNULL, skip );
+			// this (for field write)
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+			// this.$$_hibernate_getInterceptor();
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+			methodVisitor.visitMethodInsn(
+					Opcodes.INVOKEVIRTUAL,
+					managedCtClass.getInternalName(),
+					EnhancerConstants.INTERCEPTOR_GETTER_NAME,
+					Type.getMethodDescriptor( Type.getType( PersistentAttributeInterceptor.class ) ),
+					false
+			);
+			// .readXXX( self, fieldName, field );
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+			methodVisitor.visitLdcInsn( persistentFieldAsDefined.getName() );
+			methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
+
+			fieldRead( methodVisitor );
+			methodVisitor.visitMethodInsn(
+					Opcodes.INVOKEINTERFACE,
+					Type.getInternalName( PersistentAttributeInterceptor.class ),
+					"read" + EnhancerImpl.capitalize( dispatcherType.getSimpleName() ),
+					Type.getMethodDescriptor(
+							Type.getType( dispatcherType.getDescriptor() ),
+							Type.getType( Object.class ),
+							Type.getType( String.class ),
+							Type.getType( dispatcherType.getDescriptor() )
+					),
+					true
+			);
+			// field = (cast) XXX
+			if ( !dispatcherType.isPrimitive() ) {
+				methodVisitor.visitTypeInsn(
+						Opcodes.CHECKCAST, persistentFieldAsDefined.getType().asErasure().getInternalName() );
+			}
+			fieldWrite( methodVisitor );
+			// end if
+			methodVisitor.visitLabel( skip );
+			if ( implementationContext.getClassFileVersion().isAtLeast( ClassFileVersion.JAVA_V6 ) ) {
+				methodVisitor.visitFrame( Opcodes.F_SAME, 0, null, 0, null );
+			}
 		}
-		fieldWrite( methodVisitor );
-		// end if
-		methodVisitor.visitLabel( skip );
-		if ( implementationContext.getClassFileVersion().isAtLeast( ClassFileVersion.JAVA_V6 ) ) {
-			methodVisitor.visitFrame( Opcodes.F_SAME, 0, null, 0, null );
-		}
+
 		// return field
 		methodVisitor.visitVarInsn( Opcodes.ALOAD, 0 );
 		fieldRead( methodVisitor );

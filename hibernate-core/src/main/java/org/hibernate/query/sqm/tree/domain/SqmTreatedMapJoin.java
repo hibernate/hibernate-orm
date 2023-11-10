@@ -24,6 +24,14 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 			SqmMapJoin<O, K, V> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			String alias) {
+		this( wrappedPath, treatTarget, alias, false );
+	}
+
+	public SqmTreatedMapJoin(
+			SqmMapJoin<O, K, V> wrappedPath,
+			EntityDomainType<S> treatTarget,
+			String alias,
+			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
@@ -33,7 +41,7 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 				( (SqmMapJoin<O, K, S>) wrappedPath ).getModel(),
 				alias,
 				wrappedPath.getSqmJoinType(),
-				wrappedPath.isFetched(),
+				fetched,
 				wrappedPath.nodeBuilder()
 		);
 		this.treatTarget = treatTarget;
@@ -44,7 +52,8 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 			NavigablePath navigablePath,
 			SqmMapJoin<O, K, V> wrappedPath,
 			EntityDomainType<S> treatTarget,
-			String alias) {
+			String alias,
+			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
@@ -52,7 +61,7 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 				( (SqmMapJoin<O, K, S>) wrappedPath ).getModel(),
 				alias,
 				wrappedPath.getSqmJoinType(),
-				wrappedPath.isFetched(),
+				fetched,
 				wrappedPath.nodeBuilder()
 		);
 		this.treatTarget = treatTarget;
@@ -71,7 +80,8 @@ public class SqmTreatedMapJoin<O, K, V, S extends V> extends SqmMapJoin<O, K, S>
 						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
-						getExplicitAlias()
+						getExplicitAlias(),
+						isFetched()
 				)
 		);
 		copyTo( path, context );

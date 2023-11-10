@@ -132,9 +132,19 @@ public class SqmSetJoin<O, E>
 
 	@Override
 	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		return treatAs( treatTarget, alias, false );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetch );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedSetJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		final SqmTreatedSetJoin<O, E, S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedSetJoin<>( this, treatTarget, alias ) );
+			return addTreat( new SqmTreatedSetJoin<>( this, treatTarget, alias, fetch ) );
 		}
 		return treat;
 	}

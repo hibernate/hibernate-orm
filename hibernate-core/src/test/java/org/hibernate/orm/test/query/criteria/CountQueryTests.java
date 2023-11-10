@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html
  */
-package org.hibernate.orm.test.query;
+package org.hibernate.orm.test.query.criteria;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -129,21 +129,22 @@ public class CountQueryTests {
 	public void testParameters(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					//tag::criteria-extensions-count-query-example[]
 					final HibernateCriteriaBuilder cb = session.getCriteriaBuilder();
 					final JpaCriteriaQuery<Tuple> cq = cb.createTupleQuery();
 					final JpaRoot<Contact> root = cq.from( Contact.class );
-					cq.multiselect(
-							root.get( "id" ),
-							root.get( "name" )
-					);
 					final JpaParameterExpression<Contact.Gender> parameter = cb.parameter( Contact.Gender.class );
+					
+					cq.multiselect( root.get( "id" ), root.get( "name" ) );
 					cq.where( root.get( "gender" ).equalTo( parameter ) );
-					final List<Tuple> resultList = session.createQuery( cq )
-							.setParameter( parameter, Contact.Gender.FEMALE )
-							.getResultList();
 					final Long count = session.createQuery( cq.createCountQuery() )
 							.setParameter( parameter, Contact.Gender.FEMALE )
 							.getSingleResult();
+					//end::criteria-extensions-count-query-example[]
+
+					final List<Tuple> resultList = session.createQuery( cq )
+							.setParameter( parameter, Contact.Gender.FEMALE )
+							.getResultList();
 					assertEquals( resultList.size(), count.intValue() );
 				}
 		);

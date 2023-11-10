@@ -25,6 +25,14 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 			SqmSingularJoin<O,T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			String alias) {
+		this( wrappedPath, treatTarget, alias, false );
+	}
+
+	public SqmTreatedSingularJoin(
+			SqmSingularJoin<O,T> wrappedPath,
+			EntityDomainType<S> treatTarget,
+			String alias,
+			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
@@ -35,7 +43,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 				(SingularPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
-				wrappedPath.isFetched(),
+				fetched,
 				wrappedPath.nodeBuilder()
 		);
 		this.treatTarget = treatTarget;
@@ -46,7 +54,8 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 			NavigablePath navigablePath,
 			SqmSingularJoin<O,T> wrappedPath,
 			EntityDomainType<S> treatTarget,
-			String alias) {
+			String alias,
+			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
@@ -54,7 +63,7 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 				(SingularPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
-				wrappedPath.isFetched(),
+				fetched,
 				wrappedPath.nodeBuilder()
 		);
 		this.treatTarget = treatTarget;
@@ -73,7 +82,8 @@ public class SqmTreatedSingularJoin<O,T, S extends T> extends SqmSingularJoin<O,
 						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
-						getExplicitAlias()
+						getExplicitAlias(),
+						isFetched()
 				)
 		);
 		copyTo( path, context );

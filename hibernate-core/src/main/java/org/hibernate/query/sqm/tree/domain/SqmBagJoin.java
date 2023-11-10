@@ -132,9 +132,19 @@ public class SqmBagJoin<O, E> extends AbstractSqmPluralJoin<O,Collection<E>, E> 
 
 	@Override
 	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		return treatAs( treatTarget, alias, false );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetch );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedBagJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		final SqmTreatedBagJoin<O,E,S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedBagJoin<>( this, treatTarget, alias ) );
+			return addTreat( new SqmTreatedBagJoin<>( this, treatTarget, alias, fetch ) );
 		}
 		return treat;
 	}

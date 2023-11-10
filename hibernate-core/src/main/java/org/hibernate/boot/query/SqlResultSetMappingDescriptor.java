@@ -276,11 +276,7 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				String discriminatorColumn,
 				NavigablePath entityPath) {
 			final EntityDiscriminatorMapping discriminatorMapping = entityMapping.getDiscriminatorMapping();
-			if ( discriminatorMapping == null ) {
-				return null;
-			}
-
-			if ( discriminatorColumn == null ) {
+			if ( discriminatorMapping == null || discriminatorColumn == null || !entityMapping.hasSubclasses() ) {
 				return null;
 			}
 

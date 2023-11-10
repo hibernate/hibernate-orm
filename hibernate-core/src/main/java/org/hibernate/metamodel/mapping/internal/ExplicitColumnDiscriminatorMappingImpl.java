@@ -14,10 +14,13 @@ import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.type.BasicType;
+
+import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
  * @author Steve Ebersole
@@ -80,7 +83,15 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 			SqlAstCreationState creationState) {
 		final SqlExpressionResolver expressionResolver = creationState.getSqlExpressionResolver();
 		final TableReference tableReference = tableGroup.resolveTableReference( navigablePath, tableExpression );
-		return expressionResolver.resolveSqlExpression( tableReference, this );
+
+		return expressionResolver.resolveSqlExpression(
+				createColumnReferenceKey(
+						tableGroup.getPrimaryTableReference(),
+						getSelectionExpression(),
+						jdbcMappingToUse
+				),
+				processingState -> new ColumnReference( tableReference, this )
+		);
 	}
 
 	@Override

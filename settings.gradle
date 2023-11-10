@@ -79,6 +79,7 @@ dependencyResolutionManagement {
             def hikaricpVersion = version "hikaricp", "3.2.0"
             def proxoolVersion = version "proxool", "0.8.3"
             def viburVersion = version "vibur", "25.0"
+	    def ucpVersion = version "ucp", "23.3.0.23.09"
 
             def jcacheVersion = version "jcache", "1.0.0"
             def ehcache3Version = version "ehcache3", "3.10.8"
@@ -116,6 +117,10 @@ dependencyResolutionManagement {
             library( "proxool", "proxool", "proxool" ).versionRef( proxoolVersion )
 
             library( "vibur", "org.vibur", "vibur-dbcp" ).versionRef( viburVersion )
+
+	    library( "ucp", "com.oracle.database.jdbc", "ucp11" ).versionRef( ucpVersion )
+
+            library( "ojdbc11", "com.oracle.database.jdbc", "ojdbc11" ).versionRef( ucpVersion )
 
             library( "geolatte", "org.geolatte", "geolatte-geom" ).versionRef( geolatteVersion )
 
@@ -307,6 +312,7 @@ include 'hibernate-proxool'
 include 'hibernate-hikaricp'
 include 'hibernate-vibur'
 include 'hibernate-agroal'
+include 'hibernate-ucp'
 
 include 'hibernate-jcache'
 

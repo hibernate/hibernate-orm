@@ -1866,4 +1866,8 @@ public interface CoreMessageLogger extends BasicLogger {
 			id = 516)
 	void enhancementDiscoveryFailed(String className, @Cause Throwable cause);
 
+	@LogMessage(level = WARN)
+	@Message(value = "UCP properties were encountered, but the UCP ConnectionProvider was not found on the classpath; these properties are going to be ignored.",
+		id = 517)
+	void ucpProviderClassNotFound();
 }

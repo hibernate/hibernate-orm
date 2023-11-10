@@ -223,7 +223,6 @@ import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
-import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
@@ -431,6 +430,7 @@ import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.TemporalUnit.NATIVE;
 import static org.hibernate.query.sqm.TemporalUnit.SECOND;
 import static org.hibernate.query.sqm.UnaryArithmeticOperator.UNARY_MINUS;
+import static org.hibernate.query.sqm.internal.SqmUtil.isFkOptimizationAllowed;
 import static org.hibernate.sql.ast.spi.SqlAstTreeHelper.combinePredicates;
 import static org.hibernate.type.spi.TypeConfiguration.isDuration;
 
@@ -3998,10 +3998,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		throw new InterpretationException( "SqmEntityJoin not yet resolved to TableGroup" );
 	}
 
-	private boolean isJoinWithPredicate(SqmFrom<?, ?> path) {
-		return path instanceof SqmQualifiedJoin && ( (SqmQualifiedJoin<?, ?>) path ).getJoinPredicate() != null;
-	}
-
 	private Expression visitTableGroup(TableGroup tableGroup, SqmFrom<?, ?> path) {
 		final ModelPartContainer tableGroupModelPart = tableGroup.getModelPart();
 
@@ -4028,9 +4024,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// expansion to all target columns for select and group by clauses is handled in EntityValuedPathInterpretation
 				if ( entityValuedModelPart instanceof EntityAssociationMapping
 						&& ( (EntityAssociationMapping) entityValuedModelPart ).isFkOptimizationAllowed()
-						&& !isJoinWithPredicate( path ) ) {
+						&& isFkOptimizationAllowed( path ) ) {
 					// If the table group uses an association mapping that is not a one-to-many,
-					// we make use of the FK model part - unless the path is a join with an explicit predicate,
+					// we make use of the FK model part - unless the path is a non-optimizable join,
 					// for which we should always use the target's identifier to preserve semantics
 					final EntityAssociationMapping associationMapping = (EntityAssociationMapping) entityValuedModelPart;
 					final ModelPart targetPart = associationMapping.getForeignKeyDescriptor().getPart(

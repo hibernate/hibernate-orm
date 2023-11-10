@@ -139,9 +139,19 @@ public class SqmListJoin<O,E>
 
 	@Override
 	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		return treatAs( treatTarget, alias, false );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetch );
+	}
+
+	@Override
+	public <S extends E> SqmTreatedListJoin<O,E,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		final SqmTreatedListJoin<O,E,S> treat = findTreat( treatTarget, alias );
 		if ( treat == null ) {
-			return addTreat( new SqmTreatedListJoin<>( this, treatTarget, alias ) );
+			return addTreat( new SqmTreatedListJoin<>( this, treatTarget, alias, fetch ) );
 		}
 		return treat;
 	}

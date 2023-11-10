@@ -95,6 +95,7 @@ dependencies {
 	//Databases
 	testRuntimeOnly dbLibs.h2
 	testRuntimeOnly dbLibs.derby
+	testRuntimeOnly dbLibs.derbyTools
 	testRuntimeOnly dbLibs.hsqldb
 	testRuntimeOnly dbLibs.postgresql
 	testRuntimeOnly dbLibs.mssql

@@ -10,14 +10,12 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Collection;
 
-import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmTreeCreationLogger;
 import org.hibernate.query.sqm.internal.SqmCriteriaNodeBuilder;
 import org.hibernate.query.sqm.tree.jpa.AbstractJpaSelection;
-import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.type.descriptor.java.JavaType;
 
@@ -130,19 +128,8 @@ public abstract class AbstractSqmExpression<T> extends AbstractJpaSelection<T> i
 
 	@Override
 	public SqmPredicate in(Collection<?> values) {
-		final SqmInPredicate<T> in = nodeBuilder().in( this );
-		for ( Object value : values ) {
-			if ( value instanceof SqmExpression<?> ) {
-				//noinspection unchecked
-				in.value( (JpaExpression<? extends T>) value );
-			}
-			else {
-				//noinspection unchecked
-				in.value( (T) value );
-			}
-		}
-
-		return in;
+		//noinspection unchecked
+		return nodeBuilder().in( this, (Collection<T>) values );
 	}
 
 	@Override

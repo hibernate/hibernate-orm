@@ -384,7 +384,7 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			final SqmPath<?> sqmPath = (SqmPath<?>) selection;
 			// Expansion is needed if the table group is null, i.e. we're in a top level query where EVPs are always
 			// expanded to all columns, or if the selection is on the same table (lhs) as the group by expression ...
-			return ( tableGroupPath == null || sqmPath.getLhs().getNavigablePath().equals( tableGroupPath ) )
+			return ( tableGroupPath == null || sqmPath.getLhs() != null && sqmPath.getLhs().getNavigablePath().equals( tableGroupPath ) )
 					// ... and if the entity valued path is selected or any of its columns are
 					&& path.isParentOrEqual( sqmPath.getNavigablePath() );
 		}

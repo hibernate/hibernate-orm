@@ -19,9 +19,9 @@ dependencies {
 
 // JfrUnit requires JDK 17
 compileTestJava.onlyIf{
-    jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit
+    jdkVersions.test.release.asInt() >= 17
 }
 
 test.onlyIf {
-    jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit
+    jdkVersions.test.release.asInt() >= 17
 }

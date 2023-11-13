@@ -17,13 +17,8 @@ import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
-public class EmptyEventManager implements EventManager {
+public final class EmptyEventManager implements EventManager {
 
-	public static final EmptyEventManager INSTANCE = new EmptyEventManager();
-
-	private EmptyEventManager(){
-
-	}
 	@Override
 	public HibernateEvent beginSessionOpenEvent() {
 		return null;

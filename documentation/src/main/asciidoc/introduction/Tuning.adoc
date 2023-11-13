@@ -151,7 +151,7 @@ List<Book> books =
 books.forEach(book -> book.getAuthors().forEach(author -> out.println(book.title + " by " + author.name)));
 ----
 
-This code is _very_ inefficient, resulting, by default, in the execution of _N+1_ `select` statements, where _n_ is the number of ``Book``s.
+This code is _very_ inefficient, resulting, by default, in the execution of _N+1_ `select` statements, where _N_ is the number of ``Book``s.
 
 Let's see how we can improve on that.
 

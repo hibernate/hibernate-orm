@@ -19,27 +19,34 @@ import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 
+import jdk.jfr.EventType;
+
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 
 
 @AllowNonPortable
 public class JfrEventManager implements EventManager {
 
+	private static final EventType eventType = EventType.getEventType( SessionOpenEvent.class );
+
 	@Override
 	public SessionOpenEvent beginSessionOpenEvent() {
-		final SessionOpenEvent sessionOpenEvent = new SessionOpenEvent();
-		if ( sessionOpenEvent.isEnabled() ) {
+		if ( eventType.isEnabled() ) {
+			final SessionOpenEvent sessionOpenEvent = new SessionOpenEvent();
 			sessionOpenEvent.begin();
+			return sessionOpenEvent;
 		}
-		return sessionOpenEvent;
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	public void completeSessionOpenEvent(
 			HibernateEvent event,
 			SharedSessionContractImplementor session) {
-		final SessionOpenEvent sessionOpenEvent = (SessionOpenEvent) event;
-		if ( sessionOpenEvent.isEnabled() ) {
+		if ( event != null ) {
+			final SessionOpenEvent sessionOpenEvent = (SessionOpenEvent) event;
 			sessionOpenEvent.end();
 			if ( sessionOpenEvent.shouldCommit() ) {
 				sessionOpenEvent.sessionIdentifier = getSessionIdentifier( session );

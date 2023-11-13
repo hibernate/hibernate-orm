@@ -31,7 +31,7 @@ public class FlushEvent extends Event implements HibernateEvent {
 	@Label("Number Of Processed Entities")
 	public int numberOfEntitiesProcessed;
 
-	@Label("Number Of Processed Collectionc")
+	@Label("Number Of Processed Collections")
 	public int numberOfCollectionsProcessed;
 
 	@Label("Flush time")

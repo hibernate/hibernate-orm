@@ -275,7 +275,7 @@ public final class FastSessionServices {
 		this.batchBuilder = serviceRegistry.getService( BatchBuilder.class );
 		final Collection<EventManager> eventManagers = classLoaderService.loadJavaServices( EventManager.class );
 		this.eventManager = eventManagers.isEmpty()
-				? EmptyEventManager.INSTANCE
+				? new EmptyEventManager()
 				: eventManagers.iterator().next();
 	}
 

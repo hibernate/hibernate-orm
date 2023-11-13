@@ -561,6 +561,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		private final JpaCompliance jpaCompliance;
 		private static final EmptyJdbcObserver EMPTY_JDBC_OBSERVER = EmptyJdbcObserver.INSTANCE;
 		TransactionCoordinator transactionCoordinator;
+		private final EmptyEventManager eventManager;
 
 		public TemporaryJdbcSessionOwner(
 				JdbcConnectionAccess jdbcConnectionAccess,
@@ -590,6 +591,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 						.getDefaultConnectionHandlingMode();
 			}
 			this.jpaCompliance = new MutableJpaComplianceImpl( Collections.emptyMap(), false );
+			this.eventManager = new EmptyEventManager();
 		}
 
 		@Override
@@ -639,7 +641,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 		@Override
 		public EventManager getEventManager() {
-			return EmptyEventManager.INSTANCE;
+			return eventManager;
 		}
 
 		@Override

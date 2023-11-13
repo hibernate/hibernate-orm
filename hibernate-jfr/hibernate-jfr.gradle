@@ -16,12 +16,9 @@ dependencies {
     testImplementation testLibs.jfrUnit
 }
 
-
-// JfrUnit requires JDJ 17
-compileTestJava.onlyIf{
-    jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit
-}
-
-test.onlyIf {
-    jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit
+test {
+    //Testing JFR events require JDK > 16
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }

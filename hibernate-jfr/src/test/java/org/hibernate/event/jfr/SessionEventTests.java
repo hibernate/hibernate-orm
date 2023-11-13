@@ -30,15 +30,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 @JfrEventTest
 @DomainModel
 @SessionFactory
-public class SessionEventTests  {
+public class SessionEventTests {
 	public JfrEvents jfrEvents = new JfrEvents();
 
 	@Test
 	@EnableEvent(SessionOpenEvent.NAME)
 	@EnableEvent(SessionClosedEvent.NAME)
 	public void testSessionOpenEvent(SessionFactoryScope scope) {
+		jfrEvents.reset();
 		final String openedSessionIdentifier = scope.fromSession( (session) -> {
-			final List<RecordedEvent> events = jfrEvents.events().filter( recordedEvent -> recordedEvent.hasField("sessionIdentifier" ) ).toList();
+			final List<RecordedEvent> events = jfrEvents.events().filter( recordedEvent -> {
+				String eventName = recordedEvent.getEventType().getName();
+				return eventName.equals( SessionOpenEvent.NAME );
+			} ).toList();
 			assertThat( events ).hasSize( 1 );
 			final RecordedEvent event = events.get( 0 );
 			assertThat( event.getEventType().getName() ).isEqualTo( SessionOpenEvent.NAME );
@@ -49,7 +53,10 @@ public class SessionEventTests  {
 			return event.getString( "sessionIdentifier" );
 		} );
 
-		final List<RecordedEvent> events = jfrEvents.events().filter( recordedEvent -> recordedEvent.hasField("sessionIdentifier" ) ).toList();
+		final List<RecordedEvent> events = jfrEvents.events().filter( recordedEvent -> {
+			String eventName = recordedEvent.getEventType().getName();
+			return eventName.equals( SessionClosedEvent.NAME );
+		} ).toList();
 		assertThat( events ).hasSize( 1 );
 		final RecordedEvent event = events.get( 0 );
 		assertThat( event.getEventType().getName() ).isEqualTo( SessionClosedEvent.NAME );

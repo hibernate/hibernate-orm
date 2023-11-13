@@ -10,10 +10,10 @@ import org.hibernate.cache.spi.Region;
 import org.hibernate.cache.spi.access.CachedDomainDataAccess;
 import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
 import org.hibernate.event.spi.AutoFlushEvent;
+import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.event.spi.HibernateEvent;
 import org.hibernate.internal.build.AllowNonPortable;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -27,11 +27,26 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 @AllowNonPortable
 public class JfrEventManager implements EventManager {
 
-	private static final EventType eventType = EventType.getEventType( SessionOpenEvent.class );
+	private static final EventType sessionOpenEventType = EventType.getEventType( SessionOpenEvent.class );
+	private static final EventType sessionClosedEventType = EventType.getEventType( SessionClosedEvent.class );
+	private static final EventType jdbcConnectionAcquisitionEventType = EventType
+			.getEventType( JdbcConnectionAcquisitionEvent.class );
+	private static final EventType jdbcConnectionReleaseEventType = EventType
+			.getEventType( JdbcConnectionReleaseEvent.class );
+	private static final EventType jdbcPreparedStatementCreationEventType = EventType
+			.getEventType( JdbcPreparedStatementCreationEvent.class );
+	private static final EventType jdbcPreparedStatementExecutionEventType = EventType.getEventType(
+			JdbcPreparedStatementExecutionEvent.class );
+	private static final EventType jdbcBatchExecutionEventType = EventType.getEventType( JdbcBatchExecutionEvent.class );
+	private static final EventType cachePutEventType = EventType.getEventType( CachePutEvent.class );
+	private static final EventType cacheGetEventType = EventType.getEventType( CacheGetEvent.class );
+	private static final EventType flushEventType = EventType.getEventType( FlushEvent.class );
+	private static final EventType partialFlushEventType = EventType.getEventType( PartialFlushEvent.class );
+	private static final EventType dirtyCalculationEventType = EventType.getEventType( DirtyCalculationEvent.class );
 
 	@Override
 	public SessionOpenEvent beginSessionOpenEvent() {
-		if ( eventType.isEnabled() ) {
+		if ( sessionOpenEventType.isEnabled() ) {
 			final SessionOpenEvent sessionOpenEvent = new SessionOpenEvent();
 			sessionOpenEvent.begin();
 			return sessionOpenEvent;
@@ -57,19 +72,22 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public SessionClosedEvent beginSessionClosedEvent() {
-		final SessionClosedEvent sessionClosedEvent = new SessionClosedEvent();
-		if ( sessionClosedEvent.isEnabled() ) {
+		if ( sessionClosedEventType.isEnabled() ) {
+			final SessionClosedEvent sessionClosedEvent = new SessionClosedEvent();
 			sessionClosedEvent.begin();
+			return sessionClosedEvent;
 		}
-		return sessionClosedEvent;
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	public void completeSessionClosedEvent(
 			HibernateEvent event,
 			SharedSessionContractImplementor session) {
-		final SessionClosedEvent sessionClosedEvent = (SessionClosedEvent) event;
-		if ( sessionClosedEvent.isEnabled() ) {
+		if ( event != null ) {
+			final SessionClosedEvent sessionClosedEvent = (SessionClosedEvent) event;
 			sessionClosedEvent.end();
 			if ( sessionClosedEvent.shouldCommit() ) {
 				sessionClosedEvent.sessionIdentifier = getSessionIdentifier( session );
@@ -80,12 +98,15 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public JdbcConnectionAcquisitionEvent beginJdbcConnectionAcquisitionEvent() {
-		final JdbcConnectionAcquisitionEvent jdbcConnectionAcquisitionEvent = new JdbcConnectionAcquisitionEvent();
-		if ( jdbcConnectionAcquisitionEvent.isEnabled() ) {
+		if ( jdbcConnectionAcquisitionEventType.isEnabled() ) {
+			final JdbcConnectionAcquisitionEvent jdbcConnectionAcquisitionEvent = new JdbcConnectionAcquisitionEvent();
 			jdbcConnectionAcquisitionEvent.begin();
 			jdbcConnectionAcquisitionEvent.startedAt = System.nanoTime();
+			return jdbcConnectionAcquisitionEvent;
 		}
-		return jdbcConnectionAcquisitionEvent;
+		else {
+			return null;
+		}
 	}
 
 	@Override
@@ -93,8 +114,8 @@ public class JfrEventManager implements EventManager {
 			HibernateEvent event,
 			SharedSessionContractImplementor session,
 			Object tenantId) {
-		final JdbcConnectionAcquisitionEvent jdbcConnectionAcquisitionEvent = (JdbcConnectionAcquisitionEvent) event;
-		if ( jdbcConnectionAcquisitionEvent.isEnabled() ) {
+		if ( event != null ) {
+			final JdbcConnectionAcquisitionEvent jdbcConnectionAcquisitionEvent = (JdbcConnectionAcquisitionEvent) event;
 			jdbcConnectionAcquisitionEvent.end();
 			if ( jdbcConnectionAcquisitionEvent.shouldCommit() ) {
 				jdbcConnectionAcquisitionEvent.executionTime = getExecutionTime( jdbcConnectionAcquisitionEvent.startedAt );
@@ -109,12 +130,15 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public JdbcConnectionReleaseEvent beginJdbcConnectionReleaseEvent() {
-		final JdbcConnectionReleaseEvent jdbcConnectionReleaseEvent = new JdbcConnectionReleaseEvent();
-		if ( jdbcConnectionReleaseEvent.isEnabled() ) {
+		if ( jdbcConnectionReleaseEventType.isEnabled() ) {
+			final JdbcConnectionReleaseEvent jdbcConnectionReleaseEvent = new JdbcConnectionReleaseEvent();
 			jdbcConnectionReleaseEvent.begin();
 			jdbcConnectionReleaseEvent.startedAt = System.nanoTime();
+			return jdbcConnectionReleaseEvent;
 		}
-		return jdbcConnectionReleaseEvent;
+		else {
+			return null;
+		}
 	}
 
 	@Override
@@ -122,8 +146,8 @@ public class JfrEventManager implements EventManager {
 			HibernateEvent event,
 			SharedSessionContractImplementor session,
 			Object tenantId) {
-		final JdbcConnectionReleaseEvent jdbcConnectionReleaseEvent = (JdbcConnectionReleaseEvent) event;
-		if ( jdbcConnectionReleaseEvent.isEnabled() ) {
+		if ( event != null ) {
+			final JdbcConnectionReleaseEvent jdbcConnectionReleaseEvent = (JdbcConnectionReleaseEvent) event;
 			jdbcConnectionReleaseEvent.end();
 			if ( jdbcConnectionReleaseEvent.shouldCommit() ) {
 				jdbcConnectionReleaseEvent.executionTime = getExecutionTime( jdbcConnectionReleaseEvent.startedAt );
@@ -138,20 +162,23 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public JdbcPreparedStatementCreationEvent beginJdbcPreparedStatementCreationEvent() {
-		final JdbcPreparedStatementCreationEvent jdbcPreparedStatementCreation = new JdbcPreparedStatementCreationEvent();
-		if ( jdbcPreparedStatementCreation.isEnabled() ) {
+		if ( jdbcPreparedStatementCreationEventType.isEnabled() ) {
+			final JdbcPreparedStatementCreationEvent jdbcPreparedStatementCreation = new JdbcPreparedStatementCreationEvent();
 			jdbcPreparedStatementCreation.begin();
 			jdbcPreparedStatementCreation.startedAt = System.nanoTime();
+			return jdbcPreparedStatementCreation;
 		}
-		return jdbcPreparedStatementCreation;
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	public void completeJdbcPreparedStatementCreationEvent(
 			HibernateEvent event,
 			String preparedStatementSql) {
-		final JdbcPreparedStatementCreationEvent jdbcPreparedStatementCreation = (JdbcPreparedStatementCreationEvent) event;
-		if ( jdbcPreparedStatementCreation.isEnabled() ) {
+		if ( event != null ) {
+			final JdbcPreparedStatementCreationEvent jdbcPreparedStatementCreation = (JdbcPreparedStatementCreationEvent) event;
 			jdbcPreparedStatementCreation.end();
 			if ( jdbcPreparedStatementCreation.shouldCommit() ) {
 				jdbcPreparedStatementCreation.executionTime = getExecutionTime( jdbcPreparedStatementCreation.startedAt );
@@ -163,20 +190,23 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public JdbcPreparedStatementExecutionEvent beginJdbcPreparedStatementExecutionEvent() {
-		final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = new JdbcPreparedStatementExecutionEvent();
-		if ( jdbcPreparedStatementExecutionEvent.isEnabled() ) {
+		if ( jdbcPreparedStatementExecutionEventType.isEnabled() ) {
+			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = new JdbcPreparedStatementExecutionEvent();
 			jdbcPreparedStatementExecutionEvent.begin();
 			jdbcPreparedStatementExecutionEvent.startedAt = System.nanoTime();
+			return jdbcPreparedStatementExecutionEvent;
 		}
-		return jdbcPreparedStatementExecutionEvent;
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	public void completeJdbcPreparedStatementExecutionEvent(
 			HibernateEvent event,
 			String preparedStatementSql) {
-		final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = (JdbcPreparedStatementExecutionEvent) event;
-		if ( jdbcPreparedStatementExecutionEvent.isEnabled() ) {
+		if ( event != null ) {
+			final JdbcPreparedStatementExecutionEvent jdbcPreparedStatementExecutionEvent = (JdbcPreparedStatementExecutionEvent) event;
 			jdbcPreparedStatementExecutionEvent.end();
 			if ( jdbcPreparedStatementExecutionEvent.shouldCommit() ) {
 				jdbcPreparedStatementExecutionEvent.executionTime = getExecutionTime(
@@ -189,20 +219,23 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public JdbcBatchExecutionEvent beginJdbcBatchExecutionEvent() {
-		final JdbcBatchExecutionEvent jdbcBatchExecutionEvent = new JdbcBatchExecutionEvent();
-		if ( jdbcBatchExecutionEvent.isEnabled() ) {
+		if ( jdbcBatchExecutionEventType.isEnabled() ) {
+			final JdbcBatchExecutionEvent jdbcBatchExecutionEvent = new JdbcBatchExecutionEvent();
 			jdbcBatchExecutionEvent.begin();
 			jdbcBatchExecutionEvent.startedAt = System.nanoTime();
+			return jdbcBatchExecutionEvent;
 		}
-		return jdbcBatchExecutionEvent;
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	public void completeJdbcBatchExecutionEvent(
 			HibernateEvent event,
 			String statementSql) {
-		final JdbcBatchExecutionEvent jdbcBatchExecutionEvent = (JdbcBatchExecutionEvent) event;
-		if ( jdbcBatchExecutionEvent.isEnabled() ) {
+		if ( event != null ) {
+			final JdbcBatchExecutionEvent jdbcBatchExecutionEvent = (JdbcBatchExecutionEvent) event;
 			jdbcBatchExecutionEvent.end();
 			if ( jdbcBatchExecutionEvent.shouldCommit() ) {
 				jdbcBatchExecutionEvent.executionTime = getExecutionTime( jdbcBatchExecutionEvent.startedAt );
@@ -214,12 +247,15 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public HibernateEvent beginCachePutEvent() {
-		final CachePutEvent cachePutEvent = new CachePutEvent();
-		if ( cachePutEvent.isEnabled() ) {
+		if ( cachePutEventType.isEnabled() ) {
+			final CachePutEvent cachePutEvent = new CachePutEvent();
 			cachePutEvent.begin();
 			cachePutEvent.startedAt = System.nanoTime();
+			return cachePutEvent;
 		}
-		return cachePutEvent;
+		else {
+			return null;
+		}
 	}
 
 	@Override
@@ -229,8 +265,8 @@ public class JfrEventManager implements EventManager {
 			Region region,
 			boolean cacheContentChanged,
 			CacheActionDescription description) {
-		final CachePutEvent cachePutEvent = (CachePutEvent) event;
-		if ( cachePutEvent.isEnabled() ) {
+		if ( event != null ) {
+			final CachePutEvent cachePutEvent = (CachePutEvent) event;
 			cachePutEvent.end();
 			if ( cachePutEvent.shouldCommit() ) {
 				cachePutEvent.executionTime = getExecutionTime( cachePutEvent.startedAt );
@@ -271,8 +307,8 @@ public class JfrEventManager implements EventManager {
 			boolean cacheContentChanged,
 			boolean isNatualId,
 			CacheActionDescription description) {
-		final CachePutEvent cachePutEvent = (CachePutEvent) event;
-		if ( cachePutEvent.isEnabled() ) {
+		if ( event != null ) {
+			final CachePutEvent cachePutEvent = (CachePutEvent) event;
 			cachePutEvent.end();
 			if ( cachePutEvent.shouldCommit() ) {
 				cachePutEvent.executionTime = getExecutionTime( cachePutEvent.startedAt );
@@ -295,8 +331,8 @@ public class JfrEventManager implements EventManager {
 			CollectionPersister persister,
 			boolean cacheContentChanged,
 			CacheActionDescription description) {
-		final CachePutEvent cachePutEvent = (CachePutEvent) event;
-		if ( cachePutEvent.isEnabled() ) {
+		if ( event != null ) {
+			final CachePutEvent cachePutEvent = (CachePutEvent) event;
 			cachePutEvent.end();
 			if ( cachePutEvent.shouldCommit() ) {
 				cachePutEvent.executionTime = getExecutionTime( cachePutEvent.startedAt );
@@ -312,12 +348,15 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public HibernateEvent beginCacheGetEvent() {
-		final CacheGetEvent cacheGetEvent = new CacheGetEvent();
-		if ( cacheGetEvent.isEnabled() ) {
+		if ( cacheGetEventType.isEnabled() ) {
+			final CacheGetEvent cacheGetEvent = new CacheGetEvent();
 			cacheGetEvent.begin();
 			cacheGetEvent.startedAt = System.nanoTime();
+			return cacheGetEvent;
 		}
-		return cacheGetEvent;
+		else {
+			return null;
+		}
 	}
 
 	@Override
@@ -326,8 +365,8 @@ public class JfrEventManager implements EventManager {
 			SharedSessionContractImplementor session,
 			Region region,
 			boolean hit) {
-		final CacheGetEvent cacheGetEvent = (CacheGetEvent) event;
-		if ( cacheGetEvent.isEnabled() ) {
+		if ( event != null ) {
+			final CacheGetEvent cacheGetEvent = (CacheGetEvent) event;
 			cacheGetEvent.end();
 			if ( cacheGetEvent.shouldCommit() ) {
 				cacheGetEvent.executionTime = getExecutionTime( cacheGetEvent.startedAt );
@@ -347,8 +386,8 @@ public class JfrEventManager implements EventManager {
 			EntityPersister persister,
 			boolean isNaturalKey,
 			boolean hit) {
-		final CacheGetEvent cacheGetEvent = (CacheGetEvent) event;
-		if ( cacheGetEvent.isEnabled() ) {
+		if ( event != null ) {
+			final CacheGetEvent cacheGetEvent = (CacheGetEvent) event;
 			cacheGetEvent.end();
 			if ( cacheGetEvent.shouldCommit() ) {
 				cacheGetEvent.executionTime = getExecutionTime( cacheGetEvent.startedAt );
@@ -369,8 +408,8 @@ public class JfrEventManager implements EventManager {
 			Region region,
 			CollectionPersister persister,
 			boolean hit) {
-		final CacheGetEvent cacheGetEvent = (CacheGetEvent) event;
-		if ( cacheGetEvent.isEnabled() ) {
+		if ( event != null ) {
+			final CacheGetEvent cacheGetEvent = (CacheGetEvent) event;
 			cacheGetEvent.end();
 			if ( cacheGetEvent.shouldCommit() ) {
 				cacheGetEvent.executionTime = getExecutionTime( cacheGetEvent.startedAt );
@@ -385,12 +424,15 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public FlushEvent beginFlushEvent() {
-		final FlushEvent flushEvent = new FlushEvent();
-		if ( flushEvent.isEnabled() ) {
+		if ( flushEventType.isEnabled() ) {
+			final FlushEvent flushEvent = new FlushEvent();
 			flushEvent.begin();
 			flushEvent.startedAt = System.nanoTime();
+			return flushEvent;
 		}
-		return flushEvent;
+		else {
+			return null;
+		}
 	}
 
 	@Override
@@ -405,8 +447,8 @@ public class JfrEventManager implements EventManager {
 			HibernateEvent hibernateEvent,
 			org.hibernate.event.spi.FlushEvent event,
 			boolean autoFlush) {
-		final FlushEvent flushEvent = (FlushEvent) hibernateEvent;
-		if ( flushEvent.isEnabled() ) {
+		if ( hibernateEvent != null ) {
+			final FlushEvent flushEvent = (FlushEvent) hibernateEvent;
 			flushEvent.end();
 			if ( flushEvent.shouldCommit() ) {
 				flushEvent.executionTime = getExecutionTime( flushEvent.startedAt );
@@ -422,20 +464,23 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public PartialFlushEvent beginPartialFlushEvent() {
-		final PartialFlushEvent partialFlushEvent = new PartialFlushEvent();
-		if ( partialFlushEvent.isEnabled() ) {
+		if ( partialFlushEventType.isEnabled() ) {
+			final PartialFlushEvent partialFlushEvent = new PartialFlushEvent();
 			partialFlushEvent.startedAt = System.nanoTime();
 			partialFlushEvent.begin();
+			return partialFlushEvent;
 		}
-		return partialFlushEvent;
+		else {
+			return null;
+		}
 	}
 
 	@Override
 	public void completePartialFlushEvent(
 			HibernateEvent hibernateEvent,
 			AutoFlushEvent event) {
-		final PartialFlushEvent flushEvent = (PartialFlushEvent) hibernateEvent;
-		if ( flushEvent.isEnabled() ) {
+		if ( event != null ) {
+			final PartialFlushEvent flushEvent = (PartialFlushEvent) hibernateEvent;
 			flushEvent.end();
 			if ( flushEvent.shouldCommit() ) {
 				flushEvent.executionTime = getExecutionTime( flushEvent.startedAt );
@@ -451,12 +496,15 @@ public class JfrEventManager implements EventManager {
 
 	@Override
 	public DirtyCalculationEvent beginDirtyCalculationEvent() {
-		final DirtyCalculationEvent dirtyCalculationEvent = new DirtyCalculationEvent();
-		if ( dirtyCalculationEvent.isEnabled() ) {
+		if ( dirtyCalculationEventType.isEnabled() ) {
+			final DirtyCalculationEvent dirtyCalculationEvent = new DirtyCalculationEvent();
 			dirtyCalculationEvent.startedAt = System.nanoTime();
 			dirtyCalculationEvent.begin();
+			return dirtyCalculationEvent;
 		}
-		return dirtyCalculationEvent;
+		else {
+			return null;
+		}
 	}
 
 	@Override
@@ -466,8 +514,8 @@ public class JfrEventManager implements EventManager {
 			EntityPersister persister,
 			EntityEntry entry,
 			int[] dirtyProperties) {
-		final DirtyCalculationEvent dirtyCalculationEvent = (DirtyCalculationEvent) event;
-		if ( dirtyCalculationEvent.isEnabled() ) {
+		if ( event != null ) {
+			final DirtyCalculationEvent dirtyCalculationEvent = (DirtyCalculationEvent) event;
 			dirtyCalculationEvent.end();
 			if ( dirtyCalculationEvent.shouldCommit() ) {
 				dirtyCalculationEvent.executionTime = getExecutionTime( dirtyCalculationEvent.startedAt );

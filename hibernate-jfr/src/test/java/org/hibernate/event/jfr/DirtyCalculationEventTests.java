@@ -40,7 +40,7 @@ public class DirtyCalculationEventTests {
 
 	@Test
 	@EnableEvent(DirtyCalculationEvent.NAME)
-	public void testFlushEvent(SessionFactoryScope scope) {
+	public void testDirtyCalculationEvent(SessionFactoryScope scope) {
 		jfrEvents.reset();
 		String sessionId = scope.fromTransaction(
 				session -> {

@@ -80,6 +80,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSetType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSimpleIdType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTimestampAttributeType;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmUnionSubclassEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmVersionAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.PluralAttributeInfo;
@@ -248,25 +249,33 @@ public class HbmXmlTransformer {
 	}
 
 	private void handleUnsupported(String message, Object... messageArgs) {
-		if ( options.unsupportedFeatureHandling() == UnsupportedFeatureHandling.ERROR ) {
-			throw new UnsupportedOperationException(
+		handleUnsupported(
+				null,
+				message,
+				messageArgs
+		);
+	}
+
+	@FunctionalInterface
+	private interface PickHandler {
+		void handlePick(String message, Object... messageArgs);
+	}
+
+	private void handleUnsupported(PickHandler pickHandler, String message, Object... messageArgs) {
+		switch ( options.unsupportedFeatureHandling() ) {
+			case ERROR -> throw new UnsupportedOperationException(
 					String.format(
 							Locale.ROOT,
 							message,
 							messageArgs
 					)
 			);
+			case PICK -> {
+				if ( pickHandler != null ) pickHandler.handlePick( message, messageArgs );
+			}
+			case IGNORE -> TRANSFORMATION_LOGGER.debugf( message, messageArgs );
+			case WARN -> TRANSFORMATION_LOGGER.warnf( message, messageArgs );
 		}
-
-		final Logger.Level logLevel = options.unsupportedFeatureHandling() == UnsupportedFeatureHandling.WARN
-				? Logger.Level.WARN
-				: Logger.Level.DEBUG;
-		//noinspection deprecation
-		TRANSFORMATION_LOGGER.log(
-				logLevel,
-				message,
-				messageArgs
-		);
 	}
 
 	private void transferTypeDefs() {
@@ -301,8 +310,6 @@ public class HbmXmlTransformer {
 			ormRoot.getGenericGenerators().add( generatorDef );
 			generatorDef.setName( hbmGenerator.getName() );
 			generatorDef.setClazz( hbmGenerator.getClazz() );
-
-			// todo : parameters
 		}
 	}
 
@@ -332,7 +339,7 @@ public class HbmXmlTransformer {
 			for ( Object content : hbmFilterDef.getContent() ) {
 				if ( content instanceof String ) {
 					final String condition = ( (String) content ).trim();
-					if (! StringHelper.isEmpty( condition )) {
+					if ( !StringHelper.isEmpty( condition ) ) {
 						foundCondition = true;
 						filterDef.setDefaultCondition( condition );
 					}
@@ -581,10 +588,9 @@ public class HbmXmlTransformer {
 		query.setTimeout( hbmQuery.getTimeout() );
 
 		for ( Object content : hbmQuery.getContent() ) {
-			if ( content instanceof String ) {
-				String s = (String) content;
-				s = s.trim();
-				query.setQuery( s );
+			if ( content instanceof String qryString ) {
+				qryString = qryString.trim();
+				query.setQuery( qryString );
 			}
 			else {
 				@SuppressWarnings("unchecked") final JAXBElement<JaxbHbmQueryParamType> element = (JAXBElement<JaxbHbmQueryParamType>) content;
@@ -639,15 +645,13 @@ public class HbmXmlTransformer {
 
 		// JaxbQueryElement#content elements can be either the query or parameters
 		for ( Object content : hbmQuery.getContent() ) {
-			if ( content instanceof String ) {
-				String s = (String) content;
-				s = s.trim();
-				query.setQuery( s );
+			if ( content instanceof String qryString ) {
+				qryString = qryString.trim();
+				query.setQuery( qryString );
 			}
 			else if ( content instanceof JAXBElement ) {
 				final Object element = ( (JAXBElement<?>) content ).getValue();
-				if ( element instanceof JaxbHbmQueryParamType ) {
-					final JaxbHbmQueryParamType hbmQueryParam = (JaxbHbmQueryParamType) element;
+				if ( element instanceof JaxbHbmQueryParamType hbmQueryParam ) {
 					final JaxbQueryParamTypeImpl queryParam = new JaxbQueryParamTypeImpl();
 					queryParam.setName( hbmQueryParam.getName() );
 					queryParam.setType( hbmQueryParam.getType() );
@@ -711,8 +715,7 @@ public class HbmXmlTransformer {
 							)
 					);
 				}
-				else if ( element instanceof JaxbHbmSynchronizeType ) {
-					final JaxbHbmSynchronizeType hbmSynchronize = (JaxbHbmSynchronizeType) element;
+				else if ( element instanceof JaxbHbmSynchronizeType hbmSynchronize ) {
 					final JaxbSynchronizedTableImpl synchronize = new JaxbSynchronizedTableImpl();
 					synchronize.setTable( hbmSynchronize.getTable() );
 					query.getSynchronizations().add( synchronize );
@@ -767,7 +770,7 @@ public class HbmXmlTransformer {
 	private void transferEntities() {
 		// thoughts...
 		//		1) We only need to transfer the "extends" attribute if the model is dynamic (map mode),
-		//			otherwise it will be discovered via jandex
+		//			otherwise it will be discovered via hibernate-models
 		//		2) ?? Have abstract hbm class mappings become MappedSuperclass mappings ??
 
 		for ( JaxbHbmRootEntityType hbmClass : hbmXmlMapping.getClazz() ) {
@@ -837,7 +840,10 @@ public class HbmXmlTransformer {
 		}
 
 		if ( hbmClass.getLoader() != null ) {
-			throw new UnsupportedOperationException( "<loader/> is not supported in mapping.xsd - use <sql-select/> or <hql-select/> instead" );
+			handleUnsupported(
+					"<loader/> is not supported in mapping.xsd - use <sql-select/> or <hql-select/> instead: ",
+					origin
+			);
 		}
 
 		if ( hbmClass.getSqlInsert() != null ) {
@@ -970,6 +976,7 @@ public class HbmXmlTransformer {
 		throw new IllegalArgumentException( "Unrecognized cache-inclusions value : " + hbmInclusion );
 	}
 
+	@SuppressWarnings("deprecation")
 	private PolymorphismType convert(JaxbHbmPolymorphismEnum polymorphism) {
 		if ( polymorphism == null ) {
 			return null;
@@ -983,19 +990,13 @@ public class HbmXmlTransformer {
 		transfer( hbmClass::getEntityName, entity::setName );
 		transfer( hbmClass::getName, entity::setClazz );
 
-		if ( hbmClass instanceof Discriminatable ) {
-			final Discriminatable discriminatable = (Discriminatable) hbmClass;
+		if ( hbmClass instanceof Discriminatable discriminatable ) {
 			transfer( discriminatable::getDiscriminatorValue, entity::setDiscriminatorValue );
 		}
 
-		// todo (6.1) : what to do with abstract? add abstract attribute to mapping xsd, or handle as mapped-superclass?
 		if ( hbmClass.isAbstract() != null ) {
-			handleUnsupported(
-					"Transformation of abstract entity mappings is not supported : `%s` - `%s`",
-					extractEntityName( hbmClass ),
-					origin
-			);
-			return;
+			// todo : handle hbm abstract as mapping abstract or as mapped-superclass?
+			entity.setAbstract( hbmClass.isAbstract() );
 		}
 
 		if ( hbmClass.getPersister() != null ) {
@@ -1238,17 +1239,14 @@ public class HbmXmlTransformer {
 
 	private void transferAttributes(List hbmAttributeMappings, JaxbAttributesContainer attributes) {
 		for ( Object hbmAttributeMapping : hbmAttributeMappings ) {
-			if ( hbmAttributeMapping instanceof JaxbHbmBasicAttributeType ) {
-				final JaxbHbmBasicAttributeType basic = (JaxbHbmBasicAttributeType) hbmAttributeMapping;
+			if ( hbmAttributeMapping instanceof JaxbHbmBasicAttributeType basic ) {
 				attributes.getBasicAttributes().add( transformBasicAttribute( basic ) );
 			}
-			else if ( hbmAttributeMapping instanceof JaxbHbmCompositeAttributeType ) {
-				final JaxbHbmCompositeAttributeType hbmComponent = (JaxbHbmCompositeAttributeType) hbmAttributeMapping;
+			else if ( hbmAttributeMapping instanceof JaxbHbmCompositeAttributeType hbmComponent ) {
 				ormRoot.getEmbeddables().add( convertEmbeddable( hbmComponent ) );
 				attributes.getEmbeddedAttributes().add( transformEmbedded( hbmComponent ) );
 			}
-			else if ( hbmAttributeMapping instanceof JaxbHbmPropertiesType ) {
-				final JaxbHbmPropertiesType hbmProperties = (JaxbHbmPropertiesType) hbmAttributeMapping;
+			else if ( hbmAttributeMapping instanceof JaxbHbmPropertiesType hbmProperties ) {
 				transferAttributes( hbmProperties.getAttributes(), attributes );
 			}
 			else if ( hbmAttributeMapping instanceof JaxbHbmDynamicComponentType ) {
@@ -1258,33 +1256,20 @@ public class HbmXmlTransformer {
 						name
 				);
 			}
-			else if ( hbmAttributeMapping instanceof JaxbHbmOneToOneType ) {
-				final JaxbHbmOneToOneType o2o = (JaxbHbmOneToOneType) hbmAttributeMapping;
+			else if ( hbmAttributeMapping instanceof JaxbHbmOneToOneType o2o ) {
 				transferOneToOne( o2o, attributes );
 			}
-			else if ( hbmAttributeMapping instanceof JaxbHbmManyToOneType ) {
-				final JaxbHbmManyToOneType m2o = (JaxbHbmManyToOneType) hbmAttributeMapping;
+			else if ( hbmAttributeMapping instanceof JaxbHbmManyToOneType m2o ) {
 				attributes.getManyToOneAttributes().add( transformManyToOne( m2o ) );
 			}
-			else if ( hbmAttributeMapping instanceof JaxbHbmAnyAssociationType ) {
-				final JaxbHbmAnyAssociationType any = (JaxbHbmAnyAssociationType) hbmAttributeMapping;
+			else if ( hbmAttributeMapping instanceof JaxbHbmAnyAssociationType any ) {
 				attributes.getAnyMappingAttributes().add( transformAnyAttribute( any ) );
 
 			}
-			else if ( hbmAttributeMapping instanceof PluralAttributeInfo ) {
-				final PluralAttributeInfo hbmCollection = (PluralAttributeInfo) hbmAttributeMapping;
-				final CollectionAttribute target;
-
-				if ( hbmCollection.getElement() != null
-						|| hbmCollection.getCompositeElement() != null ) {
-					target = new JaxbElementCollection();
-					if ( hbmCollection.getElement() != null ) {
-						transferElementInfo( hbmCollection, hbmCollection.getElement(), (JaxbElementCollection) target );
-					}
-					else {
-						transferElementInfo( hbmCollection, hbmCollection.getCompositeElement(), (JaxbElementCollection) target );
-					}
-					attributes.getElementCollectionAttributes().add( (JaxbElementCollection) target );
+			else if ( hbmAttributeMapping instanceof PluralAttributeInfo pluralAttributeInfo ) {
+				if ( pluralAttributeInfo.getElement() != null
+						|| pluralAttributeInfo.getCompositeElement() != null ) {
+					attributes.getElementCollectionAttributes().add( transformElementCollection( pluralAttributeInfo ) );
 				}
 				else if ( hbmCollection.getOneToMany() != null ) {
 					target = new JaxbOneToMany();
@@ -1674,7 +1659,7 @@ public class HbmXmlTransformer {
 
 					@Override
 					public List<Serializable> getColumnOrFormula() {
-						return new ArrayList<Serializable>( source.getKey().getColumn() );
+						return new ArrayList<>( source.getKey().getColumn() );
 					}
 
 					@Override
@@ -1720,13 +1705,11 @@ public class HbmXmlTransformer {
 		target.setAttributeAccessor( source.getAccess() );
 		target.setFetchMode( convert( source.getFetch() ) );
 
-		if ( source instanceof JaxbHbmSetType ) {
-			final JaxbHbmSetType set = (JaxbHbmSetType) source;
+		if ( source instanceof JaxbHbmSetType set ) {
 			target.setSort( set.getSort() );
 			target.setOrderBy( set.getOrderBy() );
 		}
-		else if ( source instanceof JaxbHbmMapType ) {
-			final JaxbHbmMapType map = (JaxbHbmMapType) source;
+		else if ( source instanceof JaxbHbmMapType map ) {
 			target.setSort( map.getSort() );
 			target.setOrderBy( map.getOrderBy() );
 
@@ -1825,17 +1808,11 @@ public class HbmXmlTransformer {
 
 	private JaxbPluralFetchModeImpl convert(JaxbHbmFetchStyleWithSubselectEnum fetch) {
 		if ( fetch != null ) {
-			switch ( fetch ) {
-				case SELECT: {
-					return JaxbPluralFetchModeImpl.SELECT;
-				}
-				case JOIN: {
-					return JaxbPluralFetchModeImpl.JOIN;
-				}
-				case SUBSELECT: {
-					return JaxbPluralFetchModeImpl.SUBSELECT;
-				}
-			}
+			return switch ( fetch ) {
+				case SELECT -> JaxbPluralFetchModeImpl.SELECT;
+				case JOIN -> JaxbPluralFetchModeImpl.JOIN;
+				case SUBSELECT -> JaxbPluralFetchModeImpl.SUBSELECT;
+			};
 		}
 
 		return null;
@@ -2023,13 +2000,8 @@ public class HbmXmlTransformer {
 			final boolean isAggregate;
 			if ( isNotEmpty( hbmCompositeId.getClazz() ) ) {
 				// we have  <composite-id class="XYZ">.
-				if ( hbmCompositeId.isMapped() ) {
-					// user explicitly said the class is an "IdClass"
-					isAggregate = false;
-				}
-				else {
-					isAggregate = true;
-				}
+				// user explicitly said the class is an "IdClass"
+				isAggregate = !hbmCompositeId.isMapped();
 			}
 			else {
 				// there was no class specified, can only be non-aggregated
@@ -2045,8 +2017,7 @@ public class HbmXmlTransformer {
 				embeddable.setClazz( hbmCompositeId.getClazz() );
 				embeddable.setAttributes( new JaxbEmbeddableAttributesContainerImpl() );
 				for ( Object hbmCompositeAttribute : hbmCompositeId.getKeyPropertyOrKeyManyToOne() ) {
-					if ( hbmCompositeAttribute instanceof JaxbHbmCompositeKeyBasicAttributeType ) {
-						final JaxbHbmCompositeKeyBasicAttributeType keyProp = (JaxbHbmCompositeKeyBasicAttributeType) hbmCompositeAttribute;
+					if ( hbmCompositeAttribute instanceof JaxbHbmCompositeKeyBasicAttributeType keyProp ) {
 						final JaxbBasicImpl basic = new JaxbBasicImpl();
 						basic.setName( keyProp.getName() );
 						basic.setAttributeAccessor( keyProp.getAccess() );
@@ -2080,8 +2051,7 @@ public class HbmXmlTransformer {
 				idClass.setClazz( hbmCompositeId.getClazz() );
 				target.setIdClass( idClass );
 				for ( Object hbmCompositeAttribute : hbmCompositeId.getKeyPropertyOrKeyManyToOne() ) {
-					if ( hbmCompositeAttribute instanceof JaxbHbmCompositeKeyBasicAttributeType ) {
-						final JaxbHbmCompositeKeyBasicAttributeType keyProp = (JaxbHbmCompositeKeyBasicAttributeType) hbmCompositeAttribute;
+					if ( hbmCompositeAttribute instanceof JaxbHbmCompositeKeyBasicAttributeType keyProp ) {
 						final JaxbIdImpl id = new JaxbIdImpl();
 						id.setName( keyProp.getName() );
 						id.setAttributeAccessor( keyProp.getAccess() );
@@ -2258,6 +2228,7 @@ public class HbmXmlTransformer {
 				version.setColumn( new JaxbColumnImpl() );
 				version.getColumn().setName( hbmTimestamp.getColumnAttribute() );
 			}
+			//noinspection deprecation
 			version.setTemporal( TemporalType.TIMESTAMP );
 			target.getAttributes().getVersion().add( version );
 		}

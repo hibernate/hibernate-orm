@@ -4961,7 +4961,8 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 * @see org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData#supportsBatchUpdates
 	 */
 	public Boolean supportsBatchUpdates() {
-		return null;
+		// are there any databases/drivers which don't?
+		return true;
 	}
 
 	/**

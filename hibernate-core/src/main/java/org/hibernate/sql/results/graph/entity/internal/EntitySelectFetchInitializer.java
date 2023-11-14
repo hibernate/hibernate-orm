@@ -17,45 +17,51 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
-import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
+import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityLoadingLogging;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.internal.log.LoggingHelper.toLoggableString;
 
 /**
  * @author Andrea Boriero
  */
-public class EntitySelectFetchInitializer extends AbstractFetchParentAccess implements EntityInitializer {
+public class EntitySelectFetchInitializer implements EntityInitializer {
 	private static final String CONCRETE_NAME = EntitySelectFetchInitializer.class.getSimpleName();
 
 	protected final FetchParentAccess parentAccess;
 	private final NavigablePath navigablePath;
+	private final FetchParentAccess owningParent;
+	private final EntityMappingType ownedModelPartDeclaringType;
+	private final boolean isPartOfKey;
 	private final boolean isEnhancedForLazyLoading;
 
 	protected final EntityPersister concreteDescriptor;
 	protected final DomainResultAssembler<?> keyAssembler;
 	private final ToOneAttributeMapping toOneMapping;
 
+	protected boolean parentShallowCached;
+
+	// per-row state
 	protected State state = State.UNINITIALIZED;
 	protected Object entityIdentifier;
 	protected Object entityInstance;
-
-	@Override
-	public FetchParentAccess getFetchParentAccess() {
-		return parentAccess;
-	}
 
 	public EntitySelectFetchInitializer(
 			FetchParentAccess parentAccess,
@@ -66,6 +72,9 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		this.parentAccess = parentAccess;
 		this.toOneMapping = toOneMapping;
 		this.navigablePath = fetchedNavigable;
+		this.isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parentAccess );
+		this.owningParent = FetchParentAccess.determineOwningParent( parentAccess );
+		this.ownedModelPartDeclaringType = FetchParentAccess.determineOwnedModelPartDeclaringType( toOneMapping, parentAccess, owningParent );
 		this.concreteDescriptor = concreteDescriptor;
 		this.keyAssembler = keyAssembler;
 		this.isEnhancedForLazyLoading = concreteDescriptor.getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
@@ -73,6 +82,21 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	public ModelPart getInitializedPart(){
 		return toOneMapping;
+	}
+
+	@Override
+	public FetchParentAccess getFetchParentAccess() {
+		return parentAccess;
+	}
+
+	@Override
+	public @Nullable FetchParentAccess getOwningParent() {
+		return owningParent;
+	}
+
+	@Override
+	public @Nullable EntityMappingType getOwnedModelPartDeclaringType() {
+		return ownedModelPartDeclaringType;
 	}
 
 	@Override
@@ -92,13 +116,9 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		}
 		state = State.RESOLVED;
 
-		final EntityInitializer parentEntityInitializer = parentAccess.findFirstEntityInitializer();
-		if ( parentEntityInitializer != null && parentEntityInitializer.isEntityInitialized() ) {
-			state = State.INITIALIZED;
-			return;
-		}
-
-		if ( !isAttributeAssignableToConcreteDescriptor() ) {
+		// We can avoid processing further if the parent is already initialized or missing,
+		// as the value produced by this initializer will never be used anyway.
+		if ( parentShallowCached || shouldSkipInitializer( rowProcessingState ) ) {
 			state = State.INITIALIZED;
 			return;
 		}
@@ -177,7 +197,7 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
-		if ( state == State.INITIALIZED ) {
+		if ( state != State.RESOLVED ) {
 			return;
 		}
 		state = State.INITIALIZED;
@@ -227,15 +247,31 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		}
 	}
 
-	protected boolean isAttributeAssignableToConcreteDescriptor() {
-		return isAttributeAssignableToConcreteDescriptor( parentAccess, toOneMapping );
+	@Override
+	public void initializeInstanceFromParent(Object parentInstance, RowProcessingState rowProcessingState) {
+		final AttributeMapping attributeMapping = getInitializedPart().asAttributeMapping();
+		final Object instance = attributeMapping != null
+				? attributeMapping.getValue( parentInstance )
+				: parentInstance;
+		Hibernate.initialize( instance );
+		entityInstance = instance;
+		state = State.INITIALIZED;
 	}
 
 	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		entityInstance = null;
 		state = State.UNINITIALIZED;
-		clearResolutionListeners();
+	}
+
+	@Override
+	public void markShallowCached() {
+		parentShallowCached = true;
+	}
+
+	@Override
+	public void endLoading(ExecutionContext executionContext) {
+		parentShallowCached = false;
 	}
 
 	@Override
@@ -249,33 +285,23 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 	}
 
 	@Override
-	public EntityKey getEntityKey() {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public boolean isEntityInitialized() {
 		return state == State.INITIALIZED;
 	}
 
 	@Override
-	public Object getParentKey() {
-		return parentAccess.getParentKey();
-	}
-
-	@Override
-	public void registerResolutionListener(Consumer<Object> listener) {
-		if ( entityInstance != null ) {
-			listener.accept( entityInstance );
-		}
-		else {
-			super.registerResolutionListener( listener );
-		}
-	}
-
-	@Override
 	public EntityPersister getConcreteDescriptor() {
 		return concreteDescriptor;
+	}
+
+	@Override
+	public boolean isPartOfKey() {
+		return isPartOfKey;
+	}
+
+	@Override
+	public boolean isResultInitializer() {
+		return false;
 	}
 
 	@Override
@@ -287,5 +313,23 @@ public class EntitySelectFetchInitializer extends AbstractFetchParentAccess impl
 		UNINITIALIZED,
 		RESOLVED,
 		INITIALIZED;
+	}
+
+	@Override
+	public EntityKey getEntityKey() {
+		throw new UnsupportedOperationException(
+				"This should never happen, because this initializer has not child initializers" );
+	}
+
+	@Override
+	public Object getParentKey() {
+		throw new UnsupportedOperationException(
+				"This should never happen, because this initializer has not child initializers" );
+	}
+
+	@Override
+	public void registerResolutionListener(Consumer<Object> listener) {
+		throw new UnsupportedOperationException(
+				"This should never happen, because this initializer has not child initializers" );
 	}
 }

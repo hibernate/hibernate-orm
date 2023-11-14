@@ -13,6 +13,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
@@ -242,6 +243,12 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	@Override
 	public T applyQueryCacheSupport(boolean enabled) {
 		delegate.applyQueryCacheSupport( enabled );
+		return getThis();
+	}
+
+	@Override
+	public SessionFactoryBuilder applyQueryCacheLayout(CacheLayout cacheLayout) {
+		delegate.applyQueryCacheLayout( cacheLayout );
 		return getThis();
 	}
 

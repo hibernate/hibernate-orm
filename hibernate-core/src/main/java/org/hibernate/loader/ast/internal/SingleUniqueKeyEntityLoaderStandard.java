@@ -17,10 +17,15 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.loader.ast.spi.SingleUniqueKeyEntityLoader;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SingularAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
+import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -41,17 +46,39 @@ import static java.util.Collections.singletonList;
 public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEntityLoader<T> {
 	private final EntityMappingType entityDescriptor;
 	private final ModelPart uniqueKeyAttribute;
+	private final String uniqueKeyAttributePath;
 
 	public SingleUniqueKeyEntityLoaderStandard(
 			EntityMappingType entityDescriptor,
 			SingularAttributeMapping uniqueKeyAttribute) {
 		this.entityDescriptor = entityDescriptor;
+		this.uniqueKeyAttributePath = getAttributePath( uniqueKeyAttribute );
 		if ( uniqueKeyAttribute instanceof ToOneAttributeMapping ) {
 			this.uniqueKeyAttribute = ( (ToOneAttributeMapping) uniqueKeyAttribute ).getForeignKeyDescriptor();
 		}
 		else {
 			this.uniqueKeyAttribute = uniqueKeyAttribute;
 		}
+	}
+
+	private static String getAttributePath(AttributeMapping attribute) {
+		ManagedMappingType declaringType = attribute.getDeclaringType();
+		if ( declaringType instanceof EmbeddableMappingType ) {
+			final StringBuilder sb = new StringBuilder();
+			sb.append( attribute.getAttributeName() );
+			do {
+				final EmbeddableValuedModelPart embeddedValueMapping = ( (EmbeddableMappingType) declaringType ).getEmbeddedValueMapping();
+				attribute = embeddedValueMapping.asAttributeMapping();
+				if ( attribute == null ) {
+					break;
+				}
+				sb.insert( 0, '.' );
+				sb.insert( 0, attribute.getAttributeName() );
+				declaringType = attribute.getDeclaringType();
+			} while ( declaringType instanceof EmbeddableMappingType );
+			return sb.toString();
+		}
+		return attribute.getAttributeName();
 	}
 
 	@Override
@@ -99,7 +126,7 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 		final List<Object> list = sessionFactory.getJdbcServices().getJdbcSelectExecutor().list(
 				jdbcSelect,
 				jdbcParameterBindings,
-				new SingleUKEntityLoaderExecutionContext( session, readOnly ),
+				new SingleUKEntityLoaderExecutionContext( uniqueKeyAttributePath, ukValue, session, readOnly ),
 				row -> row[0],
 				ListResultsConsumer.UniqueSemantic.FILTER
 		);
@@ -165,11 +192,19 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 	}
 
 	private static class SingleUKEntityLoaderExecutionContext extends BaseExecutionContext {
+		private final String uniqueKeyAttributePath;
+		private final Object uniqueKey;
 		private final Callback callback;
 		private final QueryOptions queryOptions;
 
-		public SingleUKEntityLoaderExecutionContext(SharedSessionContractImplementor session, Boolean readOnly) {
+		public SingleUKEntityLoaderExecutionContext(
+				String uniqueKeyAttributePath,
+				Object uniqueKey,
+				SharedSessionContractImplementor session,
+				Boolean readOnly) {
 			super( session );
+			this.uniqueKeyAttributePath = uniqueKeyAttributePath;
+			this.uniqueKey = uniqueKey;
 			//Careful, readOnly is possibly null
 			this.queryOptions = readOnly == null ? QueryOptions.NONE : readOnly ? QueryOptions.READ_ONLY : QueryOptions.READ_WRITE;
 			callback = new CallbackImpl();
@@ -185,6 +220,15 @@ public class SingleUniqueKeyEntityLoaderStandard<T> implements SingleUniqueKeyEn
 			return callback;
 		}
 
+		@Override
+		public String getEntityUniqueKeyAttributePath() {
+			return uniqueKeyAttributePath;
+		}
+
+		@Override
+		public Object getEntityUniqueKey() {
+			return uniqueKey;
+		}
 	}
 
 }

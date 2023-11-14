@@ -46,7 +46,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -591,6 +591,11 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		// FetchParent
 
 		@Override
+		public Initializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+			throw new UnsupportedOperationException( "Compound natural id mappings should not use an initializer" );
+		}
+
+		@Override
 		public FetchableContainer getReferencedMappingContainer() {
 			return getReferencedMappingType();
 		}
@@ -639,15 +644,10 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 				JavaType<Object[]> jtd,
 				AssemblerCreationState creationState) {
 			this.jtd = jtd;
-
-			// we don't even register the Initializer here... its really no-op.
-			// we just "need it" as an impl detail for handling Fetches
-			final InitializerImpl initializer = new InitializerImpl( navigablePath, naturalIdMapping );
-
 			this.subAssemblers = new DomainResultAssembler[fetches.size()];
 			int i = 0;
 			for ( Fetch fetch : fetches ) {
-				subAssemblers[i++] = fetch.createAssembler( initializer, creationState );
+				subAssemblers[i++] = fetch.createAssembler( null, creationState );
 			}
 		}
 
@@ -675,68 +675,4 @@ public class CompoundNaturalIdMapping extends AbstractNaturalIdMapping implement
 		}
 	}
 
-	private static class InitializerImpl implements FetchParentAccess {
-		private final NavigablePath navigablePath;
-		private final CompoundNaturalIdMapping naturalIdMapping;
-
-		public InitializerImpl(NavigablePath navigablePath, CompoundNaturalIdMapping naturalIdMapping) {
-			this.navigablePath = navigablePath;
-			this.naturalIdMapping = naturalIdMapping;
-		}
-
-		@Override
-		public FetchParentAccess findFirstEntityDescriptorAccess() {
-			return null;
-		}
-
-		@Override
-		public EntityInitializer findFirstEntityInitializer() {
-			return null;
-		}
-
-		@Override
-		public Object getParentKey() {
-			return null;
-		}
-
-		@Override
-		public NavigablePath getNavigablePath() {
-			return navigablePath;
-		}
-
-		@Override
-		public ModelPart getInitializedPart() {
-			return naturalIdMapping;
-		}
-
-		@Override
-		public Object getInitializedInstance() {
-			return null;
-		}
-
-		@Override
-		public void resolveKey(RowProcessingState rowProcessingState) {
-
-		}
-
-		@Override
-		public void resolveInstance(RowProcessingState rowProcessingState) {
-
-		}
-
-		@Override
-		public void initializeInstance(RowProcessingState rowProcessingState) {
-
-		}
-
-		@Override
-		public void finishUpRow(RowProcessingState rowProcessingState) {
-
-		}
-
-		@Override
-		public void registerResolutionListener(Consumer<Object> resolvedParentConsumer) {
-
-		}
-	}
 }

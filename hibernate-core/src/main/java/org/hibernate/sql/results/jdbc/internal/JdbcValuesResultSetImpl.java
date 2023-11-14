@@ -24,8 +24,8 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.ExecutionException;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.caching.QueryCachePutManager;
-import org.hibernate.sql.results.caching.internal.QueryCachePutManagerDisabledImpl;
 import org.hibernate.sql.results.caching.internal.QueryCachePutManagerEnabledImpl;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMapping;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesMetadata;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
@@ -45,6 +45,11 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	private final SqlSelection[] sqlSelections;
 	private final BitSet initializedIndexes;
 	private final Object[] currentRowJdbcValues;
+	private final int[] valueIndexesToCacheIndexes;
+	// Is only meaningful if valueIndexesToCacheIndexes is not null
+	// Contains the size of the row to cache, or if the value is negative,
+	// represents the inverted index of the single value to cache
+	private final int rowToCacheSize;
 
 	public JdbcValuesResultSetImpl(
 			ResultSetAccess resultSetAccess,
@@ -72,6 +77,46 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 		}
 		this.initializedIndexes = new BitSet( rowSize );
 		this.currentRowJdbcValues = new Object[rowSize];
+		if ( queryCachePutManager == null ) {
+			this.valueIndexesToCacheIndexes = null;
+			this.rowToCacheSize = -1;
+		}
+		else {
+			final BitSet valueIndexesToCache = new BitSet( rowSize );
+			for ( DomainResult<?> domainResult : valuesMapping.getDomainResults() ) {
+				domainResult.collectValueIndexesToCache( valueIndexesToCache );
+			}
+			if ( valueIndexesToCache.nextClearBit( 0 ) == -1 ) {
+				this.valueIndexesToCacheIndexes = null;
+				this.rowToCacheSize = -1;
+			}
+			else {
+				final int[] valueIndexesToCacheIndexes = new int[rowSize];
+				int cacheIndex = 0;
+				for ( int i = 0; i < valueIndexesToCacheIndexes.length; i++ ) {
+					if ( valueIndexesToCache.get( i ) ) {
+						valueIndexesToCacheIndexes[i] = cacheIndex++;
+					}
+					else {
+						valueIndexesToCacheIndexes[i] = -1;
+					}
+				}
+
+				this.valueIndexesToCacheIndexes = valueIndexesToCacheIndexes;
+				if ( cacheIndex == 1 ) {
+					// Special case. Set the rowToCacheSize to the inverted index of the single element to cache
+					for ( int i = 0; i < valueIndexesToCacheIndexes.length; i++ ) {
+						if ( valueIndexesToCacheIndexes[i] != -1 ) {
+							cacheIndex = -i;
+							break;
+						}
+					}
+				}
+				else {
+				}
+				this.rowToCacheSize = cacheIndex;
+			}
+		}
 	}
 
 	private static QueryCachePutManager resolveQueryCachePutManager(
@@ -93,7 +138,7 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 			);
 		}
 		else {
-			return QueryCachePutManagerDisabledImpl.INSTANCE;
+			return null;
 		}
 	}
 
@@ -283,7 +328,9 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 
 	@Override
 	public final void finishUp(SharedSessionContractImplementor session) {
-		queryCachePutManager.finishUp( session );
+		if ( queryCachePutManager != null ) {
+			queryCachePutManager.finishUp( session );
+		}
 		resultSetAccess.release();
 	}
 
@@ -293,13 +340,36 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	}
 
 	@Override
-	public Object[] getCurrentRowValuesArray() {
-		return currentRowJdbcValues;
+	public void finishRowProcessing(RowProcessingState rowProcessingState) {
+		super.finishRowProcessing( rowProcessingState, false );
 	}
 
 	@Override
-	public void finishRowProcessing(RowProcessingState rowProcessingState) {
-		queryCachePutManager.registerJdbcRow( currentRowJdbcValues );
+	public void finishRowProcessing(RowProcessingState rowProcessingState, boolean wasAdded) {
+		if ( queryCachePutManager != null ) {
+			final Object objectToCache;
+			if ( valueIndexesToCacheIndexes == null ) {
+				objectToCache = Arrays.copyOf( currentRowJdbcValues, currentRowJdbcValues.length );
+			}
+			else if ( rowToCacheSize < 1 ) {
+				if ( !wasAdded ) {
+					// skip adding duplicate objects
+					return;
+				}
+				objectToCache = currentRowJdbcValues[-rowToCacheSize];
+			}
+			else {
+				final Object[] rowToCache = new Object[rowToCacheSize];
+				for ( int i = 0; i < currentRowJdbcValues.length; i++ ) {
+					final int cacheIndex = valueIndexesToCacheIndexes[i];
+					if ( cacheIndex != -1 ) {
+						rowToCache[cacheIndex] = initializedIndexes.get( i ) ? currentRowJdbcValues[i] : null;
+					}
+				}
+				objectToCache = rowToCache;
+			}
+			queryCachePutManager.registerJdbcRow( objectToCache );
+		}
 	}
 
 	@Override

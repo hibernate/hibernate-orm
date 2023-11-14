@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph.basic;
 
+import java.util.BitSet;
+
 import org.hibernate.Internal;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -27,7 +29,7 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 
 	private final NavigablePath navigablePath;
 
-	private final DomainResultAssembler<T> assembler;
+	private final BasicResultAssembler<T> assembler;
 
 	public BasicResult(
 			int jdbcValuesArrayPosition,
@@ -151,5 +153,10 @@ public class BasicResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
 		return assembler;
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		valueIndexes.set( assembler.valuesArrayPosition );
 	}
 }

@@ -309,13 +309,7 @@ include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-query-nati
 
 [NOTE]
 ====
-
-
-For entity queries, the query cache does not cache the state of the actual entities. Instead, it stores the entity identifiers, and when the query result is fetched from the cache, the entity state is going to be loaded from the second-level cache entity regions.
-
-Just as with collection caching, the query cache should always be used in conjunction with the second-level cache for those entities expected to be cached as part of a query result cache.
-
-For projection queries, the query cache stores the dehydrated entity state (e.g. `Object[]`) associated with the underlying JDBC `ResultSet`.
+The query cache contents for selected/fetched entities and fetched collections depends on the <<caching-query-cache-layout,query cache layout>>.
 ====
 
 [[caching-query-region]]
@@ -394,6 +388,33 @@ and is a far more efficient alternative to the bulk eviction of the region via `
 include::{example-dir-caching}/SecondLevelCacheTest.java[tags=caching-query-region-native-evict-example]
 ----
 ====
+
+[[caching-query-cache-layout]]
+=== Query cache layout
+
+The query cache usually contains the same data that is read from the original queries JDBC `ResultSet`,
+but for entities and collections the cached information can vary depending on configuration.
+
+An entity or collection in the query cache can either be represented with all its fetched data (`FULL` cache layout),
+or with just the identifier or collection owner key (`SHALLOW` cache layout).
+With the identifier or collection owner key, Hibernate ORM can then consult an entity or collection cache to retrieve the final entity data.
+The shallow query cache layout is hence only effective for entities/collections for which such a second level cache exists,
+and only if there is a very high cache hit rate i.e. few cache invalidations.
+Whenever a shallow cached entity/collection can not be found in the second level cache,
+Hibernate ORM will load the data from the database by identifier or collection owner key respectively,
+which can lead to a lot of additional queries if the second level cache does not have a high cache hit rate.
+
+Since loading polymorphic entities might involve querying multiple tables,
+it is possible to store the discriminator of an entity along with the identifier (`SHALLOW_WITH_DISCRIMINATOR` cache layout)
+to potentially avoid costly queries in case of a second level cache miss.
+
+The default query cache layout `AUTO` will choose `SHALLOW` for entities and collections that are cacheable
+and `FULL` otherwise, because query caching of entity or collection data is generally only advisable for high cache hit rates.
+
+To change the query cache layout, applications can set the global configuration setting <<caching-config-properties,`hibernate.cache.query_cache_layout`>>.
+It is also possible to configure the query cache layout for an entity type or persistent collection with the `@QueryCacheLayout` annotation,
+by placing the annotation on the entity class or the persistent collection attribute.
+
 
 [[caching-management]]
 === Managing the cached data

@@ -41,4 +41,9 @@ public class EmbeddableAssembler implements DomainResultAssembler {
 		// unneeded embeddable instantiation and injection
 		initializer.resolveState( rowProcessingState );
 	}
+
+	@Override
+	public EmbeddableInitializer getInitializer() {
+		return initializer;
+	}
 }

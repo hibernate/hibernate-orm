@@ -47,6 +47,8 @@ import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.NonAggregatedIdentifierMappingFetch;
 import org.hibernate.sql.results.graph.embeddable.internal.NonAggregatedIdentifierMappingResult;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * A "non-aggregated" composite identifier.
  *
@@ -150,6 +152,11 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 	@Override
 	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
 		return identifierValueMapper;
+	}
+
+	@Override
+	public boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
+		return identifierValueMapper.areEqual( one, other, session );
 	}
 
 	@Override

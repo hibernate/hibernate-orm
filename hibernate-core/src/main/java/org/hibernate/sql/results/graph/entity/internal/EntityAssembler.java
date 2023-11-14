@@ -39,4 +39,9 @@ public class EntityAssembler implements DomainResultAssembler {
 		initializer.resolveInstance( rowProcessingState );
 		return initializer.getEntityInstance();
 	}
+
+	@Override
+	public EntityInitializer getInitializer() {
+		return initializer;
+	}
 }

@@ -546,8 +546,9 @@ public class PluralAttributeMappingImpl
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
 			FetchParent fetchParent,
-			DomainResult<?> collectionKeyResult) {
-		return new DelayedCollectionFetch( fetchedPath, fetchedAttribute, fetchParent, collectionKeyResult );
+			DomainResult<?> collectionKeyResult,
+			boolean unfetched) {
+		return new DelayedCollectionFetch( fetchedPath, fetchedAttribute, fetchParent, collectionKeyResult, unfetched );
 	}
 
 	/**
@@ -574,6 +575,7 @@ public class PluralAttributeMappingImpl
 				fetchedPath,
 				fetchedAttribute,
 				collectionTableGroup,
+				referencedPropertyName != null,
 				fetchParent,
 				creationState
 		);
@@ -655,23 +657,32 @@ public class PluralAttributeMappingImpl
 		// Lazy property. A null foreign key domain result will lead to
 		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
 		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
+		final boolean unfetched;
 		if ( fetchParent.getReferencedModePart() == containingEntityMapping
 				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
 			collectionKeyDomainResult = null;
+			unfetched = true;
 		}
 		else {
-			collectionKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
-					fetchablePath,
-					sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
-					fetchParent,
-					creationState
-			);
+			if ( referencedPropertyName != null ) {
+				collectionKeyDomainResult = getKeyDescriptor().createTargetDomainResult(
+						fetchablePath,
+						sqlAstCreationState.getFromClauseAccess().getTableGroup( fetchParent.getNavigablePath() ),
+						fetchParent,
+						creationState
+				);
+			}
+			else {
+				collectionKeyDomainResult = null;
+			}
+			unfetched = false;
 		}
 		return buildDelayedCollectionFetch(
 				fetchablePath,
 				this,
 				fetchParent,
-				collectionKeyDomainResult
+				collectionKeyDomainResult,
+				unfetched
 		);
 	}
 

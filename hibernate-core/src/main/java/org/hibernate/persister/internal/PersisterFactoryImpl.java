@@ -26,6 +26,8 @@ import org.hibernate.persister.spi.PersisterFactory;
 import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * The standard Hibernate {@link PersisterFactory} implementation
  *
@@ -143,7 +145,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	@Override
 	public CollectionPersister createCollectionPersister(
 			Collection collectionBinding,
-			CollectionDataAccess cacheAccessStrategy,
+			@Nullable CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) {
 		// If the metadata for the collection specified an explicit persister class, use it
 		Class<? extends CollectionPersister> persisterClass = collectionBinding.getCollectionPersisterClass();
@@ -158,7 +160,7 @@ public final class PersisterFactoryImpl implements PersisterFactory, ServiceRegi
 	private CollectionPersister createCollectionPersister(
 			Class<? extends CollectionPersister> persisterClass,
 			Collection collectionBinding,
-			CollectionDataAccess cacheAccessStrategy,
+			@Nullable CollectionDataAccess cacheAccessStrategy,
 			@SuppressWarnings("deprecation") PersisterCreationContext creationContext) {
 		final Constructor<? extends CollectionPersister> constructor = resolveCollectionPersisterConstructor( persisterClass );
 		try {

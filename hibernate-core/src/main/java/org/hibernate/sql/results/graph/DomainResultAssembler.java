@@ -11,6 +11,8 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingOptions;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Responsible for "assembling" a result for inclusion in the domain query
  * result.  "Assembling" the result basically means building the result object
@@ -24,12 +26,12 @@ public interface DomainResultAssembler<J> {
 	/**
 	 * The main "assembly" contract.  Assemble the result and return it.
 	 */
-	J assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options);
+	@Nullable J assemble(RowProcessingState rowProcessingState, JdbcValuesSourceProcessingOptions options);
 
 	/**
 	 * Convenience form of {@link #assemble(RowProcessingState, JdbcValuesSourceProcessingOptions)}
 	 */
-	default J assemble(RowProcessingState rowProcessingState) {
+	default @Nullable J assemble(RowProcessingState rowProcessingState) {
 		return assemble( rowProcessingState, rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions() );
 	}
 
@@ -45,5 +47,9 @@ public interface DomainResultAssembler<J> {
 	 */
 	default void resolveState(RowProcessingState rowProcessingState) {
 		assemble( rowProcessingState );
+	}
+
+	default @Nullable Initializer getInitializer() {
+		return null;
 	}
 }

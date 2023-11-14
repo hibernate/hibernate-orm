@@ -11,17 +11,20 @@ import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Steve Ebersole
  */
 public class BagInitializerProducer implements CollectionInitializerProducer {
 	private final PluralAttributeMapping bagDescriptor;
-	private final Fetch collectionIdFetch;
+	private final @Nullable Fetch collectionIdFetch;
 	private final Fetch elementFetch;
 
 	public BagInitializerProducer(
@@ -52,31 +55,30 @@ public class BagInitializerProducer implements CollectionInitializerProducer {
 			DomainResultAssembler<?> collectionKeyAssembler,
 			DomainResultAssembler<?> collectionValueKeyAssembler,
 			AssemblerCreationState creationState) {
-		final DomainResultAssembler<?> elementAssembler = elementFetch.createAssembler(
-				parentAccess,
-				creationState
-		);
+		throw new UnsupportedOperationException( "Use the non-deprecated method variant instead." );
+	}
 
-		final DomainResultAssembler<?> collectionIdAssembler;
-		if ( bagDescriptor.getIdentifierDescriptor() == null ) {
-			collectionIdAssembler = null;
-		}
-		else {
-			collectionIdAssembler = collectionIdFetch.createAssembler(
-					parentAccess,
-					creationState
-			);
-		}
-
+	@Override
+	public CollectionInitializer produceInitializer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping attribute,
+			FetchParentAccess parentAccess,
+			LockMode lockMode,
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState) {
 		return new BagInitializer(
 				bagDescriptor,
 				parentAccess,
 				navigablePath,
 				lockMode,
-				collectionKeyAssembler,
-				collectionValueKeyAssembler,
-				elementAssembler,
-				collectionIdAssembler
+				collectionKeyResult,
+				collectionValueKeyResult,
+				elementFetch,
+				collectionIdFetch,
+				isResultInitializer,
+				creationState
 		);
 	}
 }

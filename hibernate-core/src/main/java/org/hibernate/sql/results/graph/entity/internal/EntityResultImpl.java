@@ -18,6 +18,7 @@ import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.entity.AbstractEntityResultGraphNode;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 
@@ -26,7 +27,8 @@ import org.hibernate.sql.results.graph.entity.EntityResult;
  *
  * @author Steve Ebersole
  */
-public class EntityResultImpl extends AbstractEntityResultGraphNode implements EntityResult {
+public class EntityResultImpl extends AbstractEntityResultGraphNode
+		implements EntityResult, InitializerProducer<EntityResultImpl> {
 
 	private final TableGroup tableGroup;
 	private final String resultVariable;
@@ -79,21 +81,31 @@ public class EntityResultImpl extends AbstractEntityResultGraphNode implements E
 	public DomainResultAssembler createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final Initializer initializer = creationState.resolveInitializer(
-				getNavigablePath(),
-				getReferencedModePart(),
-				() -> new EntityResultInitializer(
-						this,
-						getNavigablePath(),
-						getLockMode( creationState ),
-						getIdentifierFetch(),
-						getDiscriminatorFetch(),
-						getRowIdResult(),
-						creationState
-				)
+		return new EntityAssembler(
+				this.getResultJavaType(),
+				creationState.resolveInitializer( this, parentAccess, this ).asEntityInitializer()
 		);
+	}
 
-		return new EntityAssembler( this.getResultJavaType(), initializer.asEntityInitializer() );
+	@Override
+	public Initializer createInitializer(
+			EntityResultImpl resultGraphNode,
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
+		return resultGraphNode.createInitializer( parentAccess, creationState );
+	}
+
+	@Override
+	public Initializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+		return new EntityResultInitializer(
+				this,
+				getNavigablePath(),
+				getLockMode( creationState ),
+				getIdentifierFetch(),
+				getDiscriminatorFetch(),
+				getRowIdResult(),
+				creationState
+		);
 	}
 
 	@Override

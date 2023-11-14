@@ -6,10 +6,12 @@
  */
 package org.hibernate.query.results.complete;
 
+import java.util.BitSet;
 import java.util.function.Function;
 
 import org.hibernate.LockMode;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -19,6 +21,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.entity.EntityResult;
 import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
@@ -28,7 +31,7 @@ import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
 /**
  * @author Steve Ebersole
  */
-public class EntityResultImpl implements EntityResult {
+public class EntityResultImpl implements EntityResult, InitializerProducer<EntityResultImpl> {
 	private final NavigablePath navigablePath;
 	private final EntityValuedModelPart entityValuedModelPart;
 
@@ -120,23 +123,47 @@ public class EntityResultImpl implements EntityResult {
 	}
 
 	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		final EntityPersister entityPersister = entityValuedModelPart.getEntityMappingType().getEntityPersister();
+		identifierFetch.collectValueIndexesToCache( valueIndexes );
+		if ( !entityPersister.useShallowQueryCacheLayout() ) {
+			if ( discriminatorFetch != null ) {
+				discriminatorFetch.collectValueIndexesToCache( valueIndexes );
+			}
+			EntityResult.super.collectValueIndexesToCache( valueIndexes );
+		}
+		else if ( entityPersister.storeDiscriminatorInShallowQueryCacheLayout() && discriminatorFetch != null ) {
+			discriminatorFetch.collectValueIndexesToCache( valueIndexes );
+		}
+	}
+
+	@Override
 	public DomainResultAssembler<?> createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final Initializer initializer = creationState.resolveInitializer(
-				getNavigablePath(),
-				getReferencedModePart(),
-				() -> new EntityResultInitializer(
-						this,
-						getNavigablePath(),
-						lockMode,
-						identifierFetch,
-						discriminatorFetch,
-						null,
-						creationState
-				)
-		);
+		return new EntityAssembler( getResultJavaType(), creationState.resolveInitializer( this, parentAccess, this ).asEntityInitializer() );
+	}
 
-		return new EntityAssembler( getResultJavaType(), initializer.asEntityInitializer() );
+	@Override
+	public Initializer createInitializer(
+			EntityResultImpl resultGraphNode,
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
+		return resultGraphNode.createInitializer( parentAccess, creationState );
+	}
+
+	@Override
+	public Initializer createInitializer(
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
+		return new EntityResultInitializer(
+				this,
+				getNavigablePath(),
+				lockMode,
+				identifierFetch,
+				discriminatorFetch,
+				null,
+				creationState
+		);
 	}
 }

@@ -14,7 +14,6 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.MappingType;
@@ -36,7 +35,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.basic.BasicResult;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -66,6 +64,7 @@ public class BasicAttributeMapping
 	private final boolean insertable;
 	private final boolean updateable;
 	private final boolean partitioned;
+	private final boolean isLazy;
 
 	private final JavaType domainTypeDescriptor;
 
@@ -137,6 +136,11 @@ public class BasicAttributeMapping
 		else {
 			this.customWriteExpression = customWriteExpression;
 		}
+		this.isLazy = navigableRole.getParent().getParent() == null && declaringType.findContainingEntityMapping()
+				.getEntityPersister()
+				.getBytecodeEnhancementMetadata()
+				.getLazyAttributesMetadata()
+				.isLazyAttribute( attributeName );
 	}
 
 	public static BasicAttributeMapping withSelectableMapping(
@@ -244,6 +248,10 @@ public class BasicAttributeMapping
 	@Override
 	public boolean isNullable() {
 		return nullable;
+	}
+
+	public boolean isLazy() {
+		return isLazy;
 	}
 
 	@Override
@@ -382,13 +390,10 @@ public class BasicAttributeMapping
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		final int valuesArrayPosition;
-		// Lazy property. A valuesArrayPosition of -1 will lead to
-		// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
-		final EntityMappingType containingEntityMapping = findContainingEntityMapping();
 		boolean coerceResultType = false;
-		if ( fetchTiming == FetchTiming.DELAYED
-				&& !( fetchParent instanceof EmbeddableResultGraphNode )
-				&& containingEntityMapping.getEntityPersister().getPropertyLaziness()[getStateArrayPosition()] ) {
+		if ( fetchTiming == FetchTiming.DELAYED && isLazy ) {
+			// Lazy property. A valuesArrayPosition of -1 will lead to
+			// returning a domain result assembler that returns LazyPropertyInitializer.UNFETCHED_PROPERTY
 			valuesArrayPosition = -1;
 		}
 		else {

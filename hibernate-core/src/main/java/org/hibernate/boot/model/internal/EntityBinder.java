@@ -23,6 +23,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.DiscriminatorFormula;
@@ -43,6 +44,7 @@ import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.Polymorphism;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.annotations.Proxy;
+import org.hibernate.annotations.QueryCacheLayout;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
@@ -201,6 +203,7 @@ public class EntityBinder {
 	private String cacheRegion;
 	private boolean cacheLazyProperty;
 	private String naturalIdCacheRegion;
+	private CacheLayout queryCacheLayout;
 
 	/**
 	 * Bind an entity class. This can be done in a single pass.
@@ -1271,6 +1274,7 @@ public class EntityBinder {
 		persistentClass.setEntityName( annotatedClass.getName() );
 		persistentClass.setCached( isCached );
 		persistentClass.setLazy( lazy );
+		persistentClass.setQueryCacheLayout( queryCacheLayout );
 		if ( proxyClass != null ) {
 			persistentClass.setProxyInterfaceName( proxyClass.getName() );
 		}
@@ -1599,6 +1603,7 @@ public class EntityBinder {
 		cacheConcurrentStrategy = null;
 		cacheRegion = null;
 		cacheLazyProperty = true;
+		queryCacheLayout = null;
 		final SharedCacheMode sharedCacheMode  = context.getBuildingOptions().getSharedCacheMode();
 		if ( persistentClass instanceof RootClass ) {
 			bindRootClassCache( sharedCacheMode, context );
@@ -1643,6 +1648,9 @@ public class EntityBinder {
 		cacheConcurrentStrategy = resolveCacheConcurrencyStrategy( effectiveCache.usage() );
 		cacheRegion = effectiveCache.region();
 		cacheLazyProperty = isCacheLazy( effectiveCache, annotatedClass );
+
+		final QueryCacheLayout queryCache = annotatedClass.getAnnotation( QueryCacheLayout.class );
+		queryCacheLayout = queryCache == null ? null : queryCache.layout();
 	}
 
 	private static boolean isCacheLazy(Cache effectiveCache, XClass annotatedClass) {

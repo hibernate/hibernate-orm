@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph.basic;
 
+import java.util.BitSet;
+
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
@@ -202,5 +204,12 @@ public class BasicFetch<T> implements Fetch, BasicResultGraphNode<T> {
 	public String getResultVariable() {
 		// a basic value used as a fetch will never have a result variable in the domain result
 		return null;
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		if ( assembler instanceof BasicResultAssembler ) {
+			valueIndexes.set( ( (BasicResultAssembler<T>) assembler ).valuesArrayPosition );
+		}
 	}
 }

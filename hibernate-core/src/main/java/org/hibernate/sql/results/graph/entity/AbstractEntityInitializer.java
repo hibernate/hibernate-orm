@@ -398,6 +398,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					this
 			);
 			isOwningInitializer = holder.getEntityInitializer() == this;
+
 			if ( entityInstance == null ) {
 				resolveEntityInstance( rowProcessingState, holder, entityKey.getIdentifier() );
 			}
@@ -526,6 +527,12 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						resolveState( rowProcessingState );
 					}
 					this.isInitialized = true;
+				}
+				else if ( isOwningInitializer ) {
+					// Resolve the real entity instance for this proxy early so that potentially nested calls
+					// for eager association loading can leverage the real instance if needed
+					assert holder.getEntity() == null;
+					resolveEntityInstance( entityIdentifier, rowProcessingState );
 				}
 			}
 		}
@@ -754,13 +761,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			if ( lazyInitializer != null ) {
 				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
-				Object instance = holder.getEntity();
-				if ( instance == null ) {
-					instance = resolveInstance(
-							entityKey.getIdentifier(),
-							holder,
-							rowProcessingState
-					);
+				final Object instance = holder.getEntity();
+				assert instance != null : "The real entity instance must be resolved in the `resolveInstance()` phase";
+				if ( holder.getEntityInitializer() == this ) {
 					initializeEntity( instance, rowProcessingState );
 				}
 				lazyInitializer.setImplementation( instance );

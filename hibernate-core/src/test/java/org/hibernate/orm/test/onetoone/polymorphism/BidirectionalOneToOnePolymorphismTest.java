@@ -6,20 +6,22 @@
  */
 package org.hibernate.orm.test.onetoone.polymorphism;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.hibernate.Hibernate;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
-import org.assertj.core.api.InstanceOfAssertFactories;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 @DomainModel(annotatedClasses = {
 		BidirectionalOneToOnePolymorphismTest.Level1.class,
@@ -28,48 +30,72 @@ import org.assertj.core.api.InstanceOfAssertFactories;
 		BidirectionalOneToOnePolymorphismTest.Level3.class
 })
 @SessionFactory
+@JiraKey( "HHH-17408" )
 public class BidirectionalOneToOnePolymorphismTest {
 
+	@BeforeAll
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Level1 level1 = new Level1();
+					level1.setId( 1 );
+
+					DerivedLevel2 level2 = new DerivedLevel2();
+					level2.setId( 2 );
+					level1.setDerivedLevel2( level2 );
+					level2.setLevel1( level1 );
+
+					Level3 level3 = new Level3();
+					level3.setId( 3 );
+					level2.setLevel3( level3 );
+					level3.setLevel2( level2 );
+
+					session.persist( level1 );
+					session.persist( level2 );
+					session.persist( level3 );
+				}
+		);
+	}
+
 	@Test
-	public void persistAndLoad(SessionFactoryScope scope) {
+	public void loadAndUnProxyTest(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
-			Level1 level1 = new Level1();
-			level1.setId( 1 );
-
-			DerivedLevel2 level2 = new DerivedLevel2();
-			level2.setId( 2 );
-			level1.setDerivedLevel2( level2 );
-			level2.setLevel1( level1 );
-
-			Level3 level3 = new Level3();
-			level3.setId( 3 );
-			level2.setLevel3( level3 );
-			level3.setLevel2( level2 );
-
-			session.persist( level1 );
-			session.persist( level2 );
-			session.persist( level3 );
+			Level1 reference = session.getReference( Level1.class, 1 );
+			assertThat( reference )
+					.extracting( Level1::getDerivedLevel2 )
+					.isNotNull();
 		} );
 
-		// This succeeds, so the information was properly saved
-		scope.inTransaction( session -> assertThat( session.getReference( Level1.class, 1 ) )
-				.extracting( Level1::getDerivedLevel2 )
-				.isNotNull() );
+		scope.inTransaction(
+				session -> {
+					Level2 level2Proxy = session.getReference( Level2.class, 2 );
+					assertFalse( Hibernate.isInitialized( level2Proxy ) );
 
-		// This succeeds too, so unproxying works at least in some cases
-		scope.inTransaction( session -> assertThat( session.getReference( Level2.class, 2 ) )
-				.extracting( Hibernate::unproxy, InstanceOfAssertFactories.type( DerivedLevel2.class ) )
-				.extracting( DerivedLevel2::getLevel1 )
-				.extracting( Level1::getDerivedLevel2 )
-				.isNotNull() );
+					Object unproxy = Hibernate.unproxy( level2Proxy );
+					assertThat( unproxy ).isInstanceOf( DerivedLevel2.class );
+					DerivedLevel2 level2 = (DerivedLevel2) unproxy;
 
-		// This fails for some reason
-		scope.inTransaction( session -> assertThat( session.getReference( Level3.class, 3 ) )
-				.extracting( Level3::getLevel2 )
-				.extracting( Hibernate::unproxy, InstanceOfAssertFactories.type( DerivedLevel2.class ) )
-				.extracting( DerivedLevel2::getLevel1 )
-				.extracting( Level1::getDerivedLevel2 )
-				.isNotNull() );
+					Level1 level1 = level2.getLevel1();
+					DerivedLevel2 derivedLevel2 = level1.getDerivedLevel2();
+					assertThat( derivedLevel2 ).isNotNull();
+					assertThat( derivedLevel2 ).isSameAs( level2 );
+				} );
+
+		scope.inTransaction(
+				session -> {
+					Level3 level3Proxy = session.getReference( Level3.class, 3 );
+					assertFalse( Hibernate.isInitialized( level3Proxy ) );
+
+					Object unproxy = Hibernate.unproxy( level3Proxy.getLevel2() );
+
+					assertThat( unproxy ).isInstanceOf( DerivedLevel2.class );
+					DerivedLevel2 level2 = (DerivedLevel2) unproxy;
+
+					Level1 level1 = level2.getLevel1();
+					DerivedLevel2 derivedLevel2 = level1.getDerivedLevel2();
+					assertThat( derivedLevel2 ).isNotNull();
+					assertThat( derivedLevel2 ).isSameAs( level2 );
+				} );
 	}
 
 	@Entity(name = "Level1")

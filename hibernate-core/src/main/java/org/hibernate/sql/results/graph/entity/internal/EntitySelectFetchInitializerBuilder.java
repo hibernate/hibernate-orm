@@ -13,11 +13,12 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
+import org.hibernate.sql.results.graph.entity.EntityInitializer;
 
 import static org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder.BatchMode.BATCH_INITIALIZE;
 import static org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchInitializerBuilder.BatchMode.BATCH_LOAD;
@@ -25,7 +26,7 @@ import static org.hibernate.sql.results.graph.entity.internal.EntitySelectFetchI
 
 public class EntitySelectFetchInitializerBuilder {
 
-	public static AbstractFetchParentAccess createInitializer(
+	public static EntityInitializer createInitializer(
 			FetchParentAccess parentAccess,
 			ToOneAttributeMapping fetchedAttribute,
 			EntityPersister entityPersister,

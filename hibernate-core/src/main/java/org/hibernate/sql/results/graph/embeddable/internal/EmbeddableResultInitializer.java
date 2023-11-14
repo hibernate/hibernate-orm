@@ -28,6 +28,11 @@ public class EmbeddableResultInitializer extends AbstractEmbeddableInitializer {
 	}
 
 	@Override
+	public boolean isResultInitializer() {
+		return true;
+	}
+
+	@Override
 	public String toString() {
 		return "EmbeddableResultInitializer(" + getNavigablePath() + ")";
 	}

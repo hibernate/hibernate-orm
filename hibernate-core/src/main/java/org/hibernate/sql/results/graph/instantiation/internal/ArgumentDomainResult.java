@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph.instantiation.internal;
 
+import java.util.BitSet;
+
 import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.FetchParentAccess;
@@ -45,5 +47,10 @@ public class ArgumentDomainResult<A> implements DomainResult<A> {
 				realDomainResult.createResultAssembler( parentAccess, creationState ),
 				getResultVariable()
 		);
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		realDomainResult.collectValueIndexesToCache( valueIndexes );
 	}
 }

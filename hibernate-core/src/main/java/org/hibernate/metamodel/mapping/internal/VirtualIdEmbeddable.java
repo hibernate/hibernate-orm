@@ -28,6 +28,8 @@ import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.spi.CompositeTypeImplementor;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping.IdentifierValueMapper;
 
 /**
@@ -245,6 +247,25 @@ public class VirtualIdEmbeddable extends AbstractEmbeddableMapping implements Id
 				},
 				creationProcess
 		);
+	}
+
+	@Override
+	public boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
+		final IdClassEmbeddable idClassEmbeddable = idMapping.getIdClassEmbeddable();
+		if ( idClassEmbeddable != null ) {
+			return idClassEmbeddable.areEqual( one, other, session );
+		}
+		else {
+			final AttributeMappingsList attributeMappings = getAttributeMappings();
+			for ( int i = 0; i < attributeMappings.size(); i++ ) {
+				final AttributeMapping attributeMapping = attributeMappings.get( i );
+				final Getter getter = attributeMapping.getPropertyAccess().getGetter();
+				if ( !attributeMapping.areEqual( getter.get( one ), getter.get( other ), session ) ) {
+					return false;
+				}
+			}
+			return true;
+		}
 	}
 
 	@Override

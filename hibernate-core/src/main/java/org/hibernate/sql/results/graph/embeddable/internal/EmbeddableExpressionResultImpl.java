@@ -22,8 +22,9 @@ import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
-import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResult;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -33,7 +34,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent implements EmbeddableResultGraphNode, DomainResult<T>, EmbeddableResult<T> {
+public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent implements EmbeddableResultGraphNode, DomainResult<T>, EmbeddableResult<T>,
+		InitializerProducer<EmbeddableExpressionResultImpl<T>> {
 	private final String resultVariable;
 	private final boolean containsAnyNonScalars;
 	private final EmbeddableMappingType fetchContainer;
@@ -124,19 +126,20 @@ public class EmbeddableExpressionResultImpl<T> extends AbstractFetchParent imple
 	public DomainResultAssembler<T> createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final EmbeddableInitializer initializer = creationState.resolveInitializer(
-				getNavigablePath(),
-				getReferencedModePart(),
-				() -> new EmbeddableResultInitializer(
-						this,
-						parentAccess,
-						creationState
-				)
-		).asEmbeddableInitializer();
-
-		assert initializer != null;
-
 		//noinspection unchecked
-		return new EmbeddableAssembler( initializer );
+		return new EmbeddableAssembler( creationState.resolveInitializer( this, parentAccess, this ).asEmbeddableInitializer() );
+	}
+
+	@Override
+	public Initializer createInitializer(
+			EmbeddableExpressionResultImpl<T> resultGraphNode,
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
+		return resultGraphNode.createInitializer( parentAccess, creationState );
+	}
+
+	@Override
+	public Initializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+		return new EmbeddableResultInitializer( this, parentAccess, creationState );
 	}
 }

@@ -8,8 +8,6 @@ package org.hibernate.sql.results.graph.embeddable.internal;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityHolder;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.SubselectFetch;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
@@ -22,6 +20,8 @@ import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class NestedRowProcessingState extends BaseExecutionContext implements RowProcessingState {
 	private final AggregateEmbeddableInitializer aggregateEmbeddableInitializer;
@@ -81,7 +81,12 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	}
 
 	@Override
-	public Initializer resolveInitializer(NavigablePath path) {
+	public void finishRowProcessing(boolean wasAdded) {
+		processingState.finishRowProcessing( wasAdded );
+	}
+
+	@Override
+	public Initializer resolveInitializer(@Nullable NavigablePath path) {
 		return processingState.resolveInitializer( path );
 	}
 
@@ -123,6 +128,16 @@ public class NestedRowProcessingState extends BaseExecutionContext implements Ro
 	@Override
 	public Object getEntityId() {
 		return processingState.getEntityId();
+	}
+
+	@Override
+	public String getEntityUniqueKeyAttributePath() {
+		return processingState.getEntityUniqueKeyAttributePath();
+	}
+
+	@Override
+	public Object getEntityUniqueKey() {
+		return processingState.getEntityUniqueKey();
 	}
 
 	@Override

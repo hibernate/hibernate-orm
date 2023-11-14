@@ -7,6 +7,7 @@
 package org.hibernate.metamodel.mapping.internal;
 
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -16,7 +17,6 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
-import org.hibernate.LockMode;
 import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchStyle;
@@ -61,6 +61,7 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.persister.collection.AbstractCollectionPersister;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
@@ -92,13 +93,13 @@ import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.FetchableContainer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.graph.entity.EntityValuedFetchable;
 import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
-import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
@@ -130,6 +131,7 @@ public class ToOneAttributeMapping
 	private final String sqlAliasStem;
 	// The nullability of the actual FK column
 	private final boolean isNullable;
+	private final boolean isLazy;
 	/*
 	 The nullability of the table on which the FK column is located
 	 Note that this can be null although the FK column is not nullable e.g. in the case of a join table
@@ -191,6 +193,7 @@ public class ToOneAttributeMapping
 		sqlAliasStem = original.sqlAliasStem;
 		targetKeyPropertyNames = original.targetKeyPropertyNames;
 		isNullable = original.isNullable;
+		isLazy = original.isLazy;
 		foreignKeyDescriptor = original.foreignKeyDescriptor;
 		sideNature = original.sideNature;
 		identifyingColumnsTableExpression = original.identifyingColumnsTableExpression;
@@ -251,6 +254,10 @@ public class ToOneAttributeMapping
 		);
 		this.sqlAliasStem = SqlAliasStemHelper.INSTANCE.generateStemFromAttributeName( name );
 		this.isNullable = bootValue.isNullable();
+		this.isLazy = navigableRole.getParent().getParent() == null
+				&& declaringEntityPersister.getBytecodeEnhancementMetadata()
+				.getLazyAttributesMetadata()
+				.isLazyAttribute( name );
 		this.referencedPropertyName = bootValue.getReferencedPropertyName();
 		this.unwrapProxy = bootValue.isUnwrapProxy();
 		this.entityMappingType = entityMappingType;
@@ -680,6 +687,7 @@ public class ToOneAttributeMapping
 		this.navigableRole = original.navigableRole;
 		this.sqlAliasStem = original.sqlAliasStem;
 		this.isNullable = original.isNullable;
+		this.isLazy = original.isLazy;
 		this.isKeyTableNullable = original.isKeyTableNullable;
 		this.isOptional = original.isOptional;
 		this.notFoundAction = original.notFoundAction;
@@ -1057,13 +1065,11 @@ public class ToOneAttributeMapping
 			}
 			return new CircularFetchImpl(
 					this,
-					getEntityMappingType(),
 					fetchTiming,
 					fetchablePath,
 					fetchParent,
-					this,
 					isSelectByUniqueKey( sideNature ),
-					fetchablePath,
+					parentNavigablePath,
 					foreignKeyDomainResult
 			);
 		}
@@ -1281,7 +1287,6 @@ public class ToOneAttributeMapping
 						fetchablePath,
 						fetchParent,
 						this,
-						LockMode.READ,
 						referencedNavigablePath,
 						keyDomainResult
 				);
@@ -1662,9 +1667,10 @@ public class ToOneAttributeMapping
 			String resultVariable,
 			FromClauseAccess fromClauseAccess,
 			DomainResultCreationState creationState) {
+		final FetchableContainer parentEntityType = fetchParent.getReferencedMappingType();
 		final SqlAstJoinType joinType;
-		if ( fetchParent instanceof EntityResultJoinedSubclassImpl
-				&& ( (EntityPersister) fetchParent.getReferencedModePart() ).findDeclaredAttributeMapping( getPartName() ) == null ) {
+		if ( parentEntityType instanceof JoinedSubclassEntityPersister
+				&& ( (JoinedSubclassEntityPersister) parentEntityType ).findDeclaredAttributeMapping( getPartName() ) == null ) {
 			joinType = getJoinTypeForFetch( fetchablePath, parentTableGroup );
 		}
 		else {
@@ -1815,6 +1821,11 @@ public class ToOneAttributeMapping
 		@Override
 		public JavaType<?> getResultJavaType() {
 			return resultJavaType;
+		}
+
+		@Override
+		public void collectValueIndexesToCache(BitSet valueIndexes) {
+			// No-op
 		}
 	}
 
@@ -2277,6 +2288,10 @@ public class ToOneAttributeMapping
 
 	public boolean isNullable() {
 		return isNullable;
+	}
+
+	public boolean isLazy() {
+		return isLazy;
 	}
 
 	@Override

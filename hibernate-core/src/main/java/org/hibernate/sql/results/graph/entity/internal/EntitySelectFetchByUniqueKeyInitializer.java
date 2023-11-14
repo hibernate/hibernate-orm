@@ -17,8 +17,6 @@ import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
-import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
@@ -45,17 +43,9 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 		}
 		state = State.RESOLVED;
 
-		final EntityInitializer parentEntityInitializer = getParentEntityInitializer( parentAccess );
-		if ( parentEntityInitializer != null && parentEntityInitializer.getEntityKey() != null ) {
-			// make sure parentEntityInitializer.resolveInstance has been called before
-			parentEntityInitializer.resolveInstance( rowProcessingState );
-			if ( parentEntityInitializer.isEntityInitialized() ) {
-				state = State.INITIALIZED;
-				return;
-			}
-		}
-
-		if ( !isAttributeAssignableToConcreteDescriptor() ) {
+		// We can avoid processing further if the parent is already initialized or missing,
+		// as the value produced by this initializer will never be used anyway.
+		if ( parentShallowCached || shouldSkipInitializer( rowProcessingState ) ) {
 			state = State.INITIALIZED;
 			return;
 		}
@@ -83,7 +73,7 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
-		if ( state == State.INITIALIZED ) {
+		if ( state != State.RESOLVED ) {
 			return;
 		}
 		state = State.INITIALIZED;
@@ -103,39 +93,21 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 		final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 		entityInstance = persistenceContext.getEntity( euk );
 		if ( entityInstance == null ) {
-			final EntitySelectFetchByUniqueKeyInitializer initializer = (EntitySelectFetchByUniqueKeyInitializer) persistenceContext.getLoadContexts()
-					.findInitializer( euk );
-			if ( initializer == null ) {
-				final JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState = rowProcessingState.getJdbcValuesSourceProcessingState();
-				jdbcValuesSourceProcessingState.registerInitializer( euk, this );
+			entityInstance = concreteDescriptor.loadByUniqueKey(
+					uniqueKeyPropertyName,
+					entityIdentifier,
+					session
+			);
 
-				entityInstance = concreteDescriptor.loadByUniqueKey(
-						uniqueKeyPropertyName,
-						entityIdentifier,
-						session
-				);
-
-				// If the entity was not in the Persistence Context, but was found now,
-				// add it to the Persistence Context
-				if ( entityInstance != null ) {
-					persistenceContext.addEntity( euk, entityInstance );
-				}
-				notifyResolutionListeners(entityInstance);
-			}
-			else {
-				registerResolutionListener( instance -> entityInstance = instance );
+			// If the entity was not in the Persistence Context, but was found now,
+			// add it to the Persistence Context
+			if ( entityInstance != null ) {
+				persistenceContext.addEntity( euk, entityInstance );
 			}
 		}
 		if ( entityInstance != null ) {
 			entityInstance = persistenceContext.proxyFor( entityInstance );
 		}
-	}
-
-	private EntityInitializer getParentEntityInitializer(FetchParentAccess parentAccess) {
-		if ( parentAccess != null ) {
-			return parentAccess.findFirstEntityInitializer();
-		}
-		return null;
 	}
 
 	@Override

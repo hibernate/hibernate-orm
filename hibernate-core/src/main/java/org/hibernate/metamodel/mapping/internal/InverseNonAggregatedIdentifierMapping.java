@@ -39,6 +39,8 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetchable;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * The inverse part of a "non-aggregated" composite identifier.
  *
@@ -128,6 +130,11 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 	@Override
 	public EmbeddableMappingType getMappedIdEmbeddableTypeDescriptor() {
 		return identifierValueMapper;
+	}
+
+	@Override
+	public boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
+		return identifierValueMapper.areEqual( one, other, session );
 	}
 
 	@Override

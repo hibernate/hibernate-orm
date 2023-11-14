@@ -11,6 +11,7 @@ import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
@@ -42,25 +43,30 @@ public class MapInitializerProducer implements CollectionInitializerProducer {
 			DomainResultAssembler<?> collectionKeyAssembler,
 			DomainResultAssembler<?> collectionValueKeyAssembler,
 			AssemblerCreationState creationState) {
-		final DomainResultAssembler<?> mapKeyAssembler = mapKeyFetch.createAssembler(
-				parentAccess,
-				creationState
-		);
+		throw new UnsupportedOperationException( "Use the non-deprecated method variant instead." );
+	}
 
-		final DomainResultAssembler<?> mapValueAssembler = mapValueFetch.createAssembler(
-				parentAccess,
-				creationState
-		);
-
+	@Override
+	public CollectionInitializer produceInitializer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping attribute,
+			FetchParentAccess parentAccess,
+			LockMode lockMode,
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState) {
 		return new MapInitializer(
 				navigablePath,
 				mapDescriptor,
 				parentAccess,
 				lockMode,
-				collectionKeyAssembler,
-				collectionValueKeyAssembler,
-				mapKeyAssembler,
-				mapValueAssembler
+				collectionKeyResult,
+				collectionValueKeyResult,
+				mapKeyFetch,
+				mapValueFetch,
+				isResultInitializer,
+				creationState
 		);
 	}
 }

@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph;
 
+import java.util.BitSet;
+
 import org.hibernate.spi.NavigablePath;
 
 /**
@@ -58,4 +60,8 @@ public interface BiDirectionalFetch extends Fetch {
 	 */
 	NavigablePath getReferencedPath();
 
+	@Override
+	default void collectValueIndexesToCache(BitSet valueIndexes) {
+		// No-op
+	}
 }

@@ -20,7 +20,9 @@ import org.hibernate.sql.results.graph.entity.internal.EntityAssembler;
  * Support for non-lazy EntityFetch implementations - both joined and subsequent-select
  *
  * @author Andrea Boriero
+ * @deprecated Abstraction was not useful, so it was inlined into {@link org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl} directly
  */
+@Deprecated(forRemoval = true)
 public abstract class AbstractNonLazyEntityFetch extends AbstractFetchParent implements EntityFetch {
 	private final FetchParent fetchParent;
 	private final EntityValuedFetchable fetchContainer;

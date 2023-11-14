@@ -39,3 +39,26 @@ hibernate.type.prefer_java_type_jdbc_types=false
 
 It is expected the default will flip for 7.0.
 
+[[query-cache-layout]]
+== Query cache layout change
+
+In Hibernate ORM 6.0 the query cache layout changed from a "shallow" representation of entities and collections,
+to a "full" representation. This was done to enable to re-materialize join fetched data from just the query cache data.
+
+Storing the full data in the query cache leads to a higher memory consumption,
+which in turn might also hurt application throughput due to a higher garbage collection activity.
+
+Hibernate ORM 6.5 introduces means to configure the query cache layout globally via the `hibernate.cache.query_cache_layout`
+property, and also for an entity type or persistent collection with the `@QueryCacheLayout` annotation.
+
+The global `hibernate.cache.query_cache_layout` setting defaults to the `AUTO` value,
+which will automatically choose `SHALLOW` or `FULL` for an entity/collection,
+depending on whether the entity/collection is cacheable.
+
+Applications that want to retain the `FULL` cache layout that Hibernate ORM 6.0 used should configure
+the global property `hibernate.cache.query_cache_layout=FULL`.
+Applications that want the cache layout that Hibernate ORM 5 and older versions used should configure
+the global property `hibernate.cache.query_cache_layout=SHALLOW`.
+
+Note that even with the shallow cache layout, the association eagerness implied through join fetches will be respected,
+and associations will be eagerly initialized, so there is no change of behavior when choosing a different cache layout.

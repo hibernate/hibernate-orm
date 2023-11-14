@@ -28,4 +28,8 @@ public class EmbeddableFetchInitializer
 		return findFirstEntityDescriptorAccess().getParentKey();
 	}
 
+	@Override
+	public boolean isResultInitializer() {
+		return false;
+	}
 }

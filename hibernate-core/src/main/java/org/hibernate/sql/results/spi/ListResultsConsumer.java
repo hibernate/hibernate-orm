@@ -173,13 +173,15 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 				results = new Results<>( domainResultJavaType );
 			}
 
+			rowReader.getInitializersList().startLoading( rowProcessingState );
+
 			int readRows = 0;
 			if ( uniqueSemantic == UniqueSemantic.FILTER
 					|| uniqueSemantic == UniqueSemantic.ASSERT && rowProcessingState.hasCollectionInitializers()
 					|| uniqueSemantic == UniqueSemantic.ALLOW && isEntityResultType ) {
 				while ( rowProcessingState.next() ) {
-					results.addUnique( rowReader.readRow( rowProcessingState, processingOptions ) );
-					rowProcessingState.finishRowProcessing();
+					final boolean added = results.addUnique( rowReader.readRow( rowProcessingState, processingOptions ) );
+					rowProcessingState.finishRowProcessing( added );
 					readRows++;
 				}
 			}
@@ -194,14 +196,14 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 								)
 						);
 					}
-					rowProcessingState.finishRowProcessing();
+					rowProcessingState.finishRowProcessing( true );
 					readRows++;
 				}
 			}
 			else {
 				while ( rowProcessingState.next() ) {
 					results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
-					rowProcessingState.finishRowProcessing();
+					rowProcessingState.finishRowProcessing( true );
 					readRows++;
 				}
 			}

@@ -67,6 +67,8 @@ elif [ "$RDBMS" == "hana_cloud" ]; then
   goal="-Pdb=hana_cloud"
 elif [ "$RDBMS" == "cockroachdb" ]; then
   goal="-Pdb=cockroachdb"
+elif [ "$RDBMS" == "yugabytedb" ]; then
+  goal="-Pdb=yugabytedb"
 fi
 
 # Only run checkstyle in the H2 build,

@@ -30,4 +30,6 @@ elif [ "$RDBMS" == 'cockroachdb' ]; then
   bash $DIR/../docker_db.sh cockroachdb
 elif [ "$RDBMS" == 'hana' ]; then
   bash $DIR/../docker_db.sh hana
+elif [ "$RDBMS" == 'yugabytedb' ]; then
+  bash $DIR/../docker_db.sh yugabytedb
 fi

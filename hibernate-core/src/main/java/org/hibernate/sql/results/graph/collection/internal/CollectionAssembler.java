@@ -6,8 +6,6 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import java.util.function.Supplier;
-
 import org.hibernate.collection.spi.PersistentArrayHolder;
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
@@ -20,16 +18,14 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Andrea Boriero
  */
-public abstract class AbstractCollectionAssembler implements DomainResultAssembler {
+public class CollectionAssembler implements DomainResultAssembler {
 	private final PluralAttributeMapping fetchedMapping;
 
 	protected final CollectionInitializer initializer;
 
-	public AbstractCollectionAssembler(
-			PluralAttributeMapping fetchedMapping,
-			Supplier<CollectionInitializer> initializerProducer) {
+	public CollectionAssembler(PluralAttributeMapping fetchedMapping, CollectionInitializer initializer) {
 		this.fetchedMapping = fetchedMapping;
-		this.initializer = initializerProducer.get();
+		this.initializer = initializer;
 	}
 
 	@Override
@@ -44,5 +40,10 @@ public abstract class AbstractCollectionAssembler implements DomainResultAssembl
 	@Override
 	public JavaType<?> getAssembledJavaType() {
 		return fetchedMapping.getJavaType();
+	}
+
+	@Override
+	public CollectionInitializer getInitializer() {
+		return initializer;
 	}
 }

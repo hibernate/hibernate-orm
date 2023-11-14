@@ -54,10 +54,6 @@ public class LoadContexts {
 		return jdbcValuesSourceProcessingStateStack.findCurrentFirstWithParameter( collectionKey, JdbcValuesSourceProcessingState::findLoadingCollectionLocally );
 	}
 
-	public Initializer findInitializer(final EntityUniqueKey key){
-		return jdbcValuesSourceProcessingStateStack.findCurrentFirstWithParameter( key, JdbcValuesSourceProcessingState::findInitializer );
-	}
-
 	/**
 	 * Retrieves the persistence context to which this is bound.
 	 *

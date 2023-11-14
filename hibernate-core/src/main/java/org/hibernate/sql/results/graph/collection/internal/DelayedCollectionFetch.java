@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
+import java.util.BitSet;
+
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
@@ -14,6 +16,7 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.type.descriptor.java.JavaType;
 
 /**
@@ -22,14 +25,17 @@ import org.hibernate.type.descriptor.java.JavaType;
 public class DelayedCollectionFetch extends CollectionFetch {
 
 	private final DomainResult<?> collectionKeyResult;
+	private final boolean unfetched;
 
 	public DelayedCollectionFetch(
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedAttribute,
 			FetchParent fetchParent,
-			DomainResult<?> collectionKeyResult) {
+			DomainResult<?> collectionKeyResult,
+			boolean unfetched) {
 		super( fetchedPath, fetchedAttribute, fetchParent );
 		this.collectionKeyResult = collectionKeyResult;
+		this.unfetched = unfetched;
 	}
 
 	@Override
@@ -37,18 +43,22 @@ public class DelayedCollectionFetch extends CollectionFetch {
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
 		// lazy attribute
-		if ( collectionKeyResult == null ) {
+		if ( unfetched ) {
 			return new UnfetchedCollectionAssembler( getFetchedMapping() );
 		}
 		else {
-			return new DelayedCollectionAssembler(
-					getNavigablePath(),
-					getFetchedMapping(),
-					parentAccess,
-					collectionKeyResult,
-					creationState
-			);
+			return super.createAssembler( parentAccess, creationState );
 		}
+	}
+
+	public CollectionInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+		return new DelayedCollectionInitializer(
+				getNavigablePath(),
+				getFetchedMapping(),
+				parentAccess,
+				collectionKeyResult,
+				creationState
+		);
 	}
 
 	@Override
@@ -64,5 +74,12 @@ public class DelayedCollectionFetch extends CollectionFetch {
 	@Override
 	public JavaType<?> getResultJavaType() {
 		return getFetchedMapping().getJavaType();
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		if ( collectionKeyResult != null ) {
+			collectionKeyResult.collectValueIndexesToCache( valueIndexes );
+		}
 	}
 }

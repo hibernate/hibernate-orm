@@ -27,6 +27,10 @@ public class TupleResultAssembler<J> implements DomainResultAssembler<J> {
 		this.assembledJavaType = assembledJavaType;
 	}
 
+	public int[] getValuesArrayPositions() {
+		return valuesArrayPositions;
+	}
+
 	/**
 	 * Access to the raw value (unconverted, if a converter applied)
 	 */

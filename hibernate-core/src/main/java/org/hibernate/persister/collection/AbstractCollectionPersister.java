@@ -28,7 +28,9 @@ import org.hibernate.MappingException;
 import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.TransientObjectException;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.CacheException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -132,6 +134,8 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 import static org.hibernate.sql.model.ModelMutationLogging.MODEL_MUTATION_LOGGER;
 
@@ -211,9 +215,10 @@ public abstract class AbstractCollectionPersister
 	private final BeforeExecutionGenerator identifierGenerator;
 	private final PropertyMapping elementPropertyMapping;
 	private final EntityPersister elementPersister;
-	private final CollectionDataAccess cacheAccessStrategy;
+	private final @Nullable CollectionDataAccess cacheAccessStrategy;
 
 	private final CacheEntryStructure cacheEntryStructure;
+	private final boolean useShallowQueryCacheLayout;
 
 	// dynamic filters for the collection
 	private final FilterHelper filterHelper;
@@ -239,14 +244,14 @@ public abstract class AbstractCollectionPersister
 	@Deprecated(since = "6.0")
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,
-			CollectionDataAccess cacheAccessStrategy,
+			@Nullable CollectionDataAccess cacheAccessStrategy,
 			PersisterCreationContext creationContext) throws MappingException, CacheException {
 		this( collectionBootDescriptor, cacheAccessStrategy, (RuntimeModelCreationContext) creationContext );
 	}
 
 	public AbstractCollectionPersister(
 			Collection collectionBootDescriptor,
-			CollectionDataAccess cacheAccessStrategy,
+			@Nullable CollectionDataAccess cacheAccessStrategy,
 			RuntimeModelCreationContext creationContext) throws MappingException, CacheException {
 		this.factory = creationContext.getSessionFactory();
 		this.collectionSemantics = creationContext.getBootstrapContext()
@@ -263,6 +268,10 @@ public abstract class AbstractCollectionPersister
 		else {
 			cacheEntryStructure = UnstructuredCacheEntry.INSTANCE;
 		}
+		useShallowQueryCacheLayout = shouldUseShallowCacheLayout(
+				collectionBootDescriptor.getQueryCacheLayout(),
+				creationContext.getSessionFactoryOptions()
+		);
 
 		dialect = creationContext.getDialect();
 		sqlExceptionHelper = creationContext.getJdbcServices().getSqlExceptionHelper();
@@ -598,6 +607,18 @@ public abstract class AbstractCollectionPersister
 		return (BeforeExecutionGenerator) generator;
 	}
 
+	private boolean shouldUseShallowCacheLayout(CacheLayout collectionQueryCacheLayout, SessionFactoryOptions options) {
+		final CacheLayout queryCacheLayout;
+		if ( collectionQueryCacheLayout == null ) {
+			queryCacheLayout = options.getQueryCacheLayout();
+		}
+		else {
+			queryCacheLayout = collectionQueryCacheLayout;
+		}
+		return queryCacheLayout == CacheLayout.SHALLOW || queryCacheLayout == CacheLayout.AUTO &&
+				cacheAccessStrategy != null;
+	}
+
 	@Override
 	public NavigableRole getNavigableRole() {
 		return navigableRole;
@@ -802,6 +823,11 @@ public abstract class AbstractCollectionPersister
 	@Override
 	public boolean hasCache() {
 		return cacheAccessStrategy != null;
+	}
+
+	@Override
+	public boolean useShallowQueryCacheLayout() {
+		return useShallowQueryCacheLayout;
 	}
 
 	protected abstract RowMutationOperations getRowMutationOperations();

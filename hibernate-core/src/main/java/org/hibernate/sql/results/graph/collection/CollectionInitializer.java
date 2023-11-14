@@ -8,18 +8,21 @@ package org.hibernate.sql.results.graph.collection;
 
 import org.hibernate.collection.spi.PersistentCollection;
 import org.hibernate.engine.spi.CollectionKey;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Initializer implementation for initializing collections (plural attributes)
  *
  * @author Steve Ebersole
  */
-public interface CollectionInitializer extends Initializer {
+public interface CollectionInitializer extends FetchParentAccess {
 	@Override
 	PluralAttributeMapping getInitializedPart();
 
@@ -27,18 +30,11 @@ public interface CollectionInitializer extends Initializer {
 		return getInitializedPart().getCollectionDescriptor();
 	}
 
-	PersistentCollection<?> getCollectionInstance();
+	@Nullable PersistentCollection<?> getCollectionInstance();
 
 	@Override
 	default Object getInitializedInstance() {
 		return getCollectionInstance();
-	}
-
-	/**
-	 * Lifecycle method called at the very end of the result values processing
-	 */
-	default void endLoading(ExecutionContext context) {
-		// by default - nothing to do
 	}
 
 	@Override
@@ -46,5 +42,10 @@ public interface CollectionInitializer extends Initializer {
 		return true;
 	}
 
-	CollectionKey resolveCollectionKey(RowProcessingState rowProcessingState);
+	@Nullable CollectionKey resolveCollectionKey(RowProcessingState rowProcessingState);
+
+	@Override
+	default CollectionInitializer asCollectionInitializer() {
+		return this;
+	}
 }

@@ -23,6 +23,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.sql.ast.spi.SqlSelection;
 
 import jakarta.persistence.metamodel.Attribute;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * @author Christian Beikov
@@ -131,5 +132,10 @@ public class AnonymousTupleNonAggregatedEntityIdentifierMapping extends Anonymou
 	@Override
 	public FetchTiming getTiming() {
 		return FetchTiming.IMMEDIATE;
+	}
+
+	@Override
+	public boolean areEqual(@Nullable Object one, @Nullable Object other, SharedSessionContractImplementor session) {
+		return delegate.areEqual( one, other, session );
 	}
 }

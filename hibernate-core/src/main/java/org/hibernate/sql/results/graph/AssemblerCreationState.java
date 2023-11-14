@@ -33,6 +33,11 @@ public interface AssemblerCreationState {
 			ModelPart fetchedModelPart,
 			Supplier<Initializer> producer);
 
+	<P extends FetchParent> Initializer resolveInitializer(
+			P resultGraphNode,
+			FetchParentAccess parentAccess,
+			InitializerProducer<P> producer);
+
 	SqlAstCreationContext getSqlAstCreationContext();
 
 	ExecutionContext getExecutionContext();

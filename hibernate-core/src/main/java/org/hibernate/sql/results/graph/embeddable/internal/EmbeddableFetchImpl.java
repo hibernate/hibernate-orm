@@ -25,6 +25,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
+import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
@@ -32,7 +33,8 @@ import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 /**
  * @author Steve Ebersole
  */
-public class EmbeddableFetchImpl extends AbstractFetchParent implements EmbeddableResultGraphNode, Fetch {
+public class EmbeddableFetchImpl extends AbstractFetchParent
+		implements EmbeddableResultGraphNode, Fetch, InitializerProducer<EmbeddableFetchImpl> {
 
 	private final FetchParent fetchParent;
 	private final FetchTiming fetchTiming;
@@ -145,21 +147,19 @@ public class EmbeddableFetchImpl extends AbstractFetchParent implements Embeddab
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final EmbeddableInitializer initializer = creationState.resolveInitializer(
-				getNavigablePath(),
-				getReferencedModePart(),
-				() -> buildEmbeddableFetchInitializer( parentAccess, this, creationState )
-		).asEmbeddableInitializer();
-
-		assert initializer != null;
-
-		return new EmbeddableAssembler( initializer );
+		return new EmbeddableAssembler( creationState.resolveInitializer( this, parentAccess, this ).asEmbeddableInitializer() );
 	}
 
-	protected Initializer buildEmbeddableFetchInitializer(
+	@Override
+	public Initializer createInitializer(
+			EmbeddableFetchImpl resultGraphNode,
 			FetchParentAccess parentAccess,
-				EmbeddableResultGraphNode embeddableFetch,
 			AssemblerCreationState creationState) {
+		return resultGraphNode.createInitializer( parentAccess, creationState );
+	}
+
+	@Override
+	public EmbeddableInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
 		return new EmbeddableFetchInitializer( parentAccess, this, creationState );
 	}
 

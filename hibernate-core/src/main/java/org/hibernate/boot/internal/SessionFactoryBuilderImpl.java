@@ -14,6 +14,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -282,6 +283,12 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	@Override
 	public SessionFactoryBuilder applyQueryCacheSupport(boolean enabled) {
 		this.optionsBuilder.enableQueryCacheSupport( enabled );
+		return this;
+	}
+
+	@Override
+	public SessionFactoryBuilder applyQueryCacheLayout(CacheLayout cacheLayout) {
+		this.optionsBuilder.applyQueryCacheLayout( cacheLayout );
 		return this;
 	}
 

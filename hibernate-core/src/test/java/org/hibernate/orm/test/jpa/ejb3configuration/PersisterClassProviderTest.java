@@ -730,6 +730,16 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public boolean useShallowQueryCacheLayout() {
+			return false;
+		}
+
+		@Override
+		public boolean storeDiscriminatorInShallowQueryCacheLayout() {
+			return false;
+		}
+
+		@Override
 		public Iterable<UniqueKeyEntry> uniqueKeyEntries() {
 			return Collections.emptyList();
 		}

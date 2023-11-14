@@ -8,37 +8,43 @@ package org.hibernate.sql.results.graph.entity.internal;
 
 import java.util.function.Consumer;
 
-import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
+import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
-import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptableOrNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-public abstract class AbstractBatchEntitySelectFetchInitializer extends AbstractFetchParentAccess
-		implements EntityInitializer {
+public abstract class AbstractBatchEntitySelectFetchInitializer implements EntityInitializer {
 
 	protected final FetchParentAccess parentAccess;
 	private final NavigablePath navigablePath;
+	private final FetchParentAccess owningParent;
+	private final EntityMappingType ownedModelPartDeclaringType;
+	private final boolean isPartOfKey;
 
 	protected final EntityPersister concreteDescriptor;
 	protected final DomainResultAssembler<?> identifierAssembler;
 	protected final ToOneAttributeMapping referencedModelPart;
 	protected final EntityInitializer firstEntityInitializer;
 
+	protected boolean parentShallowCached;
+
+	// per-row state
 	protected Object initializedEntityInstance;
 	protected EntityKey entityKey;
 
@@ -53,6 +59,9 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 		this.parentAccess = parentAccess;
 		this.referencedModelPart = referencedModelPart;
 		this.navigablePath = fetchedNavigable;
+		this.isPartOfKey = Initializer.isPartOfKey( fetchedNavigable, parentAccess );
+		this.owningParent = FetchParentAccess.determineOwningParent( parentAccess );
+		this.ownedModelPartDeclaringType = FetchParentAccess.determineOwnedModelPartDeclaringType( referencedModelPart, parentAccess, owningParent );
 		this.concreteDescriptor = concreteDescriptor;
 		this.identifierAssembler = identifierAssembler;
 		this.firstEntityInitializer = parentAccess.findFirstEntityInitializer();
@@ -69,7 +78,13 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	}
 
 	@Override
-	public void resolveKey(RowProcessingState rowProcessingState) {
+	public boolean isPartOfKey() {
+		return isPartOfKey;
+	}
+
+	@Override
+	public boolean isResultInitializer() {
+		return false;
 	}
 
 	@Override
@@ -78,15 +93,12 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 
 	protected abstract void registerResolutionListener();
 
-	protected void resolveKey(
-			RowProcessingState rowProcessingState,
-			ToOneAttributeMapping referencedModelPart,
-			FetchParentAccess parentAccess) {
-
+	@Override
+	public void resolveKey(RowProcessingState rowProcessingState) {
 		if ( state != State.UNINITIALIZED ) {
 			return;
 		}
-		if ( !isAttributeAssignableToConcreteDescriptor( parentAccess, referencedModelPart ) ) {
+		if ( parentShallowCached || shouldSkipInitializer( rowProcessingState ) ) {
 			state = State.MISSING;
 			return;
 		}
@@ -110,25 +122,9 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 			return holder.getEntity();
 		}
 		// we need to register a resolution listener only if there is not an already initialized instance
-		// or an instance that another initialzier is loading
+		// or an instance that another initializer is loading
 		registerResolutionListener();
 		return null;
-	}
-
-	private boolean isInitialized(Object entity) {
-		final PersistentAttributeInterceptable attributeInterceptable = asPersistentAttributeInterceptableOrNull(
-				entity );
-		if ( attributeInterceptable == null ) {
-			return true;
-		}
-		final PersistentAttributeInterceptor interceptor =
-				attributeInterceptable.$$_hibernate_getInterceptor();
-		if ( interceptor instanceof EnhancementAsProxyLazinessInterceptor ) {
-			return ( (EnhancementAsProxyLazinessInterceptor) interceptor ).isInitialized();
-		}
-		else {
-			return true;
-		}
 	}
 
 	protected void registerToBatchFetchQueue(RowProcessingState rowProcessingState) {
@@ -138,11 +134,34 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	}
 
 	@Override
+	public void initializeInstanceFromParent(Object parentInstance, RowProcessingState rowProcessingState) {
+		final AttributeMapping attributeMapping = getInitializedPart().asAttributeMapping();
+		final Object instance = attributeMapping != null
+				? attributeMapping.getValue( parentInstance )
+				: parentInstance;
+		final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( instance );
+		if ( lazyInitializer != null && lazyInitializer.isUninitialized() ) {
+			entityKey = new EntityKey( lazyInitializer.getIdentifier(), concreteDescriptor );
+			registerToBatchFetchQueue( rowProcessingState );
+		}
+		state = State.INITIALIZED;
+	}
+
+	@Override
 	public void finishUpRow(RowProcessingState rowProcessingState) {
 		initializedEntityInstance = null;
 		entityKey = null;
 		state = State.UNINITIALIZED;
-		clearResolutionListeners();
+	}
+
+	@Override
+	public void markShallowCached() {
+		parentShallowCached = true;
+	}
+
+	@Override
+	public void endLoading(ExecutionContext executionContext) {
+		parentShallowCached = false;
 	}
 
 	@Override
@@ -153,26 +172,6 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	@Override
 	public Object getEntityInstance() {
 		return initializedEntityInstance;
-	}
-
-	@Override
-	public EntityKey getEntityKey() {
-		return entityKey;
-	}
-
-	@Override
-	public Object getParentKey() {
-		return findFirstEntityInitializer().getEntityKey().getIdentifier();
-	}
-
-	@Override
-	public void registerResolutionListener(Consumer<Object> listener) {
-		if ( initializedEntityInstance != null ) {
-			listener.accept( initializedEntityInstance );
-		}
-		else {
-			super.registerResolutionListener( listener );
-		}
 	}
 
 	protected static Object loadInstance(
@@ -205,15 +204,43 @@ public abstract class AbstractBatchEntitySelectFetchInitializer extends Abstract
 	}
 
 	@Override
+	public @Nullable FetchParentAccess getOwningParent() {
+		return owningParent;
+	}
+
+	@Override
+	public @Nullable EntityMappingType getOwnedModelPartDeclaringType() {
+		return ownedModelPartDeclaringType;
+	}
+
+	@Override
 	public EntityPersister getConcreteDescriptor() {
 		return concreteDescriptor;
 	}
 
-	enum State {
+	protected enum State {
 		UNINITIALIZED,
 		MISSING,
 		KEY_RESOLVED,
 		INITIALIZED
+	}
+
+	@Override
+	public EntityKey getEntityKey() {
+		throw new UnsupportedOperationException(
+				"This should never happen, because this initializer has not child initializers" );
+	}
+
+	@Override
+	public Object getParentKey() {
+		throw new UnsupportedOperationException(
+				"This should never happen, because this initializer has not child initializers" );
+	}
+
+	@Override
+	public void registerResolutionListener(Consumer<Object> listener) {
+		throw new UnsupportedOperationException(
+				"This should never happen, because this initializer has not child initializers" );
 	}
 
 }

@@ -60,6 +60,14 @@ public interface ExecutionContext {
 		return null;
 	}
 
+	default String getEntityUniqueKeyAttributePath() {
+		return null;
+	}
+
+	default Object getEntityUniqueKey() {
+		return null;
+	}
+
 	default EntityMappingType getRootEntityDescriptor() {
 		return null;
 	}

@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph.tuple;
 
+import java.util.BitSet;
+
 import org.hibernate.Internal;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
@@ -24,7 +26,7 @@ public class TupleResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 
 	private final NavigablePath navigablePath;
 
-	private final DomainResultAssembler<T> assembler;
+	private final TupleResultAssembler<T> assembler;
 
 	public TupleResult(
 			int[] jdbcValuesArrayPositions,
@@ -74,5 +76,12 @@ public class TupleResult<T> implements DomainResult<T>, BasicResultGraphNode<T> 
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
 		return assembler;
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		for ( int valuesArrayPosition : assembler.getValuesArrayPositions() ) {
+			valueIndexes.set( valuesArrayPosition );
+		}
 	}
 }

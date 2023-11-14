@@ -8,7 +8,6 @@ package org.hibernate.sql.results.internal;
 
 import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.engine.spi.EntityHolder;
-import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.spi.NavigablePath;
@@ -25,6 +24,8 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValues;
 import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.sql.results.spi.RowReader;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Standard RowProcessingState implementation
@@ -134,6 +135,11 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 	}
 
 	@Override
+	public void finishRowProcessing(boolean wasAdded) {
+		jdbcValues.finishRowProcessing( this, wasAdded );
+	}
+
+	@Override
 	public QueryOptions getQueryOptions() {
 		return executionContext.getQueryOptions();
 	}
@@ -174,6 +180,16 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 	}
 
 	@Override
+	public String getEntityUniqueKeyAttributePath() {
+		return executionContext.getEntityUniqueKeyAttributePath();
+	}
+
+	@Override
+	public Object getEntityUniqueKey() {
+		return executionContext.getEntityUniqueKey();
+	}
+
+	@Override
 	public EntityMappingType getRootEntityDescriptor() {
 		return executionContext.getRootEntityDescriptor();
 	}
@@ -194,7 +210,7 @@ public class RowProcessingStateStandardImpl extends BaseExecutionContext impleme
 	}
 
 	@Override
-	public Initializer resolveInitializer(NavigablePath path) {
+	public Initializer resolveInitializer(@Nullable NavigablePath path) {
 		return this.initializers.resolveInitializer( path );
 	}
 

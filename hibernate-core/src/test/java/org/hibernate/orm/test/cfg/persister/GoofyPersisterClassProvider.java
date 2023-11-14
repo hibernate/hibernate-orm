@@ -751,6 +751,16 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
+		public boolean useShallowQueryCacheLayout() {
+			return false;
+		}
+
+		@Override
+		public boolean storeDiscriminatorInShallowQueryCacheLayout() {
+			return false;
+		}
+
+		@Override
 		public Iterable<UniqueKeyEntry> uniqueKeyEntries() {
 			return Collections.emptyList();
 		}
@@ -884,6 +894,11 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 
 		public CacheEntryStructure getCacheEntryStructure() {
 			return null;  //To change body of implemented methods use File | Settings | File Templates.
+		}
+
+		@Override
+		public boolean useShallowQueryCacheLayout() {
+			return false;
 		}
 
 		public CollectionType getCollectionType() {

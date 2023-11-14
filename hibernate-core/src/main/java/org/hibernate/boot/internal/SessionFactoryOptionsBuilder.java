@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
@@ -24,6 +25,7 @@ import org.hibernate.Interceptor;
 import org.hibernate.SessionEventListener;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -126,6 +128,7 @@ import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SQL_COMMENTS;
 import static org.hibernate.cfg.AvailableSettings.USE_STRUCTURED_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SUBSELECT_FETCH;
+import static org.hibernate.cfg.CacheSettings.QUERY_CACHE_LAYOUT;
 import static org.hibernate.engine.config.spi.StandardConverters.BOOLEAN;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
@@ -228,6 +231,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	// Caching
 	private boolean secondLevelCacheEnabled;
 	private boolean queryCacheEnabled;
+	private CacheLayout queryCacheLayout;
 	private TimestampsCacheFactory timestampsCacheFactory;
 	private String cacheRegionPrefix;
 	private boolean minimalPutsEnabled;
@@ -442,6 +446,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		if ( !(regionFactory instanceof NoCachingRegionFactory) ) {
 			this.secondLevelCacheEnabled = configurationService.getSetting( USE_SECOND_LEVEL_CACHE, BOOLEAN, true );
 			this.queryCacheEnabled = configurationService.getSetting( USE_QUERY_CACHE, BOOLEAN, false );
+			this.queryCacheLayout = configurationService.getSetting(
+					QUERY_CACHE_LAYOUT,
+					value -> CacheLayout.valueOf( value.toString().toUpperCase( Locale.ROOT ) ),
+					CacheLayout.FULL
+			);
 			this.timestampsCacheFactory = strategySelector.resolveDefaultableStrategy(
 					TimestampsCacheFactory.class,
 					configurationSettings.get( QUERY_CACHE_FACTORY ),
@@ -467,6 +476,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		else {
 			this.secondLevelCacheEnabled = false;
 			this.queryCacheEnabled = false;
+			this.queryCacheLayout = CacheLayout.AUTO;
 			this.timestampsCacheFactory = null;
 			this.cacheRegionPrefix = null;
 			this.minimalPutsEnabled = false;
@@ -1049,6 +1059,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public CacheLayout getQueryCacheLayout() {
+		return queryCacheLayout;
+	}
+
+	@Override
 	public TimestampsCacheFactory getTimestampsCacheFactory() {
 		return timestampsCacheFactory;
 	}
@@ -1426,6 +1441,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	public void enableQueryCacheSupport(boolean enabled) {
 		this.queryCacheEnabled = enabled;
+	}
+
+	public void applyQueryCacheLayout(CacheLayout queryCacheLayout) {
+		this.queryCacheLayout = queryCacheLayout;
 	}
 
 	public void applyTimestampsCacheFactory(TimestampsCacheFactory factory) {

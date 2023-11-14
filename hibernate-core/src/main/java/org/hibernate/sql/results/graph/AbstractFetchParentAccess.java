@@ -10,12 +10,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+import org.hibernate.sql.exec.spi.ExecutionContext;
+
 /**
  * Base support for FetchParentAccess implementations.  Mainly adds support for
  * registering and managing resolution listeners
  */
 public abstract class AbstractFetchParentAccess implements FetchParentAccess {
 	private List<Consumer<Object>> listeners;
+	private boolean parentShallowCached;
 
 	@Override
 	public void registerResolutionListener(Consumer<Object> listener) {
@@ -42,5 +45,19 @@ public abstract class AbstractFetchParentAccess implements FetchParentAccess {
 		}
 
 		listeners.clear();
+	}
+
+	protected boolean isParentShallowCached() {
+		return parentShallowCached;
+	}
+
+	@Override
+	public void markShallowCached() {
+		parentShallowCached = true;
+	}
+
+	@Override
+	public void endLoading(ExecutionContext executionContext) {
+		parentShallowCached = false;
 	}
 }

@@ -6,12 +6,11 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import java.util.List;
-
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.NonAggregatedIdentifierMapping;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
@@ -28,7 +27,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.Initializer;
-import org.hibernate.sql.results.graph.embeddable.AbstractEmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableLoadingLogger;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
@@ -36,7 +34,8 @@ import org.hibernate.sql.results.graph.entity.EntityInitializer;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
-import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.sql.results.graph.entity.internal.BatchEntityInsideEmbeddableSelectFetchInitializer.BATCH_PROPERTY;
 
 /**
@@ -291,6 +290,21 @@ public abstract class AbstractNonAggregatedIdentifierMappingInitializer extends 
 		state = State.INITIAL;
 
 		clearResolutionListeners();
+	}
+
+	@Override
+	public boolean isPartOfKey() {
+		return true;
+	}
+
+	@Override
+	public @Nullable FetchParentAccess getOwningParent() {
+		return fetchParentAccess;
+	}
+
+	@Override
+	public @Nullable EntityMappingType getOwnedModelPartDeclaringType() {
+		return embedded.findContainingEntityMapping();
 	}
 
 	@Override

@@ -230,9 +230,11 @@ public class OutputsImpl implements Outputs {
 					jdbcValues
 			);
 
+			rowReader.getInitializersList().startLoading( rowProcessingState );
+
 			while ( rowProcessingState.next() ) {
 				results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
-				rowProcessingState.finishRowProcessing();
+				rowProcessingState.finishRowProcessing( true );
 			}
 			if ( resultSetMapping.getNumberOfResultBuilders() == 0
 					&& procedureCall.isFunctionCall()

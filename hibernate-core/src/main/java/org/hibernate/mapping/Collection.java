@@ -18,6 +18,7 @@ import java.util.function.Supplier;
 
 import org.hibernate.FetchMode;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
@@ -60,6 +61,7 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 	private boolean subselectLoadable;
 	private String cacheConcurrencyStrategy;
 	private String cacheRegionName;
+	private CacheLayout queryCacheLayout;
 	private String orderBy;
 	private String where;
 	private String manyToManyWhere;
@@ -566,6 +568,14 @@ public abstract class Collection implements Fetchable, Value, Filterable, SoftDe
 
 	public void setCacheRegionName(String cacheRegionName) {
 		this.cacheRegionName = StringHelper.nullIfEmpty( cacheRegionName );
+	}
+
+	public CacheLayout getQueryCacheLayout() {
+		return queryCacheLayout;
+	}
+
+	public void setQueryCacheLayout(CacheLayout queryCacheLayout) {
+		this.queryCacheLayout = queryCacheLayout;
 	}
 
 

@@ -11,6 +11,7 @@ import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
@@ -42,16 +43,30 @@ public class ArrayInitializerProducer implements CollectionInitializerProducer {
 			DomainResultAssembler<?> collectionKeyAssembler,
 			DomainResultAssembler<?> collectionValueKeyAssembler,
 			AssemblerCreationState creationState) {
-		//noinspection unchecked
+		throw new UnsupportedOperationException( "Use the non-deprecated method variant instead." );
+	}
+
+	@Override
+	public CollectionInitializer produceInitializer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping attribute,
+			FetchParentAccess parentAccess,
+			LockMode lockMode,
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState) {
 		return new ArrayInitializer(
 				navigablePath,
 				arrayDescriptor,
 				parentAccess,
 				lockMode,
-				collectionKeyAssembler,
-				collectionValueKeyAssembler,
-				(DomainResultAssembler<Integer>) listIndexFetch.createAssembler( parentAccess, creationState ),
-				elementFetch.createAssembler( parentAccess, creationState )
+				collectionKeyResult,
+				collectionValueKeyResult,
+				listIndexFetch,
+				elementFetch,
+				isResultInitializer,
+				creationState
 		);
 	}
 }

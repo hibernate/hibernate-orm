@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
+import java.util.BitSet;
+
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 
@@ -23,5 +25,10 @@ public interface EntityFetch extends EntityResultGraphNode, Fetch {
 	@Override
 	default FetchParent asFetchParent() {
 		return this;
+	}
+
+	@Override
+	default void collectValueIndexesToCache(BitSet valueIndexes) {
+		EntityResultGraphNode.super.collectValueIndexesToCache( valueIndexes );
 	}
 }

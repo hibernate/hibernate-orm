@@ -64,11 +64,7 @@ public class BatchEntityInsideEmbeddableSelectFetchInitializer extends AbstractB
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( state == State.INITIALIZED ) {
-			return;
-		}
-		resolveKey( rowProcessingState, referencedModelPart, parentAccess );
-		if ( entityKey == null ) {
+		if ( state != State.KEY_RESOLVED ) {
 			return;
 		}
 		state = State.INITIALIZED;

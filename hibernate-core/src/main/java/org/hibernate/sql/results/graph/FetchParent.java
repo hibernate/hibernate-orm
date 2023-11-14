@@ -6,6 +6,8 @@
  */
 package org.hibernate.sql.results.graph;
 
+import java.util.BitSet;
+
 import org.hibernate.Incubating;
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
@@ -92,6 +94,15 @@ public interface FetchParent extends DomainResultGraphNode {
 	boolean hasJoinFetches();
 
 	boolean containsCollectionFetches();
+
+	@Override
+	default void collectValueIndexesToCache(BitSet valueIndexes) {
+		for ( Fetch fetch : getFetches() ) {
+			fetch.collectValueIndexesToCache( valueIndexes );
+		}
+	}
+
+	Initializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState);
 
 	default FetchParent getRoot() {
 		if ( this instanceof Fetch ) {

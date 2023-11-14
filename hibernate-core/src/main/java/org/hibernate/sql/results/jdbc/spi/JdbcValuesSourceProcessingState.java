@@ -50,12 +50,6 @@ public interface JdbcValuesSourceProcessingState {
 
 	List<EntityHolder> getReloadedEntityHolders();
 
-	void registerInitializer(
-			EntityUniqueKey entityKey,
-			Initializer initializer);
-
-	Initializer findInitializer(EntityUniqueKey entityKey);
-
 	/**
 	 * Find a LoadingCollectionEntry locally to this context.
 	 *

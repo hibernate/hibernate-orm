@@ -13,6 +13,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
+import org.hibernate.Incubating;
 import org.hibernate.MappingException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntryStructure;
@@ -130,6 +131,9 @@ public interface CollectionPersister extends Restrictable {
 	 * Get the structure used to store data into the collection's {@linkplain #getCacheAccessStrategy() cache region}
 	 */
 	CacheEntryStructure getCacheEntryStructure();
+
+	@Incubating
+	boolean useShallowQueryCacheLayout();
 
 	/**
 	 * Return the element class of an array, or null otherwise

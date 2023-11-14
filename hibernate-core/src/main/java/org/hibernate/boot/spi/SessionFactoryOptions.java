@@ -15,6 +15,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -165,6 +166,9 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	boolean isSecondLevelCacheEnabled();
 
 	boolean isQueryCacheEnabled();
+
+	@Incubating
+	CacheLayout getQueryCacheLayout();
 
 	TimestampsCacheFactory getTimestampsCacheFactory();
 

@@ -1252,6 +1252,12 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	boolean canUseReferenceCacheEntries();
 
+	@Incubating
+	boolean useShallowQueryCacheLayout();
+
+	@Incubating
+	boolean storeDiscriminatorInShallowQueryCacheLayout();
+
 	/**
 	 * The property name of the "special" identifier property in HQL
 	 *

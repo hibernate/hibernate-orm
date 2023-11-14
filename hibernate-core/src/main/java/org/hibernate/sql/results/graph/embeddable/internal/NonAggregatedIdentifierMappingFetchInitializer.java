@@ -24,6 +24,11 @@ public class NonAggregatedIdentifierMappingFetchInitializer
 	}
 
 	@Override
+	public boolean isResultInitializer() {
+		return false;
+	}
+
+	@Override
 	public Object getParentKey() {
 		return findFirstEntityDescriptorAccess().getParentKey();
 	}

@@ -13,6 +13,8 @@ import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
 import org.hibernate.sql.results.spi.RowReader;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * State pertaining to the processing of a single "row" of a JdbcValuesSource
  *
@@ -57,11 +59,21 @@ public interface RowProcessingState extends ExecutionContext {
 
 	/**
 	 * Callback at the end of processing the current "row"
+	 *
+	 * @deprecated Use {@link #finishRowProcessing(boolean)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	void finishRowProcessing();
+
+	/**
+	 * Callback at the end of processing the current "row"
+	 */
+	default void finishRowProcessing(boolean wasAdded) {
+		finishRowProcessing();
+	}
 
 	/**
 	 * Locate the Initializer registered for the given path
 	 */
-	Initializer resolveInitializer(NavigablePath path);
+	Initializer resolveInitializer(@Nullable NavigablePath path);
 }

@@ -326,7 +326,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 		try {
 			currentRow = rowReader.readRow( rowProcessingState, getProcessingOptions() );
 
-			rowProcessingState.finishRowProcessing();
+			rowProcessingState.finishRowProcessing( true );
 
 			while ( !resultProcessed ) {
 				if ( rowProcessingState.next() ) {
@@ -338,7 +338,7 @@ public class FetchingScrollableResultsImpl<R> extends AbstractScrollableResults<
 					}
 					else {
 						rowReader.readRow( rowProcessingState, getProcessingOptions() );
-						rowProcessingState.finishRowProcessing();
+						rowProcessingState.finishRowProcessing( false );
 					}
 				}
 				else {

@@ -275,8 +275,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
+		assert jdbcServices != null;
+		assert configurationService != null;
+
+		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
+
 		final Map<String,Object> configurationSettings = new HashMap<>();
-		configurationSettings.putAll( map( jdbcServices.getJdbcEnvironment().getDialect().getDefaultProperties() ) );
+		configurationSettings.putAll( map( dialect.getDefaultProperties() ) );
 		configurationSettings.putAll( configurationService.getSettings() );
 
 		this.beanManagerReference = NullnessHelper.coalesceSuppliedValues(
@@ -488,7 +493,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 
 		this.jdbcBatchSize = getInt( STATEMENT_BATCH_SIZE, configurationSettings, 1 );
-		if ( !meta.supportsBatchUpdates() ) {
+		if ( disallowBatchUpdates( dialect, meta ) ) {
 			this.jdbcBatchSize = 0;
 		}
 
@@ -583,6 +588,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationSettings,
 				Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE
 		);
+	}
+
+	private boolean disallowBatchUpdates(Dialect dialect, ExtractedDatabaseMetaData meta) {
+		final Boolean dialectAnswer = dialect.supportsBatchUpdates();
+		if ( dialectAnswer != null ) {
+			return dialectAnswer;
+		}
+		return !meta.supportsBatchUpdates();
 	}
 
 	@SuppressWarnings("unchecked")

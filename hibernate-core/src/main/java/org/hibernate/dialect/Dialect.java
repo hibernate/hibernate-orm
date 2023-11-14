@@ -4953,6 +4953,30 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this Dialect support {@linkplain PreparedStatement#addBatch() batch updates}.
+	 *
+	 * @return {@code true} indicates it does; {@code false} indicates it does not; {@code null} indicates
+	 * it might and that database-metadata should be consulted.
+	 *
+	 * @see org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData#supportsBatchUpdates
+	 */
+	public Boolean supportsBatchUpdates() {
+		return null;
+	}
+
+	/**
+	 * Does this Dialect support {@linkplain PreparedStatement#addBatch() batch updates}.
+	 *
+	 * @return {@code true} indicates it does; {@code false} indicates it does not; {@code null} indicates
+	 * it might and that database-metadata should be consulted
+	 *
+	 * @see org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData#supportsRefCursors
+	 */
+	public Boolean supportsRefCursors() {
+		return null;
+	}
+
+	/**
 	 * Pluggable strategy for determining the {@link Size} to use for
 	 * columns of a given SQL type.
 	 * <p>

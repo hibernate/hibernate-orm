@@ -17,11 +17,13 @@ import java.util.List;
 import org.hibernate.Session;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategyJpaCompliantImpl;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.jdbc.Work;
 
 import org.hibernate.testing.junit4.BaseCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.JiraKey;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -142,6 +144,7 @@ public class AutoDiscoveryTest extends BaseCoreFunctionalTestCase {
 
 	@Test
 	@JiraKey( "HHH-16697" )
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase sum(39.74) returns Float" )
 	public void testAggregateQueryAutoDiscovery() {
 		Session session = openSession();
 		session.beginTransaction();

@@ -32,6 +32,8 @@ public class CommunityDialectSelector implements DialectSelector {
 				return Cache71Dialect.class;
 			case "CUBRID":
 				return CUBRIDDialect.class;
+			case "Altibase":
+				return AltibaseDialect.class;
 			case "DerbyTenFive":
 				return DerbyTenFiveDialect.class;
 			case "DerbyTenSix":

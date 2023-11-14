@@ -4,6 +4,7 @@ import java.util.Comparator;
 import java.util.Locale;
 
 import org.hibernate.annotations.JavaType;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -16,6 +17,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -62,6 +64,7 @@ public class OverrideStandardJavaTypeTest {
 	}
 
 	@Test
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'LANGUAGE' is not escaped even though autoQuoteKeywords is enabled")
 	public void validateNative(SessionFactoryScope scope) {
 		final var id = scope.fromTransaction(
 				session -> {

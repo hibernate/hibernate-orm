@@ -18,6 +18,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -82,6 +83,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	@SuppressWarnings( {"deprecation"})
 	public void testLoading() {
 		// open a session, begin a transaction and lock row
@@ -99,6 +101,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testCriteria() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
@@ -122,6 +125,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testCriteriaAliasSpecific() {
 			// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {
@@ -147,6 +151,7 @@ public class LockModeTest extends BaseSessionFactoryFunctionalTest {
 	@Test
 	@RequiresDialectFeature( feature = DialectFeatureChecks.SupportsLockTimeouts.class )
 	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Can't commit transaction because Altibase closes socket after lock timeout")
 	public void testQuery() {
 		// open a session, begin a transaction and lock row
 		doInHibernate( this::sessionFactory, session -> {

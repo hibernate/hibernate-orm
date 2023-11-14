@@ -23,6 +23,7 @@ public class CommunityDialectSelectorTest {
 
 		testDialectNamingResolution( Cache71Dialect.class );
 		testDialectNamingResolution( CUBRIDDialect.class );
+		testDialectNamingResolution( AltibaseDialect.class );
 
 		testDialectNamingResolution( DerbyTenFiveDialect.class );
 		testDialectNamingResolution( DerbyTenSixDialect.class );

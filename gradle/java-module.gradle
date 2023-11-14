@@ -128,6 +128,9 @@ dependencies {
 		testRuntimeOnly dbLibs.oracleXml
 		testRuntimeOnly dbLibs.oracleXmlParser
 	}
+	else if ( db.startsWith( 'altibase' ) ) {
+		testRuntimeOnly dbLibs.altibase
+	}
 
 	annotationProcessor libs.loggingProcessor
 	annotationProcessor libs.logging

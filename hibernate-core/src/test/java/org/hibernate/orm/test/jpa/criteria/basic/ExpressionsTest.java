@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.Session;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
@@ -308,6 +309,7 @@ public class ExpressionsTest extends AbstractMetamodelSpecificTest {
 
 	@Test @SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "numeric overflows")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "does not support extract(epoch)")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "datediff overflow limits")
 	public void testDateTimeOperations() {
 		HibernateCriteriaBuilder builder = (HibernateCriteriaBuilder) this.builder;
 		doInJPA(

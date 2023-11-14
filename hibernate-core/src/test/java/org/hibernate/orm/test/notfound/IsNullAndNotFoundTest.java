@@ -13,9 +13,11 @@ import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.hibernate.testing.orm.junit.Jira;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -253,6 +255,7 @@ public class IsNullAndNotFoundTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@Jira( "https://hibernate.atlassian.net/browse/HHH-17384" )
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "left join cannot be used inside exists clause")
 	public void testDeleteAdditionalPredicate() {
 		inspector.clear();
 

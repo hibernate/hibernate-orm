@@ -16,6 +16,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry.JavaService;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -40,6 +41,7 @@ import static org.hamcrest.Matchers.instanceOf;
 )
 @DomainModel
 @SessionFactory
+@RequiresDialect(H2Dialect.class)
 public class DiscoveredDialectResolverTests {
 	@Test
 	public void testRegistration(SessionFactoryScope scope) {

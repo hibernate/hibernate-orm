@@ -292,6 +292,14 @@ ext {
                         'jdbc.url'   : 'jdbc:firebirdsql://' + dbHost +'/hibernate_orm_test?charSet=utf-8;TRANSACTION_READ_COMMITTED=read_committed,rec_version,wait,lock_timeout=5',
                         'connection.init_sql' : ''
                 ],
+                altibase : [
+                        'db.dialect' : 'org.hibernate.community.dialect.AltibaseDialect',
+                        'jdbc.driver': 'Altibase.jdbc.driver.AltibaseDriver',
+                        'jdbc.user'  : 'sys',
+                        'jdbc.pass'  : 'manager',
+                        'connection.init_sql' : '',
+                        'jdbc.url'   : 'jdbc:Altibase://' + dbHost + ':20300/mydb?force_clob_bind=true'
+                ],
         ]
 }
 

@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import org.hibernate.annotations.GeneratedColumn;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HSQLDialect;
@@ -31,6 +32,7 @@ import static org.junit.Assert.assertEquals;
 @SkipForDialect(dialectClass = SybaseASEDialect.class)
 @SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 10, matchSubTypes = true)
 @SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 11, matchSubTypes = true) // 'generated always' was added in 12
+@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "generated always is not supported in Altibase")
 public class GeneratedAlwaysTest {
 
     @Test

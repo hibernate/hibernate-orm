@@ -7,11 +7,13 @@
 package org.hibernate.orm.test.annotations.idclass.xml;
 
 
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -26,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		annotatedClasses = HabitatSpeciesLink.class,
 		xmlMappings = "org/hibernate/orm/test/annotations/idclass/xml/HabitatSpeciesLink.xml"
 )
+@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "'link' is not escaped even though autoQuoteKeywords is enabled" )
 @SessionFactory
 public class IdClassXmlTest {
 	@Test

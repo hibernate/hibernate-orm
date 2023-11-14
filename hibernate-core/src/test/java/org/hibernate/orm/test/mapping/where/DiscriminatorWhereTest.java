@@ -9,11 +9,13 @@ package org.hibernate.orm.test.mapping.where;
 import java.util.Set;
 
 import org.hibernate.annotations.SQLRestriction;
+import org.hibernate.community.dialect.AltibaseDialect;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.DiscriminatorColumn;
@@ -33,6 +35,7 @@ import jakarta.persistence.Table;
 })
 @SessionFactory
 @JiraKey( "https://hibernate.atlassian.net/browse/HHH-14977" )
+@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 public class DiscriminatorWhereTest {
 	@Test
 	public void testAddDiscriminatedEntityToCollectionWithWhere(SessionFactoryScope scope) {

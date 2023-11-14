@@ -7,8 +7,8 @@
 package org.hibernate.orm.test.type;
 
 import java.util.Map;
-
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
@@ -77,6 +77,7 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
+	@SkipForDialect(value = AltibaseDialect.class, comment = "When length 0 byte array is inserted, Altibase returns with null")
 	public void testById() {
 		inSession( em -> {
 			TableWithEnumArrays tableRecord;
@@ -103,6 +104,7 @@ public class EnumArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
 	@SkipForDialect( value = AbstractHANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
+	@SkipForDialect(value = AltibaseDialect.class, comment = "When length 0 byte array is inserted, Altibase returns with null")
 	public void testQuery() {
 		inSession( em -> {
 			TypedQuery<TableWithEnumArrays> tq = em.createNamedQuery( "TableWithEnumArrays.JPQL.getByData", TableWithEnumArrays.class );

@@ -24,6 +24,7 @@ import org.hibernate.Session;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Nationalized;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.AbstractTransactSQLDialect;
@@ -128,6 +129,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "No support for the bit datatype so we use tinyint")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "No support for the bit datatype so we use number(1,0)")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for the bit datatype so we use char(1)")
 	public void booleanType() {
 		createEntityManagerFactory( BooleanEntity.class );
 		doTest( BooleanEntity.class, true );
@@ -137,6 +139,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "No support for the bit datatype so we use tinyint")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "No support for the bit datatype so we use number(1,0)")
 	@SkipForDialect(dialectClass = DB2Dialect.class, majorVersion = 10, reason = "No support for the bit datatype so we use smallint")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "No support for the bit datatype so we use char(1)")
 	public void bitType() {
 		createEntityManagerFactory( BitEntity.class );
 		doTest( BitEntity.class, false );
@@ -152,6 +155,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "No support for the tinyint datatype so we use smallint")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps tinyint to number")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "No support for the tinyint datatype so we use smallint")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps tinyint to smallint")
 	public void tinyintType() {
 		createEntityManagerFactory( TinyintEntity.class );
 		doTest( TinyintEntity.class, (byte)127 );
@@ -160,6 +164,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@Test
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Turns floats into doubles in result sets and advertises the type as double in the metadata")
 	public void floatType() {
 		createEntityManagerFactory( FloatEntity.class );
 		doTest( FloatEntity.class, 15516.125f );
@@ -182,6 +187,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of HANA")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
 	public void numericType() {
 		createEntityManagerFactory(
 				NumericEntity.class
@@ -196,6 +202,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = AbstractTransactSQLDialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of SQL Server and Sybase")
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "Value is too big for the maximum allowed precision of HANA")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Value is too big for the maximum allowed precision of Firebird")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Value is too big for the maximum allowed precision of Altibase")
 	public void decimalType() {
 		createEntityManagerFactory( DecimalEntity.class );
 		doTest( DecimalEntity.class, new BigDecimal( "5464384284258458485484848458.48465843584584684" )  );
@@ -217,6 +224,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 maps LONGVARCHAR to CLOB")
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase maps LONGVARCHAR to CLOB")
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA maps LONGVARCHAR to CLOB")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps LONGVARCHAR to CLOB")
 	public void longCharType() {
 		createEntityManagerFactory(
 				LongvarcharEntity.class
@@ -254,6 +262,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps LONGVARBINARY to BLOB")
 	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 maps LONGVARBINARY to BLOB")
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase maps LONGVARBINARY to BLOB")
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps LONGVARBINARY to BLOB")
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA maps LONGVARCHAR to BLOB")
 	public void longBinaryType() {
 		createEntityManagerFactory(
@@ -288,6 +297,7 @@ public class NativeQueryResultTypeAutoDiscoveryTest {
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle maps DATE and TIME to TIMESTAMP")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "EDB maps DATE and TIME to TIMESTAMP")
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Sybase maps DATE and TIME to TIMESTAMP", matchSubTypes = true)
+	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase maps DATE and TIME to TIMESTAMP")
 	public void dateTimeTypes() {
 		createEntityManagerFactory(
 				DateEntity.class,

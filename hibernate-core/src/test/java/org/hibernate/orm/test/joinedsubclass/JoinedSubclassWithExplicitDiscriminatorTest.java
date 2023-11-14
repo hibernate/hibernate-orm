@@ -15,6 +15,7 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 
@@ -22,6 +23,7 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 public class JoinedSubclassWithExplicitDiscriminatorTest {
 
 	@Test
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is a keyword in Altibase and escaped here")
 	public void metadataAssertions(SessionFactoryScope scope) {
         EntityPersister p = scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(Dog.class.getName());
 		assertNotNull( p );

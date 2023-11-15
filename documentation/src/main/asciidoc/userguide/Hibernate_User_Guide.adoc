@@ -49,6 +49,7 @@ include::Credits.adoc[]
 include::appendices/SettingsReference.adoc[]
 include::appendices/LegacyBasicTypeResolution.adoc[]
 include::appendices/Legacy_Native_Queries.adoc[]
+include::appendices/Monitoring.adoc[]
 
 include::Bibliography.adoc[]
 

@@ -1,0 +1,27 @@
+[appendix]
+[[appendix-monitoring-with-JFR]]
+== Monitoring with Java Flight Recorder
+:sourcedir: extras
+
+Hibernate can provide an integration with Java Flight Recorder in order to monitor low level events like:
+
+* opening and closing of a Hibernate Session
+* acquisition and release of a JDBC connection
+* ``PreparedStatement``s creation and execution
+* batching execution
+* second level cache PUT and GET operation
+* flush and partial flush execution
+* dirty check calculation
+
+[IMPORTANT]
+====
+To use the Java Flight Recorder integration, the application must include the `hibernate-jfr` jar on the classpath
+====
+
+[NOTE]
+====
+The `hibernate-jfr` integration requires JDK 17 (it should work also with JDK 11, but we haven't tested it) that also supports Java Flight Recorder Events.
+====
+
+
+

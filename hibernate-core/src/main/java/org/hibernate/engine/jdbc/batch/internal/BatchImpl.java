@@ -23,7 +23,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 
@@ -273,7 +273,7 @@ public class BatchImpl implements Batch {
 					if ( statementDetails.getMutatingTableDetails().isIdentifierTable() ) {
 						final int[] rowCounts;
 						final EventManager eventManager = jdbcSessionOwner.getEventManager();
-						final HibernateEvent jdbcBatchExecutionEvent = eventManager.beginJdbcBatchExecutionEvent();
+						final HibernateMonitoringEvent jdbcBatchExecutionEvent = eventManager.beginJdbcBatchExecutionEvent();
 						try {
 							observer.jdbcExecuteBatchStart();
 							rowCounts = statement.executeBatch();

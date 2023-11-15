@@ -29,7 +29,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.StringHelper;
@@ -988,7 +988,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final EventManager eventManager = session.getEventManager();
 		if ( persistenceContext.wasInsertedDuringTransaction( concreteDescriptor, entityIdentifier) ) {
 			boolean update = false;
-			final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 			try {
 				update = cacheAccess.update(
 						session,
@@ -1012,7 +1012,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		else {
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 			boolean put = false;
-			final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 				put = cacheAccess.putFromLoad(

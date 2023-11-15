@@ -23,7 +23,7 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -289,7 +289,7 @@ public class ResultsHelper {
 		if ( isPutFromLoad ) {
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 			final EventManager eventManager = session.getEventManager();
-			final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 			boolean put = false;
 			try {
 				eventListenerManager.cachePutStart();

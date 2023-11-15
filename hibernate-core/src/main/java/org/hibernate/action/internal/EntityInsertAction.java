@@ -18,7 +18,7 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitInsertEventListener;
@@ -164,7 +164,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	protected boolean cacheInsert(EntityPersister persister, Object ck) {
 		SharedSessionContractImplementor session = getSession();
 		final EventManager eventManager = session.getEventManager();
-		final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
+		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 		final EntityDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
 		boolean insert = false;
 		try {
@@ -256,7 +256,7 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		SharedSessionContractImplementor session = getSession();
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		final EventManager eventManager = session.getEventManager();
-		final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
+		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 		boolean afterInsert = false;
 		try {
 			eventListenerManager.cachePutStart();

@@ -24,7 +24,7 @@ import org.hibernate.engine.spi.Resolution;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdLogging;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -275,7 +275,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 					return;
 				}
 				boolean put = false;
-				final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
+				final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 				try {
 					put = cacheAccess.putFromLoad(
 							s,
@@ -307,7 +307,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 			}
 			case INSERT: {
 				boolean put = false;
-				final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
+				final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 
 				try {
 					put = cacheAccess.insert( s, cacheKey, id );
@@ -360,7 +360,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 
 				final SoftLock lock = cacheAccess.lockItem( s, cacheKey, null );
 				boolean put = false;
-				final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
+				final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 				try {
 					put = cacheAccess.update( s, cacheKey, id );
 					if ( put && statistics.isStatisticsEnabled() ) {
@@ -387,7 +387,7 @@ public class NaturalIdResolutionsImpl implements NaturalIdResolutions, Serializa
 							cacheAccess.unlockItem( s, previousCacheKey, removalLock );
 							if (success) {
 								boolean putAfterUpdate = false;
-								final HibernateEvent cachePutEventAfterUpdate = eventManager.beginCachePutEvent();
+								final HibernateMonitoringEvent cachePutEventAfterUpdate = eventManager.beginCachePutEvent();
 								try {
 									putAfterUpdate = cacheAccess.afterUpdate(
 											s,

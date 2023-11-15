@@ -17,62 +17,72 @@ import org.hibernate.service.JavaServiceLoadable;
 
 @JavaServiceLoadable
 @Incubating
+/**
+ * Defines the contract for monitoring low-level events
+ * involving interactions between the {@link Session} and the database
+ * or second-level cache.
+ *
+ * <p>
+ * <em>This an incubating API, subject to change.</em>
+ *
+ *
+ */
 public interface EventManager {
-	HibernateEvent beginSessionOpenEvent();
+	HibernateMonitoringEvent beginSessionOpenEvent();
 
 	void completeSessionOpenEvent(
-			HibernateEvent sessionOpenEvent,
+			HibernateMonitoringEvent sessionOpenEvent,
 			SharedSessionContractImplementor session);
 
-	HibernateEvent beginSessionClosedEvent();
+	HibernateMonitoringEvent beginSessionClosedEvent();
 
 	void completeSessionClosedEvent(
-			HibernateEvent sessionClosedEvent,
+			HibernateMonitoringEvent sessionClosedEvent,
 			SharedSessionContractImplementor session);
 
-	HibernateEvent beginJdbcConnectionAcquisitionEvent();
+	HibernateMonitoringEvent beginJdbcConnectionAcquisitionEvent();
 
 	void completeJdbcConnectionAcquisitionEvent(
-			HibernateEvent jdbcConnectionAcquisitionEvent,
+			HibernateMonitoringEvent jdbcConnectionAcquisitionEvent,
 			SharedSessionContractImplementor session,
 			Object tenantId);
 
-	HibernateEvent beginJdbcConnectionReleaseEvent();
+	HibernateMonitoringEvent beginJdbcConnectionReleaseEvent();
 
 	void completeJdbcConnectionReleaseEvent(
-			HibernateEvent jdbcConnectionReleaseEvent,
+			HibernateMonitoringEvent jdbcConnectionReleaseEvent,
 			SharedSessionContractImplementor session,
 			Object tenantId);
 
-	HibernateEvent beginJdbcPreparedStatementCreationEvent();
+	HibernateMonitoringEvent beginJdbcPreparedStatementCreationEvent();
 
 	void completeJdbcPreparedStatementCreationEvent(
-			HibernateEvent jdbcPreparedStatementCreation,
+			HibernateMonitoringEvent jdbcPreparedStatementCreation,
 			String preparedStatementSql);
 
-	HibernateEvent beginJdbcPreparedStatementExecutionEvent();
+	HibernateMonitoringEvent beginJdbcPreparedStatementExecutionEvent();
 
 	void completeJdbcPreparedStatementExecutionEvent(
-			HibernateEvent jdbcPreparedStatementExecutionEvent,
+			HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent,
 			String preparedStatementSql);
 
-	HibernateEvent beginJdbcBatchExecutionEvent();
+	HibernateMonitoringEvent beginJdbcBatchExecutionEvent();
 
 	void completeJdbcBatchExecutionEvent(
-			HibernateEvent jdbcBatchExecutionEvent,
+			HibernateMonitoringEvent jdbcBatchExecutionEvent,
 			String statementSql);
 
-	HibernateEvent beginCachePutEvent();
+	HibernateMonitoringEvent beginCachePutEvent();
 
 	void completeCachePutEvent(
-			HibernateEvent cachePutEvent,
+			HibernateMonitoringEvent cachePutEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			boolean cacheContentChanged,
 			CacheActionDescription description);
 
 	void completeCachePutEvent(
-			HibernateEvent cachePutEvent,
+			HibernateMonitoringEvent cachePutEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
 			EntityPersister persister,
@@ -80,7 +90,7 @@ public interface EventManager {
 			CacheActionDescription description);
 
 	void completeCachePutEvent(
-			HibernateEvent cachePutEvent,
+			HibernateMonitoringEvent cachePutEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
 			EntityPersister persister,
@@ -89,23 +99,23 @@ public interface EventManager {
 			CacheActionDescription description);
 
 	void completeCachePutEvent(
-			HibernateEvent cachePutEvent,
+			HibernateMonitoringEvent cachePutEvent,
 			SharedSessionContractImplementor session,
 			CachedDomainDataAccess cachedDomainDataAccess,
 			CollectionPersister persister,
 			boolean cacheContentChanged,
 			CacheActionDescription description);
 
-	HibernateEvent beginCacheGetEvent();
+	HibernateMonitoringEvent beginCacheGetEvent();
 
 	void completeCacheGetEvent(
-			HibernateEvent cacheGetEvent,
+			HibernateMonitoringEvent cacheGetEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			boolean hit);
 
 	void completeCacheGetEvent(
-			HibernateEvent cacheGetEvent,
+			HibernateMonitoringEvent cacheGetEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			EntityPersister persister,
@@ -113,33 +123,33 @@ public interface EventManager {
 			boolean hit);
 
 	void completeCacheGetEvent(
-			HibernateEvent cacheGetEvent,
+			HibernateMonitoringEvent cacheGetEvent,
 			SharedSessionContractImplementor session,
 			Region region,
 			CollectionPersister persister,
 			boolean hit);
 
-	HibernateEvent beginFlushEvent();
+	HibernateMonitoringEvent beginFlushEvent();
 
 	void completeFlushEvent(
-			HibernateEvent flushEvent,
+			HibernateMonitoringEvent flushEvent,
 			org.hibernate.event.spi.FlushEvent event);
 
 	void completeFlushEvent(
-			HibernateEvent flushEvent,
+			HibernateMonitoringEvent flushEvent,
 			org.hibernate.event.spi.FlushEvent event,
 			boolean autoFlush);
 
-	HibernateEvent beginPartialFlushEvent();
+	HibernateMonitoringEvent beginPartialFlushEvent();
 
 	void completePartialFlushEvent(
-			HibernateEvent flushEvent,
+			HibernateMonitoringEvent flushEvent,
 			AutoFlushEvent event);
 
-	HibernateEvent beginDirtyCalculationEvent();
+	HibernateMonitoringEvent beginDirtyCalculationEvent();
 
 	void completeDirtyCalculationEvent(
-			HibernateEvent dirtyCalculationEvent,
+			HibernateMonitoringEvent dirtyCalculationEvent,
 			SharedSessionContractImplementor session,
 			EntityPersister persister,
 			EntityEntry entry,

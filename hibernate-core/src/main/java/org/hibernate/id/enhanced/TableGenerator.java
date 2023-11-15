@@ -35,7 +35,7 @@ import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.id.ExportableColumn;
 import org.hibernate.id.IdentifierGeneratorHelper;
 import org.hibernate.id.IntegralDataTypeHolder;
@@ -669,7 +669,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			SharedSessionContractImplementor session) throws SQLException {
 		logger.logStatement( sql, FormatStyle.BASIC.getFormatter() );
 		final EventManager eventManager = session.getEventManager();
-		final HibernateEvent jdbcPreparedStatementCreation = eventManager.beginJdbcPreparedStatementCreationEvent();
+		final HibernateMonitoringEvent jdbcPreparedStatementCreation = eventManager.beginJdbcPreparedStatementCreationEvent();
 		try {
 			listener.jdbcPrepareStatementStart();
 			return connection.prepareStatement( sql );
@@ -686,7 +686,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
 		final EventManager eventManager = session.getEventManager();
-		final HibernateEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			listener.jdbcExecuteStatementStart();
 			return ps.executeUpdate();
@@ -703,7 +703,7 @@ public class TableGenerator implements PersistentIdentifierGenerator {
 			String sql,
 			SharedSessionContractImplementor session) throws SQLException {
 		final EventManager eventManager = session.getEventManager();
-		final HibernateEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			listener.jdbcExecuteStatementStart();
 			return ps.executeQuery();

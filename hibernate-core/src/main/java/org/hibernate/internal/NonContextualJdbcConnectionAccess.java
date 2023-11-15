@@ -16,7 +16,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 
 /**
  * @author Steve Ebersole
@@ -40,7 +40,7 @@ public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, 
 	@Override
 	public Connection obtainConnection() throws SQLException {
 		final EventManager eventManager = session.getEventManager();
-		final HibernateEvent jdbcConnectionAcquisitionEvent = eventManager.beginJdbcConnectionAcquisitionEvent();
+		final HibernateMonitoringEvent jdbcConnectionAcquisitionEvent = eventManager.beginJdbcConnectionAcquisitionEvent();
 		try {
 			listener.jdbcConnectionAcquisitionStart();
 			return connectionProvider.getConnection();
@@ -58,7 +58,7 @@ public class NonContextualJdbcConnectionAccess implements JdbcConnectionAccess, 
 	@Override
 	public void releaseConnection(Connection connection) throws SQLException {
 		final EventManager eventManager = session.getEventManager();
-		final HibernateEvent jdbcConnectionReleaseEvent = eventManager.beginJdbcConnectionReleaseEvent();
+		final HibernateMonitoringEvent jdbcConnectionReleaseEvent = eventManager.beginJdbcConnectionReleaseEvent();
 		try {
 			listener.jdbcConnectionReleaseStart();
 			connectionProvider.closeConnection( connection );

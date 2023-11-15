@@ -20,7 +20,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.PostCommitUpdateEventListener;
@@ -310,7 +310,7 @@ public class EntityUpdateAction extends EntityAction {
 	protected boolean updateCache(EntityPersister persister, Object previousVersion, Object ck) {
 		final SharedSessionContractImplementor session = getSession();
 		final EventManager eventManager = session.getEventManager();
-		final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
+		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 		final EntityDataAccess cacheAccessStrategy = persister.getCacheAccessStrategy();
 		boolean update = false;
 		try {
@@ -436,7 +436,7 @@ public class EntityUpdateAction extends EntityAction {
 	protected void cacheAfterUpdate(EntityDataAccess cache, Object ck, SharedSessionContractImplementor session) {
 		final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 		final EventManager eventManager = session.getEventManager();
-		final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
+		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 		boolean put = false;
 		try {
 			eventListenerManager.cachePutStart();

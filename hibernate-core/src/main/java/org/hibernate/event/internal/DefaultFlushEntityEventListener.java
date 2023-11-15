@@ -25,7 +25,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.engine.spi.Status;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEntityEvent;
 import org.hibernate.event.spi.FlushEntityEventListener;
@@ -485,7 +485,7 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 		boolean dirtyCheckPossible;
 		int[] dirtyProperties = null;
 		final EventManager eventManager = session.getEventManager();
-		final HibernateEvent dirtyCalculationEvent = eventManager.beginDirtyCalculationEvent();
+		final HibernateMonitoringEvent dirtyCalculationEvent = eventManager.beginDirtyCalculationEvent();
 		final EntityEntry entry = event.getEntityEntry();
 		final EntityPersister persister = entry.getPersister();
 		try {

@@ -9,5 +9,5 @@ package org.hibernate.event.spi;
 import org.hibernate.Incubating;
 
 @Incubating
-public interface HibernateEvent {
+public interface HibernateMonitoringEvent {
 }

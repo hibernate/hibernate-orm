@@ -16,7 +16,7 @@ import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 
 /**
  * @author Steve Ebersole
@@ -46,7 +46,7 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 		}
 
 		final EventManager eventManager = session.getEventManager();
-		final HibernateEvent jdbcConnectionAcquisitionEvent = eventManager.beginJdbcConnectionAcquisitionEvent();
+		final HibernateMonitoringEvent jdbcConnectionAcquisitionEvent = eventManager.beginJdbcConnectionAcquisitionEvent();
 		try {
 			listener.jdbcConnectionAcquisitionStart();
 			return connectionProvider.getConnection( tenantIdentifier );
@@ -68,7 +68,7 @@ public class ContextualJdbcConnectionAccess implements JdbcConnectionAccess, Ser
 		}
 
 		final EventManager eventManager = session.getEventManager();
-		final HibernateEvent jdbcConnectionReleaseEvent = eventManager.beginJdbcConnectionReleaseEvent();
+		final HibernateMonitoringEvent jdbcConnectionReleaseEvent = eventManager.beginJdbcConnectionReleaseEvent();
 		try {
 			listener.jdbcConnectionReleaseStart();
 			connectionProvider.releaseConnection( tenantIdentifier, connection );

@@ -9,7 +9,7 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.event.spi.EventSource;
 import org.hibernate.event.spi.FlushEvent;
 import org.hibernate.event.spi.FlushEventListener;
@@ -33,7 +33,7 @@ public class DefaultFlushEventListener extends AbstractFlushingEventListener imp
 		final EventManager eventManager = source.getEventManager();
 		if ( persistenceContext.getNumberOfManagedEntities() > 0
 				|| persistenceContext.getCollectionEntriesSize() > 0 ) {
-			final HibernateEvent flushEvent = eventManager.beginFlushEvent();
+			final HibernateMonitoringEvent flushEvent = eventManager.beginFlushEvent();
 			try {
 				source.getEventListenerManager().flushStart();
 

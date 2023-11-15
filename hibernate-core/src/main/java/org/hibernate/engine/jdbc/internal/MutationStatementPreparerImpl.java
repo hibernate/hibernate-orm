@@ -15,7 +15,7 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
@@ -100,7 +100,7 @@ public class MutationStatementPreparerImpl implements MutationStatementPreparer 
 						.getJdbcSessionContext()
 						.getObserver();
 				final EventManager eventManager = jdbcSessionOwner.getEventManager();
-				final HibernateEvent jdbcPreparedStatementCreation = eventManager.beginJdbcPreparedStatementCreationEvent();
+				final HibernateMonitoringEvent jdbcPreparedStatementCreation = eventManager.beginJdbcPreparedStatementCreationEvent();
 				try {
 					observer.jdbcPrepareStatementStart();
 					preparedStatement = doPrepare();

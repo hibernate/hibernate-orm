@@ -69,7 +69,7 @@ import org.hibernate.engine.spi.Status;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
 import org.hibernate.engine.transaction.spi.TransactionObserver;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.event.spi.AutoFlushEvent;
 import org.hibernate.event.spi.AutoFlushEventListener;
 import org.hibernate.event.spi.ClearEvent;
@@ -227,7 +227,7 @@ public class SessionImpl
 	public SessionImpl(SessionFactoryImpl factory, SessionCreationOptions options) {
 		super( factory, options );
 
-		final HibernateEvent sessionOpenEvent = getEventManager().beginSessionOpenEvent();
+		final HibernateMonitoringEvent sessionOpenEvent = getEventManager().beginSessionOpenEvent();
 
 		persistenceContext = createPersistenceContext();
 		actionQueue = createActionQueue();
@@ -417,7 +417,7 @@ public class SessionImpl
 		}
 
 		final EventManager eventManager = getEventManager();
-		final HibernateEvent sessionClosedEvent = eventManager.beginSessionClosedEvent();
+		final HibernateMonitoringEvent sessionClosedEvent = eventManager.beginSessionClosedEvent();
 
 		// todo : we want this check if usage is JPA, but not native Hibernate usage
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();

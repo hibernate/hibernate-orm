@@ -15,7 +15,7 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.jboss.logging.Logger;
@@ -61,7 +61,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 				log.debugf( "Pre-invalidating space [%s], timestamp: %s", space, ts );
 			}
 			final EventManager eventManager = session.getEventManager();
-			final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 
@@ -103,7 +103,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
 			final EventManager eventManager = session.getEventManager();
-			final HibernateEvent cachePutEvent = eventManager.beginCachePutEvent();
+			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
 				timestampsRegion.putIntoCache( space, ts, session );
@@ -195,7 +195,7 @@ public class TimestampsCacheEnabledImpl implements TimestampsCache {
 	private Long getLastUpdateTimestampForSpace(String space, SharedSessionContractImplementor session) {
 		Long ts = null;
 		final EventManager eventManager = session.getEventManager();
-		final HibernateEvent cacheGetEvent = eventManager.beginCacheGetEvent();
+		final HibernateMonitoringEvent cacheGetEvent = eventManager.beginCacheGetEvent();
 		try {
 			session.getEventListenerManager().cacheGetStart();
 			ts = (Long) timestampsRegion.getFromCache( space, session );

@@ -18,7 +18,7 @@ import org.hibernate.engine.jdbc.spi.ResultSetReturn;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.SqlStatementLogger;
 import org.hibernate.event.spi.EventManager;
-import org.hibernate.event.spi.HibernateEvent;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
 
 /**
@@ -55,7 +55,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		try {
 			final ResultSet rs;
 			final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
-			final HibernateEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+			final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				rs = statement.executeQuery();
@@ -95,7 +95,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		try {
 			final ResultSet rs;
 			final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
-			final HibernateEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+			final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				rs = statement.executeQuery( sql );
@@ -123,7 +123,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		try {
 			final ResultSet rs;
 			final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
-			final HibernateEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+			final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				if ( !statement.execute() ) {
@@ -156,7 +156,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 		try {
 			final ResultSet rs;
 			final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
-			final HibernateEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+			final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 			try {
 				jdbcExecuteStatementStart();
 				if ( !statement.execute( sql ) ) {
@@ -188,7 +188,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			executeStartNanos = System.nanoTime();
 		}
 		final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
-		final HibernateEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			jdbcExecuteStatementStart();
 			return statement.executeUpdate();
@@ -211,7 +211,7 @@ public class ResultSetReturnImpl implements ResultSetReturn {
 			executeStartNanos = System.nanoTime();
 		}
 		final EventManager eventManager = jdbcCoordinator.getJdbcSessionOwner().getEventManager();
-		final HibernateEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
+		final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 		try {
 			jdbcExecuteStatementStart();
 			return statement.executeUpdate( sql );

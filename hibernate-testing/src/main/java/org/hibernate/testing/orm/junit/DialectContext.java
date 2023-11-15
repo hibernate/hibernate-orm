@@ -14,8 +14,6 @@ import java.util.Properties;
 import org.hibernate.HibernateException;
 import org.hibernate.cfg.Environment;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.dialect.spi.DatabaseMetaDataDialectResolutionInfoAdapter;
-import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.internal.util.ReflectHelper;
 
 /**
@@ -33,13 +31,13 @@ public final class DialectContext {
 		}
 		try {
 			final Class<? extends Dialect> dialectClass = ReflectHelper.classForName( dialectName );
-			final Constructor<? extends Dialect> constructor = dialectClass.getConstructor( DialectResolutionInfo.class );
+			final Constructor<? extends Dialect> constructor = dialectClass.getConstructor();
 			Driver driver = (Driver) Class.forName( properties.getProperty( Environment.DRIVER ) ).newInstance();
 			Properties props = new Properties();
 			props.setProperty( "user", properties.getProperty( Environment.USER ) );
 			props.setProperty( "password", properties.getProperty( Environment.PASS ) );
 			try (Connection connection = driver.connect( properties.getProperty( Environment.URL ), props )) {
-				dialect = constructor.newInstance( new DatabaseMetaDataDialectResolutionInfoAdapter( connection.getMetaData() ) );
+				dialect = constructor.newInstance();
 			}
 		}
 		catch (ClassNotFoundException cnfe) {

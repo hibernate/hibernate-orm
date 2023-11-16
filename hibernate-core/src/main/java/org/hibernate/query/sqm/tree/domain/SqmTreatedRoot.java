@@ -17,14 +17,15 @@ import org.hibernate.spi.NavigablePath;
 /**
  * @author Steve Ebersole
  */
-public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTreatedFrom<S,T,S> {
-	private final SqmRoot<T> wrappedPath;
-	private final EntityDomainType<S> treatTarget;
+@SuppressWarnings("rawtypes")
+public class SqmTreatedRoot extends SqmRoot implements SqmTreatedFrom {
+	private final SqmRoot wrappedPath;
+	private final EntityDomainType treatTarget;
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public SqmTreatedRoot(
-			SqmRoot<T> wrappedPath,
-			EntityDomainType<S> treatTarget) {
+			SqmRoot wrappedPath,
+			EntityDomainType treatTarget) {
 		super(
 				wrappedPath.getNavigablePath().treatAs(
 						treatTarget.getHibernateEntityName()
@@ -40,8 +41,8 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	private SqmTreatedRoot(
 			NavigablePath navigablePath,
-			SqmRoot<T> wrappedPath,
-			EntityDomainType<S> treatTarget) {
+			SqmRoot wrappedPath,
+			EntityDomainType treatTarget) {
 		super(
 				navigablePath,
 				(EntityDomainType) wrappedPath.getReferencedPathSource(),
@@ -53,14 +54,14 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 	}
 
 	@Override
-	public SqmTreatedRoot<T,S> copy(SqmCopyContext context) {
-		final SqmTreatedRoot<T, S> existing = context.getCopy( this );
+	public SqmTreatedRoot copy(SqmCopyContext context) {
+		final SqmTreatedRoot existing = context.getCopy( this );
 		if ( existing != null ) {
 			return existing;
 		}
-		final SqmTreatedRoot<T, S> path = context.registerCopy(
+		final SqmTreatedRoot path = context.registerCopy(
 				this,
-				new SqmTreatedRoot<>(
+				new SqmTreatedRoot(
 						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget
@@ -71,27 +72,27 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 	}
 
 	@Override
-	public EntityDomainType<S> getTreatTarget() {
+	public EntityDomainType getTreatTarget() {
 		return treatTarget;
 	}
 
 	@Override
-	public EntityDomainType<S> getManagedType() {
+	public EntityDomainType getManagedType() {
 		return getTreatTarget();
 	}
 
 	@Override
-	public SqmPath<T> getWrappedPath() {
+	public SqmPath getWrappedPath() {
 		return wrappedPath;
 	}
 
 	@Override
-	public SqmPathSource<S> getNodeType() {
+	public SqmPathSource getNodeType() {
 		return treatTarget;
 	}
 
 	@Override
-	public EntityDomainType<S> getReferencedPathSource() {
+	public EntityDomainType getReferencedPathSource() {
 		return getTreatTarget();
 	}
 
@@ -100,8 +101,9 @@ public class SqmTreatedRoot<T, S extends T> extends SqmRoot<S> implements SqmTre
 		return wrappedPath.getLhs();
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
-	public <X> X accept(SemanticQueryWalker<X> walker) {
+	public Object accept(SemanticQueryWalker walker) {
 		return walker.visitTreatedPath( this );
 	}
 

@@ -271,7 +271,9 @@ public class HbmXmlTransformer {
 					)
 			);
 			case PICK -> {
-				if ( pickHandler != null ) pickHandler.handlePick( message, messageArgs );
+				if ( pickHandler != null ) {
+					pickHandler.handlePick( message, messageArgs );
+				}
 			}
 			case IGNORE -> TRANSFORMATION_LOGGER.debugf( message, messageArgs );
 			case WARN -> TRANSFORMATION_LOGGER.warnf( message, messageArgs );

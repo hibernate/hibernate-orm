@@ -36,8 +36,8 @@ public class SqmTreatedBagJoin<L, R, R1 extends R> extends SqmBagJoin<L, R1> imp
 	}
 
 	public SqmTreatedBagJoin(
-			SqmBagJoin<O, T> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			SqmBagJoin<L,R> wrappedPath,
+			EntityDomainType<R1> treatTarget,
 			String alias,
 			boolean fetched) {
 		//noinspection unchecked

@@ -138,6 +138,16 @@ public class SqmCteJoin<T> extends AbstractSqmJoin<T, T> {
 	}
 
 	@Override
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, String alias, boolean fetched) {
+		throw new UnsupportedOperationException( "CTE joins can not be treated" );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched) {
+		throw new UnsupportedOperationException( "CTE joins can not be treated" );
+	}
+
+	@Override
 	public SqmFrom<?, T> getParent() {
 		return getCorrelationParent();
 	}

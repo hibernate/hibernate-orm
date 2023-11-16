@@ -195,6 +195,16 @@ public class SqmEntityJoin<L,R> extends AbstractSqmJoin<L,R> implements SqmSingu
 	}
 
 	@Override
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(Class<S> treatJavaType, String alias, boolean fetched) {
+		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
+	}
+
+	@Override
+	public <S extends R> SqmTreatedEntityJoin<L,R,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched) {
+		throw new UnsupportedOperationException( "Entity join treats can not be aliased" );
+	}
+
+	@Override
 	public PersistentAttribute<? super L, ?> getAttribute() {
 		// there is no attribute
 		return null;

@@ -26,19 +26,20 @@ public class SqmTreatedMapJoin<L, K, V, S extends V> extends SqmMapJoin<L, K, S>
 	private final SqmMapJoin<L, K, V> wrappedPath;
 	private final EntityDomainType<S> treatTarget;
 
+	@SuppressWarnings({ "rawtypes" })
 	public SqmTreatedMapJoin(
-			SqmMapJoin<L, K, V> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			SqmMapJoin wrappedPath,
+			EntityDomainType treatTarget,
 			String alias) {
 		this( wrappedPath, treatTarget, alias, false );
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public SqmTreatedMapJoin(
-			SqmMapJoin<O, K, V> wrappedPath,
-			EntityDomainType<S> treatTarget,
+			SqmMapJoin wrappedPath,
+			EntityDomainType treatTarget,
 			String alias,
 			boolean fetched) {
-		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
 				wrappedPath.getNavigablePath()

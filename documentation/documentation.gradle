@@ -544,6 +544,11 @@ settingsDocumentation {
 			description = "Settings used in the integration of Jakarta Validation"
 			settingsClassName "org.hibernate.cfg.ValidationSettings"
 		}
+		dialect {
+			summary = "Dialect Specific Settings"
+			description = "Settings used for dialect configuration when the database isn't available"
+			settingsClassName "org.hibernate.cfg.DialectSpecificSettings"
+		}
 		envers {
 			summary = "Audit/History Settings"
 			description = "Settings which control Hibernate's audit/history support (hibernate-envers)"

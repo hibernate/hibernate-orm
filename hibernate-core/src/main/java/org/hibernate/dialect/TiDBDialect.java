@@ -39,7 +39,7 @@ public class TiDBDialect extends MySQLDialect {
 	}
 
 	public TiDBDialect(DialectResolutionInfo info) {
-		super( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
+		super( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 

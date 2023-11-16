@@ -48,6 +48,7 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -100,6 +101,8 @@ import static org.hibernate.LockOptions.NO_WAIT;
 import static org.hibernate.LockOptions.SKIP_LOCKED;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_EXTENDED_STRING_SIZE;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_AUTONOMOUS_DATABASE;
 import static org.hibernate.dialect.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -187,12 +190,18 @@ public class OracleDialect extends Dialect {
 	}
 
 	public OracleDialect(DialectResolutionInfo info) {
-		super(info);
-		autonomous = isAutonomous( info.getDatabaseMetadata() );
-		extended = isExtended( info.getDatabaseMetadata() );
+		this( info, OracleServerConfiguration.fromDialectResolutionInfo( info ) );
 	}
 
-	protected static boolean isExtended(DatabaseMetaData databaseMetaData) {
+	public OracleDialect(DialectResolutionInfo info, OracleServerConfiguration serverConfiguration) {
+		super( info );
+		autonomous = serverConfiguration.isAutonomous();
+		extended = serverConfiguration.isExtended();
+	}
+
+	@Deprecated( since = "6.4" )
+	protected static boolean isExtended(DialectResolutionInfo info) {
+		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
 			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
 				statement.execute( "select cast('string' as varchar2(32000)) from dual" );
@@ -204,10 +213,13 @@ public class OracleDialect extends Dialect {
 				// Ignore
 			}
 		}
-		return false;
+		// default to the dialect-specific configuration setting
+		return ConfigurationHelper.getBoolean( ORACLE_EXTENDED_STRING_SIZE, info.getConfigurationValues(), false );
 	}
 
-	protected static boolean isAutonomous(DatabaseMetaData databaseMetaData) {
+	@Deprecated( since = "6.4" )
+	protected static boolean isAutonomous(DialectResolutionInfo info) {
+		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
 			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
 				return statement.executeQuery( "select 1 from dual where sys_context('USERENV','CLOUD_SERVICE') in ('OLTP','DWCS','JSON')" )
@@ -217,11 +229,16 @@ public class OracleDialect extends Dialect {
 				// Ignore
 			}
 		}
-		return false;
+		// default to the dialect-specific configuration setting
+		return ConfigurationHelper.getBoolean( ORACLE_AUTONOMOUS_DATABASE, info.getConfigurationValues(), false );
 	}
 
 	public boolean isAutonomous() {
 		return autonomous;
+	}
+
+	public boolean isExtended() {
+		return extended;
 	}
 
 	@Override

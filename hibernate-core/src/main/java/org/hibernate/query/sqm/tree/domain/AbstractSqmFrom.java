@@ -845,6 +845,36 @@ public abstract class AbstractSqmFrom<O,T> extends AbstractSqmPath<T> implements
 	}
 
 	@Override
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(Class<S> treatJavaType) {
+		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatJavaType );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(EntityDomainType<S> treatTarget) {
+		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatTarget );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(Class<S> treatJavaType, String alias) {
+		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatJavaType, alias );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatTarget, alias );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatJavaType, alias, fetch );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedFrom<O,T,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+		return (SqmTreatedFrom<O,T,S>) super.treatAs( treatTarget, alias, fetch );
+	}
+
+	@Override
 	public void appendHqlString(StringBuilder sb) {
 		if ( alias == null ) {
 			// If we don't have an alias, this is the best we can do to at least ensure uniqueness

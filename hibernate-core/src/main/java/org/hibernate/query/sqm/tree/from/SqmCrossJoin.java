@@ -17,6 +17,7 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.domain.AbstractSqmFrom;
 import org.hibernate.query.sqm.tree.domain.SqmCorrelatedCrossJoin;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedCrossJoin;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicateCollection;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
@@ -189,6 +190,17 @@ public class SqmCrossJoin<T> extends AbstractSqmFrom<T, T> implements JpaCrossJo
 	public <S extends T> SqmTreatedCrossJoin treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "Cross join treats can not be aliased" );
 	}
+
+	@Override
+	public <S extends T> SqmTreatedFrom<T, T, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		return null;
+	}
+
+	@Override
+	public <S extends T> SqmTreatedFrom<T, T, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+		return null;
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public <S extends T> SqmTreatedCrossJoin treatAs(Class<S> treatAsType) {

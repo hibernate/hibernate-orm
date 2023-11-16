@@ -10,7 +10,6 @@ import java.util.Locale;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
-import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmPathSource;
@@ -19,6 +18,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
+import org.hibernate.spi.NavigablePath;
 
 /**
  * @author Christian Beikov
@@ -99,54 +99,54 @@ public class SqmPluralPartJoin<O,T> extends AbstractSqmJoin<O,T> {
 	public <X> X accept(SemanticQueryWalker<X> walker) {
 		return walker.visitPluralPartJoin( this );
 	}
-//
-//	@Override
-//	public <S extends T> SqmTreatedPluralPartJoin<O,T,S> treatAs(Class<S> treatJavaType) {
-//		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
-//	}
-//
-//	@Override
-//	public <S extends T> SqmTreatedPluralPartJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget) {
-//		return treatAs( treatTarget, null );
-//	}
-//
-//	@Override
-//	public <S extends T> SqmTreatedPluralPartJoin<O,T,S> treatAs(Class<S> treatJavaType, String alias) {
-//		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
-//	}
-//
-//	@Override
-//	public <S extends T> SqmTreatedPluralPartJoin<O,T,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
-//		final SqmTreatedPluralPartJoin<O, T, S> treat = findTreat( treatTarget, alias );
-//		if ( treat == null ) {
-//			return addTreat( new SqmTreatedPluralPartJoin<>( this, treatTarget, alias ) );
-//		}
-//		return treat;
-//	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <S extends T> SqmTreatedPluralPartJoin treatAs(Class<S> treatJavaType) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <S extends T> SqmTreatedPluralPartJoin treatAs(EntityDomainType<S> treatTarget) {
+		return treatAs( treatTarget, null );
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <S extends T> SqmTreatedPluralPartJoin treatAs(Class<S> treatJavaType, String alias) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias );
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <S extends T> SqmTreatedPluralPartJoin treatAs(EntityDomainType<S> treatTarget, String alias) {
+		final SqmTreatedPluralPartJoin treat = findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			return addTreat( new SqmTreatedPluralPartJoin( this, treatTarget, alias ) );
+		}
+		return treat;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <S extends T> SqmTreatedPluralPartJoin treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ), alias, fetch );
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public <S extends T> SqmTreatedPluralPartJoin treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+		final SqmTreatedPluralPartJoin treat = findTreat( treatTarget, alias );
+		if ( treat == null ) {
+			return addTreat( new SqmTreatedPluralPartJoin( this, treatTarget, alias ) );
+		}
+		return treat;
+	}
 
 
 	@Override
 	public PersistentAttribute<? super O, ?> getAttribute() {
-		return null;
-	}
-
-	@Override
-	public <S extends T> SqmTreatedPluralPartJoin<O, T, S> treatAs(Class<S> treatJavaType) {
-		return null;
-	}
-
-	@Override
-	public <S extends T> SqmTreatedJoin<O, T, S> treatAs(EntityDomainType<S> treatTarget) {
-		return null;
-	}
-
-	@Override
-	public <S extends T> SqmTreatedJoin<O, T, S> treatAs(Class<S> treatJavaType, String alias) {
-		return null;
-	}
-
-	@Override
-	public <S extends T> SqmTreatedJoin<O, T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
 		return null;
 	}
 

@@ -27,4 +27,5 @@ public interface SqmTreatedPath<T, S extends T> extends JpaTreatedPath<T,S>, Sqm
 
 	@Override
 	<S1 extends S> SqmTreatedPath<S, S1> treatAs(EntityDomainType<S1> treatTarget);
+
 }

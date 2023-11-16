@@ -7,7 +7,9 @@
 package org.hibernate.query.sqm.tree.domain;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaTreatedPath;
+import org.hibernate.query.sqm.TreatException;
 
 /**
  * @param <T> The type of the treat source
@@ -26,4 +28,14 @@ public interface SqmTreatedPath<T, S extends T> extends JpaTreatedPath<T,S>, Sqm
 
 	@Override
 	<S1 extends S> SqmTreatedPath<S, S1> treatAs(EntityDomainType<S1> treatTarget);
+
+	@Override
+	default <S1 extends S> SqmTreatedPath<S, S1> treatAs(Class<S1> treatJavaType, String alias, boolean fetch) {
+		throw new TreatException( "Treated paths cannot be fetched - " + getNavigablePath().getFullPath() );
+	}
+
+	@Override
+	default <S1 extends S> SqmTreatedPath<S, S1> treatAs(EntityDomainType<S1> treatTarget, String alias, boolean fetch) {
+		throw new TreatException( "Treated paths cannot be fetched - " + getNavigablePath().getFullPath() );
+	}
 }

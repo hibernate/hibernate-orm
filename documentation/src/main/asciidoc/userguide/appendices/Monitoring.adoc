@@ -20,7 +20,7 @@ To use the Java Flight Recorder integration, the application must include the `h
 
 [NOTE]
 ====
-The `hibernate-jfr` integration requires JDK 17 (it should work also with JDK 11, but we haven't tested it) that also supports Java Flight Recorder Events.
+The `hibernate-jfr` integration requires a JDK 17 supporting JFR events.  It should also work with a JDK 11 supporting JFR events, but we haven't tested it .
 ====
 
 

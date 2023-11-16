@@ -36,6 +36,7 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 
 	private boolean fetched;
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public AbstractSqmAttributeJoin(
 			SqmFrom<?, L> lhs,
 			SqmJoinable joinedNavigable,
@@ -43,6 +44,7 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 			SqmJoinType joinType,
 			boolean fetched,
 			NodeBuilder nodeBuilder) {
+		//noinspection StringEquality
 		this(
 				lhs,
 				joinedNavigable.createNavigablePath( lhs, alias ),
@@ -54,6 +56,7 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 		);
 	}
 
+	@SuppressWarnings("rawtypes")
 	protected AbstractSqmAttributeJoin(
 			SqmFrom<?, L> lhs,
 			NavigablePath navigablePath,
@@ -157,6 +160,12 @@ public abstract class AbstractSqmAttributeJoin<L, R>
 
 	@Override
 	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, String alias);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(Class<S> treatJavaType, String alias, boolean fetched);
+
+	@Override
+	public abstract <S extends R> SqmTreatedAttributeJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched);
 
 
 }

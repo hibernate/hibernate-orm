@@ -78,6 +78,7 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
+import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.query.sqm.UnaryArithmeticOperator;
@@ -572,7 +573,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <X, T extends X> SqmRoot<T> treat(Root<X> root, Class<T> type) {
 		//noinspection unchecked
-		return (SqmTreatedRoot<X,T>) ( (SqmRoot<X>) root ).treatAs( type );
+		return (SqmTreatedRoot) ( (SqmRoot<X>) root ).treatAs( type );
 	}
 
 	@Override

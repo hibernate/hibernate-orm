@@ -237,6 +237,36 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 		return path;
 	}
 
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) {
+		return getTreatedPath( treatTarget );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, String alias) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		return getTreatedPath( treatTarget );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		return treatAs( nodeBuilder().getDomainModel().entity( treatJavaType ) );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+		return null;
+	}
+
 	/**
 	 * Utility that checks if this path's parent navigable path is compatible with the specified SQM parent,
 	 * and if not creates a copy of the navigable path with the correct parent.

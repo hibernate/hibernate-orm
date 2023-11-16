@@ -17,7 +17,6 @@ import jakarta.persistence.metamodel.SetAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 
 import org.hibernate.metamodel.model.domain.EntityDomainType;
-import org.hibernate.query.criteria.JpaEntityJoin;
 import org.hibernate.query.criteria.JpaFrom;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
@@ -82,8 +81,10 @@ public interface SqmFrom<L, R> extends SqmVisitableNode, SqmPath<R>, JpaFrom<L, 
 	@Override
 	<S extends R> SqmTreatedFrom<L,R,S> treatAs(EntityDomainType<S> treatTarget);
 
+	@Override
 	<S extends R> SqmTreatedFrom<L,R,S> treatAs(Class<S> treatJavaType, String alias);
 
+	@Override
 	<S extends R> SqmTreatedFrom<L,R,S> treatAs(EntityDomainType<S> treatTarget, String alias);
 
 

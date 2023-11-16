@@ -30,13 +30,39 @@ public interface DiscriminatorSqmPath<T> extends SqmPath<T> {
 		throw new IllegalStateException( "Discriminator cannot be de-referenced" );
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	default SqmTreatedPath treatAs(Class treatJavaType) throws PathException {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
 	default SqmTreatedPath treatAs(EntityDomainType treatTarget) throws PathException {
+		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	default SqmTreatedPath treatAs(Class treatJavaType, String alias) throws PathException {
+		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	default SqmTreatedPath treatAs(EntityDomainType treatTarget, String alias) throws PathException {
+		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	default SqmTreatedPath treatAs(Class treatJavaType, String alias, boolean fetch) throws PathException {
+		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	default SqmTreatedPath treatAs(EntityDomainType treatTarget, String alias, boolean fetch) throws PathException {
 		throw new UnsupportedMappingException( "Cannot apply TREAT operator to discriminator path" );
 	}
 }

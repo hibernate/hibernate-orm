@@ -125,6 +125,14 @@ public interface SqmPath<T> extends SqmExpression<T>, SemanticPathPart, JpaPath<
 	@Override
 	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget);
 
+	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType, String alias);
+
+	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget, String alias);
+
+	<S extends T> SqmTreatedPath<T,S> treatAs(Class<S> treatJavaType, String alias, boolean fetch);
+
+	<S extends T> SqmTreatedPath<T,S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch);
+
 	default SqmRoot<?> findRoot() {
 		final SqmPath<?> lhs = getLhs();
 		if ( lhs != null ) {

@@ -58,9 +58,33 @@ public class NonAggregatedCompositeSimplePath<T> extends SqmEntityValuedSimplePa
 		return walker.visitNonAggregatedCompositeValuedPath( this );
 	}
 
+	@Override
+	public <S extends T> SqmTreatedSimplePath<T, S> treatAs(Class<S> treatJavaType) throws PathException {
+		throw new FunctionArgumentException( "Non-aggregate composite paths cannot be TREAT-ed" );
+	}
 
 	@Override
-	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+	public <S extends T> SqmTreatedSimplePath<T, S> treatAs(EntityDomainType<S> treatTarget) throws PathException {
+		throw new FunctionArgumentException( "Non-aggregate composite paths cannot be TREAT-ed" );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedSimplePath<T, S> treatAs(Class<S> treatJavaType, String alias) {
+		throw new FunctionArgumentException( "Non-aggregate composite paths cannot be TREAT-ed" );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedSimplePath<T, S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+		throw new FunctionArgumentException( "Non-aggregate composite paths cannot be TREAT-ed" );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		throw new FunctionArgumentException( "Non-aggregate composite paths cannot be TREAT-ed" );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedPath<T, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
 		throw new FunctionArgumentException( "Non-aggregate composite paths cannot be TREAT-ed" );
 	}
 	

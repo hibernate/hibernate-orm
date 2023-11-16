@@ -77,7 +77,7 @@ public enum AccessType {
 			return null;
 		}
 		for ( AccessType accessType : AccessType.values() ) {
-			if ( accessType.getExternalName().equals( externalName ) ) {
+			if ( accessType.getExternalName().equalsIgnoreCase( externalName ) ) {
 				return accessType;
 			}
 		}

@@ -159,7 +159,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				null,
 				0,
 				0,
-				null
+				null,
+				configurationValues
 		);
 		return new JdbcEnvironmentImpl(
 				registry,
@@ -317,7 +318,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 										dbmd.getDriverName(),
 										dbmd.getDriverMajorVersion(),
 										dbmd.getDriverMinorVersion(),
-										dbmd.getSQLKeywords()
+										dbmd.getSQLKeywords(),
+										configurationValues
 								);
 								return new JdbcEnvironmentImpl(
 										registry,
@@ -472,6 +474,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		private final int driverMajorVersion;
 		private final int driverMinorVersion;
 		private final String sqlKeywords;
+		private final Map<String, Object> configurationValues;
 
 		public DialectResolutionInfoImpl(
 				DatabaseMetaData databaseMetadata,
@@ -482,7 +485,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				String driverName,
 				int driverMajorVersion,
 				int driverMinorVersion,
-				String sqlKeywords) {
+				String sqlKeywords,
+				Map<String, Object> configurationValues) {
 			this.databaseMetadata = databaseMetadata;
 			this.databaseName = databaseName;
 			this.databaseVersion = databaseVersion;
@@ -492,6 +496,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			this.driverMajorVersion = driverMajorVersion;
 			this.driverMinorVersion = driverMinorVersion;
 			this.sqlKeywords = sqlKeywords;
+			this.configurationValues = configurationValues;
 		}
 
 		public String getSQLKeywords() {
@@ -541,6 +546,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		@Override
 		public String toString() {
 			return getMajor() + "." + getMinor();
+		}
+
+		@Override
+		public Map<String, Object> getConfigurationValues() {
+			return configurationValues;
 		}
 	}
 

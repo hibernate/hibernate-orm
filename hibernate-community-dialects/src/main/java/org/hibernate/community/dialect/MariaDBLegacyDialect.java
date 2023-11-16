@@ -61,7 +61,7 @@ public class MariaDBLegacyDialect extends MySQLLegacyDialect {
 	}
 
 	public MariaDBLegacyDialect(DialectResolutionInfo info) {
-		super( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
+		super( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 

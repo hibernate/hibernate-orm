@@ -47,6 +47,7 @@ import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.TemporalUnit;
@@ -75,6 +76,7 @@ import org.jboss.logging.Logger;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.cfg.DialectSpecificSettings.COCKROACH_VERSION_STRING;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.DAY;
 import static org.hibernate.query.sqm.TemporalUnit.EPOCH;
@@ -138,6 +140,14 @@ public class CockroachDialect extends Dialect {
 		registerKeywords( info );
 	}
 
+	public CockroachDialect(DialectResolutionInfo info, String versionString) {
+		this(
+				versionString != null ? parseVersion( versionString ) : info.makeCopy(),
+				PostgreSQLDriverKind.determineKind( info )
+		);
+		registerKeywords( info );
+	}
+
 	public CockroachDialect(DatabaseVersion version) {
 		super(version);
 		driverKind = PostgreSQLDriverKind.PG_JDBC;
@@ -148,10 +158,10 @@ public class CockroachDialect extends Dialect {
 		this.driverKind = driverKind;
 	}
 
-	protected static DatabaseVersion fetchDataBaseVersion( DialectResolutionInfo info ) {
+	protected static DatabaseVersion fetchDataBaseVersion(DialectResolutionInfo info) {
 		String versionString = null;
 		if ( info.getDatabaseMetadata() != null ) {
-			try (java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement() ) {
+			try (java.sql.Statement s = info.getDatabaseMetadata().getConnection().createStatement()) {
 				final ResultSet rs = s.executeQuery( "SELECT version()" );
 				if ( rs.next() ) {
 					versionString = rs.getString( 1 );
@@ -161,7 +171,11 @@ public class CockroachDialect extends Dialect {
 				// Ignore
 			}
 		}
-		return parseVersion( versionString );
+		if ( versionString == null ) {
+			// default to the dialect-specific configuration setting
+			versionString = ConfigurationHelper.getString( COCKROACH_VERSION_STRING, info.getConfigurationValues() );
+		}
+		return versionString != null ? parseVersion( versionString ) : info.makeCopy();
 	}
 
 	public static DatabaseVersion parseVersion( String versionString ) {

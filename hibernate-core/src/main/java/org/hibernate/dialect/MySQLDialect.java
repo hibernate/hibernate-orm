@@ -183,7 +183,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public MySQLDialect(DialectResolutionInfo info) {
-		this( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
+		this( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 

@@ -19,20 +19,19 @@ ext {
 }
 
 dependencies {
-    implementation jakartaLibs.jaxbApi
-    implementation jakartaLibs.jaxb
-    implementation libs.antlrRuntime
     implementation project( ':hibernate-core' )
-    implementation libs.byteBuddy
+
+    // ewww... but Maven needs them this way, and it is irrelevant to Gradle which is smarter here
+    api jakartaLibs.jaxbApi
+    api jakartaLibs.jaxb
+    api jakartaLibs.validation
+    api jakartaLibs.annotation
+    api libs.antlrRuntime
+    api libs.byteBuddy
 
     xjc jakartaLibs.xjc
     xjc jakartaLibs.jaxb
     xjc rootProject.fileTree(dir: 'patched-libs/jaxb2-basics', include: '*.jar')
-
-    testImplementation project( ':hibernate-core' )
-
-    testImplementation jakartaLibs.validation
-    testImplementation jakartaLibs.annotation
 }
 
 sourceSets.main {

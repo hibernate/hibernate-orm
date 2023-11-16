@@ -4953,7 +4953,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Does this Dialect support {@linkplain PreparedStatement#addBatch() batch updates}.
+	 * Whether this Dialect supports {@linkplain PreparedStatement#addBatch() batch updates}.
 	 *
 	 * @return {@code true} indicates it does; {@code false} indicates it does not; {@code null} indicates
 	 * it might and that database-metadata should be consulted.
@@ -4966,7 +4966,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
-	 * Does this Dialect support {@linkplain PreparedStatement#addBatch() batch updates}.
+	 * Whether this Dialect supports the JDBC {@link java.sql.Types#REF_CURSOR} type.
 	 *
 	 * @return {@code true} indicates it does; {@code false} indicates it does not; {@code null} indicates
 	 * it might and that database-metadata should be consulted

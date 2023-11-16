@@ -593,7 +593,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private boolean disallowBatchUpdates(Dialect dialect, ExtractedDatabaseMetaData meta) {
 		final Boolean dialectAnswer = dialect.supportsBatchUpdates();
 		if ( dialectAnswer != null ) {
-			return dialectAnswer;
+			return !dialectAnswer;
 		}
 		return !meta.supportsBatchUpdates();
 	}

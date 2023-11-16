@@ -193,6 +193,16 @@ public class SqmDerivedJoin<T> extends AbstractSqmJoin<T, T> implements JpaDeriv
 	}
 
 	@Override
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(Class<S> treatJavaType, String alias, boolean fetched) {
+		throw new UnsupportedOperationException( "Derived joins can not be treated" );
+	}
+
+	@Override
+	public <S extends T> SqmTreatedJoin<T, T, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched) {
+		throw new UnsupportedOperationException( "Derived joins can not be treated" );
+	}
+
+	@Override
 	public PersistentAttribute<? super T, ?> getAttribute() {
 		// none
 		return null;

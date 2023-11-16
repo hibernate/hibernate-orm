@@ -11,7 +11,9 @@ import java.util.List;
 
 import org.hibernate.Internal;
 import org.hibernate.metamodel.model.domain.EntityDomainType;
+import org.hibernate.query.sqm.TreatException;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedFrom;
+import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.PathException;
 import org.hibernate.query.criteria.JpaRoot;
@@ -206,14 +208,28 @@ public class SqmRoot<E> extends AbstractSqmFrom<E,E> implements JpaRoot<E> {
 		return treat;
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(Class<S> treatJavaType, String alias) {
+	public <S extends E> SqmTreatedRoot treatAs(Class<S> treatJavaType, String alias) {
 		throw new UnsupportedOperationException( "Root treats can not be aliased" );
 	}
 
+	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Override
-	public <S extends E> SqmTreatedFrom<E,E,S> treatAs(EntityDomainType<S> treatTarget, String alias) {
+	public <S extends E> SqmTreatedRoot treatAs(EntityDomainType<S> treatTarget, String alias) {
 		throw new UnsupportedOperationException( "Root treats can not be aliased" );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public <S extends E> SqmTreatedRoot treatAs(Class<S> treatJavaType, String alias, boolean fetch) {
+		throw new TreatException( "Root paths cannot be aliased, nor fetched - " + getNavigablePath().getFullPath() );
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Override
+	public <S extends E> SqmTreatedRoot treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetch) {
+		throw new TreatException( "Root paths cannot be aliased, nor fetched - " + getNavigablePath().getFullPath() );
 	}
 
 }

@@ -535,7 +535,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <X, T extends X> SqmRoot<T> treat(Root<X> root, Class<T> type) {
 		//noinspection unchecked
-		return (SqmTreatedRoot<X,T>) ( (SqmRoot<X>) root ).treatAs( type );
+		return (SqmTreatedRoot) ( (SqmRoot<X>) root ).treatAs( type );
 	}
 
 	@Override

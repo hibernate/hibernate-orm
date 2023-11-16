@@ -95,6 +95,12 @@ public abstract class AbstractSqmJoin<L, R> extends AbstractSqmFrom<L, R> implem
 	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, String alias);
 
 	@Override
+	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(Class<S> treatJavaType, String alias, boolean fetched);
+
+	@Override
+	public abstract <S extends R> SqmTreatedJoin<L, R, S> treatAs(EntityDomainType<S> treatTarget, String alias, boolean fetched);
+
+	@Override
 	public SqmFrom<?, L> getLhs() {
 		//noinspection unchecked
 		return (SqmFrom<?, L>) super.getLhs();

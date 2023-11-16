@@ -6,9 +6,9 @@
   ~ License: GNU Lesser General Public License (LGPL), version 2.1 or later.
   ~ See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
   -->
-<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="3.1">
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping" version="3.2">
     <package>org.hibernate.orm.test.boot.jaxb.mapping</package>
     <entity class="SimpleEntity" cacheable="true">
-        <caching access="transactional" region="netherworld" />
+        <caching access="TRANSACTIONAL" region="netherworld" />
     </entity>
 </entity-mappings>

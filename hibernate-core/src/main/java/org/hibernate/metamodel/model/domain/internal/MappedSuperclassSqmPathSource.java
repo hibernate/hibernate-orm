@@ -20,12 +20,16 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
  * @author Steve Ebersole
  */
 public class MappedSuperclassSqmPathSource<J> extends AbstractSqmPathSource<J> implements SqmJoinable<Object, J> {
+	private final boolean isGeneric;
+
 	public MappedSuperclassSqmPathSource(
 			String localPathName,
 			SqmPathSource<J> pathModel,
 			MappedSuperclassDomainType<J> domainType,
-			BindableType jpaBindableType) {
+			BindableType jpaBindableType,
+			boolean isGeneric) {
 		super( localPathName, pathModel, domainType, jpaBindableType );
+		this.isGeneric = isGeneric;
 	}
 
 	@Override
@@ -37,6 +41,11 @@ public class MappedSuperclassSqmPathSource<J> extends AbstractSqmPathSource<J> i
 	public SqmPathSource<?> findSubPathSource(String name) {
 		final MappedSuperclassDomainType<J> sqmPathType = getSqmPathType();
 		return sqmPathType.findSubPathSource( name );
+	}
+
+	@Override
+	public boolean isGeneric() {
+		return isGeneric;
 	}
 
 	@Override

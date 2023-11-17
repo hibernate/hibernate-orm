@@ -6718,4 +6718,8 @@ public abstract class AbstractEntityPersister
 	public String getDiscriminatorAlias() {
 		return DISCRIMINATOR_ALIAS;
 	}
+
+	protected String getSqlWhereStringTableExpression(){
+		return sqlWhereStringTableExpression;
+	}
 }

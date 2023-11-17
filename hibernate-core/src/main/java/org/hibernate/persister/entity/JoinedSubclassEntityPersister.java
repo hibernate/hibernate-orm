@@ -1366,6 +1366,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			if ( mainTableReference != null ) {
 				retainedTableReferences.add( mainTableReference );
 			}
+			final String sqlWhereStringTableExpression = persister.getSqlWhereStringTableExpression();
+			if ( sqlWhereStringTableExpression != null ) {
+				final TableReference tableReference = tableGroup.getTableReference( sqlWhereStringTableExpression );
+				if ( tableReference != null ) {
+					retainedTableReferences.add( tableReference );
+				}
+			}
 			if ( needsDiscriminator() ) {
 				// We allow multiple joined subclasses to use the same table if they define a discriminator column.
 				// In this case, we might need to add a discriminator condition to make sure we filter the correct subtype,

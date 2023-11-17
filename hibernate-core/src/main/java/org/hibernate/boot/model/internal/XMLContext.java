@@ -16,8 +16,8 @@ import org.hibernate.AnnotationException;
 import org.hibernate.boot.internal.ClassmateContext;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConverterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerContainerImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
-import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenersImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbManagedType;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclassImpl;
@@ -91,7 +91,7 @@ public class XMLContext implements Serializable {
 					globalDefaults.setAccess( defaultElement.getAccess() );
 					globalDefaults.setCascadePersist( defaultElement.getCascadePersist() != null ? Boolean.TRUE : null );
 					globalDefaults.setDelimitedIdentifiers( defaultElement.getDelimitedIdentifiers() != null ? Boolean.TRUE : null );
-					defaultEntityListeners.addAll( addEntityListenerClasses( defaultElement.getEntityListeners(), null, addedClasses ) );
+					defaultEntityListeners.addAll( addEntityListenerClasses( defaultElement.getEntityListenerContainer(), null, addedClasses ) );
 				}
 			}
 			else {
@@ -141,18 +141,18 @@ public class XMLContext implements Serializable {
 
 			LOG.debugf( "Adding XML overriding information for %s", className );
 			if ( element instanceof JaxbEntityImpl ) {
-				addEntityListenerClasses( ( (JaxbEntityImpl) element ).getEntityListeners(), packageName, addedClasses );
+				addEntityListenerClasses( ( (JaxbEntityImpl) element ).getEntityListenerContainer(), packageName, addedClasses );
 			}
 			else if ( element instanceof JaxbMappedSuperclassImpl ) {
-				addEntityListenerClasses( ( (JaxbMappedSuperclassImpl) element ).getEntityListeners(), packageName, addedClasses );
+				addEntityListenerClasses( ( (JaxbMappedSuperclassImpl) element ).getEntityListenerContainer(), packageName, addedClasses );
 			}
 		}
 	}
 
-	private List<String> addEntityListenerClasses(JaxbEntityListenersImpl listeners, String packageName, List<String> addedClasses) {
+	private List<String> addEntityListenerClasses(JaxbEntityListenerContainerImpl listeners, String packageName, List<String> addedClasses) {
 		List<String> localAddedClasses = new ArrayList<>();
 		if ( listeners != null ) {
-			List<JaxbEntityListenerImpl> elements = listeners.getEntityListener();
+			List<JaxbEntityListenerImpl> elements = listeners.getEntityListeners();
 			for ( JaxbEntityListenerImpl listener : elements ) {
 				String listenerClassName = buildSafeClassName( listener.getClazz(), packageName );
 				if ( entityListenerOverride.containsKey( listenerClassName ) ) {

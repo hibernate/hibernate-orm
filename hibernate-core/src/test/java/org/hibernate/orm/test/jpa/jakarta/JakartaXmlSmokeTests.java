@@ -52,8 +52,8 @@ public class JakartaXmlSmokeTests {
 
 			final JaxbPersistenceUnitMetadataImpl puMetadata = binding.getRoot().getPersistenceUnitMetadata();
 			final JaxbPersistenceUnitDefaultsImpl puDefaults = puMetadata.getPersistenceUnitDefaults();
-			final Stream<String> listenerNames = puDefaults.getEntityListeners()
-					.getEntityListener()
+			final Stream<String> listenerNames = puDefaults.getEntityListenerContainer()
+					.getEntityListeners()
 					.stream()
 					.map( JaxbEntityListenerImpl::getClazz );
 			assertThat( listenerNames ).containsOnly( "org.hibernate.jpa.test.pack.defaultpar.IncrementListener" );

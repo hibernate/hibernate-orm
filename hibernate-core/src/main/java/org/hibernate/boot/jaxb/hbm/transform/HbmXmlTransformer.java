@@ -74,7 +74,6 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSetType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSimpleIdType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmSynchronizeType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTimestampAttributeType;
-import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmTypeDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmUnionSubclassEntityType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmVersionAttributeType;
 import org.hibernate.boot.jaxb.hbm.spi.PluralAttributeInfo;
@@ -1448,8 +1447,8 @@ public class HbmXmlTransformer {
 		final JaxbManyToOneImpl m2o = new JaxbManyToOneImpl();
 		m2o.setAttributeAccessor( hbmM2O.getAccess() );
 		m2o.setCascade( convertCascadeType( hbmM2O.getCascade() ) );
-		m2o.setForeignKey( new JaxbForeignKeyImpl() );
-		m2o.getForeignKey().setName( hbmM2O.getForeignKey() );
+		m2o.setForeignKeys( new JaxbForeignKeyImpl() );
+		m2o.getForeignKeys().setName( hbmM2O.getForeignKey() );
 
 		transferColumnsAndFormulas(
 				new ColumnAndFormulaSource() {
@@ -1481,7 +1480,7 @@ public class HbmXmlTransformer {
 
 					@Override
 					public void addColumn(TargetColumnAdapter column) {
-						m2o.getJoinColumn().add( ( (TargetColumnAdapterJaxbJoinColumn) column ).getTargetColumn() );
+						m2o.getJoinColumns().add( ( (TargetColumnAdapterJaxbJoinColumn) column ).getTargetColumn() );
 					}
 
 					@Override
@@ -2099,15 +2098,15 @@ public class HbmXmlTransformer {
 		m2o.setName( hbmM2O.getName() );
 		m2o.setAttributeAccessor( hbmM2O.getAccess() );
 		m2o.setFetch( convert( hbmM2O.getLazy() ) );
-		m2o.setForeignKey( new JaxbForeignKeyImpl() );
-		m2o.getForeignKey().setName( hbmM2O.getForeignKey() );
+		m2o.setForeignKeys( new JaxbForeignKeyImpl() );
+		m2o.getForeignKeys().setName( hbmM2O.getForeignKey() );
 		if ( !hbmM2O.getColumn().isEmpty() ) {
 			for ( JaxbHbmColumnType hbmColumn : hbmM2O.getColumn() ) {
 				final JaxbJoinColumnImpl joinColumn = new JaxbJoinColumnImpl();
 				joinColumn.setName( hbmColumn.getName() );
 				joinColumn.setNullable( hbmColumn.isNotNull() == null ? null : !hbmColumn.isNotNull() );
 				joinColumn.setUnique( hbmColumn.isUnique() );
-				m2o.getJoinColumn().add( joinColumn );
+				m2o.getJoinColumns().add( joinColumn );
 			}
 		}
 		else {
@@ -2119,7 +2118,7 @@ public class HbmXmlTransformer {
 			else {
 				joinColumn.setName( hbmM2O.getColumnAttribute() );
 			}
-			m2o.getJoinColumn().add( joinColumn );
+			m2o.getJoinColumns().add( joinColumn );
 		}
 
 		if ( isNotEmpty( hbmM2O.getEntityName() ) ) {

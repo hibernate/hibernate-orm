@@ -52,15 +52,15 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 
 	void setMapKeyEnumerated(EnumType value);
 
-	List<JaxbAttributeOverrideImpl> getMapKeyAttributeOverride();
+	List<JaxbAttributeOverrideImpl> getMapKeyAttributeOverrides();
 
-	List<JaxbConvertImpl> getMapKeyConvert();
+	List<JaxbConvertImpl> getMapKeyConverts();
 
 	JaxbMapKeyColumnImpl getMapKeyColumn();
 
 	void setMapKeyColumn(JaxbMapKeyColumnImpl value);
 
-	List<JaxbMapKeyJoinColumnImpl> getMapKeyJoinColumn();
+	List<JaxbMapKeyJoinColumnImpl> getMapKeyJoinColumns();
 
 	JaxbForeignKeyImpl getMapKeyForeignKey();
 

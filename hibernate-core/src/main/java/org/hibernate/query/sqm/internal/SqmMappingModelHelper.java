@@ -145,7 +145,8 @@ public class SqmMappingModelHelper {
 					name,
 					pathModel,
 					(MappedSuperclassDomainType<J>) valueDomainType,
-					jpaBindableType
+					jpaBindableType,
+					isGeneric
 			);
 		}
 

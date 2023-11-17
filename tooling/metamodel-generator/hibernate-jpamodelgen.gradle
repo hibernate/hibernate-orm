@@ -10,21 +10,9 @@ apply from: rootProject.file( 'gradle/published-java-module.gradle' )
 apply plugin: 'version-injection'
 
 java {
-    sourceCompatibility = jdks.versions.getBaseline(  )
-    targetCompatibility = 17
+	sourceCompatibility = jdks.versions.baseline.get()
+	targetCompatibility = sourceCompatibility
 }
-
-//configurations {
-//    modelImplementation {
-//        extendsFrom implementation
-//    }
-//    modelAnnotationProcessor {
-//        extendsFrom annotationProcessor
-//    }
-//    testImplementation {
-//        extendsFrom modelImplementation
-//    }
-//}
 
 sourceSets {
 	quarkusOrmPanache {
@@ -124,105 +112,5 @@ check.dependsOn quarkusOrmPanacheTestTask
 test.dependsOn quarkusHrPanacheTestTask
 test.dependsOn quarkusOrmPanacheTestTask
 
-sourceSets.main {
-	java.srcDir xjcTargetDir
-	resources.srcDir xsdDir
-}
-
-compileTestJava {
-	options.compilerArgs += [
-			"-proc:none",
-	"-AsuppressJakartaDataMetamodel=true"
-    ]
-}
-
-// Tests with records
-if ( jdkVersions.test.release.asInt() >= 17 && jdkVersions.explicit ) {
-    // We need to configure the source and target version to 17
-	def testCompilerConfig = {
-		javaCompiler = javaToolchains.compilerFor {
-			languageVersion = jdkVersions.test.compile
-		}
-		sourceCompatibility = 17
-		targetCompatibility = 17
-	}
-
-    compileTestJava {
-        configure testCompilerConfig
-    }
-
-	compileQuarkusOrmPanacheJava {
-		configure testCompilerConfig
-	}
-
-	compileQuarkusHrPanacheJava {
-		configure testCompilerConfig
-	}
-
-	compileJakartaDataJava {
-		configure testCompilerConfig
-	}
-
-	def testLauncherConfig = {
-		javaLauncher = javaToolchains.launcherFor {
-			languageVersion = jdkVersions.test.launcher
-		}
-	}
-
-    test {
-        configure testLauncherConfig
-    }
-
-	quarkusOrmPanacheTest {
-		configure testLauncherConfig
-	}
-
-	quarkusHrPanacheTest {
-		configure testLauncherConfig
-	}
-
-	jakartaDataTest {
-		configure testLauncherConfig
-	}
-}
-else {
-    sourceSets {
-        test {
-            java {
-                exclude '**/records/*.java'
-            }
-        }
-    }
-}
-
-
-task jaxb {
-	// configure Gradle up-to-date checking
-	inputs.dir( xsdDir ).withPropertyName("xsdDir" ).withPathSensitivity( PathSensitivity.RELATIVE )
-	outputs.dir( xjcTargetDir )
-	outputs.cacheIf { true }
-
-	// perform actions
-	doLast {
-		xjcTargetDir.mkdirs()
-
-		ant.taskdef(name: 'xjc', classname: 'org.jvnet.jaxb2_commons.xjc.XJC2Task', classpath: configurations.xjc.asPath)
-
-		ant.xjc(
-				destdir: ( xjcTargetDir as File ).absolutePath,
-				package: 'org.hibernate.processor.xml.jaxb',
-				extension: 'true'
-		) {
-			project.ant.arg line: '-no-header'
-			project.ant.arg line: '-npa'
-			schema( dir: xsdDir.path, includes: "*.xsd" )
-		}
-	}
-}
-
 tasks.sourcesJar.dependsOn ':hibernate-core:generateHqlParser'
 tasks.sourcesJar.dependsOn ':hibernate-core:generateSqlScriptParser'
-tasks.compileJava.dependsOn jaxb
-
-checkstyleMain.exclude '**/jaxb/**'
-

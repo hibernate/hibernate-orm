@@ -24,7 +24,7 @@ public interface JaxbEntityOrMappedSuperclass extends JaxbManagedType, JaxbLifec
 
 	void setExcludeSuperclassListeners(JaxbEmptyTypeImpl value);
 
-	JaxbEntityListenersImpl getEntityListeners();
+	JaxbEntityListenerContainerImpl getEntityListenerContainer();
 
-	void setEntityListeners(JaxbEntityListenersImpl value);
+	void setEntityListenerContainer(JaxbEntityListenerContainerImpl value);
 }

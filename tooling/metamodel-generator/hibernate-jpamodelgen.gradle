@@ -19,9 +19,8 @@ ext {
 }
 
 dependencies {
-    implementation project( ':hibernate-core' )
-
-    // ewww... but Maven needs them this way, and it is irrelevant to Gradle which is smarter here
+    // api - ewww... but Maven needs them this way
+    api project( ':hibernate-core' )
     api jakartaLibs.jaxbApi
     api jakartaLibs.jaxb
     api jakartaLibs.validation

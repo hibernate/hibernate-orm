@@ -88,6 +88,12 @@
             </bindings>
         </bindings>
 
+        <bindings node="//xsd:complexType[@name='persistence-unit-defaults']">
+            <bindings node=".//xsd:element[@name='entity-listeners']">
+                <property name="entityListenerContainer"/>
+            </bindings>
+        </bindings>
+
         <bindings node="//xsd:complexType[@name='collection-user-type-registration']">
             <bindings node=".//xsd:element[@name='param']">
                 <property name="parameters"/>
@@ -96,6 +102,22 @@
 
         <bindings node="//xsd:complexType[@name='entity']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbEntity</inheritance:implements>
+
+            <bindings node=".//xsd:element[@name='entity-listeners']">
+                <property name="entityListenerContainer"/>
+            </bindings>
+
+            <bindings node=".//xsd:element[@name='sequence-generator']">
+                <property name="sequenceGenerators"/>
+            </bindings>
+
+            <bindings node=".//xsd:element[@name='table-generator']">
+                <property name="tableGenerators"/>
+            </bindings>
+
+            <bindings node=".//xsd:element[@name='identifier-generator']">
+                <property name="identifierGenerators"/>
+            </bindings>
 
             <bindings node=".//xsd:element[@name='primary-key-join-column']">
                 <property name="primaryKeyJoinColumns"/>
@@ -150,12 +172,24 @@
             </bindings>
         </bindings>
 
+        <bindings node="//xsd:complexType[@name='association-override']">
+            <bindings node=".//xsd:element[@name='join-column']">
+                <property name="joinColumns"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='foreign-key']">
+                <property name="foreignKeys"/>
+            </bindings>
+        </bindings>
+
         <bindings node="//xsd:complexType[@name='embeddable']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddable</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='mapped-superclass']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbMappedSuperclass</inheritance:implements>
+            <bindings node=".//xsd:element[@name='entity-listeners']">
+                <property name="entityListenerContainer"/>
+            </bindings>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='attributes']">
@@ -276,6 +310,21 @@
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNotFoundCapable</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableCapable</inheritance:implements>
+            <bindings node=".//xsd:element[@name='join-column']">
+                <property name="joinColumns"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='foreign-key']">
+                <property name="foreignKeys"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='join-column']">
+            <bindings node=".//xsd:element[@name='foreign-key']">
+                <property name="foreignKeys"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='check-constraint']">
+                <property name="checkConstraints"/>
+            </bindings>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='hbm-any-mapping']">
@@ -395,11 +444,79 @@
             </bindings>
         </bindings>
 
+        <bindings node="//xsd:complexType[@name='constructor-result']">
+            <bindings node=".//xsd:element[@name='column']">
+                <property name="columns"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:group[@name='collection-structure-group']">
+            <bindings node=".//xsd:element[@name='map-key-attribute-override']">
+                <property name="mapKeyAttributeOverrides"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='map-key-convert']">
+                <property name="mapKeyConverts"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='map-key-join-column']">
+                <property name="mapKeyJoinColumns"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='element-collection']">
+            <bindings node=".//xsd:element[@name='attribute-override']">
+                <property name="attributeOverrides"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='association-override']">
+                <property name="associationOverrides"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='convert']">
+                <property name="converts"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='embedded']">
+            <bindings node=".//xsd:element[@name='attribute-override']">
+                <property name="attributeOverrides"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='association-override']">
+                <property name="associationOverrides"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='convert']">
+                <property name="converts"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='embedded-id']">
+            <bindings node=".//xsd:element[@name='attribute-override']">
+                <property name="attributeOverrides"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='entity-listeners']">
+            <class name="JaxbEntityListenerContainerImpl"/>
+            <bindings node=".//xsd:element[@name='entity-listener']">
+                <property name="entityListeners"/>
+            </bindings>
+        </bindings>
+
         <bindings node="//xsd:complexType[@name='join-table']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbTableMapping</inheritance:implements>
         </bindings>
+
         <bindings node="//xsd:complexType[@name='collection-table']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbTableMapping</inheritance:implements>
+            <bindings node=".//xsd:element[@name='join-column']">
+                <property name="joinColumns"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='foreign-key']">
+                <property name="foreignKeys"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='unique-constraint']">
+                <property name="uniqueConstraints"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='index']">
+                <property name="indexes"/>
+            </bindings>
         </bindings>
         <bindings node="//xsd:complexType[@name='table-generator']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbTableMapping</inheritance:implements>
@@ -608,6 +725,12 @@
             <javaType name="org.hibernate.boot.internal.LimitedCollectionClassification"
                       parseMethod="org.hibernate.boot.jaxb.mapping.internal.LimitedCollectionClassificationMarshalling.fromXml"
                       printMethod="org.hibernate.boot.jaxb.mapping.internal.LimitedCollectionClassificationMarshalling.toXml" />
+        </bindings>
+
+        <bindings node="//xsd:simpleType[@name='not-found-enum']">
+            <javaType name="org.hibernate.annotations.NotFoundAction"
+                      parseMethod="org.hibernate.boot.jaxb.mapping.internal.NotFoundActionMarshalling.fromXml"
+                      printMethod="org.hibernate.boot.jaxb.mapping.internal.NotFoundActionMarshalling.toXml" />
         </bindings>
 
         <bindings node="//xsd:simpleType[@name='uuid-generator-style']">

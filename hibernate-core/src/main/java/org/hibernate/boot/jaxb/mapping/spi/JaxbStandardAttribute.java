@@ -17,4 +17,7 @@ import jakarta.persistence.FetchType;
 public interface JaxbStandardAttribute extends JaxbPersistentAttribute {
 	FetchType getFetch();
 	void setFetch(FetchType value);
+
+	Boolean isOptional();
+	void setOptional(Boolean optional);
 }

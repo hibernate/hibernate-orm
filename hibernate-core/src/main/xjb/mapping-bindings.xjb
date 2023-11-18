@@ -318,15 +318,6 @@
             </bindings>
         </bindings>
 
-        <bindings node="//xsd:complexType[@name='join-column']">
-            <bindings node=".//xsd:element[@name='foreign-key']">
-                <property name="foreignKeys"/>
-            </bindings>
-            <bindings node=".//xsd:element[@name='check-constraint']">
-                <property name="checkConstraints"/>
-            </bindings>
-        </bindings>
-
         <bindings node="//xsd:complexType[@name='hbm-any-mapping']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbSingularAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbStandardAttribute</inheritance:implements>
@@ -430,12 +421,13 @@
                 <property name="caching"/>
             </bindings>
         </bindings>
+
         <bindings node="//xsd:complexType[@name='table']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbTableMapping</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='check-constraint']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbCheckConstraint</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbCheckConstraint</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:group[@name='hbm-common-table-extensions']">
@@ -500,11 +492,11 @@
         </bindings>
 
         <bindings node="//xsd:complexType[@name='join-table']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbTableMapping</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='collection-table']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbTableMapping</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping</inheritance:implements>
             <bindings node=".//xsd:element[@name='join-column']">
                 <property name="joinColumns"/>
             </bindings>
@@ -519,7 +511,7 @@
             </bindings>
         </bindings>
         <bindings node="//xsd:complexType[@name='table-generator']">
-            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbTableMapping</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbTableMapping</inheritance:implements>
         </bindings>
         <bindings node="//xsd:complexType[@name='sequence-generator']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbSchemaAware</inheritance:implements>
@@ -536,9 +528,39 @@
         </bindings>
 
         <bindings node="//xsd:complexType[@name='column']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnStandard</inheritance:implements>
             <bindings node=".//xsd:element[@name='check-constraint']">
                 <property name="checkConstraints"/>
             </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='join-column']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnJoined</inheritance:implements>
+            <bindings node=".//xsd:element[@name='check-constraint']">
+                <property name="checkConstraints"/>
+            </bindings>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='primary-key-join-column']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnJoined</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='order-column']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumn</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='discriminator-column']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnCommon</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnSizable</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='map-key-column']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnCommon</inheritance:implements>
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnSizable</inheritance:implements>
+        </bindings>
+
+        <bindings node="//xsd:complexType[@name='map-key-join-column']">
+            <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.db.JaxbColumnJoined</inheritance:implements>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='entity-listener']">

@@ -67,4 +67,14 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 	void setMapKeyForeignKey(JaxbForeignKeyImpl value);
 
 	List<JaxbHbmFilterImpl> getFilters();
+
+	@Override
+	default Boolean isOptional() {
+		return null;
+	}
+
+	@Override
+	default void setOptional(Boolean optional) {
+
+	}
 }

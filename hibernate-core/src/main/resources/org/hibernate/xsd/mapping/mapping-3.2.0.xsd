@@ -3086,6 +3086,7 @@
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="fetch" type="orm:fetch-type"/>
         <xsd:attribute name="fetch-mode" type="orm:singular-fetch-mode"/>
+        <xsd:attribute name="optional" type="xsd:boolean"/>
         <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
     </xsd:complexType>
 
@@ -3097,7 +3098,7 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
-            <xsd:element name="type" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="type" type="orm:discriminator-type" minOccurs="0"/>
             <xsd:element name="column" type="orm:column" minOccurs="0"/>
             <xsd:element name="mapping" type="orm:any-discriminator-value-mapping" maxOccurs="unbounded" />
         </xsd:sequence>

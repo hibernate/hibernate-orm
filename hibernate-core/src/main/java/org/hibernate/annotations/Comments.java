@@ -12,6 +12,8 @@ import org.hibernate.binder.internal.CommentsBinder;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import jakarta.persistence.Table;
+
 import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.ElementType.TYPE;
@@ -25,12 +27,13 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Gavin King
  *
- * @remove JPA 3.2 adds a comment attribute to {@linkplain jakarta.persistence.Table}
+ * @deprecated Per {@linkplain Comment}, prefer {@linkplain Table#comment()}
  */
 @TypeBinderType(binder = CommentsBinder.class)
 @AttributeBinderType(binder = CommentsBinder.class)
 @Target({METHOD, FIELD, TYPE})
 @Retention(RUNTIME)
+@Deprecated
 @Remove
 public @interface Comments {
 	Comment[] value();

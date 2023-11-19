@@ -6,6 +6,7 @@
  */
 package org.hibernate.annotations;
 
+import org.hibernate.Remove;
 import org.hibernate.binder.internal.CommentBinder;
 
 import java.lang.annotation.Repeatable;
@@ -47,12 +48,15 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *
  * @author Yanming Zhou
  * @author Gavin King
+ *
+ * @remove JPA 3.2 adds a comment attribute to {@linkplain jakarta.persistence.Table}
  */
 @TypeBinderType(binder = CommentBinder.class)
 @AttributeBinderType(binder = CommentBinder.class)
 @Target({METHOD, FIELD, TYPE})
 @Retention(RUNTIME)
 @Repeatable(Comments.class)
+@Remove
 public @interface Comment {
 	/**
 	 * The text of the comment.

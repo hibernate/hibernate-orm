@@ -45,10 +45,11 @@ tasks.named( "javadoc", Javadoc ) {
         linksOffline 'https://www.javadoc.io/doc/javax.cache/cache-api/1.0.0/', "${project.rootDir}/javadoc/javax-cache-1.0"
 
         tags(
-                'todo:X',
                 'apiNote:a:API Note:',
                 'implSpec:a:Implementation Specification:',
                 'implNote:a:Implementation Note:',
+                'todo:X',
+                'remove:a:Removal (deprecation):',
                 'settingDefault:f:Default Value:'
         )
 

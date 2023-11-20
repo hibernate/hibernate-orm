@@ -22,6 +22,9 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 	JaxbPluralFetchModeImpl getFetchMode();
 	void setFetchMode(JaxbPluralFetchModeImpl mode);
 
+	JaxbCollectionUserTypeImpl getCollectionType();
+	void setCollectionType(JaxbCollectionUserTypeImpl value);
+
 	JaxbCollectionIdImpl getCollectionId();
 	void setCollectionId(JaxbCollectionIdImpl id);
 
@@ -37,6 +40,9 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 
 	String getSort();
 	void setSort(String value);
+
+	JaxbPluralAnyMappingImpl.JaxbSortNaturalImpl getSortNatural();
+	void setSortNatural(JaxbPluralAnyMappingImpl.JaxbSortNaturalImpl value);
 
 	JaxbMapKeyImpl getMapKey();
 	void setMapKey(JaxbMapKeyImpl value);
@@ -65,6 +71,21 @@ public interface JaxbPluralAttribute extends JaxbPersistentAttribute, JaxbLockab
 	JaxbForeignKeyImpl getMapKeyForeignKey();
 
 	void setMapKeyForeignKey(JaxbForeignKeyImpl value);
+
+	String getSqlRestriction();
+	void setSqlRestriction(String sqlRestriction);
+
+	JaxbCustomSqlImpl getSqlInsert();
+	void setSqlInsert(JaxbCustomSqlImpl sqlInsert);
+
+	JaxbCustomSqlImpl getSqlUpdate();
+	void setSqlUpdate(JaxbCustomSqlImpl sqlUpdate);
+
+	JaxbCustomSqlImpl getSqlDelete();
+	void setSqlDelete(JaxbCustomSqlImpl sqlDelete);
+
+	JaxbCustomSqlImpl getSqlDeleteAll();
+	void setSqlDeleteAll(JaxbCustomSqlImpl sqlDeleteAll);
 
 	List<JaxbHbmFilterImpl> getFilters();
 

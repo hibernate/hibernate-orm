@@ -4,6 +4,7 @@
 :docsBase: https://docs.jboss.org/hibernate/orm
 :versionDocBase: {docsBase}/6.3
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
+:userGuideBase_6_4: {docsBase}/6.4/userguide/html_single/Hibernate_User_Guide.html
 :javadocsBase: {versionDocBase}/javadocs
 
 
@@ -76,7 +77,7 @@ With Hibernate ORM 6.3, you may now experience a compilation error during annota
 To get rid of that error:
 
 1. Check out the specific sections in the User Guide for a guideline on how to properly harness the annotation processor classpath to use `hibernate-jpamodelgen`:
-   see {userGuideBase}#tooling-gradle-modelgen[here for Gradle] or {userGuideBase}#tooling-maven-modelgen[here for Maven].
+   see {userGuideBase}#tooling-gradle-modelgen[here for Gradle] or {userGuideBase_6_4}#tooling-maven-modelgen[here for Maven].
 2. If the annotation processor classpath doesn't work in your case (e.g. because you use Maven and need the version of `hibernate-jpamodelgen` managed through a BOM),
    upgrade to a newer version of Hibernate ORM that fixes https://hibernate.atlassian.net/browse/HHH-17362[HHH-17362].
 

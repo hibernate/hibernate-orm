@@ -338,9 +338,6 @@
         <bindings node="//xsd:complexType[@name='element-collection']">
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbBasicMapping</inheritance:implements>
-            <bindings node=".//xsd:element[@name='filter']">
-                <property name="filters"/>
-            </bindings>
         </bindings>
 
         <bindings node="//xsd:complexType[@name='one-to-many']">
@@ -349,9 +346,6 @@
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNotFoundCapable</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableCapable</inheritance:implements>
-            <bindings node=".//xsd:element[@name='filter']">
-                <property name="filters"/>
-            </bindings>
             <bindings node=".//xsd:element[@name='filter-join-table']">
                 <property name="joinTableFilters"/>
             </bindings>
@@ -363,9 +357,6 @@
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbNotFoundCapable</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbAssociationAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbJoinTableCapable</inheritance:implements>
-            <bindings node=".//xsd:element[@name='filter']">
-                <property name="filters"/>
-            </bindings>
             <bindings node=".//xsd:element[@name='filter-join-table']">
                 <property name="joinTableFilters"/>
             </bindings>
@@ -375,9 +366,6 @@
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbPluralAttribute</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMapping</inheritance:implements>
             <inheritance:implements>org.hibernate.boot.jaxb.mapping.spi.JaxbCascadableAttribute</inheritance:implements>
-            <bindings node=".//xsd:element[@name='filter']">
-                <property name="filters"/>
-            </bindings>
             <class name="JaxbPluralAnyMappingImpl"/>
         </bindings>
 
@@ -451,6 +439,9 @@
             </bindings>
             <bindings node=".//xsd:element[@name='map-key-join-column']">
                 <property name="mapKeyJoinColumns"/>
+            </bindings>
+            <bindings node=".//xsd:element[@name='filter']">
+                <property name="filters"/>
             </bindings>
         </bindings>
 

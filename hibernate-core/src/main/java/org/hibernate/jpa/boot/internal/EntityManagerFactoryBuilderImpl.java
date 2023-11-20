@@ -33,7 +33,7 @@ import org.hibernate.boot.cfgxml.spi.LoadedConfig;
 import org.hibernate.boot.cfgxml.spi.MappingReference;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmHibernateMapping;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmRootEntityType;
-import org.hibernate.boot.jaxb.spi.BindableMappingDescriptor;
+import org.hibernate.boot.jaxb.spi.JaxbBindableMappingDescriptor;
 import org.hibernate.boot.jaxb.spi.Binding;
 import org.hibernate.boot.model.TypeContributor;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
@@ -76,7 +76,6 @@ import org.hibernate.jpa.boot.spi.StrategyRegistrationProviderList;
 import org.hibernate.jpa.boot.spi.TypeContributorList;
 import org.hibernate.jpa.internal.util.LogHelper;
 import org.hibernate.jpa.internal.util.PersistenceUnitTransactionTypeHelper;
-import org.hibernate.mapping.PersistentClass;
 import org.hibernate.proxy.EntityNotFoundDelegate;
 import org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorBuilderImpl;
 import org.hibernate.resource.transaction.backend.jta.internal.JtaTransactionCoordinatorBuilderImpl;
@@ -352,8 +351,8 @@ public class EntityManagerFactoryBuilderImpl implements EntityManagerFactoryBuil
 					if ( classLoader == null ) {
 						throw persistenceException( "Enhancement requires a temp class loader, but none was given." );
 					}
-					for ( Binding<BindableMappingDescriptor> binding : metadataSources.getXmlBindings() ) {
-						final BindableMappingDescriptor root = binding.getRoot();
+					for ( Binding<JaxbBindableMappingDescriptor> binding : metadataSources.getXmlBindings() ) {
+						final JaxbBindableMappingDescriptor root = binding.getRoot();
 						if ( root instanceof JaxbHbmHibernateMapping ) {
 							final JaxbHbmHibernateMapping hibernateMapping = (JaxbHbmHibernateMapping) root;
 							final String packageName = hibernateMapping.getPackage();

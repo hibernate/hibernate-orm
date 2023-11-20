@@ -103,7 +103,7 @@
                 <xsd:element name="table-generator" type="orm:table-generator" minOccurs="0" maxOccurs="unbounded"/>
 
                 <!-- hbm: "generic" generators -->
-                <xsd:element name="identifier-generator" type="orm:generic-id-generator" minOccurs="0" maxOccurs="unbounded" />
+                <xsd:element name="generic-generator" type="orm:generic-id-generator" minOccurs="0" maxOccurs="unbounded" />
 
                 <xsd:element name="named-query" type="orm:named-query" minOccurs="0" maxOccurs="unbounded"/>
                 <xsd:element name="named-native-query" type="orm:named-native-query" minOccurs="0" maxOccurs="unbounded"/>
@@ -113,6 +113,7 @@
                 <xsd:element name="mapped-superclass" type="orm:mapped-superclass" minOccurs="0" maxOccurs="unbounded"/>
                 <xsd:element name="entity" type="orm:entity" minOccurs="0" maxOccurs="unbounded"/>
                 <xsd:element name="embeddable" type="orm:embeddable" minOccurs="0" maxOccurs="unbounded"/>
+
                 <xsd:element name="converter" type="orm:converter" minOccurs="0" maxOccurs="unbounded"/>
 
                 <!-- hbm : arbitrary HQL "imports" (DTO, etc) -->
@@ -208,7 +209,7 @@
         <xsd:sequence>
             <xsd:element name="param" minOccurs="0" maxOccurs="unbounded" type="configuration-parameter"/>
         </xsd:sequence>
-        <xsd:attribute name="classification" use="required" type="orm:collection-classifications"/>
+        <xsd:attribute name="classification" use="required" type="orm:collection-classification-enum"/>
         <xsd:attribute name="descriptor" use="required" type="xsd:string"/>
     </xsd:complexType>
 
@@ -222,10 +223,10 @@
         <xsd:attribute name="value" use="required" type="xsd:string"/>
     </xsd:complexType>
 
-    <xsd:simpleType name="collection-classifications">
+    <xsd:simpleType name="collection-classification-enum">
         <xsd:annotation>
             <xsd:documentation>
-                See `@org.hibernate.metamodel.CollectionClassification`
+                See `org.hibernate.metamodel.CollectionClassification`
             </xsd:documentation>
         </xsd:annotation>
         <xsd:restriction base="xsd:token">
@@ -365,6 +366,12 @@
                 String name() default "";
                 }
 
+                <entity/> may be used to model both typed and dynamic models -
+                        1. a dynamic model is represented as a Map and is indicated by -
+                            a. metadata-complete
+                            b. class is empty
+                            c. name is the "entity name" (hbm sense, rather than @Entity#name)
+                        2. typed model has a mapped class
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
@@ -461,9 +468,6 @@
 
             <xsd:element name="named-entity-graph" type="orm:named-entity-graph" minOccurs="0" maxOccurs="unbounded"/>
 
-            <!-- hbm: intended for use when mapping dynamic (MAP) models -->
-            <xsd:element name="extends" type="xsd:string" minOccurs="0"/>
-
             <xsd:element name="filter" type="orm:hbm-filter" minOccurs="0" maxOccurs="unbounded" />
 
             <xsd:element name="fetch-profile" type="orm:fetch-profile" minOccurs="0" maxOccurs="unbounded" />
@@ -471,19 +475,32 @@
             <!-- hbm: multi-tenancy tenant-id mapping : @TenantId -->
             <xsd:element name="tenant-id" type="orm:tenant-id" minOccurs="0" />
 
-            <xsd:element name="attributes" type="orm:attributes" minOccurs="0"/>
+            <!-- hbm: Used with dynamic models -->
+            <xsd:element name="abstract" type="xsd:boolean" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>
+                        See `@org.hibernate.boot.internal.Abstract`
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+            <xsd:element name="extends" type="xsd:string" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>
+                        See `@org.hibernate.boot.internal.Extends`
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
+
+            <xsd:sequence>
+                <xsd:element name="attributes" type="orm:attributes" minOccurs="0"/>
+            </xsd:sequence>
         </xsd:sequence>
+        <xsd:attribute name="cacheable" type="xsd:boolean"/>
         <xsd:attribute name="name" type="xsd:string"/>
-        <!--
-            Note : strictly speaking JPA says the class attribute is required, but Hibernate
-            dynamic models (map mode) need it as non-required.  But in that case, 'name' does
-            become required.
-        -->
-        <xsd:attribute name="class" type="xsd:string" />
+        <xsd:attribute name="class" type="xsd:string"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <!-- hbm: Hibernate's pluggable accessor spi -->
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
-        <xsd:attribute name="cacheable" type="xsd:boolean"/>
         <xsd:attribute name="metadata-complete" type="xsd:boolean"/>
     </xsd:complexType>
 
@@ -598,6 +615,7 @@
                 See `@org.hibernate.annotations.OptimisticLock`
                 See `@org.hibernate.annotations.AttributeAccessor`
                 See `@org.hibernate.annotations.Type`
+                See `@org.hibernate.annotations.JavaType`
                 See `@org.hibernate.annotations.JdbcTypeCode`
             </xsd:documentation>
         </xsd:annotation>
@@ -606,6 +624,9 @@
                 <xsd:element name="column" type="orm:column" />
                 <xsd:element name="formula" type="xsd:string" />
             </xsd:choice>
+
+            <xsd:element name="generated" minOccurs="0" type="orm:basic-generation-timing-type"/>
+
             <xsd:choice>
                 <xsd:element name="lob" type="orm:lob" minOccurs="0"/>
                 <xsd:element name="temporal" type="orm:temporal" minOccurs="0"/>
@@ -614,8 +635,7 @@
                 <xsd:element name="nationalized" type="orm:nationalized" minOccurs="0"/>
             </xsd:choice>
 
-            <xsd:element name="generated" minOccurs="0" type="orm:basic-generation-timing-type"/>
-            <xsd:element name="type" type="orm:column-type" minOccurs="0"/>
+            <xsd:group ref="basic-type-group" />
         </xsd:sequence>
 
         <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -625,9 +645,68 @@
         <!-- hbm: Hibernate's pluggable accessor spi -->
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
-        <xsd:attribute name="jdbc-type-code" type="xsd:int" />
     </xsd:complexType>
 
+    <xsd:group name="basic-type-group">
+        <xsd:choice>
+            <!--
+                Choice between -
+                        1. UserType
+                        2. composition
+                            a. java-type, as either
+                                i. @JavaType - descriptor
+                                ii. @Target - Java Class (dynamic models)
+                            b. jdbc-type, as either
+                                i. @JdbcType
+                                ii. @JdbcTypeCode
+                                iii. Name from SqlTypes
+            -->
+            <xsd:element name="type" type="orm:user-type" minOccurs="0"/>
+            <xsd:sequence minOccurs="0">
+                <xsd:choice minOccurs="0">
+                    <xsd:element name="target" type="xsd:string" minOccurs="0">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                See @org.hibernate.annotations.Target
+
+                                Generally only useful for dynamic-models - specifies the attribute's Java type
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:element>
+                    <xsd:element name="java-type" type="xsd:string" minOccurs="0">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                @org.hibernate.annotations.JavaType
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:element>
+                </xsd:choice>
+                <xsd:choice minOccurs="0">
+                    <xsd:element name="jdbc-type" type="xsd:string" minOccurs="0">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                @org.hibernate.annotations.JdbcType
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:element>
+                    <xsd:element name="jdbc-type-code" type="xsd:int" minOccurs="0">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                @org.hibernate.annotations.JdbcTypeCode
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:element>
+                    <xsd:element name="jdbc-type-name" type="xsd:string" minOccurs="0">
+                        <xsd:annotation>
+                            <xsd:documentation>
+                                Name from org.hibernate.type.SqlTypes
+                            </xsd:documentation>
+                        </xsd:annotation>
+                    </xsd:element>
+                </xsd:choice>
+            </xsd:sequence>
+        </xsd:choice>
+    </xsd:group>
 
 
     <!-- **************************************************** -->
@@ -760,6 +839,8 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
+            <xsd:element name="collection-id" type="orm:collection-id" minOccurs="0"/>
+
             <xsd:choice>
                 <xsd:element name="order-by" type="orm:order-by" minOccurs="0"/>
                 <xsd:element name="order-column" type="orm:order-column" minOccurs="0"/>
@@ -803,6 +884,7 @@
                         <xsd:element name="lob" type="orm:lob" minOccurs="0"/>
                         <xsd:element name="nationalized" type="orm:nationalized" minOccurs="0"/>
                     </xsd:choice>
+                    <xsd:group ref="basic-type-group" />
                 </xsd:sequence>
                 <xsd:sequence>
                     <xsd:element name="attribute-override" type="orm:attribute-override" minOccurs="0" maxOccurs="unbounded"/>
@@ -811,6 +893,7 @@
                 </xsd:sequence>
             </xsd:choice>
             <xsd:element name="collection-table" type="orm:collection-table" minOccurs="0"/>
+            <xsd:element name="filter" type="orm:hbm-filter" minOccurs="0" maxOccurs="unbounded" />
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="target-class" type="xsd:string"/>
@@ -819,7 +902,58 @@
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="optimistic-lock" type="xsd:boolean" default="true" />
+        <xsd:attribute name="classification" type="orm:limited-collection-classification-enum" />
     </xsd:complexType>
+
+    <xsd:complexType name="collection-id">
+        <xsd:annotation>
+            <xsd:documentation>
+                See `@org.hibernate.annotations.CollectionId`
+                See `@org.hibernate.annotations.CollectionIdType`
+                See `@org.hibernate.annotations.CollectionIdJavaType`
+                See `@org.hibernate.annotations.CollectionIdJdbcType`
+                See `@org.hibernate.annotations.CollectionIdJdbcTypeCode`
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="column" minOccurs="0" maxOccurs="unbounded" type="orm:column"/>
+            <xsd:element name="generator" type="orm:generated-value"/>
+            <xsd:group ref="basic-type-group"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:simpleType name="limited-collection-classification-enum">
+        <xsd:annotation>
+            <xsd:documentation>
+                See `@org.hibernate.boot.internal.CollectionClassification`.
+
+                Defines a limited set of `org.hibernate.metamodel.CollectionClassification`.
+
+                We leave off the following enumerated values, since we can distinguish those already
+                via presence of <collection-id/>, <order-by/>, <order-column/> and <sort/> -
+                        * ID_BAG
+                        * SORTED_SET
+                        * ORDERED_SET
+                        * SORTED_MAP
+                        * ORDERED_MAP
+
+                ARRAY is also missing, as handling the element type is tricky.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="bag"/>
+            <xsd:enumeration value="list"/>
+            <xsd:enumeration value="set"/>
+            <xsd:enumeration value="map"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+    <xsd:simpleType name="not-found-enum">
+        <xsd:restriction base="xsd:token">
+            <xsd:enumeration value="EXCEPTION"/>
+            <xsd:enumeration value="IGNORE"/>
+        </xsd:restriction>
+    </xsd:simpleType>
 
     <!-- **************************************************** -->
 
@@ -833,11 +967,13 @@
             <xsd:element name="description" type="xsd:string" minOccurs="0"/>
             <xsd:element name="attributes" type="orm:embeddable-attributes" minOccurs="0"/>
         </xsd:sequence>
-        <xsd:attribute name="class" type="xsd:string" use="required"/>
+        <xsd:attribute name="class" type="xsd:string" />
+        <xsd:attribute name="name" type="xsd:string" />
         <xsd:attribute name="instantiator" type="xsd:string"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="metadata-complete" type="xsd:boolean"/>
     </xsd:complexType>
+
 
     <!-- **************************************************** -->
 
@@ -874,6 +1010,13 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
+            <xsd:element name="target" type="xsd:string" minOccurs="0">
+                <xsd:annotation>
+                    <xsd:documentation>
+                        See `@org.hibernate.boot.internal.Target`
+                    </xsd:documentation>
+                </xsd:annotation>
+            </xsd:element>
             <xsd:element name="attribute-override" type="orm:attribute-override" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="association-override" type="orm:association-override" minOccurs="0" maxOccurs="unbounded"/>
             <xsd:element name="convert" type="orm:convert" minOccurs="0" maxOccurs="unbounded"/>
@@ -894,6 +1037,7 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
+            <xsd:element name="target" type="xsd:string" minOccurs="0"/>
             <xsd:element name="attribute-override" type="orm:attribute-override" minOccurs="0" maxOccurs="unbounded"/>
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
@@ -1077,12 +1221,13 @@
             <xsd:element name="uuid-generator" type="orm:uuid-generator" minOccurs="0"/>
 
             <xsd:element name="unsaved-value" type="xsd:string" minOccurs="0"/>
-            <xsd:element name="type" type="orm:column-type" minOccurs="0"/>
+
+            <xsd:group ref="basic-type-group" />
         </xsd:sequence>
+
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
-        <xsd:attribute name="jdbc-type-code" type="xsd:int" />
     </xsd:complexType>
 
     <!-- **************************************************** -->
@@ -1227,6 +1372,8 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
+            <xsd:element name="collection-id" type="orm:collection-id" minOccurs="0"/>
+
             <xsd:choice>
                 <xsd:element name="order-by" type="orm:order-by" minOccurs="0"/>
                 <xsd:element name="order-column" type="orm:order-column" minOccurs="0"/>
@@ -1255,6 +1402,8 @@
             </xsd:choice>
             <xsd:element name="join-table" type="orm:join-table" minOccurs="0"/>
             <xsd:element name="cascade" type="orm:cascade-type" minOccurs="0"/>
+            <xsd:element name="filter" type="orm:hbm-filter" minOccurs="0" maxOccurs="unbounded" />
+            <xsd:element name="filter-join-table" type="orm:hbm-filter" minOccurs="0" maxOccurs="unbounded" />
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="target-entity" type="xsd:string"/>
@@ -1264,6 +1413,8 @@
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="mapped-by" type="xsd:string"/>
         <xsd:attribute name="orphan-removal" type="xsd:boolean"/>
+        <xsd:attribute name="classification" type="orm:limited-collection-classification-enum" />
+        <xsd:attribute name="not-found" default="EXCEPTION" type="orm:not-found-enum"/>
     </xsd:complexType>
 
     <!-- **************************************************** -->
@@ -1297,6 +1448,7 @@
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="maps-id" type="xsd:string"/>
         <xsd:attribute name="id" type="xsd:boolean"/>
+        <xsd:attribute name="not-found" default="EXCEPTION" type="orm:not-found-enum"/>
     </xsd:complexType>
 
     <!-- **************************************************** -->
@@ -1666,6 +1818,8 @@
             </xsd:documentation>
         </xsd:annotation>
         <xsd:sequence>
+            <xsd:element name="collection-id" type="orm:collection-id" minOccurs="0"/>
+
             <xsd:choice>
                 <xsd:element name="order-by" type="orm:order-by" minOccurs="0"/>
                 <xsd:element name="order-column" type="orm:order-column" minOccurs="0"/>
@@ -1701,6 +1855,8 @@
             </xsd:choice>
             <xsd:element name="cascade" type="orm:cascade-type" minOccurs="0"/>
             <xsd:element name="on-delete" type="orm:on-delete-type" minOccurs="0"/>
+            <xsd:element name="filter" type="orm:hbm-filter" minOccurs="0" maxOccurs="unbounded" />
+            <xsd:element name="filter-join-table" type="orm:hbm-filter" minOccurs="0" maxOccurs="unbounded" />
         </xsd:sequence>
         <xsd:attribute name="name" type="xsd:string" use="required"/>
         <xsd:attribute name="target-entity" type="xsd:string"/>
@@ -1710,6 +1866,8 @@
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
         <xsd:attribute name="mapped-by" type="xsd:string"/>
         <xsd:attribute name="orphan-removal" type="xsd:boolean"/>
+        <xsd:attribute name="classification" type="orm:limited-collection-classification-enum" />
+        <xsd:attribute name="not-found" default="EXCEPTION" type="orm:not-found-enum"/>
     </xsd:complexType>
 
     <!-- **************************************************** -->
@@ -2356,6 +2514,9 @@
                 will pass it the parameters after instantiation).
             </xsd:documentation>
         </xsd:annotation>
+        <xsd:sequence>
+            <xsd:element name="parameter" type="orm:configuration-parameter" minOccurs="0" maxOccurs="unbounded" />
+        </xsd:sequence>
         <xsd:attribute name="name" use="required" type="xsd:string"/>
         <xsd:attribute name="class" use="required" type="xsd:string"/>
     </xsd:complexType>
@@ -2643,6 +2804,8 @@
         </xsd:annotation>
 
         <xsd:sequence>
+            <xsd:element name="collection-id" type="orm:collection-id" minOccurs="0"/>
+
             <xsd:element name="discriminator" type="orm:hbm-any-discriminator"/>
             <xsd:element name="key" type="orm:hbm-any-key"/>
             <xsd:element name="cascade" type="orm:cascade-type" minOccurs="0"/>
@@ -2652,6 +2815,7 @@
         <xsd:attribute name="name" use="required" type="xsd:string"/>
         <xsd:attribute name="access" type="orm:access-type"/>
         <xsd:attribute name="attribute-accessor" type="xsd:string" />
+        <xsd:attribute name="classification" type="orm:limited-collection-classification-enum" />
     </xsd:complexType>
 
 
@@ -2826,7 +2990,7 @@
 
     <!-- **************************************************** -->
 
-    <xsd:complexType name="column-type">
+    <xsd:complexType name="user-type">
         <xsd:annotation>
             <xsd:documentation>
                 See `@org.hibernate.annotations.Type`

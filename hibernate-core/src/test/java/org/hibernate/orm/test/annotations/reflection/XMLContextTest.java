@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.annotations.reflection;
 
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.internal.XMLContext;
 import org.hibernate.orm.test.internal.util.xml.XMLMappingHelper;
 
@@ -39,7 +39,7 @@ public class XMLContextTest {
 		XMLMappingHelper xmlHelper = new XMLMappingHelper();
 		final XMLContext context = new XMLContext( bootstrapContext );
 
-		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings(
+		JaxbEntityMappingsImpl mappings = xmlHelper.readOrmXmlMappings(
 				"org/hibernate/orm/test/annotations/reflection/orm.xml" );
 		context.addDocument( mappings );
 	}

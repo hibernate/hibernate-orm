@@ -11,7 +11,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import org.hibernate.annotations.Columns;
-import org.hibernate.boot.jaxb.mapping.JaxbEntityMappings;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityMappingsImpl;
 import org.hibernate.boot.model.internal.JPAXMLOverriddenAnnotationReader;
 import org.hibernate.boot.model.internal.XMLContext;
 import org.hibernate.orm.test.internal.util.xml.XMLMappingHelper;
@@ -461,7 +461,7 @@ public class JPAXMLOverriddenAnnotationReaderTest extends BaseUnitTestCase {
 
 	private XMLContext buildContext(String ormfile) throws IOException {
 		XMLMappingHelper xmlHelper = new XMLMappingHelper();
-		JaxbEntityMappings mappings = xmlHelper.readOrmXmlMappings( ormfile );
+		JaxbEntityMappingsImpl mappings = xmlHelper.readOrmXmlMappings( ormfile );
 		XMLContext context = new XMLContext( bootstrapContext );
 		context.addDocument( mappings );
 		return context;

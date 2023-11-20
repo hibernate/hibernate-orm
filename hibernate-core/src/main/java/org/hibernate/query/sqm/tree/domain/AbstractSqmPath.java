@@ -72,6 +72,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	// meant for assertions only
 	private boolean navigablePathsMatch(AbstractSqmPath<T> target) {
+		final SqmPath<?> lhs = getLhs() != null ? getLhs() : findRoot();
 		final SqmPath<?> targetLhs = target.getLhs() != null ? target.getLhs() : target.findRoot();
 		return lhs == null || lhs.getNavigablePath() == targetLhs.getNavigablePath()
 				|| getRoot( lhs ).getNodeType() instanceof SqmPolymorphicRootDescriptor;

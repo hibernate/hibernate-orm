@@ -7,13 +7,13 @@
 package org.hibernate.query.sqm.internal;
 
 import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.metamodel.EmbeddableType;
 import jakarta.persistence.metamodel.EntityType;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.TupleType;
 import org.hibernate.metamodel.model.domain.internal.DiscriminatorSqmPathSource;
-import org.hibernate.metamodel.model.domain.internal.EmbeddedSqmPathSource;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
@@ -119,10 +119,10 @@ public class TypecheckUtil {
 
 		// for embeddables, the embeddable class must match exactly
 
-		if ( lhsType instanceof EmbeddedSqmPathSource && rhsType instanceof EmbeddedSqmPathSource ) {
+		if ( lhsType instanceof EmbeddableType<?> && rhsType instanceof EmbeddableType<?> ) {
 			return areEmbeddableTypesComparable(
-					(EmbeddedSqmPathSource<?>) lhsType,
-					(EmbeddedSqmPathSource<?>) rhsType
+					(EmbeddableType<?>) lhsType,
+					(EmbeddableType<?>) rhsType
 			);
 		}
 
@@ -134,8 +134,8 @@ public class TypecheckUtil {
 
 		// allow comparing an embeddable against a tuple literal
 
-		if ( lhsType instanceof EmbeddedSqmPathSource<?> && rhsType instanceof TupleType
-				|| rhsType instanceof EmbeddedSqmPathSource<?> && lhsType instanceof TupleType ) {
+		if ( lhsType instanceof EmbeddableType<?> && rhsType instanceof TupleType
+				|| rhsType instanceof EmbeddableType<?> && lhsType instanceof TupleType ) {
 			// TODO: do something meaningful here
 			return true;
 		}
@@ -192,10 +192,10 @@ public class TypecheckUtil {
 	}
 
 	private static boolean areEmbeddableTypesComparable(
-			EmbeddedSqmPathSource<?> lhsType,
-			EmbeddedSqmPathSource<?> rhsType) {
+			EmbeddableType<?> lhsType,
+			EmbeddableType<?> rhsType) {
 		// no polymorphism for embeddable types
-		return rhsType.getNodeJavaType() == lhsType.getNodeJavaType();
+		return rhsType.getJavaType() == lhsType.getJavaType();
 	}
 
 	private static boolean areTupleTypesComparable(
@@ -340,9 +340,9 @@ public class TypecheckUtil {
 		}
 
 		// allow comparing literal null to things
-		if ( !(left instanceof SqmLiteralNull) && !(right instanceof SqmLiteralNull) ) {
-			final SqmExpressible<?> leftType = left.getNodeType();
-			final SqmExpressible<?> rightType = right.getNodeType();
+		if ( !( left instanceof SqmLiteralNull ) && !( right instanceof SqmLiteralNull ) ) {
+			final SqmExpressible<?> leftType = getNodeType( left );
+			final SqmExpressible<?> rightType = getNodeType( right );
 			if ( !areTypesComparable( leftType, rightType, factory ) ) {
 				throw new SemanticException(
 						String.format(
@@ -353,6 +353,12 @@ public class TypecheckUtil {
 				);
 			}
 		}
+	}
+
+	private static SqmExpressible<?> getNodeType(SqmExpression<?> expression) {
+		return expression instanceof SqmPath<?> ?
+				( (SqmPath<?>) expression ).getResolvedModel().getSqmType() :
+				expression.getNodeType();
 	}
 
 	/**

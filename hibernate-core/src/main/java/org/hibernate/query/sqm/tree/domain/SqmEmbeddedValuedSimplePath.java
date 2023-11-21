@@ -77,7 +77,8 @@ public class SqmEmbeddedValuedSimplePath<T>
 
 	@Override
 	public DomainType<T> getSqmType() {
-		return getReferencedPathSource().getSqmType();
+		//noinspection unchecked
+		return (DomainType<T>) getResolvedModel().getSqmType();
 	}
 
 	@Override

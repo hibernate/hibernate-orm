@@ -27,6 +27,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmLiteralNull;
 import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
+import org.hibernate.type.QueryParameterJavaObjectType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 
 import java.time.temporal.Temporal;
@@ -104,6 +105,12 @@ public class TypecheckUtil {
 			SqmExpressible<?> rhsType,
 			SessionFactoryImplementor factory) {
 		if ( lhsType == null || rhsType == null || lhsType == rhsType ) {
+			return true;
+		}
+
+		// for query with parameters we are unable to resolve the correct JavaType, especially for tuple of parameters
+
+		if ( lhsType instanceof QueryParameterJavaObjectType || rhsType instanceof QueryParameterJavaObjectType) {
 			return true;
 		}
 

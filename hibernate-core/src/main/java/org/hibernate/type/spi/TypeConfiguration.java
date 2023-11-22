@@ -57,12 +57,14 @@ import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.QueryParameterJavaObjectType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -591,10 +593,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	public SqmExpressible<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
 		final SqmExpressible<?>[] components = new SqmExpressible<?>[typedNodes.size()];
 		for ( int i = 0; i < typedNodes.size(); i++ ) {
-			final SqmExpressible<?> sqmExpressible = typedNodes.get( i ).getNodeType();
-			components[i] = sqmExpressible != null
-					? sqmExpressible
-					: getBasicTypeForJavaType( Object.class );
+			SqmTypedNode<?> tupleElement = typedNodes.get(i);
+			final SqmExpressible<?> sqmExpressible = tupleElement.getNodeType();
+			// keep null value for Named Parameters
+			if (tupleElement instanceof SqmParameter<?> && sqmExpressible == null) {
+				components[i] = QueryParameterJavaObjectType.INSTANCE;
+			}
+			else {
+				components[i] = sqmExpressible != null
+						? sqmExpressible
+						: getBasicTypeForJavaType( Object.class );
+			}
 		}
 		return arrayTuples.computeIfAbsent(
 				new ArrayCacheKey( components ),

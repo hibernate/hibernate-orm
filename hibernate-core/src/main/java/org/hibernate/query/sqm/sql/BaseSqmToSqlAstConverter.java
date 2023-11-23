@@ -5983,7 +5983,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						return resolveEntityPersister( (EntityDomainType<?>) type );
 					}
 				}
-				else if ( inferredMapping != null ) {
+				if ( inferredMapping != null ) {
 					// inferredMapping is JavaObjectType and we cannot deduct the type
 					return inferredMapping;
 				}

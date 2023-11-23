@@ -103,7 +103,6 @@ public class TypecheckUtil {
 			SqmExpressible<?> lhsType,
 			SqmExpressible<?> rhsType,
 			SessionFactoryImplementor factory) {
-
 		if ( lhsType == null || rhsType == null || lhsType == rhsType ) {
 			return true;
 		}
@@ -117,43 +116,45 @@ public class TypecheckUtil {
 			return true;
 		}
 
+		final DomainType<?> lhsDomainType = lhsType.getSqmType();
+		final DomainType<?> rhsDomainType = rhsType.getSqmType();
+
 		// for embeddables, the embeddable class must match exactly
 
-		if ( lhsType instanceof EmbeddableType<?> && rhsType instanceof EmbeddableType<?> ) {
-			return areEmbeddableTypesComparable(
-					(EmbeddableType<?>) lhsType,
-					(EmbeddableType<?>) rhsType
-			);
+		final EmbeddableType<?> lhsEmbeddable = getEmbeddableType( lhsDomainType );
+		final EmbeddableType<?> rhsEmbeddable = getEmbeddableType( rhsDomainType );
+		if ( lhsEmbeddable != null && rhsEmbeddable != null ) {
+			return areEmbeddableTypesComparable( lhsEmbeddable, rhsEmbeddable );
 		}
 
 		// for tuple constructors, we must check each element
 
-		if ( lhsType instanceof TupleType && rhsType instanceof TupleType ) {
-			return areTupleTypesComparable( factory, (TupleType<?>) lhsType, (TupleType<?>) rhsType );
+		if ( lhsDomainType instanceof TupleType && rhsDomainType instanceof TupleType ) {
+			return areTupleTypesComparable( factory, (TupleType<?>) lhsDomainType, (TupleType<?>) rhsDomainType );
 		}
 
 		// allow comparing an embeddable against a tuple literal
 
-		if ( lhsType instanceof EmbeddableType<?> && rhsType instanceof TupleType
-				|| rhsType instanceof EmbeddableType<?> && lhsType instanceof TupleType ) {
+		if ( lhsEmbeddable != null && rhsDomainType instanceof TupleType
+				|| rhsEmbeddable != null && lhsDomainType instanceof TupleType ) {
 			// TODO: do something meaningful here
 			return true;
 		}
 
 		// entities can be compared if they belong to the same inheritance hierarchy
 
-		if ( lhsType instanceof EntityType && rhsType instanceof EntityType ) {
-			return areEntityTypesComparable( (EntityType<?>) lhsType, (EntityType<?>) rhsType, factory );
+		if ( lhsDomainType instanceof EntityType && rhsDomainType instanceof EntityType ) {
+			return areEntityTypesComparable( (EntityType<?>) lhsDomainType, (EntityType<?>) rhsDomainType, factory );
 		}
 
 		// entities can be compared to discriminators if they belong to
 		// the same inheritance hierarchy
 
-		if ( lhsType instanceof DiscriminatorSqmPathSource) {
-			return isDiscriminatorTypeComparable( (DiscriminatorSqmPathSource<?>) lhsType, rhsType, factory );
+		if ( lhsDomainType instanceof DiscriminatorSqmPathSource ) {
+			return isDiscriminatorTypeComparable( (DiscriminatorSqmPathSource<?>) lhsDomainType, rhsDomainType, factory );
 		}
-		if ( rhsType instanceof DiscriminatorSqmPathSource ) {
-			return isDiscriminatorTypeComparable( (DiscriminatorSqmPathSource<?>) rhsType, lhsType, factory );
+		if ( rhsDomainType instanceof DiscriminatorSqmPathSource ) {
+			return isDiscriminatorTypeComparable( (DiscriminatorSqmPathSource<?>) rhsDomainType, lhsDomainType, factory );
 		}
 
 		// Treat the expressions as comparable if they belong to the same
@@ -162,8 +163,6 @@ public class TypecheckUtil {
 		// decent approach which allows comparison between literals and
 		// enums, user-defined types, etc.
 
-		DomainType<?> lhsDomainType = lhsType.getSqmType();
-		DomainType<?> rhsDomainType = rhsType.getSqmType();
 		if ( lhsDomainType instanceof JdbcMapping && rhsDomainType instanceof JdbcMapping ) {
 			JdbcType lhsJdbcType = ((JdbcMapping) lhsDomainType).getJdbcType();
 			JdbcType rhsJdbcType = ((JdbcMapping) rhsDomainType).getJdbcType();
@@ -189,6 +188,10 @@ public class TypecheckUtil {
 		}
 
 		return false;
+	}
+
+	private static EmbeddableType<?> getEmbeddableType(SqmExpressible<?> expressible) {
+		return expressible instanceof EmbeddableType<?> ? (EmbeddableType<?>) expressible : null;
 	}
 
 	private static boolean areEmbeddableTypesComparable(
@@ -341,8 +344,8 @@ public class TypecheckUtil {
 
 		// allow comparing literal null to things
 		if ( !( left instanceof SqmLiteralNull ) && !( right instanceof SqmLiteralNull ) ) {
-			final SqmExpressible<?> leftType = getNodeType( left );
-			final SqmExpressible<?> rightType = getNodeType( right );
+			final SqmExpressible<?> leftType = left.getExpressible();
+			final SqmExpressible<?> rightType = right.getExpressible();
 			if ( !areTypesComparable( leftType, rightType, factory ) ) {
 				throw new SemanticException(
 						String.format(
@@ -353,12 +356,6 @@ public class TypecheckUtil {
 				);
 			}
 		}
-	}
-
-	private static SqmExpressible<?> getNodeType(SqmExpression<?> expression) {
-		return expression instanceof SqmPath<?> ?
-				( (SqmPath<?>) expression ).getResolvedModel().getSqmType() :
-				expression.getNodeType();
 	}
 
 	/**

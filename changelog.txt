@@ -3,6 +3,64 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.3.2.Final (November 23, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32193
+
+** Bug
+    * [HHH-17428] - Parameter place holder should start from 1 in StandardTemporaryTableExporter
+    * [HHH-17415] - NullPointerException: EntityValuedPathInterpretation - getNavigablePath()
+    * [HHH-17412] - Type comparison error due to surprising javac method selection
+    * [HHH-17411] - Fetch join on treated join leads to owner not selected error
+    * [HHH-17386] - Type inference source is not reset for top level predicates
+    * [HHH-17383] - Association is null in lazy initialized element collection
+    * [HHH-17351] - Missing basic type registration after changing preferred jdbc type
+    * [HHH-17332] - NullPointerException in TupleMappingModelExpressible constructor
+    * [HHH-17329] - Query Cache contains null values when entity was loaded as proxy
+    * [HHH-17328] - Retrieve entity using entity graph not adding type in the where clause for @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+    * [HHH-17308] - AssertionError when mixing @SQLSelect and composite ID
+    * [HHH-17302] - Use nocache for MariaDB sequences
+    * [HHH-17299] - AssertionError in DiscriminatorPathInterpretation when treating a path with the same subtype
+    * [HHH-17294] - Non-Embeddable JSON objects are not marked as dirty when modified
+    * [HHH-17292] - MappedSuperclass with more than 1 subclass level leads to "UnknownPathException: Could not resolve attribute"
+    * [HHH-17290] - Embeddable with a primitive field cannot be set to null
+    * [HHH-17288] - IdClass broken column mapping in `@OneToOne` when `mappedBy` is used by the owning side
+    * [HHH-17285] - @MapdKey fails with name attribute that represetns a path with dots separator
+    * [HHH-17283] - Subquery using Entity with composite Id causes SemanticException
+    * [HHH-17276] - Columns that are widened to LOB type aren't considered as LOBs
+    * [HHH-17264] - OracleAggregateSupport should use json_object to create empty json
+    * [HHH-17262] - JdbcTypeRecommendationException when using <mapping-file> of persistence.xml file 
+    * [HHH-17260] - ClassCastException when using SUM() on subquery root
+    * [HHH-17257] - ElementCollection is missing elements after update if embeddable type has primitive columns marked as nullable
+    * [HHH-17256] - elementcollection embeddable contains only nulls when loading in multiple steps 
+    * [HHH-17255] - Cannot resolve table reference for treated many-to-many map collection simple attribute
+    * [HHH-17243] - org.hibernate.MappingException: Could not resolve named type : duration
+    * [HHH-17242] - Oracle temporal arithmetic performance regression
+    * [HHH-17240] - ClassTransformer enhancement is not thread safe
+    * [HHH-17234] - PostgreSQL: operator does not exist '!=-' exception when using JPA not equals operator '<>' with negative number
+    * [HHH-17231] - HHH-17231 SQLGrammarException when selecting property of grouped join association in subquery
+    * [HHH-17228] - Exception when selecting from a subclass in single table inheritance when another entity has 1-1 attributes of other subclasses
+    * [HHH-17225] - Right join does not return records from the right table if there's no matching record in the from clause
+    * [HHH-17223] - ClassCastException when using SUM() on COALESCE in criteria api
+    * [HHH-17211] - Hibernate entity with @Any attribute throws a null pointer exception on HQL select query
+    * [HHH-17208] - @Any mapping not working on HQL inserts
+    * [HHH-17205] - QueryException: could not resolve property: null on OneToOne with composite key
+    * [HHH-17196] - Documentation for @NaturalId should be more explicit about non-nullability
+    * [HHH-17193] - Error when merging entity with composite PK and nested to-many collection
+    * [HHH-17192] - Given a JOINED inheritance, "missing FROM-clause entry for table" error is thrown when applying EntityGraph to abstract entity and filtering on a subentity attribute
+    * [HHH-17188] - Query Cache contains null values when entity is found in Persistence Context
+    * [HHH-17178] - Is null predicate on treated plural path causes InterpretationException
+    * [HHH-17172] - SerializableProxy: Unable to retrieve matching session factory by name (Hibernate 6 regression?)
+    * [HHH-17170] - Custom @SQLDelete, @SQLDeleteAll and @SQLUpdate not working on associated collections
+    * [HHH-17155] - DynamicInstantiationResult wrong java type constructor selected
+    * [HHH-17143] - More not-found fix ups
+    * [HHH-17132] - NaturalId unique keys can no longer be renamed by providing an equivalent UniqueConstraint annotation
+    * [HHH-17108] - Error In Native Query when adding two Entity's and using composite key. Error: Unable to find column position by name.
+    * [HHH-17102] - @SqlResultSetMapping doesn’t work with @Inheritance(strategy = InheritanceType.JOINED)
+    * [HHH-16933] - JSON issue on Oracle 23c
+
+
 Changes in 6.3.1.Final (September 19, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

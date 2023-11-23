@@ -3786,8 +3786,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						querySpec::applyPredicate,
 						this
 				);
-				// Force initialization of a possible lazy table group
-				tableGroup.getPrimaryTableReference();
 				querySpec.getFromClause().addRoot( tableGroup );
 			}
 			else {

@@ -181,7 +181,29 @@ List documents =
 For much more information, see {envers-doc}[the User Guide].
 ****
 
-Another closely-related problem is multi-tenancy.
+Historically, filters where often used to implement soft-delete.
+But, since 6.4, Hibernate now comes with soft-delete built in.
+
+[[soft-delete]]
+=== Soft-delete
+
+Even when we don't need complete historical versioning, we often prefer to "delete" a row by marking it as obsolete using a SQL `update`, rather than by executing an actual SQL `delete` and removing the row from the database completely.
+
+The link:{doc-javadoc-url}org/hibernate/annotations/SoftDelete.html[`@SoftDelete`] annotation controls how this works:
+[source,java]
+----
+@Entity
+@SoftDelete(columnName = "deleted",
+            converter = TrueFalseConverter.class)
+class Draft {
+
+    ...
+}
+----
+The `columnName` specifies a column holding the deletion status, and the `converter` is responsible for converting a Java `Boolean` to the type of that column.
+In this example, `TrueFalseConverter` sets the column to the character `'F'` initially, and to `'T'` when the row is deleted.
+
+Another feature that you _could_ use filters for, but now don't need to, is multi-tenancy.
 
 [[multitenancy]]
 === Multi-tenancy

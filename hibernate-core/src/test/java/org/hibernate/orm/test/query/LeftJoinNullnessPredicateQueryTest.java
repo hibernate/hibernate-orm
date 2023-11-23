@@ -81,6 +81,34 @@ public class LeftJoinNullnessPredicateQueryTest {
 	}
 
 	@Test
+	public void testDereferenceIsNull(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final List<Book> resultList = session.createQuery(
+					"select book from Book book " +
+							"left join book.author a " +
+							"where a.id is null",
+					Book.class
+			).getResultList();
+			assertThat( resultList ).hasSize( 1 );
+			assertThat( resultList.get( 0 ).getTitle() ).isEqualTo( "Unknown Author" );
+		} );
+	}
+
+	@Test
+	public void testDereferenceIsNotNull(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final List<Book> resultList = session.createQuery(
+					"select book from Book book " +
+							"left join book.author a " +
+							"where a.id is not null",
+					Book.class
+			).getResultList();
+			assertThat( resultList ).hasSize( 2 );
+			assertThat( resultList.stream().map( b -> b.title ) ).contains( "The Shining", "The Colour Out of Space" );
+		} );
+	}
+
+	@Test
 	public void testIsNotNullWithCondition(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List<Book> resultList = session.createQuery(
@@ -101,6 +129,34 @@ public class LeftJoinNullnessPredicateQueryTest {
 					"select book from Book book " +
 					"left join book.author a with a.alive = true " +
 					"where a is null",
+					Book.class
+			).getResultList();
+			assertThat( resultList ).hasSize( 2 );
+			assertThat( resultList.stream().map( b -> b.title ) ).contains( "Unknown Author", "The Colour Out of Space" );
+		} );
+	}
+
+	@Test
+	public void testDereferenceIsNotWithCondition(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final List<Book> resultList = session.createQuery(
+					"select book from Book book " +
+							"left join book.author a with a.alive = true " +
+							"where a.id is not null",
+					Book.class
+			).getResultList();
+			assertThat( resultList ).hasSize( 1 );
+			assertThat( resultList.get( 0 ).getTitle() ).isEqualTo( "The Shining" );
+		} );
+	}
+
+	@Test
+	public void testDereferenceIsNullWithCondition(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final List<Book> resultList = session.createQuery(
+					"select book from Book book " +
+							"left join book.author a with a.alive = true " +
+							"where a.id is null",
 					Book.class
 			).getResultList();
 			assertThat( resultList ).hasSize( 2 );

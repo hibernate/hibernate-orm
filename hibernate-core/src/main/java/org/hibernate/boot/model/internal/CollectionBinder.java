@@ -2179,6 +2179,7 @@ public abstract class CollectionBinder {
 		}
 
 		checkFilterConditions( collection );
+		checkConsistentColumnMutability( collection );
 	}
 
 	private void handleElementCollection(XClass elementType, String hqlOrderBy) {
@@ -2663,6 +2664,34 @@ public abstract class CollectionBinder {
 					"@ManyToMany or @ElementCollection defining filter or where without join fetching "
 							+ "not valid within collection using join fetching[" + collection.getRole() + "]"
 			);
+		}
+	}
+
+	private static void checkConsistentColumnMutability(Collection collection) {
+		checkConsistentColumnMutability( collection.getRole(), collection.getKey() );
+		checkConsistentColumnMutability( collection.getRole(), collection.getElement() );
+	}
+
+	private static void checkConsistentColumnMutability(String collectionRole, Value value) {
+		Boolean readOnly = null;
+		for ( int i = 0; i < value.getColumnSpan(); i++ ) {
+			final boolean insertable = value.isColumnInsertable( i );
+			if ( insertable != value.isColumnUpdateable( i ) ) {
+				throw new AnnotationException(
+						"Join column '" + value.getColumns().get( i ).getName() + "' on collection property '"
+								+ collectionRole + "' must be defined with the same insertable and updatable attributes"
+				);
+			}
+			if ( readOnly == null ) {
+				readOnly = insertable;
+			}
+			else if ( readOnly != insertable && !value.getColumns().get( i ).isFormula() ) {
+				// We also assert that all join columns have the same mutability (except formulas)
+				throw new AnnotationException(
+						"All join columns on collection '" + collectionRole + "' should have" +
+								" the same insertable and updatable setting"
+				);
+			}
 		}
 	}
 

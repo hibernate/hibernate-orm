@@ -8,6 +8,7 @@ import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Column;
@@ -27,6 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 })
 @SessionFactory
 @JiraKey("HHH-16573")
+@Disabled("We now assert that collection columns have the same insertable / updatable attributes, see HHH-17334")
 public class EmbeddableAsOrderedElementCollectionWithUpdatableFalseTest {
 
 	@AfterEach

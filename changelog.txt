@@ -3,6 +3,62 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.4.0.Final (November 23, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32212
+
+** Bug
+    * [HHH-17454] - SemanticException caused by type check when comparing generic path to parameter expression
+    * [HHH-17428] - Parameter place holder should start from 1 in StandardTemporaryTableExporter
+    * [HHH-17415] - NullPointerException: EntityValuedPathInterpretation - getNavigablePath()
+    * [HHH-17412] - Type comparison error due to surprising javac method selection
+    * [HHH-17411] - Fetch join on treated join leads to owner not selected error
+    * [HHH-17386] - Type inference source is not reset for top level predicates
+    * [HHH-17384] - OneToMany association with @NotFound results in SQL with different JOIN-type for SELECT (LEFT JOIN) and COUNT (JOIN)
+    * [HHH-17383] - Association is null in lazy initialized element collection
+    * [HHH-17382] - Dynamic instantiation leads to superclass fields not found when using injection
+    * [HHH-17381] - fix wrong groupId in Compatibility.adoc
+    * [HHH-17380] - Persisting an entity with a non generated id and @MapsId throws PropertyValueException
+    * [HHH-17370] - ServiceException: Unable to create requested service [org.hibernate.engine.jdbc.env.spi.JdbcEnvironment] due to: Cannot invoke "org.hibernate.resource.jdbc.spi.JdbcObserver.jdbcConnectionAcquisitionEnd(java.sql.Connection)" because "this.observer" is null
+    * [HHH-17344] - DB2zDialect NullPointerException
+    * [HHH-17328] - Retrieve entity using entity graph not adding type in the where clause for @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+    * [HHH-17313] - Session#setDefaultReadOnly is ignored by named queries
+    * [HHH-17308] - AssertionError when mixing @SQLSelect and composite ID
+    * [HHH-17299] - AssertionError in DiscriminatorPathInterpretation when treating a path with the same subtype
+    * [HHH-17294] - Non-Embeddable JSON objects are not marked as dirty when modified
+    * [HHH-17292] - MappedSuperclass with more than 1 subclass level leads to "UnknownPathException: Could not resolve attribute"
+    * [HHH-17102] - @SqlResultSetMapping doesn’t work with @Inheritance(strategy = InheritanceType.JOINED)
+
+** Deprecation
+    * [HHH-17441] - Deprecate @Comment
+
+** Improvement
+    * [HHH-17425] - Introduce new configuration parameters for offline Dialect initialization
+    * [HHH-17424] - Have Dialect manage more of ExtractedDatabaseMetadata
+    * [HHH-17417] - Workaround Oracle driver issue to reduce connection creation 
+    * [HHH-17409] - Support offset without limit in AbstractSimpleLimitHandler and Oracle12LimitHandler
+    * [HHH-17389] - Add getQueryHintString() for PostgreSQLDialect
+    * [HHH-17372] - Endless recursion between default implementations of SelectionQuery.getResultStream() and SelectionQuery.stream()
+    * [HHH-17355] - Smoothen rough edges with array functions
+    * [HHH-17340] - Fix typos in javadoc
+    * [HHH-17023] - Add support for Altibase dialect
+    * [HHH-15074] - Allow partial composite id generation for EmbeddedId
+
+** New Feature
+    * [HHH-17357] - Support pgvector types and functions
+    * [HHH-17210] - Expose custom JFR events
+
+** Sub-task
+    * [HHH-17347] - Support for JDK which do not support JFR events
+
+** Task
+    * [HHH-17390] - Change scope of AbstyractEntityInitializer#resolveInstance
+    * [HHH-17367] - Add links to tutorials in documentation 
+    * [HHH-17362] - Define dependencies of hibernate-jpamodelgen as api
+    * [HHH-17350] - Work on hibernate-models, XSD and JAXB
+
+
 Changes in 6.4.0.CR1 (October 26, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

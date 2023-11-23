@@ -50,7 +50,9 @@ import static org.hibernate.sql.Template.collectColumnNames;
  *
  * @author Gavin King
  */
-public abstract class PersistentClass implements IdentifiableTypeClass, AttributeContainer, Filterable, MetaAttributable, Contributable, Serializable {
+public abstract class PersistentClass
+		implements IdentifiableTypeClass, AttributeContainer, Filterable,
+		MetaAttributable, Contributable, Serializable, Observable<PersistentClass> {
 
 	private static final Alias PK_ALIAS = new Alias( 15, "PK" );
 
@@ -120,6 +122,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	private OptimisticLockStyle optimisticLockStyle;
 
 	private boolean isCached;
+
+	private boolean resolved;
+	private List<ResolutionCallback<PersistentClass>> resolutionCallbacks;
 
 	public PersistentClass(MetadataBuildingContext buildingContext) {
 		this.metadataBuildingContext = buildingContext;
@@ -1257,5 +1262,24 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 			return getSuperPersistentClass( mappedSuperclass.getSuperMappedSuperclass() );
 		}
 		return null;
+	}
+
+	@Override
+	public void whenResolved(ResolutionCallback<PersistentClass> callback) {
+		if ( resolved ) {
+			callback.handleResolution( this );
+			return;
+		}
+
+		if ( resolutionCallbacks == null ) {
+			resolutionCallbacks = new ArrayList<>();
+		}
+		resolutionCallbacks.add( callback );
+	}
+
+	public void resolve() {
+		ObservableHelper.processCallbacks( this, resolutionCallbacks );
+		resolutionCallbacks = null;
+		resolved = true;
 	}
 }

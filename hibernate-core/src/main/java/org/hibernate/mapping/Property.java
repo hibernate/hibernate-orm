@@ -9,7 +9,7 @@ package org.hibernate.mapping;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
@@ -22,6 +22,8 @@ import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.CascadeStyle;
 import org.hibernate.engine.spi.CascadeStyles;
 import org.hibernate.engine.spi.Mapping;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.jpa.event.spi.CallbackDefinition;
 import org.hibernate.metamodel.RepresentationMode;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -30,8 +32,6 @@ import org.hibernate.property.access.spi.PropertyAccessStrategy;
 import org.hibernate.property.access.spi.PropertyAccessStrategyResolver;
 import org.hibernate.property.access.spi.Setter;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.GeneratorCreationContext;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 import org.hibernate.type.WrapperArrayHandling;
@@ -42,7 +42,7 @@ import org.hibernate.type.WrapperArrayHandling;
  *
  * @author Gavin King
  */
-public class Property implements Serializable, MetaAttributable {
+public class Property implements Serializable, MetaAttributable, Observable<Property> {
 	private String name;
 	private Value value;
 	private String cascade;
@@ -63,6 +63,9 @@ public class Property implements Serializable, MetaAttributable {
 	private boolean lob;
 	private java.util.List<CallbackDefinition> callbackDefinitions;
 	private String returnedClassName;
+
+	private boolean resolved;
+	private List<ResolutionCallback<Property>> resolutionCallbacks;
 
 	public boolean isBackRef() {
 		return false;
@@ -535,5 +538,24 @@ public class Property implements Serializable, MetaAttributable {
 		public Property getProperty() {
 			return Property.this;
 		}
+	}
+
+	@Override
+	public void whenResolved(ResolutionCallback<Property> callback) {
+		if ( resolved ) {
+			callback.handleResolution( this );
+			return;
+		}
+
+		if ( resolutionCallbacks == null ) {
+			resolutionCallbacks = new ArrayList<>();
+		}
+		resolutionCallbacks.add( callback );
+	}
+
+	public void resolve() {
+		ObservableHelper.processCallbacks( this, resolutionCallbacks );
+		resolutionCallbacks = null;
+		resolved = true;
 	}
 }

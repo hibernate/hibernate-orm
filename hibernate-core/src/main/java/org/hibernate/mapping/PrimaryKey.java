@@ -6,6 +6,7 @@
  */
 package org.hibernate.mapping;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -22,8 +23,11 @@ import org.jboss.logging.Logger;
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class PrimaryKey extends Constraint {
+public class PrimaryKey extends Constraint implements Observable<PrimaryKey> {
 	private static final Logger log = Logger.getLogger( PrimaryKey.class );
+
+	private boolean resolved;
+	private List<ResolutionCallback<PrimaryKey>> resolutionCallbacks;
 
 	private UniqueKey orderingUniqueKey = null;
 	private int[] originalOrder;
@@ -147,5 +151,24 @@ public class PrimaryKey extends Constraint {
 	@Internal
 	public int[] getOriginalOrder() {
 		return originalOrder;
+	}
+
+	@Override
+	public void whenResolved(ResolutionCallback<PrimaryKey> callback) {
+		if ( resolved ) {
+			callback.handleResolution( this );
+			return;
+		}
+
+		if ( resolutionCallbacks == null ) {
+			resolutionCallbacks = new ArrayList<>();
+		}
+		resolutionCallbacks.add( callback );
+	}
+
+	public void resolve() {
+		ObservableHelper.processCallbacks( this, resolutionCallbacks );
+		resolutionCallbacks = null;
+		resolved = true;
 	}
 }

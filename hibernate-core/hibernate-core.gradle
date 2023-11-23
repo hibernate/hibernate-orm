@@ -27,6 +27,7 @@ dependencies {
     api jakartaLibs.jpa
     api jakartaLibs.jta
 
+    implementation libs.hibernateModels
     implementation libs.hcann
     implementation libs.jandex
     implementation libs.classmate

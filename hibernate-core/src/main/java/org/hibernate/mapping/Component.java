@@ -63,7 +63,7 @@ import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication
  * @author Gavin King
  * @author Steve Ebersole
  */
-public class Component extends SimpleValue implements MetaAttributable, SortableValue {
+public class Component extends SimpleValue implements MetaAttributable, SortableValue, Observable<Component> {
 
 	private String componentClassName;
 	private boolean embedded;
@@ -95,6 +95,9 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	private transient List<Column> cachedColumns;
 
 	private transient Generator builtIdentifierGenerator;
+
+	private boolean resolved;
+	private List<ResolutionCallback<Component>> resolutionCallbacks;
 
 	public Component(MetadataBuildingContext metadata, PersistentClass owner) throws MappingException {
 		this( metadata, owner.getTable(), owner );
@@ -837,5 +840,24 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 	public void setGeneric(boolean generic) {
 		isGeneric = generic;
+	}
+
+	@Override
+	public void whenResolved(ResolutionCallback<Component> callback) {
+		if ( resolved ) {
+			callback.handleResolution( this );
+			return;
+		}
+
+		if ( resolutionCallbacks == null ) {
+			resolutionCallbacks = new ArrayList<>();
+		}
+		resolutionCallbacks.add( callback );
+	}
+
+	public void resolve() {
+		ObservableHelper.processCallbacks( this, resolutionCallbacks );
+		resolutionCallbacks = null;
+		resolved = true;
 	}
 }

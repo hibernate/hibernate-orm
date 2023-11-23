@@ -5,9 +5,9 @@
  * See the lgpl.txt file in the root directory or <http://www.gnu.org/licenses/lgpl-2.1.html>.
  */
 package org.hibernate.mapping;
+
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -17,7 +17,7 @@ import java.util.List;
  *
  * @author Emmanuel Bernard
  */
-public class MappedSuperclass implements IdentifiableTypeClass {
+public class MappedSuperclass implements IdentifiableTypeClass, Observable<MappedSuperclass> {
 	private final MappedSuperclass superMappedSuperclass;
 	private final PersistentClass superPersistentClass;
 	private final List<Property> declaredProperties;
@@ -26,6 +26,9 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 	private Property identifierProperty;
 	private Property version;
 	private Component identifierMapper;
+
+	private boolean resolved;
+	private List<ResolutionCallback<MappedSuperclass>> resolutionCallbacks;
 
 	public MappedSuperclass(
 			MappedSuperclass superMappedSuperclass,
@@ -249,5 +252,24 @@ public class MappedSuperclass implements IdentifiableTypeClass {
 		assert property.getValue().getTable() != null;
 		assert property.getValue().getTable().equals( getImplicitTable() );
 		addDeclaredProperty( property );
+	}
+
+	@Override
+	public void whenResolved(ResolutionCallback<MappedSuperclass> callback) {
+		if ( resolved ) {
+			callback.handleResolution( this );
+			return;
+		}
+
+		if ( resolutionCallbacks == null ) {
+			resolutionCallbacks = new ArrayList<>();
+		}
+		resolutionCallbacks.add( callback );
+	}
+
+	public void resolve() {
+		ObservableHelper.processCallbacks( this, resolutionCallbacks );
+		resolutionCallbacks = null;
+		resolved = true;
 	}
 }

@@ -20,6 +20,8 @@ import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.sql.ast.tree.expression.Expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * A SQM function
  *
@@ -37,7 +39,7 @@ public abstract class SqmFunction<T> extends AbstractSqmExpression<T>
 	public SqmFunction(
 			String functionName,
 			SqmFunctionDescriptor functionDescriptor,
-			SqmExpressible<T> type,
+			@Nullable SqmExpressible<T> type,
 			List<? extends SqmTypedNode<?>> arguments,
 			NodeBuilder criteriaBuilder) {
 		super( type, criteriaBuilder );

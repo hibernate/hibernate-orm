@@ -11,6 +11,7 @@ import java.util.List;
 
 import org.hibernate.boot.model.relational.AuxiliaryDatabaseObject;
 import org.hibernate.boot.model.relational.Namespace;
+import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
@@ -25,24 +26,24 @@ public class AggregateSupportImpl implements AggregateSupport {
 			String template,
 			String placeholder,
 			String aggregateParentReadExpression,
-			String column,
-			ColumnTypeInformation aggregateColumnType,
-			ColumnTypeInformation columnType) {
+			String columnExpression,
+			AggregateColumn aggregateColumn,
+			Column column) {
 		throw new UnsupportedOperationException( "Dialect does not support aggregateComponentCustomReadExpression: " + getClass().getName() );
 	}
 
 	@Override
 	public String aggregateComponentAssignmentExpression(
 			String aggregateParentAssignmentExpression,
-			String column,
-			ColumnTypeInformation aggregateColumnType,
-			ColumnTypeInformation columnType) {
+			String columnExpression,
+			AggregateColumn aggregateColumn,
+			Column column) {
 		throw new UnsupportedOperationException( "Dialect does not support aggregateComponentAssignmentExpression: " + getClass().getName() );
 	}
 
 	@Override
 	public String aggregateCustomWriteExpression(
-			ColumnTypeInformation aggregateColumnType,
+			AggregateColumn aggregateColumn,
 			List<Column> aggregatedColumns) {
 		return null;
 	}

@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Struct;
+import java.util.ArrayList;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.metamodel.mapping.AttributeMapping;
@@ -18,6 +19,8 @@ import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -25,8 +28,10 @@ import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.spi.UnknownBasicJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
+import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -381,6 +386,32 @@ public class StructJdbcType implements AggregateJdbcType {
 							// Only transform the raw jdbc value if it could be a TIMESTAMPTZ
 							targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType()
 									.wrap( transformRawJdbcValue( rawJdbcValue, options ), options );
+							break;
+						case SqlTypes.ARRAY:
+							final BasicType<?> elementType = ( (BasicPluralType<?, ?>) jdbcMapping ).getElementType();
+							final JdbcType elementJdbcType = elementType.getJdbcType();
+							switch ( elementJdbcType.getDefaultSqlTypeCode() ) {
+								case SqlTypes.TIME_WITH_TIMEZONE:
+								case SqlTypes.TIME_UTC:
+								case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
+								case SqlTypes.TIMESTAMP_UTC:
+									// Only transform the raw jdbc value if it could be a TIMESTAMPTZ
+									final Object[] array = (Object[]) ((java.sql.Array) rawJdbcValue).getArray();
+									final ArrayList<Object> list = new ArrayList<>( array.length );
+									for ( int j = 0; j < array.length; j++ ) {
+										list.add(
+												elementType.getJdbcJavaType().wrap(
+														transformRawJdbcValue( array[j], options ),
+														options
+												)
+										);
+									}
+									targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( list, options );
+									break;
+								default:
+									targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( rawJdbcValue, options );
+									break;
+							}
 							break;
 						default:
 							targetJdbcValues[jdbcIndex] = jdbcMapping.getJdbcJavaType().wrap( rawJdbcValue, options );

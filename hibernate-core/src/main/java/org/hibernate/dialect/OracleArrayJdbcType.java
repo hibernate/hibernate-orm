@@ -18,9 +18,13 @@ import org.hibernate.HibernateException;
 import org.hibernate.boot.model.relational.Database;
 import org.hibernate.boot.model.relational.NamedAuxiliaryDatabaseObject;
 import org.hibernate.engine.jdbc.Size;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
+import org.hibernate.type.descriptor.converter.spi.JpaAttributeConverter;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
@@ -34,8 +38,20 @@ import org.hibernate.type.spi.TypeConfiguration;
 import oracle.jdbc.OracleConnection;
 
 import static java.sql.Types.ARRAY;
+import static java.sql.Types.BOOLEAN;
 import static java.util.Collections.emptySet;
-import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
+import static org.hibernate.type.SqlTypes.BIGINT;
+import static org.hibernate.type.SqlTypes.BINARY;
+import static org.hibernate.type.SqlTypes.DATE;
+import static org.hibernate.type.SqlTypes.INTEGER;
+import static org.hibernate.type.SqlTypes.LONG32VARBINARY;
+import static org.hibernate.type.SqlTypes.SMALLINT;
+import static org.hibernate.type.SqlTypes.TIME;
+import static org.hibernate.type.SqlTypes.TIMESTAMP;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
+import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
+import static org.hibernate.type.SqlTypes.TINYINT;
+import static org.hibernate.type.SqlTypes.VARBINARY;
 
 /**
  * Descriptor for {@link Types#ARRAY ARRAY} handling.
@@ -63,12 +79,12 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		//noinspection unchecked
-		final BasicPluralJavaType<X> containerJavaType = (BasicPluralJavaType<X>) javaTypeDescriptor;
 		return new BasicBinder<>( javaTypeDescriptor, this ) {
 			private String typeName(WrapperOptions options) {
-				return ( typeName == null ? getTypeName( options, containerJavaType ) : typeName )
-						.toUpperCase(Locale.ROOT);
+				return ( typeName == null
+						? getTypeName( options, (BasicPluralJavaType<?>) getJavaType(), (ArrayJdbcType) getJdbcType() )
+						: typeName
+				).toUpperCase( Locale.ROOT );
 			}
 			@Override
 			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
@@ -82,13 +98,13 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setArray( index, getArray( value, containerJavaType, options ) );
+				st.setArray( index, getBindValue( value, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final java.sql.Array arr = getArray( value, containerJavaType, options );
+				final java.sql.Array arr = getBindValue( value, options );
 				try {
 					st.setObject( name, arr, ARRAY );
 				}
@@ -97,14 +113,14 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 				}
 			}
 
-			private java.sql.Array getArray(X value, BasicPluralJavaType<X> containerJavaType, WrapperOptions options)
-					throws SQLException {
+			@Override
+			public java.sql.Array getBindValue(X value, WrapperOptions options) throws SQLException {
 				//noinspection unchecked
 				final Class<Object[]> arrayClass = (Class<Object[]>) Array.newInstance(
 						getElementJdbcType().getPreferredJavaTypeClass( options ),
 						0
 				).getClass();
-				final Object[] objects = javaTypeDescriptor.unwrap( value, arrayClass, options );
+				final Object[] objects = getJavaType().unwrap( value, arrayClass, options );
 				final String arrayTypeName = typeName( options ).toUpperCase(Locale.ROOT);
 
 				final OracleConnection oracleConnection = options.getSession()
@@ -125,29 +141,76 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 		return new BasicExtractor<>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getArray( paramIndex ), options );
+				return getJavaType().wrap( rs.getArray( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getArray( index ), options );
+				return getJavaType().wrap( statement.getArray( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getArray( name ), options );
+				return getJavaType().wrap( statement.getArray( name ), options );
 			}
 		};
 	}
 
-	static String getTypeName(WrapperOptions options, BasicPluralJavaType<?> containerJavaType) {
+	static String getTypeName(WrapperOptions options, BasicPluralJavaType<?> containerJavaType, ArrayJdbcType arrayJdbcType) {
 		Dialect dialect = options.getSessionFactory().getJdbcServices().getDialect();
-		return getTypeName( containerJavaType.getElementJavaType(), dialect );
+		return getTypeName( containerJavaType.getElementJavaType(), arrayJdbcType.getElementJdbcType(), dialect );
 	}
 
-	static String getTypeName(JavaType<?> elementJavaType, Dialect dialect) {
+	static String getTypeName(BasicType<?> elementType, Dialect dialect) {
+		final BasicValueConverter<?, ?> converter = elementType.getValueConverter();
+		if ( converter != null ) {
+			final String simpleName;
+			if ( converter instanceof JpaAttributeConverter<?, ?> ) {
+				simpleName = ( (JpaAttributeConverter<?, ?>) converter ).getConverterJavaType()
+						.getJavaTypeClass()
+						.getSimpleName();
+			}
+			else {
+				simpleName = converter.getClass().getSimpleName();
+			}
+			return dialect.getArrayTypeName(
+					simpleName,
+					null, // not needed by OracleDialect.getArrayTypeName()
+					null // not needed by OracleDialect.getArrayTypeName()
+			);
+		}
+		return getTypeName( elementType.getJavaTypeDescriptor(), elementType.getJdbcType(), dialect );
+	}
+
+	static String getTypeName(JavaType<?> elementJavaType, JdbcType elementJdbcType, Dialect dialect) {
+		final String simpleName;
+		if ( elementJavaType.getJavaTypeClass().isArray() ) {
+			simpleName = dialect.getArrayTypeName(
+					elementJavaType.getJavaTypeClass().getComponentType().getSimpleName(),
+					null, // not needed by OracleDialect.getArrayTypeName()
+					null // not needed by OracleDialect.getArrayTypeName()
+			);
+		}
+		else {
+			final Class<?> preferredJavaTypeClass = elementJdbcType.getPreferredJavaTypeClass( null );
+			if ( preferredJavaTypeClass == elementJavaType.getJavaTypeClass() ) {
+				simpleName = elementJavaType.getJavaTypeClass().getSimpleName();
+			}
+			else {
+				if ( preferredJavaTypeClass.isArray() ) {
+					simpleName = elementJavaType.getJavaTypeClass().getSimpleName() + dialect.getArrayTypeName(
+							preferredJavaTypeClass.getComponentType().getSimpleName(),
+							null,
+							null
+					);
+				}
+				else {
+					simpleName = elementJavaType.getJavaTypeClass().getSimpleName() + preferredJavaTypeClass.getSimpleName();
+				}
+			}
+		}
 		return dialect.getArrayTypeName(
-				elementJavaType.getJavaTypeClass().getSimpleName(),
+				simpleName,
 				null, // not needed by OracleDialect.getArrayTypeName()
 				null // not needed by OracleDialect.getArrayTypeName()
 		);
@@ -162,7 +225,7 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 		final Dialect dialect = database.getDialect();
 		final BasicPluralJavaType<?> pluralJavaType = (BasicPluralJavaType<?>) javaType;
 		final JavaType<?> elementJavaType = pluralJavaType.getElementJavaType();
-		final String arrayTypeName = typeName == null ? getTypeName( elementJavaType, dialect ) : typeName;
+		final String arrayTypeName = typeName == null ? getTypeName( elementJavaType, getElementJdbcType(), dialect ) : typeName;
 		final String elementType =
 				typeConfiguration.getDdlTypeRegistry().getTypeName(
 						getElementJdbcType().getDdlTypeCode(),
@@ -564,6 +627,56 @@ public class OracleArrayJdbcType extends ArrayJdbcType {
 						false
 				)
 		);
+		final String jsonTypeName = typeConfiguration.getDdlTypeRegistry().getTypeName( SqlTypes.JSON, dialect );
+		final String valueExpression = determineValueExpression( "t.value", getElementJdbcType(), elementType );
+		database.addAuxiliaryDatabaseObject(
+				new NamedAuxiliaryDatabaseObject(
+						arrayTypeName + "_from_json",
+						database.getDefaultNamespace(),
+						new String[]{
+								"create or replace function " + arrayTypeName + "_from_json(arr in " + jsonTypeName +
+										") return " + arrayTypeName + " deterministic is " +
+										"res " + arrayTypeName + ":=" + arrayTypeName + "(); begin " +
+										"if arr is null then return null; end if; " +
+										"select " + valueExpression + " bulk collect into res " +
+										"from json_table(arr,'$[*]' columns (value path '$')) t; " +
+										"return res; " +
+										"end;"
+						},
+						new String[] { "drop function " + arrayTypeName + "_from_json" },
+						emptySet(),
+						false
+				)
+		);
+	}
+
+	private String determineValueExpression(String expression, JdbcType elementJdbcType, String elementType) {
+		switch ( elementJdbcType.getDefaultSqlTypeCode() ) {
+			case BOOLEAN:
+				if ( elementType.toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
+					return "decode(" + expression + ",'true',1,'false',0,null)";
+				}
+			case TINYINT:
+			case SMALLINT:
+			case INTEGER:
+			case BIGINT:
+				return "cast(" + expression + " as " + elementType + ")";
+			case DATE:
+				return "to_date(" + expression + ",'YYYY-MM-DD')";
+			case TIME:
+				return "to_timestamp(" + expression + ",'hh24:mi:ss')";
+			case TIMESTAMP:
+				return "to_timestamp(" + expression + ",'YYYY-MM-DD\"T\"hh24:mi:ss.FF9')";
+			case TIMESTAMP_WITH_TIMEZONE:
+			case TIMESTAMP_UTC:
+				return "to_timestamp_tz(" + expression + ",'YYYY-MM-DD\"T\"hh24:mi:ss.FF9TZH:TZM')";
+			case BINARY:
+			case VARBINARY:
+			case LONG32VARBINARY:
+				return "hextoraw(" + expression + ")";
+			default:
+				return expression;
+		}
 	}
 
 	protected String createOrReplaceConcatFunction(String arrayTypeName) {

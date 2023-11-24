@@ -124,6 +124,7 @@ import org.hibernate.query.sqm.UnaryArithmeticOperator;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.SelfRenderingAggregateFunctionSqlAstExpression;
 import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
+import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmMappingModelHelper;
 import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
@@ -5313,8 +5314,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	@Override
+	public boolean isInTypeInference() {
+		return inImpliedResultTypeInference || inTypeInference;
+	}
+
+	@Override
 	public MappingModelExpressible<?> resolveFunctionImpliedReturnType() {
-		if ( inImpliedResultTypeInference || functionImpliedResultTypeAccess == null ) {
+		if ( inImpliedResultTypeInference || inTypeInference || functionImpliedResultTypeAccess == null ) {
 			return null;
 		}
 		inImpliedResultTypeInference = true;
@@ -5807,6 +5813,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					}
 				}
 			}
+		}
+
+		if ( sqmExpression instanceof SelfRenderingSqmFunction<?> ) {
+			return domainModel.resolveMappingExpressible(
+					( (SelfRenderingSqmFunction<?>) sqmExpression ).resolveResultType( this ),
+					this::findTableGroupByPath
+			);
 		}
 
 		log.debugf( "Determining mapping-model type for generalized SqmExpression : %s", sqmExpression );

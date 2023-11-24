@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.embeddable;
 
+import java.net.URL;
 import java.sql.Clob;
 import java.sql.Time;
 import java.sql.Timestamp;
@@ -343,6 +344,7 @@ public class NestedStructEmbeddableTest extends BaseSessionFactoryFunctionalTest
 									"b.struct.nested.theStringBoolean," +
 									"b.struct.nested.theString," +
 									"b.struct.nested.theInteger," +
+									"b.struct.nested.theUrl," +
 									"b.struct.nested.theClob," +
 									"b.struct.nested.theBinary," +
 									"b.struct.nested.theDate," +
@@ -377,29 +379,30 @@ public class NestedStructEmbeddableTest extends BaseSessionFactoryFunctionalTest
 					struct.setTheStringBoolean( tuple.get( 4, Boolean.class ) );
 					struct.setTheString( tuple.get( 5, String.class ) );
 					struct.setTheInteger( tuple.get( 6, Integer.class ) );
-					struct.setTheClob( tuple.get( 7, Clob.class ) );
-					struct.setTheBinary( tuple.get( 8, byte[].class ) );
-					struct.setTheDate( tuple.get( 9, Date.class ) );
-					struct.setTheTime( tuple.get( 10, Time.class ) );
-					struct.setTheTimestamp( tuple.get( 11, Timestamp.class ) );
-					struct.setTheInstant( tuple.get( 12, Instant.class ) );
-					struct.setTheUuid( tuple.get( 13, UUID.class ) );
-					struct.setGender( tuple.get( 14, EntityOfBasics.Gender.class ) );
-					struct.setConvertedGender( tuple.get( 15, EntityOfBasics.Gender.class ) );
-					struct.setOrdinalGender( tuple.get( 16, EntityOfBasics.Gender.class ) );
-					struct.setTheDuration( tuple.get( 17, Duration.class ) );
-					struct.setTheLocalDateTime( tuple.get( 18, LocalDateTime.class ) );
-					struct.setTheLocalDate( tuple.get( 19, LocalDate.class ) );
-					struct.setTheLocalTime( tuple.get( 20, LocalTime.class ) );
-					struct.setTheZonedDateTime( tuple.get( 21, ZonedDateTime.class ) );
-					struct.setTheOffsetDateTime( tuple.get( 22, OffsetDateTime.class ) );
-					struct.setMutableValue( tuple.get( 23, MutableValue.class ) );
+					struct.setTheUrl( tuple.get( 7, URL.class ) );
+					struct.setTheClob( tuple.get( 8, String.class ) );
+					struct.setTheBinary( tuple.get( 9, byte[].class ) );
+					struct.setTheDate( tuple.get( 10, Date.class ) );
+					struct.setTheTime( tuple.get( 11, Time.class ) );
+					struct.setTheTimestamp( tuple.get( 12, Timestamp.class ) );
+					struct.setTheInstant( tuple.get( 13, Instant.class ) );
+					struct.setTheUuid( tuple.get( 14, UUID.class ) );
+					struct.setGender( tuple.get( 15, EntityOfBasics.Gender.class ) );
+					struct.setConvertedGender( tuple.get( 16, EntityOfBasics.Gender.class ) );
+					struct.setOrdinalGender( tuple.get( 17, EntityOfBasics.Gender.class ) );
+					struct.setTheDuration( tuple.get( 18, Duration.class ) );
+					struct.setTheLocalDateTime( tuple.get( 19, LocalDateTime.class ) );
+					struct.setTheLocalDate( tuple.get( 20, LocalDate.class ) );
+					struct.setTheLocalTime( tuple.get( 21, LocalTime.class ) );
+					struct.setTheZonedDateTime( tuple.get( 22, ZonedDateTime.class ) );
+					struct.setTheOffsetDateTime( tuple.get( 23, OffsetDateTime.class ) );
+					struct.setMutableValue( tuple.get( 24, MutableValue.class ) );
 					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregate1(), struct );
 
-					SimpleEmbeddable simpleEmbeddable = tuple.get( 24, SimpleEmbeddable.class );
-					assertEquals( simpleEmbeddable.doubleNested, tuple.get( 25, DoubleNested.class ) );
-					assertEquals( simpleEmbeddable.doubleNested.theNested, tuple.get( 26, Nested.class ) );
-					assertEquals( simpleEmbeddable.doubleNested.theNested.theLeaf, tuple.get( 27, Leaf.class ) );
+					SimpleEmbeddable simpleEmbeddable = tuple.get( 25, SimpleEmbeddable.class );
+					assertEquals( simpleEmbeddable.doubleNested, tuple.get( 26, DoubleNested.class ) );
+					assertEquals( simpleEmbeddable.doubleNested.theNested, tuple.get( 27, Nested.class ) );
+					assertEquals( simpleEmbeddable.doubleNested.theNested.theLeaf, tuple.get( 28, Leaf.class ) );
 					assertEquals( 10, simpleEmbeddable.integerField );
 					assertEquals( "String \"<abc>A&B</abc>\"", simpleEmbeddable.doubleNested.theNested.theLeaf.stringField );
 				}
@@ -466,6 +469,7 @@ public class NestedStructEmbeddableTest extends BaseSessionFactoryFunctionalTest
 									"b.struct.nested.theStringBoolean = :theStringBoolean," +
 									"b.struct.nested.theString = :theString," +
 									"b.struct.nested.theInteger = :theInteger," +
+									"b.struct.nested.theUrl = :theUrl," +
 									"b.struct.nested.theClob = :theClob," +
 									"b.struct.nested.theBinary = :theBinary," +
 									"b.struct.nested.theDate = :theDate," +
@@ -493,6 +497,7 @@ public class NestedStructEmbeddableTest extends BaseSessionFactoryFunctionalTest
 							.setParameter( "theStringBoolean", struct.isTheStringBoolean() )
 							.setParameter( "theString", struct.getTheString() )
 							.setParameter( "theInteger", struct.getTheInteger() )
+							.setParameter( "theUrl", struct.getTheUrl() )
 							.setParameter( "theClob", struct.getTheClob() )
 							.setParameter( "theBinary", struct.getTheBinary() )
 							.setParameter( "theDate", struct.getTheDate() )

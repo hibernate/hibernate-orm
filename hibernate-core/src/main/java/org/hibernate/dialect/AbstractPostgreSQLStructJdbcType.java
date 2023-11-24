@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect;
 
+import java.lang.reflect.Array;
 import java.sql.CallableStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -32,6 +33,8 @@ import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
 import org.hibernate.sql.ast.spi.SqlAppender;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
+import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -181,7 +184,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 		}
 		else {
 			array = new Object[embeddableMappingType.getJdbcValueCount()];
-			end = deserializeStruct( string, 0, 0, array, returnEmbeddable, options );
+			end = deserializeStruct( string, 0, 0, 0, array, returnEmbeddable, options );
 		}
 		assert end == string.length();
 		if ( returnEmbeddable ) {
@@ -274,6 +277,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 			String string,
 			int begin,
 			int quoteLevel,
+			int arrayLevel,
 			Object[] values,
 			boolean returnEmbeddable,
 			WrapperOptions options) throws SQLException {
@@ -423,6 +427,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 										string,
 										i + 1,
 										quoteLevel + 1,
+										arrayLevel + 1,
 										subValues,
 										returnEmbeddable,
 										options
@@ -467,6 +472,42 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 								inQuote = true;
 							}
 						}
+						else if ( string.charAt( i + 1 ) == '{' ) {
+							// This could be a quoted array
+							final JdbcMapping jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
+							if ( jdbcMapping instanceof BasicPluralType<?, ?> ) {
+								final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) jdbcMapping;
+								final ArrayList<Object> arrayList = new ArrayList<>();
+								//noinspection unchecked
+								final int subEnd = deserializeArray(
+										string,
+										i + 1,
+										quoteLevel + 1,
+										arrayLevel + 1,
+										arrayList,
+										(BasicType<Object>) pluralType.getElementType(),
+										returnEmbeddable,
+										options
+								);
+								assert string.charAt( subEnd - 1 ) == '}';
+								values[column] = pluralType.getJdbcJavaType().wrap( arrayList, options );
+								column++;
+								// The subEnd points to the first character after the ')',
+								// so move forward the index to point to the next char after quotes
+								assert repeatsChar( string, subEnd, expectedQuotes, '"' );
+								i = subEnd + expectedQuotes;
+								if ( string.charAt( i ) == ')' ) {
+									// Return the end position if this is the last element
+									assert column == values.length;
+									return i + 1;
+								}
+								// at this point, we must see a comma to indicate the next element
+								assert string.charAt( i ) == ',';
+							}
+							else {
+								inQuote = true;
+							}
+						}
 						else {
 							inQuote = true;
 						}
@@ -489,7 +530,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 							}
 							else if ( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass().isEnum()
 									&& jdbcMapping.getJdbcType().isInteger() ) {
-								values[column] =  fromRawObject(
+								values[column] = fromRawObject(
 										jdbcMapping,
 										IntegerJavaType.INSTANCE.fromEncodedString( string, start, i ),
 										options
@@ -515,11 +556,396 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 								values[column] = null;
 							}
 							else {
-								values[column] = fromString(
-										column,
+								final JdbcMapping jdbcMapping = getJdbcValueSelectable( column ).getJdbcMapping();
+								if ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.BOOLEAN ) {
+									values[column] = fromRawObject(
+											jdbcMapping,
+											string.charAt( start ) == 't',
+											options
+									);
+								}
+								else if ( jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass().isEnum()
+										&& jdbcMapping.getJdbcType().isInteger() ) {
+									values[column] = fromRawObject(
+											jdbcMapping,
+											IntegerJavaType.INSTANCE.fromEncodedString( string, start, i ),
+											options
+									);
+								}
+								else {
+									values[column] = fromString(
+											jdbcMapping,
+											string,
+											start,
+											i
+									);
+								}
+							}
+						}
+						return i + 1;
+					}
+					break;
+				case '{':
+					if ( !inQuote ) {
+						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) getJdbcValueSelectable( column ).getJdbcMapping();
+						final ArrayList<Object> arrayList = new ArrayList<>();
+						//noinspection unchecked
+						i = deserializeArray(
+								string,
+								i,
+								quoteLevel,
+								arrayLevel + 1,
+								arrayList,
+								(BasicType<Object>) pluralType.getElementType(),
+								returnEmbeddable,
+								options
+						);
+						assert string.charAt( i - 1 ) == '}';
+						values[column] = pluralType.getJdbcJavaType().wrap( arrayList, options );
+						column++;
+						if ( string.charAt( i ) == ')' ) {
+							// Return the end position if this is the last element
+							assert column == values.length;
+							return i + 1;
+						}
+						// at this point, we must see a comma to indicate the next element
+						assert string.charAt( i ) == ',';
+						start = i + 1;
+					}
+					break;
+			}
+		}
+
+		throw new IllegalArgumentException( "Struct not properly formed: " + string.substring( start ) );
+	}
+
+	private int deserializeArray(
+			String string,
+			int begin,
+			int quoteLevel,
+			int arrayLevel,
+			ArrayList<Object> values,
+			BasicType<Object> elementType,
+			boolean returnEmbeddable,
+			WrapperOptions options) throws SQLException {
+		boolean inQuote = false;
+		StringBuilder escapingSb = null;
+		assert string.charAt( begin ) == '{';
+		int start = begin + 1;
+		for ( int i = start; i < string.length(); i++ ) {
+			final char c = string.charAt( i );
+			switch ( c ) {
+				case '\\':
+					if ( inQuote ) {
+						switch ( elementType.getJdbcType().getDefaultSqlTypeCode() ) {
+							case SqlTypes.BINARY:
+							case SqlTypes.VARBINARY:
+							case SqlTypes.LONGVARBINARY:
+							case SqlTypes.LONG32VARBINARY:
+								// Ignore backslashes for binary content, this will be handled later
+								break;
+							default:
+								final int expectedQuoteCount = 1 << quoteLevel;
+								final int expectedBackslashCount = 1 << arrayLevel;
+								if ( repeatsChar( string, i, expectedBackslashCount, '\\' ) ) {
+									if ( repeatsChar( string, i + expectedBackslashCount, expectedQuoteCount, '"' ) ) {
+										// Skip quote escaping as that will be unescaped later
+										if ( escapingSb == null ) {
+											escapingSb = new StringBuilder();
+										}
+										escapingSb.append( string, start, i );
+										escapingSb.append( '"' );
+										// Move forward to the last quote
+										i += expectedBackslashCount + expectedQuoteCount - 1;
+										start = i + 1;
+										continue;
+									}
+									else {
+										assert repeatsChar( string, i + expectedBackslashCount, expectedBackslashCount, '\\' );
+										// Skip quote escaping as that will be unescaped later
+										if ( escapingSb == null ) {
+											escapingSb = new StringBuilder();
+										}
+										escapingSb.append( string, start, i );
+										escapingSb.append( '\\' );
+										// Move forward to the last quote
+										i += expectedBackslashCount + expectedQuoteCount - 1;
+										start = i + 1;
+										continue;
+									}
+								}
+						}
+					}
+					break;
+				case '"':
+					if ( inQuote ) {
+						if ( repeatsChar( string, i, 1 << ( quoteLevel + 1 ), '"' ) ) {
+							// Skip quote escaping as that will be unescaped later
+							if ( escapingSb == null ) {
+								escapingSb = new StringBuilder();
+							}
+							escapingSb.append( string, start, i );
+							escapingSb.append( '"' );
+							// Move forward to the last quote
+							i += ( 1 << ( quoteLevel + 1 ) ) - 1;
+							start = i + 1;
+							continue;
+						}
+						assert repeatsChar( string, i, 1 << quoteLevel, '"' );
+						switch ( elementType.getJdbcType().getDefaultSqlTypeCode() ) {
+							case SqlTypes.DATE:
+								values.add(
+										fromRawObject(
+												elementType,
+												parseDate(
+														CharSequenceHelper.subSequence(
+																string,
+																start,
+																i
+														)
+												),
+												options
+										)
+								);
+								break;
+							case SqlTypes.TIME:
+							case SqlTypes.TIME_WITH_TIMEZONE:
+							case SqlTypes.TIME_UTC:
+								values.add(
+										fromRawObject(
+												elementType,
+												parseTime(
+														CharSequenceHelper.subSequence(
+																string,
+																start,
+																i
+														)
+												),
+												options
+										)
+								);
+								break;
+							case SqlTypes.TIMESTAMP:
+								values.add(
+										fromRawObject(
+												elementType,
+												parseTimestamp(
+														CharSequenceHelper.subSequence(
+																string,
+																start,
+																i
+														),
+														elementType.getJdbcJavaType()
+												),
+												options
+										)
+								);
+								break;
+							case SqlTypes.TIMESTAMP_WITH_TIMEZONE:
+							case SqlTypes.TIMESTAMP_UTC:
+								values.add(
+										fromRawObject(
+												elementType,
+												parseTimestampWithTimeZone(
+														CharSequenceHelper.subSequence(
+																string,
+																start,
+																i
+														),
+														elementType.getJdbcJavaType()
+												),
+												options
+										)
+								);
+								break;
+							case SqlTypes.BINARY:
+							case SqlTypes.VARBINARY:
+							case SqlTypes.LONGVARBINARY:
+							case SqlTypes.LONG32VARBINARY:
+								final int backslashes = 1 << ( quoteLevel + 1 );
+								assert repeatsChar( string, start, backslashes, '\\' );
+								final int xCharPosition = start + backslashes;
+								assert string.charAt( xCharPosition ) == 'x';
+								values.add(
+										fromString(
+												elementType,
+												string,
+												xCharPosition + 1,
+												i
+										)
+								);
+								break;
+							default:
+								if ( escapingSb == null || escapingSb.length() == 0 ) {
+									values.add(
+											fromString(
+													elementType,
+													string,
+													start,
+													i
+											)
+									);
+								}
+								else {
+									escapingSb.append( string, start, i );
+									values.add(
+											fromString(
+													elementType,
+													escapingSb,
+													0,
+													escapingSb.length()
+											)
+									);
+									escapingSb.setLength( 0 );
+								}
+								break;
+						}
+						inQuote = false;
+						// move forward the index by 2 ^ quoteLevel to point to the next char after the quote
+						i += 1 << quoteLevel;
+						if ( string.charAt( i ) == '}' ) {
+							// Return the end position if this is the last element
+							return i + 1;
+						}
+						// at this point, we must see a comma to indicate the next element
+						assert string.charAt( i ) == ',';
+					}
+					else {
+						// This is a start quote, so move forward the index to the last quote
+						final int expectedQuotes = Math.max( 1, 1 << quoteLevel );
+						assert repeatsChar( string, i, expectedQuotes, '"' );
+						i += expectedQuotes - 1;
+						if ( string.charAt( i + 1 ) == '(' ) {
+							// This could be a nested struct
+							if ( elementType.getJdbcType() instanceof AbstractPostgreSQLStructJdbcType ) {
+								final AbstractPostgreSQLStructJdbcType structJdbcType;
+								structJdbcType = (AbstractPostgreSQLStructJdbcType) elementType.getJdbcType();
+								final Object[] subValues = new Object[structJdbcType.embeddableMappingType.getJdbcValueCount()];
+								final int subEnd = structJdbcType.deserializeStruct(
 										string,
-										start,
-										i
+										i + 1,
+										quoteLevel + 1,
+										arrayLevel + 1,
+										subValues,
+										returnEmbeddable,
+										options
+								);
+								if ( returnEmbeddable ) {
+									final Object[] attributeValues = structJdbcType.getAttributeValues(
+											structJdbcType.embeddableMappingType,
+											structJdbcType.orderMapping,
+											subValues,
+											options
+									);
+									final Object subValue = structJdbcType.embeddableMappingType.getRepresentationStrategy()
+											.getInstantiator()
+											.instantiate( () -> attributeValues, options.getSessionFactory() );
+									values.add( subValue );
+								}
+								else {
+									if ( structJdbcType.inverseOrderMapping != null ) {
+										StructHelper.orderJdbcValues(
+												structJdbcType.embeddableMappingType,
+												structJdbcType.inverseOrderMapping,
+												subValues.clone(),
+												subValues
+										);
+									}
+									values.add( subValues );
+								}
+								// The subEnd points to the first character after the '}',
+								// so move forward the index to point to the next char after quotes
+								assert repeatsChar( string, subEnd, expectedQuotes, '"' );
+								i = subEnd + expectedQuotes;
+								if ( string.charAt( i ) == '}' ) {
+									// Return the end position if this is the last element
+									return i + 1;
+								}
+								// at this point, we must see a comma to indicate the next element
+								assert string.charAt( i ) == ',';
+							}
+							else {
+								inQuote = true;
+							}
+						}
+						else {
+							inQuote = true;
+						}
+					}
+					start = i + 1;
+					break;
+				case ',':
+					if ( !inQuote ) {
+						if ( start == i ) {
+							values.add( null );
+						}
+						else {
+							if ( elementType.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.BOOLEAN ) {
+								values.add(
+										fromRawObject(
+												elementType,
+												string.charAt( start ) == 't',
+												options
+										)
+								);
+							}
+							else if ( elementType.getJavaTypeDescriptor().getJavaTypeClass().isEnum()
+									&& elementType.getJdbcType().isInteger() ) {
+								values.add(
+										fromRawObject(
+												elementType,
+												IntegerJavaType.INSTANCE.fromEncodedString( string, start, i ),
+												options
+										)
+								);
+							}
+							else {
+								values.add(
+										fromString(
+												elementType,
+												string,
+												start,
+												i
+										)
+								);
+							}
+						}
+						start = i + 1;
+					}
+					break;
+				case '}':
+					if ( !inQuote ) {
+						if ( start == i ) {
+							values.add( null );
+						}
+						else {
+							if ( elementType.getJdbcType().getDefaultSqlTypeCode() == SqlTypes.BOOLEAN ) {
+								values.add(
+										fromRawObject(
+												elementType,
+												string.charAt( start ) == 't',
+												options
+										)
+								);
+							}
+							else if ( elementType.getJavaTypeDescriptor().getJavaTypeClass().isEnum()
+									&& elementType.getJdbcType().isInteger() ) {
+								values.add(
+										fromRawObject(
+												elementType,
+												IntegerJavaType.INSTANCE.fromEncodedString( string, start, i ),
+												options
+										)
+								);
+							}
+							else {
+								values.add(
+										fromString(
+												elementType,
+												string,
+												start,
+												i
+										)
 								);
 							}
 						}
@@ -529,7 +955,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 			}
 		}
 
-		throw new IllegalArgumentException( "Struct not properly formed: " + string.substring( start ) );
+		throw new IllegalArgumentException( "Array not properly formed: " + string.substring( start ) );
 	}
 
 	private SelectableMapping getJdbcValueSelectable(int jdbcValueSelectableIndex) {
@@ -664,7 +1090,7 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 	public Object[] extractJdbcValues(Object rawJdbcValue, WrapperOptions options) throws SQLException {
 		assert embeddableMappingType != null;
 		final Object[] array = new Object[embeddableMappingType.getJdbcValueCount()];
-		deserializeStruct( (String) rawJdbcValue, 0, 0, array, true, options );
+		deserializeStruct( (String) rawJdbcValue, 0, 0, 0, array, true, options );
 		if ( inverseOrderMapping != null ) {
 			StructHelper.orderJdbcValues( embeddableMappingType, inverseOrderMapping, array.clone(), array );
 		}
@@ -751,10 +1177,17 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 			PostgreSQLAppender appender,
 			WrapperOptions options,
 			JdbcMapping jdbcMapping,
-			Object array) {
+			Object value) {
+		serializeConvertedBasicTo( appender, options, jdbcMapping, jdbcMapping.convertToRelationalValue( value ) );
+	}
+
+	private void serializeConvertedBasicTo(
+			PostgreSQLAppender appender,
+			WrapperOptions options,
+			JdbcMapping jdbcMapping,
+			Object subValue) {
 		//noinspection unchecked
 		final JavaType<Object> jdbcJavaType = (JavaType<Object>) jdbcMapping.getJdbcJavaType();
-		final Object subValue = jdbcMapping.convertToRelationalValue( array );
 		switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
 			case SqlTypes.TINYINT:
 			case SqlTypes.SMALLINT:
@@ -829,23 +1262,98 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 						byte[].class,
 						options
 				);
-				final int escapes = 1 << appender.quote;
-				appender.ensureCanFit( escapes + 1 + ( bytes.length << 1 ) );
-				for ( int i = 0; i < escapes; i++ ) {
+				if (appender.arrayLevel > 0) {
+					final int escapes = 1 << appender.quote;
+					appender.ensureCanFit( escapes + 1 + ( bytes.length << 1 ) );
 					appender.append( '\\' );
+					appender.append( '\\' );
+					appender.append( 'x' );
+					PrimitiveByteArrayJavaType.INSTANCE.appendString(
+							appender,
+							bytes
+					);
 				}
-				appender.append( 'x' );
-				PrimitiveByteArrayJavaType.INSTANCE.appendString(
-						appender,
-						bytes
-				);
+				else {
+					final int escapes = 1 << appender.quote;
+					appender.ensureCanFit( escapes + 1 + ( bytes.length << 1 ) );
+					appender.append( '\\' );
+					appender.append( '\\' );
+					appender.append( 'x' );
+					PrimitiveByteArrayJavaType.INSTANCE.appendString(
+							appender,
+							bytes
+					);
+				}
 				break;
 			case SqlTypes.UUID:
 				appender.append( subValue.toString() );
 				break;
+			case SqlTypes.ARRAY:
+				if ( subValue != null ) {
+					final int length = Array.getLength( subValue );
+					if ( length == 0 ) {
+						appender.append( "{}" );
+					}
+					else {
+						//noinspection unchecked
+						final BasicType<Object> elementType = ((BasicPluralType<?, Object>) jdbcMapping).getElementType();
+						final boolean arrayQuote = true;//length > 1;
+						final boolean elementQuote = needsArrayElementQuoting( elementType );
+						if ( arrayQuote ) {
+							appender.quoteStart();
+						}
+						appender.arrayStart();
+						Object arrayElement = Array.get( subValue, 0 );
+						if ( arrayElement == null ) {
+							appender.appendNull();
+						}
+						else {
+							if ( elementQuote ) {
+								appender.quoteStart();
+							}
+							serializeConvertedBasicTo( appender, options, elementType, arrayElement );
+							if ( elementQuote ) {
+								appender.quoteEnd();
+							}
+						}
+						for ( int i = 1; i < length; i++ ) {
+							arrayElement = Array.get( subValue, i );
+							appender.append( ',' );
+							if ( arrayElement == null ) {
+								appender.appendNull();
+							}
+							else {
+								if ( elementQuote ) {
+									appender.quoteStart();
+								}
+								serializeConvertedBasicTo( appender, options, elementType, arrayElement );
+								if ( elementQuote ) {
+									appender.quoteEnd();
+								}
+							}
+						}
+
+						appender.arrayEnd();
+						if ( arrayQuote ) {
+							appender.quoteEnd();
+						}
+					}
+				}
+				break;
 			default:
 				throw new UnsupportedOperationException( "Unsupported JdbcType nested in struct: " + jdbcMapping.getJdbcType() );
 		}
+	}
+
+	private boolean needsArrayElementQuoting(BasicType<?> elementType) {
+		final int sqlTypeCode = elementType.getJdbcType().getDefaultSqlTypeCode();
+		switch ( sqlTypeCode ) {
+			case SqlTypes.ARRAY:
+			case SqlTypes.STRUCT:
+				// Only complex element types need quoting
+				return true;
+		}
+		return false;
 	}
 
 	private Object[] getAttributeValues(
@@ -1011,7 +1519,9 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 
 	private static class PostgreSQLAppender extends StringBuilderSqlAppender {
 
+		private int backslashQuote = 0;
 		private int quote = 1;
+		private int arrayLevel;
 
 		public PostgreSQLAppender(StringBuilder sb) {
 			super( sb );
@@ -1019,12 +1529,42 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 
 		public void quoteStart() {
 			append( '"' );
-			quote = quote << 1;
+			if ( arrayLevel == 0 ) {
+				quote = quote << 1;
+			}
+			else if ( backslashQuote == 0 ) {
+				backslashQuote = quote;
+			}
+			else {
+				backslashQuote = backslashQuote << 1;
+			}
 		}
 
 		public void quoteEnd() {
-			quote = quote >> 1;
+			if ( arrayLevel == 0 ) {
+				quote = quote >> 1;
+			}
+			else if ( backslashQuote == quote ) {
+				backslashQuote = 0;
+			}
+			else {
+				backslashQuote = backslashQuote >> 1;
+			}
 			append( '"' );
+		}
+
+		public void appendNull() {
+			sb.append( "NULL" );
+		}
+
+		public void arrayStart() {
+			append( '{' );
+			arrayLevel++;
+		}
+
+		public void arrayEnd() {
+			arrayLevel--;
+			append( '}' );
 		}
 
 		@Override
@@ -1060,9 +1600,21 @@ public abstract class AbstractPostgreSQLStructJdbcType implements AggregateJdbcT
 
 		private void appendWithQuote(char fragment) {
 			if ( fragment == '"' ) {
-				sb.ensureCapacity( sb.length() + quote );
+				sb.ensureCapacity( sb.length() + backslashQuote + quote );
+				for ( int i = 0; i < backslashQuote; i++ ) {
+					sb.append( '\\' );
+				}
 				for ( int i = 0; i < quote; i++ ) {
 					sb.append( '"' );
+				}
+			}
+			else if ( fragment == '\\' ) {
+				sb.ensureCapacity( sb.length() + backslashQuote + quote );
+				for ( int i = 0; i < backslashQuote; i++ ) {
+					sb.append( '\\' );
+				}
+				for ( int i = 0; i < quote; i++ ) {
+					sb.append( '\\' );
 				}
 			}
 			else {

@@ -1062,8 +1062,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				// TODO: anything more we can do here? e.g. check constructor
 				try {
 					final Class<?> javaResultType = selection.getJavaType();
-					final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( javaResultType.getName() );
-					returnTypeCorrect = context.getTypeUtils().isAssignable( returnType,  typeElement.asType() );
+					if ( javaResultType == null ) {
+						returnTypeCorrect = true;
+					}
+					else {
+						final TypeElement typeElement = context.getTypeElementForFullyQualifiedName( javaResultType.getName() );
+						returnTypeCorrect = context.getTypeUtils().isAssignable( returnType, typeElement.asType() );
+					}
 				}
 				catch (Exception e) {
 					//ignore
@@ -1128,20 +1133,20 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private static boolean parameterMatches(VariableElement parameter, JpaSelection<?> item) {
 		final Class<?> itemType = item.getJavaType();
-		final TypeMirror parameterType = parameter.asType();
-		final TypeKind kind = parameterType.getKind();
-		final String itemTypeName = itemType.getName();
-		if ( kind == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = (DeclaredType) parameterType;
-			final TypeElement paramTypeElement = (TypeElement) declaredType.asElement();
-			return paramTypeElement.getQualifiedName().contentEquals(itemTypeName);
+		if ( itemType != null ) {
+			final TypeMirror parameterType = parameter.asType();
+			final TypeKind kind = parameterType.getKind();
+			final String itemTypeName = itemType.getName();
+			if ( kind == TypeKind.DECLARED ) {
+				final DeclaredType declaredType = (DeclaredType) parameterType;
+				final TypeElement paramTypeElement = (TypeElement) declaredType.asElement();
+				return paramTypeElement.getQualifiedName().contentEquals( itemTypeName );
+			}
+			else if ( kind.isPrimitive() ) {
+				return parameterType.toString().equals( itemTypeName );
+			}
 		}
-		else if ( kind.isPrimitive() ) {
-			return parameterType.toString().equals(itemTypeName);
-		}
-		else {
-			return false;
-		}
+		return false;
 	}
 
 	private static boolean checkReturnedArrayType(ArrayType returnType) {

@@ -7,6 +7,7 @@
 package org.hibernate.orm.test.mapping.embeddable;
 
 import java.net.URL;
+import java.sql.Clob;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.Duration;
@@ -21,48 +22,65 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.Struct;
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.procedure.ProcedureCall;
+import org.hibernate.query.procedure.ProcedureParameter;
 import org.hibernate.type.SqlTypes;
 
+import org.hibernate.testing.jdbc.SharedDriverManagerTypeCacheClearingIntegrator;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
-import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
+import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
+import org.hibernate.testing.orm.junit.ServiceRegistry;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.ParameterMode;
 import jakarta.persistence.Tuple;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@JiraKey("HHH-15862")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonAggregate.class)
-public class JsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
-
-	@Override
-	protected Class<?>[] getAnnotatedClasses() {
-		return new Class<?>[] {
-			JsonHolder.class
-		};
-	}
+@BootstrapServiceRegistry(
+		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
+		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
+)
+// Don't reorder columns in the types here to avoid the need to rewrite the test
+@ServiceRegistry(settings = @Setting(name = AvailableSettings.COLUMN_ORDERING_STRATEGY, value = "legacy"))
+@DomainModel(annotatedClasses = JsonWithArrayEmbeddableTest.JsonHolder.class)
+@SessionFactory
+public class JsonWithArrayEmbeddableTest {
 
 	@BeforeEach
-	public void setUp() {
-		inTransaction(
+	public void setUp(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
-					session.persist( new JsonHolder( 1L, EmbeddableAggregate.createAggregate1() ) );
-					session.persist( new JsonHolder( 2L, EmbeddableAggregate.createAggregate2() ) );
+					session.persist( new JsonHolder( 1L, EmbeddableWithArrayAggregate.createAggregate1() ) );
+					session.persist( new JsonHolder( 2L, EmbeddableWithArrayAggregate.createAggregate2() ) );
 				}
 		);
 	}
 
 	@AfterEach
-	protected void cleanupTest() {
-		inTransaction(
+	protected void cleanupTest(SessionFactoryScope scope) {
+		scope.inTransaction(
 				session -> {
 					session.createMutationQuery( "delete from JsonHolder h" ).executeUpdate();
 				}
@@ -70,70 +88,56 @@ public class JsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testUpdate() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdate(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					JsonHolder jsonHolder = entityManager.find( JsonHolder.class, 1L );
-					jsonHolder.setAggregate( EmbeddableAggregate.createAggregate2() );
+					jsonHolder.setAggregate( EmbeddableWithArrayAggregate.createAggregate2() );
 					entityManager.flush();
 					entityManager.clear();
-					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregate2(), entityManager.find( JsonHolder.class, 1L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate2(), entityManager.find( JsonHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
 
 	@Test
-	@JiraKey( "HHH-16682" )
-	public void testDirtyChecking() {
-		sessionFactoryScope().inTransaction(
-				entityManager -> {
-					JsonHolder jsonHolder = entityManager.find( JsonHolder.class, 1L );
-					jsonHolder.getAggregate().setTheString( "MyString" );
-					entityManager.flush();
-					entityManager.clear();
-					assertEquals( "MyString", entityManager.find( JsonHolder.class, 1L ).getAggregate().getTheString() );
-				}
-		);
-	}
-
-	@Test
-	public void testFetch() {
-		sessionFactoryScope().inSession(
+	public void testFetch(SessionFactoryScope scope) {
+		scope.inSession(
 				entityManager -> {
 					List<JsonHolder> jsonHolders = entityManager.createQuery( "from JsonHolder b where b.id = 1", JsonHolder.class ).getResultList();
 					assertEquals( 1, jsonHolders.size() );
 					assertEquals( 1L, jsonHolders.get( 0 ).getId() );
-					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregate1(), jsonHolders.get( 0 ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), jsonHolders.get( 0 ).getAggregate() );
 				}
 		);
 	}
 
 	@Test
-	public void testFetchNull() {
-		sessionFactoryScope().inSession(
+	public void testFetchNull(SessionFactoryScope scope) {
+		scope.inSession(
 				entityManager -> {
 					List<JsonHolder> jsonHolders = entityManager.createQuery( "from JsonHolder b where b.id = 2", JsonHolder.class ).getResultList();
 					assertEquals( 1, jsonHolders.size() );
 					assertEquals( 2L, jsonHolders.get( 0 ).getId() );
-					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregate2(), jsonHolders.get( 0 ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate2(), jsonHolders.get( 0 ).getAggregate() );
 				}
 		);
 	}
 
 	@Test
-	public void testDomainResult() {
-		sessionFactoryScope().inSession(
+	public void testDomainResult(SessionFactoryScope scope) {
+		scope.inSession(
 				entityManager -> {
-					List<EmbeddableAggregate> structs = entityManager.createQuery( "select b.aggregate from JsonHolder b where b.id = 1", EmbeddableAggregate.class ).getResultList();
+					List<EmbeddableWithArrayAggregate> structs = entityManager.createQuery( "select b.aggregate from JsonHolder b where b.id = 1", EmbeddableWithArrayAggregate.class ).getResultList();
 					assertEquals( 1, structs.size() );
-					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregate1(), structs.get( 0 ) );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), structs.get( 0 ) );
 				}
 		);
 	}
 
 	@Test
-	public void testSelectionItems() {
-		sessionFactoryScope().inSession(
+	public void testSelectionItems(SessionFactoryScope scope) {
+		scope.inSession(
 				entityManager -> {
 					List<Tuple> tuples = entityManager.createQuery(
 							"select " +
@@ -167,40 +171,40 @@ public class JsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 					).getResultList();
 					assertEquals( 1, tuples.size() );
 					final Tuple tuple = tuples.get( 0 );
-					final EmbeddableAggregate struct = new EmbeddableAggregate();
-					struct.setTheInt( tuple.get( 0, int.class ) );
-					struct.setTheDouble( tuple.get( 1, Double.class ) );
-					struct.setTheBoolean( tuple.get( 2, Boolean.class ) );
-					struct.setTheNumericBoolean( tuple.get( 3, Boolean.class ) );
-					struct.setTheStringBoolean( tuple.get( 4, Boolean.class ) );
-					struct.setTheString( tuple.get( 5, String.class ) );
-					struct.setTheInteger( tuple.get( 6, Integer.class ) );
-					struct.setTheUrl( tuple.get( 7, URL.class ) );
-					struct.setTheClob( tuple.get( 8, String.class ) );
-					struct.setTheBinary( tuple.get( 9, byte[].class ) );
-					struct.setTheDate( tuple.get( 10, Date.class ) );
-					struct.setTheTime( tuple.get( 11, Time.class ) );
-					struct.setTheTimestamp( tuple.get( 12, Timestamp.class ) );
-					struct.setTheInstant( tuple.get( 13, Instant.class ) );
-					struct.setTheUuid( tuple.get( 14, UUID.class ) );
-					struct.setGender( tuple.get( 15, EntityOfBasics.Gender.class ) );
-					struct.setConvertedGender( tuple.get( 16, EntityOfBasics.Gender.class ) );
-					struct.setOrdinalGender( tuple.get( 17, EntityOfBasics.Gender.class ) );
-					struct.setTheDuration( tuple.get( 18, Duration.class ) );
-					struct.setTheLocalDateTime( tuple.get( 19, LocalDateTime.class ) );
-					struct.setTheLocalDate( tuple.get( 20, LocalDate.class ) );
-					struct.setTheLocalTime( tuple.get( 21, LocalTime.class ) );
-					struct.setTheZonedDateTime( tuple.get( 22, ZonedDateTime.class ) );
-					struct.setTheOffsetDateTime( tuple.get( 23, OffsetDateTime.class ) );
-					struct.setMutableValue( tuple.get( 24, MutableValue.class ) );
-					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregate1(), struct );
+					final EmbeddableWithArrayAggregate struct = new EmbeddableWithArrayAggregate();
+					struct.setTheInt( tuple.get( 0, int[].class ) );
+					struct.setTheDouble( tuple.get( 1, double[].class ) );
+					struct.setTheBoolean( tuple.get( 2, Boolean[].class ) );
+					struct.setTheNumericBoolean( tuple.get( 3, Boolean[].class ) );
+					struct.setTheStringBoolean( tuple.get( 4, Boolean[].class ) );
+					struct.setTheString( tuple.get( 5, String[].class ) );
+					struct.setTheInteger( tuple.get( 6, Integer[].class ) );
+					struct.setTheUrl( tuple.get( 7, URL[].class ) );
+					struct.setTheClob( tuple.get( 8, String[].class ) );
+					struct.setTheBinary( tuple.get( 9, byte[][].class ) );
+					struct.setTheDate( tuple.get( 10, Date[].class ) );
+					struct.setTheTime( tuple.get( 11, Time[].class ) );
+					struct.setTheTimestamp( tuple.get( 12, Timestamp[].class ) );
+					struct.setTheInstant( tuple.get( 13, Instant[].class ) );
+					struct.setTheUuid( tuple.get( 14, UUID[].class ) );
+					struct.setGender( tuple.get( 15, EntityOfBasics.Gender[].class ) );
+					struct.setConvertedGender( tuple.get( 16, EntityOfBasics.Gender[].class ) );
+					struct.setOrdinalGender( tuple.get( 17, EntityOfBasics.Gender[].class ) );
+					struct.setTheDuration( tuple.get( 18, Duration[].class ) );
+					struct.setTheLocalDateTime( tuple.get( 19, LocalDateTime[].class ) );
+					struct.setTheLocalDate( tuple.get( 20, LocalDate[].class ) );
+					struct.setTheLocalTime( tuple.get( 21, LocalTime[].class ) );
+					struct.setTheZonedDateTime( tuple.get( 22, ZonedDateTime[].class ) );
+					struct.setTheOffsetDateTime( tuple.get( 23, OffsetDateTime[].class ) );
+					struct.setMutableValue( tuple.get( 24, MutableValue[].class ) );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), struct );
 				}
 		);
 	}
 
 	@Test
-	public void testDeleteWhere() {
-		sessionFactoryScope().inTransaction(
+	public void testDeleteWhere(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "delete JsonHolder b where b.aggregate is not null" ).executeUpdate();
 					assertNull( entityManager.find( JsonHolder.class, 1L ) );
@@ -210,8 +214,8 @@ public class JsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 	}
 
 	@Test
-	public void testUpdateAggregate() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdateAggregate(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "update JsonHolder b set b.aggregate = null" ).executeUpdate();
 					assertNull( entityManager.find( JsonHolder.class, 1L ).getAggregate() );
@@ -221,37 +225,37 @@ public class JsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	public void testUpdateAggregateMember() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdateAggregateMember(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "update JsonHolder b set b.aggregate.theString = null" ).executeUpdate();
-					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
+					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
 					struct.setTheString( null );
-					EmbeddableAggregate.assertEquals( struct, entityManager.find( JsonHolder.class, 1L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( struct, entityManager.find( JsonHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	public void testUpdateMultipleAggregateMembers() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdateMultipleAggregateMembers(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "update JsonHolder b set b.aggregate.theString = null, b.aggregate.theUuid = null" ).executeUpdate();
-					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
+					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
 					struct.setTheString( null );
 					struct.setTheUuid( null );
-					EmbeddableAggregate.assertEquals( struct, entityManager.find( JsonHolder.class, 1L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( struct, entityManager.find( JsonHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsJsonComponentUpdate.class)
-	public void testUpdateAllAggregateMembers() {
-		sessionFactoryScope().inTransaction(
+	public void testUpdateAllAggregateMembers(SessionFactoryScope scope) {
+		scope.inTransaction(
 				entityManager -> {
-					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
+					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
 					entityManager.createMutationQuery(
 									"update JsonHolder b set " +
 											"b.aggregate.theInt = :theInt," +
@@ -307,27 +311,25 @@ public class JsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 							.setParameter( "theOffsetDateTime", struct.getTheOffsetDateTime() )
 							.setParameter( "mutableValue", struct.getMutableValue() )
 							.executeUpdate();
-					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregate1(), entityManager.find( JsonHolder.class, 2L ).getAggregate() );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), entityManager.find( JsonHolder.class, 2L ).getAggregate() );
 				}
 		);
 	}
 
-	//tag::embeddable-json-type-mapping-example[]
 	@Entity(name = "JsonHolder")
 	public static class JsonHolder {
 
 		@Id
 		private Long id;
 		@JdbcTypeCode(SqlTypes.JSON)
-		private EmbeddableAggregate aggregate;
+		private EmbeddableWithArrayAggregate aggregate;
 
-		//end::embeddable-json-type-mapping-example[]
 		//Getters and setters are omitted for brevity
 
 		public JsonHolder() {
 		}
 
-		public JsonHolder(Long id, EmbeddableAggregate aggregate) {
+		public JsonHolder(Long id, EmbeddableWithArrayAggregate aggregate) {
 			this.id = id;
 			this.aggregate = aggregate;
 		}
@@ -340,16 +342,13 @@ public class JsonEmbeddableTest extends BaseSessionFactoryFunctionalTest {
 			this.id = id;
 		}
 
-		public EmbeddableAggregate getAggregate() {
+		public EmbeddableWithArrayAggregate getAggregate() {
 			return aggregate;
 		}
 
-		public void setAggregate(EmbeddableAggregate aggregate) {
+		public void setAggregate(EmbeddableWithArrayAggregate aggregate) {
 			this.aggregate = aggregate;
 		}
 
-	//tag::embeddable-json-type-mapping-example[]
 	}
-
-	//end::embeddable-json-type-mapping-example[]
 }

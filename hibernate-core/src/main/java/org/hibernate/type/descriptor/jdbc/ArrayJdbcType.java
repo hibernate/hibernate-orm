@@ -7,6 +7,7 @@
 package org.hibernate.type.descriptor.jdbc;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Type;
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,6 +17,7 @@ import java.sql.Types;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
@@ -26,6 +28,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.jdbc.internal.JdbcLiteralFormatterArray;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.internal.ParameterizedTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -61,8 +64,17 @@ public class ArrayJdbcType implements JdbcType {
 				scale,
 				typeConfiguration
 		);
-		return typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
+		final JavaType<Object> javaType = typeConfiguration.getJavaTypeRegistry().resolveDescriptor(
 				Array.newInstance( elementJavaType.getJavaTypeClass(), 0 ).getClass()
+		);
+		if ( javaType instanceof BasicPluralType<?, ?> ) {
+			//noinspection unchecked
+			return (JavaType<T>) javaType;
+		}
+		//noinspection unchecked
+		return (JavaType<T>) javaType.createJavaType(
+				new ParameterizedTypeImpl( javaType.getJavaTypeClass(), new Type[0], null ),
+				typeConfiguration
 		);
 	}
 

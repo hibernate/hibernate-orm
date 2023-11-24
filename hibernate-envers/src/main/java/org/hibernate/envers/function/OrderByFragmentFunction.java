@@ -138,7 +138,7 @@ public class OrderByFragmentFunction extends AbstractSqmFunctionDescriptor {
 				QueryEngine queryEngine) {
 			super(
 					orderByFragmentFunction,
-					null,
+					(sqlAppender, sqlAstArguments, returnType, walker) -> {},
 					arguments,
 					impliedResultType,
 					orderByFragmentFunction.getArgumentsValidator(),

@@ -9,7 +9,6 @@ package org.hibernate.query.sqm.tree.expression;
 import org.hibernate.HibernateException;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.criteria.JpaParameterExpression;
-import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 
 /**
@@ -64,9 +63,6 @@ public interface SqmParameter<T> extends SqmExpression<T>, JpaParameterExpressio
 	 * @return The anticipated Type.
 	 */
 	BindableType<T> getAnticipatedType();
-
-	@Override
-	SqmExpressible<T> getNodeType();
 
 	/**
 	 * Make a copy

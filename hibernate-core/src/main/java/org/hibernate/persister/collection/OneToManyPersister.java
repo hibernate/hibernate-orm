@@ -102,7 +102,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	private final boolean cascadeDeleteEnabled;
 	private final boolean keyIsNullable;
-	private final boolean keyIsUpdateable;
 	private final MutationExecutorService mutationExecutorService;
 
 	@Deprecated(since = "6.0")
@@ -121,7 +120,6 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 		cascadeDeleteEnabled = collectionBinding.getKey().isCascadeDeleteEnabled()
 				&& creationContext.getDialect().supportsCascadeDelete();
 		keyIsNullable = collectionBinding.getKey().isNullable();
-		keyIsUpdateable = collectionBinding.getKey().isUpdateable();
 
 		this.rowMutationOperations = buildRowMutationOperations();
 
@@ -156,12 +154,7 @@ public class OneToManyPersister extends AbstractCollectionPersister {
 
 	@Override
 	protected boolean isRowDeleteEnabled() {
-		return keyIsUpdateable && keyIsNullable;
-	}
-
-	@Override
-	protected boolean isRowInsertEnabled() {
-		return keyIsUpdateable;
+		return super.isRowDeleteEnabled() && keyIsNullable;
 	}
 
 	public boolean isCascadeDeleteEnabled() {

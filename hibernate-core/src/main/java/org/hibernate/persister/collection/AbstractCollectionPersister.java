@@ -195,6 +195,7 @@ public abstract class AbstractCollectionPersister
 	private final boolean isLazy;
 	private final boolean isExtraLazy;
 	protected final boolean isInverse;
+	private final boolean keyIsUpdateable;
 	private final boolean isMutable;
 	private final boolean isVersioned;
 	protected final int batchSize;
@@ -491,6 +492,8 @@ public abstract class AbstractCollectionPersister
 		isExtraLazy = collectionBootDescriptor.isExtraLazy();
 
 		isInverse = collectionBootDescriptor.isInverse();
+
+		keyIsUpdateable = collectionBootDescriptor.getKey().isUpdateable();
 
 		if ( collectionBootDescriptor.isArray() ) {
 			elementClass = ( (org.hibernate.mapping.Array) collectionBootDescriptor ).getElementClass();
@@ -1098,7 +1101,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected boolean isRowDeleteEnabled() {
-		return true;
+		return keyIsUpdateable;
 	}
 
 	@Override
@@ -1107,7 +1110,7 @@ public abstract class AbstractCollectionPersister
 	}
 
 	protected boolean isRowInsertEnabled() {
-		return true;
+		return keyIsUpdateable;
 	}
 
 	public String getOwnerEntityName() {

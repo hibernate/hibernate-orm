@@ -11,8 +11,8 @@ import static org.junit.Assert.assertEquals;
 import java.util.Locale;
 
 import org.hibernate.internal.util.StringHelper;
-import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.hibernate.type.descriptor.java.LocaleJavaType;
+
 import org.junit.Test;
 
 /**
@@ -21,7 +21,29 @@ import org.junit.Test;
  * @author Christian Beikov
  * @author Steve Ebersole
  */
-public class LocaleJavaTypeDescriptorTest extends BaseUnitTestCase {
+public class LocaleJavaTypeDescriptorTest extends AbstractDescriptorTest<Locale> {
+	final Locale original = toLocale( "de", "DE", null );
+	final Locale copy = toLocale( "de", "DE", null );
+	final Locale different = toLocale( "de", null, null );
+
+	public LocaleJavaTypeDescriptorTest() {
+		super( LocaleJavaType.INSTANCE );
+	}
+
+	@Override
+	protected Data<Locale> getTestData() {
+		return new Data<>( original, copy, different );
+	}
+
+	@Override
+	protected boolean shouldBeMutable() {
+		return false;
+	}
+
+	@Override
+	protected boolean isIdentityDifferentFromEquality() {
+		return false;
+	}
 
 	@Test
 	public void testConversionFromString() {
@@ -36,7 +58,7 @@ public class LocaleJavaTypeDescriptorTest extends BaseUnitTestCase {
 		assertEquals( Locale.ROOT, LocaleJavaType.INSTANCE.fromString( "" ) );
 	}
 
-	public Locale toLocale(String lang, String region, String variant) {
+	private static Locale toLocale(String lang, String region, String variant) {
 		final Locale.Builder builder = new Locale.Builder();
 		if ( StringHelper.isNotEmpty( lang ) ) {
 			builder.setLanguage( lang );

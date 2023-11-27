@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.mapping.type.java;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -22,6 +23,8 @@ import org.hibernate.type.descriptor.java.BlobJavaType;
 import org.hibernate.type.descriptor.java.DataHelper;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.junit.Test;
+
+import org.assertj.core.api.Assertions;
 
 /**
  * @author Steve Ebersole
@@ -53,6 +56,16 @@ public class BlobDescriptorTest extends AbstractDescriptorTest<Blob> {
 		assertTrue( BlobJavaType.INSTANCE.areEqual( original, original ) );
 		assertFalse( BlobJavaType.INSTANCE.areEqual( original, copy ) );
 		assertFalse( BlobJavaType.INSTANCE.areEqual( original, different ) );
+	}
+
+	@Override
+	public void testPassThrough() {
+		// blobs of the same internal value are not really comparable
+		// we'll just check that operations don't fail, not that the output is equal to the input
+		assertThatCode( () -> BlobJavaType.INSTANCE.wrap( original, wrapperOptions ) )
+						.doesNotThrowAnyException();
+		assertThatCode( () -> BlobJavaType.INSTANCE.unwrap( original, Blob.class, wrapperOptions ) )
+				.doesNotThrowAnyException();
 	}
 
 	@Test

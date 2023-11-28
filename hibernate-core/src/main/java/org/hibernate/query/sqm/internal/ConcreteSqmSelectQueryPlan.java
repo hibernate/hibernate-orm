@@ -195,6 +195,20 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		return new MySqmJdbcExecutionContextAdapter( executionContext, jdbcSelect, subSelectFetchKeyHandler, hql );
 	}
 
+	private static Class<?> singleSelectionType(SqmSelectStatement<?> sqm) {
+		final List<SqmSelection<?>> selections = sqm.getQueryPart()
+				.getFirstQuerySpec()
+				.getSelectClause()
+				.getSelections();
+		if ( selections.size() == 1 ) {
+			final SqmSelection<?> sqmSelection = selections.get( 0 );
+			return sqmSelection.getSelectableNode().isCompoundSelection() ?
+					null :
+					sqmSelection.getNodeJavaType().getJavaTypeClass();
+		}
+		return null;
+	}
+
 	@SuppressWarnings("unchecked")
 	protected static <T> RowTransformer<T> determineRowTransformer(
 			SqmSelectStatement<?> sqm,
@@ -210,13 +224,13 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		else if ( resultType == Object[].class ) {
 			return (RowTransformer<T>) RowTransformerArrayImpl.instance();
 		}
-		else if ( resultType == List.class ) {
+		else if ( resultType == List.class && resultType != singleSelectionType( sqm ) ) {
 			return (RowTransformer<T>) RowTransformerListImpl.instance();
 		}
 		else {
 			// NOTE : if we get here :
 			// 		1) there is no TupleTransformer specified
-			// 		2) an explicit result-type, other than an array, was specified
+			// 		2) an explicit result-type, other than an array or List, was specified
 
 			if ( tupleMetadata == null ) {
 				if ( sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections().size() == 1 ) {

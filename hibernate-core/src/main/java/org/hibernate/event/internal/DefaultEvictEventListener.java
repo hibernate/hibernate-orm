@@ -59,7 +59,8 @@ public class DefaultEvictEventListener implements EvictEventListener {
 					.getEntityDescriptor( lazyInitializer.getEntityName() );
 			final EntityKey key = source.generateEntityKey( id, persister );
 			final EntityHolder holder = persistenceContext.removeEntityHolder( key );
-			if ( !lazyInitializer.isUninitialized() ) {
+			// if the entity has been evicted then its holder is null
+			if ( holder != null && !lazyInitializer.isUninitialized() ) {
 				final Object entity = holder.getEntity();
 				if ( entity != null ) {
 					EntityEntry entry = persistenceContext.removeEntry( entity );

@@ -420,7 +420,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					currentNavigablePath = currentNavigablePath.getParent();
 					parentInitializer = rowProcessingState.resolveInitializer( currentNavigablePath.getParent() );
 				}
-				if ( parentInitializer != null && parentInitializer.asEntityInitializer()
+				if ( modelPart.isEntityIdentifierMapping() ) {
+					return false;
+				}
+				else if ( parentInitializer != null && parentInitializer.asEntityInitializer()
 						.getEntityDescriptor()
 						.getEntityMetamodel()
 						.isPolymorphic() ) {

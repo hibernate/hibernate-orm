@@ -30,7 +30,8 @@ public class NaturalIdCacheKey implements Serializable {
 	private final String tenantId;
 	private final int hashCode;
 
-	private NaturalIdCacheKey(Object naturalIdValues, String entityName, String tenantId, int hashCode) {
+	// The constructor needs to be public because it is used by WildFly NaturalIdCacheKeyMarshaller#readFrom(ProtoStreamReader)
+	public NaturalIdCacheKey(Object naturalIdValues, String entityName, String tenantId, int hashCode) {
 		this.naturalIdValues = naturalIdValues;
 		this.entityName = entityName;
 		this.tenantId = tenantId;

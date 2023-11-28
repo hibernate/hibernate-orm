@@ -674,6 +674,12 @@ abstract public class DialectFeatureChecks {
 		}
 	}
 
+	public static class SupportsStandardArrays implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsStandardArrays();
+		}
+	}
+
 	public static class SupportsStructuralArrays implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.getPreferredSqlTypeCodeForArray() != SqlTypes.VARBINARY;

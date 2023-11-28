@@ -48,7 +48,12 @@ public class Limit {
 	}
 
 	public void setFirstRow(Integer firstRow) {
-		this.firstRow = firstRow;
+		if (firstRow != null && firstRow == 0) {
+			this.firstRow = null;
+		}
+		else {
+			this.firstRow = firstRow;
+		}
 	}
 
 	public Integer getMaxRows() {

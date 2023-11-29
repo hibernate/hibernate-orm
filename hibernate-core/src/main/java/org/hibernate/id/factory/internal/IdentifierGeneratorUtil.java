@@ -130,11 +130,6 @@ public class IdentifierGeneratorUtil {
 				params
 		);
 
-		if ( generator.generatedOnExecution() && generator instanceof BeforeExecutionGenerator ) {
-			// support mixed-timing generators
-			simpleValue.setNullValue( "undefined" );
-		}
-
 		return generator;
 	}
 

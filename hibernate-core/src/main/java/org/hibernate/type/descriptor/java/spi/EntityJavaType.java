@@ -6,6 +6,7 @@
  */
 package org.hibernate.type.descriptor.java.spi;
 
+import org.hibernate.Hibernate;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.AbstractClassJavaType;
 import org.hibernate.type.descriptor.java.IncomparableComparator;
@@ -39,6 +40,11 @@ public class EntityJavaType<T> extends AbstractClassJavaType<T> {
 	@Override
 	public boolean areEqual(T one, T another) {
 		return one == another;
+	}
+
+	@Override
+	public boolean isInstance(Object value) {
+		return getJavaTypeClass().isAssignableFrom( Hibernate.getClassLazy( value ) );
 	}
 
 	@Override

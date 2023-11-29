@@ -21,6 +21,7 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
 import static org.hibernate.cfg.MultiTenancySettings.TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionConfigurationHelper.getDataSource;
 
 /**
  * A concrete implementation of the {@link MultiTenantConnectionProvider} contract bases on a number of
@@ -71,9 +72,8 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 
 	@Override
 	public void injectServices(ServiceRegistryImplementor serviceRegistry) {
-		final Object dataSourceConfigValue = serviceRegistry.getService( ConfigurationService.class )
-				.getSettings()
-				.get( AvailableSettings.DATASOURCE );
+		final Map<String, Object> settings = serviceRegistry.getService( ConfigurationService.class ).getSettings();
+		final Object dataSourceConfigValue = getDataSource( settings );
 		if ( !(dataSourceConfigValue instanceof String) ) {
 			throw new HibernateException( "Improper set up of DataSourceBasedMultiTenantConnectionProviderImpl" );
 		}
@@ -97,9 +97,7 @@ public class DataSourceBasedMultiTenantConnectionProviderImpl<T>
 		}
 		else if ( namedObject instanceof Context ) {
 			this.baseJndiNamespace = jndiName;
-			this.tenantIdentifierForAny = (T) serviceRegistry.getService( ConfigurationService.class )
-					.getSettings()
-					.get( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY );
+			this.tenantIdentifierForAny = (T) settings.get( TENANT_IDENTIFIER_TO_USE_FOR_ANY_KEY );
 			if ( tenantIdentifierForAny == null ) {
 				throw new HibernateException( "JNDI name named a Context, but tenant identifier to use for ANY was not specified" );
 			}

@@ -77,6 +77,8 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	 */
 	public static final String INJECTION_DATA = "hibernate.connection_provider.injection_data";
 
+	public static final String JAKARTA_CONNECTION_PREFIX = "jakarta.persistence.jdbc";
+
 	// mapping from legacy connection provider name to actual
 	// connection provider that will be used
 	private static final Map<String, String> LEGACY_CONNECTION_PROVIDER_MAPPING = Map.of(
@@ -104,7 +106,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 			return null;
 		}
 
-		if ( configurationValues.get( AvailableSettings.DATASOURCE ) != null ) {
+		if ( getConfigDataSourceValue( configurationValues ) != null ) {
 			return new DatasourceConnectionProviderImpl();
 		}
 
@@ -194,7 +196,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 
 		if ( connectionProvider == null ) {
-			if ( configurationValues.get( AvailableSettings.URL ) != null ) {
+			if ( getUrl( configurationValues ) != null ) {
 				connectionProvider = new DriverManagerConnectionProviderImpl();
 			}
 		}
@@ -227,6 +229,22 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 
 		return connectionProvider;
+	}
+
+	private static Object getConfigDataSourceValue(Map<String, Object> configurationValues) {
+		final Object dataSource = configurationValues.get( AvailableSettings.DATASOURCE );
+		if ( dataSource != null ) {
+			return dataSource;
+		}
+		return configurationValues.get( AvailableSettings.JAKARTA_JTA_DATASOURCE );
+	}
+
+	private static String getUrl(Map<String, Object> configurationValues) {
+		final String url = (String) configurationValues.get( AvailableSettings.URL );
+		if ( url != null ) {
+			return url;
+		}
+		return (String) configurationValues.get( AvailableSettings.JAKARTA_JDBC_URL );
 	}
 
 	private Class<? extends ConnectionProvider> getSingleRegisteredProvider(StrategySelector strategySelector) {
@@ -346,9 +364,9 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	/**
 	 * Build the connection properties capable of being passed to
 	 * {@link java.sql.DriverManager#getConnection(String, Properties)} forms taking {@link Properties} argument.
-	 * We seek out all keys in the passed map which start with {@code hibernate.connection.}, using them to create
+	 * We seek out all keys in the passed map which start with {@code hibernate.connection.} or {@code jakarta.persistence.jdbc}, using them to create
 	 * a new {@link Properties} instance. The keys in this new {@link Properties} have the
-	 * {@code hibernate.connection.} prefix trimmed.
+	 * {@code hibernate.connection.} and {@code jakarta.persistence.jdbc} prefix trimmed.
 	 *
 	 * @param properties The map from which to build the connection specific properties.
 	 *
@@ -356,13 +374,30 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	 */
 	public static Properties getConnectionProperties(Map<String, Object> properties) {
 		final Properties result = new Properties();
+		final int jakartaConnectionPrefixLength = JAKARTA_CONNECTION_PREFIX.length() + 1;
+		final int connectionPrefixLength = AvailableSettings.CONNECTION_PREFIX.length() + 1;
+
 		for ( Map.Entry<?, ?> entry : properties.entrySet() ) {
 			if ( !( entry.getKey() instanceof String ) || !( entry.getValue() instanceof String ) ) {
 				continue;
 			}
 			final String key = (String) entry.getKey();
 			final String value = (String) entry.getValue();
-			if ( key.startsWith( AvailableSettings.CONNECTION_PREFIX ) ) {
+
+			if ( key.startsWith( JAKARTA_CONNECTION_PREFIX ) ) {
+				if ( SPECIAL_PROPERTIES.contains( key ) ) {
+					if ( AvailableSettings.JAKARTA_JDBC_USER.equals( key ) ) {
+						result.setProperty( "user", value );
+					}
+				}
+				else {
+					result.setProperty(
+							key.substring( jakartaConnectionPrefixLength ),
+							value
+					);
+				}
+			}
+			else if ( key.startsWith( AvailableSettings.CONNECTION_PREFIX ) ) {
 				if ( SPECIAL_PROPERTIES.contains( key ) ) {
 					if ( AvailableSettings.USER.equals( key ) ) {
 						result.setProperty( "user", value );
@@ -370,7 +405,7 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 				}
 				else {
 					result.setProperty(
-							key.substring( AvailableSettings.CONNECTION_PREFIX.length() + 1 ),
+							key.substring( connectionPrefixLength ),
 							value
 					);
 				}
@@ -391,12 +426,17 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	static {
 		SPECIAL_PROPERTIES = new HashSet<>();
 		SPECIAL_PROPERTIES.add( AvailableSettings.DATASOURCE );
+		SPECIAL_PROPERTIES.add( AvailableSettings.JAKARTA_JTA_DATASOURCE );
+		SPECIAL_PROPERTIES.add( AvailableSettings.JAKARTA_NON_JTA_DATASOURCE );
 		SPECIAL_PROPERTIES.add( AvailableSettings.URL );
+		SPECIAL_PROPERTIES.add( AvailableSettings.JAKARTA_JDBC_URL );
 		SPECIAL_PROPERTIES.add( AvailableSettings.CONNECTION_PROVIDER );
 		SPECIAL_PROPERTIES.add( AvailableSettings.POOL_SIZE );
 		SPECIAL_PROPERTIES.add( AvailableSettings.ISOLATION );
 		SPECIAL_PROPERTIES.add( AvailableSettings.DRIVER );
+		SPECIAL_PROPERTIES.add( AvailableSettings.JAKARTA_JDBC_DRIVER );
 		SPECIAL_PROPERTIES.add( AvailableSettings.USER );
+		SPECIAL_PROPERTIES.add( AvailableSettings.JAKARTA_JDBC_USER );
 		SPECIAL_PROPERTIES.add( AvailableSettings.CONNECTION_PROVIDER_DISABLES_AUTOCOMMIT );
 
 		ISOLATION_VALUE_MAP = new ConcurrentHashMap<>();

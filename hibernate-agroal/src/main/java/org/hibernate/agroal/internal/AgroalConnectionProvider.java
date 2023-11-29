@@ -74,6 +74,22 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 		}
 	}
 
+	private static <T> void copyProperty(
+			Map<String, Object> properties,
+			Consumer<T> consumer,
+			Function<String, T> converter,
+			String... keys) {
+		for ( Object key : keys ) {
+			Object value = properties.get( key );
+			if ( value != null && value instanceof String ) {
+				if ( !( (String) value ).isEmpty() ) {
+					consumer.accept( converter.apply( (String) value ) );
+					return;
+				}
+			}
+		}
+	}
+
 	@Override
 	public void configure(Map<String, Object> props) throws HibernateException {
 		LOGGER.debug( "Configuring Agroal" );
@@ -81,10 +97,10 @@ public class AgroalConnectionProvider implements ConnectionProvider, Configurabl
 			AgroalPropertiesReader agroalProperties = new AgroalPropertiesReader( CONFIG_PREFIX )
 					.readProperties( (Map) props ); //TODO: this is a garbage cast
 			agroalProperties.modify().connectionPoolConfiguration( cp -> cp.connectionFactoryConfiguration( cf -> {
-				copyProperty( props, AvailableSettings.DRIVER, cf::connectionProviderClassName, Function.identity() );
-				copyProperty( props, AvailableSettings.URL, cf::jdbcUrl, Function.identity() );
-				copyProperty( props, AvailableSettings.USER, cf::principal, NamePrincipal::new );
-				copyProperty( props, AvailableSettings.PASS, cf::credential, SimplePassword::new );
+				copyProperty( props,  cf::connectionProviderClassName, Function.identity(), AvailableSettings.DRIVER, AvailableSettings.JAKARTA_JDBC_DRIVER );
+				copyProperty( props,  cf::jdbcUrl, Function.identity() , AvailableSettings.URL, AvailableSettings.JAKARTA_JDBC_URL);
+				copyProperty( props,  cf::principal, NamePrincipal::new, AvailableSettings.USER, AvailableSettings.JAKARTA_JDBC_USER );
+				copyProperty( props,  cf::credential, SimplePassword::new ,AvailableSettings.PASS, AvailableSettings.JAKARTA_JDBC_PASSWORD);
 				copyProperty( props, AvailableSettings.AUTOCOMMIT, cf::autoCommit, Boolean::valueOf );
 				resolveIsolationSetting( props, cf );
 				return cf;

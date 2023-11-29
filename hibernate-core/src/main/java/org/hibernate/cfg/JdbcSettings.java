@@ -508,7 +508,7 @@ public interface JdbcSettings extends C3p0Settings, ProxoolSettings {
 	/**
 	 * @see javax.sql.DataSource
 	 *
-	 * @deprecated The JPA-standard {@link #JAKARTA_JTA_DATASOURCE} or {@link #JAKARTA_JTA_DATASOURCE} setting
+	 * @deprecated The JPA-standard {@link #JAKARTA_JTA_DATASOURCE} or {@link #JAKARTA_NON_JTA_DATASOURCE} setting
 	 * is now preferred.
 	 */
 	@Deprecated

@@ -39,6 +39,8 @@ import org.hibernate.service.spi.ServiceRegistryAwareService;
 import org.hibernate.service.spi.ServiceRegistryImplementor;
 import org.hibernate.service.spi.Stoppable;
 
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionConfigurationHelper.getDriverClassName;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionConfigurationHelper.getUrl;
 import static org.hibernate.internal.log.ConnectionPoolingLogger.CONNECTIONS_LOGGER;
 import static org.hibernate.internal.log.ConnectionPoolingLogger.CONNECTIONS_MESSAGE_LOGGER;
 
@@ -103,9 +105,9 @@ public class DriverManagerConnectionProviderImpl
 	}
 
 	private static ConnectionCreator buildCreator(Map<String,Object> configurationValues, ServiceRegistryImplementor serviceRegistry) {
-		final String url = (String) configurationValues.get( AvailableSettings.URL );
+		final String url = getUrl( configurationValues );
 
-		String driverClassName = (String) configurationValues.get( AvailableSettings.DRIVER );
+		String driverClassName = getDriverClassName( configurationValues );
 		boolean success = false;
 		Driver driver = null;
 		if ( driverClassName != null ) {

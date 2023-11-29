@@ -19,6 +19,8 @@ import org.hibernate.service.spi.ServiceRegistryImplementor;
 
 import org.jboss.logging.Logger;
 
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionConfigurationHelper.getDataSource;
+
 /**
  * A service initiator for the {@link MultiTenantConnectionProvider} service.
  *
@@ -49,7 +51,7 @@ public class MultiTenantConnectionProviderInitiator implements StandardServiceIn
 		if ( configValue == null ) {
 			// if they also specified the data source *name*, then lets assume they want
 			// DataSourceBasedMultiTenantConnectionProviderImpl
-			final Object dataSourceConfigValue = configurationValues.get( AvailableSettings.DATASOURCE );
+			final Object dataSourceConfigValue = getDataSource( configurationValues );
 			if ( dataSourceConfigValue instanceof String ) {
 				return new DataSourceBasedMultiTenantConnectionProviderImpl<>();
 			}

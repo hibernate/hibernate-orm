@@ -20,6 +20,9 @@ import org.hibernate.service.spi.Configurable;
 import org.hibernate.service.spi.InjectService;
 import org.hibernate.service.spi.Stoppable;
 
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionConfigurationHelper.getPassword;
+import static org.hibernate.engine.jdbc.connections.internal.ConnectionConfigurationHelper.getUser;
+
 /**
  * A {@link ConnectionProvider} that manages connections from an underlying {@link DataSource}.
  * <p>
@@ -80,7 +83,7 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 	@Override
 	public void configure(Map<String, Object> configValues) {
 		if ( this.dataSource == null ) {
-			final Object dataSource = configValues.get( Environment.DATASOURCE );
+			final Object dataSource = ConnectionConfigurationHelper.getDataSource( configValues );
 			if ( dataSource instanceof DataSource ) {
 				this.dataSource = (DataSource) dataSource;
 			}
@@ -102,8 +105,8 @@ public class DatasourceConnectionProviderImpl implements ConnectionProvider, Con
 			throw new HibernateException( "Unable to determine appropriate DataSource to use" );
 		}
 
-		user = (String) configValues.get( Environment.USER );
-		pass = (String) configValues.get( Environment.PASS );
+		user = getUser( configValues );
+		pass = getPassword( configValues );
 		useCredentials = user != null || pass != null;
 		available = true;
 	}

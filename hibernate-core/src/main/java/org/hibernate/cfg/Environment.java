@@ -146,6 +146,7 @@ public final class Environment implements AvailableSettings {
 			try {
 				GLOBAL_PROPERTIES.load(stream);
 				LOG.propertiesLoaded( ConfigurationHelper.maskOut( GLOBAL_PROPERTIES, PASS ) );
+				LOG.propertiesLoaded( ConfigurationHelper.maskOut( GLOBAL_PROPERTIES, JAKARTA_JDBC_PASSWORD ) );
 			}
 			catch (Exception e) {
 				LOG.unableToLoadProperties();

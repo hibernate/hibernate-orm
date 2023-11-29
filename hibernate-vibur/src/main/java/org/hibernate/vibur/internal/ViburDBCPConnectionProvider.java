@@ -7,6 +7,8 @@
 
 package org.hibernate.vibur.internal;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.cfg.Environment;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.service.UnknownUnwrapTypeException;
 import org.hibernate.service.spi.Configurable;
@@ -99,20 +101,20 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 	private static Properties transform(Map<String, Object> configurationValues) {
 		Properties result = new Properties();
 
-		String driverClassName = (String) configurationValues.get( DRIVER );
+		String driverClassName = getDriverClassName( configurationValues );
 		if ( driverClassName != null ) {
 			result.setProperty( "driverClassName", driverClassName );
 		}
-		String jdbcUrl = (String) configurationValues.get( URL );
+		String jdbcUrl = getUrl( configurationValues );
 		if ( jdbcUrl != null ) {
 			result.setProperty( "jdbcUrl", jdbcUrl );
 		}
 
-		String username = (String) configurationValues.get( USER );
+		String username = getUser( configurationValues );
 		if ( username != null ) {
 			result.setProperty( "username", username );
 		}
-		String password = (String) configurationValues.get( PASS );
+		String password = getPassword( configurationValues );
 		if ( password != null ) {
 			result.setProperty( "password", password );
 		}
@@ -142,5 +144,37 @@ public class ViburDBCPConnectionProvider implements ConnectionProvider, Configur
 	 */
 	public ViburDBCPDataSource getDataSource() {
 		return dataSource;
+	}
+
+	private static String getDriverClassName(Map<String, Object> configValues) {
+		final String driverClassName = (String) configValues.get( AvailableSettings.DRIVER );
+		if ( driverClassName != null ) {
+			return driverClassName;
+		}
+		return (String) configValues.get( AvailableSettings.JAKARTA_JDBC_DRIVER );
+	}
+
+	private static String getUrl(Map<String, Object> configValues) {
+		final String url = (String) configValues.get( AvailableSettings.URL );
+		if ( url != null ) {
+			return url;
+		}
+		return (String) configValues.get( AvailableSettings.JAKARTA_JDBC_URL );
+	}
+
+	public static String getPassword(Map<String, Object> configValues) {
+		final String password = (String) configValues.get( Environment.PASS );
+		if ( password != null ) {
+			return password;
+		}
+		return (String) configValues.get( Environment.JAKARTA_JDBC_PASSWORD );
+	}
+
+	public static String getUser(Map<String, Object> configValues) {
+		final String user = (String) configValues.get( Environment.USER );
+		if ( user != null ) {
+			return user;
+		}
+		return (String) configValues.get( Environment.JAKARTA_JDBC_USER );
 	}
 }

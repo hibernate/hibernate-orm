@@ -27,6 +27,7 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.orm.junit.EntityManagerFactoryScope;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.Jpa;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.junit.jupiter.api.AfterEach;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.jboss.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
 /**
@@ -188,6 +190,43 @@ public class ExplicitLockingTest {
 			//end::locking-follow-on-explicit-example[]
 		});
 	}
+
+	@Test
+	@JiraKey("HHH-16672")
+	public void persistAndLock(EntityManagerFactoryScope scope) {
+		scope.inTransaction(entityManager -> {
+			Person person = new Person("John Doe");
+			entityManager.persist(person);
+			entityManager.lock(person, LockModeType.PESSIMISTIC_WRITE);
+		});
+	}
+
+	@Test
+	@JiraKey("HHH-16672")
+	public void persistFindAndLock(EntityManagerFactoryScope scope) {
+		scope.inTransaction(entityManager -> {
+			Person person = new Person("John Doe");
+			entityManager.persist(person);
+			assertNotNull(person.id);
+
+			Person foundPerson = entityManager.find(Person.class, person.id);
+			entityManager.lock(foundPerson, LockModeType.PESSIMISTIC_WRITE);
+		});
+	}
+
+	@Test
+	@JiraKey("HHH-16672")
+	public void persistFindWithLock(EntityManagerFactoryScope scope) {
+		scope.inTransaction(entityManager -> {
+			Person person = new Person("John Doe");
+			entityManager.persist(person);
+			assertNotNull(person.id);
+
+			Person foundPerson = entityManager.find(Person.class, person.id, LockModeType.PESSIMISTIC_WRITE);
+			assertNotNull(foundPerson);
+		});
+	}
+
 
 	//tag::locking-jpa-query-hints-scope-entity-example[]
 	@Entity(name = "Person")

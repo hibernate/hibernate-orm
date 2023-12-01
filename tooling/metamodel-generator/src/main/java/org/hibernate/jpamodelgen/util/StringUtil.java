@@ -99,7 +99,7 @@ public final class StringUtil {
 	}
 
 	public static String nameToMethodName(String name) {
-		return name.replaceAll("[\\s.\\-!@#%=+/*^&|(){}\\[\\]]", "_");
+		return name.replaceAll("[\\s.\\-!@#%=+/*^&|(){}\\[\\],]", "_");
 	}
 
 	public static String getUpperUnderscoreCaseFromLowerCamelCase(String lowerCamelCaseString){

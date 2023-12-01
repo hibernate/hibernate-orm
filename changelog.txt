@@ -3,6 +3,29 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.14.Final (December 01, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32207
+
+** Bug
+    * [HHH-17445] - Subquery correlated path expressions do not work with nullness predicates
+    * [HHH-17384] - OneToMany association with @NotFound results in SQL with different JOIN-type for SELECT (LEFT JOIN) and COUNT (JOIN)
+    * [HHH-17351] - Missing basic type registration after changing preferred jdbc type
+    * [HHH-17329] - Query Cache contains null values when entity was loaded as proxy
+    * [HHH-17294] - Non-Embeddable JSON objects are not marked as dirty when modified
+    * [HHH-17143] - More not-found fix ups
+    * [HHH-17108] - Error In Native Query when adding two Entity's and using composite key. Error: Unable to find column position by name.
+    * [HHH-17102] - @SqlResultSetMapping doesn’t work with @Inheritance(strategy = InheritanceType.JOINED)
+
+** Improvement
+    * [HHH-17315] - Reduce Oracle database user privileges to avoid cross schemas clashes
+
+** Task
+    * [HHH-17367] - Add links to tutorials in documentation 
+    * [HHH-17323] - Add annotation processor for tests explicitly to fix JDK22 issues
+
+
 Changes in 6.2.13.Final (October 11, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

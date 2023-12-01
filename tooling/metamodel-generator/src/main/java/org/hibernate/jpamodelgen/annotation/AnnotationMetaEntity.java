@@ -521,9 +521,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 */
 	private static boolean isSessionGetter(ExecutableElement method) {
 		if ( method.getParameters().isEmpty() ) {
-			final TypeMirror type = method.getReturnType();
+			final TypeMirror type = ununi( method.getReturnType() );
 			if ( type.getKind() == TypeKind.DECLARED ) {
-				final DeclaredType declaredType = ununi( (DeclaredType) type );
+				final DeclaredType declaredType = (DeclaredType) type;
 				final Element element = declaredType.asElement();
 				if ( element.getKind() == ElementKind.INTERFACE ) {
 					final Name name = ((TypeElement) element).getQualifiedName();
@@ -628,13 +628,13 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void addQueryMethod(ExecutableElement method) {
-		final TypeMirror returnType = method.getReturnType();
+		final TypeMirror returnType = ununi( method.getReturnType() );
 		final TypeKind kind = returnType.getKind();
 		if ( kind == TypeKind.VOID ||  kind == TypeKind.ARRAY || kind.isPrimitive() ) {
 			addQueryMethod( method, returnType, null );
 		}
 		else if ( kind == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = ununi( (DeclaredType) returnType );
+			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement typeElement = (TypeElement) declaredType.asElement();
 			final List<? extends TypeMirror> typeArguments = declaredType.getTypeArguments();
 			switch ( typeArguments.size() ) {
@@ -711,11 +711,16 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 	}
 
-	private static DeclaredType ununi(DeclaredType returnType) {
-		final TypeElement typeElement = (TypeElement) returnType.asElement();
-		return typeElement.getQualifiedName().contentEquals(Constants.UNI)
-				? (DeclaredType) returnType.getTypeArguments().get(0)
-				: returnType;
+	private static TypeMirror ununi(TypeMirror returnType) {
+		if ( returnType.getKind() != TypeKind.DECLARED ) {
+			return returnType;
+		}
+		DeclaredType declaredType = (DeclaredType) returnType;
+		final TypeElement typeElement = (TypeElement) declaredType.asElement();
+		if ( typeElement.getQualifiedName().contentEquals( Constants.UNI ) ) {
+			returnType = declaredType.getTypeArguments().get(0);
+		}
+		return returnType;
 	}
 
 	private static boolean isLegalRawResultType(String containerTypeName) {
@@ -853,6 +858,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			ExecutableElement method,
 			@Nullable TypeMirror returnType,
 			@Nullable TypeElement containerType) {
+		returnType = returnType != null ? ununi( returnType ) : null;
 		if ( returnType == null ) {
 			context.message( method,
 					"missing return type",
@@ -881,7 +887,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 		else if ( returnType.getKind() == TypeKind.DECLARED ) {
-			final DeclaredType declaredType = ununi( (DeclaredType) returnType );
+			final DeclaredType declaredType = (DeclaredType) returnType;
 			final TypeElement entity = (TypeElement) declaredType.asElement();
 			if ( !containsAnnotation( entity, Constants.ENTITY ) ) {
 				context.message( method,

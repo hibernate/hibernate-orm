@@ -204,7 +204,15 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 
 	void chainSessionEnd(boolean isUpdate, StringBuilder declaration) {
 		if ( isReactiveSession() ) {
-			declaration.append("\n\t});");
+			declaration.append("\n\t})");
+			// here we're checking for a boxed void and not Uni<Void> because the returnType has already
+			// been checked, and is ununi-ed
+			if ( isUpdate && returnTypeName != null && returnTypeName.equals(BOXED_VOID) ) {
+				declaration.append(".replaceWithVoid();");
+			}
+			else {
+				declaration.append(";");
+			}
 		}
 	}
 
@@ -445,7 +453,7 @@ public abstract class AbstractQueryMethod implements MetaAttribute {
 					.append(" _results = ");
 		}
 		else {
-			if ( !"void".equals(returnTypeName) ) {
+			if ( !"void".equals(returnTypeName) || isReactiveSession() ) {
 				declaration
 						.append("return ");
 			}

@@ -99,6 +99,10 @@ public final class Constants {
 
 	public static final String UNI = "io.smallrye.mutiny.Uni";
 	public static final String UNI_MUTINY_SESSION = UNI+"<org.hibernate.reactive.mutiny.Mutiny.Session>";
+	public static final String UNI_INTEGER = UNI+"<java.lang.Integer>";
+	public static final String UNI_VOID = UNI+"<java.lang.Void>";
+	public static final String UNI_BOOLEAN = UNI+"<java.lang.Boolean>";
+	public static final String BOXED_VOID = Void.class.getName();
 
 	public static final String SINGULAR_ATTRIBUTE = "jakarta.persistence.metamodel.SingularAttribute";
 	public static final String COLLECTION_ATTRIBUTE = "jakarta.persistence.metamodel.CollectionAttribute";

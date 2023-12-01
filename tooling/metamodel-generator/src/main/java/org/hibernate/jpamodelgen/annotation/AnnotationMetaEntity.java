@@ -1558,13 +1558,30 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			@Nullable TypeMirror returnType,
 			AnnotationMirror mirror,
 			AnnotationValue value) {
-		if ( returnType == null
-				|| returnType.getKind() != TypeKind.VOID
-				&& returnType.getKind() != TypeKind.BOOLEAN
-				&& returnType.getKind() != TypeKind.INT ) {
+		boolean reactive = usingReactiveSession( sessionType );
+		if ( !isValidUpdateReturnType( returnType, method, reactive ) ) {
 			context.message( method, mirror, value,
-					"return type of mutation query method must be 'int', 'boolean', or 'void'",
+					"return type of mutation query method must be " + (!reactive ? "'int', 'boolean' or 'void'" : "'Uni<Integer>', 'Uni<Boolean>' or 'Uni<Void>'"),
 					Diagnostic.Kind.ERROR );
+		}
+	}
+
+	private boolean isValidUpdateReturnType(@Nullable TypeMirror returnType, ExecutableElement method, boolean reactive) {
+		if ( returnType == null ) {
+			return false;
+		}
+		if ( reactive ) {
+			// for reactive calls, don't use the returnType param, which has been ununi-ed, we want to check the full one
+			return method.getReturnType().toString().equals( Constants.UNI_VOID )
+					|| method.getReturnType().toString().equals( Constants.UNI_BOOLEAN )
+					|| method.getReturnType().toString().equals( Constants.UNI_INTEGER );
+			
+		}
+		else {
+			// non-reactive
+			return returnType.getKind() == TypeKind.VOID
+					|| returnType.getKind() == TypeKind.BOOLEAN
+					|| returnType.getKind() == TypeKind.INT;
 		}
 	}
 
@@ -1955,7 +1972,8 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private boolean usingReactiveSession(String sessionType) {
-		return Constants.MUTINY_SESSION.equals(sessionType);
+		return Constants.MUTINY_SESSION.equals(sessionType)
+				|| Constants.UNI_MUTINY_SESSION.equals(sessionType);
 	}
 
 	private boolean usingStatelessSession(String sessionType) {

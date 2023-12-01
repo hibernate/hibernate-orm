@@ -694,7 +694,9 @@ For example, the following converter will be automatically applied to any attrib
 [source,java]
 ----
 @Converter(autoApply = true)
-public static class EnumSetConverter implements AttributeConverter<EnumSet<DayOfWeek>,Integer> {
+public static class EnumSetConverter
+        // converts Java values of type EnumSet<DayOfWeek> to integers for storage in an INT column
+        implements AttributeConverter<EnumSet<DayOfWeek>,Integer> {
     @Override
     public Integer convertToDatabaseColumn(EnumSet<DayOfWeek> enumSet) {
         int encoded = 0;

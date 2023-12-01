@@ -7,9 +7,6 @@
 name: Hibernate ORM build-Atlas
 
 on:
-  push:
-    branches:
-      - '6.2'
   pull_request:
     branches:
       - '6.2'

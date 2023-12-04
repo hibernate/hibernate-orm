@@ -1,0 +1,29 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="3.2">
+    <package>org.hibernate.orm.test.boot.models.xml.column</package>
+    <entity class="AnEntity" metadata-complete="true" access="FIELD">
+        <attributes>
+            <id name="id"/>
+            <basic name="name" >
+                <column name="nombre"
+                        length="256"
+                        table="tbl"
+                        nullable="true"
+                        insertable="true"
+                        updatable="true"
+                        unique="true"
+                        comment="The name column"
+                        options="the options" >
+                    <check-constraint constraint="nombre is not null"/>
+                </column>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

@@ -1,0 +1,18 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="3.2">
+    <package>org.hibernate.orm.test.boot.models.xml.column</package>
+    <entity class="AnEntity" access="FIELD">
+        <attributes>
+            <basic name="name" >
+                <column name="nombre"/>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

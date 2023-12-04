@@ -1,0 +1,28 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="3.1">
+    <persistence-unit-metadata>
+        <xml-mapping-metadata-complete/>
+        <persistence-unit-defaults>
+            <schema>schema1</schema>
+            <catalog>catalog1</catalog>
+            <default-access>MIXED</default-access>
+            <default-cascade>REMOVE,LOCK</default-cascade>
+        </persistence-unit-defaults>
+    </persistence-unit-metadata>
+
+    <package>org.hibernate.models.orm.xml</package>
+
+    <entity class="SimpleEntity">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+</entity-mappings>

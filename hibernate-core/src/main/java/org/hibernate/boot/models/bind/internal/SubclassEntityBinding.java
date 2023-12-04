@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.MappingException;
-import org.hibernate.boot.models.bind.internal.binders.ColumnBinder;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
@@ -172,10 +171,10 @@ public class SubclassEntityBinding extends EntityBinding {
 							targetColumn,
 							joinColumnAnns
 					);
-					pkColumn = ColumnBinder.bindColumn( joinColumnAnn, targetColumn::getName, true, false );
+					pkColumn = ColumnHelper.bindColumn( joinColumnAnn, targetColumn::getName, true, false );
 				}
 				else {
-					pkColumn = ColumnBinder.bindColumn( null, targetColumn::getName, true, false );
+					pkColumn = ColumnHelper.bindColumn( null, targetColumn::getName, true, false );
 				}
 				primaryKey.addColumn( pkColumn );
 			}

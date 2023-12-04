@@ -7,7 +7,7 @@
 package org.hibernate.orm.test.boot.models.bind.tenancy;
 
 import org.hibernate.annotations.TenantId;
-import org.hibernate.boot.models.bind.internal.binders.TenantIdBinder;
+import org.hibernate.boot.models.bind.internal.BasicValueHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
@@ -38,7 +38,7 @@ public class SimpleTenancyTests {
 				(context) -> {
 					var metadataCollector = context.getMetadataCollector();
 
-					assertThat( metadataCollector.getFilterDefinition( TenantIdBinder.FILTER_NAME ) ).isNotNull();
+					assertThat( metadataCollector.getFilterDefinition( BasicValueHelper.TENANT_FILTER_NAME ) ).isNotNull();
 
 					final PersistentClass entityBinding = metadataCollector.getEntityBinding( ProtectedEntity.class.getName() );
 					final Property tenantProperty = entityBinding.getProperty( "tenant" );
@@ -65,7 +65,7 @@ public class SimpleTenancyTests {
 				(context) -> {
 					var metadataCollector = context.getMetadataCollector();
 
-					assertThat( metadataCollector.getFilterDefinition( TenantIdBinder.FILTER_NAME ) ).isNotNull();
+					assertThat( metadataCollector.getFilterDefinition( BasicValueHelper.TENANT_FILTER_NAME ) ).isNotNull();
 
 					final PersistentClass entityBinding = metadataCollector.getEntityBinding( ProtectedEntityWithColumn.class.getName() );
 					final Property tenantProperty = entityBinding.getProperty( "tenant" );

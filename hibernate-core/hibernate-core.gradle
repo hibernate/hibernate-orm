@@ -27,10 +27,11 @@ dependencies {
     api jakartaLibs.jpa
     api jakartaLibs.jta
 
-    implementation libs.hcann
+    implementation libs.hibernateModels
     implementation libs.jandex
     implementation libs.classmate
     implementation libs.byteBuddy
+    implementation libs.hcann
 
     implementation jakartaLibs.jaxbApi
     implementation jakartaLibs.jaxb

@@ -1,0 +1,28 @@
+
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="3.2">
+    <entity class="org.hibernate.orm.test.boot.models.xml.SimpleEntity" metadata-complete="true" access="FIELD">
+        <sql-restriction>name is not null</sql-restriction>
+        <sql-insert callable="true" result-check="COUNT" table="SimpleEntity">insert into SimpleEntity(name) values(?)</sql-insert>
+        <filter name="name_filter">
+            <condition>{t}.name = :name</condition>
+            <aliases alias="t" table="SimpleEntity" entity="org.hibernate.orm.test.boot.models.xml.SimpleEntity"/>
+         </filter>
+
+        <attributes>
+            <id name="id">
+                <column name="pk"/>
+            </id>
+            <basic name="name">
+                <column name="description"/>
+            </basic>
+        </attributes>
+    </entity>
+</entity-mappings>

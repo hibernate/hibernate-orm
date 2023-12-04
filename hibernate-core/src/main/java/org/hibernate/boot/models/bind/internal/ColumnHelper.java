@@ -1,10 +1,10 @@
 /*
  * Hibernate, Relational Persistence for Idiomatic Java
  *
- * SPDX-License-Identifier: Apache-2.0
- * Copyright: Red Hat Inc. and Hibernate Authors
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.boot.models.bind.internal.binders;
+package org.hibernate.boot.models.bind.internal;
 
 import java.util.function.Supplier;
 
@@ -28,7 +28,7 @@ import static org.hibernate.internal.util.NullnessHelper.nullif;
 /**
  * @author Steve Ebersole
  */
-public class ColumnBinder {
+public class ColumnHelper {
 	public static Column bindColumn(
 			AnnotationUsage<?> annotationUsage,
 			Supplier<String> defaultNameSupplier) {
@@ -90,7 +90,7 @@ public class ColumnBinder {
 		return nullif( columnAnnotation.getAttributeValue( "name" ), defaultNameSupplier );
 	}
 
-	private ColumnBinder() {
+	private ColumnHelper() {
 	}
 
 	public static DiscriminatorType bindDiscriminatorColumn(

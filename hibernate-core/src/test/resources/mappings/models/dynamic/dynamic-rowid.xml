@@ -1,0 +1,38 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="3.1">
+    <entity name="EntityWithoutRowId" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <target>Integer</target>
+                <jdbc-type-name>BIGINT</jdbc-type-name>
+            </id>
+        </attributes>
+    </entity>
+
+    <entity name="EntityWithRowIdNoValue" metadata-complete="true">
+        <rowid/>
+        <attributes>
+            <id name="id">
+                <target>Integer</target>
+                <jdbc-type-name>BIGINT</jdbc-type-name>
+            </id>
+        </attributes>
+    </entity>
+
+    <entity name="EntityWithRowId" metadata-complete="true">
+        <rowid>ROW_ID</rowid>
+        <attributes>
+            <id name="id">
+                <target>Integer</target>
+                <jdbc-type-name>BIGINT</jdbc-type-name>
+            </id>
+        </attributes>
+    </entity>
+</entity-mappings>

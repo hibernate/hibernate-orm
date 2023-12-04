@@ -1,0 +1,27 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="3.1">
+    <persistence-unit-metadata>
+        <xml-mapping-metadata-complete/>
+        <persistence-unit-defaults>
+            <schema>schema2</schema>
+            <catalog>catalog2</catalog>
+            <delimited-identifiers/>
+            <access>FIELD</access>
+            <cascade-persist/>
+        </persistence-unit-defaults>
+    </persistence-unit-metadata>
+
+    <entity name="DynamicEntity" metadata-complete="true">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+</entity-mappings>

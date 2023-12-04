@@ -1,0 +1,36 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 version="3.2">
+    <entity name="Employee" metadata-complete="true">
+        <named-entity-graph name="employee" include-all-attributes="true">
+            <named-attribute-node name="name"/>
+            <named-attribute-node name="address" subgraph="employee.address"/>
+            <subgraph name="first.subgraph">
+                <named-attribute-node name="city"/>
+            </subgraph>
+            <subgraph name="second.subgraph" class="String">
+                <named-attribute-node name="city" subgraph="sub1"/>
+                <named-attribute-node name="name" subgraph="sub"/>
+                <named-attribute-node name="surname" />
+            </subgraph>
+        </named-entity-graph>
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <basic name="surname"/>
+<!--            <one-to-one name="address" fetch="LAZY"/>-->
+        </attributes>
+    </entity>
+<!--    <entity name="Address" metadata-complete="true">-->
+<!--        <attributes>-->
+<!--            <id name="id"/>-->
+<!--            <basic name="city"/>-->
+
+<!--        </attributes>-->
+<!--    </entity>-->
+</entity-mappings>

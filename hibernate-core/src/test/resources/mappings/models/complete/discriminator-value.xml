@@ -1,0 +1,43 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="3.2">
+    <package>org.hibernate.orm.test.boot.models.xml.complete</package>
+
+    <entity class="Root" metadata-complete="true" access="FIELD">
+        <inheritance strategy="JOINED"/>
+        <discriminator-column name="TYPE_COLUMN" discriminator-type="INTEGER"/>
+        <attributes>
+            <id name="id">
+                <column name="pk"/>
+            </id>
+            <basic name="name"/>
+        </attributes>
+    </entity>
+    <entity class="Sub" metadata-complete="true" access="FIELD">
+        <extends>Root</extends>
+        <discriminator-value>R</discriminator-value>
+        <attributes>
+            <basic name="subName"/>
+        </attributes>
+    </entity>
+
+    <entity class="SimplePerson" metadata-complete="true" access="FIELD">
+        <discriminator-column/>
+        <attributes>
+            <id name="id"/>
+        </attributes>
+    </entity>
+
+    <entity class="org.hibernate.orm.test.boot.models.xml.SimpleEntity" metadata-complete="true" access="FIELD">
+        <discriminator-formula>CASE WHEN VALUE1 IS NOT NULL THEN 1 WHEN VALUE2 IS NOT NULL THEN 2 END</discriminator-formula>
+        <attributes>
+            <id name="id"/>
+        </attributes>
+    </entity>
+</entity-mappings>

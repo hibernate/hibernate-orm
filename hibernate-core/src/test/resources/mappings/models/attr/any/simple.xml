@@ -1,0 +1,33 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="3.2">
+    <package>org.hibernate.orm.test.boot.models.xml.attr</package>
+
+    <entity class="AnyTests$Entity3" metadata-complete="true" access="FIELD">
+        <attributes>
+            <id name="id"/>
+            <basic name="name"/>
+            <any name="association">
+                <discriminator>
+                    <type>INTEGER</type>
+                    <column name="association_type"/>
+                    <mapping value="1">AnyTests$Entity1</mapping>
+                    <mapping value="2">AnyTests$Entity2</mapping>
+                </discriminator>
+                <key>
+                    <type>integer</type>
+                    <column name="association_fk"/>
+                </key>
+                <cascade>
+                    <cascade-all/>
+                </cascade>
+            </any>
+        </attributes>
+    </entity>
+</entity-mappings>

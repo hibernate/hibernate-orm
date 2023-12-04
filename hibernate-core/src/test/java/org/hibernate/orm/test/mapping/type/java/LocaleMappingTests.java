@@ -22,6 +22,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -46,16 +47,15 @@ public class LocaleMappingTests {
 	@Test
 	public void basicAssertions(SessionFactoryScope scope) {
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
-		final Dialect dialect = sessionFactory.getJdbcServices().getDialect();
-		final NationalizationSupport nationalizationSupport = dialect.getNationalizationSupport();
+		final JdbcTypeRegistry jdbcTypeRegistry = sessionFactory.getTypeConfiguration().getJdbcTypeRegistry();
 		final EntityPersister entityDescriptor = sessionFactory.getMappingMetamodel().getEntityDescriptor(
 				LocaleMappingTestEntity.class );
 
 		{
 			final BasicAttributeMapping localeAttribute = (BasicAttributeMapping) entityDescriptor.findAttributeMapping(
 					"locale" );
-			assertThat( localeAttribute.getJdbcMapping().getJdbcType().getJdbcTypeCode() )
-					.isEqualTo( nationalizationSupport.getVarcharVariantCode() );
+			assertThat( localeAttribute.getJdbcMapping().getJdbcType() )
+					.isEqualTo( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) );
 			assertThat( localeAttribute.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo(
 					Locale.class );
 		}
@@ -64,8 +64,8 @@ public class LocaleMappingTests {
 			final PluralAttributeMapping yearsAttribute = (PluralAttributeMapping) entityDescriptor.findAttributeMapping(
 					"locales" );
 			final BasicValuedCollectionPart elementDescriptor = (BasicValuedCollectionPart) yearsAttribute.getElementDescriptor();
-			assertThat( elementDescriptor.getJdbcMapping().getJdbcType().getJdbcTypeCode() )
-					.isEqualTo( nationalizationSupport.getVarcharVariantCode() );
+			assertThat( elementDescriptor.getJdbcMapping().getJdbcType() )
+					.isEqualTo( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) );
 			assertThat( elementDescriptor.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo(
 					Locale.class );
 		}
@@ -74,8 +74,8 @@ public class LocaleMappingTests {
 			final PluralAttributeMapping countByYearAttribute = (PluralAttributeMapping) entityDescriptor.findAttributeMapping(
 					"countByLocale" );
 			final BasicValuedCollectionPart keyDescriptor = (BasicValuedCollectionPart) countByYearAttribute.getIndexDescriptor();
-			assertThat( keyDescriptor.getJdbcMapping().getJdbcType().getJdbcTypeCode() )
-					.isEqualTo( nationalizationSupport.getVarcharVariantCode() );
+			assertThat( keyDescriptor.getJdbcMapping().getJdbcType() )
+					.isEqualTo( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) );
 			assertThat( keyDescriptor.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo(
 					Locale.class );
 		}

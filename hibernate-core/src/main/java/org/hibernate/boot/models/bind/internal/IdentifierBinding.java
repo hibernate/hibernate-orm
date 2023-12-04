@@ -6,8 +6,6 @@
  */
 package org.hibernate.boot.models.bind.internal;
 
-import org.hibernate.boot.models.bind.internal.binders.BasicValueBinder;
-import org.hibernate.boot.models.bind.internal.binders.ColumnBinder;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
@@ -106,7 +104,7 @@ public class IdentifierBinding extends Binding {
 		final PrimaryKey primaryKey = table.getPrimaryKey();
 
 		final AnnotationUsage<Column> idColumnAnn = idAttributeMember.getAnnotationUsage( Column.class );
-		final org.hibernate.mapping.Column column = ColumnBinder.bindColumn(
+		final org.hibernate.mapping.Column column = ColumnHelper.bindColumn(
 				idColumnAnn,
 				() -> "id",
 				true,
@@ -115,10 +113,10 @@ public class IdentifierBinding extends Binding {
 		idValue.addColumn( column, true, false );
 		primaryKey.addColumn( column );
 
-		AttributeBinding.bindImplicitJavaType( idAttributeMember, idProperty, idValue );
-		BasicValueBinder.bindJavaType( idAttributeMember, idProperty, idValue, options, state, context );
-		BasicValueBinder.bindJdbcType( idAttributeMember, idProperty, idValue, options, state, context );
-		BasicValueBinder.bindNationalized( idAttributeMember, idProperty, idValue, options, state, context );
+		BasicValueHelper.bindImplicitJavaType( idAttributeMember, idValue, options, state, context );
+		BasicValueHelper.bindJavaType( idAttributeMember, idValue, options, state, context );
+		BasicValueHelper.bindJdbcType( idAttributeMember, idValue, options, state, context );
+		BasicValueHelper.bindNationalized( idAttributeMember, idValue, options, state, context );
 
 		return idValue;
 	}

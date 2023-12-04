@@ -16,7 +16,6 @@ import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.Database;
-import org.hibernate.boot.models.bind.internal.binders.ColumnBinder;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
@@ -40,8 +39,8 @@ import jakarta.persistence.DiscriminatorType;
 import jakarta.persistence.InheritanceType;
 
 import static org.hibernate.boot.models.bind.ModelBindingLogging.MODEL_BINDING_LOGGER;
-import static org.hibernate.boot.models.bind.internal.binders.TenantIdBinder.bindTenantId;
-import static org.hibernate.boot.models.bind.internal.binders.VersionBinder.bindVersion;
+import static org.hibernate.boot.models.bind.internal.BasicValueHelper.bindTenantId;
+import static org.hibernate.boot.models.bind.internal.BasicValueHelper.bindVersion;
 import static org.hibernate.internal.util.StringHelper.coalesce;
 
 /**
@@ -304,7 +303,7 @@ public class RootEntityBinding extends EntityBinding {
 		final BasicValue value = new BasicValue( bindingState.getMetadataBuildingContext(), rootClass.getIdentityTable() );
 		rootClass.setDiscriminator( value );
 
-		final DiscriminatorType discriminatorType = ColumnBinder.bindDiscriminatorColumn(
+		final DiscriminatorType discriminatorType = ColumnHelper.bindDiscriminatorColumn(
 				bindingContext,
 				formulaAnn,
 				value,

@@ -3151,14 +3151,20 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		// The AND junction allows to create an intersection of entity name lists of all sub-predicates
 		final EntityMappingType mappingType = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
 		final AbstractEntityPersister persister = (AbstractEntityPersister) mappingType.getEntityPersister();
-		// Avoid doing this for single table entity persisters, as the table span includes secondary tables,
-		// which we don't want to resolve, though we know that there is only a single table anyway
-		if ( persister instanceof SingleTableEntityPersister ) {
-			return;
+		if ( getCurrentClauseStack().getCurrent() != Clause.WHERE && getCurrentClauseStack().getCurrent() != Clause.HAVING ) {
+			// Where and having clauses are handled specially with EntityNameUse.FILTER and pruning
+			registerEntityNameUsage( tableGroup, EntityNameUse.PROJECTION, persister.getEntityName(), true );
 		}
-		final int subclassTableSpan = persister.getSubclassTableSpan();
-		for ( int i = 0; i < subclassTableSpan; i++ ) {
-			tableGroup.resolveTableReference( null, persister.getSubclassTableName( i ) );
+		else {
+			// Avoid doing this for single table entity persisters, as the table span includes secondary tables,
+			// which we don't want to resolve, though we know that there is only a single table anyway
+			if ( persister instanceof SingleTableEntityPersister ) {
+				return;
+			}
+			final int subclassTableSpan = persister.getSubclassTableSpan();
+			for ( int i = 0; i < subclassTableSpan; i++ ) {
+				tableGroup.resolveTableReference( null, persister.getSubclassTableName( i ) );
+			}
 		}
 	}
 

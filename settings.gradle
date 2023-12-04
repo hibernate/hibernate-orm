@@ -70,8 +70,9 @@ dependencyResolutionManagement {
             def byteBuddyVersion = version "byteBuddy", "1.14.15"
             def classmateVersion = version "classmate", "1.5.1"
             def geolatteVersion = version "geolatte", "1.8.2"
-            def hcannVersion = version "hcann", "7.0.1.Final"
+            def hibernateModelsVersion = version "hibernateModels", "0.5.4"
             def jandexVersion = version "jandex", "3.1.2"
+			def hcannVersion = version "hcann", "7.0.1.Final"
             def jacksonVersion = version "jackson", "2.17.0"
             def jbossLoggingVersion = version "jbossLogging", "3.5.0.Final"
             def jbossLoggingToolVersion = version "jbossLoggingTool", "2.2.1.Final"
@@ -100,9 +101,10 @@ dependencyResolutionManagement {
             library( "loggingAnnotations", "org.jboss.logging", "jboss-logging-annotations" ).versionRef( jbossLoggingToolVersion )
             library( "loggingProcessor", "org.jboss.logging", "jboss-logging-processor" ).versionRef( jbossLoggingToolVersion )
 
-            library( "hcann", "org.hibernate.common", "hibernate-commons-annotations" ).versionRef( hcannVersion )
+            library( "hibernateModels", "org.hibernate.models", "hibernate-models" ).versionRef( hibernateModelsVersion )
             library( "jandex", "io.smallrye", "jandex" ).versionRef( jandexVersion )
             library( "classmate", "com.fasterxml", "classmate" ).versionRef( classmateVersion )
+            library( "hcann", "org.hibernate.common", "hibernate-commons-annotations" ).versionRef( hcannVersion )
 
             library( "jackson", "com.fasterxml.jackson.core", "jackson-databind" ).versionRef( jacksonVersion )
             library( "jacksonXml", "com.fasterxml.jackson.dataformat", "jackson-dataformat-xml" ).versionRef( jacksonVersion )

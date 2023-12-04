@@ -1,0 +1,38 @@
+<!--
+  ~ Hibernate, Relational Persistence for Idiomatic Java
+  ~
+  ~ SPDX-License-Identifier: Apache-2.0
+  ~ Copyright: Red Hat Inc. and Hibernate Authors
+  -->
+<entity-mappings xmlns="http://www.hibernate.org/xsd/orm/mapping"
+                 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 version="3.1">
+    <entity name="Contact" metadata-complete="true">
+        <attributes>
+            <id name="id">
+                <target>Integer</target>
+                <jdbc-type-name>BIGINT</jdbc-type-name>
+            </id>
+            <element-collection name="labels" target-class="string" classification="SET">
+                <sort-natural/>
+                <collection-table name="labels">
+                    <join-column name="contact_fk"/>
+                </collection-table>
+            </element-collection>
+            <embedded name="name">
+                <target>Name</target>
+            </embedded>
+        </attributes>
+    </entity>
+
+    <embeddable name="Name" metadata-complete="true">
+        <attributes>
+            <basic name="first">
+                <target>string</target>
+            </basic>
+            <basic name="last">
+                <target>string</target>
+            </basic>
+        </attributes>
+    </embeddable>
+</entity-mappings>

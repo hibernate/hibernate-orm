@@ -120,6 +120,10 @@ public abstract class EntityBinding extends IdentifiableTypeBinding {
 		applySynchronizedTableNames( typeMetadata, persistentClass, bindingState );
 	}
 
+	/**
+	 * @apiNote Not part of {@linkplain #applyCommonInformation} to allow the difference that we
+	 * do not always want this for the root entity
+	 */
 	protected static void applyDiscriminatorValue(
 			EntityTypeMetadata typeMetadata,
 			PersistentClass persistentClass) {

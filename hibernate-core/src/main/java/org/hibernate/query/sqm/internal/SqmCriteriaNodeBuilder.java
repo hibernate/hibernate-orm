@@ -45,6 +45,7 @@ import org.hibernate.metamodel.model.domain.BasicDomainType;
 import org.hibernate.metamodel.model.domain.DomainType;
 import org.hibernate.metamodel.model.domain.JpaMetamodel;
 import org.hibernate.metamodel.model.domain.SimpleDomainType;
+import org.hibernate.metamodel.model.domain.SingularPersistentAttribute;
 import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -75,6 +76,7 @@ import org.hibernate.query.sqm.FrameKind;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.SqmExpressible;
+import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.TrimSpec;
@@ -1827,12 +1829,25 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 			if ( typeInferenceSource instanceof BindableType ) {
 				return (BindableType<T>) typeInferenceSource;
 			}
-			if ( typeInferenceSource.getNodeType() != null ) {
-				return (BindableType<T>) typeInferenceSource.getNodeType();
+			final SqmExpressible<?> nodeType = getNodeType( typeInferenceSource );
+			if ( nodeType != null ) {
+				return (BindableType<T>) nodeType;
 			}
 		}
 
 		return value == null ? null : (BasicType<T>) typeConfiguration.getBasicTypeForJavaType( value.getClass() );
+	}
+
+	private static SqmExpressible<?> getNodeType(SqmExpression<?> expression) {
+		if ( expression instanceof SqmPath<?> ) {
+			final SqmPathSource<?> pathSource = ( (SqmPath<?>) expression ).getResolvedModel();
+			return pathSource instanceof SingularPersistentAttribute<?, ?> ?
+					( (SingularPersistentAttribute<?, ?>) pathSource ).getPathSource() :
+					pathSource;
+		}
+		else {
+			return expression.getNodeType();
+		}
 	}
 
 	private <T> ValueBindJpaCriteriaParameter<T> valueParameter(T value, SqmExpression<? extends T> typeInferenceSource) {

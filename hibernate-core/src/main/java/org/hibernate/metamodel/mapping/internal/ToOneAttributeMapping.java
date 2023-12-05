@@ -947,6 +947,11 @@ public class ToOneAttributeMapping
 		final AssociationKey associationKey = foreignKeyDescriptor.getAssociationKey();
 		final boolean associationKeyVisited = creationState.isAssociationKeyVisited( associationKey );
 		if ( associationKeyVisited || bidirectionalAttributePath != null ) {
+			if ( !associationKeyVisited && creationState.isRegisteringVisitedAssociationKeys() ) {
+				// If the current association key hasn't been visited yet and we are registering keys,
+				// then there can't be a circular fetch
+				return null;
+			}
 			NavigablePath parentNavigablePath = fetchablePath.getParent();
 			assert parentNavigablePath.equals( fetchParent.getNavigablePath() );
 			// The parent navigable path is {fk} if we are creating the domain result for the foreign key for a circular fetch
@@ -1003,12 +1008,6 @@ public class ToOneAttributeMapping
 						fetchTiming,
 						creationState
 				);
-			}
-
-			if ( !associationKeyVisited && creationState.isRegisteringVisitedAssociationKeys() ) {
-				// If the current association key hasn't been visited yet and we are registering keys,
-				// then there can't be a circular fetch
-				return null;
 			}
 
 			/*

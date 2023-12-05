@@ -4,11 +4,14 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.orm.test.boot.models.bind.discriminated;
+package org.hibernate.orm.test.boot.models.bind.inheritance;
 
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.SingleTableSubclass;
+import org.hibernate.mapping.Subclass;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -28,11 +31,11 @@ import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.check
 
 /**
  * @author Steve Ebersole
- */
-public class SimpleSingleTableTests {
+ */	@SuppressWarnings("JUnitMalformedDeclaration")
+
+public class SingleTableTests {
 	@Test
 	@ServiceRegistry
-	@SuppressWarnings("JUnitMalformedDeclaration")
 	void testNoInheritance(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -48,7 +51,6 @@ public class SimpleSingleTableTests {
 
 	@Test
 	@ServiceRegistry
-	@SuppressWarnings("JUnitMalformedDeclaration")
 	void testImplicitDiscriminator(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -78,7 +80,6 @@ public class SimpleSingleTableTests {
 
 	@Test
 	@ServiceRegistry
-	@SuppressWarnings("JUnitMalformedDeclaration")
 	void testExplicitDiscriminator(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -103,6 +104,31 @@ public class SimpleSingleTableTests {
 				scope.getRegistry(),
 				ExplicitRoot.class,
 				ExplicitSub.class
+		);
+	}
+
+	@Test
+	@ServiceRegistry
+	void testAttributes(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var metadataCollector = context.getMetadataCollector();
+					final RootClass rootBinding = (RootClass) metadataCollector.getEntityBinding( Root.class.getName() );
+					final SingleTableSubclass subBinding = (SingleTableSubclass) metadataCollector.getEntityBinding( Sub.class.getName() );
+
+					assertThat( rootBinding.getDeclaredProperties() ).hasSize( 2 );
+					assertThat( rootBinding.getProperties() ).hasSize( 2 );
+					assertThat( rootBinding.getPropertyClosure() ).hasSize( 2 );
+					assertThat( rootBinding.getSubclassPropertyClosure() ).hasSize( 3 );
+
+					assertThat( subBinding.getDeclaredProperties() ).hasSize( 1 );
+					assertThat( subBinding.getProperties() ).hasSize( 1 );
+					assertThat( subBinding.getPropertyClosure() ).hasSize( 3 );
+					assertThat( subBinding.getSubclassPropertyClosure() ).hasSize( 3 );
+				},
+				scope.getRegistry(),
+				Root.class,
+				Sub.class
 		);
 	}
 
@@ -142,23 +168,6 @@ public class SimpleSingleTableTests {
 	@Entity(name="Sub")
 	@DiscriminatorValue( "S" )
 	public static class ExplicitSub extends ExplicitRoot {
-		private String details;
-	}
-
-	@Entity(name="ExplicitRoot")
-	@Table(name="data2")
-	@Inheritance(strategy = InheritanceType.JOINED)
-	@DiscriminatorColumn(name = "type_discriminator", discriminatorType = DiscriminatorType.CHAR, length = 1)
-	@DiscriminatorValue( "R" )
-	public static class JoinedRoot {
-		@Id
-		private Integer id;
-		private String name;
-	}
-
-	@Entity(name="Sub")
-	@DiscriminatorValue( "S" )
-	public static class JoinedSub extends JoinedRoot {
 		private String details;
 	}
 }

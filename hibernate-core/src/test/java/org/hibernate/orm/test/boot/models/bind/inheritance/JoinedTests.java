@@ -4,7 +4,7 @@
  * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
  * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
  */
-package org.hibernate.orm.test.boot.models.bind.joined;
+package org.hibernate.orm.test.boot.models.bind.inheritance;
 
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.RootClass;
@@ -29,7 +29,7 @@ import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.check
 /**
  * @author Steve Ebersole
  */
-public class SimpleJoinedTests {
+public class JoinedTests {
 	/**
 	 * Allowing for something like:
 	 *

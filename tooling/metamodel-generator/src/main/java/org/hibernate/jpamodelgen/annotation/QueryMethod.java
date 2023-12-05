@@ -85,6 +85,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		modifiers( paramTypes, declaration );
 		preamble( declaration, returnType, paramTypes );
 		collectOrdering( declaration, paramTypes );
+		chainSession( declaration );
 		tryReturn( declaration, paramTypes, containerType );
 		castResult( declaration, returnType );
 		createQuery( declaration );
@@ -94,6 +95,7 @@ public class QueryMethod extends AbstractQueryMethod {
 		unwrapped = applyOrder( declaration, paramTypes, containerType, unwrapped );
 		execute( declaration, unwrapped );
 		convertExceptions( declaration );
+		chainSessionEnd( isUpdate, declaration );
 		closingBrace( declaration );
 		return declaration.toString();
 	}
@@ -107,7 +109,7 @@ public class QueryMethod extends AbstractQueryMethod {
 	@Override
 	void createQuery(StringBuilder declaration) {
 		declaration
-				.append(sessionName)
+				.append(localSessionName())
 				.append(isNative ? ".createNativeQuery" : ".createQuery")
 				.append("(")
 				.append(getConstantName());

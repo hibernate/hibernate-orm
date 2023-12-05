@@ -59,12 +59,14 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 		comment( declaration );
 		modifiers( declaration );
 		preamble( declaration, returnType(), paramTypes );
+		chainSession( declaration );
 		nullChecks( paramTypes, declaration );
 		createCriteriaQuery( declaration );
 		where( declaration, paramTypes );
 //		orderBy( paramTypes, declaration );
 		executeQuery( declaration, paramTypes );
 		convertExceptions( declaration );
+		chainSessionEnd( false, declaration );
 		closingBrace( declaration );
 		return declaration.toString();
 	}
@@ -102,7 +104,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	@Override
 	void createQuery(StringBuilder declaration) {
 		declaration
-				.append(sessionName)
+				.append(localSessionName())
 				.append(".createQuery(_query)\n");
 	}
 
@@ -119,7 +121,7 @@ public class CriteriaFinderMethod extends AbstractFinderMethod {
 	private void createCriteriaQuery(StringBuilder declaration) {
 		declaration
 				.append("\tvar _builder = ")
-				.append(sessionName)
+				.append(localSessionName())
 				.append(isUsingEntityManager()
 						? ".getEntityManagerFactory()"
 						: ".getFactory()")

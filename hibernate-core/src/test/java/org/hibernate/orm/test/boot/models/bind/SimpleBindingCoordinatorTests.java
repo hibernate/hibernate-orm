@@ -28,13 +28,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
+@ServiceRegistry( settingProviders = @SettingProvider(
+		settingName = AvailableSettings.PHYSICAL_NAMING_STRATEGY,
+		provider = CustomNamingStrategyProvider.class
+) )
 public class SimpleBindingCoordinatorTests {
 	@Test
-	@ServiceRegistry( settingProviders = @SettingProvider(
-			settingName = AvailableSettings.PHYSICAL_NAMING_STRATEGY,
-			provider = CustomNamingStrategyProvider.class
-	) )
-	void testIt(ServiceRegistryScope scope) {
+	void testCollectorState(ServiceRegistryScope scope) {
 		BindingTestingHelper.checkDomainModel(
 				(context) -> {
 					final var bindingState = context.getBindingState();
@@ -75,15 +75,17 @@ public class SimpleBindingCoordinatorTests {
 					assertThat( namespaceItr.hasNext() ).isFalse();
 					assertThat( namespace1.getTables() ).hasSize( 1 );
 					assertThat( namespace2.getTables() ).hasSize( 1 );
+				},
+				scope.getRegistry(),
+				SimpleEntity.class
+		);
+	}
 
+	@Test
+	void testAttributes(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
 					final RootClass entityBinding = (RootClass) context.getMetadataCollector().getEntityBinding( SimpleEntity.class.getName() );
-					assertThat( entityBinding.isCached() ).isFalse();
-					final Column softDeleteColumn = entityBinding.getSoftDeleteColumn();
-					assertThat( softDeleteColumn ).isNotNull();
-					assertThat( softDeleteColumn.getName() ).isEqualTo( "ACTIVE" );
-					assertThat( entityBinding.getFilters() ).hasSize( 1 );
-					assertThat( entityBinding.getCacheRegionName() ).isEqualTo( "my-region" );
-					assertThat( entityBinding.getCacheConcurrencyStrategy() ).isEqualTo( CacheConcurrencyStrategy.READ_ONLY.toAccessType().getExternalName() );
 
 					final Property id = entityBinding.getProperty( "id" );
 					assertThat( id.getValue().getTable().getName() ).isEqualTo( "SIMPLETONS" );
@@ -120,6 +122,76 @@ public class SimpleBindingCoordinatorTests {
 					final BasicValue versionValue = (BasicValue) version.getValue();
 					assertThat( ( (Column) versionValue.getColumn() ).getCanonicalName() ).isEqualTo( "version" );
 					assertThat( versionValue.resolve().getDomainJavaType().getJavaType() ).isEqualTo( Integer.class );
+				},
+				scope.getRegistry(),
+				SimpleEntity.class
+		);
+	}
+
+	@Test
+	void testCaching(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector().getEntityBinding( SimpleEntity.class.getName() );
+					assertThat( entityBinding.isCached() ).isFalse();
+					assertThat( entityBinding.getCacheRegionName() ).isEqualTo( "my-region" );
+					assertThat( entityBinding.getCacheConcurrencyStrategy() ).isEqualTo( CacheConcurrencyStrategy.READ_ONLY.toAccessType().getExternalName() );
+
+				},
+				scope.getRegistry(),
+				SimpleEntity.class
+		);
+	}
+
+	@Test
+	void testBatchSize(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector().getEntityBinding( SimpleEntity.class.getName() );
+					assertThat( entityBinding.getBatchSize() ).isEqualTo( 32 );
+				},
+				scope.getRegistry(),
+				SimpleEntity.class
+		);
+	}
+
+	@Test
+	void testSoftDelete(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector().getEntityBinding( SimpleEntity.class.getName() );
+
+					final Column softDeleteColumn = entityBinding.getSoftDeleteColumn();
+					assertThat( softDeleteColumn ).isNotNull();
+					assertThat( softDeleteColumn.getName() ).isEqualTo( "ACTIVE" );
+
+				},
+				scope.getRegistry(),
+				SimpleEntity.class
+		);
+	}
+
+	@Test
+	void testSynchronization(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector().getEntityBinding( SimpleEntity.class.getName() );
+
+					assertThat( entityBinding.getSynchronizedTables() ).hasSize( 1 );
+
+					assertThat( entityBinding.getFilters() ).hasSize( 1 );
+				},
+				scope.getRegistry(),
+				SimpleEntity.class
+		);
+	}
+
+	@Test
+	void testFilters(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector().getEntityBinding( SimpleEntity.class.getName() );
+					assertThat( entityBinding.getFilters() ).hasSize( 1 );
 				},
 				scope.getRegistry(),
 				SimpleEntity.class

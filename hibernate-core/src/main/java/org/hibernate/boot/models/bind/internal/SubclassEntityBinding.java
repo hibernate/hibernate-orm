@@ -52,7 +52,7 @@ public class SubclassEntityBinding extends EntityBinding {
 		applyNaming( typeMetadata, subclass, bindingState );
 		bindingState.registerTypeBinding( getTypeMetadata(), this );
 
-		if ( subclass instanceof TableOwner ) {
+		if ( subclass instanceof TableOwner tableOwner ) {
 			final var primaryTable = TableHelper.bindPrimaryTable(
 					typeMetadata,
 					EntityHierarchy.HierarchyRelation.SUB,
@@ -61,7 +61,7 @@ public class SubclassEntityBinding extends EntityBinding {
 					bindingContext
 			);
 			final var table = primaryTable.table();
-			( (TableOwner) subclass ).setTable( table );
+			tableOwner.setTable( table );
 		}
 
 		applyDiscriminatorValue( typeMetadata, subclass );

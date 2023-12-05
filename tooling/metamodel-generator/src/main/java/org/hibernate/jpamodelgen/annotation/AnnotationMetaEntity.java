@@ -459,7 +459,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		if ( method.getParameters().isEmpty() ) {
 			final TypeMirror type = method.getReturnType();
 			if ( type.getKind() == TypeKind.DECLARED ) {
-				final DeclaredType declaredType = (DeclaredType) type;
+				final DeclaredType declaredType = ununi( (DeclaredType) type );
 				final Element element = declaredType.asElement();
 				if ( element.getKind() == ElementKind.INTERFACE ) {
 					final Name name = ((TypeElement) element).getQualifiedName();

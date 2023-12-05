@@ -98,6 +98,7 @@ public final class Constants {
 	public static final String TUPLE = "jakarta.persistence.Tuple";
 
 	public static final String UNI = "io.smallrye.mutiny.Uni";
+	public static final String UNI_MUTINY_SESSION = UNI+"<org.hibernate.reactive.mutiny.Mutiny.Session>";
 
 	public static final String SINGULAR_ATTRIBUTE = "jakarta.persistence.metamodel.SingularAttribute";
 	public static final String COLLECTION_ATTRIBUTE = "jakarta.persistence.metamodel.CollectionAttribute";
@@ -129,7 +130,8 @@ public final class Constants {
 					Constants.ENTITY_MANAGER,
 					Constants.HIB_SESSION,
 					Constants.HIB_STATELESS_SESSION,
-					Constants.MUTINY_SESSION
+					Constants.MUTINY_SESSION,
+					Constants.UNI_MUTINY_SESSION
 			);
 
 	//TODO: this is not even an exhaustive list of built-in basic types

@@ -35,6 +35,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 
 import static org.hibernate.boot.models.categorize.spi.AttributeMetadata.AttributeNature.BASIC;
+import static org.hibernate.boot.models.categorize.spi.AttributeMetadata.AttributeNature.EMBEDDED;
 
 /**
  * Binding for an attribute
@@ -61,15 +62,20 @@ public class AttributeBinding extends Binding {
 		this.property = new Property();
 		this.property.setName( attributeMetadata.getName() );
 
+		final Value value;
 		if ( attributeMetadata.getNature() == BASIC ) {
-			final var basicValue = createBasicValue( primaryTable );
-			property.setValue( basicValue );
-			attributeTable = basicValue.getTable();
-			mappingValue = basicValue;
+			value = createBasicValue( primaryTable );
+		}
+		else if ( attributeMetadata.getNature() == EMBEDDED ) {
+			value = createComponentValue( primaryTable, owner );
 		}
 		else {
 			throw new UnsupportedOperationException( "Not yet implemented" );
 		}
+
+		property.setValue( value );
+		attributeTable = value.getTable();
+		mappingValue = value;
 
 		applyNaturalId( attributeMetadata, property );
 	}
@@ -130,6 +136,16 @@ public class AttributeBinding extends Binding {
 		);
 
 		return basicValue;
+	}
+
+	private Component createComponentValue(Table primaryTable, PersistentClass persistentClass) {
+		final Component component = new Component( bindingState.getMetadataBuildingContext(), persistentClass );
+
+		// 1. embeddable (attributes, etc)
+		// 2. overrides
+		final MemberDetails member = attributeMetadata.getMember();
+
+		return component;
 	}
 
 	public Property getProperty() {

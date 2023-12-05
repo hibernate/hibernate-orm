@@ -18,7 +18,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingDiscriminatorImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbAnyMappingKeyImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
-import org.hibernate.boot.models.bind.internal.AnyKeyType;
+import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.models.categorize.xml.internal.XmlProcessingHelper;
 import org.hibernate.boot.models.categorize.xml.internal.db.ColumnProcessing;
 import org.hibernate.boot.models.categorize.xml.spi.XmlDocumentContext;

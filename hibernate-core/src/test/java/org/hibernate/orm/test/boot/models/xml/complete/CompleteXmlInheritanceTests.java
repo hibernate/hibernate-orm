@@ -16,7 +16,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.orm.test.boot.models.BootstrapContextTesting;
 import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
-import org.hibernate.orm.test.boot.models.process.ManagedResourcesImpl;
+import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
 
 import org.junit.jupiter.api.Test;
 

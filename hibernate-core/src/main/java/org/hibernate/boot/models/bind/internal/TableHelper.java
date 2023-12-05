@@ -132,15 +132,14 @@ public class TableHelper {
 		return tableReference;
 	}
 
-	public static List<SecondaryTable> bindSecondaryTables(
+	public static void bindSecondaryTables(
 			EntityBinding entityBinding,
+			TableReference primaryTableReference,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		final ClassDetails typeClassDetails = entityBinding.getTypeMetadata().getClassDetails();
-
 		final List<AnnotationUsage<jakarta.persistence.SecondaryTable>> secondaryTableAnns = typeClassDetails.getRepeatedAnnotationUsages( jakarta.persistence.SecondaryTable.class );
-		final List<SecondaryTable> result = new ArrayList<>( secondaryTableAnns.size() );
 
 		secondaryTableAnns.forEach( (secondaryTableAnn) -> {
 			final AnnotationUsage<SecondaryRow> secondaryRowAnn = typeClassDetails.getNamedAnnotationUsage(
@@ -150,20 +149,20 @@ public class TableHelper {
 			);
 			final SecondaryTable binding = bindSecondaryTable(
 					entityBinding,
+					primaryTableReference,
 					secondaryTableAnn,
 					secondaryRowAnn,
 					bindingOptions,
 					bindingState,
 					bindingContext
 			);
-			result.add( binding );
 			bindingState.addSecondaryTable( binding );
 		} );
-		return result;
 	}
 
 	public static SecondaryTable bindSecondaryTable(
 			EntityBinding entityBinding,
+			TableReference primaryTableReference,
 			AnnotationUsage<jakarta.persistence.SecondaryTable> secondaryTableAnn,
 			AnnotationUsage<SecondaryRow> secondaryRowAnn,
 			BindingOptions bindingOptions,
@@ -197,7 +196,7 @@ public class TableHelper {
 				bindingContext
 		);
 
-		final var binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
+		final var secondaryTable = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
 				toCanonicalName( schemaName ),
 				toCanonicalName( catalogName ),
 				logicalName.getCanonicalName(),
@@ -206,15 +205,15 @@ public class TableHelper {
 				bindingState.getMetadataBuildingContext()
 		);
 
-		applyComment( binding, secondaryTableAnn, findCommentAnnotation(
+		applyComment( secondaryTable, secondaryTableAnn, findCommentAnnotation(
 				entityBinding.getTypeMetadata(),
 				logicalName,
 				false
 		) );
-		applyOptions( binding, secondaryTableAnn );
+		applyOptions( secondaryTable, secondaryTableAnn );
 
 		final Join join = new Join();
-		join.setTable( binding );
+		join.setTable( secondaryTable );
 		join.setOptional( BindingHelper.getValue( secondaryRowAnn, "optional", true ) );
 		join.setInverse( !BindingHelper.getValue( secondaryRowAnn, "owned", true ) );
 		join.setPersistentClass( entityBinding.getPersistentClass() );
@@ -231,7 +230,7 @@ public class TableHelper {
 				physicalNamingStrategy.toPhysicalSchemaName( schemaName, jdbcEnvironment ),
 				BindingHelper.getValue( secondaryRowAnn, "optional", true ),
 				BindingHelper.getValue( secondaryRowAnn, "owned", true ),
-				binding
+				secondaryTable
 		);
 	}
 

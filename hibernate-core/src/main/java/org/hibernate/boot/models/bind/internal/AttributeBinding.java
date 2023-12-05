@@ -14,12 +14,10 @@ import org.hibernate.annotations.Mutability;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.boot.model.convert.internal.ClassBasedConverterDescriptor;
-import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.models.AnnotationPlacementException;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
-import org.hibernate.boot.models.bind.spi.TableReference;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Component;
@@ -233,21 +231,6 @@ public class AttributeBinding extends Binding {
 				bindingState,
 				bindingContext
 		);
-		// todo : implicit column
-		final var columnAnn = member.getAnnotationUsage( annotation );
-		final var column = ColumnHelper.bindColumn( columnAnn, property::getName );
-
-		var tableName = BindingHelper.getValue( columnAnn, "table", "" );
-		if ( "".equals( tableName ) || tableName == null ) {
-			basicValue.setTable( primaryTable );
-		}
-		else {
-			final Identifier identifier = Identifier.toIdentifier( tableName );
-			final TableReference tableByName = bindingState.getTableByName( identifier.getCanonicalName() );
-			basicValue.setTable( tableByName.table() );
-		}
-
-		basicValue.addColumn( column );
 	}
 
 	private void applyNaturalId(AttributeMetadata attributeMetadata, Property property) {

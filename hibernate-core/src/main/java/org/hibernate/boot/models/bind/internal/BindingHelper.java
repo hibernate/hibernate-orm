@@ -13,7 +13,6 @@ import java.util.function.Supplier;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
-import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.boot.models.bind.spi.QuotedIdentifierTarget;
@@ -21,7 +20,6 @@ import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationUsage;
-import org.hibernate.models.spi.AttributeDescriptor;
 
 import static org.hibernate.boot.models.bind.ModelBindingLogging.MODEL_BINDING_LOGGER;
 
@@ -29,69 +27,6 @@ import static org.hibernate.boot.models.bind.ModelBindingLogging.MODEL_BINDING_L
  * @author Steve Ebersole
  */
 public class BindingHelper {
-	public static <T, A extends Annotation> T getValue(
-			AnnotationUsage<A> annotationUsage,
-			String attributeName,
-			Class<A> annotationType,
-			BindingContext context) {
-		final T valueOrNull = getValueOrNull( annotationUsage, attributeName );
-		if ( valueOrNull != null ) {
-			return valueOrNull;
-		}
-
-		// resolve its default
-		return getDefaultValue( attributeName, annotationType, context );
-	}
-
-	public static <T, A extends Annotation> T getValueOrNull(
-			AnnotationUsage<A> annotationUsage,
-			String attributeName) {
-		if ( annotationUsage != null ) {
-			// allow to return null if missing
-			return annotationUsage.getAttributeValue( attributeName );
-		}
-
-		// there was no annotation...
-		return null;
-	}
-
-	public static <T,A extends Annotation> T getDefaultValue(
-			String attributeName,
-			Class<A> annotationType,
-			BindingContext context) {
-		final AnnotationDescriptor<A> annotationDescriptor = context.getAnnotationDescriptorRegistry().getDescriptor( annotationType );
-		final AttributeDescriptor<Object> attributeDescriptor = annotationDescriptor.getAttribute( attributeName );
-		//noinspection unchecked
-		return (T) attributeDescriptor.getAttributeMethod().getDefaultValue();
-
-	}
-
-	public static <A extends Annotation> String getString(
-			AnnotationUsage<A> annotationUsage,
-			String attributeName,
-			Class<A> annotationType,
-			BindingContext context) {
-		return getValue( annotationUsage, attributeName, annotationType, context );
-	}
-
-	public static <A extends Annotation> String getStringOrNull(
-			AnnotationUsage<A> annotationUsage,
-			String attributeName) {
-		return getValueOrNull( annotationUsage, attributeName );
-	}
-
-	public static <A extends Annotation> Identifier getIdentifier(
-			AnnotationUsage<A> annotationUsage,
-			String attributeName,
-			Class<A> annotationType,
-			QuotedIdentifierTarget target,
-			BindingOptions options,
-			JdbcEnvironment jdbcEnvironment,
-			BindingContext context) {
-		final String name = getString( annotationUsage, attributeName, annotationType, context );
-		final boolean globallyQuoted = options.getGloballyQuotedIdentifierTargets().contains( target );
-		return jdbcEnvironment.getIdentifierHelper().toIdentifier( name, globallyQuoted );
-	}
 
 	public static <A extends Annotation> Identifier toIdentifier(
 			String name,
@@ -116,17 +51,12 @@ public class BindingHelper {
 			return (T) descriptor.getAttribute( attributeName ).getAttributeMethod().getDefaultValue();
 		}
 
-		//noinspection unchecked
-		return getValue(
-				ann,
-				attributeName,
-				() -> (T) descriptor.getAttribute( attributeName ).getAttributeMethod().getDefaultValue()
-		);
+		return ann.getAttributeValue( attributeName );
 	}
 
 	public static <T,A extends Annotation> T getValue(AnnotationUsage<A> ann, String attributeName, Supplier<T> defaultValueSupplier) {
 		if ( ann == null ) {
-			return (T) defaultValueSupplier.get();
+			return defaultValueSupplier.get();
 		}
 
 		return ann.getAttributeValue( attributeName, defaultValueSupplier );

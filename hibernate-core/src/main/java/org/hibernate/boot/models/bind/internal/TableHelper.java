@@ -7,7 +7,6 @@
 package org.hibernate.boot.models.bind.internal;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.Comment;
@@ -75,7 +74,6 @@ public class TableHelper {
 				tableReference = bindPhysicalTable(
 						entityTypeMetadata,
 						tableAnn,
-						Table.class,
 						true,
 						bindingOptions,
 						bindingState,
@@ -178,7 +176,6 @@ public class TableHelper {
 		final Identifier schemaName = resolveDatabaseIdentifier(
 				secondaryTableAnn,
 				"schema",
-				jakarta.persistence.SecondaryTable.class,
 				bindingOptions.getDefaultSchemaName(),
 				QuotedIdentifierTarget.SCHEMA_NAME,
 				bindingOptions,
@@ -188,7 +185,6 @@ public class TableHelper {
 		final Identifier catalogName = resolveDatabaseIdentifier(
 				secondaryTableAnn,
 				"catalog",
-				jakarta.persistence.SecondaryTable.class,
 				bindingOptions.getDefaultCatalogName(),
 				QuotedIdentifierTarget.CATALOG_NAME,
 				bindingOptions,
@@ -249,7 +245,7 @@ public class TableHelper {
 		}
 		else {
 			// either an explicit or implicit @Table
-			tableReference = bindPhysicalTable( type, tableAnn, annotationType, true, bindingOptions, bindingState, bindingContext );
+			tableReference = bindPhysicalTable( type, tableAnn, true, bindingOptions, bindingState, bindingContext );
 		}
 		return tableReference;
 	}
@@ -281,7 +277,7 @@ public class TableHelper {
 						null,
 						null,
 						logicalName.getCanonicalName(),
-						BindingHelper.getString( subselectAnn, "value", Subselect.class, bindingContext ),
+						subselectAnn.getString( "value" ),
 						true,
 						bindingState.getMetadataBuildingContext()
 				)
@@ -291,13 +287,12 @@ public class TableHelper {
 	private static <A extends Annotation> PhysicalTableReference bindPhysicalTable(
 			EntityTypeMetadata type,
 			AnnotationUsage<A> tableAnn,
-			Class<A> annotationType,
 			boolean isPrimary,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		if ( tableAnn != null ) {
-			return bindExplicitPhysicalTable( type, tableAnn, annotationType, isPrimary, bindingOptions, bindingState, bindingContext );
+			return bindExplicitPhysicalTable( type, tableAnn, isPrimary, bindingOptions, bindingState, bindingContext );
 		}
 		else {
 			return bindImplicitPhysicalTable( type, isPrimary, bindingOptions, bindingState, bindingContext );
@@ -307,7 +302,6 @@ public class TableHelper {
 	private static <A extends Annotation> PhysicalTable bindExplicitPhysicalTable(
 			EntityTypeMetadata type,
 			AnnotationUsage<A> tableAnn,
-			Class<A> annotationType,
 			boolean isPrimary,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
@@ -316,7 +310,6 @@ public class TableHelper {
 		final Identifier logicalSchemaName = resolveDatabaseIdentifier(
 				tableAnn,
 				"schema",
-				annotationType,
 				bindingOptions.getDefaultSchemaName(),
 				QuotedIdentifierTarget.SCHEMA_NAME,
 				bindingOptions,
@@ -326,7 +319,6 @@ public class TableHelper {
 		final Identifier logicalCatalogName = resolveDatabaseIdentifier(
 				tableAnn,
 				"catalog",
-				annotationType,
 				bindingOptions.getDefaultCatalogName(),
 				QuotedIdentifierTarget.CATALOG_NAME,
 				bindingOptions,
@@ -412,7 +404,6 @@ public class TableHelper {
 		final Identifier logicalSchemaName = resolveDatabaseIdentifier(
 				tableAnn,
 				"schema",
-				Table.class,
 				bindingOptions.getDefaultSchemaName(),
 				QuotedIdentifierTarget.SCHEMA_NAME,
 				bindingOptions,
@@ -422,7 +413,6 @@ public class TableHelper {
 		final Identifier logicalCatalogName = resolveDatabaseIdentifier(
 				tableAnn,
 				"catalog",
-				Table.class,
 				bindingOptions.getDefaultCatalogName(),
 				QuotedIdentifierTarget.CATALOG_NAME,
 				bindingOptions,
@@ -486,23 +476,24 @@ public class TableHelper {
 	private static <A extends Annotation> Identifier resolveDatabaseIdentifier(
 			AnnotationUsage<A> annotationUsage,
 			String attributeName,
-			Class<A> annotationType,
 			Identifier fallback,
 			QuotedIdentifierTarget target,
 			BindingOptions bindingOptions,
-			BindingState bindingState,
+			@SuppressWarnings("unused") BindingState bindingState,
 			BindingContext bindingContext) {
-		final String explicit = BindingHelper.getStringOrNull( annotationUsage, attributeName );
-		if ( StringHelper.isNotEmpty( explicit ) ) {
-			return BindingHelper.toIdentifier( explicit, target, bindingOptions, jdbcEnvironment( bindingContext ) );
-		}
-
-		if ( fallback != null ) {
+		if ( annotationUsage == null ) {
 			return fallback;
 		}
-
-		final String defaultValue = BindingHelper.getDefaultValue( attributeName, annotationType, bindingContext );
-		return BindingHelper.toIdentifier(defaultValue, target, bindingOptions, jdbcEnvironment( bindingContext ) );
+		final String explicitValue = annotationUsage.getString( attributeName );
+		if ( StringHelper.isEmpty( explicitValue ) ) {
+			return fallback;
+		}
+		return BindingHelper.toIdentifier(
+				explicitValue,
+				target,
+				bindingOptions,
+				jdbcEnvironment( bindingContext )
+		);
 	}
 
 	private static AnnotationUsage<Comment> findCommentAnnotation(

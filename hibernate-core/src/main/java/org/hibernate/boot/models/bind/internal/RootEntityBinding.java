@@ -107,12 +107,8 @@ public class RootEntityBinding extends EntityBinding {
 		applyCacheRegions( typeMetadata, rootClass );
 		applySoftDelete( typeMetadata, rootClass, tableReference.table() );
 
-		applyCaching( typeMetadata, rootClass, bindingState );
-		applyFilters( typeMetadata, rootClass );
-		applyJpaEventListeners( typeMetadata, rootClass );
-
+		applyCommonInformation( typeMetadata, rootClass, bindingState );
 		prepareAttributeBindings( tableReference.table() );
-
 		prepareSubclassBindings();
 	}
 

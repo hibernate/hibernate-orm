@@ -83,7 +83,7 @@ public class RootEntityBinding extends EntityBinding {
 				bindingContext
 		);
 
-		processSecondaryTables();
+		processSecondaryTables( this.tableReference );
 
 		bindingState.registerTypeBinding( typeMetadata, this );
 
@@ -110,8 +110,6 @@ public class RootEntityBinding extends EntityBinding {
 		applyCaching( typeMetadata, rootClass, bindingState );
 		applyFilters( typeMetadata, rootClass );
 		applyJpaEventListeners( typeMetadata, rootClass );
-
-		// todo : handle any super mapped-superclasses
 
 		prepareAttributeBindings( tableReference.table() );
 

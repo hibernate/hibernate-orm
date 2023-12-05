@@ -13,7 +13,7 @@ import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
-import org.hibernate.orm.test.boot.models.process.ManagedResourcesImpl;
+import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.models.internal.jdk.VoidClassDetails;

@@ -6,14 +6,26 @@
  */
 package org.hibernate.boot.models.bind.internal;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import org.hibernate.annotations.BatchSize;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.ResultCheckStyle;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLInsert;
+import org.hibernate.annotations.SQLUpdate;
+import org.hibernate.annotations.Synchronize;
+import org.hibernate.boot.models.HibernateAnnotations;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
@@ -24,6 +36,7 @@ import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
 import org.hibernate.boot.models.categorize.spi.MappedSuperclassTypeMetadata;
+import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.jpa.event.internal.EntityCallback;
@@ -43,6 +56,8 @@ import jakarta.persistence.Cacheable;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.SharedCacheMode;
+
+import static org.hibernate.boot.models.bind.ModelBindingLogging.MODEL_BINDING_MSG_LOGGER;
 
 /**
  * @author Steve Ebersole
@@ -94,6 +109,15 @@ public abstract class EntityBinding extends IdentifiableTypeBinding {
 		persistentClass.setJpaEntityName( importName );
 
 		bindingState.getMetadataBuildingContext().getMetadataCollector().addImport( importName, entityName );
+	}
+
+	protected static void applyCommonInformation(EntityTypeMetadata typeMetadata, PersistentClass persistentClass, BindingState bindingState) {
+		applyCaching( typeMetadata, persistentClass, bindingState );
+		applyFilters( typeMetadata, persistentClass );
+		applyJpaEventListeners( typeMetadata, persistentClass );
+		applyBatchSize( typeMetadata, persistentClass, bindingState );
+		applySqlCustomizations( typeMetadata, persistentClass, bindingState );
+		applySynchronizedTableNames( typeMetadata, persistentClass, bindingState );
 	}
 
 	protected static void applyDiscriminatorValue(
@@ -355,6 +379,153 @@ public abstract class EntityBinding extends IdentifiableTypeBinding {
 			modelsException.addSuppressed( e );
 			throw modelsException;
 		}
+	}
+
+	private static void applyBatchSize(
+			EntityTypeMetadata typeMetadata,
+			PersistentClass persistentClass,
+			BindingState bindingState) {
+		final AnnotationUsage<BatchSize> batchSizeAnnotation = typeMetadata
+				.getClassDetails()
+				.getAnnotationUsage( HibernateAnnotations.BATCH_SIZE );
+		if ( batchSizeAnnotation == null ) {
+			return;
+		}
+
+		persistentClass.setBatchSize( batchSizeAnnotation.getInteger( "size" ) );
+	}
+
+	private static void applySqlCustomizations(
+			EntityTypeMetadata typeMetadata,
+			PersistentClass persistentClass,
+			BindingState bindingState) {
+		final AnnotationUsage<DynamicInsert> dynamicInsert = typeMetadata
+				.getClassDetails()
+				.getAnnotationUsage( HibernateAnnotations.DYNAMIC_INSERT );
+		final AnnotationUsage<DynamicUpdate> dynamicUpdate = typeMetadata
+				.getClassDetails()
+				.getAnnotationUsage( HibernateAnnotations.DYNAMIC_UPDATE );
+
+		final List<AnnotationUsage<SQLInsert>> customInserts = typeMetadata
+				.getClassDetails()
+				.getRepeatedAnnotationUsages( HibernateAnnotations.SQL_INSERT );
+		final List<AnnotationUsage<SQLUpdate>> customUpdates = typeMetadata
+				.getClassDetails()
+				.getRepeatedAnnotationUsages( HibernateAnnotations.SQL_UPDATE );
+		final List<AnnotationUsage<SQLDelete>> customDeletes = typeMetadata
+				.getClassDetails()
+				.getRepeatedAnnotationUsages( HibernateAnnotations.SQL_DELETE );
+
+		if ( dynamicInsert != null ) {
+			if ( CollectionHelper.isNotEmpty( customInserts ) ) {
+				MODEL_BINDING_MSG_LOGGER.dynamicAndCustomInsert( persistentClass.getEntityName() );
+			}
+			persistentClass.setDynamicInsert( dynamicInsert.getBoolean( "value" ) );
+		}
+
+		if ( dynamicUpdate != null ) {
+			if ( CollectionHelper.isNotEmpty( customUpdates ) ) {
+				MODEL_BINDING_MSG_LOGGER.dynamicAndCustomUpdate( persistentClass.getEntityName() );
+			}
+			persistentClass.setDynamicUpdate( dynamicUpdate.getBoolean( "value" ) );
+		}
+
+		if ( CollectionHelper.isNotEmpty( customInserts )
+				|| CollectionHelper.isNotEmpty( customUpdates )
+				|| CollectionHelper.isNotEmpty( customDeletes ) ) {
+			final Map<String,Join> joinMap = extractJoinMap( persistentClass );
+			applyCustomSql(
+					customInserts,
+					persistentClass,
+					joinMap,
+					PersistentClass::setCustomSQLInsert,
+					Join::setCustomSQLInsert
+			);
+			applyCustomSql(
+					customUpdates,
+					persistentClass,
+					joinMap,
+					PersistentClass::setCustomSQLUpdate,
+					Join::setCustomSQLUpdate
+			);
+			applyCustomSql(
+					customDeletes,
+					persistentClass,
+					joinMap,
+					PersistentClass::setCustomSQLDelete,
+					Join::setCustomSQLDelete
+			);
+		}
+	}
+
+	private static Map<String, Join> extractJoinMap(PersistentClass persistentClass) {
+		final List<Join> joins = persistentClass.getJoins();
+		if ( CollectionHelper.isEmpty( joins ) ) {
+			return Collections.emptyMap();
+		}
+
+		final HashMap<String, Join> joinMap = CollectionHelper.mapOfSize( joins.size() );
+		joins.forEach( (join) -> joinMap.put( join.getTable().getName(), join ) );
+		return joinMap;
+	}
+
+	private static <A extends Annotation> void applyCustomSql(
+			List<AnnotationUsage<A>> annotationUsages,
+			PersistentClass persistentClass,
+			Map<String,Join> joinMap,
+			PrimaryCustomSqlInjector primaryTableInjector,
+			SecondaryCustomSqlInjector secondaryTableInjector) {
+		if ( CollectionHelper.isEmpty( annotationUsages ) ) {
+			return;
+		}
+
+		annotationUsages.forEach( annotationUsage -> {
+			final String tableName = annotationUsage.getString( "table" );
+
+			if ( StringHelper.isEmpty( tableName ) ) {
+				primaryTableInjector.injectCustomSql(
+						persistentClass,
+						annotationUsage.getString( "sql" ),
+						annotationUsage.getBoolean( "callable" ),
+						ExecuteUpdateResultCheckStyle.fromResultCheckStyle( annotationUsage.getEnum( "", ResultCheckStyle.class ) )
+				);
+			}
+			else {
+				final Join join = joinMap.get( tableName );
+				secondaryTableInjector.injectCustomSql(
+						join,
+						annotationUsage.getString( "sql" ),
+						annotationUsage.getBoolean( "callable" ),
+						ExecuteUpdateResultCheckStyle.fromResultCheckStyle( annotationUsage.getEnum( "", ResultCheckStyle.class ) )
+				);
+			}
+		} );
+	}
+
+	@FunctionalInterface
+	private interface PrimaryCustomSqlInjector {
+		void injectCustomSql(PersistentClass persistentClass, String sql, boolean callable, ExecuteUpdateResultCheckStyle checkStyle);
+	}
+
+	@FunctionalInterface
+	private interface SecondaryCustomSqlInjector {
+		void injectCustomSql(Join join, String sql, boolean callable, ExecuteUpdateResultCheckStyle checkStyle);
+	}
+
+	private static void applySynchronizedTableNames(
+			EntityTypeMetadata typeMetadata,
+			PersistentClass persistentClass,
+			BindingState bindingState) {
+		final AnnotationUsage<Synchronize> usage = typeMetadata
+				.getClassDetails()
+				.getAnnotationUsage( HibernateAnnotations.SYNCHRONIZE );
+		if ( usage == null ) {
+			return;
+		}
+
+		// todo : handle Synchronize#logical - for now assume it is logical
+		final List<String> names = usage.getList( "value" );
+		names.forEach( persistentClass::addSynchronizedTable );
 	}
 
 	protected void processSecondaryTables(TableReference primaryTableReference) {

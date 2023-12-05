@@ -95,6 +95,9 @@ public final class Context {
 	// keep track of which named queries have been checked
 	private final Set<String> checkedNamedQueries = new HashSet<>();
 
+	private boolean usesQuarkusOrm = false;
+	private boolean usesQuarkusReactive = false;
+
 	public Context(ProcessingEnvironment processingEnvironment) {
 		this.processingEnvironment = processingEnvironment;
 
@@ -389,5 +392,21 @@ public final class Context {
 
 	public boolean checkNamedQuery(String name) {
 		return checkedNamedQueries.add(name);
+	}
+
+	public void setUsesQuarkusOrm(boolean b) {
+		usesQuarkusOrm = b;
+	}
+	
+	public boolean usesQuarkusOrm() {
+		return usesQuarkusOrm;
+	}
+
+	public void setUsesQuarkusReactive(boolean b) {
+		usesQuarkusReactive = b;
+	}
+	
+	public boolean usesQuarkusReactive() {
+		return usesQuarkusReactive;
 	}
 }

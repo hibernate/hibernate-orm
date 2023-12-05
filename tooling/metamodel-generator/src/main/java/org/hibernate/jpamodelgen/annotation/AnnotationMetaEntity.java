@@ -58,6 +58,8 @@ import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
+import jakarta.persistence.EntityManager;
+
 import static java.beans.Introspector.decapitalize;
 import static java.lang.Boolean.FALSE;
 import static java.util.Collections.emptyList;
@@ -407,6 +409,12 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 				sessionType = getter.getReturnType().toString();
 			}
 		}
+		else if ( element.getKind() == ElementKind.INTERFACE
+				&& ( context.usesQuarkusOrm() || context.usesQuarkusReactive() ) ) {
+			// if we don't have a getter, but we're in Quarkus, we know how to find the default sessions
+			repository = true;
+			sessionType = setupQuarkusDaoConstructor();
+		}
 		if ( !repository && jakartaDataRepository ) {
 			repository = true;
 			sessionType = HIB_STATELESS_SESSION;
@@ -512,6 +520,41 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			sessionGetter = method.getSimpleName() + "()";
 		}
 		return sessionType;
+	}
+
+	/**
+	 * For Quarkus, we generate a constructor with injection for EntityManager in ORM,
+	 * and in HR, we define the static session getter.
+	 */
+	private String setupQuarkusDaoConstructor() {
+		final String typeName = element.getSimpleName().toString() + '_';
+		final String sessionVariableName = getSessionVariableName( sessionType );
+
+		if ( context.usesQuarkusOrm() ) {
+			String name = "getEntityManager";
+			putMember( name,
+					new RepositoryConstructor(
+							this,
+							typeName,
+							name,
+							sessionType,
+							sessionVariableName,
+							dataStore(), 
+							context.addInjectAnnotation(),
+							context.addNonnullAnnotation(),
+							false,
+							false,
+							true
+							)
+					);
+			return Constants.ENTITY_MANAGER;
+		}
+		else {
+			importType( Constants.QUARKUS_SESSION_OPERATIONS );
+			// use this getter to get the method, do not generate an injection point for its type
+			sessionGetter = "SessionOperations.getSession()";
+			return Constants.UNI_MUTINY_SESSION;
+		}
 	}
 
 	/**

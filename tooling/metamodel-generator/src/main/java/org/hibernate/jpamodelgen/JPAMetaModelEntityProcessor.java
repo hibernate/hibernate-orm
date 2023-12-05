@@ -174,12 +174,29 @@ public class JPAMetaModelEntityProcessor extends AbstractProcessor {
 				context.getProcessingEnvironment().getElementUtils()
 						.getPackageElement( "io.quarkus.hibernate.orm" );
 
+		PackageElement quarkusOrmPanachePackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "io.quarkus.hibernate.orm.panache" );
+		PackageElement quarkusReactivePanachePackage =
+				context.getProcessingEnvironment().getElementUtils()
+						.getPackageElement( "io.quarkus.hibernate.reactive.panache" );
+		if ( quarkusReactivePanachePackage != null
+				&& quarkusOrmPanachePackage != null ) {
+			context.logMessage(
+					Diagnostic.Kind.WARNING,
+					"Both Quarkus Hibernate ORM and Hibernate Reactive with Panache detected: this is not supported, so will proceed as if none were there"
+			);
+			quarkusOrmPanachePackage = quarkusReactivePanachePackage = null;
+		}
+		
 		context.setAddInjectAnnotation( jakartaInjectPackage != null );
 		context.setAddNonnullAnnotation( jakartaAnnotationPackage != null );
 		context.setAddGeneratedAnnotation( jakartaAnnotationPackage != null );
 		context.setAddDependentAnnotation( jakartaContextPackage != null );
 		context.setAddTransactionScopedAnnotation( jakartaTransactionsPackage != null );
 		context.setQuarkusInjection( quarkusOrmPackage != null );
+		context.setUsesQuarkusOrm( quarkusOrmPanachePackage != null );
+		context.setUsesQuarkusReactive( quarkusReactivePanachePackage != null );
 
 		final Map<String, String> options = environment.getOptions();
 

@@ -40,21 +40,21 @@ public class SubclassEntityBinding extends EntityBinding {
 	private final Subclass subclass;
 
 	public SubclassEntityBinding(
-			EntityTypeMetadata entityTypeMetadata,
+			EntityTypeMetadata typeMetadata,
 			IdentifiableTypeBinding superTypeBinding,
 			EntityHierarchy.HierarchyRelation hierarchyRelation,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		super( entityTypeMetadata, superTypeBinding, hierarchyRelation, bindingOptions, bindingState, bindingContext );
+		super( typeMetadata, superTypeBinding, hierarchyRelation, bindingOptions, bindingState, bindingContext );
 
 		this.subclass = createSubclass();
-		applyNaming( entityTypeMetadata, subclass, bindingState );
+		applyNaming( typeMetadata, subclass, bindingState );
 		bindingState.registerTypeBinding( getTypeMetadata(), this );
 
 		if ( subclass instanceof TableOwner ) {
 			final var primaryTable = TableHelper.bindPrimaryTable(
-					entityTypeMetadata,
+					typeMetadata,
 					EntityHierarchy.HierarchyRelation.SUB,
 					bindingOptions,
 					bindingState,
@@ -64,7 +64,11 @@ public class SubclassEntityBinding extends EntityBinding {
 			( (TableOwner) subclass ).setTable( table );
 		}
 
-		applyDiscriminatorValue( getTypeMetadata(), subclass );
+		applyDiscriminatorValue( typeMetadata, subclass );
+
+		applyCommonInformation( typeMetadata, subclass, bindingState );
+		prepareAttributeBindings( subclass.getTable() );
+		prepareSubclassBindings();
 	}
 
 	@Override
@@ -182,10 +186,10 @@ public class SubclassEntityBinding extends EntityBinding {
 			final AnnotationUsage<ForeignKey> foreignKeyAnn = BindingHelper.getValue( joinTableAnn, "foreignKey", (AnnotationUsage<ForeignKey>) null );
 			final String foreignKeyName = foreignKeyAnn == null
 					? ""
-					: BindingHelper.getString( foreignKeyAnn, "name", ForeignKey.class, bindingContext );
+					: foreignKeyAnn.getString( "name" );
 			final String foreignKeyDefinition = foreignKeyAnn == null
 					? ""
-					: BindingHelper.getString( foreignKeyAnn, "foreignKeyDefinition", ForeignKey.class, bindingContext );
+					: foreignKeyAnn.getString( "foreignKeyDefinition" );
 
 			final org.hibernate.mapping.ForeignKey foreignKey = targetTable.createForeignKey(
 					foreignKeyName,

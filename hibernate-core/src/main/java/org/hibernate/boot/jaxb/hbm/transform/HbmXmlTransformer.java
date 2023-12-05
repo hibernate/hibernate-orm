@@ -13,9 +13,11 @@ import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import org.hibernate.annotations.NotFoundAction;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.boot.MappingException;
+import org.hibernate.boot.internal.LimitedCollectionClassification;
 import org.hibernate.boot.jaxb.JaxbLogger;
 import org.hibernate.boot.jaxb.Origin;
 import org.hibernate.boot.jaxb.hbm.spi.Discriminatable;
@@ -61,6 +63,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryPropertyReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmNativeQueryScalarReturnType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOnDeleteEnum;
+import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOneToManyCollectionElementType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOneToOneType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmOuterJoinEnum;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmPolymorphismEnum;
@@ -90,6 +93,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbCachingImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCascadeTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCheckConstraintImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionTableImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbColumnResultImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCustomSqlImpl;
@@ -144,6 +148,7 @@ import org.hibernate.internal.util.collections.CollectionHelper;
 
 import org.jboss.logging.Logger;
 
+import jakarta.persistence.AccessType;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.TemporalType;
@@ -596,7 +601,7 @@ public class HbmXmlTransformer {
 				queryParam.setType( hbmQueryParam.getType() );
 			}
 		}
-		
+
 		return query;
 	}
 
@@ -726,7 +731,7 @@ public class HbmXmlTransformer {
 				}
 			}
 		}
-		
+
 		return query;
 	}
 
@@ -889,11 +894,11 @@ public class HbmXmlTransformer {
 		if ( hbmClass.getCache() != null ) {
 			transformEntityCaching( hbmClass, entity );
 		}
-		
+
 		for ( JaxbHbmNamedQueryType hbmQuery : hbmClass.getQuery() ) {
 			entity.getNamedQueries().add( transformNamedQuery( hbmQuery, entity.getName() + "." + hbmQuery.getName() ) );
 		}
-		
+
 		for ( JaxbHbmNamedNativeQueryType hbmQuery : hbmClass.getSqlQuery() ) {
 			entity.getNamedNativeQueries().add(
 					transformNamedNativeQuery(
@@ -902,15 +907,15 @@ public class HbmXmlTransformer {
 					)
 			);
 		}
-		
+
 		for ( JaxbHbmFilterType hbmFilter : hbmClass.getFilter()) {
 			entity.getFilters().add( convert( hbmFilter ) );
 		}
-		
+
 		for ( JaxbHbmFetchProfileType hbmFetchProfile : hbmClass.getFetchProfile() ) {
 			entity.getFetchProfiles().add( transferFetchProfile( hbmFetchProfile ) );
 		}
-		
+
 		for ( JaxbHbmJoinedSubclassEntityType hbmSubclass : hbmClass.getJoinedSubclass() ) {
 			entity.setInheritance( new JaxbInheritanceImpl() );
 			entity.getInheritance().setStrategy( InheritanceType.JOINED );
@@ -919,7 +924,7 @@ public class HbmXmlTransformer {
 			ormRoot.getEntities().add( subclassEntity );
 			transferJoinedSubclass( hbmSubclass, subclassEntity );
 		}
-		
+
 		for (JaxbHbmUnionSubclassEntityType hbmSubclass : hbmClass.getUnionSubclass() ) {
 			entity.setInheritance( new JaxbInheritanceImpl() );
 			entity.getInheritance().setStrategy( InheritanceType.TABLE_PER_CLASS );
@@ -928,13 +933,13 @@ public class HbmXmlTransformer {
 			ormRoot.getEntities().add( subclassEntity );
 			transferUnionSubclass( hbmSubclass, subclassEntity );
 		}
-		
+
 		for ( JaxbHbmDiscriminatorSubclassEntityType hbmSubclass : hbmClass.getSubclass() ) {
 			final JaxbEntityImpl subclassEntity = new JaxbEntityImpl();
 			ormRoot.getEntities().add( subclassEntity );
 			transferDiscriminatorSubclass( hbmSubclass, subclassEntity );
 		}
-		
+
 		for ( JaxbHbmNamedQueryType hbmQuery : hbmClass.getQuery() ) {
 			// Tests implied this was the case...
 			final String name = hbmClass.getName() + "." + hbmQuery.getName();
@@ -1073,7 +1078,7 @@ public class HbmXmlTransformer {
 			joinColumn.setName( hbmSubclass.getKey().getColumnAttribute() );
 			subclassEntity.getPrimaryKeyJoinColumns().add( joinColumn );
 		}
-		
+
 		if ( !hbmSubclass.getJoinedSubclass().isEmpty() ) {
 			subclassEntity.setInheritance( new JaxbInheritanceImpl() );
 			subclassEntity.getInheritance().setStrategy( InheritanceType.JOINED );
@@ -1783,8 +1788,85 @@ public class HbmXmlTransformer {
 		return null;
 	}
 
-	private JaxbOneToManyImpl transformOneToManyCollection(PluralAttributeInfo pluralAttributeInfo) {
-		throw new MappingException( "OneToMany transformation not yet implemented", origin );
+	private JaxbOneToManyImpl transformOneToManyCollection(PluralAttributeInfo source) {
+		JaxbOneToManyImpl oneToMany = new JaxbOneToManyImpl();
+		JaxbHbmListType listType = (JaxbHbmListType)source;
+
+		// columns + formulas --> do we need similar for lists, sets, etc?
+		// ~~> listType.getElement()
+		//transferCollectionTable( source, oneToMany )
+
+		//name, attributeAccessor, fetchMode, listIndex (--> JaxbOrderColumnImpl)
+		transferCollectionBasicInfo( source, oneToMany );
+
+		//attributeaccessor already set, set this as well?
+		oneToMany.setAccess( AccessType.valueOf( listType.getAccess()) );
+
+		oneToMany.setClassification( LimitedCollectionClassification.LIST );
+		oneToMany.setOrphanRemoval( isOrphanRemoval( listType.getCascade() ) );
+		oneToMany.setCascade( convertCascadeType(listType.getCascade()) );
+
+		JaxbCollectionUserTypeImpl jcut = new JaxbCollectionUserTypeImpl();
+		jcut.setType( listType.getCollectionType() );
+		oneToMany.setCollectionType( jcut );
+
+		for ( JaxbHbmFilterType hbmFilter : source.getFilter()) {
+			oneToMany.getFilters().add( convert( hbmFilter ) );
+		}
+
+		oneToMany.setSqlRestriction( source.getWhere() );
+
+		//already done in root entity transfer
+		oneToMany.setOptimisticLock( listType.isOptimisticLock() );
+
+		//setFetch, setFetchMode (again?)
+		transferFetchable( listType.getLazy(), listType.getFetch(), listType.getOuterJoin(), oneToMany );
+
+		// todo extract to separate methods
+		if ( listType.getSqlDelete() != null ) {
+			oneToMany.setSqlDelete( new JaxbCustomSqlImpl() );
+			oneToMany.getSqlDelete().setValue( listType.getSqlDelete().getValue() );
+			oneToMany.getSqlDelete().setResultCheck( listType.getSqlDelete().getCheck() );
+			oneToMany.getSqlDelete().setCallable( listType.getSqlDelete().isCallable() );
+			oneToMany.getSqlDelete().setTable( listType.getTable()  /* ? */ );
+		}
+
+		// todo similar to above
+		//oneToMany.setSqlDeleteAll( JaxbHbmCustomSqlDmlType -> JaxbCustomSqlImpl );
+		//oneToMany.setSqlInsert( JaxbHbmCustomSqlDmlType -> JaxbCustomSqlImpl );
+		//oneToMany.setSqlUpdate( JaxbHbmCustomSqlDmlType -> JaxbCustomSqlImpl );
+
+		oneToMany.setForeignKey( new JaxbForeignKeyImpl() );
+//		oneToMany.getForeignKey().setName( ?? );
+//		oneToMany.setCollectionId( ? );
+//		oneToMany.setMappedBy( ?? );
+//		oneToMany.setOnDelete( ?? );
+
+		// no equivalent in hbm?
+//		oneToMany.setJoinTable( ?? );
+//		oneToMany.setSqlJoinTableRestriction( ?? );
+//		oneToMany.setSortNatural( ?? );
+
+		// being set in transferCollectionBasicInfo (--> listindex)
+//		oneToMany.setOrderColumn(  );
+
+		// applies only to map + set
+//		oneToMany.setSort(  );
+//		oneToMany.setOrderBy( listType. );
+
+
+		JaxbHbmOneToManyCollectionElementType hbmOneToMany = source.getOneToMany();
+		if ( hbmOneToMany.isEmbedXml() != null ) {
+			TRANSFORMATION_LOGGER.warnf( "Transformation of embed-xml mapping not supported - `%s`", origin );
+		}
+		if ( !(hbmOneToMany.getNode() == null || hbmOneToMany.getNode().isBlank() ) ) {
+			TRANSFORMATION_LOGGER.warnf( "Transformation of node mapping not supported - `%s`", origin );
+		}
+		oneToMany.setTargetEntity( hbmOneToMany.getClazz() );
+		oneToMany.setName( hbmOneToMany.getEntityName() );
+		oneToMany.setNotFound( NotFoundAction.valueOf( hbmOneToMany.getNotFound().value() ) );
+
+		return oneToMany;
 	}
 
 	private JaxbManyToManyImpl transformManyToManyCollection(PluralAttributeInfo pluralAttributeInfo) {
@@ -2056,7 +2138,7 @@ public class HbmXmlTransformer {
 				}
 				target.getSecondaryTables().add( secondaryTable );
 			}
-			
+
 			for ( Serializable attributeMapping : hbmJoin.getAttributes() ) {
 				if ( attributeMapping instanceof JaxbHbmBasicAttributeType ) {
 					final JaxbBasicImpl prop = transformBasicAttribute( (JaxbHbmBasicAttributeType) attributeMapping );
@@ -2167,7 +2249,7 @@ public class HbmXmlTransformer {
 		}
 	}
 
-	
+
 	// ToOne
 	private void transferFetchable(
 			JaxbHbmLazyWithNoProxyEnum hbmLazy,
@@ -2177,7 +2259,7 @@ public class HbmXmlTransformer {
 			JaxbSingularAssociationAttribute fetchable) {
 		FetchType laziness = FetchType.LAZY;
 		JaxbSingularFetchModeImpl fetch = JaxbSingularFetchModeImpl.SELECT;
-		
+
 		if (hbmLazy != null) {
 			if (hbmLazy.equals( JaxbHbmLazyWithNoProxyEnum.FALSE )) {
 				laziness = FetchType.EAGER;
@@ -2186,7 +2268,7 @@ public class HbmXmlTransformer {
 				// TODO: @LazyToOne(LazyToOneOption.PROXY) or @LazyToOne(LazyToOneOption.NO_PROXY)
 			}
 		}
-		
+
 		// allow fetch style to override laziness, if necessary
 		if (constrained != null && ! constrained) {
 			// NOTE SPECIAL CASE: one-to-one constrained=false cannot be proxied, so default to join and non-lazy
@@ -2207,11 +2289,11 @@ public class HbmXmlTransformer {
 				}
 			}
 		}
-		
+
 		fetchable.setFetch( laziness );
 		fetchable.setFetchMode( fetch );
 	}
-	
+
 	// ToMany
 	private void transferFetchable(
 			JaxbHbmLazyWithExtraEnum hbmLazy,
@@ -2220,7 +2302,7 @@ public class HbmXmlTransformer {
 			JaxbPluralAttribute fetchable) {
 		FetchType laziness = FetchType.LAZY;
 		JaxbPluralFetchModeImpl fetch = JaxbPluralFetchModeImpl.SELECT;
-		
+
 		if (hbmLazy != null) {
 			if (hbmLazy.equals( JaxbHbmLazyWithExtraEnum.EXTRA )) {
 				throw new MappingException( "HBM transformation: extra lazy not yet supported.", origin );
@@ -2229,7 +2311,7 @@ public class HbmXmlTransformer {
 				laziness = FetchType.EAGER;
 			}
 		}
-		
+
 		// allow fetch style to override laziness, if necessary
 		if (hbmFetch == null) {
 			if (hbmOuterJoin != null && hbmOuterJoin.equals( JaxbHbmOuterJoinEnum.TRUE ) ) {
@@ -2246,11 +2328,11 @@ public class HbmXmlTransformer {
 				fetch = JaxbPluralFetchModeImpl.SUBSELECT;
 			}
 		}
-		
+
 		fetchable.setFetch( laziness );
 		fetchable.setFetchMode( fetch );
 	}
-	
+
 	// KeyManyToOne
 	private FetchType convert(JaxbHbmLazyEnum hbmLazy) {
 		if ( hbmLazy != null && "false".equalsIgnoreCase( hbmLazy.value() ) ) {
@@ -2331,12 +2413,12 @@ public class HbmXmlTransformer {
 		}
 		return cascadeType;
 	}
-	
+
 	private boolean isOrphanRemoval(String s) {
 		return isNotEmpty( s )
 				&& s.toLowerCase( Locale.ROOT ).contains( "orphan" );
 	}
-	
+
 	private String getFullyQualifiedClassName(String className) {
 		// todo : right now we do both, we set the package into the XML and qualify the names; pick one...
 		//		1) pass the names through as-is and set the package into the XML; the orm.xml reader

@@ -3,6 +3,15 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.15.Final (December 05, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32222
+
+** Bug
+    * [HHH-17491] - UnknownEntityTypeException thrown when multiple subclasses define an attribute with the same name and one is a MappedSuperclass
+
+
 Changes in 6.2.14.Final (December 01, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

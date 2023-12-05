@@ -138,6 +138,11 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	 */
 	private String sessionType = Constants.ENTITY_MANAGER;
 
+	/**
+	 * The field or method call to obtain the session
+	 */
+	private String sessionGetter = "entityManager";
+	
 	private final Map<String,String> memberTypes = new HashMap<>();
 
 	public AnnotationMetaEntity(
@@ -484,21 +489,28 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		final String sessionVariableName = getSessionVariableName( sessionType );
 		final String name = method == null ? sessionVariableName : method.getSimpleName().toString();
 		final String typeName = element.getSimpleName().toString() + '_';
-		putMember( name,
-				new RepositoryConstructor(
-						this,
-						typeName,
-						name,
-						sessionType,
-						sessionVariableName,
-						dataStore(),
-						context.addInjectAnnotation(),
-						context.addNonnullAnnotation(),
-						method != null,
-						jakartaDataRepository,
-						quarkusInjection
-				)
-		);
+
+		if( method == null || !method.isDefault() ) {
+			putMember( name,
+					new RepositoryConstructor(
+							this,
+							typeName,
+							name,
+							sessionType,
+							sessionVariableName,
+							dataStore(),
+							context.addInjectAnnotation(),
+							context.addNonnullAnnotation(),
+							method != null,
+							jakartaDataRepository,
+							quarkusInjection
+					)
+			);
+		}
+		else {
+			// use this getter to get the method, do not generate an injection point for its type
+			sessionGetter = method.getSimpleName() + "()";
+		}
 		return sessionType;
 	}
 
@@ -1088,14 +1100,14 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		return getSessionVariableName(sessionType);
 	}
 
-	private static String getSessionVariableName(String sessionType) {
+	private String getSessionVariableName(String sessionType) {
 		switch (sessionType) {
 			case HIB_SESSION:
 			case HIB_STATELESS_SESSION:
 			case MUTINY_SESSION:
 				return "session";
 			default:
-				return "entityManager";
+				return sessionGetter;
 		}
 	}
 

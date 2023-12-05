@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.boot.models.bind;
 
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Filter;
@@ -13,6 +14,7 @@ import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.annotations.SoftDeleteType;
+import org.hibernate.annotations.Synchronize;
 import org.hibernate.annotations.TenantId;
 
 import jakarta.persistence.Basic;
@@ -39,6 +41,8 @@ import jakarta.persistence.Version;
 @SoftDelete(strategy = SoftDeleteType.ACTIVE)
 @Cacheable(false)
 @Cache(usage = CacheConcurrencyStrategy.READ_ONLY, region = "my-region")
+@BatchSize(size = 32)
+@Synchronize("some_other_table")
 public class SimpleEntity {
 	@Id
 	private Integer id;

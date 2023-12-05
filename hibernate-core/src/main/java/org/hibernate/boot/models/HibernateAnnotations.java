@@ -11,6 +11,7 @@ import java.util.function.Consumer;
 
 import org.hibernate.annotations.*;
 import org.hibernate.boot.internal.Abstract;
+import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.internal.CollectionClassification;
 import org.hibernate.boot.internal.Extends;
 import org.hibernate.boot.internal.Target;
@@ -172,6 +173,7 @@ public interface HibernateAnnotations {
 	AnnotationDescriptor<WhereJoinTable> WHERE_JOIN_TABLE = createOrmDescriptor( WhereJoinTable.class );
 
 	AnnotationDescriptor<Abstract> ABSTRACT = createOrmDescriptor( Abstract.class );
+	AnnotationDescriptor<AnyKeyType> ANY_KEY_TYPE = createOrmDescriptor( AnyKeyType.class );
 	AnnotationDescriptor<CollectionClassification> COLLECTION_CLASSIFICATION = createOrmDescriptor( CollectionClassification.class );
 	AnnotationDescriptor<Extends> EXTENDS = createOrmDescriptor( Extends.class );
 	AnnotationDescriptor<Target> TARGET = createOrmDescriptor( Target.class );

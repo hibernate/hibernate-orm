@@ -12,6 +12,9 @@ import java.util.Map;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.orm.test.boot.models.BootstrapContextTesting;
+import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
+import org.hibernate.orm.test.boot.models.MyStringConverter;
+import org.hibernate.orm.test.boot.models.MyUuidConverter;
 import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
@@ -37,6 +40,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.models.internal.SimpleClassLoading.SIMPLE_CLASS_LOADING;
 
 /**
+ * Tests the general process / flow of using hibernate-models
+ *
  * @author Steve Ebersole
  */
 public class SimpleProcessorTests {
@@ -69,12 +74,6 @@ public class SimpleProcessorTests {
 				StringJavaType.class,
 				AbstractClassJavaType.class
 		);
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-		// Above here is work done before hibernate-models.
-		// Below here is work done by hibernate-models.
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {

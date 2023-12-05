@@ -30,6 +30,7 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -342,16 +343,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 			}
 		}
 
-		jakartaDataRepository = hasAnnotation( element, JD_REPOSITORY );
-		findSessionGetter( element );
-		if ( !repository && jakartaDataRepository) {
-			repository = true;
-			sessionType = HIB_STATELESS_SESSION;
-			addDaoConstructor( null );
-		}
-		if ( jakartaDataRepository && !quarkusInjection ) {
-			addDefaultConstructor();
-		}
+		setupSession();
 
 		if ( managed && !jakartaDataStaticModel ) {
 			putMember( "class", new AnnotationMetaType(this) );
@@ -395,31 +387,91 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 		}
 		return null;
 	}
+	
+	private void setupSession() {
+		jakartaDataRepository = hasAnnotation( element, JD_REPOSITORY );
+		ExecutableElement getter = findSessionGetter( element );
+		if ( getter != null ) {
+			// Never make a DAO for Panache subtypes
+			if ( !isPanacheType( element ) ) {
+				repository = true;
+				sessionType = addDaoConstructor( getter );
+			}
+			else {
+				// For Panache subtypes, we look at the session type, but no DAO, we want static methods
+				sessionType = getter.getReturnType().toString();
+			}
+		}
+		if ( !repository && jakartaDataRepository ) {
+			repository = true;
+			sessionType = HIB_STATELESS_SESSION;
+			addDaoConstructor( null );
+		}
+		if ( jakartaDataRepository && !quarkusInjection ) {
+			addDefaultConstructor();
+		}
+	}
 
-	private void findSessionGetter(TypeElement type) {
-		if ( !hasAnnotation( type, Constants.ENTITY )
+	private @Nullable ExecutableElement findSessionGetter(TypeElement type) {
+		if ( ( !hasAnnotation( type, Constants.ENTITY )
 				&& !hasAnnotation( type, Constants.MAPPED_SUPERCLASS )
-				&& !hasAnnotation( type, Constants.EMBEDDABLE ) ) {
+				&& !hasAnnotation( type, Constants.EMBEDDABLE ) )
+				|| isPanacheType( type ) ) {
 			for ( ExecutableElement method : methodsIn( type.getEnclosedElements() ) ) {
 				if ( isSessionGetter( method ) ) {
-					repository = true;
-					sessionType = addDaoConstructor( method );
+					return method;
 				}
 			}
-			if ( !repository) {
-				final TypeMirror superclass = type.getSuperclass();
-				if ( superclass.getKind() == TypeKind.DECLARED ) {
-					final DeclaredType declaredType = (DeclaredType) superclass;
-					findSessionGetter( (TypeElement) declaredType.asElement() );
+			final TypeMirror superclass = type.getSuperclass();
+			if ( superclass.getKind() == TypeKind.DECLARED ) {
+				final DeclaredType declaredType = (DeclaredType) superclass;
+				ExecutableElement ret = findSessionGetter( (TypeElement) declaredType.asElement() );
+				if ( ret != null ) {
+					return ret;
 				}
-				for ( TypeMirror superinterface : type.getInterfaces() ) {
-					if ( superinterface.getKind() == TypeKind.DECLARED ) {
-						final DeclaredType declaredType = (DeclaredType) superinterface;
-						findSessionGetter( (TypeElement) declaredType.asElement() );
+			}
+			for ( TypeMirror superinterface : type.getInterfaces() ) {
+				if ( superinterface.getKind() == TypeKind.DECLARED ) {
+					final DeclaredType declaredType = (DeclaredType) superinterface;
+					ExecutableElement ret = findSessionGetter( (TypeElement) declaredType.asElement() );
+					if ( ret != null ) {
+						return ret;
 					}
 				}
 			}
 		}
+		return null;
+	}
+
+	private boolean isPanacheType(TypeElement type) {
+		return isOrmPanacheType( type ) || isReactivePanacheType( type );
+	}
+
+	private boolean isOrmPanacheType(TypeElement type) {
+		ProcessingEnvironment processingEnvironment = this.context.getProcessingEnvironment();
+		TypeElement panacheRepositorySuperType = processingEnvironment.getElementUtils().getTypeElement( Constants.PANACHE_ORM_REPOSITORY_BASE );
+		TypeElement panacheEntitySuperType = processingEnvironment.getElementUtils().getTypeElement( Constants.PANACHE_ORM_ENTITY_BASE );
+		if ( panacheRepositorySuperType == null || panacheEntitySuperType == null ) {
+			return false;
+		}
+		Types types = processingEnvironment.getTypeUtils();
+		// check against a raw supertype of PanacheRepositoryBase, which .asType() is not
+		return processingEnvironment.getTypeUtils().isSubtype( type.asType(), types.getDeclaredType( panacheRepositorySuperType ) )
+				|| processingEnvironment.getTypeUtils().isSubtype( type.asType(), panacheEntitySuperType.asType() );
+	}
+
+	private boolean isReactivePanacheType(TypeElement type) {
+		ProcessingEnvironment processingEnvironment = this.context.getProcessingEnvironment();
+		TypeElement panacheRepositorySuperType = processingEnvironment.getElementUtils().getTypeElement( Constants.PANACHE_REACTIVE_REPOSITORY_BASE );
+		TypeElement panacheEntitySuperType = processingEnvironment.getElementUtils().getTypeElement( Constants.PANACHE_REACTIVE_ENTITY_BASE );
+
+		if ( panacheRepositorySuperType == null || panacheEntitySuperType == null ) {
+			return false;
+		}
+		Types types = processingEnvironment.getTypeUtils();
+		// check against a raw supertype of PanacheRepositoryBase, which .asType() is not
+		return types.isSubtype( type.asType(), types.getDeclaredType( panacheRepositorySuperType ) )
+				|| types.isSubtype( type.asType(), panacheEntitySuperType.asType());
 	}
 
 	/**
@@ -557,7 +609,7 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 
 	private void addQueryMethods(List<ExecutableElement> queryMethods) {
 		for ( ExecutableElement method : queryMethods) {
-			if ( method.getModifiers().contains(Modifier.ABSTRACT) ) {
+			if ( method.getModifiers().contains(Modifier.ABSTRACT) || method.getModifiers().contains(Modifier.NATIVE) ) {
 				addQueryMethod( method );
 			}
 		}

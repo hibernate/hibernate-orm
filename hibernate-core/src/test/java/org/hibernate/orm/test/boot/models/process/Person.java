@@ -14,6 +14,7 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.JavaTypeRegistration;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.id.IncrementGenerator;
+import org.hibernate.orm.test.boot.models.MyUuidConverter;
 import org.hibernate.type.descriptor.java.StringJavaType;
 
 import jakarta.persistence.Entity;

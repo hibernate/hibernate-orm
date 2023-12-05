@@ -13,7 +13,7 @@ import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
-import org.hibernate.orm.test.boot.models.process.ManagedResourcesImpl;
+import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
 import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;

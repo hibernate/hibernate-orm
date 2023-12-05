@@ -24,7 +24,7 @@ import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.orm.test.boot.models.process.ManagedResourcesImpl;
+import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
 
 /**
  * @author Steve Ebersole

@@ -17,6 +17,7 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
+import org.hibernate.boot.models.bind.spi.TableReference;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
@@ -356,21 +357,14 @@ public abstract class EntityBinding extends IdentifiableTypeBinding {
 		}
 	}
 
-	protected void processSecondaryTables() {
-		final List<SecondaryTable> secondaryTables = TableHelper.bindSecondaryTables(
+	protected void processSecondaryTables(TableReference primaryTableReference) {
+		TableHelper.bindSecondaryTables(
 				this,
+				primaryTableReference,
 				bindingOptions,
 				bindingState,
 				bindingContext
 		);
-
-		secondaryTables.forEach( (secondaryTable) -> {
-			final Join join = new Join();
-			join.setTable( secondaryTable.table() );
-			join.setPersistentClass( getPersistentClass() );
-			join.setOptional( secondaryTable.optional() );
-			join.setInverse( !secondaryTable.owned() );
-		} );
 	}
 
 	protected void prepareSubclassBindings() {

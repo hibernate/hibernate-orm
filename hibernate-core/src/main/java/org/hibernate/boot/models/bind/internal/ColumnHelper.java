@@ -16,7 +16,9 @@ import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.DependantValue;
 import org.hibernate.mapping.Formula;
+import org.hibernate.mapping.Table;
 import org.hibernate.models.spi.AnnotationDescriptor;
 import org.hibernate.models.spi.AnnotationUsage;
 

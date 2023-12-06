@@ -8,8 +8,8 @@ package org.hibernate.orm.test.boot.models.bind.inheritance;
 
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.SingleTableSubclass;
 
-import org.hibernate.testing.orm.junit.FailureExpected;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
 import org.junit.jupiter.api.Test;
@@ -29,20 +29,14 @@ import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.check
 /**
  * @author Steve Ebersole
  */
+@ServiceRegistry
+@SuppressWarnings("JUnitMalformedDeclaration")
 public class JoinedTests {
-	/**
-	 * Allowing for something like:
-	 *
-	 * primaryKeyBinder.whenResolved( (primaryKey) -> ... )
-	 *
-	 */
-	@SuppressWarnings("JUnitMalformedDeclaration")
 	@Test
-	@ServiceRegistry
-	@FailureExpected(
-			reason = "Binding the primary key is done twice by 2 'owners' overwriting details. " +
-					"Might be case for distinct, sequential root key and secondary key (secondary tables, subclass tables) table phases."
-	)
+//	@FailureExpected(
+//			reason = "Binding the primary key is done twice by 2 'owners' overwriting details. " +
+//					"Might be case for distinct, sequential root key and secondary key (secondary tables, subclass tables) table phases."
+//	)
 	void simpleTest(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -76,6 +70,30 @@ public class JoinedTests {
 		);
 	}
 
+	@Test
+	void testAttributes(ServiceRegistryScope scope) {
+		checkDomainModel(
+				(context) -> {
+					final var metadataCollector = context.getMetadataCollector();
+					final RootClass rootBinding = (RootClass) metadataCollector.getEntityBinding( Root.class.getName() );
+					final JoinedSubclass subBinding = (JoinedSubclass) metadataCollector.getEntityBinding( Sub.class.getName() );
+
+					assertThat( rootBinding.getDeclaredProperties() ).hasSize( 2 );
+					assertThat( rootBinding.getProperties() ).hasSize( 2 );
+					assertThat( rootBinding.getPropertyClosure() ).hasSize( 2 );
+					assertThat( rootBinding.getSubclassPropertyClosure() ).hasSize( 3 );
+
+					assertThat( subBinding.getDeclaredProperties() ).hasSize( 1 );
+					assertThat( subBinding.getProperties() ).hasSize( 1 );
+					assertThat( subBinding.getPropertyClosure() ).hasSize( 3 );
+					assertThat( subBinding.getSubclassPropertyClosure() ).hasSize( 3 );
+				},
+				scope.getRegistry(),
+				Root.class,
+				Sub.class
+		);
+	}
+
 	@Entity(name="Root")
 	@Table(name="Root")
 	@Inheritance(strategy = InheritanceType.JOINED)
@@ -91,8 +109,6 @@ public class JoinedTests {
 	@Table(name="Sub")
 	@DiscriminatorValue("S")
 	public static class Sub extends Root {
-		@Id
-		private Integer id;
-		private String name;
+		private String otherStuff;
 	}
 }

@@ -5949,7 +5949,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final JdbcMapping paramJdbcMapping = paramModelType.getSingleJdbcMapping();
 				final JdbcMapping inferredJdbcMapping = inferredValueMapping.getSingleJdbcMapping();
 				// Only use the inferred mapping as parameter type when the JavaType accepts values of the bind type
-				if ( inferredJdbcMapping.getMappedJavaType().isWider( paramJdbcMapping.getMappedJavaType() )
+				if ( ( inferredJdbcMapping.getMappedJavaType() == paramJdbcMapping.getMappedJavaType()
+						|| inferredJdbcMapping.getMappedJavaType().isWider( paramJdbcMapping.getMappedJavaType() ) )
 						// and the bind type is not explicit or the bind type has the same JDBC type
 						&& ( !bindingTypeExplicit || canUseInferredType( paramJdbcMapping, inferredJdbcMapping ) ) ) {
 					return resolveInferredValueMappingForParameter( inferredValueMapping );

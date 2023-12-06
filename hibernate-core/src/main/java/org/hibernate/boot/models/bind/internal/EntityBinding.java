@@ -46,6 +46,7 @@ import org.hibernate.jpa.event.spi.CallbackType;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Subclass;
 import org.hibernate.mapping.Table;
 import org.hibernate.models.ModelsException;
 import org.hibernate.models.spi.AnnotationUsage;
@@ -506,6 +507,8 @@ public abstract class EntityBinding extends IdentifiableTypeBinding {
 		} );
 	}
 
+	public abstract RootEntityBinding getRootEntityBinding();
+
 	@FunctionalInterface
 	private interface PrimaryCustomSqlInjector {
 		void injectCustomSql(PersistentClass persistentClass, String sql, boolean callable, ExecuteUpdateResultCheckStyle checkStyle);
@@ -530,16 +533,6 @@ public abstract class EntityBinding extends IdentifiableTypeBinding {
 		// todo : handle Synchronize#logical - for now assume it is logical
 		final List<String> names = usage.getList( "value" );
 		names.forEach( persistentClass::addSynchronizedTable );
-	}
-
-	protected void processSecondaryTables(TableReference primaryTableReference) {
-		TableHelper.bindSecondaryTables(
-				this,
-				primaryTableReference,
-				bindingOptions,
-				bindingState,
-				bindingContext
-		);
 	}
 
 	protected void prepareSubclassBindings() {

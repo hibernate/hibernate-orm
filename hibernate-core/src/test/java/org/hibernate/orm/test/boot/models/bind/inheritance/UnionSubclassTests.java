@@ -6,9 +6,7 @@
  */
 package org.hibernate.orm.test.boot.models.bind.inheritance;
 
-import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.PersistentClass;
-import org.hibernate.mapping.Table;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
@@ -18,6 +16,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
+import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.checkDomainModel;
@@ -36,7 +35,7 @@ public class UnionSubclassTests {
 					final PersistentClass rootBinding = metadataCollector.getEntityBinding( UnionRoot.class.getName() );
 					assertThat( rootBinding ).isSameAs( rootBinding.getRootClass() );
 					assertThat( rootBinding.getTable() ).isSameAs( rootBinding.getRootTable() );
-					assertThat( rootBinding.getTable() ).isInstanceOf( Table.class );
+					assertThat( rootBinding.getTable() ).isInstanceOf( org.hibernate.mapping.Table.class );
 					assertThat( rootBinding.getTable().isAbstract() ).isFalse();
 					assertThat( rootBinding.getTable().getName() ).isEqualToIgnoringCase( "unionroot" );
 
@@ -45,9 +44,9 @@ public class UnionSubclassTests {
 					assertThat( subBinding.getRootClass() ).isSameAs( rootBinding );
 					assertThat( subBinding.getTable() ).isNotSameAs( subBinding.getRootTable() );
 					assertThat( rootBinding.getTable() ).isSameAs( subBinding.getRootTable() );
-					assertThat( subBinding.getTable() ).isInstanceOf( DenormalizedTable.class );
+					assertThat( subBinding.getTable() ).isInstanceOf( org.hibernate.mapping.DenormalizedTable.class );
 					assertThat( subBinding.getTable().isAbstract() ).isFalse();
-					assertThat( subBinding.getTable().getName() ).isEqualToIgnoringCase( "unionsub" );
+					assertThat( subBinding.getTable().getName() ).isEqualToIgnoringCase( "UnionSubclassTests$UnionSub" );
 
 					assertThat( rootBinding.getIdentifier() ).isNotNull();
 					assertThat( rootBinding.getTable().getPrimaryKey() ).isNotNull();
@@ -66,6 +65,7 @@ public class UnionSubclassTests {
 	 */
 	@Entity
 	@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+	@Table(name = "unionroot")
 	public static class UnionRoot {
 		@Id
 		private Integer id;

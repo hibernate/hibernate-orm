@@ -6,12 +6,15 @@
  */
 package org.hibernate.orm.test.boot.models.bind;
 
+import java.util.List;
+
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.boot.models.bind.internal.PhysicalTable;
 import org.hibernate.boot.models.bind.internal.SecondaryTable;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
+import org.hibernate.mapping.Join;
 import org.hibernate.mapping.Property;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.type.SqlTypes;
@@ -28,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Steve Ebersole
  */
+@SuppressWarnings("JUnitMalformedDeclaration")
 @ServiceRegistry( settingProviders = @SettingProvider(
 		settingName = AvailableSettings.PHYSICAL_NAMING_STRATEGY,
 		provider = CustomNamingStrategyProvider.class
@@ -165,6 +169,25 @@ public class SimpleBindingCoordinatorTests {
 					assertThat( softDeleteColumn ).isNotNull();
 					assertThat( softDeleteColumn.getName() ).isEqualTo( "ACTIVE" );
 
+				},
+				scope.getRegistry(),
+				SimpleEntity.class
+		);
+	}
+
+	@Test
+	void testSecondaryTables(ServiceRegistryScope scope) {
+		BindingTestingHelper.checkDomainModel(
+				(context) -> {
+					final RootClass entityBinding = (RootClass) context.getMetadataCollector().getEntityBinding( SimpleEntity.class.getName() );
+					final List<Join> joins = entityBinding.getJoins();
+					assertThat( joins ).hasSize( 1 );
+					final Join join = joins.get( 0 );
+					assertThat( join.getTable() ).isNotNull();
+					assertThat( join.getTable().getPrimaryKey() ).isNotNull();
+					assertThat( join.getTable().getPrimaryKey().getColumns() ).hasSize( 1 );
+					assertThat( join.getKey() ).isNotNull();
+					assertThat( join.getKey().getColumns() ).hasSize( 1 );
 				},
 				scope.getRegistry(),
 				SimpleEntity.class

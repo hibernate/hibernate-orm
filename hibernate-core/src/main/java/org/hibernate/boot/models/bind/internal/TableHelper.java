@@ -7,7 +7,9 @@
 package org.hibernate.boot.models.bind.internal;
 
 import java.lang.annotation.Annotation;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.annotations.Comment;
 import org.hibernate.annotations.SecondaryRow;
@@ -26,9 +28,11 @@ import org.hibernate.boot.models.bind.spi.QuotedIdentifierTarget;
 import org.hibernate.boot.models.bind.spi.TableReference;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
+import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.engine.jdbc.env.spi.JdbcEnvironment;
 import org.hibernate.internal.util.StringHelper;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.mapping.DenormalizedTable;
 import org.hibernate.mapping.Join;
 import org.hibernate.mapping.PrimaryKey;
@@ -108,6 +112,7 @@ public class TableHelper {
 			}
 		}
 		else {
+			assert entityTypeMetadata.getHierarchy().getInheritanceType() == InheritanceType.JOINED;
 			tableReference = normalTableDetermination(
 					entityTypeMetadata,
 					subselectAnn,
@@ -130,16 +135,20 @@ public class TableHelper {
 		return tableReference;
 	}
 
-	public static void bindSecondaryTables(
+	public static Map<String,SecondaryTable> bindSecondaryTables(
 			EntityBinding entityBinding,
-			TableReference primaryTableReference,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		final ClassDetails typeClassDetails = entityBinding.getTypeMetadata().getClassDetails();
-		final List<AnnotationUsage<jakarta.persistence.SecondaryTable>> secondaryTableAnns = typeClassDetails.getRepeatedAnnotationUsages( jakarta.persistence.SecondaryTable.class );
+		final List<AnnotationUsage<jakarta.persistence.SecondaryTable>> annotationUsages = typeClassDetails.getRepeatedAnnotationUsages( jakarta.persistence.SecondaryTable.class );
 
-		secondaryTableAnns.forEach( (secondaryTableAnn) -> {
+		if ( CollectionHelper.isEmpty( annotationUsages ) ) {
+			return Collections.emptyMap();
+		}
+
+		final Map<String,SecondaryTable> secondaryTableMap = CollectionHelper.mapOfSize( annotationUsages.size() );
+		annotationUsages.forEach( (secondaryTableAnn) -> {
 			final AnnotationUsage<SecondaryRow> secondaryRowAnn = typeClassDetails.getNamedAnnotationUsage(
 					SecondaryRow.class,
 					secondaryTableAnn.getString( "name" ),
@@ -147,20 +156,20 @@ public class TableHelper {
 			);
 			final SecondaryTable binding = bindSecondaryTable(
 					entityBinding,
-					primaryTableReference,
 					secondaryTableAnn,
 					secondaryRowAnn,
 					bindingOptions,
 					bindingState,
 					bindingContext
 			);
+			secondaryTableMap.put( binding.logicalName().getCanonicalName(), binding );
 			bindingState.addSecondaryTable( binding );
 		} );
+		return secondaryTableMap;
 	}
 
 	public static SecondaryTable bindSecondaryTable(
 			EntityBinding entityBinding,
-			TableReference primaryTableReference,
 			AnnotationUsage<jakarta.persistence.SecondaryTable> secondaryTableAnn,
 			AnnotationUsage<SecondaryRow> secondaryRowAnn,
 			BindingOptions bindingOptions,
@@ -192,14 +201,16 @@ public class TableHelper {
 				bindingContext
 		);
 
-		final var secondaryTable = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
+		final MetadataBuildingContext buildingContext = bindingState.getMetadataBuildingContext();
+		final var secondaryTable = buildingContext.getMetadataCollector().addTable(
 				toCanonicalName( schemaName ),
 				toCanonicalName( catalogName ),
 				logicalName.getCanonicalName(),
 				null,
 				false,
-				bindingState.getMetadataBuildingContext()
+				buildingContext
 		);
+		secondaryTable.setPrimaryKey( new PrimaryKey( secondaryTable ) );
 
 		applyComment( secondaryTable, secondaryTableAnn, findCommentAnnotation(
 				entityBinding.getTypeMetadata(),
@@ -214,6 +225,17 @@ public class TableHelper {
 		join.setInverse( !BindingHelper.getValue( secondaryRowAnn, "owned", true ) );
 		join.setPersistentClass( entityBinding.getPersistentClass() );
 		entityBinding.getPersistentClass().addJoin( join );
+
+		entityBinding.getRootEntityBinding().getIdentifierBinding().whenResolved( new SecondaryTableKeyHandler(
+				secondaryTableAnn,
+				join,
+				entityBinding,
+				buildingContext
+		) );
+
+		// todo : handle @UniqueConstraint
+		// todo : handle @Index
+		// todo : handle @CheckConstraint
 
 		final JdbcEnvironment jdbcEnvironment = jdbcEnvironment( bindingContext );
 		final PhysicalNamingStrategy physicalNamingStrategy = physicalNamingStrategy( bindingContext );
@@ -256,6 +278,7 @@ public class TableHelper {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
+		final MetadataBuildingContext metadataBuildingContext = bindingState.getMetadataBuildingContext();
 		final Identifier logicalName = implicitNamingStrategy( bindingContext ).determinePrimaryTableName(
 				new ImplicitEntityNameSource() {
 					@Override
@@ -265,23 +288,26 @@ public class TableHelper {
 
 					@Override
 					public MetadataBuildingContext getBuildingContext() {
-						return bindingState.getMetadataBuildingContext();
+						return metadataBuildingContext;
 					}
 				}
 		);
 
 		// todo : get rid of metadata-collector handling of tables and handle via table-state
-		return new InLineView(
-				logicalName,
-				bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
-						null,
-						null,
-						logicalName.getCanonicalName(),
-						subselectAnn.getString( "value" ),
-						true,
-						bindingState.getMetadataBuildingContext()
-				)
+		final InFlightMetadataCollector metadataCollector = metadataBuildingContext.getMetadataCollector();
+		final org.hibernate.mapping.Table table = metadataCollector.addTable(
+				null,
+				null,
+				logicalName.getCanonicalName(),
+				subselectAnn.getString( "value" ),
+				true,
+				metadataBuildingContext
 		);
+		final PrimaryKey primaryKey = new PrimaryKey( table );
+		table.setPrimaryKey( primaryKey );
+		primaryKey.setTable( table );
+
+		return new InLineView( logicalName, table );
 	}
 
 	private static <A extends Annotation> PhysicalTableReference bindPhysicalTable(
@@ -326,7 +352,7 @@ public class TableHelper {
 				bindingContext
 		);
 
-		final var binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
+		final var table = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
 				logicalSchemaName == null ? null : logicalSchemaName.getCanonicalName(),
 				logicalCatalogName == null  ? null : logicalCatalogName.getCanonicalName(),
 				logicalName.getCanonicalName(),
@@ -334,9 +360,11 @@ public class TableHelper {
 				type.isAbstract(),
 				bindingState.getMetadataBuildingContext()
 		);
+		final PrimaryKey primaryKey = new PrimaryKey( table );
+		table.setPrimaryKey( primaryKey );
 
-		applyComment( binding, tableAnn, findCommentAnnotation( type, logicalName, isPrimary ) );
-		applyOptions( binding, tableAnn );
+		applyComment( table, tableAnn, findCommentAnnotation( type, logicalName, isPrimary ) );
+		applyOptions( table, tableAnn );
 
 		final JdbcEnvironment jdbcEnvironment = jdbcEnvironment( bindingContext );
 		final PhysicalNamingStrategy physicalNamingStrategy = physicalNamingStrategy( bindingContext );
@@ -348,7 +376,7 @@ public class TableHelper {
 				physicalNamingStrategy.toPhysicalTableName( logicalName, jdbcEnvironment ),
 				logicalCatalogName == null ? null : physicalNamingStrategy.toPhysicalCatalogName( logicalCatalogName, jdbcEnvironment ),
 				logicalSchemaName == null ? null : physicalNamingStrategy.toPhysicalSchemaName( logicalSchemaName, jdbcEnvironment ),
-				binding
+				table
 		);
 	}
 
@@ -360,7 +388,7 @@ public class TableHelper {
 			BindingContext bindingContext) {
 		final Identifier logicalName = determineLogicalName( type, null, bindingOptions, bindingState, bindingContext );
 
-		final org.hibernate.mapping.Table binding = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
+		final org.hibernate.mapping.Table table = bindingState.getMetadataBuildingContext().getMetadataCollector().addTable(
 				bindingOptions.getDefaultSchemaName() == null ? null : bindingOptions.getDefaultSchemaName().getCanonicalName(),
 				bindingOptions.getDefaultCatalogName() == null ? null : bindingOptions.getDefaultCatalogName().getCanonicalName(),
 				logicalName.getCanonicalName(),
@@ -368,9 +396,11 @@ public class TableHelper {
 				type.isAbstract(),
 				bindingState.getMetadataBuildingContext()
 		);
+		final PrimaryKey primaryKey = new PrimaryKey( table );
+		table.setPrimaryKey( primaryKey );
 
 		applyComment(
-				binding,
+				table,
 				null,
 				findCommentAnnotation( type, logicalName, isPrimary )
 		);
@@ -385,7 +415,7 @@ public class TableHelper {
 				physicalNamingStrategy.toPhysicalTableName( logicalName, jdbcEnvironment ),
 				physicalNamingStrategy.toPhysicalCatalogName( bindingOptions.getDefaultCatalogName(), jdbcEnvironment ),
 				physicalNamingStrategy.toPhysicalSchemaName( bindingOptions.getDefaultSchemaName(), jdbcEnvironment ),
-				binding
+				table
 		);
 	}
 
@@ -420,17 +450,21 @@ public class TableHelper {
 				bindingContext
 		);
 
-		final DenormalizedTable binding = (DenormalizedTable) bindingState.getMetadataBuildingContext().getMetadataCollector().addDenormalizedTable(
+		final MetadataBuildingContext buildingContext = bindingState.getMetadataBuildingContext();
+		final InFlightMetadataCollector metadataCollector = buildingContext.getMetadataCollector();
+		final DenormalizedTable table = (DenormalizedTable) metadataCollector.addDenormalizedTable(
 				logicalSchemaName == null ? null : logicalSchemaName.getCanonicalName(),
 				logicalCatalogName == null  ? null : logicalCatalogName.getCanonicalName(),
 				logicalName.getCanonicalName(),
 				type.isAbstract(),
 				null,
 				unionBaseTable,
-				bindingState.getMetadataBuildingContext()
+				buildingContext
 		);
+		final PrimaryKey primaryKey = new PrimaryKey( table );
+		table.setPrimaryKey( primaryKey );
 
-		return new UnionTable( logicalName, superTypeTable, binding, !type.hasSubTypes() );
+		return new UnionTable( logicalName, superTypeTable, table, !type.hasSubTypes() );
 	}
 
 

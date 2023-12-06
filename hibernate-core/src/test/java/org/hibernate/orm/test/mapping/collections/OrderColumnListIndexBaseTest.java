@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.mapping.collections;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -23,7 +25,9 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
 
+import static org.hibernate.testing.transaction.TransactionUtil.doInAutoCommit;
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author Vlad Mihalcea
@@ -47,6 +51,53 @@ public class OrderColumnListIndexBaseTest extends BaseEntityManagerFunctionalTes
 			person.addPhone(new Phone(1L, "landline", "028-234-9876"));
 			person.addPhone(new Phone(2L, "mobile", "072-122-9876"));
 			//end::collections-customizing-ordered-list-ordinal-persist-example[]
+		});
+		doInAutoCommit( st -> {
+			try (ResultSet rs = st.executeQuery( "select id, order_id from Phone" )) {
+				while ( rs.next() ) {
+					final long id = rs.getLong( 1 );
+					if ( id == 1 ) {
+						assertEquals( 100, rs.getInt( 2 ) );
+					}
+					else if ( id == 2 ) {
+						assertEquals( 101, rs.getInt( 2 ) );
+					}
+				}
+			}
+			catch (SQLException e) {
+				throw new RuntimeException( e );
+			}
+		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person = entityManager.find(  Person.class, 1L);
+			person.addPhone(new Phone(3L, "fax", "099-234-9876"));
+			entityManager.persist(person);
+		});
+		doInAutoCommit( st -> {
+			try (ResultSet rs = st.executeQuery( "select id, order_id from Phone" )) {
+				while ( rs.next() ) {
+					final long id = rs.getLong( 1 );
+					if ( id == 1 ) {
+						assertEquals( 100, rs.getInt( 2 ) );
+					}
+					else if ( id == 2 ) {
+						assertEquals( 101, rs.getInt( 2 ) );
+					}
+					else if ( id == 3 ) {
+						assertEquals( 102, rs.getInt( 2 ) );
+					}
+				}
+			}
+			catch (SQLException e) {
+				throw new RuntimeException( e );
+			}
+		} );
+		doInJPA(this::entityManagerFactory, entityManager -> {
+			Person person = entityManager.find(  Person.class, 1L);
+			final List<Phone> phones = person.getPhones();
+			assertEquals( Long.valueOf( 1L ), phones.get( 0 ).getId() );
+			assertEquals( Long.valueOf( 2L ), phones.get( 1 ).getId() );
+			assertEquals( Long.valueOf( 3L ), phones.get( 2 ).getId() );
 		});
 	}
 

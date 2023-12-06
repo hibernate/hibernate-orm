@@ -50,8 +50,8 @@ import static org.hibernate.internal.util.StringHelper.coalesce;
  */
 public class RootEntityBinding extends EntityBinding {
 	private final RootClass rootClass;
-	private final TableReference tableReference;
 	private final IdentifierBinding identifierBinding;
+	private final TableReference tableReference;
 
 	public RootEntityBinding(
 			EntityTypeMetadata typeMetadata,
@@ -82,8 +82,17 @@ public class RootEntityBinding extends EntityBinding {
 				bindingState,
 				bindingContext
 		);
+		rootClass.setTable( tableReference.table() );
 
-		processSecondaryTables( this.tableReference );
+		this.identifierBinding = new IdentifierBinding( this, typeMetadata, bindingOptions, bindingState, bindingContext );
+		this.rootClass.setIdentifier( identifierBinding.getValue() );
+
+		TableHelper.bindSecondaryTables(
+				this,
+				bindingOptions,
+				bindingState,
+				bindingContext
+		);
 
 		bindingState.registerTypeBinding( typeMetadata, this );
 
@@ -92,9 +101,6 @@ public class RootEntityBinding extends EntityBinding {
 		if ( getSuperTypeBinding() != null ) {
 			rootClass.setSuperMappedSuperclass( (MappedSuperclass) getSuperTypeBinding().getBinding() );
 		}
-
-		this.identifierBinding = new IdentifierBinding( this, typeMetadata, bindingOptions, bindingState, bindingContext );
-		this.rootClass.setIdentifier( identifierBinding.getValue() );
 
 		if ( typeMetadata.hasSubTypes() ) {
 			bindDiscriminator( typeMetadata, rootClass, bindingOptions, bindingState, bindingContext );
@@ -160,6 +166,11 @@ public class RootEntityBinding extends EntityBinding {
 
 	public IdentifierBinding getIdentifierBinding() {
 		return identifierBinding;
+	}
+
+	@Override
+	public RootEntityBinding getRootEntityBinding() {
+		return this;
 	}
 
 	private void applyCacheRegions(EntityTypeMetadata source, RootClass rootClass) {

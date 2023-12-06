@@ -31,11 +31,11 @@ import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.check
 
 /**
  * @author Steve Ebersole
- */	@SuppressWarnings("JUnitMalformedDeclaration")
-
+ */
+@SuppressWarnings("JUnitMalformedDeclaration")
+@ServiceRegistry
 public class SingleTableTests {
 	@Test
-	@ServiceRegistry
 	void testNoInheritance(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -50,7 +50,6 @@ public class SingleTableTests {
 	}
 
 	@Test
-	@ServiceRegistry
 	void testImplicitDiscriminator(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -79,7 +78,6 @@ public class SingleTableTests {
 	}
 
 	@Test
-	@ServiceRegistry
 	void testExplicitDiscriminator(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {
@@ -108,7 +106,6 @@ public class SingleTableTests {
 	}
 
 	@Test
-	@ServiceRegistry
 	void testAttributes(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {

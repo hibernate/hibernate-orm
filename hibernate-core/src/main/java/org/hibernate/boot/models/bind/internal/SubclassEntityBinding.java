@@ -6,17 +6,12 @@
  */
 package org.hibernate.boot.models.bind.internal;
 
-import java.util.Collections;
-import java.util.List;
-
-import org.hibernate.MappingException;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
-import org.hibernate.mapping.Column;
 import org.hibernate.mapping.IdentifiableTypeClass;
 import org.hibernate.mapping.JoinedSubclass;
 import org.hibernate.mapping.MappedSuperclass;
@@ -24,14 +19,9 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.PrimaryKey;
 import org.hibernate.mapping.SingleTableSubclass;
 import org.hibernate.mapping.Subclass;
-import org.hibernate.mapping.TableOwner;
 import org.hibernate.mapping.UnionSubclass;
-import org.hibernate.models.spi.AnnotationUsage;
 
-import jakarta.persistence.ForeignKey;
 import jakarta.persistence.InheritanceType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
 
 /**
  * @author Steve Ebersole
@@ -52,17 +42,20 @@ public class SubclassEntityBinding extends EntityBinding {
 		applyNaming( typeMetadata, subclass, bindingState );
 		bindingState.registerTypeBinding( getTypeMetadata(), this );
 
-		if ( subclass instanceof TableOwner tableOwner ) {
-			final var primaryTable = TableHelper.bindPrimaryTable(
-					typeMetadata,
-					EntityHierarchy.HierarchyRelation.SUB,
-					bindingOptions,
-					bindingState,
-					bindingContext
-			);
-			final var table = primaryTable.table();
-			tableOwner.setTable( table );
-		}
+		applyTable(
+				typeMetadata,
+				subclass,
+				bindingOptions,
+				bindingState,
+				bindingContext
+		);
+
+		TableHelper.bindSecondaryTables(
+				this,
+				bindingOptions,
+				bindingState,
+				bindingContext
+		);
 
 		applyDiscriminatorValue( typeMetadata, subclass );
 
@@ -74,6 +67,11 @@ public class SubclassEntityBinding extends EntityBinding {
 	@Override
 	public Subclass getPersistentClass() {
 		return subclass;
+	}
+
+	@Override
+	public RootEntityBinding getRootEntityBinding() {
+		return getSuperEntityBinding().getRootEntityBinding();
 	}
 
 	@Override
@@ -102,20 +100,22 @@ public class SubclassEntityBinding extends EntityBinding {
 	}
 
 	private UnionSubclass createUnionSubclass(IdentifiableTypeClass superTypeMapping) {
+		final UnionSubclass unionSubclass;
 		if ( superTypeMapping instanceof PersistentClass superEntity ) {
-			return new UnionSubclass( superEntity, bindingState.getMetadataBuildingContext() );
+			unionSubclass = new UnionSubclass( superEntity, bindingState.getMetadataBuildingContext() );
 		}
 		else {
 			assert superTypeMapping instanceof MappedSuperclass;
 
 			final var superEntity = resolveSuperEntityPersistentClass( superTypeMapping );
-			final var binding = new UnionSubclass(
+			unionSubclass = new UnionSubclass(
 					superEntity,
 					bindingState.getMetadataBuildingContext()
 			);
-			binding.setSuperMappedSuperclass( (MappedSuperclass) superTypeMapping );
-			return binding;
+			unionSubclass.setSuperMappedSuperclass( (MappedSuperclass) superTypeMapping );
 		}
+
+		return unionSubclass;
 	}
 
 	private JoinedSubclass createJoinedSubclass(IdentifiableTypeClass superTypeMapping) {
@@ -150,86 +150,13 @@ public class SubclassEntityBinding extends EntityBinding {
 		final PrimaryKey primaryKey = new PrimaryKey( joinTableReference.table() );
 		joinTableReference.table().setPrimaryKey( primaryKey );
 
-		final var targetTable = superTypePersistentClass.getIdentityTable();
-		if ( targetTable.getPrimaryKey() != null && targetTable.getPrimaryKey().getColumnSpan() > 0 ) {
-			// we can create the foreign key immediately
-			final var joinTableAnn = typeMetadata.getClassDetails().getAnnotationUsage( JoinTable.class );
-
-			final List<AnnotationUsage<JoinColumn>> joinColumnAnns = BindingHelper.getValue(
-					joinTableAnn,
-					"joinColumns",
-					Collections.emptyList()
-			);
-			final List<AnnotationUsage<JoinColumn>> inverseJoinColumnAnns = BindingHelper.getValue(
-					joinTableAnn,
-					"inverseJoinColumns",
-					Collections.emptyList()
-			);
-
-			for ( int i = 0; i < targetTable.getPrimaryKey().getColumnSpan(); i++ ) {
-				final Column targetColumn = targetTable.getPrimaryKey().getColumns().get( i );
-				final Column pkColumn;
-				if ( !inverseJoinColumnAnns.isEmpty() ) {
-					final var joinColumnAnn = resolveMatchingJoinColumnAnn(
-							inverseJoinColumnAnns,
-							targetColumn,
-							joinColumnAnns
-					);
-					pkColumn = ColumnHelper.bindColumn( joinColumnAnn, targetColumn::getName, true, false );
-				}
-				else {
-					pkColumn = ColumnHelper.bindColumn( null, targetColumn::getName, true, false );
-				}
-				primaryKey.addColumn( pkColumn );
-			}
-
-			final AnnotationUsage<ForeignKey> foreignKeyAnn = BindingHelper.getValue( joinTableAnn, "foreignKey", (AnnotationUsage<ForeignKey>) null );
-			final String foreignKeyName = foreignKeyAnn == null
-					? ""
-					: foreignKeyAnn.getString( "name" );
-			final String foreignKeyDefinition = foreignKeyAnn == null
-					? ""
-					: foreignKeyAnn.getString( "foreignKeyDefinition" );
-
-			final org.hibernate.mapping.ForeignKey foreignKey = targetTable.createForeignKey(
-					foreignKeyName,
-					primaryKey.getColumns(),
-					findSuperEntityMetadata().getEntityName(),
-					foreignKeyDefinition,
-					targetTable.getPrimaryKey().getColumns()
-			);
-			foreignKey.setReferencedTable( targetTable );
-		}
-		else {
-			throw new UnsupportedOperationException( "Delayed foreign key creation not yet implemented" );
-		}
-
-		// todo : bind foreign-key
-		// todo : do same for secondary tables
-		//		- in both cases we can immediately process the fk if
+		getRootEntityBinding().getIdentifierBinding().whenResolved( new JoinedSubclassKeyHandler(
+				getTypeMetadata().getClassDetails(),
+				joinedSubclass,
+				bindingState.getMetadataBuildingContext()
+		) );
 
 		return joinedSubclass;
-	}
-
-	private AnnotationUsage<JoinColumn> resolveMatchingJoinColumnAnn(
-			List<AnnotationUsage<JoinColumn>> inverseJoinColumnAnns,
-			Column pkColumn,
-			List<AnnotationUsage<JoinColumn>> joinColumnAnns) {
-		int matchPosition = -1;
-		for ( int j = 0; j < inverseJoinColumnAnns.size(); j++ ) {
-			final var inverseJoinColumnAnn = inverseJoinColumnAnns.get( j );
-			final String name = inverseJoinColumnAnn.getString( "name" );
-			if ( pkColumn.getName().equals( name ) ) {
-				matchPosition = j;
-				break;
-			}
-		}
-
-		if ( matchPosition == -1 ) {
-			throw new MappingException( "Unable to match primary key column [" + pkColumn.getName() + "] to any inverseJoinColumn - " + getTypeMetadata().getEntityName() );
-		}
-
-		return joinColumnAnns.get( matchPosition );
 	}
 
 	private SingleTableSubclass createSingleTableSubclass(IdentifiableTypeClass superTypeBinding) {
@@ -246,6 +173,30 @@ public class SubclassEntityBinding extends EntityBinding {
 			);
 			binding.setSuperMappedSuperclass( (MappedSuperclass) superTypeBinding );
 			return binding;
+		}
+	}
+
+	protected void applyTable(
+			EntityTypeMetadata typeMetadata,
+			Subclass subclass,
+			BindingOptions bindingOptions,
+			BindingState bindingState,
+			BindingContext bindingContext) {
+		if ( subclass instanceof UnionSubclass unionSubclass ) {
+			final var unionTableReference = TableHelper.bindPrimaryTable(
+					getTypeMetadata(),
+					EntityHierarchy.HierarchyRelation.SUB,
+					bindingOptions,
+					bindingState,
+					bindingContext
+			);
+			unionSubclass.setTable( unionTableReference.table() );
+
+			final PrimaryKey primaryKey = new PrimaryKey( unionTableReference.table() );
+			unionTableReference.table().setPrimaryKey( primaryKey );
+		}
+		else if ( subclass instanceof JoinedSubclass joinedSubclass ) {
+
 		}
 	}
 }

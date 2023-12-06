@@ -6,6 +6,9 @@
  */
 package org.hibernate.boot.models.bind.internal;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
@@ -33,8 +36,11 @@ import jakarta.persistence.Column;
  *
  * @author Steve Ebersole
  */
-public class IdentifierBinding extends Binding {
+public class IdentifierBinding extends Binding implements Observable<KeyValue> {
 	private final KeyValue keyValue;
+
+	private boolean resolved;
+	private List<ResolutionCallback<KeyValue>> resolutionCallbacks;
 
 	public IdentifierBinding(
 			RootEntityBinding rootEntityBinding,
@@ -44,7 +50,7 @@ public class IdentifierBinding extends Binding {
 			BindingContext context) {
 		super( options, state, context );
 
-		this.keyValue = prepareMappingValue( rootEntityBinding, entityTypeMetadata, options, state, context );
+		this.keyValue = prepareMappingValue( rootEntityBinding, entityTypeMetadata, this, options, state, context );
 	}
 
 	public KeyValue getValue() {
@@ -59,6 +65,7 @@ public class IdentifierBinding extends Binding {
 	private static KeyValue prepareMappingValue(
 			RootEntityBinding rootEntityBinding,
 			EntityTypeMetadata entityTypeMetadata,
+			IdentifierBinding binding,
 			BindingOptions options,
 			BindingState state,
 			BindingContext context) {
@@ -68,7 +75,7 @@ public class IdentifierBinding extends Binding {
 		final Table table = rootClass.getTable();
 
 		if ( idMapping instanceof BasicKeyMapping basicKeyMapping ) {
-			return prepareBasicIdentifier( basicKeyMapping, table, rootClass, options, state, context );
+			return prepareBasicIdentifier( basicKeyMapping, table, rootClass, binding, options, state, context );
 		}
 		else if ( idMapping instanceof AggregatedKeyMapping aggregatedKeyMapping ) {
 			return bindAggregatedIdentifier( aggregatedKeyMapping, table, rootClass, options, state, context );
@@ -76,13 +83,13 @@ public class IdentifierBinding extends Binding {
 		else {
 			return bindNonAggregatedIdentifier( (NonAggregatedKeyMapping) idMapping, table, rootClass, options, state, context );
 		}
-
 	}
 
 	private static KeyValue prepareBasicIdentifier(
 			BasicKeyMapping basicKeyMapping,
 			Table table,
 			RootClass rootClass,
+			IdentifierBinding binding,
 			BindingOptions options,
 			BindingState state,
 			BindingContext context) {
@@ -118,6 +125,8 @@ public class IdentifierBinding extends Binding {
 		BasicValueHelper.bindJdbcType( idAttributeMember, idValue, options, state, context );
 		BasicValueHelper.bindNationalized( idAttributeMember, idValue, options, state, context );
 
+		binding.resolve();
+
 		return idValue;
 	}
 
@@ -149,5 +158,25 @@ public class IdentifierBinding extends Binding {
 			BindingState state,
 			BindingContext context) {
 		throw new UnsupportedOperationException( "Not yet implemented" );
+	}
+
+
+	@Override
+	public void whenResolved(ResolutionCallback<KeyValue> callback) {
+		if ( resolved ) {
+			callback.handleResolution( keyValue );
+			return;
+		}
+
+		if ( resolutionCallbacks == null ) {
+			resolutionCallbacks = new ArrayList<>();
+		}
+		resolutionCallbacks.add( callback );
+	}
+
+	public void resolve() {
+		ObservableHelper.processCallbacks( keyValue, resolutionCallbacks );
+		resolutionCallbacks = null;
+		resolved = true;
 	}
 }

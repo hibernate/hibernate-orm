@@ -33,10 +33,6 @@ import static org.hibernate.orm.test.boot.models.bind.BindingTestingHelper.check
 @SuppressWarnings("JUnitMalformedDeclaration")
 public class JoinedTests {
 	@Test
-//	@FailureExpected(
-//			reason = "Binding the primary key is done twice by 2 'owners' overwriting details. " +
-//					"Might be case for distinct, sequential root key and secondary key (secondary tables, subclass tables) table phases."
-//	)
 	void simpleTest(ServiceRegistryScope scope) {
 		checkDomainModel(
 				(context) -> {

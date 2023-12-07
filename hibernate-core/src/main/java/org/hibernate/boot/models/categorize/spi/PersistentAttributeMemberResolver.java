@@ -33,14 +33,12 @@ public interface PersistentAttributeMemberResolver {
 	 * @param classDetails Descriptor of the class
 	 * @param classLevelAccessType The implicit AccessType
 	 * @param allMemberConsumer Optional callback for each member on the class
-	 * @param buildingContext The local context
 	 *
 	 * @return The list of "backing members"
 	 */
 	List<MemberDetails> resolveAttributesMembers(
 			ClassDetails classDetails,
 			AccessType classLevelAccessType,
-			AllMemberConsumer allMemberConsumer,
-			ModelCategorizationContext buildingContext);
+			AllMemberConsumer allMemberConsumer);
 
 }

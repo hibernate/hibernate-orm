@@ -41,8 +41,7 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 			Function<FieldDetails,Boolean> transientFieldChecker,
 			Function<MethodDetails,Boolean> transientMethodChecker,
 			ClassDetails classDetails,
-			AccessType classLevelAccessType,
-			ModelCategorizationContext processingContext) {
+			AccessType classLevelAccessType) {
 		assert classLevelAccessType != null;
 
 		final LinkedHashMap<String,MemberDetails> results = new LinkedHashMap<>();
@@ -51,8 +50,7 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 				results::put,
 				transientFieldChecker,
 				transientMethodChecker,
-				classDetails,
-				processingContext
+				classDetails
 		);
 
 		processClassLevelAccess(
@@ -61,8 +59,7 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 				transientFieldChecker,
 				transientMethodChecker,
 				classDetails,
-				classLevelAccessType,
-				processingContext
+				classLevelAccessType
 		);
 
 		return new ArrayList<>( results.values() );
@@ -72,18 +69,17 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 			BiConsumer<String,MemberDetails> memberConsumer,
 			Function<FieldDetails,Boolean> transientFieldChecker,
 			Function<MethodDetails,Boolean> transientMethodChecker,
-			ClassDetails classDetails,
-			ModelCategorizationContext processingContext) {
+			ClassDetails classDetails) {
 		final List<FieldDetails> fields = classDetails.getFields();
 		for ( int i = 0; i < fields.size(); i++ ) {
 			final FieldDetails fieldDetails = fields.get( i );
-			processAttributeLevelAccessMember( fieldDetails, memberConsumer, transientFieldChecker, classDetails, processingContext );
+			processAttributeLevelAccessMember( fieldDetails, memberConsumer, transientFieldChecker, classDetails );
 		}
 
 		final List<MethodDetails> methods = classDetails.getMethods();
 		for ( int i = 0; i < methods.size(); i++ ) {
 			final MethodDetails methodDetails = methods.get( i );
-			processAttributeLevelAccessMember( methodDetails, memberConsumer, transientMethodChecker, classDetails, processingContext );
+			processAttributeLevelAccessMember( methodDetails, memberConsumer, transientMethodChecker, classDetails );
 		}
 	}
 
@@ -91,8 +87,7 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 			M memberDetails,
 			BiConsumer<String,MemberDetails> memberConsumer,
 			Function<M,Boolean> transiencyChecker,
-			ClassDetails classDetails,
-			ModelCategorizationContext processingContext) {
+			ClassDetails classDetails) {
 		final AnnotationUsage<Access> access = memberDetails.getAnnotationUsage( JpaAnnotations.ACCESS );
 		if ( access == null  ) {
 			return;
@@ -100,12 +95,7 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 
 		final AccessType attributeAccessType = access.getAttributeValue( "value" );
 
-		validateAttributeLevelAccess(
-				memberDetails,
-				attributeAccessType,
-				classDetails,
-				processingContext
-		);
+		validateAttributeLevelAccess( memberDetails, attributeAccessType, classDetails );
 
 		if ( transiencyChecker.apply( memberDetails ) ) {
 			// the field is @Transient
@@ -118,8 +108,7 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 	private void validateAttributeLevelAccess(
 			MemberDetails annotationTarget,
 			AccessType attributeAccessType,
-			ClassDetails classDetails,
-			ModelCategorizationContext processingContext) {
+			ClassDetails classDetails) {
 		// Apply the checks defined in section `2.3.2 Explicit Access Type` of the persistence specification
 
 		// Mainly, it is never legal to:
@@ -138,8 +127,7 @@ public class StandardPersistentAttributeMemberResolver extends AbstractPersisten
 			Function<FieldDetails,Boolean> transientFieldChecker,
 			Function<MethodDetails,Boolean> transientMethodChecker,
 			ClassDetails classDetails,
-			AccessType classLevelAccessType,
-			@SuppressWarnings("unused") ModelCategorizationContext processingContext) {
+			AccessType classLevelAccessType) {
 		if ( classLevelAccessType == AccessType.FIELD ) {
 			final List<FieldDetails> fields = classDetails.getFields();
 			for ( int i = 0; i < fields.size(); i++ ) {

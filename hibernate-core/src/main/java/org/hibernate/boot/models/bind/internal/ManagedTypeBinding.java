@@ -11,7 +11,7 @@ import java.util.Map;
 import org.hibernate.boot.models.bind.spi.BindingContext;
 import org.hibernate.boot.models.bind.spi.BindingOptions;
 import org.hibernate.boot.models.bind.spi.BindingState;
-import org.hibernate.boot.models.categorize.spi.ManagedTypeMetadata;
+import org.hibernate.models.spi.ClassDetails;
 
 /**
  * Binding for an {@linkplain jakarta.persistence.metamodel.ManagedType managed type}
@@ -19,19 +19,19 @@ import org.hibernate.boot.models.categorize.spi.ManagedTypeMetadata;
  * @author Steve Ebersole
  */
 public abstract class ManagedTypeBinding extends Binding {
-	protected final ManagedTypeMetadata typeMetadata;
+	protected final ClassDetails classDetails;
 
 	public ManagedTypeBinding(
-			ManagedTypeMetadata typeMetadata,
+			ClassDetails classDetails,
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
 		super( bindingOptions, bindingState, bindingContext );
-		this.typeMetadata = typeMetadata;
+		this.classDetails = classDetails;
 	}
 
-	public ManagedTypeMetadata getTypeMetadata() {
-		return typeMetadata;
+	public ClassDetails getClassDetails() {
+		return classDetails;
 	}
 
 	public abstract Map<String, AttributeBinding> getAttributeBindings();

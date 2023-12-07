@@ -27,6 +27,7 @@ import org.hibernate.models.ModelsException;
  * @author Steve Ebersole
  */
 public abstract class IdentifiableTypeBinding extends ManagedTypeBinding {
+	protected final IdentifiableTypeMetadata typeMetadata;
 	protected final IdentifiableTypeBinding superTypeBinding;
 	protected final IdentifiableTypeMetadata superTypeMetadata;
 
@@ -39,7 +40,8 @@ public abstract class IdentifiableTypeBinding extends ManagedTypeBinding {
 			BindingOptions bindingOptions,
 			BindingState bindingState,
 			BindingContext bindingContext) {
-		super( typeMetadata, bindingOptions, bindingState, bindingContext );
+		super( typeMetadata.getClassDetails(), bindingOptions, bindingState, bindingContext );
+		this.typeMetadata = typeMetadata;
 		this.superTypeBinding = superTypeBinding;
 		this.superTypeMetadata = superTypeBinding == null ? null : superTypeBinding.getTypeMetadata();
 
@@ -47,9 +49,8 @@ public abstract class IdentifiableTypeBinding extends ManagedTypeBinding {
 		this.attributeBindings = CollectionHelper.linkedMapOfSize( typeMetadata.getNumberOfAttributes() );
 	}
 
-	@Override
 	public IdentifiableTypeMetadata getTypeMetadata() {
-		return (IdentifiableTypeMetadata) super.getTypeMetadata();
+		return typeMetadata;
 	}
 
 	public IdentifiableTypeMetadata getSuperTypeMetadata() {

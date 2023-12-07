@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
-import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
@@ -23,7 +22,6 @@ import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
-import jakarta.persistence.Access;
 import jakarta.persistence.AccessType;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.ExcludeDefaultListeners;
@@ -56,7 +54,7 @@ public abstract class AbstractIdentifiableTypeMetadata
 		this.hierarchy = hierarchy;
 		this.superType = null;
 
-		this.accessType = determineAccessType( accessType );
+		this.accessType = CategorizationHelper.determineAccessType( classDetails, accessType );
 	}
 
 
@@ -72,7 +70,7 @@ public abstract class AbstractIdentifiableTypeMetadata
 		this.hierarchy = hierarchy;
 		this.superType = superType;
 
-		this.accessType = determineAccessType( superType.getAccessType() );
+		this.accessType = CategorizationHelper.determineAccessType( classDetails, superType.getAccessType() );
 	}
 
 	protected void postInstantiate(HierarchyTypeConsumer typeConsumer) {
@@ -122,15 +120,6 @@ public abstract class AbstractIdentifiableTypeMetadata
 			}
 		} );
 
-	}
-
-	private AccessType determineAccessType(AccessType defaultAccessType) {
-		final AnnotationUsage<Access> annotation = getClassDetails().getAnnotationUsage( JpaAnnotations.ACCESS );
-		if ( annotation != null ) {
-			return annotation.getAttributeValue( "value" );
-		}
-
-		return defaultAccessType;
 	}
 
 	private void addSubclass(IdentifiableTypeMetadata subclass) {

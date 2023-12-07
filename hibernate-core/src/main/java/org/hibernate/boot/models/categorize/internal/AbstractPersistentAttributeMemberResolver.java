@@ -14,7 +14,6 @@ import java.util.function.Function;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.AllMemberConsumer;
-import org.hibernate.boot.models.categorize.spi.ModelCategorizationContext;
 import org.hibernate.boot.models.categorize.spi.PersistentAttributeMemberResolver;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
@@ -45,21 +44,18 @@ public abstract class AbstractPersistentAttributeMemberResolver implements Persi
 	 * @param transientMethodChecker Check whether a method is annotated as @Transient
 	 * @param classDetails The Jandex ClassInfo describing the type for which to resolve members
 	 * @param classLevelAccessType The AccessType determined for the class default
-	 * @param processingContext The local context
 	 */
 	protected abstract List<MemberDetails> resolveAttributesMembers(
 			Function<FieldDetails,Boolean> transientFieldChecker,
 			Function<MethodDetails,Boolean> transientMethodChecker,
 			ClassDetails classDetails,
-			AccessType classLevelAccessType,
-			ModelCategorizationContext processingContext);
+			AccessType classLevelAccessType);
 
 	@Override
 	public List<MemberDetails> resolveAttributesMembers(
 			ClassDetails classDetails,
 			AccessType classLevelAccessType,
-			AllMemberConsumer memberConsumer,
-			ModelCategorizationContext processingContext) {
+			AllMemberConsumer memberConsumer) {
 
 		final Set<FieldDetails> transientFields = new HashSet<>();
 		final Set<MethodDetails> transientMethods = new HashSet<>();
@@ -67,16 +63,14 @@ public abstract class AbstractPersistentAttributeMemberResolver implements Persi
 				transientFields::add,
 				transientMethods::add,
 				classDetails,
-				memberConsumer,
-				processingContext
+				memberConsumer
 		);
 
 		return resolveAttributesMembers(
 				transientFields::contains,
 				transientMethods::contains,
 				classDetails,
-				classLevelAccessType,
-				processingContext
+				classLevelAccessType
 		);
 	}
 
@@ -84,8 +78,7 @@ public abstract class AbstractPersistentAttributeMemberResolver implements Persi
 			final Consumer<FieldDetails> transientFieldConsumer,
 			final Consumer<MethodDetails> transientMethodConsumer,
 			ClassDetails classDetails,
-			AllMemberConsumer memberConsumer,
-			@SuppressWarnings("unused") ModelCategorizationContext processingContext) {
+			AllMemberConsumer memberConsumer) {
 		final List<FieldDetails> fields = classDetails.getFields();
 		for ( int i = 0; i < fields.size(); i++ ) {
 			final FieldDetails fieldDetails = fields.get( i );

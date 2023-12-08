@@ -231,6 +231,7 @@ import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import static java.lang.Integer.parseInt;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_DATE;
 import static java.time.format.DateTimeFormatter.ISO_LOCAL_TIME;
 import static java.util.Arrays.asList;
@@ -1493,7 +1494,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				throw new SyntaxException( "Position based 'order by' is not allowed in 'over' or 'within group' clauses" );
 			}
 
-			final int position = Integer.parseInt( child.getText() );
+			final int position = parseInt( child.getText() );
 
 			// make sure this selection exists
 			final SqmAliasedNode<?> nodeByPosition;
@@ -2855,6 +2856,60 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
+	public Object visitAbsExpression(HqlParser.AbsExpressionContext ctx) {
+		final SqmExpression<?> arg = (SqmExpression<?>) ctx.expression().accept( this );
+		return getFunctionDescriptor("abs").generateSqmExpression(
+				arg,
+				null,
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
+	public Object visitNormExpression(HqlParser.NormExpressionContext ctx) {
+		final SqmExpression<?> arg = (SqmExpression<?>) ctx.expression().accept( this );
+		int p = ctx.INTEGER_LITERAL() == null ? 2 : parseInt( ctx.INTEGER_LITERAL().getText() );
+		if ( arg instanceof SqmBinaryArithmetic
+				&& ((SqmBinaryArithmetic<?>) arg).getOperator() == BinaryArithmeticOperator.SUBTRACT ) {
+			final SqmFunctionDescriptor function;
+			switch (p) {
+				case 1:
+					function = getFunctionDescriptor("l1_distance");
+					break;
+				case 2:
+					function = getFunctionDescriptor("l2_distance");
+					break;
+				default:
+					throw new SemanticException("unsupported norm: " + p);
+			}
+			if ( function == null ) {
+				throw new SemanticException("hibernate-vector is not available");
+			}
+			return function.generateSqmExpression(
+					asList( ((SqmBinaryArithmetic<?>) arg).getLeftHandOperand(),
+							((SqmBinaryArithmetic<?>) arg).getRightHandOperand() ),
+					resolveExpressibleTypeBasic(Double.class),
+					creationContext.getQueryEngine()
+			);
+		}
+		else {
+			if ( p != 2 ) {
+				// TODO: the L1 norm could be implemented as the l1_distance() from zero
+				throw new SemanticException("unsupported norm: " + p);
+			}
+			final SqmFunctionDescriptor function = getFunctionDescriptor("vector_norm");
+			if ( function == null ) {
+				throw new SemanticException("hibernate-vector is not available");
+			}
+			return function.generateSqmExpression(
+					arg,
+					resolveExpressibleTypeBasic(Double.class),
+					creationContext.getQueryEngine()
+			);
+		}
+	}
+
+	@Override
 	public SqmExpression<?> visitConcatenationExpression(HqlParser.ConcatenationExpressionContext ctx) {
 		if ( ctx.getChildCount() != 3 ) {
 			throw new SyntaxException( "Expecting two operands to the '||' operator" );
@@ -3489,8 +3544,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	private static LocalTime localTime(HqlParser.TimeContext ctx) {
-		final int hour = Integer.parseInt( ctx.hour().getText() );
-		final int minute = Integer.parseInt( ctx.minute().getText() );
+		final int hour = parseInt( ctx.hour().getText() );
+		final int minute = parseInt( ctx.minute().getText() );
 		final HqlParser.SecondContext secondContext = ctx.second();
 		if ( secondContext != null ) {
 			final String secondText = secondContext.getText();
@@ -3499,7 +3554,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				return LocalTime.of(
 						hour,
 						minute,
-						Integer.parseInt( secondText )
+						parseInt( secondText )
 				);
 			}
 			else {
@@ -3507,8 +3562,8 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				return LocalTime.of(
 						hour,
 						minute,
-						Integer.parseInt( secondText.substring( 0, index ) ),
-						Integer.parseInt( secondFractions ) * (int) Math.pow( 10, 9 - secondFractions.length() )
+						parseInt( secondText.substring( 0, index ) ),
+						parseInt( secondFractions ) * (int) Math.pow( 10, 9 - secondFractions.length() )
 				);
 			}
 		}
@@ -3519,33 +3574,33 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	private static LocalDate localDate(HqlParser.DateContext ctx) {
 		return LocalDate.of(
-				Integer.parseInt( ctx.year().getText() ),
-				Integer.parseInt( ctx.month().getText() ),
-				Integer.parseInt( ctx.day().getText() )
+				parseInt( ctx.year().getText() ),
+				parseInt( ctx.month().getText() ),
+				parseInt( ctx.day().getText() )
 		);
 	}
 
 	private static ZoneOffset zoneOffset(HqlParser.OffsetContext offset) {
 		final int factor = ( (TerminalNode) offset.getChild( 0 ) ).getSymbol().getType() == PLUS ? 1 : -1;
-		final int hour = factor * Integer.parseInt( offset.hour().getText() );
+		final int hour = factor * parseInt( offset.hour().getText() );
 		if ( offset.getChildCount() == 2 ) {
 			return ZoneOffset.ofHours( hour );
 		}
 		return ZoneOffset.ofHoursMinutes(
 				hour,
-				factor * Integer.parseInt( offset.minute().getText() )
+				factor * parseInt( offset.minute().getText() )
 		);
 	}
 
 	private static ZoneOffset zoneOffset(HqlParser.OffsetWithMinutesContext offset) {
 		final int factor = ( (TerminalNode) offset.getChild( 0 ) ).getSymbol().getType() == PLUS ? 1 : -1;
-		final int hour = factor * Integer.parseInt( offset.hour().getText() );
+		final int hour = factor * parseInt( offset.hour().getText() );
 		if ( offset.getChildCount() == 2 ) {
 			return ZoneOffset.ofHours( hour );
 		}
 		return ZoneOffset.ofHoursMinutes(
 				hour,
-				factor * Integer.parseInt( offset.minute().getText() )
+				factor * parseInt( offset.minute().getText() )
 		);
 	}
 
@@ -3754,7 +3809,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		parameterStyle = parameterStyle.withPositional();
 		return resolveParameter(
 				new SqmPositionalParameter<>(
-						Integer.parseInt( ctx.getChild( 1 ).getText() ),
+						parseInt( ctx.getChild( 1 ).getText() ),
 						parameterDeclarationContextStack.getCurrent().isMultiValuedBindingAllowed(),
 						expressibleType,
 						creationContext.getNodeBuilder()

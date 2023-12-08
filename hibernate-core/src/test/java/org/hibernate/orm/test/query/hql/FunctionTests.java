@@ -2200,4 +2200,14 @@ public class FunctionTests {
 				}
 		);
 	}
+
+	@Test
+	public void testAbsOperator(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(15, session.createSelectionQuery("select |-15|", Integer.class).getSingleResult());
+					assertEquals(1.0, session.createSelectionQuery("select |-1.0|", Double.class).getSingleResult());
+				}
+		);
+	}
 }

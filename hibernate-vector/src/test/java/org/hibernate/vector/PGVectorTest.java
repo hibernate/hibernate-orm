@@ -102,11 +102,45 @@ public class PGVectorTest {
 	}
 
 	@Test
+	public void testEuclideanDistanceSugar(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			//tag::euclidean-distance-example[]
+			final float[] vector = new float[]{ 1, 1, 1 };
+			final List<Tuple> results = em.createSelectionQuery( "select e.id, ||e.theVector - :vec|| from VectorEntity e order by e.id", Tuple.class )
+					.setParameter( "vec", vector )
+					.getResultList();
+			//end::euclidean-distance-example[]
+			assertEquals( 2, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertEquals( euclideanDistance( V1, vector ), results.get( 0 ).get( 1, Double.class ), 0D );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertEquals( euclideanDistance( V2, vector ), results.get( 1 ).get( 1, Double.class ), 0D );
+		} );
+	}
+
+	@Test
 	public void testTaxicabDistance(SessionFactoryScope scope) {
 		scope.inTransaction( em -> {
 			//tag::taxicab-distance-example[]
 			final float[] vector = new float[]{ 1, 1, 1 };
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, taxicab_distance(e.theVector, :vec) from VectorEntity e order by e.id", Tuple.class )
+					.setParameter( "vec", vector )
+					.getResultList();
+			//end::taxicab-distance-example[]
+			assertEquals( 2, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertEquals( taxicabDistance( V1, vector ), results.get( 0 ).get( 1, Double.class ), 0D );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertEquals( taxicabDistance( V2, vector ), results.get( 1 ).get( 1, Double.class ), 0D );
+		} );
+	}
+
+	@Test
+	public void testTaxicabDistanceSugar(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			//tag::taxicab-distance-example[]
+			final float[] vector = new float[]{ 1, 1, 1 };
+			final List<Tuple> results = em.createSelectionQuery( "select e.id, ||e.theVector - :vec||1 from VectorEntity e order by e.id", Tuple.class )
 					.setParameter( "vec", vector )
 					.getResultList();
 			//end::taxicab-distance-example[]
@@ -157,6 +191,21 @@ public class PGVectorTest {
 		scope.inTransaction( em -> {
 			//tag::vector-norm-example[]
 			final List<Tuple> results = em.createSelectionQuery( "select e.id, vector_norm(e.theVector) from VectorEntity e order by e.id", Tuple.class )
+					.getResultList();
+			//end::vector-norm-example[]
+			assertEquals( 2, results.size() );
+			assertEquals( 1L, results.get( 0 ).get( 0 ) );
+			assertEquals( euclideanNorm( V1 ), results.get( 0 ).get( 1, Double.class ), 0D );
+			assertEquals( 2L, results.get( 1 ).get( 0 ) );
+			assertEquals( euclideanNorm( V2 ), results.get( 1 ).get( 1, Double.class ), 0D );
+		} );
+	}
+
+	@Test
+	public void testVectorNormSugar(SessionFactoryScope scope) {
+		scope.inTransaction( em -> {
+			//tag::vector-norm-example[]
+			final List<Tuple> results = em.createSelectionQuery( "select e.id, ||e.theVector|| from VectorEntity e order by e.id", Tuple.class )
 					.getResultList();
 			//end::vector-norm-example[]
 			assertEquals( 2, results.size() );

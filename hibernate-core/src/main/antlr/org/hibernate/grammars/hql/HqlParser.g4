@@ -702,6 +702,8 @@ expression
 	| expression multiplicativeOperator expression									# MultiplicationExpression
 	| expression additiveOperator expression										# AdditionExpression
 	| expression DOUBLE_PIPE expression												# ConcatenationExpression
+	| DOUBLE_PIPE expression DOUBLE_PIPE INTEGER_LITERAL?							# NormExpression
+	| PIPE expression PIPE															# AbsExpression
 	;
 
 /**

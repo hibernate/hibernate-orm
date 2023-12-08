@@ -2856,6 +2856,17 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
+	public Object visitPowExpression(HqlParser.PowExpressionContext ctx) {
+		final SqmExpression<?> base = (SqmExpression<?>) ctx.expression(0).accept( this );
+		final SqmExpression<?> power = (SqmExpression<?>) ctx.expression(1).accept( this );
+		return getFunctionDescriptor("power").generateSqmExpression(
+				asList( base, power ),
+				resolveExpressibleTypeBasic(Double.class),
+				creationContext.getQueryEngine()
+		);
+	}
+
+	@Override
 	public Object visitAbsExpression(HqlParser.AbsExpressionContext ctx) {
 		final SqmExpression<?> arg = (SqmExpression<?>) ctx.expression().accept( this );
 		return getFunctionDescriptor("abs").generateSqmExpression(

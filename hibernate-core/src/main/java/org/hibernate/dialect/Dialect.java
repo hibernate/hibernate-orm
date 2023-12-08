@@ -5043,7 +5043,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					length = null;
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					if ( scale != null && scale != 0 ) {
-						throw new IllegalArgumentException("scale has no meaning for floating point numbers");
+						throw new IllegalArgumentException("scale has no meaning for SQL floating point types");
 					}
 					// but if the user explicitly specifies a precision, we need to convert it:
 					if ( precision != null ) {
@@ -5061,7 +5061,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					length = null;
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					if ( scale != null && scale != 0 ) {
-						throw new IllegalArgumentException("scale has no meaning for timestamps");
+						throw new IllegalArgumentException("scale has no meaning for SQL time or timestamp types");
 					}
 					break;
 				case SqlTypes.NUMERIC:

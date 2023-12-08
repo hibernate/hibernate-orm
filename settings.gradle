@@ -224,7 +224,7 @@ dependencyResolutionManagement {
             def informixVersion = version "informix", "4.10.12"
             def mariadbVersion = version "mariadb", "3.3.1"
             def mssqlVersion = version "mssql", "12.2.0.jre11"
-            def mysqlVersion = version "mysql", "8.0.33"
+            def mysqlVersion = version "mysql", "8.2.0"
             def oracleVersion = version "oracle", "23.3.0.23.09"
             def oracleLegacyVersion = version "oracleLegacy", "11.2.0.4"
             def pgsqlVersion = version "pgsql", "42.7.1"

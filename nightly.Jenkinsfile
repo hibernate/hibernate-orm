@@ -165,7 +165,7 @@ stage('Build') {
 									break;
 								case "cockroachdb":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach:v23.1.8').pull()
+										docker.image('cockroachdb/cockroach:v23.1.12').pull()
 									}
 									sh "./docker_db.sh cockroachdb"
 									state[buildEnv.tag]['containerName'] = "cockroach"

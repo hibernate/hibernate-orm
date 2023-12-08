@@ -214,20 +214,23 @@ public abstract class ResultSetMappingBinder {
 			JaxbHbmNativeQueryCollectionLoadReturnType rtnSource,
 			HbmLocalMetadataBuildingContext context,
 			int queryReturnPosition) {
-		final int dot = rtnSource.getRole().lastIndexOf( '.' );
-		if ( dot == -1 ) {
-			throw new MappingException(
-					String.format(
-							Locale.ENGLISH,
-							"Collection attribute for sql query return [%s] not formatted correctly {OwnerClassName.propertyName}",
-							rtnSource.getAlias()
-					),
-					context.getOrigin()
-			);
+		PersistentClass entityBinding = null;
+		int dot = rtnSource.getRole().length();
+		while ( entityBinding == null ) {
+			dot = rtnSource.getRole().lastIndexOf( '.', dot - 1);
+			if ( dot == -1 ) {
+				throw new MappingException(
+						String.format(
+								Locale.ENGLISH,
+								"Collection attribute for sql query return [%s] not formatted correctly {OwnerClassName.propertyName}",
+								rtnSource.getAlias()
+						),
+						context.getOrigin()
+				);
+			}
+			entityBinding = context.findEntityBinding( null, rtnSource.getRole().substring( 0, dot ) );
 		}
-
-		String ownerClassName = context.findEntityBinding( null, rtnSource.getRole().substring( 0, dot ) )
-				.getClassName();
+		String ownerClassName = entityBinding.getClassName();
 		String ownerPropertyName = rtnSource.getRole().substring( dot + 1 );
 
 		return new NativeSQLQueryCollectionReturn(

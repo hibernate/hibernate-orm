@@ -224,7 +224,7 @@ postgresql_16() {
 }
 
 edb() {
-    edb_15
+    edb_16
 }
 
 edb_12() {
@@ -246,6 +246,13 @@ edb_15() {
     # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
     (cd edb; $CONTAINER_CLI build -t edb-test:15 -f edb15.Dockerfile .)
     $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:15
+}
+
+edb_16() {
+    $CONTAINER_CLI rm -f edb || true
+    # We need to build a derived image because the existing image is mainly made for use by a kubernetes operator
+    (cd edb; $CONTAINER_CLI build -t edb-test:16 -f edb16.Dockerfile .)
+    $CONTAINER_CLI run --name edb -e POSTGRES_USER=hibernate_orm_test -e POSTGRES_PASSWORD=hibernate_orm_test -e POSTGRES_DB=hibernate_orm_test -p 5444:5444 -d edb-test:16
 }
 
 db2() {
@@ -936,6 +943,7 @@ if [ -z ${1} ]; then
     echo -e "\tdb2_10_5"
     echo -e "\tdb2_spatial"
     echo -e "\tedb"
+    echo -e "\tedb_16"
     echo -e "\tedb_15"
     echo -e "\tedb_14"
     echo -e "\tedb_12"

@@ -225,7 +225,7 @@ db2() {
 
 db2_11_5() {
     $PRIVILEGED_CLI $CONTAINER_CLI rm -f db2 || true
-    $PRIVILEGED_CLI $CONTAINER_CLI run --name db2 --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false -p 50000:50000 -d ${DB_IMAGE_DB2_11_5:-docker.io/ibmcom/db2:11.5.8.0}
+    $PRIVILEGED_CLI $CONTAINER_CLI run --name db2 --privileged -e DB2INSTANCE=orm_test -e DB2INST1_PASSWORD=orm_test -e DBNAME=orm_test -e LICENSE=accept -e AUTOCONFIG=false -e ARCHIVE_LOGS=false -e TO_CREATE_SAMPLEDB=false -e REPODB=false -p 50000:50000 -d icr.io/db2_community/db2:11.5.9.0
     # Give the container some time to start
     OUTPUT=
     while [[ $OUTPUT != *"INSTANCE"* ]]; do

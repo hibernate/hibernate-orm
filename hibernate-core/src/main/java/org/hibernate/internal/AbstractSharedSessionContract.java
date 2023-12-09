@@ -1063,9 +1063,10 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		if ( Tuple.class.equals( resultClass ) ) {
 			query.setResultTransformer( new NativeQueryTupleTransformer() );
 		}
-		else {
-			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
-		}
+//      why should we add here an Entity automatically: it's a wild guess and erratic most times
+//		else {
+//			query.addEntity( "alias1", resultClass.getName(), LockMode.READ );
+//		}
 	}
 
 	@Override

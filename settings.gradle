@@ -288,7 +288,9 @@ buildCache {
     }
     remote(HttpBuildCache) {
         enabled = true
-        push = settings.ext.populateRemoteBuildCache
+        // Check access key presence to avoid build cache errors on PR builds when access key is not present
+        def accessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY")
+        push = settings.ext.populateRemoteBuildCache && accessKey
         url = 'https://ge.hibernate.org/cache/'
     }
 }

@@ -286,7 +286,7 @@ public class UnionSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected boolean needsDiscriminator() {
+	public boolean needsDiscriminator() {
 		return false;
 	}
 

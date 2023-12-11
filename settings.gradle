@@ -19,8 +19,8 @@ pluginManagement {
 
 plugins {
     id 'org.hibernate.orm.build.env-settings'
-    id 'com.gradle.enterprise' version '3.13.4'
-    id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.11'
+    id 'com.gradle.enterprise' version '3.16'
+    id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.12.1'
 }
 
 // version catalog support

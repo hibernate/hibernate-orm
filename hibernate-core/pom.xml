@@ -10,8 +10,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- NuoDB JARs -->
-        <nuodb-jar.version>24.0.0</nuodb-jar.version>
-        <nuodb-hibernate-jar.version>22.0.1-hib5</nuodb-hibernate-jar.version>
+        <nuodb-jar.version>24.1.2</nuodb-jar.version>
+        <nuodb-hibernate-jar.version>22.0.2-hib5</nuodb-hibernate-jar.version>
 
         <ant.version>1.8.2</ant.version>
         <byte-buddy.version>1.12.18</byte-buddy.version>

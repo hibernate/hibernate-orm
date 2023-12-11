@@ -4360,6 +4360,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect support the {@code conflict} clause for insert statements
+	 * that appear in a CTE?
+	 *
+	 * @return {@code true} if {@code conflict} clause is supported
+	 * @since 6.5
+	 */
+	public boolean supportsConflictClauseForInsertCTE() {
+		return false;
+	}
+
+	/**
 	 * Does this dialect support {@code values} lists of form
 	 * {@code VALUES (1), (2), (3)}?
 	 *
@@ -4378,6 +4389,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean supportsValuesListForInsert() {
 		return true;
+	}
+
+	/**
+	 * Does this dialect support the {@code from} clause for update statements?
+	 *
+	 * @return {@code true} if {@code from} clause is supported
+	 * @since 6.5
+	 */
+	public boolean supportsFromClauseInUpdate() {
+		return false;
 	}
 
 	/**

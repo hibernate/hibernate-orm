@@ -7,9 +7,6 @@
 package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -21,7 +18,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.MutableBoolean;
 import org.hibernate.internal.util.MutableInteger;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
@@ -107,46 +103,16 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 		);
 		assert hierarchyRootTableReference != null;
 
-		final Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions;
-		final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions;
-
-		if ( getDomainParameterXref().getSqmParameterCount() == 0 ) {
-			parameterResolutions = Collections.emptyMap();
-			paramTypeResolutions = Collections.emptyMap();
-		}
-		else {
-			parameterResolutions = new IdentityHashMap<>();
-			paramTypeResolutions = new LinkedHashMap<>();
-		}
-
 		// Use the converter to interpret the where-clause.  We do this for 2 reasons:
 		//		1) the resolved Predicate is ultimately the base for applying restriction to the deletes
 		//		2) we also inspect each ColumnReference that is part of the where-clause to see which
 		//			table it comes from.  if all of the referenced columns (if any at all) are from the root table
 		//			we can perform all of the deletes without using an id-table
-		final MutableBoolean needsIdTableWrapper = new MutableBoolean( false );
-		final Predicate specifiedRestriction = getConverter().visitWhereClause(
-				getSqmDelete().getWhereClause(),
-				columnReference -> {
-					if ( ! hierarchyRootTableReference.getIdentificationVariable().equals( columnReference.getQualifier() ) ) {
-						needsIdTableWrapper.setValue( true );
-					}
-				},
-				(sqmParameter, mappingType, jdbcParameters) -> {
-					parameterResolutions.computeIfAbsent(
-							sqmParameter,
-							k -> new ArrayList<>( 1 )
-					).add( jdbcParameters );
-					paramTypeResolutions.put( sqmParameter, mappingType );
-				}
-		);
+		final Predicate specifiedRestriction = getConverter().visitWhereClause( getSqmDelete().getWhereClause() );
 
 		final PredicateCollector predicateCollector = new PredicateCollector( specifiedRestriction );
 		entityDescriptor.applyBaseRestrictions(
-				(filterPredicate) -> {
-					needsIdTableWrapper.setValue( true );
-					predicateCollector.applyPredicate( filterPredicate );
-				},
+				predicateCollector,
 				deletingTableGroup,
 				true,
 				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
@@ -155,12 +121,18 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 		);
 
 		getConverter().pruneTableGroupJoins();
+		final ColumnReferenceCheckingSqlAstWalker walker = new ColumnReferenceCheckingSqlAstWalker(
+				hierarchyRootTableReference.getIdentificationVariable()
+		);
+		if ( predicateCollector.getPredicate() != null ) {
+			predicateCollector.getPredicate().accept( walker );
+		}
 
 		// We need an id table if we want to delete from an intermediate table to avoid FK violations
 		// The intermediate table has a FK to the root table, so we can't delete from the root table first
 		// Deleting from the intermediate table first also isn't possible,
 		// because that is the source for deletion in other tables, hence we need an id table
-		final boolean needsIdTable = needsIdTableWrapper.getValue()
+		final boolean needsIdTable = !walker.isAllColumnReferencesFromIdentificationVariable()
 				|| entityDescriptor != entityDescriptor.getRootEntityDescriptor();
 
 		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext );
@@ -169,8 +141,8 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 			return executeWithIdTable(
 					predicateCollector.getPredicate(),
 					deletingTableGroup,
-					parameterResolutions,
-					paramTypeResolutions,
+					getConverter().getJdbcParamsBySqmParam(),
+					getConverter().getSqmParameterMappingModelExpressibleResolutions(),
 					executionContextAdapter
 			);
 		}
@@ -178,8 +150,8 @@ public class RestrictedDeleteExecutionDelegate extends AbstractDeleteExecutionDe
 			return executeWithoutIdTable(
 					predicateCollector.getPredicate(),
 					deletingTableGroup,
-					parameterResolutions,
-					paramTypeResolutions,
+					getConverter().getJdbcParamsBySqmParam(),
+					getConverter().getSqmParameterMappingModelExpressibleResolutions(),
 					getConverter().getSqlExpressionResolver(),
 					executionContextAdapter
 			);

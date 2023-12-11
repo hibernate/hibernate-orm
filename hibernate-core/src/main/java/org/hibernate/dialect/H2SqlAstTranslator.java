@@ -11,7 +11,9 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
@@ -23,13 +25,17 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
 
@@ -78,6 +84,44 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 				() -> super.visitStandardTableInsert( tableInsert ),
 				getSessionFactory()
 		);
+	}
+
+	@Override
+	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
+		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
+			// Render plain insert statement and possibly run into unique constraint violation
+			super.visitInsertStatementOnly( statement );
+		}
+		else {
+			visitInsertStatementEmulateMerge( statement );
+		}
+	}
+
+	@Override
+	protected void visitUpdateStatementOnly(UpdateStatement statement) {
+		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			visitUpdateStatementEmulateMerge( statement );
+		}
+		else {
+			super.visitUpdateStatementOnly( statement );
+		}
+	}
+
+	@Override
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		super.renderDmlTargetTableExpression( tableReference );
+		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause != null ) {
+			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
+				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+			}
+		}
 	}
 
 	@Override
@@ -267,10 +311,9 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from dual";
+	protected String getDual() {
+		return "dual";
 	}
-
 
 	private boolean supportsOffsetFetchClause() {
 		return true;

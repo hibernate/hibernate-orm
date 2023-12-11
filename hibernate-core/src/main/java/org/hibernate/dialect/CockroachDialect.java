@@ -573,6 +573,11 @@ public class CockroachDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsConflictClauseForInsertCTE() {
+		return true;
+	}
+
+	@Override
 	public String getNoColumnsInsertString() {
 		return "default values";
 	}
@@ -1160,4 +1165,14 @@ public class CockroachDialect extends Dialect {
 //			RuntimeModelCreationContext runtimeModelCreationContext) {
 //		return new CteInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 //	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
+	}
 }

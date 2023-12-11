@@ -146,13 +146,14 @@ public class AltibaseSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 		emulateQueryPartTableReferenceColumnAliasing( tableReference );
 	}
 
-	protected String getFromDual() {
-		return " from dual";
+	@Override
+	protected String getDual() {
+		return "dual";
 	}
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return " from " + getDual();
 	}
 
 	@Override

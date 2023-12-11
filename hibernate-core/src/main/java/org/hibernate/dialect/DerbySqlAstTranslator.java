@@ -233,13 +233,13 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from (values 0) dual";
+	protected String getDual() {
+		return "(values 0)";
 	}
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return " from " + getDual() + " dual";
 	}
 
 	@Override

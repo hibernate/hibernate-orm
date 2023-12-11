@@ -733,6 +733,11 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public boolean supportsConflictClauseForInsertCTE() {
+		return getVersion().isSameOrAfter( 9, 5 );
+	}
+
+	@Override
 	public SequenceSupport getSequenceSupport() {
 		return getVersion().isBefore( 8, 2 )
 				? PostgreSQLLegacySequenceSupport.LEGACY_INSTANCE
@@ -1466,5 +1471,15 @@ public class PostgreSQLLegacyDialect extends Dialect {
 	public int getDefaultIntervalSecondScale() {
 		// The maximum scale for `interval second` is 6 unfortunately
 		return 6;
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
 	}
 }

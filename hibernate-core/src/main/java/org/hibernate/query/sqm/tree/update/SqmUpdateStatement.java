@@ -6,7 +6,6 @@
  */
 package org.hibernate.query.sqm.tree.update;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -176,10 +175,14 @@ public class SqmUpdateStatement<T>
 	}
 
 	public <Y> void applyAssignment(SqmPath<Y> targetPath, SqmExpression<? extends Y> value) {
+		applyAssignment( new SqmAssignment<>( targetPath, value ) );
+	}
+
+	public <Y> void applyAssignment(SqmAssignment<Y> assignment) {
 		if ( setClause == null ) {
 			setClause = new SqmSetClause();
 		}
-		setClause.addAssignment( new SqmAssignment<>( targetPath, value ) );
+		setClause.addAssignment( assignment );
 	}
 
 	@Override
@@ -191,20 +194,8 @@ public class SqmUpdateStatement<T>
 		}
 		sb.append( getTarget().getEntityName() );
 		sb.append( ' ' ).append( getTarget().resolveAlias() );
-		sb.append( " set " );
-		final List<SqmAssignment<?>> assignments = setClause.getAssignments();
-		appendAssignment( assignments.get( 0 ), sb );
-		for ( int i = 1; i < assignments.size(); i++ ) {
-			sb.append( ", " );
-			appendAssignment( assignments.get( i ), sb );
-		}
+		setClause.appendHqlString( sb );
 
 		super.appendHqlString( sb );
-	}
-
-	private static void appendAssignment(SqmAssignment<?> sqmAssignment, StringBuilder sb) {
-		sqmAssignment.getTargetPath().appendHqlString( sb );
-		sb.append( " = " );
-		sqmAssignment.getValue().appendHqlString( sb );
 	}
 }

@@ -131,60 +131,20 @@ public class TableBasedUpdateHandler
 		);
 		assert hierarchyRootTableReference != null;
 
-		final Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions;
-		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
-			parameterResolutions = Collections.emptyMap();
-		}
-		else {
-			parameterResolutions = new IdentityHashMap<>();
-		}
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// visit the set-clause using our special converter, collecting
 		// information about the assignments
 
-		final List<Assignment> assignments = new ArrayList<>();
-		final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions = new LinkedHashMap<>();
-
-		converterDelegate.visitSetClause(
-				getSqmDeleteOrUpdateStatement().getSetClause(),
-				assignments::add,
-				(sqmParameter, mappingType, jdbcParameters) -> {
-					parameterResolutions.computeIfAbsent(
-							sqmParameter,
-							k -> new ArrayList<>( 1 )
-					).add( jdbcParameters );
-					paramTypeResolutions.put( sqmParameter, mappingType );
-				}
-		);
+		final List<Assignment> assignments = converterDelegate.visitSetClause( getSqmDeleteOrUpdateStatement().getSetClause() );
 		converterDelegate.addVersionedAssignment( assignments::add, getSqmDeleteOrUpdateStatement() );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// visit the where-clause using our special converter, collecting information
 		// about the restrictions
 
-		final Predicate providedPredicate;
-		final SqmWhereClause whereClause = getSqmUpdate().getWhereClause();
-		if ( whereClause == null || whereClause.getPredicate() == null ) {
-			providedPredicate = null;
-		}
-		else {
-			providedPredicate = converterDelegate.visitWhereClause(
-					whereClause,
-					columnReference -> {},
-					(sqmParameter, mappingType, jdbcParameters) -> {
-						parameterResolutions.computeIfAbsent(
-								sqmParameter,
-								k -> new ArrayList<>( 1 )
-						).add( jdbcParameters );
-						paramTypeResolutions.put( sqmParameter, mappingType );
-					}
-
-			);
-			assert providedPredicate != null;
-		}
-
-		final PredicateCollector predicateCollector = new PredicateCollector( providedPredicate );
+		final PredicateCollector predicateCollector = new PredicateCollector(
+				converterDelegate.visitWhereClause( getSqmUpdate().getWhereClause() )
+		);
 
 		entityDescriptor.applyBaseRestrictions(
 				predicateCollector::applyPredicate,
@@ -217,8 +177,6 @@ public class TableBasedUpdateHandler
 				tableReferenceByAlias,
 				assignments,
 				predicateCollector.getPredicate(),
-				parameterResolutions,
-				paramTypeResolutions,
 				executionContext
 		);
 	}
@@ -233,8 +191,6 @@ public class TableBasedUpdateHandler
 			Map<String, TableReference> tableReferenceByAlias,
 			List<Assignment> assignments,
 			Predicate suppliedPredicate,
-			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
-			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			DomainQueryExecutionContext executionContext) {
 		return new UpdateExecutionDelegate(
 				sqmConverter,
@@ -246,8 +202,6 @@ public class TableBasedUpdateHandler
 				tableReferenceByAlias,
 				assignments,
 				suppliedPredicate,
-				parameterResolutions,
-				paramTypeResolutions,
 				executionContext
 		);
 	}

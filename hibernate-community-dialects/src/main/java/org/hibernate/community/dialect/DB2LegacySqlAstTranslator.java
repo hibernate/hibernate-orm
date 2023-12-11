@@ -13,8 +13,10 @@ import org.hibernate.LockMode;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -28,10 +30,12 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -344,10 +348,38 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
 		final boolean closeWrapper = renderReturningClause( statement );
-		super.visitInsertStatementOnly( statement );
+		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
+			// Render plain insert statement and possibly run into unique constraint violation
+			super.visitInsertStatementOnly( statement );
+		}
+		else {
+			visitInsertStatementEmulateMerge( statement );
+		}
 		if ( closeWrapper ) {
 			appendSql( ')' );
 		}
+	}
+
+	@Override
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause != null ) {
+			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
+				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+			}
+		}
+	}
+
+	@Override
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		super.renderDmlTargetTableExpression( tableReference );
+		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
+		renderFromClauseExcludingDmlTargetReference( statement );
 	}
 
 	protected boolean renderReturningClause(MutationStatement statement) {
@@ -497,13 +529,13 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from sysibm.dual";
+	protected String getDual() {
+		return "sysibm.dual";
 	}
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return " from " + getDual();
 	}
 
 	@Override

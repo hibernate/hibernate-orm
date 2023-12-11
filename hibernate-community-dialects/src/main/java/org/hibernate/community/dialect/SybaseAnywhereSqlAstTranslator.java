@@ -116,14 +116,7 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 				appendSql( " )" );
 
 				registerAffectedTable( tableReference );
-				final Clause currentClause = getClauseStack().getCurrent();
-				if ( rendersTableReferenceAlias( currentClause ) ) {
-					final String identificationVariable = tableReference.getIdentificationVariable();
-					if ( identificationVariable != null ) {
-						appendSql( ' ' );
-						appendSql( identificationVariable );
-					}
-				}
+				renderTableReferenceIdentificationVariable( tableReference );
 			}
 			else {
 				super.renderNamedTableReference( tableReference, lockMode );
@@ -248,12 +241,12 @@ public class SybaseAnywhereSqlAstTranslator<T extends JdbcOperation> extends Abs
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from sys.dummy";
+	protected String getDual() {
+		return "sys.dummy";
 	}
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return " from " + getDual();
 	}
 }

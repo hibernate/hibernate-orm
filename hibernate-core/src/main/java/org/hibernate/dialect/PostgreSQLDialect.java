@@ -787,6 +787,10 @@ public class PostgreSQLDialect extends Dialect {
 	public boolean supportsNonQueryWithCTE() {
 		return true;
 	}
+	@Override
+	public boolean supportsConflictClauseForInsertCTE() {
+		return true;
+	}
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
@@ -1546,5 +1550,15 @@ public class PostgreSQLDialect extends Dialect {
 	public int getDefaultIntervalSecondScale() {
 		// The maximum scale for `interval second` is 6 unfortunately
 		return 6;
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
 	}
 }

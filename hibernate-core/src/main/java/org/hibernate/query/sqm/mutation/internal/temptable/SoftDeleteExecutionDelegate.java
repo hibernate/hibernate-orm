@@ -8,10 +8,7 @@ package org.hibernate.query.sqm.mutation.internal.temptable;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 import org.hibernate.boot.model.internal.SoftDeleteHelper;
@@ -20,7 +17,6 @@ import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.internal.util.MutableBoolean;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
@@ -42,7 +38,6 @@ import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
-import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.from.MutatingTableReferenceGroupWrapper;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -55,7 +50,6 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
@@ -99,26 +93,12 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 				.getEntityDescriptor( targetEntityName );
 
 		final EntityMappingType rootEntityDescriptor = targetEntityDescriptor.getRootEntityDescriptor();
-		final boolean targetIsHierarchyRoot = rootEntityDescriptor == targetEntityDescriptor;
 
 		// determine if we need to use a sub-query for matching ids -
 		//		1. if the target is not the root we will
 		//		2. if the supplied predicate (if any) refers to columns from a table
 		//			other than the identifier table we will
-		final MutableBoolean needsSubQueryRef = new MutableBoolean( !targetIsHierarchyRoot );
-
 		final SqmJdbcExecutionContextAdapter executionContext = omittingLockingAndPaging( domainQueryExecutionContext );
-
-		final Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions;
-		final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions;
-		if ( getDomainParameterXref().getSqmParameterCount() == 0 ) {
-			parameterResolutions = Collections.emptyMap();
-			paramTypeResolutions = Collections.emptyMap();
-		}
-		else {
-			parameterResolutions = new IdentityHashMap<>();
-			paramTypeResolutions = new LinkedHashMap<>();
-		}
 
 		final TableGroup deletingTableGroup = getConverter().getMutatingTableGroup();
 		final TableDetails softDeleteTable = rootEntityDescriptor.getSoftDeleteTableDetails();
@@ -129,29 +109,11 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 		assert rootTableReference != null;
 
 		// NOTE : `converter.visitWhereClause` already applies the soft-delete restriction
-		final Predicate specifiedRestriction = getConverter().visitWhereClause(
-				getSqmDelete().getWhereClause(),
-				columnReference -> {
-					if ( !rootTableReference.getIdentificationVariable().equals( columnReference.getQualifier() ) ) {
-						// the predicate referred to a column from a table other than hierarchy identifier table
-						needsSubQueryRef.setValue( true );
-					}
-				},
-				(sqmParameter, mappingType, jdbcParameters) -> {
-					parameterResolutions.computeIfAbsent(
-							sqmParameter,
-							k -> new ArrayList<>( 1 )
-					).add( jdbcParameters );
-					paramTypeResolutions.put( sqmParameter, mappingType );
-				}
-		);
+		final Predicate specifiedRestriction = getConverter().visitWhereClause( getSqmDelete().getWhereClause() );
 
 		final PredicateCollector predicateCollector = new PredicateCollector( specifiedRestriction );
 		targetEntityDescriptor.applyBaseRestrictions(
-				(filterPredicate) -> {
-					needsSubQueryRef.setValue( true );
-					predicateCollector.applyPredicate( filterPredicate );
-				},
+				predicateCollector,
 				deletingTableGroup,
 				true,
 				executionContext.getSession().getLoadQueryInfluencers().getEnabledFilters(),
@@ -160,26 +122,33 @@ public class SoftDeleteExecutionDelegate extends AbstractDeleteExecutionDelegate
 		);
 
 		getConverter().pruneTableGroupJoins();
+		final ColumnReferenceCheckingSqlAstWalker walker = new ColumnReferenceCheckingSqlAstWalker(
+				rootTableReference.getIdentificationVariable()
+		);
+		if ( predicateCollector.getPredicate() != null ) {
+			predicateCollector.getPredicate().accept( walker );
+		}
 
 		final JdbcParameterBindings jdbcParameterBindings = SqmUtil.createJdbcParameterBindings(
 				executionContext.getQueryParameterBindings(),
 				getDomainParameterXref(),
 				SqmUtil.generateJdbcParamsXref(
 						getDomainParameterXref(),
-						() -> parameterResolutions
+						getConverter()::getJdbcParamsBySqmParam
 				),
 				getSessionFactory().getRuntimeMetamodels().getMappingMetamodel(),
 				navigablePath -> deletingTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressible<T>) paramTypeResolutions.get(parameter);
+						return (MappingModelExpressible<T>) getConverter().getSqmParameterMappingModelExpressibleResolutions().get(parameter);
 					}
 				},
 				executionContext.getSession()
 		);
 
-		final boolean needsSubQuery = needsSubQueryRef.getValue();
+		final boolean needsSubQuery = !walker.isAllColumnReferencesFromIdentificationVariable()
+				|| targetEntityDescriptor != rootEntityDescriptor;
 		if ( needsSubQuery ) {
 			if ( getSessionFactory().getJdbcServices().getDialect().supportsSubqueryOnMutatingTable() ) {
 				return performDeleteWithSubQuery(

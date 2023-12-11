@@ -514,4 +514,14 @@ public class SybaseDialect extends AbstractTransactSQLDialect {
 				? AbstractTransactSQLIdentityColumnSupport.INSTANCE
 				: SybaseJconnIdentityColumnSupport.INSTANCE;
 	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
+	}
 }

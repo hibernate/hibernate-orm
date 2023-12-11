@@ -21,6 +21,7 @@ import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.HANACloudColumnStoreDialect;
 import org.hibernate.dialect.HANAColumnStoreDialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HANARowStoreDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
@@ -70,6 +71,8 @@ public class DefaultDialectSelector implements DialectSelector {
 				return findCommunityDialect( name );
 			case "H2":
 				return H2Dialect.class;
+			case "HANA":
+				return HANADialect.class;
 			case "HANACloudColumnStore":
 				return HANACloudColumnStoreDialect.class;
 			case "HANAColumnStore":

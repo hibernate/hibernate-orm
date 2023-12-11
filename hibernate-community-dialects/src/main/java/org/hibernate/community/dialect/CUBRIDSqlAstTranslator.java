@@ -82,14 +82,14 @@ public class CUBRIDSqlAstTranslator<T extends JdbcOperation> extends AbstractSql
 	}
 
 	@Override
-	protected String getFromDual() {
+	protected String getDual() {
 		//TODO: is this really needed?
 		//TODO: would "from table({0})" be better?
-		return " from db_root";
+		return "db_root";
 	}
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return " from " + getDual();
 	}
 }

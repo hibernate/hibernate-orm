@@ -98,15 +98,10 @@ public class CteUpdateHandler extends AbstractCteMutationHandler implements Upda
 		// visit the set-clause using our special converter, collecting
 		// information about the assignments
 		final SqmSetClause setClause = updateStatement.getSetClause();
-		final List<Assignment> assignments = new ArrayList<>( setClause.getAssignments().size() );
-
-		sqmConverter.visitSetClause(
-				setClause,
-				assignments::add,
-				(sqmParam, mappingType, jdbcParameters) -> {
-					parameterResolutions.put( sqmParam, jdbcParameters );
-				}
-		);
+		final List<Assignment> assignments = sqmConverter.visitSetClause( setClause );
+		for ( Map.Entry<SqmParameter<?>, List<List<JdbcParameter>>> entry : sqmConverter.getJdbcParamsBySqmParam().entrySet() ) {
+			parameterResolutions.put( entry.getKey(), entry.getValue().get( entry.getValue().size() - 1 ) );
+		}
 		sqmConverter.addVersionedAssignment( assignments::add, updateStatement );
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

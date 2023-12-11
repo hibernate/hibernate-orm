@@ -7,12 +7,15 @@
 package org.hibernate.query.sqm.tree.insert;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.hibernate.query.criteria.JpaConflictClause;
+import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
@@ -22,6 +25,9 @@ import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
+import jakarta.persistence.criteria.Path;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * Convenience base class for InsertSqmStatement implementations.
  *
@@ -29,6 +35,7 @@ import org.hibernate.query.sqm.tree.from.SqmRoot;
  */
 public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatement<T> implements SqmInsertStatement<T> {
 	private List<SqmPath<?>> insertionTargetPaths;
+	private @Nullable SqmConflictClause<T> conflictClause;
 
 	protected AbstractSqmInsertStatement(SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super( querySource, nodeBuilder );
@@ -38,6 +45,7 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 		super( targetRoot, querySource, nodeBuilder );
 	}
 
+	@Deprecated(forRemoval = true)
 	protected AbstractSqmInsertStatement(
 			NodeBuilder builder,
 			SqmQuerySource querySource,
@@ -45,8 +53,20 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 			Map<String, SqmCteStatement<?>> cteStatements,
 			SqmRoot<T> target,
 			List<SqmPath<?>> insertionTargetPaths) {
+		this( builder, querySource, parameters, cteStatements, target, insertionTargetPaths, null );
+	}
+
+	protected AbstractSqmInsertStatement(
+			NodeBuilder builder,
+			SqmQuerySource querySource,
+			Set<SqmParameter<?>> parameters,
+			Map<String, SqmCteStatement<?>> cteStatements,
+			SqmRoot<T> target,
+			List<SqmPath<?>> insertionTargetPaths,
+			SqmConflictClause<T> conflictClause) {
 		super( builder, querySource, parameters, cteStatements, target );
 		this.insertionTargetPaths = insertionTargetPaths;
+		this.conflictClause = conflictClause;
 	}
 
 	protected List<SqmPath<?>> copyInsertionTargetPaths(SqmCopyContext context) {
@@ -69,8 +89,16 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 				: Collections.unmodifiableList( insertionTargetPaths );
 	}
 
-	public void setInsertionTargetPaths(List<SqmPath<?>> insertionTargetPaths) {
-		this.insertionTargetPaths = insertionTargetPaths;
+	@Override
+	public SqmInsertStatement<T> setInsertionTargetPaths(Path<?>... insertionTargetPaths) {
+		return setInsertionTargetPaths( Arrays.asList( insertionTargetPaths ) );
+	}
+
+	@Override
+	public SqmInsertStatement<T> setInsertionTargetPaths(List<? extends Path<?>> insertionTargetPaths) {
+		//noinspection unchecked
+		this.insertionTargetPaths = (List<SqmPath<?>>) insertionTargetPaths;
+		return this;
 	}
 
 	public void addInsertTargetStateField(SqmPath<?> stateField) {
@@ -85,6 +113,27 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 		if ( insertionTargetPaths != null ) {
 			insertionTargetPaths.forEach( consumer );
 		}
+	}
+
+	@Override
+	public SqmConflictClause<T> createConflictClause() {
+		return new SqmConflictClause<>( this );
+	}
+
+	@Override
+	public @Nullable SqmConflictClause<T> getConflictClause() {
+		return conflictClause;
+	}
+
+	@Override
+	public JpaConflictClause<T> onConflict() {
+		return this.conflictClause = createConflictClause();
+	}
+
+	@Override
+	public JpaCriteriaInsert<T> onConflict(@Nullable JpaConflictClause<T> conflictClause) {
+		this.conflictClause = (SqmConflictClause<T>) conflictClause;
+		return this;
 	}
 
 	@Override

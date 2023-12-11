@@ -49,6 +49,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -84,6 +86,7 @@ import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.query.sqm.TemporalUnit.NANOSECOND;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.INTEGER;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -700,6 +703,21 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return new TemplatedViolatedConstraintNameExtractor(
+				sqle -> {
+					switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
+						case 2627:
+						case 2601:
+							return extractUsingTemplate( "'", "'", sqle.getMessage() );
+						default:
+							return null;
+					}
+				}
+		);
+	}
+
+	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
@@ -712,6 +730,13 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 				case 1222:
 					return new LockTimeoutException( message, sqlException, sql );
 				case 2627:
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+					);
 				case 2601:
 					return new ConstraintViolationException(
 							message,
@@ -1105,5 +1130,15 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 			SessionFactoryImplementor factory) {
 		final SQLServerSqlAstTranslator<JdbcOperation> translator = new SQLServerSqlAstTranslator<>( factory, optionalTableUpdate );
 		return translator.createMergeOperation( optionalTableUpdate );
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
 	}
 }

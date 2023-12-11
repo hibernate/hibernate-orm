@@ -65,7 +65,11 @@ public class PrimaryKey extends Constraint {
 	}
 
 	public String sqlConstraintString(Dialect dialect) {
-		StringBuilder buf = new StringBuilder("primary key (");
+		StringBuilder buf = new StringBuilder();
+		if ( orderingUniqueKey != null && orderingUniqueKey.isNameExplicit() ) {
+			buf.append( "constraint " ).append( orderingUniqueKey.getName() ).append( ' ' );
+		}
+		buf.append( "primary key (" );
 		boolean first = true;
 		for ( Column column : getColumns() ) {
 			if ( first ) {

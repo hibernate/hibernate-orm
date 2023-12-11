@@ -42,8 +42,11 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -87,6 +90,7 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import jakarta.persistence.TemporalType;
 
+import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
 import static org.hibernate.type.SqlTypes.BOOLEAN;
@@ -974,12 +978,34 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return new TemplatedViolatedConstraintNameExtractor(
+				sqle -> {
+					switch ( JdbcExceptionHelper.extractErrorCode( sqle ) ) {
+						case -803:
+							return extractUsingTemplate( "SQLERRMC=1;", ",", sqle.getMessage() );
+						default:
+							return null;
+					}
+				}
+		);
+	}
+
+	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 			switch ( errorCode ) {
 				case -952:
 					return new LockTimeoutException( message, sqlException, sql );
+				case -803:
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+					);
 			}
 			return null;
 		};
@@ -1170,5 +1196,15 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public int rowIdSqlType() {
 		return VARBINARY;
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return getDB2Version().isSameOrAfter( 11 );
 	}
 }

@@ -8,17 +8,21 @@ package org.hibernate.sql.exec.internal;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import org.hibernate.JDBCException;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventManager;
 import org.hibernate.event.spi.HibernateMonitoringEvent;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBinder;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -98,10 +102,23 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 			}
 		}
 		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert(
+			final JDBCException exception = jdbcServices.getSqlExceptionHelper().convert(
 					e,
 					"JDBC exception executing SQL [" + finalSql + "]"
 			);
+			if ( exception instanceof ConstraintViolationException && jdbcMutation instanceof JdbcOperationQueryInsert ) {
+				final ConstraintViolationException constraintViolationException = (ConstraintViolationException) exception;
+				if ( constraintViolationException.getKind() == ConstraintViolationException.ConstraintKind.UNIQUE ) {
+					final String uniqueConstraintNameThatMayFail = ( (JdbcOperationQueryInsert) jdbcMutation ).getUniqueConstraintNameThatMayFail();
+					if ( uniqueConstraintNameThatMayFail != null ) {
+						if ( uniqueConstraintNameThatMayFail.isEmpty()
+								|| uniqueConstraintNameThatMayFail.equalsIgnoreCase( constraintViolationException.getConstraintName() ) ) {
+							return 0;
+						}
+					}
+				}
+			}
+			throw exception;
 		}
 		finally {
 			executionContext.afterStatement( logicalConnection );

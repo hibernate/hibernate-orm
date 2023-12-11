@@ -570,6 +570,10 @@ public class CockroachLegacyDialect extends Dialect {
 	public boolean supportsRecursiveCTE() {
 		return getVersion().isSameOrAfter( 20, 1 );
 	}
+	@Override
+	public boolean supportsConflictClauseForInsertCTE() {
+		return true;
+	}
 
 	@Override
 	public String getNoColumnsInsertString() {
@@ -1165,4 +1169,14 @@ public class CockroachLegacyDialect extends Dialect {
 //			RuntimeModelCreationContext runtimeModelCreationContext) {
 //		return new CteInsertStrategy( rootEntityDescriptor, runtimeModelCreationContext );
 //	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
+	}
 }

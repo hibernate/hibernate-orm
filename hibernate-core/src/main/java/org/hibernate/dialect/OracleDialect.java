@@ -1048,6 +1048,7 @@ public class OracleDialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
+			final String constraintName;
 			// interpreting Oracle exceptions is much much more precise based on their specific vendor codes.
 			switch ( JdbcExceptionHelper.extractErrorCode( sqlException ) ) {
 
@@ -1080,9 +1081,19 @@ public class OracleDialect extends Dialect {
 
 				// data integrity violation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+				case 1:
+					// ORA-00001: unique constraint violated
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							constraintName
+					);
 				case 1407:
 					// ORA-01407: cannot update column to NULL
-					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName( sqlException );
 					return new ConstraintViolationException( message, sqlException, sql, constraintName );
 
 				default:
@@ -1563,5 +1574,10 @@ public class OracleDialect extends Dialect {
 	@Override
 	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
 		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
 	}
 }

@@ -224,6 +224,8 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
+import org.hibernate.query.sqm.tree.insert.SqmConflictUpdateAction;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -270,6 +272,7 @@ import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
+import org.hibernate.sql.ast.spi.SqlAliasBaseConstant;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -332,6 +335,7 @@ import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableGroupJoinProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
@@ -961,21 +965,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		for ( SqmAssignment<?> sqmAssignment : setClause.getAssignments() ) {
 			final SqmPathInterpretation<?> assignedPathInterpretation;
 			try {
-				pushProcessingState(
-						new SqlAstProcessingStateImpl(
-								getCurrentProcessingState(),
-								this,
-								getCurrentClauseStack()::getCurrent
-						),
-						getFromClauseIndex()
-				);
 				currentClauseStack.push( Clause.SET );
-
 				assignedPathInterpretation = (SqmPathInterpretation<?>) sqmAssignment.getTargetPath().accept( this );
 			}
 			finally {
 				currentClauseStack.pop();
-				popProcessingStateStack();
 			}
 
 			try {
@@ -1033,6 +1027,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 					if ( valueExpression instanceof SqlTuple ) {
 						final List<? extends Expression> expressions = ( (SqlTuple) valueExpression ).getExpressions();
+						assert targetColumnReferences.size() == expressions.size();
+						for ( int i = 0; i < targetColumnReferences.size(); i++ ) {
+							final ColumnReference columnReference = targetColumnReferences.get( i );
+							addAssignment( assignments, aggregateColumnAssignmentHandler, columnReference, expressions.get( i ) );
+						}
+					}
+					else if ( valueExpression instanceof EmbeddableValuedPathInterpretation<?> ) {
+						final List<? extends Expression> expressions = ( (EmbeddableValuedPathInterpretation<?>) valueExpression ).getSqlTuple().getExpressions();
 						assert targetColumnReferences.size() == expressions.size();
 						for ( int i = 0; i < targetColumnReferences.size(); i++ ) {
 							final ColumnReference columnReference = targetColumnReferences.get( i );
@@ -1227,6 +1229,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				}
 		);
 
+		insertStatement.setConflictClause( visitConflictClause( sqmStatement.getConflictClause() ) );
+
 		this.currentSqmStatement = oldSqmStatement;
 		this.cteContainer = oldCteContainer;
 
@@ -1321,6 +1325,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				insertStatement.getValuesList().add( values );
 			}
 
+			insertStatement.setConflictClause( visitConflictClause( sqmStatement.getConflictClause() ) );
+
 			return insertStatement;
 		}
 		finally {
@@ -1328,6 +1334,46 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			this.currentSqmStatement = oldSqmStatement;
 			this.cteContainer = oldCteContainer;
 		}
+	}
+
+	@Override
+	public ConflictClause visitConflictClause(SqmConflictClause<?> sqmConflictClause) {
+		if ( sqmConflictClause == null ) {
+			return null;
+		}
+		final List<SqmPath<?>> constraintAttributes = sqmConflictClause.getConstraintPaths();
+		final List<String> constraintColumnNames = new ArrayList<>( constraintAttributes.size() );
+		for ( SqmPath<?> constraintAttribute : constraintAttributes ) {
+			final Assignable assignable = ( (Assignable) constraintAttribute.accept( this ) );
+			for ( ColumnReference columnReference : assignable.getColumnReferences() ) {
+				constraintColumnNames.add( columnReference.getSelectableName() );
+			}
+		}
+		final SqmConflictUpdateAction<?> updateAction = sqmConflictClause.getConflictAction();
+		final List<Assignment> assignments;
+		final Predicate predicate;
+		if ( updateAction == null ) {
+			assignments = Collections.emptyList();
+			predicate = null;
+		}
+		else {
+			final SqmRoot<?> excludedRoot = sqmConflictClause.getExcludedRoot();
+			final EntityPersister entityDescriptor = resolveEntityPersister( excludedRoot.getModel() );
+			final TableGroup tableGroup = entityDescriptor.createRootTableGroup(
+					true,
+					excludedRoot.getNavigablePath(),
+					excludedRoot.getExplicitAlias(),
+					new SqlAliasBaseConstant( "excluded" ),
+					() -> null,
+					this
+			);
+			registerSqmFromTableGroup( excludedRoot, tableGroup );
+			assignments = visitSetClause( updateAction.getSetClause() );
+			final SqmWhereClause whereClause = updateAction.getWhereClause();
+			predicate = whereClause == null ? null : visitWhereClause( whereClause.getPredicate() );
+		}
+
+		return new ConflictClause( sqmConflictClause.getConstraintName(), constraintColumnNames, assignments, predicate );
 	}
 
 	public AdditionalInsertValues visitInsertionTargetPaths(
@@ -1579,12 +1625,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 	@Override
 	public Values visitValues(SqmValues sqmValues) {
-		final Values values = new Values();
-		for ( SqmExpression<?> expression : sqmValues.getExpressions() ) {
+		final List<SqmExpression<?>> expressions = sqmValues.getExpressions();
+		final ArrayList<Expression> valuesExpressions = new ArrayList<>( expressions.size() );
+		for ( SqmExpression<?> expression : expressions ) {
 			// todo: add WriteExpression handling
-			values.getExpressions().add( (Expression) expression.accept( this ) );
+			valuesExpressions.add( (Expression) expression.accept( this ) );
 		}
-		return values;
+		return new Values( valuesExpressions );
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2471,6 +2518,14 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			}
 		}
 		return Collections.emptyList();
+	}
+
+	@Override
+	public Predicate visitWhereClause(SqmWhereClause whereClause) {
+		if ( whereClause == null ) {
+			return null;
+		}
+		return visitWhereClause( whereClause.getPredicate() );
 	}
 
 	private Predicate visitWhereClause(SqmPredicate sqmPredicate) {

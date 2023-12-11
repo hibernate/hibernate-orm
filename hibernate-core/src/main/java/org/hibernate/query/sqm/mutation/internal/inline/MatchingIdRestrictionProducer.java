@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableConsumer;
 import org.hibernate.metamodel.mapping.EntityMappingType;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -25,14 +26,19 @@ import org.hibernate.sql.exec.spi.ExecutionContext;
  */
 public interface MatchingIdRestrictionProducer {
 	/**
+	 * Produces a list of expression for which a restriction can be produced per-table.
+	 */
+	List<Expression> produceIdExpressionList(List<Object> idsAndFks, EntityMappingType entityDescriptor);
+
+	/**
 	 * Produce the restriction predicate
 	 *
-	 * @param matchingIdValues The matching id values.
+	 * @param idExpressions The matching id value expressions.
 	 * @param mutatingTableReference The TableReference for the table being mutated
 	 * @param columnsToMatchVisitationSupplier The columns against which to restrict the mutations
 	 */
 	Predicate produceRestriction(
-			List<?> matchingIdValues,
+			List<Expression> idExpressions,
 			EntityMappingType entityDescriptor,
 			int valueIndex,
 			ModelPart valueModelPart,

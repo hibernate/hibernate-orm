@@ -7,12 +7,16 @@
 package org.hibernate.query.sqm.tree.insert;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.query.criteria.JpaConflictClause;
 import org.hibernate.query.criteria.JpaCriteriaInsertValues;
 import org.hibernate.query.criteria.JpaPredicate;
+import org.hibernate.query.criteria.JpaValues;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -23,15 +27,17 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
+import jakarta.persistence.criteria.Path;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  * @author Gavin King
  */
 public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> implements JpaCriteriaInsertValues<T> {
-	private final List<SqmValues> valuesList;
+	private @Nullable List<SqmValues> valuesList;
 
 	public SqmInsertValuesStatement(SqmRoot<T> targetRoot, NodeBuilder nodeBuilder) {
 		super( targetRoot, SqmQuerySource.HQL, nodeBuilder );
-		this.valuesList = new ArrayList<>();
 	}
 
 	public SqmInsertValuesStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {
@@ -45,7 +51,6 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 				SqmQuerySource.CRITERIA,
 				nodeBuilder
 		);
-		this.valuesList = new ArrayList<>();
 	}
 
 	private SqmInsertValuesStatement(
@@ -55,8 +60,9 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 			Map<String, SqmCteStatement<?>> cteStatements,
 			SqmRoot<T> target,
 			List<SqmPath<?>> insertionTargetPaths,
+			SqmConflictClause<T> conflictClause,
 			List<SqmValues> valuesList) {
-		super( builder, querySource, parameters, cteStatements, target, insertionTargetPaths );
+		super( builder, querySource, parameters, cteStatements, target, insertionTargetPaths, conflictClause );
 		this.valuesList = valuesList;
 	}
 
@@ -66,9 +72,15 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 		if ( existing != null ) {
 			return existing;
 		}
-		final List<SqmValues> valuesList = new ArrayList<>( this.valuesList.size() );
-		for ( SqmValues sqmValues : this.valuesList ) {
-			valuesList.add( sqmValues.copy( context ) );
+		final List<SqmValues> valuesList;
+		if ( this.valuesList == null ) {
+			valuesList = null;
+		}
+		else {
+			valuesList = new ArrayList<>( this.valuesList.size() );
+			for ( SqmValues sqmValues : this.valuesList ) {
+				valuesList.add( sqmValues.copy( context ) );
+			}
 		}
 		return context.registerCopy(
 				this,
@@ -79,6 +91,7 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 						copyCteStatements( context ),
 						getTarget().copy( context ),
 						copyInsertionTargetPaths( context ),
+						getConflictClause() == null ? null : getConflictClause().copy( context ),
 						valuesList
 				)
 		);
@@ -94,13 +107,16 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 						copyCteStatements( context ),
 						getTarget().copy( context ),
 						copyInsertionTargetPaths( context ),
-						new ArrayList<>()
+						getConflictClause() == null ? null : getConflictClause().copy( context ),
+						null
 				)
 		);
 	}
 
 	public List<SqmValues> getValuesList() {
-		return valuesList;
+		return valuesList == null
+				? Collections.emptyList()
+				: Collections.unmodifiableList( valuesList );
 	}
 
 	@Override
@@ -114,7 +130,38 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
+	public SqmInsertValuesStatement<T> setInsertionTargetPaths(Path<?>... insertionTargetPaths) {
+		super.setInsertionTargetPaths( insertionTargetPaths );
+		return this;
+	}
+
+	@Override
+	public SqmInsertValuesStatement<T> setInsertionTargetPaths(List<? extends Path<?>> insertionTargetPaths) {
+		super.setInsertionTargetPaths( insertionTargetPaths );
+		return this;
+	}
+
+	@Override
+	public SqmInsertValuesStatement<T> values(JpaValues... values) {
+		return values( Arrays.asList( values ) );
+	}
+
+	@Override
+	public SqmInsertValuesStatement<T> values(List<? extends JpaValues> values) {
+		//noinspection unchecked
+		this.valuesList = (List<SqmValues>) values;
+		return this;
+	}
+
+	@Override
+	public SqmInsertValuesStatement<T> onConflict(JpaConflictClause<T> conflictClause) {
+		super.onConflict( conflictClause );
+		return this;
+	}
+
+	@Override
 	public void appendHqlString(StringBuilder sb) {
+		assert valuesList != null;
 		super.appendHqlString( sb );
 		sb.append( " values (" );
 		appendValues( valuesList.get( 0 ), sb );
@@ -123,6 +170,10 @@ public class SqmInsertValuesStatement<T> extends AbstractSqmInsertStatement<T> i
 			appendValues( valuesList.get( i ), sb );
 		}
 		sb.append( ')' );
+		final SqmConflictClause conflictClause = getConflictClause();
+		if ( conflictClause != null ) {
+			conflictClause.appendHqlString( sb );
+		}
 	}
 
 	private static void appendValues(SqmValues sqmValues, StringBuilder sb) {

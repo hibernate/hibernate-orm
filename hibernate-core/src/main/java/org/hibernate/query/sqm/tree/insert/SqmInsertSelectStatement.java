@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.hibernate.Incubating;
+import org.hibernate.query.criteria.JpaConflictClause;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.sqm.NodeBuilder;
@@ -23,6 +24,11 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmQuerySpec;
+import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
+
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Path;
 
 /**
  * @author Steve Ebersole
@@ -57,8 +63,9 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 			Map<String, SqmCteStatement<?>> cteStatements,
 			SqmRoot<T> target,
 			List<SqmPath<?>> insertionTargetPaths,
+			SqmConflictClause<T> conflictClause,
 			SqmQueryPart<?> selectQueryPart) {
-		super( builder, querySource, parameters, cteStatements, target, insertionTargetPaths );
+		super( builder, querySource, parameters, cteStatements, target, insertionTargetPaths, conflictClause );
 		this.selectQueryPart = selectQueryPart;
 	}
 
@@ -77,9 +84,18 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 						copyCteStatements( context ),
 						getTarget().copy( context ),
 						copyInsertionTargetPaths( context ),
+						getConflictClause() == null ? null : getConflictClause().copy( context ),
 						selectQueryPart.copy( context )
 				)
 		);
+	}
+
+	@Override
+	public SqmInsertSelectStatement<T> select(CriteriaQuery<Tuple> criteriaQuery) {
+		final SqmSelectStatement<Tuple> selectStatement = (SqmSelectStatement<Tuple>) criteriaQuery;
+		putAllCtes( selectStatement );
+		setSelectQueryPart( selectStatement.getQueryPart() );
+		return this;
 	}
 
 	public SqmQueryPart<?> getSelectQueryPart() {
@@ -102,9 +118,31 @@ public class SqmInsertSelectStatement<T> extends AbstractSqmInsertStatement<T> i
 	}
 
 	@Override
+	public SqmInsertSelectStatement<T> setInsertionTargetPaths(Path<?>... insertionTargetPaths) {
+		super.setInsertionTargetPaths( insertionTargetPaths );
+		return this;
+	}
+
+	@Override
+	public SqmInsertSelectStatement<T> setInsertionTargetPaths(List<? extends Path<?>> insertionTargetPaths) {
+		super.setInsertionTargetPaths( insertionTargetPaths );
+		return this;
+	}
+
+	@Override
+	public SqmInsertSelectStatement<T> onConflict(JpaConflictClause<T> conflictClause) {
+		super.onConflict( conflictClause );
+		return this;
+	}
+
+	@Override
 	public void appendHqlString(StringBuilder sb) {
 		super.appendHqlString( sb );
 		sb.append( ' ' );
 		selectQueryPart.appendHqlString( sb );
+		final SqmConflictClause conflictClause = getConflictClause();
+		if ( conflictClause != null ) {
+			conflictClause.appendHqlString( sb );
+		}
 	}
 }

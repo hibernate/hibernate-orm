@@ -46,6 +46,7 @@ import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.select.QueryPart;
@@ -290,6 +291,7 @@ public class TableBasedInsertHandler implements InsertHandler {
 			}
 			insertStatement.setValuesList( valuesList );
 		}
+		final ConflictClause conflictClause = converterDelegate.visitConflictClause( sqmInsertStatement.getConflictClause() );
 		converterDelegate.pruneTableGroupJoins();
 
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -313,9 +315,8 @@ public class TableBasedInsertHandler implements InsertHandler {
 				tableReferenceByAlias,
 				targetPathColumns,
 				insertStatement,
-				converterDelegate.getJdbcParamsBySqmParam(),
+				conflictClause,
 				sessionUidParameter,
-				converterDelegate.getSqmParameterMappingModelExpressibleResolutions(),
 				executionContext
 		);
 	}
@@ -334,9 +335,8 @@ public class TableBasedInsertHandler implements InsertHandler {
 			Map<String, TableReference> tableReferenceByAlias,
 			List<Assignment> assignments,
 			InsertSelectStatement insertStatement,
-			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
+			ConflictClause conflictClause,
 			JdbcParameter sessionUidParameter,
-			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			DomainQueryExecutionContext executionContext) {
 		return new InsertExecutionDelegate(
 				sqmInsertStatement,
@@ -349,9 +349,8 @@ public class TableBasedInsertHandler implements InsertHandler {
 				tableReferenceByAlias,
 				assignments,
 				insertStatement,
-				parameterResolutions,
+				conflictClause,
 				sessionUidParameter,
-				paramTypeResolutions,
 				executionContext
 		);
 	}

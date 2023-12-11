@@ -134,13 +134,13 @@ public class InformixSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from (select 0 from systables where tabid=1) dual";
+	protected String getDual() {
+		return "(select 0 from systables where tabid=1)";
 	}
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return " from " + getDual() + " dual";
 	}
 
 	private boolean supportsParameterOffsetFetchExpression() {

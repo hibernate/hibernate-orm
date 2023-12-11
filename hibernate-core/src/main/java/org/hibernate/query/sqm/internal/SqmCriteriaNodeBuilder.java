@@ -131,6 +131,7 @@ import org.hibernate.query.sqm.tree.expression.ValueBindJpaCriteriaParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
+import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.predicate.SqmBetweenPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmBooleanExpressionPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmComparisonPredicate;
@@ -351,6 +352,17 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	@Override
 	public <T> SqmInsertSelectStatement<T> createCriteriaInsertSelect(Class<T> targetEntity) {
 		return new SqmInsertSelectStatement<>( targetEntity, this );
+	}
+
+	@Override
+	public SqmValues values(Expression<?>... expressions) {
+		return values( Arrays.asList( expressions ) );
+	}
+
+	@Override
+	public SqmValues values(List<? extends Expression<?>> expressions) {
+		//noinspection unchecked
+		return new SqmValues( (List<SqmExpression<?>>) expressions );
 	}
 
 	@Override
@@ -1905,13 +1917,8 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 	}
 
 	@Override
-	public <V, C extends Collection<V>> SqmExpression<Collection<V>> values(C collection) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public <V, M extends Map<?, V>> Expression<Collection<V>> values(M map) {
-		throw new UnsupportedOperationException();
+		return value( map.values() );
 	}
 
 	@Override

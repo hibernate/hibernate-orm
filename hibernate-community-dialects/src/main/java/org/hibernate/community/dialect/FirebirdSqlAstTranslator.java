@@ -263,13 +263,13 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from rdb$database";
+	protected String getDual() {
+		return "rdb$database";
 	}
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return " from " + getDual();
 	}
 
 	private boolean supportsOffsetFetchClause() {

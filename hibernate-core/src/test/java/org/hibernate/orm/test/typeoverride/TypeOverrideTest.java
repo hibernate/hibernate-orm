@@ -12,6 +12,7 @@ import org.hibernate.boot.MetadataBuilder;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
@@ -22,6 +23,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.testing.orm.junit.BaseSessionFactoryFunctionalTest;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -72,8 +74,8 @@ public class TypeOverrideTest extends BaseSessionFactoryFunctionalTest {
 			);
 		}
 		else if ( AbstractHANADialect.class.isInstance( dialect ) ) {
-			assertSame(
-					( (AbstractHANADialect) dialect ).getBlobTypeDescriptor(),
+			Assertions.assertInstanceOf(
+					AbstractHANADialect.HANABlobType.class,
 					jdbcTypeRegistry.getDescriptor( Types.BLOB )
 			);
 		}

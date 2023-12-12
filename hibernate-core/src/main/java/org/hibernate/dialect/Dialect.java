@@ -5391,4 +5391,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupportImpl.NONE;
 	}
+
+	/**
+	 * Resolves the default scale for a {@link SqlTypes.INTERVAL_SECOND} type code for the given column
+	 * <p>
+	 * Usually 9 (nanosecond) or 6 (microseconds).
+	 *
+	 * @return the default scale, in decimal digits,
+	 *         of the fractional seconds field
+	 */
+	public int getDefaultIntervalSecondScale(){
+		// The default scale necessary is 9 i.e. nanosecond resolution
+		return 9;
+	}
 }

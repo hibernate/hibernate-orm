@@ -161,8 +161,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	@Override
 	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
 		if ( jdbcType.getDdlTypeCode() == SqlTypes.INTERVAL_SECOND ) {
-			// The default scale necessary is 9 i.e. nanosecond resolution
-			return 9;
+			return dialect.getDefaultIntervalSecondScale();
 		}
 		else {
 			// For non-interval types, we use the type numeric(21)

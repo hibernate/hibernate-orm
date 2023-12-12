@@ -1144,6 +1144,12 @@ public class CockroachLegacyDialect extends Dialect {
 		};
 	}
 
+	@Override
+	public int getDefaultIntervalSecondScale() {
+		// The maximum scale for `interval second` is 6 unfortunately
+		return 6;
+	}
+
 // CockroachDB doesn't support this by default. See sql.multiple_modifications_of_table.enabled
 //
 //	@Override

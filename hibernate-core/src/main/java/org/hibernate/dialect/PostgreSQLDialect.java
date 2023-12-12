@@ -1541,4 +1541,10 @@ public class PostgreSQLDialect extends Dialect {
 			return "$" + position;
 		}
 	}
+
+	@Override
+	public int getDefaultIntervalSecondScale() {
+		// The maximum scale for `interval second` is 6 unfortunately
+		return 6;
+	}
 }

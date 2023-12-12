@@ -199,7 +199,7 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	public void visitInListPredicate(InListPredicate inListPredicate) {
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		if ( listExpressions.isEmpty() ) {
-			appendSql( "1=0" );
+			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
 			return;
 		}
 		final Expression testExpression = inListPredicate.getTestExpression();

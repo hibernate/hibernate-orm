@@ -29,6 +29,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  * Java {@link Duration} to SQL {@code numeric(21)} here, which
  * can comfortably represent 60 millennia of nanos.
  *
+ * @see org.hibernate.cfg.AvailableSettings#PREFERRED_DURATION_JDBC_TYPE
+ *
  * @author Steve Ebersole
  * @author Gavin King
  */

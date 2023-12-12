@@ -29,6 +29,8 @@ import org.hibernate.type.spi.TypeConfiguration;
 /**
  * Java type descriptor for the Java {@link Instant} type.
  *
+ * @see org.hibernate.cfg.AvailableSettings#PREFERRED_INSTANT_JDBC_TYPE
+ *
  * @author Steve Ebersole
  */
 public class InstantJavaType extends AbstractTemporalJavaType<Instant>

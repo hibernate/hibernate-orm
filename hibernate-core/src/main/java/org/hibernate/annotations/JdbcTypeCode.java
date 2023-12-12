@@ -36,8 +36,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  *         For other collection mappings, describes the elements
  *     </li>
  *     <li>
- *         For discriminated association mappings (`@Any` and `@ManyToAny`), describes the discriminator
- *         value.
+ *         For discriminated association mappings ({@link Any @Any} and {@link ManyToAny @ManyToAny}), describes the
+ *         discriminator value.
  *     </li>
  * </ul>
  * <p>

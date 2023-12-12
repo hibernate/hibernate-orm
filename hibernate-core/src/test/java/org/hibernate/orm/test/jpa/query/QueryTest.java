@@ -22,6 +22,7 @@ import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Query;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Tuple;
+import jakarta.persistence.TypedQuery;
 
 import org.hibernate.Hibernate;
 import org.hibernate.QueryException;
@@ -38,6 +39,7 @@ import org.hibernate.stat.Statistics;
 
 import org.hibernate.testing.SkipForDialect;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.Jira;
 import org.junit.Test;
 import junit.framework.Assert;
 
@@ -879,6 +881,54 @@ public class QueryTest extends BaseEntityManagerFunctionalTestCase {
 			result = q.getResultList();
 			assertNotNull( result );
 			assertEquals( 2, result.size() );
+			em.remove( result.get( 0 ) );
+			em.remove( result.get( 1 ) );
+			em.getTransaction().commit();
+		}
+		catch (Exception e){
+			if ( em.getTransaction() != null && em.getTransaction().isActive() ) {
+				em.getTransaction().rollback();
+			}
+			throw e;
+		}
+		finally {
+			em.close();
+		}
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17490" )
+	public void testEmptyParameterList() throws Exception {
+		final Item item = new Item( "Mouse", "Micro$oft mouse" );
+		final Item item2 = new Item( "Computer", "Dell computer" );
+
+		EntityManager em = getOrCreateEntityManager();
+		em.getTransaction().begin();
+		try {
+			em.persist( item );
+			em.persist( item2 );
+			assertTrue( em.contains( item ) );
+			em.getTransaction().commit();
+
+			em.getTransaction().begin();
+			TypedQuery<Item> q = em.createQuery(
+					"select item from Item item where item.name in :names",
+					Item.class
+			);
+			q.setParameter( "names", List.of() );
+			List<Item> result = q.getResultList();
+			assertNotNull( result );
+			assertEquals( 0, result.size() );
+
+			q = em.createQuery(
+					"select item from Item item where item.name not in :names",
+					Item.class
+			);
+			q.setParameter( "names", List.of() );
+			result = q.getResultList();
+			assertNotNull( result );
+			assertEquals( 2, result.size() );
+
 			em.remove( result.get( 0 ) );
 			em.remove( result.get( 1 ) );
 			em.getTransaction().commit();

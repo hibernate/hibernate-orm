@@ -196,7 +196,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final Dialect dialect = creationContext.getDialect();
 		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
-		final BasicTypeRegistry basicTypeRegistry = creationContext.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 
 		// DISCRIMINATOR
 

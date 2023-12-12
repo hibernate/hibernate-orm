@@ -185,11 +185,11 @@ public class NaiveEqualsHashCodeEntityTest extends BaseEntityManagerFunctionalTe
 			if (this == o) {
 				return true;
 			}
-			if (o == null || getClass() != o.getClass()) {
+			if (!(o instanceof Book)) {
 				return false;
 			}
 			Book book = (Book) o;
-			return Objects.equals(id, book.id);
+			return Objects.equals(id, book.getId());
 		}
 
 		@Override

@@ -9,8 +9,15 @@ package org.hibernate.type.descriptor;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.Year;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.chrono.ChronoZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
@@ -18,8 +25,12 @@ import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
+import java.util.function.Function;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -467,6 +478,216 @@ public final class DateTimeUtils {
 		final int precisionMask = pow10( 9 - precision );
 		final int nanosToRound = nano % precisionMask;
 		return nano - nanosToRound + ( nanosToRound >= ( precisionMask >> 1 ) ? precisionMask : 0 );
+	}
+
+	/**
+	 * The mapping of supported temporal types to a factory which can convert them to a legacy {@code Calendar}.
+	 * Keep sorted alphabetically by class name.
+	 */
+	private static final Map<Class<? extends Temporal>, Function<Calendar, Temporal>> CALENDAR_TO_TEMPORAL = Map.of(
+		Instant.class, Calendar::toInstant,
+		LocalDate.class, cal -> LocalDate.of(
+			cal.get( Calendar.YEAR ),
+			cal.get( Calendar.MONTH ) + 1,
+			cal.get( Calendar.DAY_OF_MONTH ) ),
+		LocalDateTime.class, cal -> LocalDateTime.of(
+			cal.get( Calendar.YEAR ),
+			cal.get( Calendar.MONTH ) + 1,
+			cal.get( Calendar.DAY_OF_MONTH ),
+			cal.get( Calendar.HOUR_OF_DAY ),
+			cal.get( Calendar.MINUTE ),
+			cal.get( Calendar.SECOND ),
+			cal.get( Calendar.MILLISECOND ) * 1_000_000 ),
+		OffsetDateTime.class, cal -> OffsetDateTime.of(
+			cal.get( Calendar.YEAR ),
+			cal.get( Calendar.MONTH ) + 1,
+			cal.get( Calendar.DAY_OF_MONTH ),
+			cal.get( Calendar.HOUR_OF_DAY ),
+			cal.get( Calendar.MINUTE ),
+			cal.get( Calendar.SECOND ),
+			cal.get( Calendar.MILLISECOND ) * 1_000_000,
+			ZoneOffset.ofTotalSeconds( cal.get( Calendar.ZONE_OFFSET ) / 1_000 )
+		),
+		Year.class, cal -> Year.of(
+			cal.get( Calendar.YEAR )
+		),
+		YearMonth.class, cal -> YearMonth.of(
+			cal.get( Calendar.YEAR ),
+			cal.get( Calendar.MONTH ) + 1
+		),
+		ZonedDateTime.class, cal ->
+			cal instanceof GregorianCalendar ?
+				((GregorianCalendar) cal).toZonedDateTime() :
+				ZonedDateTime.of(
+					cal.get( Calendar.YEAR ),
+					cal.get( Calendar.MONTH ) + 1,
+					cal.get( Calendar.DAY_OF_MONTH ),
+					cal.get( Calendar.HOUR_OF_DAY ),
+					cal.get( Calendar.MINUTE ),
+					cal.get( Calendar.SECOND ),
+					cal.get( Calendar.MILLISECOND ) * 1_000_000,
+					cal.getTimeZone().toZoneId()
+				)
+	);
+
+	/**
+	 * Convert a legacy {@link Calendar} to a temporal value on a best-effort basis, if possible.
+	 * Only ISO dates and date-times are supported.
+	 * Handling dates and times correctly is a tricky business, so we'll centralize the logic here to avoid problems.
+	 *
+	 * @param cal the calendar to convert
+	 * @param temporalClass the class of the target temporal type (must not be {@code null})
+	 * @return the temporal object, or {@code null} if the
+	 * @param <T> the target temporal type
+	 */
+	public static <T extends Temporal> T calendarToTemporal( Calendar cal, Class<T> temporalClass ) {
+		if ( cal == null ) {
+			return null;
+		}
+		Function<Calendar, Temporal> func = CALENDAR_TO_TEMPORAL.get( temporalClass );
+		if (func == null) {
+			return null;
+		}
+		return temporalClass.cast( func.apply( cal ) );
+	}
+
+	private static final Set<Class<? extends Temporal>> CALENDAR_TEMPORAL_TYPES = CALENDAR_TO_TEMPORAL.keySet();
+
+	/**
+	 * Convert a temporal value to a legacy {@link Calendar} on a best-effort basis, if possible.
+	 * The result presently always uses the {@code "gregorian"} {@linkplain Calendar.Builder#setCalendarType(String) calendar type}.
+	 * Only ISO dates and date-times are supported.
+	 * Handling dates and times correctly is a tricky business, so we'll centralize the logic here to avoid problems.
+	 *
+	 * @param temporal the value to convert
+	 * @return the converted value, or {@code null} if the value cannot be converted
+	 */
+	public static Calendar temporalToCalendar( Temporal temporal ) {
+		if ( temporal == null ) {
+			return null;
+		}
+		if (! CALENDAR_TEMPORAL_TYPES.contains( temporal.getClass() ) ) {
+			// we don't support conversion of non-ISO or non-chronological dates and times to legacy calendars
+			return null;
+		}
+		if ( temporal instanceof ZonedDateTime ) {
+			// special case: there's a dedicated factory method
+			return GregorianCalendar.from( (ZonedDateTime) temporal );
+		}
+		Calendar.Builder cb = new Calendar.Builder().setCalendarType( "gregorian" );
+		return copyToCalendarBuilder( cb, temporal ).build();
+	}
+
+	/**
+	 * Copy all the known fields of the given {@code temporal} to the calendar builder.
+	 *
+	 * @param cb the calendar builder (must not be {@code null})
+	 * @param temporal the temporal (must not be {@code null})
+	 * @return the calendar builder (not {@code null})
+	 */
+	private static Calendar.Builder copyToCalendarBuilder( Calendar.Builder cb, Temporal temporal ) {
+		// copy over time zone information, if any
+		if ( temporal instanceof ChronoZonedDateTime<?> ) {
+			ChronoZonedDateTime<?> zoned = (ChronoZonedDateTime<?>) temporal;
+			cb.setTimeZone( TimeZone.getTimeZone( zoned.getZone() ) );
+		}
+		else if ( temporal.isSupported( ChronoField.OFFSET_SECONDS ) ) {
+			cb.set( Calendar.ZONE_OFFSET, temporal.get( ChronoField.OFFSET_SECONDS ) * 1_000 );
+		}
+		// now copy all date/time information
+		if ( temporal.isSupported( ChronoField.INSTANT_SECONDS ) ) {
+			// copy as an instant instead
+			long instant = temporal.get( ChronoField.INSTANT_SECONDS ) * 1_000L;
+			if ( temporal.isSupported( ChronoField.NANO_OF_SECOND ) ) {
+				instant += temporal.get( ChronoField.NANO_OF_SECOND ) / 1_000_000;
+			}
+			else if (temporal.isSupported( ChronoField.MICRO_OF_SECOND ) ) {
+				instant += temporal.get( ChronoField.MICRO_OF_SECOND ) / 1_000;
+			}
+			else if (temporal.isSupported( ChronoField.MILLI_OF_SECOND ) ) {
+				instant += temporal.get( ChronoField.MILLI_OF_SECOND );
+			}
+			cb.setInstant( instant );
+			return cb;
+		}
+		else if ( temporal.isSupported( ChronoField.YEAR )) {
+			cb.set( Calendar.YEAR, temporal.get( ChronoField.YEAR ) );
+			if ( temporal.isSupported( ChronoField.MONTH_OF_YEAR ) ) {
+				// note: not supporting odd months like Calendar#UNDECIMBER
+				cb.set( Calendar.MONTH, temporal.get( ChronoField.MONTH_OF_YEAR ) - 1 );
+				if ( temporal.isSupported( ChronoField.DAY_OF_MONTH ) ) {
+					cb.set( Calendar.DAY_OF_MONTH, temporal.get( ChronoField.DAY_OF_MONTH ) );
+					return copyTimeOfDayToCalendarBuilder( cb, temporal );
+				}
+				else {
+					// just a year + month
+					return cb;
+				}
+			}
+			else if ( temporal.isSupported( ChronoField.DAY_OF_YEAR ) ) {
+				cb.set( Calendar.DAY_OF_YEAR, temporal.get( ChronoField.DAY_OF_YEAR ) );
+				return copyTimeOfDayToCalendarBuilder( cb, temporal );
+			}
+			else {
+				// just a year
+				return cb;
+			}
+		}
+		else {
+			// no date information whatsoever
+			return cb;
+		}
+	}
+
+	/**
+	 * Copy all the known time-of-day fields of the given {@code temporal} to the calendar builder.
+	 *
+	 * @param cb the calendar builder (must not be {@code null})
+	 * @param temporal the temporal (must not be {@code null})
+	 * @return the calendar builder (not {@code null})
+	 */
+	private static Calendar.Builder copyTimeOfDayToCalendarBuilder(final Calendar.Builder cb, final Temporal temporal) {
+		if ( temporal.isSupported( ChronoField.HOUR_OF_DAY ) ) {
+			cb.set( Calendar.HOUR_OF_DAY, temporal.get( ChronoField.HOUR_OF_DAY ) );
+			return copyTimeOfHourToCalendarBuilder( cb, temporal );
+		}
+		else if ( temporal.isSupported( ChronoField.HOUR_OF_AMPM ) && temporal.isSupported( ChronoField.AMPM_OF_DAY )) {
+			cb.set( Calendar.AM_PM, temporal.get( ChronoField.AMPM_OF_DAY ) );
+			cb.set( Calendar.HOUR, temporal.get( ChronoField.HOUR_OF_AMPM ) );
+			return copyTimeOfHourToCalendarBuilder( cb, temporal );
+		}
+		else {
+			// just a date with no TOD info
+			return cb;
+		}
+	}
+
+	/**
+	 * Copy all the known time-of-hour fields of the given {@code temporal} to the calendar builder.
+	 *
+	 * @param cb the calendar builder (must not be {@code null})
+	 * @param temporal the temporal (must not be {@code null})
+	 * @return the calendar builder (not {@code null})
+	 */
+	private static Calendar.Builder copyTimeOfHourToCalendarBuilder(final Calendar.Builder cb, final Temporal temporal) {
+		if ( temporal.isSupported( ChronoField.MINUTE_OF_HOUR ) ) {
+			cb.set( Calendar.MINUTE, temporal.get( ChronoField.MINUTE_OF_HOUR ) );
+			if ( temporal.isSupported( ChronoField.SECOND_OF_MINUTE ) ) {
+				cb.set( Calendar.SECOND, temporal.get( ChronoField.SECOND_OF_MINUTE ) );
+				if ( temporal.isSupported( ChronoField.NANO_OF_SECOND ) ) {
+					// round downwards always
+					cb.set( Calendar.MILLISECOND, temporal.get( ChronoField.NANO_OF_SECOND ) / 1_000_000 );
+				}
+				else if ( temporal.isSupported( ChronoField.MICRO_OF_SECOND ) ) {
+					// round downwards always
+					cb.set( Calendar.MILLISECOND, temporal.get( ChronoField.MICRO_OF_SECOND ) / 1_000 );
+				}
+				else if ( temporal.isSupported( ChronoField.MILLI_OF_SECOND ) ) {
+					cb.set( Calendar.MILLISECOND, temporal.get( ChronoField.MILLI_OF_SECOND ) );
+				}
+			}
+		}
+		return cb;
 	}
 
 	private static int pow10(int exponent) {

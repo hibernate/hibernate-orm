@@ -8,6 +8,7 @@ package org.hibernate.type.descriptor.java;
 
 import java.sql.Types;
 import java.time.ZonedDateTime;
+import java.time.temporal.Temporal;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 
@@ -16,6 +17,7 @@ import jakarta.persistence.TemporalType;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.compare.CalendarComparator;
+import org.hibernate.type.descriptor.DateTimeUtils;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -115,6 +117,12 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 		if ( Calendar.class.isAssignableFrom( type ) ) {
 			return (X) value;
 		}
+		if ( Temporal.class.isAssignableFrom( type ) ) {
+			Temporal temporal = DateTimeUtils.calendarToTemporal( value, type.asSubclass( Temporal.class ) );
+			if ( temporal != null ) {
+				return (X) temporal;
+			}
+		}
 		if ( java.sql.Date.class.isAssignableFrom( type ) ) {
 			return (X) new java.sql.Date( value.getTimeInMillis() );
 		}
@@ -136,6 +144,12 @@ public class CalendarJavaType extends AbstractTemporalJavaType<Calendar> impleme
 		}
 		if (value instanceof Calendar) {
 			return (Calendar) value;
+		}
+		if ( value instanceof Temporal ) {
+			Calendar cal = DateTimeUtils.temporalToCalendar((Temporal) value);
+			if ( cal != null ) {
+				return cal;
+			}
 		}
 
 		if ( !(value instanceof java.util.Date)) {

@@ -81,7 +81,7 @@ public class OracleServerConfiguration {
 	}
 
 	private static boolean isAutonomous(String cloudServiceParam) {
-		return List.of( "OLTP", "DWCS", "JSON" ).contains( cloudServiceParam );
+		return cloudServiceParam != null && List.of( "OLTP", "DWCS", "JSON" ).contains( cloudServiceParam );
 	}
 
 	private static boolean isAutonomous(DatabaseMetaData databaseMetaData) {

@@ -407,7 +407,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		}
 		assert holder.entityInitializer == null || holder.entityInitializer == initializer;
 		holder.entityInitializer = initializer;
-		holder.processingState = processingState;
+		processingState.registerLoadingEntityHolder( holder );
 		return holder;
 	}
 
@@ -423,57 +423,59 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	@Override
 	public void postLoad(JdbcValuesSourceProcessingState processingState, Consumer<EntityHolder> holderConsumer) {
-		if ( entitiesByKey == null ) {
+		final Callback callback = processingState.getExecutionContext().getCallback();
+		if ( processingState.getLoadingEntityHolders() != null ) {
+			final EventListenerGroup<PostLoadEventListener> listenerGroup = getSession().getFactory()
+					.getFastSessionServices()
+					.eventListenerGroup_POST_LOAD;
+			final PostLoadEvent postLoadEvent = processingState.getPostLoadEvent();
+			for ( final EntityHolder holder : processingState.getLoadingEntityHolders() ) {
+				processLoadedEntityHolder( holder, listenerGroup, postLoadEvent, callback, holderConsumer );
+			}
+			processingState.getLoadingEntityHolders().clear();
+		}
+		if ( processingState.getReloadedEntityHolders() != null ) {
+			for ( final EntityHolder holder : processingState.getReloadedEntityHolders() ) {
+				processLoadedEntityHolder( holder, null, null, callback, holderConsumer );
+			}
+			processingState.getReloadedEntityHolders().clear();
+		}
+	}
+
+	private void processLoadedEntityHolder(
+			EntityHolder holder,
+			EventListenerGroup<PostLoadEventListener> listenerGroup,
+			PostLoadEvent postLoadEvent,
+			Callback callback,
+			Consumer<EntityHolder> holderConsumer) {
+		if ( holderConsumer != null ) {
+			holderConsumer.accept( holder );
+		}
+		if ( holder.getEntity() == null ) {
+			// It's possible that we tried to load an entity and found out it doesn't exist,
+			// in which case we added an entry with a null proxy and entity.
+			// Remove that empty entry on post load to avoid unwanted side effects
+			entitiesByKey.remove( holder.getEntityKey() );
 			return;
 		}
-		final Callback callback = processingState.getExecutionContext().getCallback();
-		final EventListenerGroup<PostLoadEventListener> listenerGroup = getSession().getFactory()
-				.getFastSessionServices()
-				.eventListenerGroup_POST_LOAD;
-		final PostLoadEvent postLoadEvent = getSession().isEventSource() ? new PostLoadEvent( getSession().asEventSource() ) : null;
-		for ( Iterator<EntityHolderImpl> iterator = entitiesByKey.values().iterator(); iterator.hasNext(); ) {
-			final EntityHolderImpl holder = iterator.next();
-			if ( holder.processingState == processingState ) {
-				if ( holderConsumer != null ) {
-					holderConsumer.accept( holder );
-				}
-				if ( holder.entity == null ) {
-					// It's possible that we tried to load an entity and found out it doesn't exist,
-					// in which case we added an entry with a null proxy and entity.
-					// Remove that empty entry on post load to avoid unwanted side effects
-					iterator.remove();
-					continue;
-				}
-				if ( postLoadEvent != null ) {
-					postLoadEvent.reset();
-					postLoadEvent.setEntity( holder.entity )
-							.setId( holder.entityKey.getIdentifier() )
-							.setPersister( holder.getDescriptor() );
-					listenerGroup.fireEventOnEachListener(
-							postLoadEvent,
-							PostLoadEventListener::onPostLoad
-					);
-				}
-
-				if ( callback != null ) {
-					callback.invokeAfterLoadActions(
-							holder.getEntity(),
-							holder.getDescriptor(),
-							getSession()
-					);
-					if ( holder.reloaded ) {
-						callback.invokeAfterLoadActions(
-								holder.getEntity(),
-								holder.getDescriptor(),
-								getSession()
-						);
-					}
-				}
-				holder.processingState = null;
-				holder.entityInitializer = null;
-				holder.reloaded = false;
-			}
+		if ( postLoadEvent != null ) {
+			postLoadEvent.reset();
+			postLoadEvent.setEntity( holder.getEntity() )
+					.setId( holder.getEntityKey().getIdentifier() )
+					.setPersister( holder.getDescriptor() );
+			listenerGroup.fireEventOnEachListener(
+					postLoadEvent,
+					PostLoadEventListener::onPostLoad
+			);
 		}
+		if ( callback != null ) {
+			callback.invokeAfterLoadActions(
+					holder.getEntity(),
+					holder.getDescriptor(),
+					getSession()
+			);
+		}
+		( (EntityHolderImpl) holder ).entityInitializer = null;
 	}
 
 	@Override
@@ -2133,8 +2135,6 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		Object entity;
 		Object proxy;
 		EntityInitializer entityInitializer;
-		JdbcValuesSourceProcessingState processingState;
-		boolean reloaded;
 		EntityHolderState state;
 
 		private EntityHolderImpl(EntityKey entityKey, EntityPersister descriptor, Object entity, Object proxy) {
@@ -2173,9 +2173,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 		@Override
 		public void markAsReloaded(JdbcValuesSourceProcessingState processingState) {
-			assert this.processingState == null;
-			this.reloaded = true;
-			this.processingState = processingState;
+			processingState.registerReloadedEntityHolder( this );
 		}
 
 		@Override

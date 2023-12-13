@@ -40,6 +40,8 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	private final ExecutionContext executionContext;
 	private final JdbcValuesSourceProcessingOptions processingOptions;
 
+	private List<EntityHolder> loadingEntityHolders;
+	private List<EntityHolder> reloadedEntityHolders;
 	private Map<EntityUniqueKey, Initializer> initializerByUniquKeyMap;
 	private Map<CollectionKey, LoadingCollectionEntry> loadingCollectionMap;
 	private List<CollectionInitializer> arrayInitializers;
@@ -87,6 +89,32 @@ public class JdbcValuesSourceProcessingStateStandardImpl implements JdbcValuesSo
 	@Override
 	public PostLoadEvent getPostLoadEvent() {
 		return postLoadEvent;
+	}
+
+	@Override
+	public void registerLoadingEntityHolder(EntityHolder holder) {
+		if ( loadingEntityHolders == null ) {
+			loadingEntityHolders = new ArrayList<>();
+		}
+		loadingEntityHolders.add( holder );
+	}
+
+	@Override
+	public List<EntityHolder> getLoadingEntityHolders() {
+		return loadingEntityHolders;
+	}
+
+	@Override
+	public void registerReloadedEntityHolder(EntityHolder holder) {
+		if ( reloadedEntityHolders == null ) {
+			reloadedEntityHolders = new ArrayList<>();
+		}
+		reloadedEntityHolders.add( holder );
+	}
+
+	@Override
+	public List<EntityHolder> getReloadedEntityHolders() {
+		return reloadedEntityHolders;
 	}
 
 	@Override

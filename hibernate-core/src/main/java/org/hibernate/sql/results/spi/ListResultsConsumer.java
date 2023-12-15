@@ -152,10 +152,9 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 		final TypeConfiguration typeConfiguration = session.getTypeConfiguration();
 		final QueryOptions queryOptions = rowProcessingState.getQueryOptions();
 		RuntimeException ex = null;
+		persistenceContext.beforeLoad();
+		persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
 		try {
-			persistenceContext.beforeLoad();
-			persistenceContext.getLoadContexts().register( jdbcValuesSourceProcessingState );
-
 			final JavaType<R> domainResultJavaType = resolveDomainResultJavaType(
 					rowReader.getDomainResultResultJavaType(),
 					rowReader.getResultJavaTypes(),
@@ -207,13 +206,8 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 				}
 			}
 
-			try {
-				rowReader.finishUp( jdbcValuesSourceProcessingState );
-				jdbcValuesSourceProcessingState.finishUp( readRows > 1 );
-			}
-			finally {
-				persistenceContext.getLoadContexts().deregister( jdbcValuesSourceProcessingState );
-			}
+			rowReader.finishUp( jdbcValuesSourceProcessingState );
+			jdbcValuesSourceProcessingState.finishUp( readRows > 1 );
 
 			//noinspection unchecked
 			final ResultListTransformer<R> resultListTransformer =
@@ -231,6 +225,7 @@ public class ListResultsConsumer<R> implements ResultsConsumer<List<R>, R> {
 			try {
 				jdbcValues.finishUp( session );
 				persistenceContext.afterLoad();
+				persistenceContext.getLoadContexts().deregister( jdbcValuesSourceProcessingState );
 				persistenceContext.initializeNonLazyCollections();
 			}
 			catch (RuntimeException e) {

@@ -153,6 +153,11 @@ public class AnyKeyPart implements BasicValuedModelPart, FetchOptions {
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return null;
+	}
+
+	@Override
 	public JdbcMapping getJdbcMapping() {
 		return jdbcMapping;
 	}

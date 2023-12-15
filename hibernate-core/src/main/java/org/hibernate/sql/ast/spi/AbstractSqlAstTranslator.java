@@ -5700,7 +5700,9 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					parameter.getJdbcMapping(),
 					sqlTypedMapping.getColumnDefinition(),
 					sqlTypedMapping.getLength(),
-					sqlTypedMapping.getPrecision(),
+					sqlTypedMapping.getTemporalPrecision() != null
+							? sqlTypedMapping.getTemporalPrecision()
+							: sqlTypedMapping.getPrecision(),
 					sqlTypedMapping.getScale()
 			);
 		}

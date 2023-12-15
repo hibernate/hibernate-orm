@@ -1106,6 +1106,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 	}
 
 	@Override
+	public boolean isPreferJavaTimeJdbcTypesEnabled() {
+		return getBuildingContext().isPreferJavaTimeJdbcTypesEnabled();
+	}
+
+	@Override
 	public Object accept(ValueVisitor visitor) {
 		return visitor.accept(this);
 	}

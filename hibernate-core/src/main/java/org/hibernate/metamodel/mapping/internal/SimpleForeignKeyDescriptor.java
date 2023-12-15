@@ -664,6 +664,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return keySide.getModelPart().getTemporalPrecision();
+	}
+
+	@Override
 	public String getFetchableName() {
 		return PART_NAME;
 	}

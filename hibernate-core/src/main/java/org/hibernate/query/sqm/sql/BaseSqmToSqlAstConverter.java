@@ -899,12 +899,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							persister.getVersionJavaType().next(
 									persister.getVersionJavaType().seed(
 											versionMapping.getLength(),
-											versionMapping.getPrecision(),
+											versionMapping.getTemporalPrecision() != null
+													? versionMapping.getTemporalPrecision()
+													: versionMapping.getPrecision(),
 											versionMapping.getScale(),
 											null
 									),
 									versionMapping.getLength(),
-									versionMapping.getPrecision(),
+									versionMapping.getTemporalPrecision() != null
+											? versionMapping.getTemporalPrecision()
+											: versionMapping.getPrecision(),
 									versionMapping.getScale(),
 									null
 							),
@@ -6072,6 +6076,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									null,
 									precision,
 									0,
+									null,
 									( (BasicType<?>) bindable ).getJdbcMapping()
 							);
 						}
@@ -6082,6 +6087,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 									null,
 									bigDecimal.precision(),
 									bigDecimal.scale(),
+									null,
 									( (BasicType<?>) bindable ).getJdbcMapping()
 							);
 						}

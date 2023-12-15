@@ -9,7 +9,10 @@ package org.hibernate.boot.spi;
 import org.hibernate.Incubating;
 import org.hibernate.boot.model.TypeDefinitionRegistry;
 import org.hibernate.boot.model.naming.ObjectNameNormalizer;
+import org.hibernate.cfg.MappingSettings;
+import org.hibernate.engine.config.spi.ConfigurationService;
 import org.hibernate.internal.util.config.ConfigurationHelper;
+import org.hibernate.service.ServiceRegistry;
 
 /**
  * Describes the context in which the process of building {@link org.hibernate.boot.Metadata}
@@ -75,6 +78,24 @@ public interface MetadataBuildingContext {
 	@Incubating
 	default int getPreferredSqlTypeCodeForArray() {
 		return ConfigurationHelper.getPreferredSqlTypeCodeForArray( getBootstrapContext().getServiceRegistry() );
+	}
+
+	@Incubating
+	default boolean isPreferJavaTimeJdbcTypesEnabled() {
+		return isPreferJavaTimeJdbcTypesEnabled( getBootstrapContext().getServiceRegistry() );
+	}
+
+	static boolean isPreferJavaTimeJdbcTypesEnabled(ServiceRegistry serviceRegistry) {
+		return isPreferJavaTimeJdbcTypesEnabled( serviceRegistry.getService( ConfigurationService.class ) );
+	}
+
+	static boolean isPreferJavaTimeJdbcTypesEnabled(ConfigurationService configurationService) {
+		return ConfigurationHelper.getBoolean(
+				MappingSettings.PREFER_JAVA_TYPE_JDBC_TYPES,
+				configurationService.getSettings(),
+				// todo : true would be better eventually so maybe just rip off that band aid
+				false
+		);
 	}
 
 	TypeDefinitionRegistry getTypeDefinitionRegistry();

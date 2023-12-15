@@ -132,6 +132,11 @@ public class BasicValuedCollectionPart
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return selectableMapping.getTemporalPrecision();
+	}
+
+	@Override
 	public Integer getScale() {
 		return selectableMapping.getScale();
 	}

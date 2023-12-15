@@ -2088,7 +2088,9 @@ public abstract class AbstractEntityPersister
 		final Object nextVersion = getVersionJavaType().next(
 				currentVersion,
 				versionMapping.getLength(),
-				versionMapping.getPrecision(),
+				versionMapping.getTemporalPrecision() != null
+						? versionMapping.getTemporalPrecision()
+						: versionMapping.getPrecision(),
 				versionMapping.getScale(),
 				session
 		);
@@ -5506,6 +5508,7 @@ public abstract class AbstractEntityPersister
 				column.getLength(),
 				column.getPrecision(),
 				column.getScale(),
+				column.getTemporalPrecision(),
 				basicTypeResolution.getLegacyResolvedBasicType(),
 				entityPersister,
 				creationProcess
@@ -5551,6 +5554,7 @@ public abstract class AbstractEntityPersister
 					column.getLength(),
 					column.getPrecision(),
 					column.getScale(),
+					column.getTemporalPrecision(),
 					column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() ),
 					column.isNullable(),
 					value.isColumnInsertable( 0 ),
@@ -5570,6 +5574,7 @@ public abstract class AbstractEntityPersister
 			final Long length;
 			final Integer precision;
 			final Integer scale;
+			final Integer temporalPrecision;
 			final boolean isLob;
 			final boolean nullable;
 
@@ -5582,6 +5587,7 @@ public abstract class AbstractEntityPersister
 				columnDefinition = column.getSqlType();
 				length = column.getLength();
 				precision = column.getPrecision();
+				temporalPrecision = column.getTemporalPrecision();
 				scale = column.getScale();
 				isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
 				nullable = column.isNullable();
@@ -5609,6 +5615,7 @@ public abstract class AbstractEntityPersister
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					precision = column.getPrecision();
+					temporalPrecision = column.getTemporalPrecision();
 					scale = column.getScale();
 					nullable = column.isNullable();
 					isLob = column.isSqlTypeLob( creationContext.getMetadata() );
@@ -5622,6 +5629,7 @@ public abstract class AbstractEntityPersister
 					columnDefinition = null;
 					length = null;
 					precision = null;
+					temporalPrecision = null;
 					scale = null;
 					nullable = true;
 					isLob = false;
@@ -5646,6 +5654,7 @@ public abstract class AbstractEntityPersister
 					length,
 					precision,
 					scale,
+					temporalPrecision,
 					isLob,
 					nullable,
 					value.isColumnInsertable( 0 ),

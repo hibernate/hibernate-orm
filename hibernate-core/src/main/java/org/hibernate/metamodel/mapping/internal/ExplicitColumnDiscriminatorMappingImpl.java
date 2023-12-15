@@ -135,6 +135,11 @@ public class ExplicitColumnDiscriminatorMappingImpl extends AbstractDiscriminato
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return null;
+	}
+
+	@Override
 	public boolean isFormula() {
 		return columnFormula != null;
 	}

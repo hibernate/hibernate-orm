@@ -31,6 +31,7 @@ import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.boot.registry.selector.spi.StrategySelector;
 import org.hibernate.boot.spi.BootstrapContext;
+import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.cache.internal.NoCachingRegionFactory;
 import org.hibernate.cache.internal.StandardTimestampsCacheFactory;
@@ -216,6 +217,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final SqmTranslatorFactory sqmTranslatorFactory;
 	private final Boolean useOfJdbcNamedParametersEnabled;
 	private boolean namedQueryStartupCheckingEnabled;
+	private boolean preferJavaTimeJdbcTypes;
 	private final int preferredSqlTypeCodeForBoolean;
 	private final int preferredSqlTypeCodeForDuration;
 	private final int preferredSqlTypeCodeForUuid;
@@ -428,6 +430,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.useOfJdbcNamedParametersEnabled = configurationService.getSetting( CALLABLE_NAMED_PARAMS_ENABLED, BOOLEAN, true );
 
 		this.namedQueryStartupCheckingEnabled = configurationService.getSetting( QUERY_STARTUP_CHECKING, BOOLEAN, true );
+		this.preferJavaTimeJdbcTypes = MetadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled( configurationService );
 		this.preferredSqlTypeCodeForBoolean = ConfigurationHelper.getPreferredSqlTypeCodeForBoolean( serviceRegistry );
 		this.preferredSqlTypeCodeForDuration = ConfigurationHelper.getPreferredSqlTypeCodeForDuration( serviceRegistry );
 		this.preferredSqlTypeCodeForUuid = ConfigurationHelper.getPreferredSqlTypeCodeForUuid( serviceRegistry );
@@ -1243,6 +1246,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 		return defaultTimeZoneStorageStrategy;
+	}
+
+	@Override
+	public boolean isPreferJavaTimeJdbcTypesEnabled() {
+		return preferJavaTimeJdbcTypes;
 	}
 
 	@Override

@@ -18,6 +18,7 @@ public interface SqlTypedMapping {
 	Long getLength();
 	Integer getPrecision();
 	Integer getScale();
+	Integer getTemporalPrecision();
 	default boolean isLob() {
 		return getJdbcMapping().getJdbcType().isLob();
 	}
@@ -26,7 +27,12 @@ public interface SqlTypedMapping {
 	default Size toSize() {
 		final Size size = new Size();
 		size.setLength( getLength() );
-		size.setPrecision( getPrecision() );
+		if ( getTemporalPrecision() != null ) {
+			size.setPrecision( getTemporalPrecision() );
+		}
+		else {
+			size.setPrecision( getPrecision() );
+		}
 		size.setScale( getScale() );
 		return size;
 	}

@@ -5,7 +5,7 @@
 :versionDocBase: {docsBase}/6.5
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 :javadocsBase: {versionDocBase}/javadocs
-
+:fn-instant: footnote:instant[JDBC 4.2, curiously, does not define support for Instant to be directly marshalled through the driver.]
 
 This guide discusses migration to Hibernate ORM version 6.5. For migration from
 earlier versions, see any other pertinent migration guides as well.
@@ -15,4 +15,27 @@ earlier versions, see any other pertinent migration guides as well.
 * link:{docsBase}/6.2/migration-guide/migration-guide.html[6.2 Migration guide]
 * link:{docsBase}/6.1/migration-guide/migration-guide.html[6.1 Migration guide]
 * link:{docsBase}/6.0/migration-guide/migration-guide.html[6.0 Migration guide]
+
+
+[[java-time]]
+== Java Time Handling
+
+6.5 adds support for marshalling Java Time objects directly through the JDBC driver as defined by JDBC 4.2.
+In previous versions, Hibernate would handle Java Time objects using `java.sql.Date`, `java.sql.Time` or
+`java.sql.Timestamp` references as intermediate forms.
+
+Another behavioral change with this is handling for timezones.  `OffsetDateTime`, `OffsetTime` and
+`ZonedDateTime` all encode explicit timezone information.  With direct marshalling, Hibernate simply
+passes along the value as-is.  In the legacy behavior, since the `java.sql` variants do not
+encode timezone information, Hibernate generally has to specially handle timezones when converting to
+those intermediate forms.
+
+For 6.5 this behavior is disabled by default.  To opt-in,
+
+[source]
+----
+hibernate.type.prefer_java_type_jdbc_types=false
+----
+
+It is expected the default will flip for 7.0.
 

@@ -45,6 +45,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			Long length,
 			Integer precision,
 			Integer scale,
+			Integer temporalPrecision,
 			boolean isLob,
 			boolean nullable,
 			boolean insertable,
@@ -52,7 +53,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			boolean partitioned,
 			boolean isFormula,
 			JdbcMapping jdbcMapping) {
-		super( columnDefinition, length, precision, scale, jdbcMapping );
+		super( columnDefinition, length, precision, scale, temporalPrecision, jdbcMapping );
 		assert selectionExpression != null;
 		// Save memory by using interned strings. Probability is high that we have multiple duplicate strings
 		this.containingTableExpression = containingTableExpression == null ? null : containingTableExpression.intern();
@@ -168,6 +169,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 		final Long length;
 		final Integer precision;
 		final Integer scale;
+		final Integer temporalPrecision;
 		final String selectableName;
 		final boolean isLob;
 		final boolean isNullable;
@@ -177,6 +179,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			length = null;
 			precision = null;
 			scale = null;
+			temporalPrecision = null;
 			isNullable = true;
 			isLob = false;
 			selectableName = selectable.getText();
@@ -188,6 +191,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 			length = column.getLength();
 			precision = column.getPrecision();
 			scale = column.getScale();
+			temporalPrecision = column.getTemporalPrecision();
 
 			isNullable = forceNotNullable ? false : column.isNullable();
 			isLob = column.isSqlTypeLob( creationContext.getMetadata() );
@@ -205,6 +209,7 @@ public class SelectableMappingImpl extends SqlTypedMappingImpl implements Select
 				length,
 				precision,
 				scale,
+				temporalPrecision,
 				isLob,
 				isNullable,
 				insertable,

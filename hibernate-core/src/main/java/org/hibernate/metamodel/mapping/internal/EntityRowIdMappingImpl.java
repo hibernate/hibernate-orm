@@ -219,6 +219,11 @@ public class EntityRowIdMappingImpl implements EntityRowIdMapping {
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return null;
+	}
+
+	@Override
 	public boolean isFormula() {
 		return false;
 	}

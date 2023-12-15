@@ -417,6 +417,13 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 		}
 
 		@Override
+		public boolean isPreferJavaTimeJdbcTypesEnabled() {
+			return sessionFactory == null
+					? metadataBuildingContext.isPreferJavaTimeJdbcTypesEnabled()
+					: sessionFactory.getSessionFactoryOptions().isPreferJavaTimeJdbcTypesEnabled();
+		}
+
+		@Override
 		public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 			return sessionFactory == null
 					? metadataBuildingContext.getBuildingOptions().getDefaultTimeZoneStorage()

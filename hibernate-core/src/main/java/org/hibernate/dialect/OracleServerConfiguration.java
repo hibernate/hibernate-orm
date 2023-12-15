@@ -81,12 +81,12 @@ public class OracleServerConfiguration {
 	}
 
 	private static boolean isAutonomous(String cloudServiceParam) {
-		return cloudServiceParam != null && List.of( "OLTP", "DWCS", "JSON" ).contains( cloudServiceParam );
+		return cloudServiceParam != null && List.of( "OLTP", "DWCS", "JDCS" ).contains( cloudServiceParam );
 	}
 
 	private static boolean isAutonomous(DatabaseMetaData databaseMetaData) {
 		try (final Statement statement = databaseMetaData.getConnection().createStatement()) {
-			return statement.executeQuery( "select 1 from dual where sys_context('USERENV','CLOUD_SERVICE') in ('OLTP','DWCS','JSON')" ).next();
+			return statement.executeQuery( "select 1 from dual where sys_context('USERENV','CLOUD_SERVICE') in ('OLTP','DWCS','JDCS')" ).next();
 		}
 		catch (SQLException ex) {
 			// Ignore

@@ -39,6 +39,7 @@ import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
  * Functionality common to all implementations of {@link ManagedType}.
  *
  * @author Steve Ebersole
+ * @author Yanming Zhou
  */
 public abstract class AbstractManagedType<J>
 		extends AbstractDomainType<J>
@@ -152,7 +153,13 @@ public abstract class AbstractManagedType<J>
 	@Override
 	public PersistentAttribute<? super J,?> findAttribute(String name) {
 		// first look at declared attributes
-		final PersistentAttribute<J,?> attribute = findDeclaredAttribute( name );
+		PersistentAttribute<J,?> attribute = findDeclaredAttribute( name );
+		if ( attribute != null ) {
+			return attribute;
+		}
+
+		// second look at declared concrete generic attributes
+		attribute = findDeclaredConcreteGenericAttribute( name );
 		if ( attribute != null ) {
 			return attribute;
 		}

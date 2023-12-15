@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
@@ -69,6 +71,9 @@ public abstract class AbstractServiceRegistryImpl
 	private Set<ServiceRegistryImplementor> childRegistries;
 
 	private final AtomicBoolean active = new AtomicBoolean( true );
+
+	protected final Lock thisLock = new ReentrantLock();
+	private final Lock serviceBindingListLock = new ReentrantLock();
 
 	protected AbstractServiceRegistryImpl(@Nullable ServiceRegistryImplementor parent) {
 		this( parent, true );
@@ -197,7 +202,8 @@ public abstract class AbstractServiceRegistryImpl
 		}
 
 		//Any service initialization needs synchronization
-		synchronized ( this ) {
+		thisLock.lock();
+		try {
 			// Check again after having acquired the lock:
 			service = serviceRole.cast( initializedServiceByRole.get( serviceRole ) );
 			if ( service != null ) {
@@ -217,13 +223,18 @@ public abstract class AbstractServiceRegistryImpl
 				initializedServiceByRole.put( serviceRole, service );
 			}
 			return service;
+		} finally {
+			thisLock.unlock();
 		}
 	}
 
 	protected <R extends Service> void registerService(ServiceBinding<R> serviceBinding, R service) {
 		serviceBinding.setService( service );
-		synchronized ( serviceBindingList ) {
+		serviceBindingListLock.lock();
+		try {
 			serviceBindingList.add( serviceBinding );
+		} finally {
+			serviceBindingListLock.unlock();
 		}
 	}
 
@@ -349,78 +360,101 @@ public abstract class AbstractServiceRegistryImpl
 	}
 
 	@Override
-	public synchronized void destroy() {
-		if ( active.compareAndSet( true, false ) ) {
-			try {
-				//First thing, make sure that the fast path read is disabled so that
-				//threads not owning the synchronization lock can't get an invalid Service:
-				initializedServiceByRole.clear();
-				synchronized (serviceBindingList) {
-					ListIterator<ServiceBinding<?>> serviceBindingsIterator = serviceBindingList.listIterator(
-							serviceBindingList.size()
-					);
-					while ( serviceBindingsIterator.hasPrevious() ) {
-						final ServiceBinding<?> serviceBinding = serviceBindingsIterator.previous();
-						serviceBinding.getLifecycleOwner().stopService( serviceBinding );
+	public void destroy() {
+		thisLock.lock();
+		try {
+			if ( active.compareAndSet( true, false ) ) {
+				try {
+					//First thing, make sure that the fast path read is disabled so that
+					//threads not owning the synchronization lock can't get an invalid Service:
+					initializedServiceByRole.clear();
+					serviceBindingListLock.lock();
+					try {
+						ListIterator<ServiceBinding<?>> serviceBindingsIterator = serviceBindingList.listIterator(
+								serviceBindingList.size()
+						);
+						while ( serviceBindingsIterator.hasPrevious() ) {
+							final ServiceBinding<?> serviceBinding = serviceBindingsIterator.previous();
+							serviceBinding.getLifecycleOwner().stopService( serviceBinding );
+						}
+						serviceBindingList.clear();
+					} finally {
+						serviceBindingListLock.unlock();
 					}
-					serviceBindingList.clear();
+					serviceBindingMap.clear();
 				}
-				serviceBindingMap.clear();
-			}
-			finally {
-				if ( parent != null ) {
-					parent.deRegisterChild( this );
+				finally {
+					if ( parent != null ) {
+						parent.deRegisterChild( this );
+					}
 				}
 			}
+		} finally {
+			thisLock.unlock();
 		}
 	}
 
 	@Override
-	public synchronized <R extends Service> void stopService(ServiceBinding<R> binding) {
-		final Service service = binding.getService();
-		if ( service instanceof Stoppable ) {
-			try {
-				( (Stoppable) service ).stop();
+	public <R extends Service> void stopService(ServiceBinding<R> binding) {
+		thisLock.lock();
+		try {
+			final Service service = binding.getService();
+			if ( service instanceof Stoppable ) {
+				try {
+					( (Stoppable) service ).stop();
+				}
+				catch ( Exception e ) {
+					log.unableToStopService( service.getClass(), e );
+				}
 			}
-			catch ( Exception e ) {
-				log.unableToStopService( service.getClass(), e );
-			}
+		} finally {
+			thisLock.unlock();
 		}
 	}
 
 	@Override
-	public synchronized void registerChild(ServiceRegistryImplementor child) {
-		if ( childRegistries == null ) {
-			childRegistries = new HashSet<>();
-		}
-		if ( !childRegistries.add( child ) ) {
-			log.warnf(
-					"Child ServiceRegistry [%s] was already registered; this will end badly later...",
-					child
-			);
-		}
-	}
-
-	@Override
-	public synchronized void deRegisterChild(ServiceRegistryImplementor child) {
-		if ( childRegistries == null ) {
-			throw new IllegalStateException( "No child ServiceRegistry registrations found" );
-		}
-		childRegistries.remove( child );
-		if ( childRegistries.isEmpty() ) {
-			if ( autoCloseRegistry ) {
-				log.debug(
-						"Implicitly destroying ServiceRegistry on de-registration " +
-								"of all child ServiceRegistries"
-				);
-				destroy();
+	public void registerChild(ServiceRegistryImplementor child) {
+		thisLock.lock();
+		try {
+			if ( childRegistries == null ) {
+				childRegistries = new HashSet<>();
 			}
-			else {
-				log.debug(
-						"Skipping implicitly destroying ServiceRegistry on de-registration " +
-								"of all child ServiceRegistries"
+			if ( !childRegistries.add( child ) ) {
+				log.warnf(
+						"Child ServiceRegistry [%s] was already registered; this will end badly later...",
+						child
 				);
 			}
+		} finally {
+			thisLock.unlock();
+		}
+	}
+
+	@Override
+	public void deRegisterChild(ServiceRegistryImplementor child) {
+		thisLock.lock();
+		try {
+			if ( childRegistries == null ) {
+				throw new IllegalStateException( "No child ServiceRegistry registrations found" );
+			}
+			childRegistries.remove( child );
+			if ( childRegistries.isEmpty() ) {
+				if ( autoCloseRegistry ) {
+					log.debug(
+							"Implicitly destroying ServiceRegistry on de-registration " +
+									"of all child ServiceRegistries"
+					);
+					destroy();
+				}
+				else {
+					log.debug(
+							"Skipping implicitly destroying ServiceRegistry on de-registration " +
+									"of all child ServiceRegistries"
+					);
+				}
+			}
+		} finally {
+			thisLock.unlock();
 		}
 	}
 
@@ -428,19 +462,24 @@ public abstract class AbstractServiceRegistryImpl
 	 * Not intended for general use. We need the ability to stop and "reactivate" a registry to allow
 	 * experimentation with technologies such as GraalVM, Quarkus and Cri-O.
 	 */
-	public synchronized void resetParent(@Nullable BootstrapServiceRegistry newParent) {
-		if ( this.parent != null ) {
-			this.parent.deRegisterChild( this );
-		}
-		if ( newParent != null ) {
-			if ( !(newParent instanceof ServiceRegistryImplementor) ) {
-				throw new IllegalArgumentException( "ServiceRegistry parent needs to implement ServiceRegistryImplementor" );
+	public void resetParent(@Nullable BootstrapServiceRegistry newParent) {
+		thisLock.lock();
+		try {
+			if ( this.parent != null ) {
+				this.parent.deRegisterChild( this );
 			}
-			this.parent = (ServiceRegistryImplementor) newParent;
-			this.parent.registerChild( this );
-		}
-		else {
-			this.parent = null;
+			if ( newParent != null ) {
+				if ( !(newParent instanceof ServiceRegistryImplementor) ) {
+					throw new IllegalArgumentException( "ServiceRegistry parent needs to implement ServiceRegistryImplementor" );
+				}
+				this.parent = (ServiceRegistryImplementor) newParent;
+				this.parent.registerChild( this );
+			}
+			else {
+				this.parent = null;
+			}
+		} finally {
+			thisLock.unlock();
 		}
 	}
 
@@ -475,9 +514,14 @@ public abstract class AbstractServiceRegistryImpl
 	 * Not intended for general use. We need the ability to stop and "reactivate" a registry to allow
 	 * experimentation with technologies such as GraalVM, Quarkus and Cri-O.
 	 */
-	public synchronized void reactivate() {
-		if ( !active.compareAndSet( false, true ) ) {
-			throw new IllegalStateException( "Was not inactive, could not reactivate" );
+	public void reactivate() {
+		thisLock.lock();
+		try {
+			if ( !active.compareAndSet( false, true ) ) {
+				throw new IllegalStateException( "Was not inactive, could not reactivate" );
+			}
+		} finally {
+			thisLock.unlock();
 		}
 	}
 

@@ -34,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
+ * @author Yanming Zhou
  */
 @DomainModel( annotatedClasses = {
 		GenericMappedSuperclassAssociationTest.Parent.class,
@@ -86,7 +87,7 @@ public class GenericMappedSuperclassAssociationTest {
 			final CriteriaQuery<ChildB> cq = cb.createQuery( ChildB.class );
 			final Root<ChildB> from = cq.from( ChildB.class );
 			final Path<Object> parent = from.get( "parent" );
-			assertThat( parent.getModel().getBindableJavaType() ).isEqualTo( Parent.class );
+			assertThat( parent.getModel().getBindableJavaType() ).isEqualTo( ParentB.class );
 			assertThat( ( (SqmPath<?>) parent ).getResolvedModel().getBindableJavaType() ).isEqualTo( ParentB.class );
 			cq.select( from ).where( cb.equal( from.get( "parent" ).get( "id" ), 2L ) );
 			final ChildB result = session.createQuery( cq ).getSingleResult();

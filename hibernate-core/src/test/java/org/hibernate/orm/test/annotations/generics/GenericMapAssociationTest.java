@@ -34,6 +34,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
+ * @author Yanming Zhou
  */
 @SessionFactory
 @DomainModel( annotatedClasses = {
@@ -81,8 +82,7 @@ public class GenericMapAssociationTest {
 			final CriteriaQuery<Long> query = cb.createQuery( Long.class );
 			final Root<MapContainerEntity> root = query.from( MapContainerEntity.class );
 			final Join<MapContainerEntity, MapValueEntity> join = root.join( "map" );
-			// generic attributes are always reported as Object java type
-			assertThat( join.getJavaType() ).isEqualTo( Object.class );
+			assertThat( join.getJavaType() ).isEqualTo( MapValueEntity.class );
 			assertThat( join.getModel() ).isSameAs( root.getModel().getAttribute( "map" ) );
 			assertThat( ( (SqmPath<?>) join ).getResolvedModel()
 								.getBindableJavaType() ).isEqualTo( MapValueEntity.class );

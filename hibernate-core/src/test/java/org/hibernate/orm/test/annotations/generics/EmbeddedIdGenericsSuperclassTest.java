@@ -31,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Marco Belladelli
+ * @author Yanming Zhou
  */
 @DomainModel(annotatedClasses = {
 		EmbeddedIdGenericsSuperclassTest.Customer.class,
@@ -81,7 +82,7 @@ public class EmbeddedIdGenericsSuperclassTest {
 			final CriteriaQuery<Customer> query = cb.createQuery( Customer.class );
 			final Root<Customer> root = query.from( Customer.class );
 			final Path<DomainEntityId> id = root.get( "id" );
-			assertThat( id.getJavaType() ).isEqualTo( DomainEntityId.class );
+			assertThat( id.getJavaType() ).isEqualTo( CustomerId.class );
 			assertThat( id.getModel() ).isSameAs( root.getModel().getAttribute( "id" ) );
 			assertThat( ( (SqmPath<?>) id ).getResolvedModel().getBindableJavaType() ).isEqualTo( CustomerId.class );
 			query.select( root ).where( cb.equal( id.get( "someDomainField" ), 1 ) );
@@ -111,7 +112,7 @@ public class EmbeddedIdGenericsSuperclassTest {
 			final CriteriaQuery<Invoice> query = cb.createQuery( Invoice.class );
 			final Root<Invoice> root = query.from( Invoice.class );
 			final Path<DomainEntityId> id = root.get( "id" );
-			assertThat( id.getJavaType() ).isEqualTo( DomainEntityId.class );
+			assertThat( id.getJavaType() ).isEqualTo( InvoiceId.class );
 			assertThat( id.getModel() ).isSameAs( root.getModel().getAttribute( "id" ) );
 			assertThat( ( (SqmPath<?>) id ).getResolvedModel().getBindableJavaType() ).isEqualTo( InvoiceId.class );
 			query.select( root ).where( cb.equal( id.get( "someOtherDomainField" ), 1 ) );

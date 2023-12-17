@@ -31,7 +31,6 @@ import org.hibernate.boot.spi.AdditionalMappingContributor;
 import org.hibernate.boot.spi.InFlightMetadataCollector;
 import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
@@ -44,12 +43,12 @@ import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
 import org.hibernate.testing.orm.domain.gambit.MutableValue;
 import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.RequiresDialect;
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
-import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -64,23 +63,22 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+@JiraKey("HHH-15862")
+@RequiresDialect( PostgreSQLDialect.class )
+@RequiresDialect( OracleDialect.class )
 @BootstrapServiceRegistry(
 		javaServices = @BootstrapServiceRegistry.JavaService(
 				role = AdditionalMappingContributor.class,
-				impl = StructEmbeddableTest.class
+				impl = StructWithArrayEmbeddableTest.class
 		),
 		// Clear the type cache, otherwise we might run into ORA-21700: object does not exist or is marked for delete
 		integrators = SharedDriverManagerTypeCacheClearingIntegrator.class
 )
 // Don't reorder columns in the types here to avoid the need to rewrite the test
 @ServiceRegistry(settings = @Setting(name = AvailableSettings.COLUMN_ORDERING_STRATEGY, value = "legacy"))
-@DomainModel(annotatedClasses = StructEmbeddableTest.StructHolder.class)
+@DomainModel(annotatedClasses = StructWithArrayEmbeddableTest.StructHolder.class)
 @SessionFactory
-@RequiresDialect( PostgreSQLDialect.class )
-@RequiresDialect( OracleDialect.class )
-@RequiresDialect( DB2Dialect.class )
-public class StructEmbeddableTest implements AdditionalMappingContributor {
-
+public class StructWithArrayEmbeddableTest implements AdditionalMappingContributor {
 	@Override
 	public void contribute(
 			AdditionalMappingContributions contributions,
@@ -101,7 +99,7 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 				new NamedAuxiliaryDatabaseObject(
 						"PostgreSQL structFunction",
 						namespace,
-						"create function structFunction() returns structType as $$ declare result structType; begin result.theBinary = bytea '\\x01'; result.theString = 'ABC'; result.theDouble = 0; result.theInt = 0; result.theLocalDateTime = timestamp '2022-12-01 01:00:00'; result.theUuid = '53886a8a-7082-4879-b430-25cb94415be8'::uuid; return result; end $$ language plpgsql",
+						"create function structFunction() returns structType as $$ declare result structType; begin result.theBinary = array[bytea '\\x01']; result.theString = array['ABC']; result.theDouble = array[0]; result.theInt = array[0]; result.theLocalDateTime = array[timestamp '2022-12-01 01:00:00']; result.theUuid = array['53886a8a-7082-4879-b430-25cb94415be8'::uuid]; return result; end $$ language plpgsql",
 						"drop function structFunction",
 						Set.of( PostgreSQLDialect.class.getName() )
 				)
@@ -110,7 +108,7 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 				new NamedAuxiliaryDatabaseObject(
 						"PostgreSQL structProcedure",
 						namespace,
-						"create procedure structProcedure(INOUT result structType) AS $$ declare res structType; begin res.theBinary = bytea '\\x01'; res.theString = 'ABC'; res.theDouble = 0; res.theInt = 0; res.theLocalDateTime = timestamp '2022-12-01 01:00:00'; res.theUuid = '53886a8a-7082-4879-b430-25cb94415be8'::uuid; result = res; end $$ language plpgsql",
+						"create procedure structProcedure(INOUT result structType) AS $$ declare res structType; begin res.theBinary = array[bytea '\\x01']; res.theString = array['ABC']; res.theDouble = array[0]; res.theInt = array[0]; res.theLocalDateTime = array[timestamp '2022-12-01 01:00:00']; res.theUuid = array['53886a8a-7082-4879-b430-25cb94415be8'::uuid]; result = res; end $$ language plpgsql",
 						"drop procedure structProcedure",
 						Set.of( PostgreSQLDialect.class.getName() )
 				)
@@ -124,7 +122,7 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 				new NamedAuxiliaryDatabaseObject(
 						"PostgrePlus structFunction",
 						namespace,
-						"create function structFunction() returns structType as $$ declare result structType; begin result.theBinary = bytea '\\x01'; result.theString = 'ABC'; result.theDouble = 0; result.theInt = 0; result.theLocalDateTime = timestamp '2022-12-01 01:00:00'; result.theUuid = '53886a8a-7082-4879-b430-25cb94415be8'::uuid; return result; end $$ language plpgsql",
+						"create function structFunction() returns structType as $$ declare result structType; begin result.theBinary = array[bytea '\\x01']; result.theString = array['ABC']; result.theDouble = array[0]; result.theInt = array[0]; result.theLocalDateTime = array[timestamp '2022-12-01 01:00:00']; result.theUuid = array['53886a8a-7082-4879-b430-25cb94415be8'::uuid]; return result; end $$ language plpgsql",
 						"drop function structFunction",
 						Set.of( PostgresPlusDialect.class.getName() )
 				)
@@ -133,36 +131,9 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 				new NamedAuxiliaryDatabaseObject(
 						"PostgrePlus structProcedure",
 						namespace,
-						"create procedure structProcedure(result INOUT structType) AS $$ declare res structType; begin res.theBinary = bytea '\\x01'; res.theString = 'ABC'; res.theDouble = 0; res.theInt = 0; res.theLocalDateTime = timestamp '2022-12-01 01:00:00'; res.theUuid = '53886a8a-7082-4879-b430-25cb94415be8'::uuid; result = res; end $$ language plpgsql",
+						"create procedure structProcedure(result INOUT structType) AS $$ declare res structType; begin res.theBinary = array[bytea '\\x01']; res.theString = array['ABC']; res.theDouble = array[0]; res.theInt = array[0]; res.theLocalDateTime = array[timestamp '2022-12-01 01:00:00']; res.theUuid = array['53886a8a-7082-4879-b430-25cb94415be8'::uuid]; result = res; end $$ language plpgsql",
 						"drop procedure structProcedure",
 						Set.of( PostgresPlusDialect.class.getName() )
-				)
-		);
-
-		//---------------------------------------------------------
-		// DB2
-		//---------------------------------------------------------
-		final String binaryType;
-		final String binaryLiteralPrefix;
-		if ( metadata.getDatabase().getDialect().getVersion().isBefore( 11 ) ) {
-			binaryType = "char(16) for bit data";
-			binaryLiteralPrefix = "x";
-		}
-		else {
-			binaryType = "binary(16)";
-			binaryLiteralPrefix = "bx";
-		}
-
-		contributions.contributeAuxiliaryDatabaseObject(
-				new NamedAuxiliaryDatabaseObject(
-						"DB2 structFunction",
-						namespace,
-						"create function structFunction() returns structType language sql RETURN select structType()..theBinary(" + binaryLiteralPrefix + "'01')..theString('ABC')..theDouble(0)..theInt(0)..theLocalDateTime(timestamp '2022-12-01 01:00:00')..theUuid(cast(" + binaryLiteralPrefix + "'" +
-								// UUID is already in HEX encoding, but we have to remove the dashes
-								"53886a8a-7082-4879-b430-25cb94415be8".replace( "-", "" )
-								+ "' as " + binaryType + ")) from (values (1)) t",
-						"drop function structFunction",
-						Set.of( DB2Dialect.class.getName() )
 				)
 		);
 
@@ -176,12 +147,12 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 						namespace,
 						"create function structFunction return structType is result structType; begin " +
 								"result := structType(" +
-								"theBinary => hextoraw('01')," +
-								"theString => 'ABC'," +
-								"theDouble => 0," +
-								"theInt => 0," +
-								"theLocalDateTime => timestamp '2022-12-01 01:00:00'," +
-								"theUuid => hextoraw('53886a8a70824879b43025cb94415be8')," +
+								"theBinary => byteArrayArray( hextoraw('01') )," +
+								"theString => StringArray( 'ABC' )," +
+								"theDouble => DoubleArray( 0 )," +
+								"theInt => IntegerArray( 0 )," +
+								"theLocalDateTime => LocalDateTimeTimestampArray( timestamp '2022-12-01 01:00:00' )," +
+								"theUuid => UUIDbyteArrayArray( hextoraw('53886a8a70824879b43025cb94415be8') )," +
 								"converted_gender => null," +
 								"gender => null," +
 								"mutableValue => null," +
@@ -212,12 +183,12 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 						namespace,
 						"create procedure structProcedure(result OUT structType) AS begin " +
 								"result := structType(" +
-								"theBinary => hextoraw('01')," +
-								"theString => 'ABC'," +
-								"theDouble => 0," +
-								"theInt => 0," +
-								"theLocalDateTime => timestamp '2022-12-01 01:00:00'," +
-								"theUuid => hextoraw('53886a8a70824879b43025cb94415be8')," +
+								"theBinary => byteArrayArray( hextoraw('01') )," +
+								"theString => StringArray( 'ABC' )," +
+								"theDouble => DoubleArray( 0 )," +
+								"theInt => IntegerArray( 0 )," +
+								"theLocalDateTime => LocalDateTimeTimestampArray( timestamp '2022-12-01 01:00:00' )," +
+								"theUuid => UUIDbyteArrayArray( hextoraw('53886a8a70824879b43025cb94415be8') )," +
 								"converted_gender => null," +
 								"gender => null," +
 								"mutableValue => null," +
@@ -248,8 +219,8 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 	public void setUp(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					session.persist( new StructHolder( 1L, EmbeddableAggregate.createAggregate1() ) );
-					session.persist( new StructHolder( 2L, EmbeddableAggregate.createAggregate2() ) );
+					session.persist( new StructHolder( 1L, EmbeddableWithArrayAggregate.createAggregate1() ) );
+					session.persist( new StructHolder( 2L, EmbeddableWithArrayAggregate.createAggregate2() ) );
 				}
 		);
 	}
@@ -268,10 +239,10 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 		scope.inTransaction(
 				entityManager -> {
 					StructHolder structHolder = entityManager.find( StructHolder.class, 1L );
-					structHolder.setAggregate( EmbeddableAggregate.createAggregate2() );
+					structHolder.setAggregate( EmbeddableWithArrayAggregate.createAggregate2() );
 					entityManager.flush();
 					entityManager.clear();
-					assertStructEquals( EmbeddableAggregate.createAggregate2(), entityManager.find( StructHolder.class, 1L ).getAggregate() );
+					assertStructEquals( EmbeddableWithArrayAggregate.createAggregate2(), entityManager.find( StructHolder.class, 1L ).getAggregate() );
 				}
 		);
 	}
@@ -283,7 +254,7 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 					List<StructHolder> structHolders = entityManager.createQuery( "from StructHolder b where b.id = 1", StructHolder.class ).getResultList();
 					assertEquals( 1, structHolders.size() );
 					assertEquals( 1L, structHolders.get( 0 ).getId() );
-					assertStructEquals( EmbeddableAggregate.createAggregate1(), structHolders.get( 0 ).getAggregate() );
+					assertStructEquals( EmbeddableWithArrayAggregate.createAggregate1(), structHolders.get( 0 ).getAggregate() );
 				}
 		);
 	}
@@ -295,7 +266,7 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 					List<StructHolder> structHolders = entityManager.createQuery( "from StructHolder b where b.id = 2", StructHolder.class ).getResultList();
 					assertEquals( 1, structHolders.size() );
 					assertEquals( 2L, structHolders.get( 0 ).getId() );
-					assertStructEquals( EmbeddableAggregate.createAggregate2(), structHolders.get( 0 ).getAggregate() );
+					assertStructEquals( EmbeddableWithArrayAggregate.createAggregate2(), structHolders.get( 0 ).getAggregate() );
 				}
 		);
 	}
@@ -304,9 +275,9 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 	public void testDomainResult(SessionFactoryScope scope) {
 		scope.inSession(
 				entityManager -> {
-					List<EmbeddableAggregate> structs = entityManager.createQuery( "select b.aggregate from StructHolder b where b.id = 1", EmbeddableAggregate.class ).getResultList();
+					List<EmbeddableWithArrayAggregate> structs = entityManager.createQuery( "select b.aggregate from StructHolder b where b.id = 1", EmbeddableWithArrayAggregate.class ).getResultList();
 					assertEquals( 1, structs.size() );
-					assertStructEquals( EmbeddableAggregate.createAggregate1(), structs.get( 0 ) );
+					assertStructEquals( EmbeddableWithArrayAggregate.createAggregate1(), structs.get( 0 ) );
 				}
 		);
 	}
@@ -347,33 +318,33 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 					).getResultList();
 					assertEquals( 1, tuples.size() );
 					final Tuple tuple = tuples.get( 0 );
-					final EmbeddableAggregate struct = new EmbeddableAggregate();
-					struct.setTheInt( tuple.get( 0, int.class ) );
-					struct.setTheDouble( tuple.get( 1, Double.class ) );
-					struct.setTheBoolean( tuple.get( 2, Boolean.class ) );
-					struct.setTheNumericBoolean( tuple.get( 3, Boolean.class ) );
-					struct.setTheStringBoolean( tuple.get( 4, Boolean.class ) );
-					struct.setTheString( tuple.get( 5, String.class ) );
-					struct.setTheInteger( tuple.get( 6, Integer.class ) );
-					struct.setTheUrl( tuple.get( 7, URL.class ) );
-					struct.setTheClob( tuple.get( 8, String.class ) );
-					struct.setTheBinary( tuple.get( 9, byte[].class ) );
-					struct.setTheDate( tuple.get( 10, Date.class ) );
-					struct.setTheTime( tuple.get( 11, Time.class ) );
-					struct.setTheTimestamp( tuple.get( 12, Timestamp.class ) );
-					struct.setTheInstant( tuple.get( 13, Instant.class ) );
-					struct.setTheUuid( tuple.get( 14, UUID.class ) );
-					struct.setGender( tuple.get( 15, EntityOfBasics.Gender.class ) );
-					struct.setConvertedGender( tuple.get( 16, EntityOfBasics.Gender.class ) );
-					struct.setOrdinalGender( tuple.get( 17, EntityOfBasics.Gender.class ) );
-					struct.setTheDuration( tuple.get( 18, Duration.class ) );
-					struct.setTheLocalDateTime( tuple.get( 19, LocalDateTime.class ) );
-					struct.setTheLocalDate( tuple.get( 20, LocalDate.class ) );
-					struct.setTheLocalTime( tuple.get( 21, LocalTime.class ) );
-					struct.setTheZonedDateTime( tuple.get( 22, ZonedDateTime.class ) );
-					struct.setTheOffsetDateTime( tuple.get( 23, OffsetDateTime.class ) );
-					struct.setMutableValue( tuple.get( 24, MutableValue.class ) );
-					EmbeddableAggregate.assertEquals( EmbeddableAggregate.createAggregate1(), struct );
+					final EmbeddableWithArrayAggregate struct = new EmbeddableWithArrayAggregate();
+					struct.setTheInt( tuple.get( 0, int[].class ) );
+					struct.setTheDouble( tuple.get( 1, double[].class ) );
+					struct.setTheBoolean( tuple.get( 2, Boolean[].class ) );
+					struct.setTheNumericBoolean( tuple.get( 3, Boolean[].class ) );
+					struct.setTheStringBoolean( tuple.get( 4, Boolean[].class ) );
+					struct.setTheString( tuple.get( 5, String[].class ) );
+					struct.setTheInteger( tuple.get( 6, Integer[].class ) );
+					struct.setTheUrl( tuple.get( 7, URL[].class ) );
+					struct.setTheClob( tuple.get( 8, String[].class ) );
+					struct.setTheBinary( tuple.get( 9, byte[][].class ) );
+					struct.setTheDate( tuple.get( 10, Date[].class ) );
+					struct.setTheTime( tuple.get( 11, Time[].class ) );
+					struct.setTheTimestamp( tuple.get( 12, Timestamp[].class ) );
+					struct.setTheInstant( tuple.get( 13, Instant[].class ) );
+					struct.setTheUuid( tuple.get( 14, UUID[].class ) );
+					struct.setGender( tuple.get( 15, EntityOfBasics.Gender[].class ) );
+					struct.setConvertedGender( tuple.get( 16, EntityOfBasics.Gender[].class ) );
+					struct.setOrdinalGender( tuple.get( 17, EntityOfBasics.Gender[].class ) );
+					struct.setTheDuration( tuple.get( 18, Duration[].class ) );
+					struct.setTheLocalDateTime( tuple.get( 19, LocalDateTime[].class ) );
+					struct.setTheLocalDate( tuple.get( 20, LocalDate[].class ) );
+					struct.setTheLocalTime( tuple.get( 21, LocalTime[].class ) );
+					struct.setTheZonedDateTime( tuple.get( 22, ZonedDateTime[].class ) );
+					struct.setTheOffsetDateTime( tuple.get( 23, OffsetDateTime[].class ) );
+					struct.setMutableValue( tuple.get( 24, MutableValue[].class ) );
+					EmbeddableWithArrayAggregate.assertEquals( EmbeddableWithArrayAggregate.createAggregate1(), struct );
 				}
 		);
 	}
@@ -404,7 +375,7 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "update StructHolder b set b.aggregate.theString = null" ).executeUpdate();
-					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
+					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
 					struct.setTheString( null );
 					assertStructEquals( struct, entityManager.find( StructHolder.class, 1L ).getAggregate() );
 				}
@@ -416,7 +387,7 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 		scope.inTransaction(
 				entityManager -> {
 					entityManager.createMutationQuery( "update StructHolder b set b.aggregate.theString = null, b.aggregate.theUuid = null" ).executeUpdate();
-					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
+					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
 					struct.setTheString( null );
 					struct.setTheUuid( null );
 					assertStructEquals( struct, entityManager.find( StructHolder.class, 1L ).getAggregate() );
@@ -428,7 +399,7 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 	public void testUpdateAllAggregateMembers(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate1();
+					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate1();
 					entityManager.createMutationQuery(
 							"update StructHolder b set " +
 									"b.aggregate.theInt = :theInt," +
@@ -484,7 +455,7 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 							.setParameter( "theOffsetDateTime", struct.getTheOffsetDateTime() )
 							.setParameter( "mutableValue", struct.getMutableValue() )
 							.executeUpdate();
-					assertStructEquals( EmbeddableAggregate.createAggregate1(), entityManager.find( StructHolder.class, 2L ).getAggregate() );
+					assertStructEquals( EmbeddableWithArrayAggregate.createAggregate1(), entityManager.find( StructHolder.class, 2L ).getAggregate() );
 				}
 		);
 	}
@@ -493,21 +464,14 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 	public void testNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
-					//noinspection unchecked
 					List<Object> resultList = entityManager.createNativeQuery(
-									"select b.aggregate from StructHolder b where b.id = 1",
-									// DB2 does not support structs on the driver level, and we instead do a XML serialization/deserialization
-									// So in order to receive the correct value, we have to specify the actual type that we expect
-									scope.getSessionFactory().getJdbcServices().getDialect() instanceof DB2Dialect
-											? (Class<Object>) (Class<?>) EmbeddableAggregate.class
-											// Using Object.class on purpose to verify Dialect#resolveSqlTypeDescriptor works
-											: Object.class
+									"select b.aggregate from StructHolder b where b.id = 1", Object.class
 							)
 							.getResultList();
 					assertEquals( 1, resultList.size() );
-					assertInstanceOf( EmbeddableAggregate.class, resultList.get( 0 ) );
-					EmbeddableAggregate struct = (EmbeddableAggregate) resultList.get( 0 );
-					assertStructEquals( EmbeddableAggregate.createAggregate1(), struct );
+					assertInstanceOf( EmbeddableWithArrayAggregate.class, resultList.get( 0 ) );
+					EmbeddableWithArrayAggregate struct = (EmbeddableWithArrayAggregate) resultList.get( 0 );
+					assertStructEquals( EmbeddableWithArrayAggregate.createAggregate1(), struct );
 				}
 		);
 	}
@@ -517,22 +481,19 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 		scope.inTransaction(
 				entityManager -> {
 					ProcedureCall structFunction = entityManager.createStoredProcedureCall( "structFunction" )
-							.markAsFunctionCall( EmbeddableAggregate.class );
+							.markAsFunctionCall( EmbeddableWithArrayAggregate.class );
 					//noinspection unchecked
 					final List<Object> resultList = structFunction.getResultList();
 					assertEquals( 1, resultList.size() );
-					assertInstanceOf( EmbeddableAggregate.class, resultList.get( 0 ) );
-					EmbeddableAggregate result = (EmbeddableAggregate) resultList.get( 0 );
-					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate3();
+					assertInstanceOf( EmbeddableWithArrayAggregate.class, resultList.get( 0 ) );
+					EmbeddableWithArrayAggregate result = (EmbeddableWithArrayAggregate) resultList.get( 0 );
+					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate3();
 					assertStructEquals( struct, result );
 				}
 		);
 	}
 
 	@Test
-	@SkipForDialect(dialectClass = PostgreSQLDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11")
-	@SkipForDialect(dialectClass = PostgresPlusDialect.class, majorVersion = 10, reason = "Procedures were only introduced in version 11")
-	@SkipForDialect(dialectClass = DB2Dialect.class, reason = "DB2 does not support struct types in procedures")
 	public void testProcedure(SessionFactoryScope scope) {
 		scope.inTransaction(
 				entityManager -> {
@@ -545,42 +506,40 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 						parameterMode = ParameterMode.OUT;
 					}
 					ProcedureCall structFunction = entityManager.createStoredProcedureCall( "structProcedure" );
-					ProcedureParameter<EmbeddableAggregate> resultParameter = structFunction.registerParameter(
+					ProcedureParameter<EmbeddableWithArrayAggregate> resultParameter = structFunction.registerParameter(
 							"structType",
-							EmbeddableAggregate.class,
+							EmbeddableWithArrayAggregate.class,
 							parameterMode
 					);
 					structFunction.setParameter( resultParameter, null );
-					EmbeddableAggregate result = structFunction.getOutputs().getOutputParameterValue( resultParameter );
-					EmbeddableAggregate struct = EmbeddableAggregate.createAggregate3();
+					EmbeddableWithArrayAggregate result = structFunction.getOutputs().getOutputParameterValue( resultParameter );
+					EmbeddableWithArrayAggregate struct = EmbeddableWithArrayAggregate.createAggregate3();
 					assertStructEquals( struct, result );
 				}
 		);
 	}
 
-	private static void assertStructEquals(EmbeddableAggregate struct, EmbeddableAggregate struct2) {
+	private static void assertStructEquals(EmbeddableWithArrayAggregate struct, EmbeddableWithArrayAggregate struct2) {
 		assertArrayEquals( struct.getTheBinary(), struct2.getTheBinary() );
-		assertEquals( struct.getTheString(), struct2.getTheString() );
-		assertEquals( struct.getTheLocalDateTime(), struct2.getTheLocalDateTime() );
-		assertEquals( struct.getTheUuid(), struct2.getTheUuid() );
+		assertArrayEquals( struct.getTheString(), struct2.getTheString() );
+		assertArrayEquals( struct.getTheLocalDateTime(), struct2.getTheLocalDateTime() );
+		assertArrayEquals( struct.getTheUuid(), struct2.getTheUuid() );
 	}
 
-	//tag::embeddable-struct-type-mapping-example[]
 	@Entity(name = "StructHolder")
 	public static class StructHolder {
 
 		@Id
 		private Long id;
 		@Struct(name = "structType")
-		private EmbeddableAggregate aggregate;
+		private EmbeddableWithArrayAggregate aggregate;
 
-		//end::embeddable-struct-type-mapping-example[]
 		//Getters and setters are omitted for brevity
 
 		public StructHolder() {
 		}
 
-		public StructHolder(Long id, EmbeddableAggregate aggregate) {
+		public StructHolder(Long id, EmbeddableWithArrayAggregate aggregate) {
 			this.id = id;
 			this.aggregate = aggregate;
 		}
@@ -593,15 +552,13 @@ public class StructEmbeddableTest implements AdditionalMappingContributor {
 			this.id = id;
 		}
 
-		public EmbeddableAggregate getAggregate() {
+		public EmbeddableWithArrayAggregate getAggregate() {
 			return aggregate;
 		}
 
-		public void setAggregate(EmbeddableAggregate aggregate) {
+		public void setAggregate(EmbeddableWithArrayAggregate aggregate) {
 			this.aggregate = aggregate;
 		}
 
-		//tag::embeddable-struct-type-mapping-example[]
 	}
-	//end::embeddable-struct-type-mapping-example[]
 }

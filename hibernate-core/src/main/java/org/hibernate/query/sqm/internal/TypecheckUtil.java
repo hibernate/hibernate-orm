@@ -336,10 +336,12 @@ public class TypecheckUtil {
 	 * @see TypecheckUtil#assertAssignable(String, SqmPath, SqmTypedNode, SessionFactoryImplementor)
 	 */
 	public static void assertComparable(Expression<?> x, Expression<?> y, SessionFactoryImplementor factory) {
-		SqmExpression<?> left = (SqmExpression<?>) x;
-		SqmExpression<?> right = (SqmExpression<?>) y;
-		if (  left.getTupleLength() != null && right.getTupleLength() != null
-				&& left.getTupleLength().intValue() != right.getTupleLength().intValue() ) {
+		final SqmExpression<?> left = (SqmExpression<?>) x;
+		final SqmExpression<?> right = (SqmExpression<?>) y;
+		final Integer leftTupleLength = left.getTupleLength();
+		final Integer rightTupleLength;
+		if (  leftTupleLength != null && ( rightTupleLength = right.getTupleLength() ) != null
+				&& leftTupleLength.intValue() != rightTupleLength.intValue() ) {
 			throw new SemanticException( "Cannot compare tuples of different lengths" );
 		}
 

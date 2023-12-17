@@ -11,6 +11,7 @@ import java.lang.reflect.Array;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -171,6 +172,15 @@ public class IntegerPrimitiveArrayJavaType extends AbstractArrayJavaType<int[], 
 		else if ( value instanceof Integer ) {
 			// Support binding a single element as parameter value
 			return new int[]{ (int) value };
+		}
+		else if ( value instanceof Collection<?> ) {
+			final Collection<?> collection = (Collection<?>) value;
+			final int[] wrapped = new int[collection.size()];
+			int i = 0;
+			for ( Object e : collection ) {
+				wrapped[i++] = getElementJavaType().wrap( e, options );
+			}
+			return wrapped;
 		}
 
 		throw unknownWrap( value.getClass() );

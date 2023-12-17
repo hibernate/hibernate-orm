@@ -1042,6 +1042,15 @@ public class PropertyBinder {
 				resolveCompositeUserType( inferredData, context );
 
 		if ( isComposite || compositeUserType != null ) {
+			if ( property.isArray() && property.getElementClass() != null
+					&& isEmbedded( property, property.getElementClass() ) ) {
+				// This is a special kind of basic aggregate component array type
+				// todo: see HHH-15830
+				throw new AnnotationException(
+						"Property '" + BinderHelper.getPath( propertyHolder, inferredData )
+								+ "' is mapped as basic aggregate component array, but this is not yet supported."
+				);
+			}
 			propertyBinder = createCompositeBinder(
 					propertyHolder,
 					inferredData,

@@ -10,12 +10,14 @@ import org.hibernate.Incubating;
 import org.hibernate.query.sqm.internal.NoParamSqmCopyContext;
 import org.hibernate.query.sqm.internal.SimpleSqmCopyContext;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 /**
  *
  */
 public interface SqmCopyContext {
 
-	<T> T getCopy(T original);
+	<T> @Nullable T getCopy(T original);
 
 	<T> T registerCopy(T original, T copy);
 

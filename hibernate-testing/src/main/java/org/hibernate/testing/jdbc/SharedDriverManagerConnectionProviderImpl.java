@@ -6,11 +6,15 @@
  */
 package org.hibernate.testing.jdbc;
 
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.Set;
 
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.jdbc.connections.internal.ConnectionProviderInitiator;
@@ -26,6 +30,47 @@ import org.hibernate.internal.util.config.ConfigurationHelper;
 public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConnectionProviderImpl {
 
 	private static final SharedDriverManagerConnectionProviderImpl INSTANCE = new SharedDriverManagerConnectionProviderImpl();
+
+	private static final Set<String> PGJDBC_STANDARD_TYPE_NAMES = buildTypeNames( Set.of(
+			"int2",
+			"int4",
+			"oid",
+			"int8",
+			"money",
+			"numeric",
+			"float4",
+			"float8",
+			"char",
+			"bpchar",
+			"varchar",
+			"text",
+			"name",
+			"bytea",
+			"bool",
+			"bit",
+			"date",
+			"time",
+			"timetz",
+			"timestamp",
+			"timestamptz",
+			"refcursor",
+			"json",
+			"jsonb",
+			"box",
+			"point",
+			"uuid",
+			"xml"
+	) );
+
+	private static Set<String> buildTypeNames(Set<String> baseTypeNames) {
+		final HashSet<String> typeNames = new HashSet<>( baseTypeNames.size() * 3 );
+		for ( String baseTypeName : baseTypeNames ) {
+			typeNames.add( baseTypeName );
+			typeNames.add( "_" + baseTypeName );
+			typeNames.add( baseTypeName + "[]" );
+		}
+		return typeNames;
+	}
 
 	public static SharedDriverManagerConnectionProviderImpl getInstance() {
 		return INSTANCE;
@@ -80,6 +125,49 @@ public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConn
 					final Class<?> oracleConnection = Class.forName( "oracle.jdbc.OracleConnection" );
 					final Object connection = c.unwrap( oracleConnection );
 					oracleConnection.getMethod( "removeAllDescriptor").invoke( connection );
+					return true;
+				}
+				catch (Exception e) {
+					throw new RuntimeException( e );
+				}
+			} );
+		}
+		else if ( "org.postgresql.Driver".equals( config.driverClassName ) ) {
+			validateConnections( c -> {
+				// Until pgjdbc provides a method for this out of the box, we have to do this manually
+				// See https://github.com/pgjdbc/pgjdbc/issues/3049
+				try {
+					final Class<?> pgConnection = Class.forName( "org.postgresql.jdbc.PgConnection" );
+					final Object connection = c.unwrap( pgConnection );
+					final Object typeInfo = pgConnection.getMethod( "getTypeInfo" ).invoke( connection );
+					final Class<?> typeInfoCacheClass = Class.forName( "org.postgresql.jdbc.TypeInfoCache" );
+					final Field oidToPgNameField = typeInfoCacheClass.getDeclaredField( "oidToPgName" );
+					final Field pgNameToOidField = typeInfoCacheClass.getDeclaredField( "pgNameToOid" );
+					final Field pgNameToSQLTypeField = typeInfoCacheClass.getDeclaredField( "pgNameToSQLType" );
+					final Field oidToSQLTypeField = typeInfoCacheClass.getDeclaredField( "oidToSQLType" );
+					oidToPgNameField.setAccessible( true );
+					pgNameToOidField.setAccessible( true );
+					pgNameToSQLTypeField.setAccessible( true );
+					oidToSQLTypeField.setAccessible( true );
+					//noinspection unchecked
+					final Map<Integer, String> oidToPgName = (Map<Integer, String>) oidToPgNameField.get( typeInfo );
+					//noinspection unchecked
+					final Map<String, Integer> pgNameToOid = (Map<String, Integer>) pgNameToOidField.get( typeInfo );
+					//noinspection unchecked
+					final Map<String, Integer> pgNameToSQLType = (Map<String, Integer>) pgNameToSQLTypeField.get( typeInfo );
+					//noinspection unchecked
+					final Map<Integer, Integer> oidToSQLType = (Map<Integer, Integer>) oidToSQLTypeField.get( typeInfo );
+					for ( Iterator<Map.Entry<String, Integer>> iter = pgNameToOid.entrySet().iterator(); iter.hasNext(); ) {
+						Map.Entry<String, Integer> entry = iter.next();
+						final String typeName = entry.getKey();
+						if ( !PGJDBC_STANDARD_TYPE_NAMES.contains( typeName ) ) {
+							final Integer oid = entry.getValue();
+							oidToPgName.remove( oid );
+							oidToSQLType.remove( oid );
+							pgNameToSQLType.remove( typeName );
+							iter.remove();
+						}
+					}
 					return true;
 				}
 				catch (Exception e) {

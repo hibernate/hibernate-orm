@@ -96,6 +96,11 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 	}
 
 	@Override
+	public boolean isInTypeInference() {
+		return false;
+	}
+
+	@Override
 	public MappingModelExpressible<?> resolveFunctionImpliedReturnType() {
 		return null;
 	}

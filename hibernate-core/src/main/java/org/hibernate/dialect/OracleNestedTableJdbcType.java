@@ -17,6 +17,7 @@ import org.hibernate.type.descriptor.ValueExtractor;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.BasicBinder;
 import org.hibernate.type.descriptor.jdbc.BasicExtractor;
 import org.hibernate.type.descriptor.jdbc.JdbcLiteralFormatter;
@@ -34,8 +35,8 @@ import java.util.Locale;
 
 import static java.sql.Types.ARRAY;
 import static java.util.Collections.emptySet;
+import static org.hibernate.dialect.OracleArrayJdbcType.getTypeName;
 import static org.hibernate.internal.util.StringHelper.truncate;
-import static org.hibernate.internal.util.collections.ArrayHelper.EMPTY_STRING_ARRAY;
 
 /**
  * Descriptor for {@link Types#ARRAY ARRAY} handling.
@@ -94,12 +95,12 @@ public class OracleNestedTableJdbcType implements JdbcType {
 
 	@Override
 	public <X> ValueBinder<X> getBinder(final JavaType<X> javaTypeDescriptor) {
-		//noinspection unchecked
-		final BasicPluralJavaType<X> containerJavaType = (BasicPluralJavaType<X>) javaTypeDescriptor;
 		return new BasicBinder<>( javaTypeDescriptor, this ) {
 			private String typeName(WrapperOptions options) {
-				return ( typeName == null ? getTypeName( options, containerJavaType ) : typeName )
-						.toUpperCase(Locale.ROOT);
+				return ( typeName == null
+						? getTypeName( options, (BasicPluralJavaType<?>) getJavaType(), (ArrayJdbcType) getJdbcType() )
+						: typeName
+				).toUpperCase( Locale.ROOT );
 			}
 			@Override
 			protected void doBindNull(PreparedStatement st, int index, WrapperOptions options) throws SQLException {
@@ -113,13 +114,13 @@ public class OracleNestedTableJdbcType implements JdbcType {
 
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options) throws SQLException {
-				st.setArray( index, getArray( value, containerJavaType, options ) );
+				st.setArray( index, getBindValue( value, options ) );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				final java.sql.Array arr = getArray( value, containerJavaType, options );
+				final java.sql.Array arr = getBindValue( value, options );
 				try {
 					st.setObject( name, arr, ARRAY );
 				}
@@ -128,14 +129,14 @@ public class OracleNestedTableJdbcType implements JdbcType {
 				}
 			}
 
-			private java.sql.Array getArray(X value, BasicPluralJavaType<X> containerJavaType, WrapperOptions options)
-					throws SQLException {
+			@Override
+			public java.sql.Array getBindValue(X value, WrapperOptions options) throws SQLException {
 				//noinspection unchecked
 				final Class<Object[]> arrayClass = (Class<Object[]>) Array.newInstance(
 						getElementJdbcType().getPreferredJavaTypeClass( options ),
 						0
 				).getClass();
-				final Object[] objects = javaTypeDescriptor.unwrap( value, arrayClass, options );
+				final Object[] objects = getJavaType().unwrap( value, arrayClass, options );
 				final String arrayTypeName = typeName( options ).toUpperCase(Locale.ROOT);
 
 				final OracleConnection oracleConnection = options.getSession()
@@ -156,32 +157,19 @@ public class OracleNestedTableJdbcType implements JdbcType {
 		return new BasicExtractor<>( javaTypeDescriptor, this ) {
 			@Override
 			protected X doExtract(ResultSet rs, int paramIndex, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( rs.getArray( paramIndex ), options );
+				return getJavaType().wrap( rs.getArray( paramIndex ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, int index, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getArray( index ), options );
+				return getJavaType().wrap( statement.getArray( index ), options );
 			}
 
 			@Override
 			protected X doExtract(CallableStatement statement, String name, WrapperOptions options) throws SQLException {
-				return javaTypeDescriptor.wrap( statement.getArray( name ), options );
+				return getJavaType().wrap( statement.getArray( name ), options );
 			}
 		};
-	}
-
-	static String getTypeName(WrapperOptions options, BasicPluralJavaType<?> containerJavaType) {
-		Dialect dialect = options.getSessionFactory().getJdbcServices().getDialect();
-		return getTypeName( containerJavaType.getElementJavaType(), dialect );
-	}
-
-	static String getTypeName(JavaType<?> elementJavaType, Dialect dialect) {
-		return dialect.getArrayTypeName(
-				elementJavaType.getJavaTypeClass().getSimpleName(),
-				null, // not needed by OracleDialect.getArrayTypeName(),
-				null // not needed by OracleDialect.getArrayTypeName()
-		);
 	}
 
 	@Override
@@ -193,7 +181,7 @@ public class OracleNestedTableJdbcType implements JdbcType {
 		final Dialect dialect = database.getDialect();
 		final BasicPluralJavaType<?> pluralJavaType = (BasicPluralJavaType<?>) javaType;
 		final JavaType<?> elementJavaType = pluralJavaType.getElementJavaType();
-		final String arrayTypeName = typeName==null ? getTypeName( elementJavaType, dialect ) : typeName;
+		final String arrayTypeName = typeName==null ? getTypeName( elementJavaType, getElementJdbcType(), dialect ) : typeName;
 		final String elementType =
 				typeConfiguration.getDdlTypeRegistry().getTypeName(
 						getElementJdbcType().getDdlTypeCode(),
@@ -225,7 +213,7 @@ public class OracleNestedTableJdbcType implements JdbcType {
 	public String getExtraCreateTableInfo(JavaType<?> javaType, String columnName, String tableName, Database database) {
 		final Dialect dialect = database.getDialect();
 		final BasicPluralJavaType<?> pluralJavaType = (BasicPluralJavaType<?>) javaType;
-		String elementTypeName = getTypeName( pluralJavaType.getElementJavaType(), dialect );
+		String elementTypeName = getTypeName( pluralJavaType.getElementJavaType(), getElementJdbcType(), dialect );
 		return " nested table " + columnName + " store as \"" + truncate(
 				tableName + " " + columnName + " " + elementTypeName,
 				dialect.getMaxIdentifierLength()

@@ -158,8 +158,8 @@ public class InverseDistributionFunction extends AbstractSqmSelfRenderingFunctio
 		}
 
 		@Override
-		protected ReturnableType<?> resolveResultType(
-				Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+		protected ReturnableType<?> determineResultType(
+				SqmToSqlAstConverter converter,
 				TypeConfiguration typeConfiguration) {
 			return (ReturnableType<?>)
 					getWithinGroup().getSortSpecifications().get( 0 )

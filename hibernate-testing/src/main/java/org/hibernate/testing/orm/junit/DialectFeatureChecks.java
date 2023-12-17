@@ -27,11 +27,12 @@ import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.SybaseDriverKind;
-import org.hibernate.dialect.TimeZoneSupport;
 import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.dialect.TimeZoneSupport;
+import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.Column;
 import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.sql.ast.spi.StringBuilderSqlAppender;
-import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
 import org.hibernate.type.SqlTypes;
 
 /**
@@ -522,7 +523,7 @@ abstract public class DialectFeatureChecks {
 						"",
 						"",
 						"",
-						new ColumnTypeInformation() {
+						new AggregateColumn(new Column(), null) {
 							@Override
 							public TruthValue getNullable() {
 								return TruthValue.UNKNOWN;
@@ -547,7 +548,7 @@ abstract public class DialectFeatureChecks {
 							public int getDecimalDigits() {
 								return 0;
 							}
-						}, new ColumnTypeInformation() {
+						}, new Column() {
 							@Override
 							public TruthValue getNullable() {
 								return TruthValue.UNKNOWN;
@@ -590,7 +591,7 @@ abstract public class DialectFeatureChecks {
 						"",
 						"",
 						"",
-						new ColumnTypeInformation() {
+						new AggregateColumn(new Column(), null) {
 							@Override
 							public TruthValue getNullable() {
 								return TruthValue.UNKNOWN;
@@ -615,7 +616,7 @@ abstract public class DialectFeatureChecks {
 							public int getDecimalDigits() {
 								return 0;
 							}
-						}, new ColumnTypeInformation() {
+						}, new Column() {
 							@Override
 							public TruthValue getNullable() {
 								return TruthValue.UNKNOWN;
@@ -670,6 +671,12 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsCommentOn implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			return dialect.supportsCommentOn();
+		}
+	}
+
+	public static class SupportsStandardArrays implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return dialect.supportsStandardArrays();
 		}
 	}
 

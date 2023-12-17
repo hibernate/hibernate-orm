@@ -296,18 +296,18 @@ public class AggregateComponentSecondPass implements SecondPass {
 					validateSupportedColumnTypes( StringHelper.qualify( basePath, property.getName() ), subComponent );
 				}
 			}
-			else if ( value instanceof BasicValue ) {
-				final BasicType<?> basicType = (BasicType<?>) value.getType();
-				if ( basicType instanceof BasicPluralType<?, ?> ) {
-					// todo: see HHH-15862
-					throw new AnnotationException(
-							"Property '" + StringHelper.qualify( basePath, property.getName() )
-									+ "' uses not yet supported array mapping type in component class '"
-									+ component.getComponentClassName()
-									+ "'. Aggregate components currently may only contain simple basic values and components of simple basic values."
-					);
-				}
-			}
+//			else if ( value instanceof BasicValue ) {
+//				final BasicType<?> basicType = (BasicType<?>) value.getType();
+//				if ( basicType instanceof BasicPluralType<?, ?> ) {
+//					// todo: see HHH-15862
+//					throw new AnnotationException(
+//							"Property '" + StringHelper.qualify( basePath, property.getName() )
+//									+ "' uses not yet supported array mapping type in component class '"
+//									+ component.getComponentClassName()
+//									+ "'. Aggregate components currently may only contain simple basic values and components of simple basic values."
+//					);
+//				}
+//			}
 		}
 	}
 

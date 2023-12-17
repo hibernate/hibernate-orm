@@ -12,17 +12,27 @@ import java.util.Map;
 
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.OracleArrayJdbcType;
+import org.hibernate.engine.jdbc.Size;
+import org.hibernate.mapping.AggregateColumn;
+import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
-import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.type.BasicPluralType;
+import org.hibernate.type.BasicType;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
+import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import static org.hibernate.type.SqlTypes.ARRAY;
 import static org.hibernate.type.SqlTypes.BIGINT;
 import static org.hibernate.type.SqlTypes.BINARY;
 import static org.hibernate.type.SqlTypes.BLOB;
@@ -39,8 +49,6 @@ import static org.hibernate.type.SqlTypes.TIME;
 import static org.hibernate.type.SqlTypes.TIMESTAMP;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.TIMESTAMP_WITH_TIMEZONE;
-import static org.hibernate.type.SqlTypes.TIME_UTC;
-import static org.hibernate.type.SqlTypes.TIME_WITH_TIMEZONE;
 import static org.hibernate.type.SqlTypes.TINYINT;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 
@@ -93,10 +101,10 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 			String template,
 			String placeholder,
 			String aggregateParentReadExpression,
-			String column,
-			ColumnTypeInformation aggregateColumnType,
-			ColumnTypeInformation columnType) {
-		switch ( aggregateColumnType.getTypeCode() ) {
+			String columnExpression,
+			AggregateColumn aggregateColumn,
+			Column column) {
+		switch ( aggregateColumn.getTypeCode() ) {
 			case JSON:
 				switch ( jsonSupport ) {
 					case OSON:
@@ -111,12 +119,12 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 						else {
 							parentPartExpression = aggregateParentReadExpression + ",'$.";
 						}
-						switch ( columnType.getTypeCode() ) {
+						switch ( column.getTypeCode() ) {
 							case BOOLEAN:
-								if ( columnType.getTypeName().toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
+								if ( column.getTypeName().toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
 									return template.replace(
 											placeholder,
-											"decode(json_value(" + parentPartExpression + column + "'),'true',1,'false',0,null)"
+											"decode(json_value(" + parentPartExpression + columnExpression + "'),'true',1,'false',0,null)"
 									);
 								}
 							case TINYINT:
@@ -125,28 +133,28 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 							case BIGINT:
 								return template.replace(
 										placeholder,
-										"json_value(" + parentPartExpression + column + "' returning " + columnType.getTypeName() + ')'
+										"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getTypeName() + ')'
 								);
 							case DATE:
 								return template.replace(
 										placeholder,
-										"to_date(json_value(" + parentPartExpression + column + "'),'YYYY-MM-DD')"
+										"to_date(json_value(" + parentPartExpression + columnExpression + "'),'YYYY-MM-DD')"
 								);
 							case TIME:
 								return template.replace(
 										placeholder,
-										"to_timestamp(json_value(" + parentPartExpression + column + "'),'hh24:mi:ss')"
+										"to_timestamp(json_value(" + parentPartExpression + columnExpression + "'),'hh24:mi:ss')"
 								);
 							case TIMESTAMP:
 								return template.replace(
 										placeholder,
-										"to_timestamp(json_value(" + parentPartExpression + column + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9')"
+										"to_timestamp(json_value(" + parentPartExpression + columnExpression + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9')"
 								);
 							case TIMESTAMP_WITH_TIMEZONE:
 							case TIMESTAMP_UTC:
 								return template.replace(
 										placeholder,
-										"to_timestamp_tz(json_value(" + parentPartExpression + column + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9TZH:TZM')"
+										"to_timestamp_tz(json_value(" + parentPartExpression + columnExpression + "'),'YYYY-MM-DD\"T\"hh24:mi:ss.FF9TZH:TZM')"
 								);
 							case BINARY:
 							case VARBINARY:
@@ -154,7 +162,7 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								// We encode binary data as hex, so we have to decode here
 								return template.replace(
 										placeholder,
-										"hextoraw(json_value(" + parentPartExpression + column + "'))"
+										"hextoraw(json_value(" + parentPartExpression + columnExpression + "'))"
 								);
 							case CLOB:
 							case NCLOB:
@@ -162,61 +170,119 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								// We encode binary data as hex, so we have to decode here
 								return template.replace(
 										placeholder,
-										"(select * from json_table(" + aggregateParentReadExpression + ",'$' columns (" + column + " " + columnType.getTypeName() + " path '$." + column + "')))"
+										"(select * from json_table(" + aggregateParentReadExpression + ",'$' columns (" + columnExpression + " " + column.getTypeName() + " path '$." + columnExpression + "')))"
 								);
+							case ARRAY:
+								final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) column.getValue().getType();
+								final OracleArrayJdbcType jdbcType = (OracleArrayJdbcType) pluralType.getJdbcType();
+								switch ( jdbcType.getElementJdbcType().getDefaultSqlTypeCode() ) {
+									case BOOLEAN:
+									case DATE:
+									case TIME:
+									case TIMESTAMP:
+									case TIMESTAMP_WITH_TIMEZONE:
+									case TIMESTAMP_UTC:
+									case BINARY:
+									case VARBINARY:
+									case LONG32VARBINARY:
+										return template.replace(
+												placeholder,
+												jdbcType.getTypeName() + "_from_json(json_query(" + parentPartExpression + columnExpression + "'))"
+										);
+									default:
+										return template.replace(
+												placeholder,
+												"json_value(" + parentPartExpression + columnExpression + "' returning " + column.getTypeName() + ')'
+										);
+								}
 							case JSON:
 								return template.replace(
 										placeholder,
-										"json_query(" + parentPartExpression + column + "')"
+										"json_query(" + parentPartExpression + columnExpression + "')"
 								);
 							default:
 								return template.replace(
 										placeholder,
-										"cast(json_value(" + parentPartExpression + column + "') as " + columnType.getTypeName() + ')'
+										"cast(json_value(" + parentPartExpression + columnExpression + "') as " + column.getTypeName() + ')'
 								);
 						}
 					case NONE:
 						throw new UnsupportedOperationException( "The Oracle version doesn't support JSON aggregates!" );
 				}
 			case STRUCT:
-				return template.replace( placeholder, aggregateParentReadExpression + "." + column );
+				return template.replace( placeholder, aggregateParentReadExpression + "." + columnExpression );
 		}
-		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnType.getTypeCode() );
+		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
 	}
 
 	@Override
 	public String aggregateComponentAssignmentExpression(
 			String aggregateParentAssignmentExpression,
-			String column,
-			ColumnTypeInformation aggregateColumnType,
-			ColumnTypeInformation columnType) {
-		switch ( aggregateColumnType.getTypeCode() ) {
+			String columnExpression,
+			AggregateColumn aggregateColumn,
+			Column column) {
+		switch ( aggregateColumn.getTypeCode() ) {
 			case JSON:
 				// For JSON we always have to replace the whole object
 				return aggregateParentAssignmentExpression;
 			case STRUCT:
-				return aggregateParentAssignmentExpression + "." + column;
+				return aggregateParentAssignmentExpression + "." + columnExpression;
 		}
-		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumnType.getTypeCode() );
+		throw new IllegalArgumentException( "Unsupported aggregate SQL type: " + aggregateColumn.getTypeCode() );
 	}
 
-	private String jsonCustomWriteExpression(String customWriteExpression, int sqlTypeCode, String typeName) {
+	private String jsonCustomWriteExpression(
+			String customWriteExpression,
+			JdbcMapping jdbcMapping,
+			SelectableMapping column,
+			TypeConfiguration typeConfiguration) {
+		final int sqlTypeCode = jdbcMapping.getJdbcType().getDefaultSqlTypeCode();
 		switch ( jsonSupport ) {
 			case OSON:
-//				return customWriteExpression;
 			case MERGEPATCH:
 				switch ( sqlTypeCode ) {
 					case CLOB:
 						return "to_clob(" + customWriteExpression + ")";
 					case BOOLEAN:
-						if ( typeName.toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
+						final String sqlTypeName = AbstractSqlAstTranslator.getSqlTypeName( column, typeConfiguration );
+						if ( sqlTypeName.toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
 							return "decode(" + customWriteExpression + ",1,'true',0,'false',null)";
+						}
+					case ARRAY:
+						final BasicPluralType<?, ?> pluralType = (BasicPluralType<?, ?>) jdbcMapping;
+						final OracleArrayJdbcType jdbcType = (OracleArrayJdbcType) pluralType.getJdbcType();
+						switch ( jdbcType.getElementJdbcType().getDefaultSqlTypeCode() ) {
+							case CLOB:
+								return "(select json_arrayagg(to_clob(t.column_value)) from table(" + customWriteExpression + ") t)";
+							case BOOLEAN:
+								final String elementTypeName = determineElementTypeName( column.toSize(), pluralType, typeConfiguration );
+								if ( elementTypeName.toLowerCase( Locale.ROOT ).trim().startsWith( "number" ) ) {
+									return "(select json_arrayagg(decode(t.column_value,1,'true',0,'false',null)) from table(" + customWriteExpression + ") t)";
+								}
+							default:
+								break;
 						}
 					default:
 						return customWriteExpression;
 				}
 		}
 		throw new IllegalStateException( "JSON not supported!" );
+	}
+
+	private static String determineElementTypeName(
+			Size castTargetSize,
+			BasicPluralType<?, ?> pluralType,
+			TypeConfiguration typeConfiguration) {
+		final DdlTypeRegistry ddlTypeRegistry = typeConfiguration.getDdlTypeRegistry();
+		final BasicType<?> expressionType = pluralType.getElementType();
+		DdlType ddlType = ddlTypeRegistry.getDescriptor( expressionType.getJdbcType().getDdlTypeCode() );
+		if ( ddlType == null ) {
+			// this may happen when selecting a null value like `SELECT null from ...`
+			// some dbs need the value to be cast so not knowing the real type we fall back to INTEGER
+			ddlType = ddlTypeRegistry.getDescriptor( SqlTypes.INTEGER );
+		}
+
+		return ddlType.getTypeName( castTargetSize, expressionType, ddlTypeRegistry );
 	}
 
 	@Override
@@ -314,7 +380,6 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 					);
 					currentMappingType = currentAggregate.embeddableMappingType;
 				}
-				final int sqlTypeCode = column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode();
 				final String customWriteExpression = column.getWriteExpression();
 				currentAggregate.subExpressions.put(
 						parts[parts.length - 1].getSelectableName(),
@@ -322,32 +387,13 @@ public class OracleAggregateSupport extends AggregateSupportImpl {
 								column,
 								aggregateSupport.jsonCustomWriteExpression(
 										customWriteExpression,
-										sqlTypeCode,
-										determineTypeName( column, typeConfiguration )
+										column.getJdbcMapping(),
+										column,
+										typeConfiguration
 								)
 						)
 				);
 			}
-		}
-
-		private static String determineTypeName(SelectableMapping column, TypeConfiguration typeConfiguration) {
-			final String typeName;
-			if ( column.getColumnDefinition() == null ) {
-				final DdlType ddlType = typeConfiguration.getDdlTypeRegistry().getDescriptor(
-						column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode()
-				);
-				return ddlType.getCastTypeName(
-						column.getJdbcMapping().getJdbcType(),
-						column.getJdbcMapping().getJavaTypeDescriptor(),
-						column.getLength(),
-						column.getPrecision(),
-						column.getScale()
-				);
-			}
-			else{
-				typeName = column.getColumnDefinition();
-			}
-			return typeName;
 		}
 
 		@Override

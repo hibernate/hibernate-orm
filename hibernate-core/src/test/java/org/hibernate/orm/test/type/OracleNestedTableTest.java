@@ -85,7 +85,7 @@ public class OracleNestedTableTest {
 				ResultSet tableInfo = c.getMetaData().getColumns(null, null, "CONTAINERWITHARRAYS", "ACTIVITYTYPES" );
 				while ( tableInfo.next() ) {
 					String type = tableInfo.getString(6);
-					assertEquals( "ACTIVITYTYPEARRAY", type );
+					assertEquals( "ACTIVITYTYPEBYTEARRAY", type );
 					return;
 				}
 				fail("nested table column not exported");

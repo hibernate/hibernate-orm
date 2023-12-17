@@ -377,7 +377,7 @@ public interface SessionFactoryBuilder {
 	 *
 	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_IDENTIFIER_RESOLVER
 	 */
-	SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver);
+	SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver);
 
 	/**
 	 * If using the built-in JTA-based

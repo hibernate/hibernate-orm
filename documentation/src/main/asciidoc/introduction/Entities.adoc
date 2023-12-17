@@ -694,7 +694,9 @@ For example, the following converter will be automatically applied to any attrib
 [source,java]
 ----
 @Converter(autoApply = true)
-public static class EnumSetConverter implements AttributeConverter<EnumSet<DayOfWeek>,Integer> {
+public static class EnumSetConverter
+        // converts Java values of type EnumSet<DayOfWeek> to integers for storage in an INT column
+        implements AttributeConverter<EnumSet<DayOfWeek>,Integer> {
     @Override
     public Integer convertToDatabaseColumn(EnumSet<DayOfWeek> enumSet) {
         int encoded = 0;
@@ -1577,18 +1579,25 @@ class Book {
     @Basic(optional=false)
     String isbn;
 
+    String getIsbn() {
+        return isbn;
+    }
+
     ...
 
     @Override
     public boolean equals(Object other) {
-        return other instanceof Book
-            && ((Book) other).isbn.equals(isbn);
+        return other instanceof Book                   // check type with instanceof, not getClass()
+            && ((Book) other).getIsbn().equals(isbn);  // compare natural ids
     }
     @Override
     public int hashCode() {
-        return isbn.hashCode();
+        return isbn.hashCode();  // hashcode based on the natural id
     }
 }
 ----
 
 That said, an implementation of `equals()` and `hashCode()` based on the generated identifier of the entity can work _if you're careful_.
+
+CAUTION: Your implementation of `equals()` must be written to accommodate the possibility that the object passed to the `equals()` might be a <<proxies-and-lazy-fetching,proxy>>.
+Therefore, you should use `instanceof`, not `getClass()` to check the type of the argument, and should access fields of the passed entity via its accessor methods.

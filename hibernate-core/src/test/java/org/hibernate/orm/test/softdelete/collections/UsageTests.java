@@ -60,7 +60,7 @@ public class UsageTests {
 					.uniqueResult();
 		} );
 		assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "deleted='N'" );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "deleted='N'", "deleted=N'N'" );
 	}
 
 	@Test
@@ -91,8 +91,9 @@ public class UsageTests {
 		} );
 		assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).startsWith( "update " );
-		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "deleted='Y'" );
-		assertThat( statementInspector.getSqlQueries().get( 0 ) ).endsWith( "deleted='N'" );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "deleted='Y'", "deleted=N'Y'" );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "deleted='N'", "deleted=N'N'" );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).endsWith( "'N'" );
 
 		scope.inTransaction( (session) -> {
 			final CollectionOwner owner = session.get( CollectionOwner.class, 1 );
@@ -138,8 +139,9 @@ public class UsageTests {
 		// this will be a "recreate"
 		assertThat( statementInspector.getSqlQueries() ).hasSize( 2 );
 		assertThat( statementInspector.getSqlQueries().get( 0 ) ).startsWith( "update " );
-		assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "deleted='Y'" );
-		assertThat( statementInspector.getSqlQueries().get( 0 ) ).endsWith( "deleted='N'" );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "deleted='Y'", "deleted=N'Y'" );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "deleted='N'", "deleted=N'N'" );
+		assertThat( statementInspector.getSqlQueries().get( 0 ) ).endsWith( "'N'" );
 		assertThat( statementInspector.getSqlQueries().get( 1 ) ).startsWith( "insert " );
 
 		scope.inTransaction( (session) -> {

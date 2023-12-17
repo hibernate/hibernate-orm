@@ -7,14 +7,13 @@
 package org.hibernate.sql.exec.spi;
 
 import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityKey;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 
 /**
  * A context for execution of SQL statements expressed via
@@ -65,16 +64,8 @@ public interface ExecutionContext {
 		return null;
 	}
 
-	/**
-	 * @deprecated use {@link #registerSubselect(EntityKey, LoadingEntityEntry)} instead.
-	 */
-	@Deprecated
-	default void registerLoadingEntityEntry(EntityKey entityKey, LoadingEntityEntry entry) {
+	default void registerLoadingEntityHolder(EntityHolder holder) {
 		// by default do nothing
-	}
-
-	default void registerSubselect(EntityKey entityKey, LoadingEntityEntry entry) {
-		registerLoadingEntityEntry( entityKey, entry );
 	}
 
 	/**

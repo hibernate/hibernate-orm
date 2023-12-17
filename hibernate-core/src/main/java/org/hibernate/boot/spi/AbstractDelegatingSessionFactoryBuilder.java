@@ -210,7 +210,7 @@ public abstract class AbstractDelegatingSessionFactoryBuilder<T extends SessionF
 	}
 
 	@Override
-	public T applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {
+	public T applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
 		delegate.applyCurrentTenantIdentifierResolver( resolver );
 		return getThis();
 	}

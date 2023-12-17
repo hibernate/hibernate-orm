@@ -19,6 +19,7 @@ import org.hibernate.LockOptions;
 import org.hibernate.Session;
 import org.hibernate.TransactionException;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.AbstractHANADialect;
 import org.hibernate.dialect.CockroachDialect;
@@ -101,6 +102,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 		                    comment = "Test verifies proper exception throwing when a lock timeout is specified.",
                               jiraKey = "HHH-7252" )
 	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase close socket after lock timeout occurred")
 	public void testFindWithPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -150,6 +152,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getSingleResult.",
 			jiraKey = "HHH-13364" )
 	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase close socket after lock timeout occurred")
 	public void testQuerySingleResultPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -196,6 +199,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for Query#getResultList.",
 			jiraKey = "HHH-13364" )
 	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase close socket after lock timeout occurred")
 	public void testQueryResultListPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -245,6 +249,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 			comment = "Test verifies proper exception throwing when a lock timeout is specified for NamedQuery#getResultList.",
 			jiraKey = "HHH-13364" )
 	@SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+	@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase close socket after lock timeout occurred")
 	public void testNamedQueryResultListPessimisticWriteLockTimeoutException() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -1183,6 +1188,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	@SkipForDialect(value = FirebirdDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = AltibaseDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	public void testLockInsertFkTarget() {
 		Lock lock = new Lock();
 		lock.setName( "name" );
@@ -1221,6 +1227,7 @@ public class LockTest extends BaseEntityManagerFunctionalTestCase {
 	@SkipForDialect(value = AbstractHANADialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
 	@SkipForDialect(value = CockroachDialect.class, comment = "Cockroach supports the 'for no key update' syntax but it doesn't work")
 	@SkipForDialect(value = FirebirdDialect.class, comment = "Seems like FK constraint checks are not compatible with exclusive locks")
+	@SkipForDialect(value = AltibaseDialect.class, comment = "FK constraint checks are not compatible with exclusive locks")
 	public void testLockUpdateFkTarget() {
 		Lock lock1 = new Lock();
 		lock1.setName( "l1" );

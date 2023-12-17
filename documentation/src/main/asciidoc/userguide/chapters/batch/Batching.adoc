@@ -386,10 +386,14 @@ The temporary table can be either global or local, depending on the underlying d
 [[batch-bulk-hql-strategies-non-temporary-table]]
 ===== Non-temporary table bulk mutation strategies
 
-When the temporary table strategy can not be used because the database user lacks privilege to create temporary tables,
-the `InlineMutationStrategy` must be used.
+The strategies outlined above depend on the creation of temporary tables, which Hibernate creates on startup if they don't already exist. At present this process is not integrated in the schema management tooling, and this requires that the user have the required permissions to alter the database schema.
 
-To use this strategy, you need to configure the following configuration property:
+If the Hibernate session user lacks these permissions, you will need to either:
+
+ * alter your schema through a different user with more permissions, to add a global temporary table named HTE_<root entity table name>, which contains all columns of all tables involved in the entity hierarchy. +
+This will allow insert, update and delete in HQL for multi-table entities.
+
+* OR configure Hibernate ORM to use the (badly-performing) inline strategy (for _mutations_ only!):
 
 [source,xml]
 ----
@@ -398,7 +402,22 @@ To use this strategy, you need to configure the following configuration property
 />
 ----
 
-Now, when running the previous test case, Hibernate generates the following SQL statements:
+[IMPORTANT]
+====
+We strongly recommend the use of the first option, i.e. manually adding the temporary tables, because the inline strategy is set to be removed in a future release. Also, there is no equivalent strategy for inserts.
+
+Additionally, automatic creation of temporary tables should be deactivated. This is done by setting the
+
+`hibernate.query.mutation_strategy.global_temporary.create_tables` and `hibernate.query.mutation_strategy.global_temporary.drop_tables`
+
+*or*
+
+`hibernate.query.mutation_strategy.persistent.create_tables` and `hibernate.query.mutation_strategy.persistent.drop_tables`
+
+properties (depending on the default strategy for the dialect) to `false`
+====
+
+With the inline strategy, when running the previous test case, Hibernate generates the following SQL statements:
 
 [[batch-bulk-hql-InlineIdsInClauseBulkIdStrategy-delete-query-example]]
 .`InlineIdsInClauseBulkIdStrategy` delete entity query example

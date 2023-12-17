@@ -387,7 +387,7 @@ public class EmbeddableBinder {
 			);
 
 			final XProperty property = propertyAnnotatedElement.getProperty();
-			if ( isGeneratedId( property ) ) {
+			if ( property.isAnnotationPresent( GeneratedValue.class ) ) {
 				processGeneratedId( context, component, property );
 			}
 		}
@@ -465,11 +465,6 @@ public class EmbeddableBinder {
 		else {
 			return null;
 		}
-	}
-
-	private static boolean isGeneratedId(XProperty property) {
-		return property.isAnnotationPresent( GeneratedValue.class )
-			&& property.isAnnotationPresent( Id.class );
 	}
 
 	private static void processCompositeUserType(Component component, CompositeUserType<?> compositeUserType) {

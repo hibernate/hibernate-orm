@@ -37,6 +37,7 @@ import org.hibernate.SessionFactoryObserver;
 import org.hibernate.StatelessSession;
 import org.hibernate.StatelessSessionBuilder;
 import org.hibernate.UnknownFilterException;
+import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.boot.model.relational.internal.SqlStringGenerationContextImpl;
@@ -78,6 +79,7 @@ import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.model.domain.internal.MappingMetamodelImpl;
 import org.hibernate.metamodel.model.domain.spi.JpaMetamodelImplementor;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
@@ -97,6 +99,9 @@ import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.sql.spi.NativeQueryImplementor;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.mutation.internal.temptable.GlobalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.LocalTemporaryTableStrategy;
+import org.hibernate.query.sqm.mutation.internal.temptable.PersistentTableStrategy;
 import org.hibernate.query.sqm.spi.NamedSqmQueryMemento;
 import org.hibernate.relational.SchemaManager;
 import org.hibernate.relational.internal.SchemaManagerImpl;
@@ -111,6 +116,7 @@ import org.hibernate.service.spi.SessionFactoryServiceRegistryFactory;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
@@ -129,6 +135,7 @@ import static org.hibernate.cfg.AvailableSettings.CURRENT_SESSION_CONTEXT_CLASS;
 import static org.hibernate.cfg.AvailableSettings.JAKARTA_VALIDATION_FACTORY;
 import static org.hibernate.cfg.AvailableSettings.JPA_VALIDATION_FACTORY;
 import static org.hibernate.internal.FetchProfileHelper.getFetchProfiles;
+import static org.hibernate.internal.log.DeprecationLogger.DEPRECATION_LOGGER;
 import static org.hibernate.internal.util.config.ConfigurationHelper.getBoolean;
 import static org.hibernate.jpa.HibernateHints.HINT_TENANT_ID;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
@@ -185,6 +192,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	private final transient Map<String, Generator> identifierGenerators;
 	private final transient Map<String, FilterDefinition> filters;
 	private final transient Map<String, FetchProfile> fetchProfiles;
+	private final transient JavaType<Object> tenantIdentifierJavaType;
 
 	private final transient FastSessionServices fastSessionServices;
 	private final transient WrapperOptions wrapperOptions;
@@ -224,6 +232,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		settings = getSettings( options, serviceRegistry );
 		maskOutSensitiveInformation( settings );
+		deprecationCheck( settings );
 		LOG.debugf( "Instantiating SessionFactory with settings: %s", settings);
 		logIfEmptyCompositesEnabled( settings );
 
@@ -239,6 +248,17 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		filters = new HashMap<>( bootMetamodel.getFilterDefinitions() );
 		LOG.debugf( "Session factory constructed with filter configurations : %s", filters );
+
+		final FilterDefinition tenantFilter = filters.get( TenantIdBinder.FILTER_NAME );
+		if ( tenantFilter == null ) {
+			tenantIdentifierJavaType = options.getDefaultTenantIdentifierJavaType();
+		}
+		else {
+			final JdbcMapping jdbcMapping = tenantFilter.getParameterJdbcMapping( TenantIdBinder.PARAMETER_NAME );
+			assert jdbcMapping != null;
+			//noinspection unchecked
+			tenantIdentifierJavaType = jdbcMapping.getJavaTypeDescriptor();
+		}
 
 		entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() );
 		schemaManager = new SchemaManagerImpl( this, bootMetamodel );
@@ -312,6 +332,27 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		LOG.debug( "Instantiated SessionFactory" );
+	}
+
+	private void deprecationCheck(Map<String, Object> settings) {
+		for ( String s:settings.keySet() ) {
+			switch (s) {
+				case "hibernate.hql.bulk_id_strategy.global_temporary.create_tables":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.global_temporary.create_tables", GlobalTemporaryTableStrategy.CREATE_ID_TABLES );
+				case "hibernate.hql.bulk_id_strategy.global_temporary.drop_tables":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.global_temporary.drop_tables", GlobalTemporaryTableStrategy.DROP_ID_TABLES );
+				case "hibernate.hql.bulk_id_strategy.persistent.create_tables":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.create_tables", PersistentTableStrategy.CREATE_ID_TABLES );
+				case "hibernate.hql.bulk_id_strategy.persistent.drop_tables":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.drop_tables", PersistentTableStrategy.DROP_ID_TABLES );
+				case "hibernate.hql.bulk_id_strategy.persistent.schema":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.schema", PersistentTableStrategy.SCHEMA );
+				case "hibernate.hql.bulk_id_strategy.persistent.catalog":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.persistent.catalog", PersistentTableStrategy.CATALOG );
+				case "hibernate.hql.bulk_id_strategy.local_temporary.drop_tables":
+					DEPRECATION_LOGGER.deprecatedSetting( "hibernate.hql.bulk_id_strategy.local_temporary.drop_tables", LocalTemporaryTableStrategy.DROP_ID_TABLES );
+			}
+		}
 	}
 
 	private void initializeMappingModel(
@@ -502,7 +543,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	private SessionBuilderImpl createDefaultSessionOpenOptionsIfPossible() {
-		final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
+		final CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver = getCurrentTenantIdentifierResolver();
 		if ( currentTenantIdentifierResolver == null ) {
 			return withOptions();
 		}
@@ -707,7 +748,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		if ( map != null ) {
 			//noinspection SuspiciousMethodCalls
-			final String tenantIdHint = (String) map.get( HINT_TENANT_ID );
+			final Object tenantIdHint = map.get( HINT_TENANT_ID );
 			if ( tenantIdHint != null ) {
 				builder = (SessionBuilderImplementor) builder.tenantIdentifier( tenantIdHint );
 			}
@@ -1198,7 +1239,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		private FlushMode flushMode;
 		private boolean autoClose;
 		private boolean autoClear;
-		private String tenantIdentifier;
+		private Object tenantIdentifier;
 		private TimeZone jdbcTimeZone;
 		private boolean explicitNoInterceptor;
 		private int defaultBatchFetchSize;
@@ -1223,7 +1264,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			this.defaultBatchFetchSize = sessionFactoryOptions.getDefaultBatchFetchSize();
 			this.subselectFetchEnabled = sessionFactoryOptions.isSubselectFetchEnabled();
 
-			final CurrentTenantIdentifierResolver currentTenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
+			final CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( currentTenantIdentifierResolver != null ) {
 				tenantIdentifier = currentTenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
@@ -1293,6 +1334,14 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		@Override
 		public String getTenantIdentifier() {
+			if ( tenantIdentifier == null ) {
+				return null;
+			}
+			return sessionFactory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+		}
+
+		@Override
+		public Object getTenantIdentifierValue() {
 			return tenantIdentifier;
 		}
 
@@ -1378,6 +1427,12 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		}
 
 		@Override
+		public SessionBuilderImpl tenantIdentifier(Object tenantIdentifier) {
+			this.tenantIdentifier = tenantIdentifier;
+			return this;
+		}
+
+		@Override
 		public SessionBuilderImpl eventListeners(SessionEventListener... listeners) {
 			if ( this.listeners == null ) {
 				this.listeners = sessionFactory.getSessionFactoryOptions()
@@ -1410,12 +1465,12 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	public static class StatelessSessionBuilderImpl implements StatelessSessionBuilder, SessionCreationOptions {
 		private final SessionFactoryImpl sessionFactory;
 		private Connection connection;
-		private String tenantIdentifier;
+		private Object tenantIdentifier;
 
 		public StatelessSessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
 
-			CurrentTenantIdentifierResolver tenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
+			CurrentTenantIdentifierResolver<Object> tenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( tenantIdentifierResolver != null ) {
 				tenantIdentifier = tenantIdentifierResolver.resolveCurrentTenantIdentifier();
 			}
@@ -1434,6 +1489,12 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		@Override
 		public StatelessSessionBuilder tenantIdentifier(String tenantIdentifier) {
+			this.tenantIdentifier = tenantIdentifier;
+			return this;
+		}
+
+		@Override
+		public StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier) {
 			this.tenantIdentifier = tenantIdentifier;
 			return this;
 		}
@@ -1491,6 +1552,14 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		@Override
 		public String getTenantIdentifier() {
+			if ( tenantIdentifier == null ) {
+				return null;
+			}
+			return sessionFactory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+		}
+
+		@Override
+		public Object getTenantIdentifierValue() {
 			return tenantIdentifier;
 		}
 
@@ -1516,8 +1585,13 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	@Override
-	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
+	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return getSessionFactoryOptions().getCurrentTenantIdentifierResolver();
+	}
+
+	@Override
+	public JavaType<Object> getTenantIdentifierJavaType() {
+		return tenantIdentifierJavaType;
 	}
 
 

@@ -331,32 +331,47 @@ public interface SchemaToolingSettings {
 	/**
 	 * Allows creation of {@linkplain org.hibernate.dialect.temptable.TemporaryTableKind#PERSISTENT persistent}
 	 * temporary tables at application startup to be disabled. By default, table creation is enabled.
+	 *
+	 * @deprecated Use {@link PersistentTableStrategy#CREATE_ID_TABLES}.
 	 */
+	@Deprecated(forRemoval = true)
 	String BULK_ID_STRATEGY_PERSISTENT_TEMPORARY_CREATE_TABLES = PersistentTableStrategy.CREATE_ID_TABLES;
 
 	/**
 	 * Allows dropping of {@linkplain org.hibernate.dialect.temptable.TemporaryTableKind#PERSISTENT persistent}
 	 * temporary tables at application shutdown to be disabled. By default, table dropping is enabled.
+	 *
+	 * @deprecated Use {@link PersistentTableStrategy#DROP_ID_TABLES}.
 	 */
+	@Deprecated(forRemoval = true)
 	String BULK_ID_STRATEGY_PERSISTENT_TEMPORARY_DROP_TABLES = PersistentTableStrategy.DROP_ID_TABLES;
 
 	/**
 	 * Allows creation of {@linkplain org.hibernate.dialect.temptable.TemporaryTableKind#GLOBAL global}
 	 * temporary tables at application startup to be disabled. By default, table creation is enabled.
+	 *
+	 * @deprecated Use {@link GlobalTemporaryTableStrategy#CREATE_ID_TABLES}.
 	 */
+	@Deprecated(forRemoval = true)
 	String BULK_ID_STRATEGY_GLOBAL_TEMPORARY_CREATE_TABLES = GlobalTemporaryTableStrategy.CREATE_ID_TABLES;
 
 	/**
 	 * Allows dropping of {@linkplain org.hibernate.dialect.temptable.TemporaryTableKind#GLOBAL global}
 	 * temporary tables at application shutdown to be disabled. By default, table dropping is enabled.
+	 *
+	 * @deprecated Use {@link GlobalTemporaryTableStrategy#DROP_ID_TABLES}.
 	 */
+	@Deprecated(forRemoval = true)
 	String BULK_ID_STRATEGY_GLOBAL_TEMPORARY_DROP_TABLES = GlobalTemporaryTableStrategy.DROP_ID_TABLES;
 
 	/**
 	 * Allows dropping of {@linkplain org.hibernate.dialect.temptable.TemporaryTableKind#LOCAL local}
 	 * temporary tables at transaction commit to be enabled. By default, table dropping is disabled,
 	 * and the database will drop the temporary tables automatically.
+	 *
+	 * @deprecated Use {@link LocalTemporaryTableStrategy#DROP_ID_TABLES}.
 	 */
+	@Deprecated(forRemoval = true)
 	String BULK_ID_STRATEGY_LOCAL_TEMPORARY_DROP_TABLES = LocalTemporaryTableStrategy.DROP_ID_TABLES;
 
 

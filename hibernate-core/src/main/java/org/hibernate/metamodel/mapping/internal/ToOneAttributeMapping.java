@@ -947,6 +947,11 @@ public class ToOneAttributeMapping
 		final AssociationKey associationKey = foreignKeyDescriptor.getAssociationKey();
 		final boolean associationKeyVisited = creationState.isAssociationKeyVisited( associationKey );
 		if ( associationKeyVisited || bidirectionalAttributePath != null ) {
+			if ( !associationKeyVisited && creationState.isRegisteringVisitedAssociationKeys() ) {
+				// If the current association key hasn't been visited yet and we are registering keys,
+				// then there can't be a circular fetch
+				return null;
+			}
 			NavigablePath parentNavigablePath = fetchablePath.getParent();
 			assert parentNavigablePath.equals( fetchParent.getNavigablePath() );
 			// The parent navigable path is {fk} if we are creating the domain result for the foreign key for a circular fetch
@@ -1003,12 +1008,6 @@ public class ToOneAttributeMapping
 						fetchTiming,
 						creationState
 				);
-			}
-
-			if ( !associationKeyVisited && creationState.isRegisteringVisitedAssociationKeys() ) {
-				// If the current association key hasn't been visited yet and we are registering keys,
-				// then there can't be a circular fetch
-				return null;
 			}
 
 			/*
@@ -1534,7 +1533,7 @@ public class ToOneAttributeMapping
 						if ( sideNature == ForeignKeyDescriptor.Nature.KEY ) {
 							// If the key side is non-nullable we also need to add the keyResult
 							// to be able to manually check invalid foreign key references
-							if ( notFoundAction != null || !isInternalLoadNullable ) {
+							if ( hasNotFoundAction() || !isInternalLoadNullable ) {
 								keyResult = foreignKeyDescriptor.createKeyDomainResult(
 										fetchablePath,
 										tableGroup,
@@ -1543,7 +1542,7 @@ public class ToOneAttributeMapping
 								);
 							}
 						}
-						else if ( notFoundAction != null
+						else if ( hasNotFoundAction()
 								|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null ) {
 							// For the target side only add keyResult when a not-found action is present
 							keyResult = foreignKeyDescriptor.createTargetDomainResult(

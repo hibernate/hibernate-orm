@@ -29,6 +29,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
  * Java {@link Duration} to SQL {@code numeric(21)} here, which
  * can comfortably represent 60 millennia of nanos.
  *
+ * @see org.hibernate.cfg.AvailableSettings#PREFERRED_DURATION_JDBC_TYPE
+ *
  * @author Steve Ebersole
  * @author Gavin King
  */
@@ -159,8 +161,7 @@ public class DurationJavaType extends AbstractClassJavaType<Duration> {
 	@Override
 	public int getDefaultSqlScale(Dialect dialect, JdbcType jdbcType) {
 		if ( jdbcType.getDdlTypeCode() == SqlTypes.INTERVAL_SECOND ) {
-			// The default scale necessary is 9 i.e. nanosecond resolution
-			return 9;
+			return dialect.getDefaultIntervalSecondScale();
 		}
 		else {
 			// For non-interval types, we use the type numeric(21)

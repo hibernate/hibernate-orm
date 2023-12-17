@@ -19,8 +19,8 @@ pluginManagement {
 
 plugins {
     id 'org.hibernate.orm.build.env-settings'
-    id 'com.gradle.enterprise' version '3.15.1'
-    id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.11.3'
+    id 'com.gradle.enterprise' version '3.16'
+    id 'com.gradle.common-custom-user-data-gradle-plugin' version '1.12.1'
 }
 
 dependencyResolutionManagement {
@@ -177,6 +177,8 @@ dependencyResolutionManagement {
             def wildFlyTxnClientVersion = version "wildFlyTxnClient", "2.0.0.Final"
             def xapoolVersion = version "xapool", "1.5.0"
 
+            def jfrUnitVersion = version "jfrUnit", "1.0.0.Alpha2"
+
             library( "junit5Api", "org.junit.jupiter", "junit-jupiter-api" ).versionRef( junit5Version )
             library( "junit5Engine", "org.junit.jupiter", "junit-jupiter-engine" ).versionRef( junit5Version )
             library( "junit5Params", "org.junit.jupiter", "junit-jupiter-params" ).versionRef( junit5Version )
@@ -206,26 +208,29 @@ dependencyResolutionManagement {
             library( "wildFlyTxnClient", "org.wildfly.transaction", "wildfly-transaction-client-jakarta" ).versionRef( wildFlyTxnClientVersion )
 
             library( "weld", "org.jboss.weld.se", "weld-se-shaded" ).versionRef( weldVersion )
+
+            library( "jfrUnit", "org.moditect.jfrunit", "jfrunit-core" ).versionRef( jfrUnitVersion )
         }
         dbLibs {
-            def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.2.220" )
+            def h2Version = version "h2", overrideableVersion( "gradle.libs.versions.h2", "2.2.224" )
 
-            def db2Version = version "db2", "11.5.8.0"
+            def db2Version = version "db2", "11.5.9.0"
             // Latest Derby version 10.16.1.1 only supports JDK 17+, but 10.15.2 should be compatible
             def derbyVersion = version "derby", overrideableVersion( "gradle.libs.versions.derby", "10.15.2.0" )
             def firebirdVersion = version "firebird", "4.0.8.java11"
-            def hanaVersion = version "hana", "2.16.14"
+            def hanaVersion = version "hana", "2.19.11"
             def h2gisVersion = version "h2gis", overrideableVersion( "gradle.libs.versions.h2gis", "2.2.0" )
             def hsqldbVersion = version "hsqldb", overrideableVersion( "gradle.libs.versions.hsqldb", "2.7.2" )
             def informixVersion = version "informix", "4.10.12"
-            def mariadbVersion = version "mariadb", "2.7.9"
-            def mssqlVersion = version "mssql", "12.2.0.jre11"
-            def mysqlVersion = version "mysql", "8.0.33"
+            def mariadbVersion = version "mariadb", "3.3.1"
+            def mssqlVersion = version "mssql", "12.4.2.jre11"
+            def mysqlVersion = version "mysql", "8.2.0"
             def oracleVersion = version "oracle", "23.3.0.23.09"
             def oracleLegacyVersion = version "oracleLegacy", "11.2.0.4"
-            def pgsqlVersion = version "pgsql", "42.6.0"
+            def pgsqlVersion = version "pgsql", "42.7.1"
             def sybaseVersion = version "sybase", "1.3.1"
             def tidbVersion = version "tidb", mysqlVersion
+            def altibaseVersion = version "altibase", "7.3.0.0.2"
 
             library( "h2", "com.h2database", "h2" ).versionRef( h2Version )
             library( "h2gis", "org.orbisgis", "h2gis" ).versionRef( h2gisVersion )
@@ -245,6 +250,7 @@ dependencyResolutionManagement {
             library( "sybase", "net.sourceforge.jtds", "jtds" ).versionRef( sybaseVersion )
             library( "informix", "com.ibm.informix", "jdbc" ).versionRef( informixVersion )
             library( "firebird", "org.firebirdsql.jdbc", "jaybird" ).versionRef( firebirdVersion )
+            library( "altibase", "com.altibase", "altibase-jdbc" ).versionRef( altibaseVersion )
         }
         mavenLibs {
             def mavenCoreVersion = version "mavenCore", "3.8.1"
@@ -282,7 +288,9 @@ buildCache {
     }
     remote(HttpBuildCache) {
         enabled = true
-        push = settings.ext.populateRemoteBuildCache
+        // Check access key presence to avoid build cache errors on PR builds when access key is not present
+        def accessKey = System.getenv("GRADLE_ENTERPRISE_ACCESS_KEY")
+        push = settings.ext.populateRemoteBuildCache && accessKey
         url = 'https://ge.hibernate.org/cache/'
     }
 }
@@ -296,6 +304,7 @@ include 'hibernate-spatial'
 include 'hibernate-platform'
 
 include 'hibernate-community-dialects'
+include 'hibernate-vector'
 
 include 'hibernate-c3p0'
 include 'hibernate-proxool'
@@ -312,6 +321,11 @@ include 'hibernate-integrationtest-java-modules'
 include 'documentation'
 include 'release'
 
+// Not all JDK implementations support JFR
+if ( "OpenJDK Runtime Environment".equals( System.getProperty( "java.runtime.name" ) ) ) {
+    include 'hibernate-jfr'
+}
+
 include 'metamodel-generator'
 project(':metamodel-generator').projectDir = new File(rootProject.projectDir, "tooling/metamodel-generator")
 project(':metamodel-generator').name = 'hibernate-jpamodelgen'
@@ -325,7 +339,6 @@ project(':hibernate-enhance-maven-plugin').projectDir = new File(rootProject.pro
 include 'hibernate-ant'
 project(':hibernate-ant').projectDir = new File(rootProject.projectDir, "tooling/hibernate-ant")
 
-
 rootProject.children.each { project ->
     project.buildFileName = "${project.name}.gradle"
     assert project.projectDir.isDirectory()
@@ -333,4 +346,3 @@ rootProject.children.each { project ->
     assert project.buildFile.isFile()
 }
 include 'hibernate-platform'
-

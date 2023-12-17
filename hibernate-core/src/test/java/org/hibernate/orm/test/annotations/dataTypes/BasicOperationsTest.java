@@ -15,6 +15,7 @@ import java.util.Date;
 import java.util.Locale;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
@@ -45,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SkipForDialect(dialectClass = OracleDialect.class, reason = "HHH-6834")
 @SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "HHH-6834")
 @SkipForDialect(dialectClass = SybaseASEDialect.class, reason = "jConnect reports the type code 11 for bigdatetime columns, which is an unknown type code..")
+@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase reports the type code 93 for date columns")
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsExpectedLobUsagePattern.class, jiraKey = "HHH-6834")
 @DomainModel(
 		annotatedClasses = { SomeEntity.class, SomeOtherEntity.class }

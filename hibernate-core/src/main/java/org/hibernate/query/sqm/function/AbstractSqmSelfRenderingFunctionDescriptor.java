@@ -21,7 +21,7 @@ import java.util.List;
  * @author Gavin King
  */
 public abstract class AbstractSqmSelfRenderingFunctionDescriptor
-		extends AbstractSqmFunctionDescriptor implements FunctionRenderingSupport {
+		extends AbstractSqmFunctionDescriptor implements FunctionRenderer {
 
 	private final FunctionKind functionKind;
 
@@ -82,7 +82,7 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			default:
 				return new SelfRenderingSqmFunction<>(
 						this,
-						(sqlAppender, sqlAstArguments, walker) -> render(sqlAppender, sqlAstArguments, walker),
+						this,
 						arguments,
 						impliedResultType,
 						getArgumentsValidator(),

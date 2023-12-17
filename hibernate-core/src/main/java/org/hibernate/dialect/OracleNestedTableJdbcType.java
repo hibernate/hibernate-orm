@@ -193,7 +193,7 @@ public class OracleNestedTableJdbcType implements JdbcType {
 		final Dialect dialect = database.getDialect();
 		final BasicPluralJavaType<?> pluralJavaType = (BasicPluralJavaType<?>) javaType;
 		final JavaType<?> elementJavaType = pluralJavaType.getElementJavaType();
-		final String elementTypeName = typeName==null ? getTypeName( elementJavaType, dialect ) : typeName;
+		final String arrayTypeName = typeName==null ? getTypeName( elementJavaType, dialect ) : typeName;
 		final String elementType =
 				typeConfiguration.getDdlTypeRegistry().getTypeName(
 						getElementJdbcType().getDdlTypeCode(),
@@ -208,25 +208,17 @@ public class OracleNestedTableJdbcType implements JdbcType {
 				);
 		database.addAuxiliaryDatabaseObject(
 				new NamedAuxiliaryDatabaseObject(
-						elementTypeName,
+						arrayTypeName,
 						database.getDefaultNamespace(),
-						getCreateArrayTypeCommand( elementTypeName, elementType ),
-						getDropArrayTypeCommand( elementTypeName ),
+						new String[]{
+								"create or replace type " + arrayTypeName
+										+ " as table of " + elementType
+						},
+						new String[] { "drop type " + arrayTypeName + " force" },
 						emptySet(),
 						true
 				)
 		);
-	}
-
-	String[] getCreateArrayTypeCommand(String elementTypeName, String elementType) {
-		return new String[]{
-				"create or replace type " + elementTypeName
-						+ " as table of " + elementType
-		};
-	}
-
-	String[] getDropArrayTypeCommand(String elementTypeName) {
-		return EMPTY_STRING_ARRAY; //new String[] { "drop type " + elementTypeName + " force" };
 	}
 
 	@Override

@@ -17,11 +17,13 @@ import jakarta.persistence.criteria.Root;
 
 import org.hibernate.Hibernate;
 import org.hibernate.Session;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.jdbc.AbstractWork;
 
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,6 +41,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class JoinTest {
 
 	@Test
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "In line view in left join is not possible in Altibase")
 	public void testSequentialSelects(SessionFactoryScope scope) {
 		scope.inTransaction(
 				s -> {

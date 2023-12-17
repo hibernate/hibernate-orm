@@ -7,7 +7,7 @@
 package org.hibernate.query.sql.spi;
 
 /**
- * Defines the "callback" the process of recognizing native query parameters.
+ * Defines the "callback" process of recognizing native query parameters.
  *
  * @see org.hibernate.engine.query.spi.NativeQueryInterpreter#recognizeParameters
  */

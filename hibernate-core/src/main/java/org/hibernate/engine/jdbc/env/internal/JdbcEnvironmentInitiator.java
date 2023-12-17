@@ -26,6 +26,8 @@ import org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl;
 import org.hibernate.engine.jdbc.internal.JdbcServicesImpl;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.event.internal.EmptyEventManager;
+import org.hibernate.event.spi.EventManager;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.jdbc.AbstractReturningWork;
 import org.hibernate.jpa.internal.MutableJpaComplianceImpl;
@@ -159,7 +161,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				null,
 				0,
 				0,
-				null
+				null,
+				configurationValues
 		);
 		return new JdbcEnvironmentImpl(
 				registry,
@@ -317,7 +320,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 										dbmd.getDriverName(),
 										dbmd.getDriverMajorVersion(),
 										dbmd.getDriverMinorVersion(),
-										dbmd.getSQLKeywords()
+										dbmd.getSQLKeywords(),
+										configurationValues
 								);
 								return new JdbcEnvironmentImpl(
 										registry,
@@ -392,7 +396,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
 		}
 		else {
-			final MultiTenantConnectionProvider multiTenantConnectionProvider = registry.getService( MultiTenantConnectionProvider.class );
+			final MultiTenantConnectionProvider<?> multiTenantConnectionProvider = registry.getService( MultiTenantConnectionProvider.class );
 			return new MultiTenantConnectionProviderJdbcConnectionAccess( multiTenantConnectionProvider );
 		}
 	}
@@ -403,7 +407,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			return new ConnectionProviderJdbcConnectionAccess( connectionProvider );
 		}
 		else {
-			final MultiTenantConnectionProvider multiTenantConnectionProvider = registry.getService( MultiTenantConnectionProvider.class );
+			final MultiTenantConnectionProvider<?> multiTenantConnectionProvider = registry.getService( MultiTenantConnectionProvider.class );
 			return new MultiTenantConnectionProviderJdbcConnectionAccess( multiTenantConnectionProvider );
 		}
 	}
@@ -436,13 +440,13 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 	}
 
 	public static class MultiTenantConnectionProviderJdbcConnectionAccess implements JdbcConnectionAccess {
-		private final MultiTenantConnectionProvider connectionProvider;
+		private final MultiTenantConnectionProvider<?> connectionProvider;
 
-		public MultiTenantConnectionProviderJdbcConnectionAccess(MultiTenantConnectionProvider connectionProvider) {
+		public MultiTenantConnectionProviderJdbcConnectionAccess(MultiTenantConnectionProvider<?> connectionProvider) {
 			this.connectionProvider = connectionProvider;
 		}
 
-		public MultiTenantConnectionProvider getConnectionProvider() {
+		public MultiTenantConnectionProvider<?> getConnectionProvider() {
 			return connectionProvider;
 		}
 
@@ -472,6 +476,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		private final int driverMajorVersion;
 		private final int driverMinorVersion;
 		private final String sqlKeywords;
+		private final Map<String, Object> configurationValues;
 
 		public DialectResolutionInfoImpl(
 				DatabaseMetaData databaseMetadata,
@@ -482,7 +487,8 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 				String driverName,
 				int driverMajorVersion,
 				int driverMinorVersion,
-				String sqlKeywords) {
+				String sqlKeywords,
+				Map<String, Object> configurationValues) {
 			this.databaseMetadata = databaseMetadata;
 			this.databaseName = databaseName;
 			this.databaseVersion = databaseVersion;
@@ -492,6 +498,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 			this.driverMajorVersion = driverMajorVersion;
 			this.driverMinorVersion = driverMinorVersion;
 			this.sqlKeywords = sqlKeywords;
+			this.configurationValues = configurationValues;
 		}
 
 		public String getSQLKeywords() {
@@ -542,6 +549,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		public String toString() {
 			return getMajor() + "." + getMinor();
 		}
+
+		@Override
+		public Map<String, Object> getConfigurationValues() {
+			return configurationValues;
+		}
 	}
 
 	/**
@@ -557,7 +569,9 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		private final boolean connectionProviderDisablesAutoCommit;
 		private final PhysicalConnectionHandlingMode connectionHandlingMode;
 		private final JpaCompliance jpaCompliance;
+		private static final EmptyJdbcObserver EMPTY_JDBC_OBSERVER = EmptyJdbcObserver.INSTANCE;
 		TransactionCoordinator transactionCoordinator;
+		private final EmptyEventManager eventManager;
 
 		public TemporaryJdbcSessionOwner(
 				JdbcConnectionAccess jdbcConnectionAccess,
@@ -587,6 +601,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 						.getDefaultConnectionHandlingMode();
 			}
 			this.jpaCompliance = new MutableJpaComplianceImpl( Collections.emptyMap(), false );
+			this.eventManager = new EmptyEventManager();
 		}
 
 		@Override
@@ -632,6 +647,11 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		@Override
 		public Integer getJdbcBatchSize() {
 			return null;
+		}
+
+		@Override
+		public EventManager getEventManager() {
+			return eventManager;
 		}
 
 		@Override
@@ -691,7 +711,7 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 
 		@Override
 		public JdbcObserver getObserver() {
-			return null;
+			return EMPTY_JDBC_OBSERVER;
 		}
 
 		@Override
@@ -717,6 +737,61 @@ public class JdbcEnvironmentInitiator implements StandardServiceInitiator<JdbcEn
 		@Override
 		public boolean isActive() {
 			return true;
+		}
+
+		private static class EmptyJdbcObserver implements JdbcObserver{
+
+			public static final EmptyJdbcObserver INSTANCE = new EmptyJdbcObserver();
+
+			@Override
+			public void jdbcConnectionAcquisitionStart() {
+
+			}
+
+			@Override
+			public void jdbcConnectionAcquisitionEnd(Connection connection) {
+
+			}
+
+			@Override
+			public void jdbcConnectionReleaseStart() {
+
+			}
+
+			@Override
+			public void jdbcConnectionReleaseEnd() {
+
+			}
+
+			@Override
+			public void jdbcPrepareStatementStart() {
+
+			}
+
+			@Override
+			public void jdbcPrepareStatementEnd() {
+
+			}
+
+			@Override
+			public void jdbcExecuteStatementStart() {
+
+			}
+
+			@Override
+			public void jdbcExecuteStatementEnd() {
+
+			}
+
+			@Override
+			public void jdbcExecuteBatchStart() {
+
+			}
+
+			@Override
+			public void jdbcExecuteBatchEnd() {
+
+			}
 		}
 	}
 }

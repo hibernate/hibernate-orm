@@ -13,6 +13,8 @@ import java.util.function.Function;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 import org.hibernate.sql.exec.spi.ExecutionContext;
@@ -79,12 +81,15 @@ public class StandardJdbcMutationExecutor implements JdbcMutationExecutor {
 				}
 
 				session.getEventListenerManager().jdbcExecuteStatementStart();
+				final EventManager eventManager = session.getEventManager();
+				final HibernateMonitoringEvent jdbcPreparedStatementExecutionEvent = eventManager.beginJdbcPreparedStatementExecutionEvent();
 				try {
 					int rows = preparedStatement.executeUpdate();
 					expectationCheck.accept( rows, preparedStatement );
 					return rows;
 				}
 				finally {
+					eventManager.completeJdbcPreparedStatementExecutionEvent( jdbcPreparedStatementExecutionEvent, finalSql );
 					session.getEventListenerManager().jdbcExecuteStatementEnd();
 				}
 			}

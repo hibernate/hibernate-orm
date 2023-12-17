@@ -106,7 +106,7 @@ public class StandardTemporaryTableExporter implements TemporaryTableExporter {
 					.getFastSessionServices().parameterMarkerStrategy;
 			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName()
 					+ " where " + idTable.getSessionUidColumn().getColumnName() + " = "
-					+ parameterMarkerStrategy.createMarker( 0, null );
+					+ parameterMarkerStrategy.createMarker( 1, null );
 		}
 		else {
 			return getTruncateTableCommand() + " " + idTable.getQualifiedTableName();

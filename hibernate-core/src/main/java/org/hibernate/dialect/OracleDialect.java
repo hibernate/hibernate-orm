@@ -13,7 +13,6 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
-import java.util.Locale;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,7 +27,6 @@ import org.hibernate.dialect.function.ModeStatsModeEmulation;
 import org.hibernate.dialect.function.OracleTruncFunction;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.identity.Oracle12cIdentityColumnSupport;
-import org.hibernate.dialect.pagination.LegacyOracleLimitHandler;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.Oracle12LimitHandler;
 import org.hibernate.dialect.sequence.OracleSequenceSupport;
@@ -50,6 +48,7 @@ import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
 import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
 import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
+import org.hibernate.internal.util.config.ConfigurationHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
@@ -102,6 +101,8 @@ import static org.hibernate.LockOptions.NO_WAIT;
 import static org.hibernate.LockOptions.SKIP_LOCKED;
 import static org.hibernate.LockOptions.WAIT_FOREVER;
 import static org.hibernate.cfg.AvailableSettings.BATCH_VERSIONED_DATA;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_EXTENDED_STRING_SIZE;
+import static org.hibernate.cfg.DialectSpecificSettings.ORACLE_AUTONOMOUS_DATABASE;
 import static org.hibernate.dialect.OracleJdbcHelper.getArrayJdbcTypeConstructor;
 import static org.hibernate.dialect.OracleJdbcHelper.getNestedTableJdbcTypeConstructor;
 import static org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor.extractUsingTemplate;
@@ -154,7 +155,10 @@ public class OracleDialect extends Dialect {
 	private static final Pattern SQL_STATEMENT_TYPE_PATTERN =
 			Pattern.compile( "^(?:/\\*.*?\\*/)?\\s*(select|insert|update|delete)\\s+.*?", CASE_INSENSITIVE );
 
-	private static final int PARAM_LIST_SIZE_LIMIT = 1000;
+	private static final int PARAM_LIST_SIZE_LIMIT_1000 = 1000;
+
+	/** Starting from 23c, 65535 parameters are supported for the IN condition. */
+	private static final int PARAM_LIST_SIZE_LIMIT_65535 = 65535;
 
 	public static final String PREFER_LONG_RAW = "hibernate.dialect.oracle.prefer_long_raw";
 
@@ -165,11 +169,8 @@ public class OracleDialect extends Dialect {
 	private static final String ADD_QUARTER_EXPRESSION = String.format( yqmSelect, "?2*3", "?3" );
 	private static final String ADD_MONTH_EXPRESSION = String.format( yqmSelect, "?2", "?3" );
 
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 11, 2 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 19 );
 
-	private final LimitHandler limitHandler = supportsFetchClause( FetchClauseType.ROWS_ONLY )
-			? Oracle12LimitHandler.INSTANCE
-			: new LegacyOracleLimitHandler( getVersion() );
 	private final UniqueDelegate uniqueDelegate = new CreateTableUniqueDelegate(this);
 
 	// Is it an Autonomous Database Cloud Service?
@@ -189,12 +190,18 @@ public class OracleDialect extends Dialect {
 	}
 
 	public OracleDialect(DialectResolutionInfo info) {
-		super(info);
-		autonomous = isAutonomous( info.getDatabaseMetadata() );
-		extended = isExtended( info.getDatabaseMetadata() );
+		this( info, OracleServerConfiguration.fromDialectResolutionInfo( info ) );
 	}
 
-	protected static boolean isExtended(DatabaseMetaData databaseMetaData) {
+	public OracleDialect(DialectResolutionInfo info, OracleServerConfiguration serverConfiguration) {
+		super( info );
+		autonomous = serverConfiguration.isAutonomous();
+		extended = serverConfiguration.isExtended();
+	}
+
+	@Deprecated( since = "6.4" )
+	protected static boolean isExtended(DialectResolutionInfo info) {
+		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
 			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
 				statement.execute( "select cast('string' as varchar2(32000)) from dual" );
@@ -206,10 +213,13 @@ public class OracleDialect extends Dialect {
 				// Ignore
 			}
 		}
-		return false;
+		// default to the dialect-specific configuration setting
+		return ConfigurationHelper.getBoolean( ORACLE_EXTENDED_STRING_SIZE, info.getConfigurationValues(), false );
 	}
 
-	protected static boolean isAutonomous(DatabaseMetaData databaseMetaData) {
+	@Deprecated( since = "6.4" )
+	protected static boolean isAutonomous(DialectResolutionInfo info) {
+		final DatabaseMetaData databaseMetaData = info.getDatabaseMetadata();
 		if ( databaseMetaData != null ) {
 			try ( java.sql.Statement statement = databaseMetaData.getConnection().createStatement() ) {
 				return statement.executeQuery( "select 1 from dual where sys_context('USERENV','CLOUD_SERVICE') in ('OLTP','DWCS','JSON')" )
@@ -219,11 +229,16 @@ public class OracleDialect extends Dialect {
 				// Ignore
 			}
 		}
-		return false;
+		// default to the dialect-specific configuration setting
+		return ConfigurationHelper.getBoolean( ORACLE_AUTONOMOUS_DATABASE, info.getConfigurationValues(), false );
 	}
 
 	public boolean isAutonomous() {
 		return autonomous;
+	}
+
+	public boolean isExtended() {
+		return extended;
 	}
 
 	@Override
@@ -298,12 +313,7 @@ public class OracleDialect extends Dialect {
 				typeConfiguration
 		).setArgumentListSignature("(pattern, string[, start])");
 		// The within group clause became optional in 18
-		if ( getVersion().isSameOrAfter( 18 ) ) {
-			functionFactory.listagg( null );
-		}
-		else {
-			functionFactory.listagg( "within group (order by rownum)" );
-		}
+		functionFactory.listagg( null );
 		functionFactory.windowFunctions();
 		functionFactory.hypotheticalOrderedSetAggregates();
 		functionFactory.inverseDistributionOrderedSetAggregates();
@@ -317,6 +327,26 @@ public class OracleDialect extends Dialect {
 				new OracleTruncFunction( functionContributions.getTypeConfiguration() )
 		);
 		functionContributions.getFunctionRegistry().registerAlternateKey( "truncate", "trunc" );
+
+		functionFactory.array_oracle();
+		functionFactory.arrayAggregate_jsonArrayagg();
+		functionFactory.arrayPosition_oracle();
+		functionFactory.arrayPositions_oracle();
+		functionFactory.arrayLength_oracle();
+		functionFactory.arrayConcat_oracle();
+		functionFactory.arrayPrepend_oracle();
+		functionFactory.arrayAppend_oracle();
+		functionFactory.arrayContains_oracle();
+		functionFactory.arrayOverlaps_oracle();
+		functionFactory.arrayGet_oracle();
+		functionFactory.arraySet_oracle();
+		functionFactory.arrayRemove_oracle();
+		functionFactory.arrayRemoveIndex_oracle();
+		functionFactory.arraySlice_oracle();
+		functionFactory.arrayReplace_oracle();
+		functionFactory.arrayTrim_oracle();
+		functionFactory.arrayFill_oracle();
+		functionFactory.arrayToString_oracle();
 	}
 
 	@Override
@@ -374,7 +404,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean supportsInsertReturningGeneratedKeys() {
-		return getVersion().isSameOrAfter( 12 );
+		return true;
 	}
 
 	/**
@@ -710,12 +740,12 @@ public class OracleDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 21 ) ) {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 		}
-		else if ( getVersion().isSameOrAfter( 12 ) ) {
+		else {
 			ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "blob", this ) );
 		}
 
-		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this ) );
-		ddlTypeRegistry.addDescriptor( TABLE, new ArrayDdlTypeImpl( this ) );
+		ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );
+		ddlTypeRegistry.addDescriptor( TABLE, new ArrayDdlTypeImpl( this, false ) );
 	}
 
 	@Override
@@ -726,8 +756,7 @@ public class OracleDialect extends Dialect {
 	@Override
 	protected void initDefaultProperties() {
 		super.initDefaultProperties();
-		getDefaultProperties().setProperty( BATCH_VERSIONED_DATA,
-				Boolean.toString( getVersion().isSameOrAfter( 12 ) ) );
+		getDefaultProperties().setProperty( BATCH_VERSIONED_DATA, "true" );
 	}
 
 	@Override
@@ -741,7 +770,7 @@ public class OracleDialect extends Dialect {
 		// support the version taking an array of the names of the columns to
 		// be returned (via its RETURNING clause).  No other driver seems to
 		// support this overloaded version.
-		return getVersion().isSameOrAfter( 12 );
+		return true;
 	}
 
 	@Override
@@ -856,27 +885,25 @@ public class OracleDialect extends Dialect {
 			typeContributions.contributeJdbcType( OracleReflectionStructJdbcType.INSTANCE );
 		}
 
-		if ( getVersion().isSameOrAfter( 12 ) ) {
-			// account for Oracle's deprecated support for LONGVARBINARY
-			// prefer BLOB, unless the user explicitly opts out
-			boolean preferLong = serviceRegistry.getService( ConfigurationService.class ).getSetting(
-					PREFER_LONG_RAW,
-					StandardConverters.BOOLEAN,
-					false
-			);
+		// account for Oracle's deprecated support for LONGVARBINARY
+		// prefer BLOB, unless the user explicitly opts out
+		boolean preferLong = serviceRegistry.getService( ConfigurationService.class ).getSetting(
+				PREFER_LONG_RAW,
+				StandardConverters.BOOLEAN,
+				false
+		);
 
-			BlobJdbcType descriptor = preferLong ?
-					BlobJdbcType.PRIMITIVE_ARRAY_BINDING :
-					BlobJdbcType.DEFAULT;
+		BlobJdbcType descriptor = preferLong ?
+				BlobJdbcType.PRIMITIVE_ARRAY_BINDING :
+				BlobJdbcType.DEFAULT;
 
-			typeContributions.contributeJdbcType( descriptor );
+		typeContributions.contributeJdbcType( descriptor );
 
-			if ( getVersion().isSameOrAfter( 21 ) ) {
-				typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
-			}
-			else {
-				typeContributions.contributeJdbcType( OracleJsonBlobJdbcType.INSTANCE );
-			}
+		if ( getVersion().isSameOrAfter( 21 ) ) {
+			typeContributions.contributeJdbcType( OracleJsonJdbcType.INSTANCE );
+		}
+		else {
+			typeContributions.contributeJdbcType( OracleJsonBlobJdbcType.INSTANCE );
 		}
 
 		if ( OracleJdbcHelper.isUsable( serviceRegistry ) ) {
@@ -923,19 +950,17 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public IdentityColumnSupport getIdentityColumnSupport() {
-		return getVersion().isBefore( 12 )
-				? super.getIdentityColumnSupport()
-				: Oracle12cIdentityColumnSupport.INSTANCE;
+		return Oracle12cIdentityColumnSupport.INSTANCE;
 	}
 
 	@Override
 	public LimitHandler getLimitHandler() {
-		return limitHandler;
+		return Oracle12LimitHandler.INSTANCE;
 	}
 
 	@Override
 	public String getCurrentTimestampSelectString() {
-		return "select systimestamp from dual";
+		return getVersion().isSameOrAfter( 23 ) ? "select systimestamp" : "select systimestamp from dual";
 	}
 
 
@@ -944,6 +969,21 @@ public class OracleDialect extends Dialect {
 	@Override
 	public String getAddColumnString() {
 		return "add";
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTableName() {
+		return getVersion().isSameOrAfter( 23 );
+	}
+
+	@Override
+	public boolean supportsIfExistsAfterAlterTable() {
+		return getVersion().isSameOrAfter( 23 );
+	}
+
+	@Override
+	public boolean supportsIfExistsBeforeTypeName() {
+		return getVersion().isSameOrAfter( 23 );
 	}
 
 	@Override
@@ -982,7 +1022,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getSelectGUIDString() {
-		return "select rawtohex(sys_guid()) from dual";
+		return getVersion().isSameOrAfter( 23 ) ? "select rawtohex(sys_guid())" : "select rawtohex(sys_guid()) from dual";
 	}
 
 	@Override
@@ -1087,7 +1127,9 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public int getInExpressionCountLimit() {
-		return PARAM_LIST_SIZE_LIMIT;
+		return getVersion().isSameOrAfter( 23 )
+				? PARAM_LIST_SIZE_LIMIT_65535
+				: PARAM_LIST_SIZE_LIMIT_1000;
 	}
 
 	@Override
@@ -1176,13 +1218,13 @@ public class OracleDialect extends Dialect {
 	public int getMaxAliasLength() {
 		// Max identifier length is 30 for pre 12.2 versions, and 128 for 12.2+
 		// but Hibernate needs to add "uniqueing info" so we account for that
-		return getVersion().isSameOrAfter( 12, 2 ) ? 118 : 20;
+		return 118;
 	}
 
 	@Override
 	public int getMaxIdentifierLength() {
 		// Since 12.2 version, maximum identifier length is 128
-		return getVersion().isSameOrAfter( 12, 2 ) ? 128 : 30;
+		return 128;
 	}
 
 	@Override
@@ -1198,7 +1240,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public String getCurrentSchemaCommand() {
-		return "SELECT SYS_CONTEXT('USERENV','CURRENT_SCHEMA') FROM DUAL";
+		return getVersion().isSameOrAfter( 23 ) ? "select sys_context('USERENV','CURRENT_SCHEMA')" : "SELECT SYS_CONTEXT('USERENV','CURRENT_SCHEMA') FROM DUAL";
 	}
 
 	@Override
@@ -1230,7 +1272,7 @@ public class OracleDialect extends Dialect {
 	public boolean supportsFetchClause(FetchClauseType type) {
 		// Until 12.2 there was a bug in the Oracle query rewriter causing ORA-00918
 		// when the query contains duplicate implicit aliases in the select clause
-		return getVersion().isSameOrAfter( 12, 2 );
+		return true;
 	}
 
 	@Override
@@ -1245,7 +1287,7 @@ public class OracleDialect extends Dialect {
 
 	@Override
 	public boolean supportsLateral() {
-		return getVersion().isSameOrAfter( 12, 1 );
+		return true;
 	}
 
 	@Override

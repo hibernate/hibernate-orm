@@ -9,6 +9,7 @@ package org.hibernate.orm.test.envers.integration.lazy;
 import java.util.List;
 import jakarta.persistence.EntityManager;
 
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
@@ -34,6 +35,7 @@ import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 @RunWith(BytecodeEnhancerRunner.class)
 @EnhancementOptions(lazyLoading = true)
 @SkipForDialect(value = OracleDialect.class, comment = "Oracle does not support identity key generation")
+@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase does not support identity key generation")
 public class IsCollectionInitializedBytecodeEnhancementTest extends BaseEnversJPAFunctionalTestCase {
 
 	private Long mce1Id = null;

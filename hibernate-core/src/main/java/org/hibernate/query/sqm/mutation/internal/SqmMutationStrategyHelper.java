@@ -174,7 +174,7 @@ public class SqmMutationStrategyHelper {
 			jdbcServices.getJdbcMutationExecutor().execute(
 					jdbcServices.getJdbcEnvironment()
 							.getSqlAstTranslatorFactory()
-							.buildDeleteTranslator( sessionFactory, sqlAstDelete )
+							.buildMutationTranslator( sessionFactory, sqlAstDelete )
 							.translate( jdbcParameterBindings, executionContext.getQueryOptions() ),
 					jdbcParameterBindings,
 					sql -> executionContext.getSession()

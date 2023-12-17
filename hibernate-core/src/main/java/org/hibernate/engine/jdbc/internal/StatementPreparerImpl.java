@@ -17,8 +17,11 @@ import org.hibernate.ScrollMode;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.SqlExceptionHelper;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.resource.jdbc.spi.JdbcObserver;
 import org.hibernate.resource.jdbc.spi.JdbcSessionContext;
+import org.hibernate.resource.jdbc.spi.JdbcSessionOwner;
 import org.hibernate.resource.jdbc.spi.LogicalConnectionImplementor;
 
 /**
@@ -171,13 +174,17 @@ class StatementPreparerImpl implements StatementPreparer {
 				jdbcServices.getSqlStatementLogger().logStatement( sql );
 
 				final PreparedStatement preparedStatement;
-				final JdbcObserver observer = jdbcCoordinator.getJdbcSessionOwner().getJdbcSessionContext().getObserver();
+				final JdbcSessionOwner jdbcSessionOwner = jdbcCoordinator.getJdbcSessionOwner();
+				final JdbcObserver observer = jdbcSessionOwner.getJdbcSessionContext().getObserver();
+				final EventManager eventManager = jdbcSessionOwner.getEventManager();
+				final HibernateMonitoringEvent jdbcPreparedStatementCreation = eventManager.beginJdbcPreparedStatementCreationEvent();
 				try {
 					observer.jdbcPrepareStatementStart();
 					preparedStatement = doPrepare();
 					setStatementTimeout( preparedStatement );
 				}
 				finally {
+					eventManager.completeJdbcPreparedStatementCreationEvent( jdbcPreparedStatementCreation, sql );
 					observer.jdbcPrepareStatementEnd();
 				}
 				postProcess( preparedStatement );

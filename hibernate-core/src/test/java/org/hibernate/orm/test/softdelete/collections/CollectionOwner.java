@@ -35,12 +35,15 @@ public class CollectionOwner {
 	@Basic
 	private String name;
 
+	//tag::example-soft-delete-element-collection[]
 	@ElementCollection
 	@CollectionTable(name = "elements", joinColumns = @JoinColumn(name = "owner_fk"))
 	@Column(name = "txt")
 	@SoftDelete(converter = YesNoConverter.class)
 	private Collection<String> elements;
+	//end::example-soft-delete-element-collection[]
 
+	//tag::example-soft-delete-many-to-many[]
 	@ManyToMany
 	@JoinTable(
 			name = "m2m",
@@ -49,6 +52,7 @@ public class CollectionOwner {
 	)
 	@SoftDelete(columnName = "gone", converter = NumericBooleanConverter.class)
 	private Collection<CollectionOwned> manyToMany;
+	//end::example-soft-delete-many-to-many[]
 
 	protected CollectionOwner() {
 		// for Hibernate use

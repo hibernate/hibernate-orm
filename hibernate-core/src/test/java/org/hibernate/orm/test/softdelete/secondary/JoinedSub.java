@@ -14,10 +14,13 @@ import jakarta.persistence.Table;
 /**
  * @author Steve Ebersole
  */
+//tag::example-soft-delete-secondary[]
 @Entity
 @Table(name = "joined_sub")
 @PrimaryKeyJoinColumn(name = "joined_fk")
 public class JoinedSub extends JoinedRoot {
+	// ...
+//end::example-soft-delete-secondary[]
 	@Basic
 	String subDetails;
 
@@ -28,4 +31,6 @@ public class JoinedSub extends JoinedRoot {
 		super( id, name );
 		this.subDetails = subDetails;
 	}
+//tag::example-soft-delete-secondary[]
 }
+//end::example-soft-delete-secondary[]

@@ -13,7 +13,7 @@ import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
-import org.hibernate.query.sqm.function.FunctionRenderingSupport;
+import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
@@ -48,8 +48,7 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TEM
  *
  * @author Gavin King
  */
-public class ExtractFunction
-		extends AbstractSqmFunctionDescriptor implements FunctionRenderingSupport {
+public class ExtractFunction extends AbstractSqmFunctionDescriptor implements FunctionRenderer {
 
 	private final Dialect dialect;
 
@@ -70,6 +69,7 @@ public class ExtractFunction
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		final ExtractUnit field = (ExtractUnit) sqlAstArguments.get( 0 );
 		final TemporalUnit unit = field.getUnit();
@@ -100,7 +100,7 @@ public class ExtractFunction
 					);
 					return new SelfRenderingSqmFunction<>(
 							this,
-							(sqlAppender, sqlAstArguments, walker) -> sqlAstArguments.get( 0 ).accept( walker ),
+							(sqlAppender, sqlAstArguments, returnType, walker) -> sqlAstArguments.get( 0 ).accept( walker ),
 							Collections.singletonList( offsetPath ),
 							null,
 							null,

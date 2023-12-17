@@ -86,7 +86,7 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 
 	@Override
 	protected boolean supportsSimpleQueryGrouping() {
-		return getDialect().getVersion().isSameOrAfter( 10, 4 );
+		return true;
 	}
 
 	@Override
@@ -218,11 +218,6 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 	@Override
 	protected String getFromDual() {
 		return " from dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return getDialect().getVersion().isBefore( 10, 4 ) ? getFromDual() : "";
 	}
 
 	@Override

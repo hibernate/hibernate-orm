@@ -35,7 +35,7 @@ public class AbstractResultTests {
 						QueryOptions.NONE,
 						DomainParameterXref.from( sqm ),
 						parameterBindings,
-						LoadQueryInfluencers.NONE,
+						new LoadQueryInfluencers( sessionFactory ),
 						sessionFactory,
 						true
 				)

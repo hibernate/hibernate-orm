@@ -14,7 +14,7 @@ import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmFunctionDescriptor;
-import org.hibernate.query.sqm.function.FunctionRenderingSupport;
+import org.hibernate.query.sqm.function.FunctionRenderer;
 import org.hibernate.query.sqm.function.SelfRenderingSqmFunction;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -100,7 +100,7 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 			QueryEngine queryEngine) {
 		final NodeBuilder nodeBuilder = queryEngine.getCriteriaBuilder();
 		final List<SqmTypedNode<?>> args = new ArrayList<>( arguments );
-		final FunctionRenderingSupport renderingSupport;
+		final FunctionRenderer renderingSupport;
 		final ArgumentsValidator argumentsValidator;
 		if ( arguments.size() == 2 && arguments.get( 1 ) instanceof SqmExtractUnit ) {
 			// datetime truncation
@@ -171,7 +171,7 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 		);
 	}
 
-	private static class TruncRenderingSupport implements FunctionRenderingSupport {
+	protected static class TruncRenderingSupport implements FunctionRenderer {
 		private final PatternRenderer truncPattern;
 		private final PatternRenderer twoArgTruncPattern;
 
@@ -184,6 +184,7 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 		public void render(
 				SqlAppender sqlAppender,
 				List<? extends SqlAstNode> sqlAstArguments,
+				ReturnableType<?> returnType,
 				SqlAstTranslator<?> walker) {
 			final PatternRenderer pattern;
 			if ( twoArgTruncPattern != null && sqlAstArguments.size() == 2 ) {

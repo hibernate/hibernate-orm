@@ -34,6 +34,7 @@ import org.hibernate.dialect.sequence.DerbySequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.dialect.temptable.TemporaryTableKind;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
@@ -319,8 +320,8 @@ public class DerbyLegacyDialect extends Dialect {
 
 		final BasicTypeRegistry basicTypeRegistry = functionContributions.getTypeConfiguration().getBasicTypeRegistry();
 		final BasicType<String> stringType = basicTypeRegistry.resolve( StandardBasicTypes.STRING );
-
-		CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
+		final DdlTypeRegistry ddlTypeRegistry = functionContributions.getTypeConfiguration().getDdlTypeRegistry();
+		final CommonFunctionFactory functionFactory = new CommonFunctionFactory(functionContributions);
 
 		// Derby needs an actual argument type for aggregates like SUM, AVG, MIN, MAX to determine the result type
 		functionFactory.aggregates( this, SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER );
@@ -331,8 +332,8 @@ public class DerbyLegacyDialect extends Dialect {
 						functionContributions.getTypeConfiguration(),
 						SqlAstNodeRenderingMode.NO_PLAIN_PARAMETER,
 						"||",
-						functionContributions.getTypeConfiguration().getDdlTypeRegistry().getDescriptor( VARCHAR )
-								.getCastTypeName( stringType, null, null, null ),
+						ddlTypeRegistry.getDescriptor( VARCHAR )
+								.getCastTypeName( Size.nil(), stringType, ddlTypeRegistry ),
 						true
 				)
 		);

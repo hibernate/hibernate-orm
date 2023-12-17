@@ -8,7 +8,6 @@ package org.hibernate.orm.test.tenantid;
 
 import org.hibernate.HibernateError;
 import org.hibernate.PropertyValueException;
-import org.hibernate.Session;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
@@ -21,8 +20,6 @@ import org.hibernate.testing.orm.junit.SessionFactoryProducer;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
 import org.hibernate.binder.internal.TenantIdBinder;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.type.descriptor.DateTimeUtils;
 
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
@@ -62,7 +59,7 @@ public class TenantIdTest implements SessionFactoryProducer {
     @Override
     public SessionFactoryImplementor produceSessionFactory(MetadataImplementor model) {
         final SessionFactoryBuilder sessionFactoryBuilder = model.getSessionFactoryBuilder();
-        sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver() {
+        sessionFactoryBuilder.applyCurrentTenantIdentifierResolver( new CurrentTenantIdentifierResolver<String>() {
             @Override
             public String resolveCurrentTenantIdentifier() {
                 return currentTenant;

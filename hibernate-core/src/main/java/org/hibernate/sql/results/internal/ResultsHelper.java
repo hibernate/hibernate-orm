@@ -22,6 +22,8 @@ import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.metamodel.mapping.ModelPart;
@@ -286,9 +288,12 @@ public class ResultsHelper {
 		// CollectionRegionAccessStrategy has no update, so avoid putting uncommitted data via putFromLoad
 		if ( isPutFromLoad ) {
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+			final EventManager eventManager = session.getEventManager();
+			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+			boolean put = false;
 			try {
 				eventListenerManager.cachePutStart();
-				final boolean put = cacheAccess.putFromLoad(
+				put = cacheAccess.putFromLoad(
 						session,
 						cacheKey,
 						collectionDescriptor.getCacheEntryStructure().structure( entry ),
@@ -296,6 +301,17 @@ public class ResultsHelper {
 						factory.getSessionFactoryOptions().isMinimalPutsEnabled()
 								&& session.getCacheMode()!= CacheMode.REFRESH
 				);
+			}
+			finally {
+				eventManager.completeCachePutEvent(
+						cachePutEvent,
+						session,
+						cacheAccess,
+						collectionDescriptor,
+						put,
+						EventManager.CacheActionDescription.COLLECTION_INSERT
+				);
+				eventListenerManager.cachePutEnd();
 
 				final StatisticsImplementor statistics = factory.getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {
@@ -304,9 +320,7 @@ public class ResultsHelper {
 							collectionDescriptor.getCacheAccessStrategy().getRegion().getName()
 					);
 				}
-			}
-			finally {
-				eventListenerManager.cachePutEnd();
+
 			}
 		}
 	}

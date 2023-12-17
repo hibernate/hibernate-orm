@@ -165,19 +165,6 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 		throw new UnsupportedOperationException();
 	}
 
-	/**
-	 * Specialized hook to visit the target paths defined by the insert SQM.
-	 */
-	public AdditionalInsertValues visitInsertionTargetPaths(
-			BiConsumer<Assignable, List<ColumnReference>> targetColumnReferenceConsumer,
-			SqmInsertStatement<?> sqmStatement,
-			EntityPersister entityDescriptor,
-			TableGroup tableGroup,
-			SqmParameterResolutionConsumer parameterResolutionConsumer) {
-		this.parameterResolutionConsumer = parameterResolutionConsumer;
-		return visitInsertionTargetPaths( targetColumnReferenceConsumer, sqmStatement, entityDescriptor, tableGroup );
-	}
-
 	public Predicate visitWhereClause(
 			SqmWhereClause sqmWhereClause,
 			Consumer<ColumnReference> restrictionColumnReferenceConsumer,

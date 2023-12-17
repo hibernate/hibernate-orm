@@ -11,18 +11,18 @@ import java.sql.Statement;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
+import org.hibernate.type.YesNoConverter;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -83,10 +83,10 @@ public class ToOneTests {
 			assertThat( sqlInspector.getSqlQueries() ).hasSize( 2 );
 			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( " join " );
 			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( ".reporter_fk" );
-			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( ".active='Y" );
+			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsAnyOf( ".active='Y'", ".active=N'Y'" );
 			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsOnlyOnce( "active" );
 			assertThat( sqlInspector.getSqlQueries().get( 1 ) ).doesNotContain( " join " );
-			assertThat( sqlInspector.getSqlQueries().get( 1 ) ).contains( ".active='Y" );
+			assertThat( sqlInspector.getSqlQueries().get( 1 ) ).containsAnyOf( ".active='Y'", ".active=N'Y'" );
 			assertThat( sqlInspector.getSqlQueries().get( 1 ) ).containsOnlyOnce( "active" );
 		} );
 	}
@@ -145,7 +145,7 @@ public class ToOneTests {
 
 	@Entity(name="User")
 	@Table(name="users")
-	@SoftDelete(columnName = "active", converter = ReverseYesNoConverter.class)
+	@SoftDelete(converter = YesNoConverter.class, strategy = SoftDeleteType.ACTIVE)
 	public static class User {
 		@Id
 		private Integer id;

@@ -12,7 +12,7 @@ import org.hibernate.type.descriptor.java.JavaTypedExpressible;
 /**
  * Hibernate understands mapping a collection into 4 parts<ol>
  *     <li>The key - the foreign-key defining the association to the owner</li>
- *     <li>The element - for Map's this is analogous to the value</li>
+ *     <li>The element - for Maps this is analogous to the value</li>
  *     <li>The index - the List/array index or Map key</li>
  *     <li>The collection-id - this is only relevant for id-bag mappings</li>
  * </ol>

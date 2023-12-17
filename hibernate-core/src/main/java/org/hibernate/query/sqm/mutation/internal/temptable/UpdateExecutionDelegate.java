@@ -59,6 +59,7 @@ import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
@@ -369,8 +370,8 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 		insertSqlAst.addTargetColumnReferences( targetColumnReferences.toArray( new ColumnReference[0] ) );
 		insertSqlAst.setSourceSelectStatement( insertSourceSelectQuerySpec );
 
-		final JdbcOperationQueryInsert jdbcInsert = sqlAstTranslatorFactory
-				.buildInsertTranslator( sessionFactory, insertSqlAst )
+		final JdbcOperationQueryMutation jdbcInsert = sqlAstTranslatorFactory
+				.buildMutationTranslator( sessionFactory, insertSqlAst )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		return jdbcMutationExecutor.execute(
@@ -443,8 +444,8 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 				new InSubQueryPredicate( keyExpression, idTableSubQuery, false )
 		);
 
-		final JdbcOperationQueryUpdate jdbcUpdate = sqlAstTranslatorFactory
-				.buildUpdateTranslator( sessionFactory, sqlAst )
+		final JdbcOperationQueryMutation jdbcUpdate = sqlAstTranslatorFactory
+				.buildMutationTranslator( sessionFactory, sqlAst )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		final int updateCount = jdbcMutationExecutor.execute(

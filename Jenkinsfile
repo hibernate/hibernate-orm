@@ -48,7 +48,8 @@ stage('Configure') {
 		// and it's useful to test that.
 		new BuildEnvironment( testJdkVersion: '20', testJdkLauncherArgs: '--enable-preview' ),
 		new BuildEnvironment( testJdkVersion: '21', testJdkLauncherArgs: '--enable-preview' ),
-		new BuildEnvironment( testJdkVersion: '22', testJdkLauncherArgs: '--enable-preview' )
+		new BuildEnvironment( testJdkVersion: '22', testJdkLauncherArgs: '--enable-preview' ),
+		new BuildEnvironment( testJdkVersion: '23', testJdkLauncherArgs: '--enable-preview' )
 	];
 
 	if ( env.CHANGE_ID ) {
@@ -140,7 +141,7 @@ stage('Build') {
 									break;
 								case "cockroachdb":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach:v23.1.8').pull()
+										docker.image('cockroachdb/cockroach:v23.1.12').pull()
 									}
 									sh "./docker_db.sh cockroachdb"
 									state[buildEnv.tag]['containerName'] = "cockroach"

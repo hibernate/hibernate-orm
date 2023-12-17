@@ -108,3 +108,9 @@ To apply the platform (BOM) in Maven
   </dependency>
 </dependencyManagement>
 ----
+
+[[examples]]
+=== Example sources
+The bundled examples mentioned in this tutorial can be downloaded from link:{doc-quick-start-url}hibernate-tutorials.zip[here].
+
+Alternatively, the example source code can also be obtained from https://github.com/hibernate/hibernate-orm/tree/{fullVersion}/documentation/src/main/asciidoc/quickstart/tutorials[Github]

@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.function;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
 import org.hibernate.query.sqm.produce.function.FunctionArgumentTypeResolver;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
@@ -117,6 +118,7 @@ public class NamedSqmFunctionDescriptor
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 		render( sqlAppender, sqlAstArguments, null, Collections.emptyList(), null, null, translator );
 	}
@@ -126,6 +128,7 @@ public class NamedSqmFunctionDescriptor
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 		render( sqlAppender, sqlAstArguments, filter, Collections.emptyList(), null, null, translator );
 	}
@@ -136,6 +139,7 @@ public class NamedSqmFunctionDescriptor
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 		render( sqlAppender, sqlAstArguments, filter, withinGroup, null, null, translator );
 	}
@@ -147,6 +151,7 @@ public class NamedSqmFunctionDescriptor
 			Predicate filter,
 			Boolean respectNulls,
 			Boolean fromFirst,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		render( sqlAppender, sqlAstArguments, filter, Collections.emptyList(), respectNulls, fromFirst, walker );
 	}

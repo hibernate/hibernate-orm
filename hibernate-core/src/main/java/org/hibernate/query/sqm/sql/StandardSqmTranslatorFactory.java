@@ -11,11 +11,13 @@ import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.query.spi.QueryParameterBindings;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.sql.internal.StandardSqmTranslator;
+import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
+import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.insert.InsertStatement;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
@@ -45,6 +47,25 @@ public class StandardSqmTranslatorFactory implements SqmTranslatorFactory {
 				loadQueryInfluencers,
 				creationContext,
 				deduplicateSelectionItems
+		);
+	}
+
+	@Override
+	public SqmTranslator<? extends MutationStatement> createMutationTranslator(
+			SqmDmlStatement<?> sqmDeleteStatement,
+			QueryOptions queryOptions,
+			DomainParameterXref domainParameterXref,
+			QueryParameterBindings domainParameterBindings,
+			LoadQueryInfluencers loadQueryInfluencers,
+			SqlAstCreationContext creationContext) {
+		return new StandardSqmTranslator<>(
+				sqmDeleteStatement,
+				queryOptions,
+				domainParameterXref,
+				domainParameterBindings,
+				loadQueryInfluencers,
+				creationContext,
+				false
 		);
 	}
 

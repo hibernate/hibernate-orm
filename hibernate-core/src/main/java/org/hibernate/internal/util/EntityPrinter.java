@@ -12,6 +12,7 @@ import java.util.Map;
 import org.hibernate.Hibernate;
 import org.hibernate.HibernateException;
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.TypedValue;
@@ -103,19 +104,23 @@ public final class EntityPrinter {
 	}
 
 	// Cannot use Map as an argument because it clashes with the previous method (due to type erasure)
-	public void toString(Iterable<Map.Entry<EntityKey, Object>> entitiesByEntityKey) throws HibernateException {
+	public void toString(Iterable<Map.Entry<EntityKey, EntityHolder>> entitiesByEntityKey) throws HibernateException {
 		if ( !LOG.isDebugEnabled() || !entitiesByEntityKey.iterator().hasNext() ) {
 			return;
 		}
 
 		LOG.debug( "Listing entities:" );
 		int i = 0;
-		for ( Map.Entry<EntityKey, Object> entityKeyAndEntity : entitiesByEntityKey ) {
+		for ( Map.Entry<EntityKey, EntityHolder> entityKeyAndEntity : entitiesByEntityKey ) {
+			final EntityHolder holder = entityKeyAndEntity.getValue();
+			if ( holder.getEntity() == null ) {
+				continue;
+			}
 			if ( i++ > 20 ) {
 				LOG.debug( "More......" );
 				break;
 			}
-			LOG.debug( toString( entityKeyAndEntity.getKey().getEntityName(), entityKeyAndEntity.getValue() ) );
+			LOG.debug( toString( entityKeyAndEntity.getKey().getEntityName(), holder.getEntity() ) );
 		}
 	}
 

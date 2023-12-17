@@ -262,6 +262,11 @@ public class DerbySqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
+	protected boolean supportsJoinInMutationStatementSubquery() {
+		return false;
+	}
+
+	@Override
 	public void visitBinaryArithmeticExpression(BinaryArithmeticExpression arithmeticExpression) {
 		final BinaryArithmeticOperator operator = arithmeticExpression.getOperator();
 		if ( operator == BinaryArithmeticOperator.MODULO ) {

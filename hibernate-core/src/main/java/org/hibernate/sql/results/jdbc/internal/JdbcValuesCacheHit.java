@@ -66,7 +66,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	@Override
 	protected boolean processNext(RowProcessingState rowProcessingState) {
 		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-				"JdbcValuesCacheHit#processNext : position = %i; numberOfRows = %i",
+				"JdbcValuesCacheHit#processNext : position = %d; numberOfRows = %d",
 				position,
 				numberOfRows
 		);
@@ -87,7 +87,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	@Override
 	protected boolean processPrevious(RowProcessingState rowProcessingState) {
 		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-				"JdbcValuesCacheHit#processPrevious : position = %i; numberOfRows = %i",
+				"JdbcValuesCacheHit#processPrevious : position = %d; numberOfRows = %d",
 				position, numberOfRows
 		);
 
@@ -107,7 +107,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	@Override
 	protected boolean processScroll(int numberOfRows, RowProcessingState rowProcessingState) {
 		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-				"JdbcValuesCacheHit#processScroll(%i) : position = %i; numberOfRows = %i",
+				"JdbcValuesCacheHit#processScroll(%d) : position = %d; numberOfRows = %d",
 				numberOfRows, position, this.numberOfRows
 		);
 
@@ -132,7 +132,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 	@Override
 	protected boolean processPosition(int position, RowProcessingState rowProcessingState) {
 		ResultsLogger.RESULTS_MESSAGE_LOGGER.tracef(
-				"JdbcValuesCacheHit#processPosition(%i) : position = %i; numberOfRows = %i",
+				"JdbcValuesCacheHit#processPosition(%d) : position = %d; numberOfRows = %d",
 				position, this.position, this.numberOfRows
 		);
 
@@ -143,7 +143,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 			// we need to subtract it from `numberOfRows`
 			final int newPosition = numberOfRows + position;
 			ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf(
-					"Translated negative absolute position `%i` into `%i` based on `%i` number of rows",
+					"Translated negative absolute position `%d` into `%d` based on `%d` number of rows",
 					position,
 					newPosition,
 					numberOfRows
@@ -153,7 +153,7 @@ public class JdbcValuesCacheHit extends AbstractJdbcValues {
 
 		if ( position > numberOfRows ) {
 			ResultsLogger.RESULTS_MESSAGE_LOGGER.debugf(
-					"Absolute position `%i` exceeded number of rows `%i`",
+					"Absolute position `%d` exceeded number of rows `%d`",
 					position,
 					numberOfRows
 			);

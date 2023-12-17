@@ -400,4 +400,9 @@ public abstract class CriteriaDefinition<R>
 	public <X> JpaRoot<X> from(JpaCteCriteria<X> cte) {
 		return query.from(cte);
 	}
+
+	@Override
+	public JpaCriteriaQuery<Long> createCountQuery() {
+		return query.createCountQuery();
+	}
 }

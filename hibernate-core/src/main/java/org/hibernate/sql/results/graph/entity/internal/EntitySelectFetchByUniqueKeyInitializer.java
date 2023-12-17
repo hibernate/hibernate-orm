@@ -10,8 +10,10 @@ import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.log.LoggingHelper;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
@@ -37,31 +39,55 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 	}
 
 	@Override
-	public void initializeInstance(RowProcessingState rowProcessingState) {
-		if ( entityInstance != null || isInitialized ) {
+	public void resolveInstance(RowProcessingState rowProcessingState) {
+		if ( state != State.UNINITIALIZED ) {
 			return;
 		}
+		state = State.RESOLVED;
 
 		final EntityInitializer parentEntityInitializer = getParentEntityInitializer( parentAccess );
 		if ( parentEntityInitializer != null && parentEntityInitializer.getEntityKey() != null ) {
 			// make sure parentEntityInitializer.resolveInstance has been called before
 			parentEntityInitializer.resolveInstance( rowProcessingState );
 			if ( parentEntityInitializer.isEntityInitialized() ) {
-				isInitialized = true;
+				state = State.INITIALIZED;
 				return;
 			}
 		}
 
 		if ( !isAttributeAssignableToConcreteDescriptor() ) {
-			isInitialized = true;
+			state = State.INITIALIZED;
 			return;
 		}
 
-		final Object entityIdentifier = keyAssembler.assemble( rowProcessingState );
+		entityIdentifier = keyAssembler.assemble( rowProcessingState );
 		if ( entityIdentifier == null ) {
-			isInitialized = true;
+			state = State.INITIALIZED;
 			return;
 		}
+
+		// Defer the select by default to the initialize phase
+		// We only need to select in this phase if this is part of an identifier or foreign key
+		NavigablePath np = getNavigablePath().getParent();
+		while ( np != null ) {
+			if ( np instanceof EntityIdentifierNavigablePath
+					|| ForeignKeyDescriptor.PART_NAME.equals( np.getLocalName() )
+					|| ForeignKeyDescriptor.TARGET_PART_NAME.equals( np.getLocalName() )) {
+
+				initializeInstance( rowProcessingState );
+				return;
+			}
+			np = np.getParent();
+		}
+	}
+
+	@Override
+	public void initializeInstance(RowProcessingState rowProcessingState) {
+		if ( state == State.INITIALIZED ) {
+			return;
+		}
+		state = State.INITIALIZED;
+
 		final String entityName = concreteDescriptor.getEntityName();
 		final String uniqueKeyPropertyName = fetchedAttribute.getReferencedPropertyName();
 
@@ -103,7 +129,6 @@ public class EntitySelectFetchByUniqueKeyInitializer extends EntitySelectFetchIn
 		if ( entityInstance != null ) {
 			entityInstance = persistenceContext.proxyFor( entityInstance );
 		}
-		isInitialized = true;
 	}
 
 	private EntityInitializer getParentEntityInitializer(FetchParentAccess parentAccess) {

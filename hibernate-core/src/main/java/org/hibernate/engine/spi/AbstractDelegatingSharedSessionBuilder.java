@@ -124,6 +124,12 @@ public abstract class AbstractDelegatingSharedSessionBuilder implements SharedSe
 	}
 
 	@Override
+	public SharedSessionBuilder tenantIdentifier(Object tenantIdentifier) {
+		delegate.tenantIdentifier( tenantIdentifier );
+		return this;
+	}
+
+	@Override
 	public SharedSessionBuilder eventListeners(SessionEventListener... listeners) {
 		delegate.eventListeners( listeners );
 		return this;

@@ -15,6 +15,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
@@ -29,6 +30,7 @@ import org.junit.Test;
 @SkipForDialect(value = DB2Dialect.class, comment = "DB2 is far more resistant to the reserved keyword usage. See HHH-12832.")
 @SkipForDialect(value = DerbyDialect.class, comment = "Derby is far more resistant to the reserved keyword usage.")
 @SkipForDialect(value = FirebirdDialect.class, comment = "FirebirdDialect has autoQuoteKeywords enabled, so it is far more resistant to the reserved keyword usage.")
+@SkipForDialect(value = AltibaseDialect.class, comment = "AltibaseDialect has autoQuoteKeywords enabled, so it is far more resistant to the reserved keyword usage.")
 public class SchemaMigratorHaltOnErrorTest extends BaseEntityManagerFunctionalTestCase {
 
 	@Override

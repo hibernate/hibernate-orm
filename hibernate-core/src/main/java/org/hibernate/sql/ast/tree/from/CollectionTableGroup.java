@@ -67,15 +67,33 @@ public class CollectionTableGroup extends StandardTableGroup implements PluralTa
 	}
 
 	public void registerIndexTableGroup(TableGroupJoin indexTableGroupJoin) {
+		registerIndexTableGroup( indexTableGroupJoin, true );
+	}
+
+	public void registerIndexTableGroup(TableGroupJoin indexTableGroupJoin, boolean nested) {
 		assert this.indexTableGroup == null;
 		this.indexTableGroup = indexTableGroupJoin.getJoinedGroup();
-		addNestedTableGroupJoin( indexTableGroupJoin );
+		if ( nested ) {
+			addNestedTableGroupJoin( indexTableGroupJoin );
+		}
+		else {
+			addTableGroupJoin( indexTableGroupJoin );
+		}
 	}
 
 	public void registerElementTableGroup(TableGroupJoin elementTableGroupJoin) {
+		registerElementTableGroup( elementTableGroupJoin, true );
+	}
+
+	public void registerElementTableGroup(TableGroupJoin elementTableGroupJoin, boolean nested) {
 		assert this.elementTableGroup == null;
 		this.elementTableGroup = elementTableGroupJoin.getJoinedGroup();
-		addNestedTableGroupJoin( elementTableGroupJoin );
+		if ( nested ) {
+			addNestedTableGroupJoin( elementTableGroupJoin );
+		}
+		else {
+			addTableGroupJoin( elementTableGroupJoin );
+		}
 	}
 
 	@Override

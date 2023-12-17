@@ -120,7 +120,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithM
  */
 public class MySQLDialect extends Dialect {
 
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 5, 7 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 8 );
 
 	private final MySQLStorageEngine storageEngine = createStorageEngine();
 	private final SizeStrategy sizeStrategy = new SizeStrategyImpl() {
@@ -183,7 +183,7 @@ public class MySQLDialect extends Dialect {
 	}
 
 	public MySQLDialect(DialectResolutionInfo info) {
-		this( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
+		this( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 
@@ -622,22 +622,11 @@ public class MySQLDialect extends Dialect {
 				.register();
 
 		// pi() produces a value with 7 digits unless we're explicit
-		if ( getMySQLVersion().isSameOrAfter( 8 ) ) {
-			functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
-					.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
-					.setExactArgumentCount( 0 )
-					.setArgumentListSignature( "" )
-					.register();
-		}
-		else {
-			// But before MySQL 8, it's not possible to cast to double. Double has a default precision of 53
-			// and since the internal representation of pi has only 15 decimal places, we cast to decimal(53,15)
-			functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as decimal(53,15))" )
-					.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
-					.setExactArgumentCount( 0 )
-					.setArgumentListSignature( "" )
-					.register();
-		}
+		functionRegistry.patternDescriptorBuilder( "pi", "cast(pi() as double)" )
+				.setInvariantType( basicTypeRegistry.resolve( StandardBasicTypes.DOUBLE ) )
+				.setExactArgumentCount( 0 )
+				.setArgumentListSignature( "" )
+				.register();
 
 		// By default char() produces a binary string, not a character string.
 		// (Note also that char() is actually a variadic function in MySQL.)
@@ -1050,6 +1039,11 @@ public class MySQLDialect extends Dialect {
 	@Override
 	public String getSelectGUIDString() {
 		return "select uuid()";
+	}
+
+	@Override
+	public boolean supportsCommentOn() {
+		return true;
 	}
 
 	@Override
@@ -1467,12 +1461,12 @@ public class MySQLDialect extends Dialect {
 
 	@Override
 	public boolean supportsSkipLocked() {
-		return getMySQLVersion().isSameOrAfter( 8 );
+		return true;
 	}
 
 	@Override
 	public boolean supportsNoWait() {
-		return getMySQLVersion().isSameOrAfter( 8 );
+		return true;
 	}
 
 	@Override
@@ -1493,11 +1487,11 @@ public class MySQLDialect extends Dialect {
 	}
 
 	boolean supportsForShare() {
-		return getMySQLVersion().isSameOrAfter( 8 );
+		return true;
 	}
 
 	boolean supportsAliasLocks() {
-		return getMySQLVersion().isSameOrAfter( 8 );
+		return true;
 	}
 
 	@Override

@@ -206,7 +206,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 
 	// multi-tenancy
 	private boolean multiTenancyEnabled;
-	private CurrentTenantIdentifierResolver currentTenantIdentifierResolver;
+	private CurrentTenantIdentifierResolver<Object> currentTenantIdentifierResolver;
 
 	// Queries
 	private SqmFunctionRegistry sqmFunctionRegistry;
@@ -248,6 +248,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private TimeZone jdbcTimeZone;
 	private final ValueHandlingMode criteriaValueHandlingMode;
 	private final boolean criteriaCopyTreeEnabled;
+	private final boolean nativeJdbcParametersIgnored;
 	private final ImmutableEntityUpdateQueryHandlingMode immutableEntityUpdateQueryHandlingMode;
 	// These two settings cannot be modified from the builder,
 	// in order to maintain consistency.
@@ -274,8 +275,13 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		final ConfigurationService configurationService = serviceRegistry.getService( ConfigurationService.class );
 		final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 
+		assert jdbcServices != null;
+		assert configurationService != null;
+
+		final Dialect dialect = jdbcServices.getJdbcEnvironment().getDialect();
+
 		final Map<String,Object> configurationSettings = new HashMap<>();
-		configurationSettings.putAll( map( jdbcServices.getJdbcEnvironment().getDialect().getDefaultProperties() ) );
+		configurationSettings.putAll( map( dialect.getDefaultProperties() ) );
 		configurationSettings.putAll( configurationService.getSettings() );
 
 		this.beanManagerReference = NullnessHelper.coalesceSuppliedValues(
@@ -487,7 +493,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		}
 
 		this.jdbcBatchSize = getInt( STATEMENT_BATCH_SIZE, configurationSettings, 1 );
-		if ( !meta.supportsBatchUpdates() ) {
+		if ( disallowBatchUpdates( dialect, meta ) ) {
 			this.jdbcBatchSize = 0;
 		}
 
@@ -551,6 +557,12 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				jpaBootstrap
 		);
 
+		this.nativeJdbcParametersIgnored = getBoolean(
+				AvailableSettings.NATIVE_IGNORE_JDBC_PARAMETERS,
+				configurationSettings,
+				false
+		);
+
 		// added the boolean parameter in case we want to define some form of "all" as discussed
 		this.jpaCompliance = context.getJpaCompliance();
 
@@ -576,6 +588,14 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 				configurationSettings,
 				Statistics.DEFAULT_QUERY_STATISTICS_MAX_SIZE
 		);
+	}
+
+	private boolean disallowBatchUpdates(Dialect dialect, ExtractedDatabaseMetaData meta) {
+		final Boolean dialectAnswer = dialect.supportsBatchUpdates();
+		if ( dialectAnswer != null ) {
+			return !dialectAnswer;
+		}
+		return !meta.supportsBatchUpdates();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1001,7 +1021,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
-	public CurrentTenantIdentifierResolver getCurrentTenantIdentifierResolver() {
+	public CurrentTenantIdentifierResolver<Object> getCurrentTenantIdentifierResolver() {
 		return currentTenantIdentifierResolver;
 	}
 
@@ -1143,6 +1163,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	@Override
 	public boolean isCriteriaCopyTreeEnabled() {
 		return criteriaCopyTreeEnabled;
+	}
+
+	@Override
+	public boolean getNativeJdbcParametersIgnored() {
+		return nativeJdbcParametersIgnored;
 	}
 
 	@Override
@@ -1378,8 +1403,9 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.multiTenancyEnabled = enabled;
 	}
 
-	public void applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {
-		this.currentTenantIdentifierResolver = resolver;
+	public void applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
+		//noinspection unchecked
+		this.currentTenantIdentifierResolver = (CurrentTenantIdentifierResolver<Object>) resolver;
 	}
 
 	public void enableNamedQueryCheckingOnStartup(boolean enabled) {

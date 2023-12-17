@@ -161,7 +161,7 @@ public class MySQLLegacyDialect extends Dialect {
 	}
 
 	public MySQLLegacyDialect(DialectResolutionInfo info) {
-		this( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
+		this( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 
@@ -927,6 +927,11 @@ public class MySQLLegacyDialect extends Dialect {
 	@Override
 	public String getSelectGUIDString() {
 		return "select uuid()";
+	}
+
+	@Override
+	public boolean supportsCommentOn() {
+		return true;
 	}
 
 	@Override

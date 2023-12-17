@@ -211,6 +211,7 @@ import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
+import org.hibernate.type.BasicPluralType;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
@@ -2858,14 +2859,53 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 		if ( ctx.getChildCount() != 3 ) {
 			throw new SyntaxException( "Expecting two operands to the '||' operator" );
 		}
-		return getFunctionDescriptor( "concat" ).generateSqmExpression(
-				asList(
-						(SqmExpression<?>) ctx.expression( 0 ).accept( this ),
-						(SqmExpression<?>) ctx.expression( 1 ).accept( this )
-				),
-				null,
-				creationContext.getQueryEngine()
-		);
+		final SqmExpression<?> lhs = (SqmExpression<?>) ctx.expression( 0 ).accept( this );
+		final SqmExpression<?> rhs = (SqmExpression<?>) ctx.expression( 1 ).accept( this );
+		final SqmExpressible<?> lhsExpressible = lhs.getExpressible();
+		final SqmExpressible<?> rhsExpressible = rhs.getExpressible();
+		if ( lhsExpressible != null && lhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+			if ( rhsExpressible == null || rhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+				// Both sides are array, so use array_concat
+				return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
+						asList( lhs, rhs ),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
+			else {
+				// The RHS seems to be of the element type, so use array_append
+				return getFunctionDescriptor( "array_append" ).generateSqmExpression(
+						asList( lhs, rhs ),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
+		}
+		else if ( rhsExpressible != null && rhsExpressible.getSqmType() instanceof BasicPluralType<?, ?> ) {
+			if ( lhsExpressible == null ) {
+				// The RHS is an array and the LHS doesn't have a clear type, so use array_concat
+				return getFunctionDescriptor( "array_concat" ).generateSqmExpression(
+						asList( lhs, rhs ),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
+			else {
+				// The LHS seems to be of the element type, so use array_prepend
+				return getFunctionDescriptor( "array_prepend" ).generateSqmExpression(
+						asList( lhs, rhs ),
+						null,
+						creationContext.getQueryEngine()
+				);
+			}
+		}
+		else {
+			return getFunctionDescriptor( "concat" ).generateSqmExpression(
+					asList( lhs, rhs ),
+					null,
+					creationContext.getQueryEngine()
+			);
+		}
 	}
 
 	@Override

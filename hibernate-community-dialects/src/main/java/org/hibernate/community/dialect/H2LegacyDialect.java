@@ -146,7 +146,7 @@ public class H2LegacyDialect extends Dialect {
 		// https://github.com/h2database/h2database/commit/b2cdf84e0b84eb8a482fa7dccdccc1ab95241440
 		limitHandler = version.isSameOrAfter( 1, 4, 195 )
 				? OffsetFetchLimitHandler.INSTANCE
-				: LimitOffsetLimitHandler.INSTANCE;
+				: LimitOffsetLimitHandler.OFFSET_ONLY_INSTANCE;
 
 		if ( version.isBefore( 1, 2, 139 ) ) {
 			LOG.unsupportedMultiTableBulkHqlJpaql( version.getMajor(), version.getMinor(), version.getMicro() );
@@ -366,10 +366,29 @@ public class H2LegacyDialect extends Dialect {
 		functionFactory.rownum();
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
 			functionFactory.windowFunctions();
+			functionFactory.inverseDistributionOrderedSetAggregates();
+			functionFactory.hypotheticalOrderedSetAggregates();
 			if ( getVersion().isSameOrAfter( 2 ) ) {
 				functionFactory.listagg( null );
-				functionFactory.inverseDistributionOrderedSetAggregates();
-				functionFactory.hypotheticalOrderedSetAggregates();
+				functionFactory.array();
+				functionFactory.arrayAggregate();
+				functionFactory.arrayPosition_h2( getMaximumArraySize() );
+				functionFactory.arrayPositions_h2( getMaximumArraySize() );
+				functionFactory.arrayLength_cardinality();
+				functionFactory.arrayConcat_operator();
+				functionFactory.arrayPrepend_operator();
+				functionFactory.arrayAppend_operator();
+				functionFactory.arrayContains_h2( getMaximumArraySize() );
+				functionFactory.arrayOverlaps_h2( getMaximumArraySize() );
+				functionFactory.arrayGet_h2();
+				functionFactory.arraySet_h2( getMaximumArraySize() );
+				functionFactory.arrayRemove_h2( getMaximumArraySize() );
+				functionFactory.arrayRemoveIndex_h2( getMaximumArraySize() );
+				functionFactory.arraySlice();
+				functionFactory.arrayReplace_h2( getMaximumArraySize() );
+				functionFactory.arrayTrim_trim_array();
+				functionFactory.arrayFill_h2();
+				functionFactory.arrayToString_h2( getMaximumArraySize() );
 			}
 			else {
 				// Use group_concat until 2.x as listagg was buggy
@@ -379,6 +398,16 @@ public class H2LegacyDialect extends Dialect {
 		else {
 			functionFactory.listagg_groupConcat();
 		}
+	}
+
+	/**
+	 * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
+	 * due to https://github.com/h2database/h2database/issues/1815.
+	 * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same,
+	 * but requires that {@code system_range} is fed with a "maximum array size".
+	 */
+	protected int getMaximumArraySize() {
+		return 1000;
 	}
 
 	@Override

@@ -46,7 +46,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	public static String getSqlType(CastTarget castTarget, SessionFactoryImplementor factory) {
-		final String sqlType = getSqlTypeName( castTarget, factory );
+		final String sqlType = getCastTypeName( castTarget, factory.getTypeConfiguration() );
 		return getSqlType( castTarget, sqlType, factory.getJdbcServices().getDialect() );
 	}
 
@@ -122,7 +122,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected String getForShare(int timeoutMillis) {
-		return getDialect().getVersion().isSameOrAfter( 8 ) ? " for share" : " lock in share mode";
+		return " for share";
 	}
 
 	protected boolean shouldEmulateFetchClause(QueryPart queryPart) {
@@ -154,16 +154,6 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	@Override
 	public void visitValuesTableReference(ValuesTableReference tableReference) {
 		emulateValuesTableReferenceColumnAliasing( tableReference );
-	}
-
-	@Override
-	public void visitQueryPartTableReference(QueryPartTableReference tableReference) {
-		if ( getDialect().getVersion().isSameOrAfter( 8 ) ) {
-			super.visitQueryPartTableReference( tableReference );
-		}
-		else {
-			emulateQueryPartTableReferenceColumnAliasing( tableReference );
-		}
 	}
 
 	@Override
@@ -271,7 +261,7 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected boolean supportsSimpleQueryGrouping() {
-		return getDialect().getVersion().isSameOrAfter( 8 );
+		return true;
 	}
 
 	@Override
@@ -281,17 +271,12 @@ public class MySQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 
 	@Override
 	protected boolean supportsWithClause() {
-		return getDialect().getVersion().isSameOrAfter( 8 );
+		return true;
 	}
 
 	@Override
 	protected String getFromDual() {
 		return " from dual";
-	}
-
-	@Override
-	protected String getFromDualForSelectOnly() {
-		return getDialect().getVersion().isSameOrAfter( 8 ) ? "" : getFromDual();
 	}
 
 	@Override

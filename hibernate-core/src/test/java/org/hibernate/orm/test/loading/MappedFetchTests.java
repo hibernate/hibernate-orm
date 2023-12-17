@@ -73,7 +73,7 @@ public class MappedFetchTests {
 				rootEntityDescriptor.getIdentifierMapping(),
 				null,
 				1,
-				LoadQueryInfluencers.NONE,
+				new LoadQueryInfluencers( sessionFactory ),
 				LockOptions.NONE,
 				jdbcParameter -> {
 				},

@@ -93,7 +93,6 @@ import static org.hibernate.type.SqlTypes.LONG32VARCHAR;
 import static org.hibernate.type.SqlTypes.NCHAR;
 import static org.hibernate.type.SqlTypes.NVARCHAR;
 import static org.hibernate.type.SqlTypes.OTHER;
-import static org.hibernate.type.SqlTypes.TIMESTAMP_UTC;
 import static org.hibernate.type.SqlTypes.UUID;
 import static org.hibernate.type.SqlTypes.VARBINARY;
 import static org.hibernate.type.SqlTypes.VARCHAR;
@@ -310,6 +309,35 @@ public class H2Dialect extends Dialect {
 		functionFactory.listagg( null );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates();
+		functionFactory.array();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_h2( getMaximumArraySize() );
+		functionFactory.arrayPositions_h2( getMaximumArraySize() );
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_operator();
+		functionFactory.arrayPrepend_operator();
+		functionFactory.arrayAppend_operator();
+		functionFactory.arrayContains_h2( getMaximumArraySize() );
+		functionFactory.arrayOverlaps_h2( getMaximumArraySize() );
+		functionFactory.arrayGet_h2();
+		functionFactory.arraySet_h2( getMaximumArraySize() );
+		functionFactory.arrayRemove_h2( getMaximumArraySize() );
+		functionFactory.arrayRemoveIndex_h2( getMaximumArraySize() );
+		functionFactory.arraySlice();
+		functionFactory.arrayReplace_h2( getMaximumArraySize() );
+		functionFactory.arrayTrim_trim_array();
+		functionFactory.arrayFill_h2();
+		functionFactory.arrayToString_h2( getMaximumArraySize() );
+	}
+
+	/**
+	 * H2 requires a very special emulation, because {@code unnest} is pretty much useless,
+	 * due to https://github.com/h2database/h2database/issues/1815.
+	 * This emulation uses {@code array_get}, {@code array_length} and {@code system_range} functions to roughly achieve the same,
+	 * but requires that {@code system_range} is fed with a "maximum array size".
+	 */
+	protected int getMaximumArraySize() {
+		return 1000;
 	}
 
 	@Override

@@ -196,7 +196,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		final Dialect dialect = creationContext.getDialect();
 		final SqmFunctionRegistry functionRegistry = creationContext.getFunctionRegistry();
 		final TypeConfiguration typeConfiguration = creationContext.getTypeConfiguration();
-		final BasicTypeRegistry basicTypeRegistry = creationContext.getTypeConfiguration().getBasicTypeRegistry();
+		final BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 
 		// DISCRIMINATOR
 
@@ -1365,6 +1365,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			);
 			if ( mainTableReference != null ) {
 				retainedTableReferences.add( mainTableReference );
+			}
+			final String sqlWhereStringTableExpression = persister.getSqlWhereStringTableExpression();
+			if ( sqlWhereStringTableExpression != null ) {
+				final TableReference tableReference = tableGroup.getTableReference( sqlWhereStringTableExpression );
+				if ( tableReference != null ) {
+					retainedTableReferences.add( tableReference );
+				}
 			}
 			if ( needsDiscriminator() ) {
 				// We allow multiple joined subclasses to use the same table if they define a discriminator column.

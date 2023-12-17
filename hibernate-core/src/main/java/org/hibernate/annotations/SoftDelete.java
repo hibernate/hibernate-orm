@@ -11,8 +11,8 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import org.hibernate.Incubating;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.type.BooleanAsBooleanConverter;
 
 import jakarta.persistence.AttributeConverter;
 
@@ -57,26 +57,23 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
 @Target({PACKAGE, TYPE, FIELD, METHOD, ANNOTATION_TYPE})
 @Retention(RUNTIME)
 @Documented
+@Incubating
 public @interface SoftDelete {
 	/**
 	 * (Optional) The name of the column.
 	 * <p/>
-	 * Defaults to {@code deleted}.
+	 * Default depends on the {@linkplain #strategy() strategy} being used.
+	 *
+	 * @see SoftDeleteType#getDefaultColumnName()
 	 */
-	String columnName() default "deleted";
+	String columnName() default "";
 
 	/**
-	 * (Optional) The Java type used for values when dealing with JDBC.
-	 * This type should match the "relational type" of the specified
-	 * {@linkplain #converter() converter}.
+	 * The strategy to use for storing/reading values to/from the database.
 	 * <p/>
-	 * By default, Hibernate will inspect the {@linkplain #converter() converter}
-	 * and determine the proper type from its signature.
-	 *
-	 * @apiNote Sometimes useful since {@linkplain #converter() converter}
-	 * signatures are not required to be parameterized.
+	 * The strategy also affects the default {@linkplain #columnName() column name}.
 	 */
-	Class<?> jdbcType() default void.class;
+	SoftDeleteType strategy() default SoftDeleteType.DELETED;
 
 	/**
 	 * (Optional) Conversion to apply to determine the appropriate value to
@@ -94,5 +91,13 @@ public @interface SoftDelete {
 	 *
 	 * @apiNote The converter should never return {@code null}
 	 */
-	Class<? extends AttributeConverter<Boolean,?>> converter() default BooleanAsBooleanConverter.class;
+	Class<? extends AttributeConverter<Boolean,?>> converter() default UnspecifiedConversion.class;
+
+	/**
+	 * Used as the default for {@linkplain SoftDelete#converter()}, indicating that
+	 * {@linkplain Dialect#getPreferredSqlTypeCodeForBoolean() dialect} and
+	 * {@linkplain org.hibernate.cfg.MappingSettings#PREFERRED_BOOLEAN_JDBC_TYPE settings}
+	 * resolution should be used.
+	 */
+	interface UnspecifiedConversion extends AttributeConverter<Boolean,Object> {}
 }

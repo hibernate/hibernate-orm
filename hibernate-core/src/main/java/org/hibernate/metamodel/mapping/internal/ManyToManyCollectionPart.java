@@ -82,8 +82,6 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 		LazyTableGroup.ParentTableGroupUseChecker {
 	private ForeignKeyDescriptor foreignKey;
 	private ValuedModelPart fkTargetModelPart;
-	private boolean[] isInsertable;
-	private boolean[] isUpdatable;
 
 	public ManyToManyCollectionPart(
 			Nature nature,

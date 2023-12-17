@@ -551,6 +551,16 @@ public class SqlTypes {
 	 */
 	public static final int NAMED_ENUM = 6001;
 
+
+	/**
+	 * A type code representing an {@code embedding vector} type for databases like
+	 * {@link org.hibernate.dialect.PostgreSQLDialect PostgreSQL} that have special extensions.
+	 * An embedding vector essentially is a {@code float[]} with a fixed size.
+	 *
+	 * @since 6.4
+	 */
+	public static final int VECTOR = 10_000;
+
 	private SqlTypes() {
 	}
 

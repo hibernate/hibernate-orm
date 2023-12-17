@@ -17,6 +17,8 @@ import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.cache.spi.QueryResultsRegion;
 import org.hibernate.cache.spi.TimestampsCache;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 
 import static org.hibernate.cache.spi.SecondLevelCacheLogger.L2CACHE_LOGGER;
 
@@ -61,11 +63,20 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 				deepCopy( results )
 		);
 
+		final EventManager eventManager = session.getEventManager();
+		final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 		try {
 			session.getEventListenerManager().cachePutStart();
 			cacheRegion.putIntoCache( key, cacheItem, session );
 		}
 		finally {
+			eventManager.completeCachePutEvent(
+					cachePutEvent,
+					session,
+					cacheRegion,
+					true,
+					EventManager.CacheActionDescription.QUERY_RESULT
+			);
 			session.getEventListenerManager().cachePutEnd();
 		}
 
@@ -142,11 +153,19 @@ public class QueryResultsCacheImpl implements QueryResultsCache {
 
 	private CacheItem getCachedData(QueryKey key, SharedSessionContractImplementor session) {
 		CacheItem cachedItem = null;
+		final EventManager eventManager = session.getEventManager();
+		final HibernateMonitoringEvent cacheGetEvent = eventManager.beginCacheGetEvent();
 		try {
 			session.getEventListenerManager().cacheGetStart();
 			cachedItem = (CacheItem) cacheRegion.getFromCache( key, session );
 		}
 		finally {
+			eventManager.completeCacheGetEvent(
+					cacheGetEvent,
+					session,
+					cacheRegion,
+					cachedItem != null
+			);
 			session.getEventListenerManager().cacheGetEnd( cachedItem != null );
 		}
 		return cachedItem;

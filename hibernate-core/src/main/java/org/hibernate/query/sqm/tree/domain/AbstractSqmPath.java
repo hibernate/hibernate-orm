@@ -20,6 +20,7 @@ import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.metamodel.model.domain.ManagedDomainType;
 import org.hibernate.metamodel.model.domain.PersistentAttribute;
 import org.hibernate.query.sqm.NodeBuilder;
+import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.expression.AbstractSqmExpression;
@@ -72,6 +73,7 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 
 	// meant for assertions only
 	private boolean navigablePathsMatch(AbstractSqmPath<T> target) {
+		final SqmPath<?> lhs = getLhs() != null ? getLhs() : findRoot();
 		final SqmPath<?> targetLhs = target.getLhs() != null ? target.getLhs() : target.findRoot();
 		return lhs == null || lhs.getNavigablePath() == targetLhs.getNavigablePath()
 				|| getRoot( lhs ).getNodeType() instanceof SqmPolymorphicRootDescriptor;
@@ -170,6 +172,12 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 			}
 		}
 		return getModel();
+	}
+
+	@Override
+	public SqmExpressible<T> getExpressible() {
+		//noinspection unchecked
+		return (SqmExpressible<T>) getResolvedModel();
 	}
 
 	@Override

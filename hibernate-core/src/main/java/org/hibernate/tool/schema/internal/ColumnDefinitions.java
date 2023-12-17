@@ -249,6 +249,8 @@ class ColumnDefinitions {
 					return "varchar";
 				case "binary varying":
 					return "varbinary";
+				case "interval second":
+					return "interval";
 				default:
 					return lowerCaseTypName;
 			}

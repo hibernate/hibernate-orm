@@ -9,8 +9,6 @@ package org.hibernate.query.sqm.mutation.internal.cte;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -186,14 +184,6 @@ public class CteInsertHandler implements InsertHandler {
 		);
 		final TableGroup insertingTableGroup = sqmConverter.getMutatingTableGroup();
 
-		final Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions;
-		if ( domainParameterXref.getSqmParameterCount() == 0 ) {
-			parameterResolutions = Collections.emptyMap();
-		}
-		else {
-			parameterResolutions = new IdentityHashMap<>();
-		}
-
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// visit the insertion target using our special converter, collecting
 		// information about the target paths
@@ -201,7 +191,6 @@ public class CteInsertHandler implements InsertHandler {
 		final int size = sqmStatement.getInsertionTargetPaths().size();
 		final List<Map.Entry<List<CteColumn>, Assignment>> targetPathColumns = new ArrayList<>( size );
 		final List<CteColumn> targetPathCteColumns = new ArrayList<>( size );
-		final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions = new LinkedHashMap<>();
 		final NamedTableReference entityTableReference = new NamedTableReference(
 				cteTable.getTableExpression(),
 				TemporaryTable.DEFAULT_ALIAS,
@@ -236,14 +225,7 @@ public class CteInsertHandler implements InsertHandler {
 				},
 				sqmInsertStatement,
 				entityDescriptor,
-				insertingTableGroup,
-				(sqmParameter, mappingType, jdbcParameters) -> {
-					parameterResolutions.computeIfAbsent(
-							sqmParameter,
-							k -> new ArrayList<>( 1 )
-					).add( jdbcParameters );
-					paramTypeResolutions.put( sqmParameter, mappingType );
-				}
+				insertingTableGroup
 		);
 
 		final boolean assignsId = targetPathCteColumns.contains( cteTable.getCteColumns().get( 0 ) );
@@ -604,7 +586,7 @@ public class CteInsertHandler implements InsertHandler {
 				targetPathColumns,
 				assignsId,
 				sqmConverter,
-				parameterResolutions,
+				sqmConverter.getJdbcParamsBySqmParam(),
 				factory
 		);
 
@@ -641,7 +623,7 @@ public class CteInsertHandler implements InsertHandler {
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressible<T>) paramTypeResolutions.get(parameter);
+						return (MappingModelExpressible<T>) sqmConverter.getSqmParameterMappingModelExpressibleResolutions().get( parameter );
 					}
 				},
 				executionContext.getSession()
@@ -870,7 +852,6 @@ public class CteInsertHandler implements InsertHandler {
 				final CteColumn idCteColumn = cteColumns.get( 0 );
 				querySpec.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								0,
 								new ColumnReference(
 										"t",
 										idCteColumn.getColumnExpression(),
@@ -885,7 +866,6 @@ public class CteInsertHandler implements InsertHandler {
 					final CteColumn cteColumn = cteColumns.get( j );
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									0,
 									new ColumnReference(
 											"e",
 											cteColumn.getColumnExpression(),
@@ -924,13 +904,11 @@ public class CteInsertHandler implements InsertHandler {
 				);
 				finalResultQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								0,
 								idColumnReference
 						)
 				);
 				finalResultQuery.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
-								0,
 								SqmInsertStrategyHelper.createRowNumberingExpression(
 										querySpec,
 										sessionFactory
@@ -976,7 +954,6 @@ public class CteInsertHandler implements InsertHandler {
 					);
 					insertSelectSpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
-									0,
 									new ColumnReference(
 											"e",
 											rootKeyColumns[j],
@@ -1009,7 +986,6 @@ public class CteInsertHandler implements InsertHandler {
 						final ColumnReference columnReference = assignmentReferences.get( j );
 						insertSelectSpec.getSelectClause().addSqlSelection(
 								new SqlSelectionImpl(
-										0,
 										new ColumnReference(
 												"e",
 												entry.getKey().get( j ).getColumnExpression(),

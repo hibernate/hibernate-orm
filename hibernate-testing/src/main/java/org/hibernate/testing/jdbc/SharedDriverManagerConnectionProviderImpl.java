@@ -73,6 +73,22 @@ public class SharedDriverManagerConnectionProviderImpl extends DriverManagerConn
 		validateConnectionsReturned();
 	}
 
+	public void clearTypeCache() {
+		if ( "oracle.jdbc.OracleDriver".equals( config.driverClassName ) ) {
+			validateConnections( c -> {
+				try {
+					final Class<?> oracleConnection = Class.forName( "oracle.jdbc.OracleConnection" );
+					final Object connection = c.unwrap( oracleConnection );
+					oracleConnection.getMethod( "removeAllDescriptor").invoke( connection );
+					return true;
+				}
+				catch (Exception e) {
+					throw new RuntimeException( e );
+				}
+			} );
+		}
+	}
+
 	public void onDefaultTimeZoneChange() {
 		if ( "org.h2.Driver".equals( config.driverClassName ) || "org.hsqldb.jdbc.JDBCDriver".equals( config.driverClassName ) ) {
 			// Clear the connection pool to avoid issues with drivers that initialize the session TZ to the system TZ

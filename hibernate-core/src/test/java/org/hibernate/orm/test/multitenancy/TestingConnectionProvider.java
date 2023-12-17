@@ -15,7 +15,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 /**
  * @author Steve Ebersole
  */
-public class TestingConnectionProvider extends AbstractMultiTenantConnectionProvider {
+public class TestingConnectionProvider extends AbstractMultiTenantConnectionProvider<String> {
 	private Map<String,ConnectionProvider> connectionProviderMap;
 
 	public TestingConnectionProvider(Map<String, ConnectionProvider> connectionProviderMap) {

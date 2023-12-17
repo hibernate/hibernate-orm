@@ -18,6 +18,8 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 /**
  * Descriptor for {@link UUID} handling.
  *
+ * @see org.hibernate.cfg.AvailableSettings#PREFERRED_UUID_JDBC_TYPE
+ *
  * @author Steve Ebersole
  */
 public class UUIDJavaType extends AbstractClassJavaType<UUID> {

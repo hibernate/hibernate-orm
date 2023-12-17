@@ -36,6 +36,18 @@ public interface StatelessSessionBuilder {
 	 * @param tenantIdentifier The tenant identifier.
 	 *
 	 * @return {@code this}, for method chaining
+	 * @deprecated Use {@link #tenantIdentifier(Object)} instead
 	 */
+	@Deprecated(forRemoval = true)
 	StatelessSessionBuilder tenantIdentifier(String tenantIdentifier);
+
+	/**
+	 * Define the tenant identifier to be associated with the opened session.
+	 *
+	 * @param tenantIdentifier The tenant identifier.
+	 *
+	 * @return {@code this}, for method chaining
+	 * @since 6.4
+	 */
+	StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier);
 }

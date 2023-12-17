@@ -22,8 +22,10 @@ import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.SortNatural;
 import org.hibernate.annotations.Where;
+import org.hibernate.community.dialect.AltibaseDialect;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -31,6 +33,7 @@ import org.junit.jupiter.api.Test;
  * @author Nathan Xu
  */
 @TestForIssue(jiraKey = "HHH-14227")
+@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 public class InsertOrderingSelfReferenceTest extends BaseInsertOrderingTest {
 
 	@Override

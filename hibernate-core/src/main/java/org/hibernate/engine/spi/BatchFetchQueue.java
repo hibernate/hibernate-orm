@@ -311,7 +311,7 @@ public class BatchFetchQueue {
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			return CacheHelper.fromSharedCache( session, key, cache ) != null;
+			return CacheHelper.fromSharedCache( session, key, persister, cache ) != null;
 		}
 		return false;
 	}
@@ -529,7 +529,7 @@ public class BatchFetchQueue {
 					session.getFactory(),
 					session.getTenantIdentifier()
 			);
-			return CacheHelper.fromSharedCache( session, cacheKey, cache ) != null;
+			return CacheHelper.fromSharedCache( session, cacheKey, persister, cache ) != null;
 		}
 		return false;
 	}

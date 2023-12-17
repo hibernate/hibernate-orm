@@ -210,7 +210,7 @@ public class OneToOneSecondPass implements SecondPass {
 		final KeyValue targetEntityIdentifier = targetEntity.getIdentifier();
 		boolean referenceToPrimaryKey = mappedBy == null
 				|| targetEntityIdentifier instanceof Component
-						&& ( (Component) targetEntityIdentifier ).hasProperty( mappedBy );
+						&& ( (Component) targetEntityIdentifier ).matchesAllProperties( mappedBy );
 		oneToOne.setReferenceToPrimaryKey( referenceToPrimaryKey );
 
 		final String propertyRef = oneToOne.getReferencedPropertyName();

@@ -43,6 +43,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.transaction.internal.TransactionImpl;
 import org.hibernate.engine.transaction.spi.TransactionImplementor;
+import org.hibernate.event.spi.EventManager;
 import org.hibernate.graph.RootGraph;
 import org.hibernate.graph.internal.RootGraphImpl;
 import org.hibernate.graph.spi.RootGraphImplementor;
@@ -152,7 +153,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	private final Interceptor interceptor;
 
-	private final String tenantIdentifier;
+	private final Object tenantIdentifier;
 	private final TimeZone jdbcTimeZone;
 
 	// mutable state
@@ -161,6 +162,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private Integer jdbcBatchSize;
 
 	private boolean criteriaCopyTreeEnabled;
+
+	private boolean nativeJdbcParametersIgnored;
 
 	protected boolean closed;
 	protected boolean waitingForAutoClose;
@@ -174,6 +177,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	public AbstractSharedSessionContract(SessionFactoryImpl factory, SessionCreationOptions options) {
 		this.factory = factory;
+
 		fastSessionServices = factory.getFastSessionServices();
 		cacheTransactionSync = factory.getCache().getRegionFactory().createTransactionContext( this );
 		flushMode = options.getInitialSessionFlushMode();
@@ -183,6 +187,7 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		sessionEventsManager = createSessionEventsManager(options);
 		entityNameResolver = new CoordinatingEntityNameResolver( factory, interceptor );
 		setCriteriaCopyTreeEnabled( factory.getSessionFactoryOptions().isCriteriaCopyTreeEnabled() );
+		setNativeJdbcParametersIgnored( factory.getSessionFactoryOptions().getNativeJdbcParametersIgnored() );
 
 		final StatementInspector statementInspector = interpret( options.getStatementInspector() );
 
@@ -254,8 +259,8 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		);
 	}
 
-	private String getTenantId( SessionFactoryImpl factory, SessionCreationOptions options ) {
-		final String tenantIdentifier = options.getTenantIdentifier();
+	private Object getTenantId( SessionFactoryImpl factory, SessionCreationOptions options ) {
+		final Object tenantIdentifier = options.getTenantIdentifierValue();
 		if ( factory.getSessionFactoryOptions().isMultiTenancyEnabled() && tenantIdentifier == null ) {
 			throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
 		}
@@ -364,6 +369,14 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	@Override
 	public String getTenantIdentifier() {
+		if ( tenantIdentifier == null ) {
+			return null;
+		}
+		return factory.getTenantIdentifierJavaType().toString( tenantIdentifier );
+	}
+
+	@Override
+	public Object getTenantIdentifierValue() {
 		return tenantIdentifier;
 	}
 
@@ -602,14 +615,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 			if ( ! fastSessionServices.requiresMultiTenantConnectionProvider ) {
 				jdbcConnectionAccess = new NonContextualJdbcConnectionAccess(
 						getEventListenerManager(),
-						fastSessionServices.connectionProvider
+						fastSessionServices.connectionProvider,
+						this
 				);
 			}
 			else {
 				jdbcConnectionAccess = new ContextualJdbcConnectionAccess(
-						getTenantIdentifier(),
+						getTenantIdentifierValue(),
 						getEventListenerManager(),
-						fastSessionServices.multiTenantConnectionProvider
+						fastSessionServices.multiTenantConnectionProvider,
+						this
 				);
 			}
 		}
@@ -697,6 +712,16 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	@Override
 	public boolean isCriteriaCopyTreeEnabled() {
 		return criteriaCopyTreeEnabled;
+	}
+
+	@Override
+	public boolean getNativeJdbcParametersIgnored() {
+		return nativeJdbcParametersIgnored;
+	}
+
+	@Override
+	public void setNativeJdbcParametersIgnored(boolean nativeJdbcParametersIgnored) {
+		this.nativeJdbcParametersIgnored = nativeJdbcParametersIgnored;
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1303,6 +1328,11 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 
 	public Integer getJdbcBatchSize() {
 		return jdbcBatchSize;
+	}
+
+	@Override
+	public EventManager getEventManager() {
+		return fastSessionServices.getEventManager();
 	}
 
 	@Override

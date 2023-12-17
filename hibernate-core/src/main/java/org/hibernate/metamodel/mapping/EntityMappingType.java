@@ -638,6 +638,11 @@ public interface EntityMappingType
 	}
 
 	@Override
+	default boolean hasWhereRestrictions() {
+		return getEntityPersister().hasWhereRestrictions();
+	}
+
+	@Override
 	default void applyWhereRestrictions(
 			Consumer<Predicate> predicateConsumer,
 			TableGroup tableGroup,

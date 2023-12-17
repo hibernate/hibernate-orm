@@ -57,6 +57,7 @@ import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.sqm.TemporalUnit;
+import org.hibernate.query.sqm.tree.expression.SqmExpression;
 
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CollectionJoin;
@@ -2125,5 +2126,892 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public JpaExpression<Duration> duration(long magnitude, TemporalUnit unit) {
 		return criteriaBuilder.duration( magnitude, unit );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayAgg(JpaOrder order, Expression<? extends T> argument) {
+		return criteriaBuilder.arrayAgg( order, argument );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaPredicate filter, Expression<? extends T> argument) {
+		return criteriaBuilder.arrayAgg( order, filter, argument );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayAgg(JpaOrder order, JpaWindow window, Expression<? extends T> argument) {
+		return criteriaBuilder.arrayAgg( order, window, argument );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayAgg(
+			JpaOrder order,
+			JpaPredicate filter,
+			JpaWindow window,
+			Expression<? extends T> argument) {
+		return criteriaBuilder.arrayAgg( order, filter, window, argument );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayLiteral(T... elements) {
+		return criteriaBuilder.arrayLiteral( elements );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<Integer> arrayLength(Expression<T[]> arrayExpression) {
+		return criteriaBuilder.arrayLength( arrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<Integer> arrayPosition(Expression<T[]> arrayExpression, T element) {
+		return criteriaBuilder.arrayPosition( arrayExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<Integer> arrayPosition(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
+		return criteriaBuilder.arrayPosition( arrayExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<int[]> arrayPositions(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
+		return criteriaBuilder.arrayPositions( arrayExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<int[]> arrayPositions(Expression<T[]> arrayExpression, T element) {
+		return criteriaBuilder.arrayPositions( arrayExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<List<Integer>> arrayPositionsList(
+			Expression<T[]> arrayExpression,
+			Expression<T> elementExpression) {
+		return criteriaBuilder.arrayPositionsList( arrayExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<List<Integer>> arrayPositionsList(Expression<T[]> arrayExpression, T element) {
+		return criteriaBuilder.arrayPositionsList( arrayExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayConcat(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayConcat( arrayExpression1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayConcat(Expression<T[]> arrayExpression1, T[] array2) {
+		return criteriaBuilder.arrayConcat( arrayExpression1, array2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayConcat(T[] array1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayConcat( array1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
+		return criteriaBuilder.arrayAppend( arrayExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayAppend(Expression<T[]> arrayExpression, T element) {
+		return criteriaBuilder.arrayAppend( arrayExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayPrepend(Expression<T> elementExpression, Expression<T[]> arrayExpression) {
+		return criteriaBuilder.arrayPrepend( elementExpression, arrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayPrepend(T element, Expression<T[]> arrayExpression) {
+		return criteriaBuilder.arrayPrepend( element, arrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T> arrayGet(Expression<T[]> arrayExpression, Expression<Integer> indexExpression) {
+		return criteriaBuilder.arrayGet( arrayExpression, indexExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T> arrayGet(Expression<T[]> arrayExpression, Integer index) {
+		return criteriaBuilder.arrayGet( arrayExpression, index );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arraySet(
+			Expression<T[]> arrayExpression,
+			Expression<Integer> indexExpression,
+			Expression<T> elementExpression) {
+		return criteriaBuilder.arraySet( arrayExpression, indexExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arraySet(
+			Expression<T[]> arrayExpression,
+			Expression<Integer> indexExpression,
+			T element) {
+		return criteriaBuilder.arraySet( arrayExpression, indexExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arraySet(
+			Expression<T[]> arrayExpression,
+			Integer index,
+			Expression<T> elementExpression) {
+		return criteriaBuilder.arraySet( arrayExpression, index, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arraySet(Expression<T[]> arrayExpression, Integer index, T element) {
+		return criteriaBuilder.arraySet( arrayExpression, index, element );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
+		return criteriaBuilder.arrayRemove( arrayExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayRemove(Expression<T[]> arrayExpression, T element) {
+		return criteriaBuilder.arrayRemove( arrayExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayRemoveIndex(
+			Expression<T[]> arrayExpression,
+			Expression<Integer> indexExpression) {
+		return criteriaBuilder.arrayRemoveIndex( arrayExpression, indexExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayRemoveIndex(Expression<T[]> arrayExpression, Integer index) {
+		return criteriaBuilder.arrayRemoveIndex( arrayExpression, index );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arraySlice(
+			Expression<T[]> arrayExpression,
+			Expression<Integer> lowerIndexExpression,
+			Expression<Integer> upperIndexExpression) {
+		return criteriaBuilder.arraySlice( arrayExpression, lowerIndexExpression, upperIndexExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arraySlice(
+			Expression<T[]> arrayExpression,
+			Expression<Integer> lowerIndexExpression,
+			Integer upperIndex) {
+		return criteriaBuilder.arraySlice( arrayExpression, lowerIndexExpression, upperIndex );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arraySlice(
+			Expression<T[]> arrayExpression,
+			Integer lowerIndex,
+			Expression<Integer> upperIndexExpression) {
+		return criteriaBuilder.arraySlice( arrayExpression, lowerIndex, upperIndexExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arraySlice(Expression<T[]> arrayExpression, Integer lowerIndex, Integer upperIndex) {
+		return criteriaBuilder.arraySlice( arrayExpression, lowerIndex, upperIndex );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayReplace(
+			Expression<T[]> arrayExpression,
+			Expression<T> oldElementExpression,
+			Expression<T> newElementExpression) {
+		return criteriaBuilder.arrayReplace( arrayExpression, oldElementExpression, newElementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayReplace(
+			Expression<T[]> arrayExpression,
+			Expression<T> oldElementExpression,
+			T newElement) {
+		return criteriaBuilder.arrayReplace( arrayExpression, oldElementExpression, newElement );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayReplace(
+			Expression<T[]> arrayExpression,
+			T oldElement,
+			Expression<T> newElementExpression) {
+		return criteriaBuilder.arrayReplace( arrayExpression, oldElement, newElementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayReplace(Expression<T[]> arrayExpression, T oldElement, T newElement) {
+		return criteriaBuilder.arrayReplace( arrayExpression, oldElement, newElement );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayTrim(
+			Expression<T[]> arrayExpression,
+			Expression<Integer> elementCountExpression) {
+		return criteriaBuilder.arrayTrim( arrayExpression, elementCountExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayTrim(Expression<T[]> arrayExpression, Integer elementCount) {
+		return criteriaBuilder.arrayTrim( arrayExpression, elementCount );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayFill(
+			Expression<T> elementExpression,
+			Expression<Integer> elementCountExpression) {
+		return criteriaBuilder.arrayFill( elementExpression, elementCountExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayFill(Expression<T> elementExpression, Integer elementCount) {
+		return criteriaBuilder.arrayFill( elementExpression, elementCount );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayFill(T element, Expression<Integer> elementCountExpression) {
+		return criteriaBuilder.arrayFill( element, elementCountExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<T[]> arrayFill(T element, Integer elementCount) {
+		return criteriaBuilder.arrayFill( element, elementCount );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<String> arrayToString(
+			Expression<? extends Object[]> arrayExpression,
+			Expression<String> separatorExpression) {
+		return criteriaBuilder.arrayToString( arrayExpression, separatorExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<String> arrayToString(Expression<? extends Object[]> arrayExpression, String separator) {
+		return criteriaBuilder.arrayToString( arrayExpression, separator );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayContains(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
+		return criteriaBuilder.arrayContains( arrayExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayContains(Expression<T[]> arrayExpression, T element) {
+		return criteriaBuilder.arrayContains( arrayExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayContains(T[] array, Expression<T> elementExpression) {
+		return criteriaBuilder.arrayContains( array, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayContainsNullable(Expression<T[]> arrayExpression, Expression<T> elementExpression) {
+		return criteriaBuilder.arrayContainsNullable( arrayExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayContainsNullable(Expression<T[]> arrayExpression, T element) {
+		return criteriaBuilder.arrayContainsNullable( arrayExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayContainsNullable(T[] array, Expression<T> elementExpression) {
+		return criteriaBuilder.arrayContainsNullable( array, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, Expression<T[]> subArrayExpression) {
+		return criteriaBuilder.arrayContainsAll( arrayExpression, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayContainsAll(Expression<T[]> arrayExpression, T[] subArray) {
+		return criteriaBuilder.arrayContainsAll( arrayExpression, subArray );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayContainsAll(T[] array, Expression<T[]> subArrayExpression) {
+		return criteriaBuilder.arrayContainsAll( array, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayContainsAllNullable(
+			Expression<T[]> arrayExpression,
+			Expression<T[]> subArrayExpression) {
+		return criteriaBuilder.arrayContainsAllNullable( arrayExpression, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayContainsAllNullable(Expression<T[]> arrayExpression, T[] subArray) {
+		return criteriaBuilder.arrayContainsAllNullable( arrayExpression, subArray );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayContainsAllNullable(T[] array, Expression<T[]> subArrayExpression) {
+		return criteriaBuilder.arrayContainsAllNullable( array, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayOverlaps( arrayExpression1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayOverlaps(Expression<T[]> arrayExpression1, T[] array2) {
+		return criteriaBuilder.arrayOverlaps( arrayExpression1, array2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayOverlaps(T[] array1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayOverlaps( array1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayOverlapsNullable( arrayExpression1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayOverlapsNullable(Expression<T[]> arrayExpression1, T[] array2) {
+		return criteriaBuilder.arrayOverlapsNullable( arrayExpression1, array2 );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaPredicate arrayOverlapsNullable(T[] array1, Expression<T[]> arrayExpression2) {
+		return criteriaBuilder.arrayOverlapsNullable( array1, arrayExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<E>> JpaExpression<C> collectionLiteral(E... elements) {
+		return criteriaBuilder.collectionLiteral( elements );
+	}
+
+	@Override
+	@Incubating
+	public JpaExpression<Integer> collectionLength(Expression<? extends Collection<?>> collectionExpression) {
+		return criteriaBuilder.collectionLength( collectionExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaExpression<Integer> collectionPosition(
+			Expression<? extends Collection<? extends E>> collectionExpression,
+			E element) {
+		return criteriaBuilder.collectionPosition( collectionExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaExpression<Integer> collectionPosition(
+			Expression<? extends Collection<? extends E>> collectionExpression,
+			Expression<E> elementExpression) {
+		return criteriaBuilder.collectionPosition( collectionExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<int[]> collectionPositions(
+			Expression<? extends Collection<? super T>> collectionExpression,
+			Expression<T> elementExpression) {
+		return criteriaBuilder.collectionPositions( collectionExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<int[]> collectionPositions(
+			Expression<? extends Collection<? super T>> collectionExpression,
+			T element) {
+		return criteriaBuilder.collectionPositions( collectionExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<List<Integer>> collectionPositionsList(
+			Expression<? extends Collection<? super T>> collectionExpression,
+			Expression<T> elementExpression) {
+		return criteriaBuilder.collectionPositionsList( collectionExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<List<Integer>> collectionPositionsList(
+			Expression<? extends Collection<? super T>> collectionExpression,
+			T element) {
+		return criteriaBuilder.collectionPositionsList( collectionExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionConcat(
+			Expression<C> collectionExpression1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionConcat( collectionExpression1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionConcat(
+			Expression<C> collectionExpression1,
+			Collection<? extends E> collection2) {
+		return criteriaBuilder.collectionConcat( collectionExpression1, collection2 );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionConcat(
+			C collection1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionConcat( collection1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionAppend(
+			Expression<C> collectionExpression,
+			Expression<? extends E> elementExpression) {
+		return criteriaBuilder.collectionAppend( collectionExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionAppend(
+			Expression<C> collectionExpression,
+			E element) {
+		return criteriaBuilder.collectionAppend( collectionExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionPrepend(
+			Expression<? extends E> elementExpression,
+			Expression<C> collectionExpression) {
+		return criteriaBuilder.collectionPrepend( elementExpression, collectionExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionPrepend(
+			E element,
+			Expression<C> collectionExpression) {
+		return criteriaBuilder.collectionPrepend( element, collectionExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaExpression<E> collectionGet(
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<Integer> indexExpression) {
+		return criteriaBuilder.collectionGet( collectionExpression, indexExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaExpression<E> collectionGet(Expression<? extends Collection<E>> collectionExpression, Integer index) {
+		return criteriaBuilder.collectionGet( collectionExpression, index );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionSet(
+			Expression<C> collectionExpression,
+			Expression<Integer> indexExpression,
+			Expression<? extends E> elementExpression) {
+		return criteriaBuilder.collectionSet( collectionExpression, indexExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionSet(
+			Expression<C> collectionExpression,
+			Expression<Integer> indexExpression,
+			E element) {
+		return criteriaBuilder.collectionSet( collectionExpression, indexExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionSet(
+			Expression<C> collectionExpression,
+			Integer index,
+			Expression<? extends E> elementExpression) {
+		return criteriaBuilder.collectionSet( collectionExpression, index, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionSet(
+			Expression<C> collectionExpression,
+			Integer index,
+			E element) {
+		return criteriaBuilder.collectionSet( collectionExpression, index, element );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionRemove(
+			Expression<C> collectionExpression,
+			Expression<? extends E> elementExpression) {
+		return criteriaBuilder.collectionRemove( collectionExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionRemove(
+			Expression<C> collectionExpression,
+			E element) {
+		return criteriaBuilder.collectionRemove( collectionExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <C extends Collection<?>> JpaExpression<C> collectionRemoveIndex(
+			Expression<C> collectionExpression,
+			Expression<Integer> indexExpression) {
+		return criteriaBuilder.collectionRemoveIndex( collectionExpression, indexExpression );
+	}
+
+	@Override
+	@Incubating
+	public <C extends Collection<?>> JpaExpression<C> collectionRemoveIndex(
+			Expression<C> collectionExpression,
+			Integer index) {
+		return criteriaBuilder.collectionRemoveIndex( collectionExpression, index );
+	}
+
+	@Override
+	@Incubating
+	public <C extends Collection<?>> JpaExpression<C> collectionSlice(
+			Expression<C> collectionExpression,
+			Expression<Integer> lowerIndexExpression,
+			Expression<Integer> upperIndexExpression) {
+		return criteriaBuilder.collectionSlice( collectionExpression, lowerIndexExpression, upperIndexExpression );
+	}
+
+	@Override
+	@Incubating
+	public <C extends Collection<?>> JpaExpression<C> collectionSlice(
+			Expression<C> collectionExpression,
+			Expression<Integer> lowerIndexExpression,
+			Integer upperIndex) {
+		return criteriaBuilder.collectionSlice( collectionExpression, lowerIndexExpression, upperIndex );
+	}
+
+	@Override
+	@Incubating
+	public <C extends Collection<?>> JpaExpression<C> collectionSlice(
+			Expression<C> collectionExpression,
+			Integer lowerIndex,
+			Expression<Integer> upperIndexExpression) {
+		return criteriaBuilder.collectionSlice( collectionExpression, lowerIndex, upperIndexExpression );
+	}
+
+	@Override
+	@Incubating
+	public <C extends Collection<?>> JpaExpression<C> collectionSlice(
+			Expression<C> collectionExpression,
+			Integer lowerIndex,
+			Integer upperIndex) {
+		return criteriaBuilder.collectionSlice( collectionExpression, lowerIndex, upperIndex );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(
+			Expression<C> collectionExpression,
+			Expression<? extends E> oldElementExpression,
+			Expression<? extends E> newElementExpression) {
+		return criteriaBuilder.collectionReplace( collectionExpression, oldElementExpression, newElementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(
+			Expression<C> collectionExpression,
+			Expression<? extends E> oldElementExpression,
+			E newElement) {
+		return criteriaBuilder.collectionReplace( collectionExpression, oldElementExpression, newElement );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(
+			Expression<C> collectionExpression,
+			E oldElement,
+			Expression<? extends E> newElementExpression) {
+		return criteriaBuilder.collectionReplace( collectionExpression, oldElement, newElementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E, C extends Collection<? super E>> JpaExpression<C> collectionReplace(
+			Expression<C> collectionExpression,
+			E oldElement,
+			E newElement) {
+		return criteriaBuilder.collectionReplace( collectionExpression, oldElement, newElement );
+	}
+
+	@Override
+	@Incubating
+	public <C extends Collection<?>> JpaExpression<C> collectionTrim(
+			Expression<C> arrayExpression,
+			Expression<Integer> elementCountExpression) {
+		return criteriaBuilder.collectionTrim( arrayExpression, elementCountExpression );
+	}
+
+	@Override
+	@Incubating
+	public <C extends Collection<?>> JpaExpression<C> collectionTrim(
+			Expression<C> arrayExpression,
+			Integer elementCount) {
+		return criteriaBuilder.collectionTrim( arrayExpression, elementCount );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<Collection<T>> collectionFill(
+			Expression<T> elementExpression,
+			Expression<Integer> elementCountExpression) {
+		return criteriaBuilder.collectionFill( elementExpression, elementCountExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<Collection<T>> collectionFill(Expression<T> elementExpression, Integer elementCount) {
+		return criteriaBuilder.collectionFill( elementExpression, elementCount );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<Collection<T>> collectionFill(T element, Expression<Integer> elementCountExpression) {
+		return criteriaBuilder.collectionFill( element, elementCountExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<Collection<T>> collectionFill(T element, Integer elementCount) {
+		return criteriaBuilder.collectionFill( element, elementCount );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<String> collectionToString(
+			Expression<? extends Collection<?>> collectionExpression,
+			Expression<String> separatorExpression) {
+		return criteriaBuilder.collectionToString( collectionExpression, separatorExpression );
+	}
+
+	@Override
+	@Incubating
+	public <T> JpaExpression<String> collectionToString(
+			Expression<? extends Collection<?>> collectionExpression,
+			String separator) {
+		return criteriaBuilder.collectionToString( collectionExpression, separator );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionContains(
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends E> elementExpression) {
+		return criteriaBuilder.collectionContains( collectionExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionContains(Expression<? extends Collection<E>> collectionExpression, E element) {
+		return criteriaBuilder.collectionContains( collectionExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionContains(Collection<E> collection, Expression<E> elementExpression) {
+		return criteriaBuilder.collectionContains( collection, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionContainsNullable(
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends E> elementExpression) {
+		return criteriaBuilder.collectionContainsNullable( collectionExpression, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionContainsNullable(
+			Expression<? extends Collection<E>> collectionExpression,
+			E element) {
+		return criteriaBuilder.collectionContainsNullable( collectionExpression, element );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionContainsNullable(Collection<E> collection, Expression<E> elementExpression) {
+		return criteriaBuilder.collectionContainsNullable( collection, elementExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionContainsAll(
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return criteriaBuilder.collectionContainsAll( collectionExpression, subCollectionExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionContainsAll(
+			Expression<? extends Collection<E>> collectionExpression,
+			Collection<? extends E> subCollection) {
+		return criteriaBuilder.collectionContainsAll( collectionExpression, subCollection );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionContainsAll(
+			Collection<E> collection,
+			Expression<? extends Collection<? extends E>> subArrayExpression) {
+		return criteriaBuilder.collectionContainsAll( collection, subArrayExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionContainsAllNullable(
+			Expression<? extends Collection<E>> collectionExpression,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return criteriaBuilder.collectionContainsAllNullable( collectionExpression, subCollectionExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionContainsAllNullable(
+			Expression<? extends Collection<E>> collectionExpression,
+			Collection<? extends E> subCollection) {
+		return criteriaBuilder.collectionContainsAllNullable( collectionExpression, subCollection );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionContainsAllNullable(
+			Collection<E> collection,
+			Expression<? extends Collection<? extends E>> subCollectionExpression) {
+		return criteriaBuilder.collectionContainsAllNullable( collection, subCollectionExpression );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionOverlaps(
+			Expression<? extends Collection<E>> collectionExpression1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionOverlaps( collectionExpression1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionOverlaps(
+			Expression<? extends Collection<E>> collectionExpression1,
+			Collection<? extends E> collection2) {
+		return criteriaBuilder.collectionOverlaps( collectionExpression1, collection2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionOverlaps(
+			Collection<E> collection1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionOverlaps( collection1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionOverlapsNullable(
+			Expression<? extends Collection<E>> collectionExpression1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionOverlapsNullable( collectionExpression1, collectionExpression2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionOverlapsNullable(
+			Expression<? extends Collection<E>> collectionExpression1,
+			Collection<? extends E> collection2) {
+		return criteriaBuilder.collectionOverlapsNullable( collectionExpression1, collection2 );
+	}
+
+	@Override
+	@Incubating
+	public <E> JpaPredicate collectionOverlapsNullable(
+			Collection<E> collection1,
+			Expression<? extends Collection<? extends E>> collectionExpression2) {
+		return criteriaBuilder.collectionOverlapsNullable( collection1, collectionExpression2 );
 	}
 }

@@ -221,6 +221,7 @@ public class OutputsImpl implements Outputs {
 						executionContext,
 						processingOptions
 				);
+		final ArrayList<Object> results = new ArrayList<>();
 		try {
 			final RowProcessingStateStandardImpl rowProcessingState = new RowProcessingStateStandardImpl(
 					jdbcValuesSourceProcessingState,
@@ -229,8 +230,6 @@ public class OutputsImpl implements Outputs {
 					jdbcValues
 			);
 
-
-			final ArrayList<Object> results = new ArrayList<>();
 			while ( rowProcessingState.next() ) {
 				results.add( rowReader.readRow( rowProcessingState, processingOptions ) );
 				rowProcessingState.finishRowProcessing();
@@ -248,7 +247,7 @@ public class OutputsImpl implements Outputs {
 		}
 		finally {
 			rowReader.finishUp( jdbcValuesSourceProcessingState );
-			jdbcValuesSourceProcessingState.finishUp();
+			jdbcValuesSourceProcessingState.finishUp( results.size() > 1 );
 			jdbcValues.finishUp( this.context.getSession() );
 		}
 	}

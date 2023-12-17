@@ -93,7 +93,7 @@ Note that the restriction specified by the `condition` or `defaultCondition` is 
 |===
 
 By default, a new session comes with every filter disabled.
-A filter may be explicitly enabled in a given session by calling `enableFilter()` and assigning arguments to the parameters of the filter.
+A filter may be explicitly enabled in a given session by calling link:{doc-javadoc-url}org/hibernate/Session.html#enableFilter(java.lang.String)[`enableFilter()`] and assigning arguments to the parameters of the filter using the returned instance of link:{doc-javadoc-url}org/hibernate/Filter.html[`Filter`].
 You should do this right at the _start_ of the session.
 
 [source,java]
@@ -120,7 +120,7 @@ More than one filter may be enabled in a given session.
 
 [TIP]
 ====
-When we only need to filter rows by a static condition with no parameters, we don't need a filter, since `@SQLRestriction` provides a much simpler way to do that.
+When we only need to filter rows by a static condition with no parameters, we don't need a filter, since link:{doc-javadoc-url}org/hibernate/annotations/SQLRestriction.html[`@SQLRestriction`] provides a much simpler way to do that.
 ====
 
 :envers: https://hibernate.org/orm/envers/
@@ -178,13 +178,43 @@ List documents =
             .forEntitiesAtRevision(Document.class, revision)
             .getResultList();
 ----
-For much more information, see {envers-doc}[the User Guide].
+For much more information, see the {envers-doc}[User Guide].
 ****
 
-Another closely-related problem is multi-tenancy.
+Historically, filters where often used to implement soft-delete.
+But, since 6.4, Hibernate now comes with soft-delete built in.
+
+[[soft-delete]]
+=== Soft-delete
+
+:soft-delete-doc: {doc-user-guide-url}#soft-delete
+
+Even when we don't need complete historical versioning, we often prefer to "delete" a row by marking it as obsolete using a SQL `update`, rather than by executing an actual SQL `delete` and removing the row from the database completely.
+
+The link:{doc-javadoc-url}org/hibernate/annotations/SoftDelete.html[`@SoftDelete`] annotation controls how this works:
+[source,java]
+----
+@Entity
+@SoftDelete(columnName = "deleted",
+            converter = TrueFalseConverter.class)
+class Draft {
+
+    ...
+}
+----
+The `columnName` specifies a column holding the deletion status, and the `converter` is responsible for converting a Java `Boolean` to the type of that column.
+In this example, link:{doc-javadoc-url}org/hibernate/type/TrueFalseConverter.html[`TrueFalseConverter`] sets the column to the character `'F'` initially, and to `'T'` when the row is deleted.
+Any JPA `AttributeConverter` for the Java `Boolean` type may be used here.
+Built-in options include link:{doc-javadoc-url}org/hibernate/type/NumericBooleanConverter.html[`NumericBooleanConverter`] and link:{doc-javadoc-url}org/hibernate/type/YesNoConverter.html[`YesNoConverter`].
+
+Much more information about soft delete is available in the {soft-delete-doc}[User Guide].
+
+Another feature that you _could_ use filters for, but now don't need to, is multi-tenancy.
 
 [[multitenancy]]
 === Multi-tenancy
+
+:multitenacy-doc: {doc-user-guide-url}#multitenacy
 
 A _multi-tenant_ database is one where the data is segregated by _tenant_.
 We don't need to actually define what a "tenant" really represents here; all we care about at this level of abstraction is that each tenant may be distinguished by a unique identifier.
@@ -262,13 +292,15 @@ To make use of multi-tenancy, we'll usually need to set at least one of these co
 | `hibernate.multi_tenant_connection_provider`  | Specifies the `MultiTenantConnectionProvider`
 |===
 
+A longer discussion of multi-tenancy may be found in the {multitenacy-doc}[User Guide].
+
 [[custom-sql]]
 === Using custom-written SQL
 
 We've already discussed how to run <<native-queries,queries written in SQL>>, but occasionally that's not enough.
 Sometimes—but much less often than you might expect—we would like to customize the SQL used by Hibernate to perform basic CRUD operations for an entity or collection.
 
-For this we can use `@SQLInsert` and friends:
+For this we can use link:{doc-javadoc-url}org/hibernate/annotations/SQLInsert.html[`@SQLInsert`] and friends:
 
 [source,java]
 ----
@@ -279,6 +311,20 @@ For this we can use `@SQLInsert` and friends:
 @SQLSelect(sql = "select id, name from person where id = ? and valid = true")
 public static class Person { ... }
 ----
+
+.Annotations for overriding generated SQL
+[%breakable,cols="25,~"]
+|===
+| Annotation | Purpose
+
+| link:{doc-javadoc-url}org/hibernate/annotations/SQLSelect.html[`@SQLSelect`] | Overrides a generated SQL `select` statement
+| link:{doc-javadoc-url}org/hibernate/annotations/SQLInsert.html[`@SQLInsert`] | Overrides a generated SQL `insert` statement
+| link:{doc-javadoc-url}org/hibernate/annotations/SQLUpdate.html[`@SQLUpdate`] | Overrides a generated SQL `update` statement
+| link:{doc-javadoc-url}org/hibernate/annotations/SQDelete.html[`@SQDelete`] | Overrides a generated SQL `delete` statement a single rows
+| link:{doc-javadoc-url}org/hibernate/annotations/SQDeleteAll.html[`@SQDeleteAll`] | Overrides a generated SQL `delete` statement for multiple rows
+| link:{doc-javadoc-url}org/hibernate/annotations/SQLRestriction.html[`@SQLRestriction`] | Adds a restriction to generated SQL
+| link:{doc-javadoc-url}org/hibernate/annotations/SQLOrder.html[`@SQLOrder`] | Adds an ordering to generated SQL
+|===
 
 [TIP]
 ====
@@ -294,7 +340,7 @@ However, the `@Column` annotation does lend some flexibility here:
 
 [TIP]
 ====
-If you need custom SQL, but are targeting multiple dialects of SQL, you can use the annotations defined in `DialectOverrides`.
+If you need custom SQL, but are targeting multiple dialects of SQL, you can use the annotations defined in link:{doc-javadoc-url}org/hibernate/annotations/DialectOverride.html[`DialectOverride`].
 For example, this annotation lets us override the custom `insert` statement just for PostgreSQL:
 
 [source,java]
@@ -402,7 +448,7 @@ Hibernate has a range of built-in generators which are defined in terms of this 
 
 Furthermore, support for JPA's standard id generation strategies is also defined in terms of this framework.
 
-As an example, let's look at how `@UuidGenerator` is defined:
+As an example, let's look at how link:{doc-javadoc-url}org/hibernate/annotations/UuidGenerator.html[`@UuidGenerator`] is defined:
 
 [source,java]
 ----
@@ -414,7 +460,7 @@ public @interface UuidGenerator { ... }
 ----
 
 `@UuidGenerator` is meta-annotated both `@IdGeneratorType` and `@ValueGenerationType` because it may be used to generate both ids and values of regular attributes.
-Either way, this `Generator` class does the hard work:
+Either way, link:{doc-javadoc-url}org/hibernate/id/uuid/UuidGenerator.html[this `Generator` class] does the hard work:
 
 [source,java]
 ----
@@ -518,11 +564,12 @@ Custom naming strategies may be enabled using the configuration properties we al
 
 :ogc: https://www.ogc.org
 :geolatte: https://github.com/GeoLatte/geolatte-geom
+:spatial-doc: {doc-user-guide-url}#spatial
 
 Hibernate Spatial augments the <<basic-attributes,built-in basic types>> with a set of Java mappings for {ogc}[OGC] spatial types.
 
 - {geolatte}[Geolatte-geom] defines a set of Java types implementing the OGC spatial types, and codecs for translating to and from database-native spatial datatypes.
-- Hibernate Spatial itself supplies integration with Hibernate.
+- {spatial-doc}[Hibernate Spatial] itself supplies integration with Hibernate.
 
 To use Hibernate Spatial, we must add it as a dependency, as described in <<optional-dependencies>>.
 
@@ -633,7 +680,7 @@ The first three options let us map the index of a `List` or key of a `Map` to a 
 | Annotation | Purpose | JPA-standard
 
 | `@OrderColumn` | Specifies the column used to maintain the order of a list | &#10004;
-| `@ListIndexBase` | The column value for the first element of the list (zero by default) | &#10006;
+| link:{doc-javadoc-url}org/hibernate/annotations/ListIndexBase.html[`@ListIndexBase`] | The column value for the first element of the list (zero by default) | &#10006;
 | `@MapKeyColumn` | Specifies the column used to persist the keys of a map
 (used when the key is of basic type)| &#10004;
 | `@MapKeyJoinColumn` | Specifies the column used to persist the keys of a map
@@ -705,8 +752,8 @@ On the other hand, the following annotations specify how a collection should be 
 |===
 | Annotation | Purpose | JPA-standard
 
-| `@SortNatural` | Specifies that the elements of a collection are `Comparable` | &#10006;
-| `@SortComparator` | Specifies a `Comparator` used to sort the collection | &#10006;
+| link:{doc-javadoc-url}org/hibernate/annotations/SortNatural.html[`@SortNatural`] | Specifies that the elements of a collection are `Comparable` | &#10006;
+| link:{doc-javadoc-url}org/hibernate/annotations/SortComparator.html[`@SortComparator`] | Specifies a `Comparator` used to sort the collection | &#10006;
 |===
 
 Under the covers, Hibernate uses a `TreeSet` or `TreeMap` to maintain the collection in sorted order.
@@ -714,7 +761,9 @@ Under the covers, Hibernate uses a `TreeSet` or `TreeMap` to maintain the collec
 [[any]]
 === Any mappings
 
-An `@Any` mapping is a sort of polymorphic many-to-one association where the target entity types are not related by the usual entity inheritance.
+:any-doc: {doc-user-guide-url}#associations-any
+
+An link:{doc-javadoc-url}org/hibernate/annotations/Any.html[`@Any`] mapping is a sort of polymorphic many-to-one association where the target entity types are not related by the usual entity inheritance.
 The target type is distinguished using a discriminator value stored on the _referring_ side of the relationship.
 
 This is quite different to <<entity-inheritance,discriminated inheritance>> where the discriminator is held in the tables mapped by the referenced entity hierarchy.
@@ -767,10 +816,10 @@ There are a number of annotations which are useful to express this sort of compl
 |===
 | Annotations | Purpose
 
-| `@Any` | Declares that an attribute is a discriminated polymorphic association mapping
-| `@AnyDiscriminator` | Specify the Java type of the discriminator
+| link:{doc-javadoc-url}org/hibernate/annotations/Any.html[`@Any`] | Declares that an attribute is a discriminated polymorphic association mapping
+| link:{doc-javadoc-url}org/hibernate/annotations/AnyDiscriminator.html[`@AnyDiscriminator`] | Specify the Java type of the discriminator
 | `@JdbcType` or `@JdbcTypeCode` | Specify the JDBC type of the discriminator
-| `@AnyDiscriminatorValue` | Specifies how discriminator values map to entity types
+| link:{doc-javadoc-url}org/hibernate/annotations/AnyDiscriminatorValue.html[`@AnyDiscriminatorValue`] | Specifies how discriminator values map to entity types
 | `@Column` or `@Formula` | Specify the column or formula in which the discriminator value is stored
 | `@AnyKeyJavaType` or `@AnyKeyJavaClass` | Specify the Java type of the foreign key (that is, of the ids of the target entities)
 | `@AnyKeyJdbcType` or `@AnyKeyJdbcTypeCode` | Specify the JDBC type of the foreign key
@@ -793,6 +842,8 @@ from Order ord
 ====
 Polymorphic association joins for `@Any` mappings are not currently implemented.
 ====
+
+Further information may be found in the {any-doc}[User Guide].
 
 [[dynamic-insert-update]]
 === Selective column lists in inserts and updates
@@ -938,7 +989,7 @@ We've already seen two different ways to override the default <<association-fetc
 - the `join fetch` clause in <<hql-queries,HQL>>, or, equivalently, the method `From.fetch()` in the criteria query API.
 
 A third way is to define a named fetch profile.
-First, we must declare the profile, by annotating a class or package:
+First, we must declare the profile, by annotating a class or package link:{doc-javadoc-url}org/hibernate/annotations/FetchProfile.html[`@FetchProfile`]:
 
 [source,java]
 ----
@@ -1029,7 +1080,7 @@ We may define as many different fetch profiles as we like.
 | `@FetchProfileOverride` | Specifies the fetch strategy for the annotated association, in a given fetch profile
 |===
 
-A fetch profile must be explicitly enabled for a given session:
+A fetch profile must be explicitly enabled for a given session by calling link:{doc-javadoc-url}org/hibernate/Session.html#enableFetchProfile(java.lang.String)[`enableFetchProfile()`]:
 
 [source,java]
 ----
@@ -1042,7 +1093,7 @@ Well, it's really hard to say.
 It's nice that this feature _exists_, and if you love it, that's great.
 But Hibernate offers alternatives that we think are more compelling most of the time.
 
-The one and only advantage unique to fetch profiles is that they let us very selectively request subselect fetching.
+The one and only advantage unique to fetch profiles is that they let us very selectively request <<batch-subselect-fetch,subselect fetching>>.
 We can't do that with entity graphs, and we can't do it with HQL.
 
 [%unbreakable]

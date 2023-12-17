@@ -28,11 +28,11 @@ stage('Configure') {
 	this.environments = [
 		// Minimum supported versions
 		new BuildEnvironment( dbName: 'hsqldb_2_6' ),
-		new BuildEnvironment( dbName: 'mysql_5_7' ),
-		new BuildEnvironment( dbName: 'mariadb_10_3' ),
-		new BuildEnvironment( dbName: 'postgresql_11' ),
-		new BuildEnvironment( dbName: 'edb_11' ),
-		new BuildEnvironment( dbName: 'oracle_11_2' ),
+		new BuildEnvironment( dbName: 'mysql_8_0' ),
+		new BuildEnvironment( dbName: 'mariadb_10_4' ),
+		new BuildEnvironment( dbName: 'postgresql_12' ),
+		new BuildEnvironment( dbName: 'edb_12' ),
+		new BuildEnvironment( dbName: 'oracle_21' ), // Did not find an image for Oracle-XE 19c
 		new BuildEnvironment( dbName: 'db2_10_5', longRunning: true ),
 		new BuildEnvironment( dbName: 'mssql_2017' ), // Unfortunately there is no SQL Server 2008 image, so we have to test with 2017
 // 		new BuildEnvironment( dbName: 'sybase_16' ), // There only is a Sybase ASE 16 image, so no pint in testing that nightly
@@ -110,38 +110,38 @@ stage('Build') {
 									state[buildEnv.tag]['additionalOptions'] = state[buildEnv.tag]['additionalOptions'] +
 										" -Pgradle.libs.versions.hsqldb=2.6.1"
 									break;
-								case "mysql_5_7":
+								case "mysql_8_0":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mysql:5.7.43').pull()
+										docker.image('mysql:8.0.31').pull()
 									}
-									sh "./docker_db.sh mysql_5_7"
+									sh "./docker_db.sh mysql_8_0"
 									state[buildEnv.tag]['containerName'] = "mysql"
 									break;
-								case "mariadb_10_3":
+								case "mariadb_10_4":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('mariadb:10.3.39').pull()
+										docker.image('mariadb:10.4.31').pull()
 									}
-									sh "./docker_db.sh mariadb_10_3"
+									sh "./docker_db.sh mariadb_10_4"
 									state[buildEnv.tag]['containerName'] = "mariadb"
 									break;
-								case "postgresql_11":
+								case "postgresql_12":
 									// use the postgis image to enable the PGSQL GIS (spatial) extension
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('postgis/postgis:11-3.3').pull()
+										docker.image('postgis/postgis:12-3.4').pull()
 									}
-									sh "./docker_db.sh postgresql_11"
+									sh "./docker_db.sh postgresql_12"
 									state[buildEnv.tag]['containerName'] = "postgres"
 									break;
-								case "edb_11":
-									docker.image('quay.io/enterprisedb/edb-postgres-advanced:11.21-3.3-postgis').pull()
-									sh "./docker_db.sh edb_11"
+								case "edb_12":
+									docker.image('quay.io/enterprisedb/edb-postgres-advanced:12.16-3.3-postgis').pull()
+									sh "./docker_db.sh edb_12"
 									state[buildEnv.tag]['containerName'] = "edb"
 									break;
-								case "oracle_11_2":
+								case "oracle_21":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('gvenzl/oracle-xe:11.2.0.2-full').pull()
+										docker.image('gvenzl/oracle-xe:21.3.0-full').pull()
 									}
-									sh "./docker_db.sh oracle_11"
+									sh "./docker_db.sh oracle_21"
 									state[buildEnv.tag]['containerName'] = "oracle"
 									break;
 								case "db2_10_5":
@@ -165,7 +165,7 @@ stage('Build') {
 									break;
 								case "cockroachdb":
 									docker.withRegistry('https://index.docker.io/v1/', 'hibernateci.hub.docker.com') {
-										docker.image('cockroachdb/cockroach:v23.1.8').pull()
+										docker.image('cockroachdb/cockroach:v23.1.12').pull()
 									}
 									sh "./docker_db.sh cockroachdb"
 									state[buildEnv.tag]['containerName'] = "cockroach"

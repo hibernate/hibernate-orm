@@ -41,4 +41,9 @@ public class StringUtilTest {
 	public void testGetUpperUnderscoreCaseFromLowerCamelCase(){
 		assertEquals("USER_PARENT_NAME", StringUtil.getUpperUnderscoreCaseFromLowerCamelCase("userParentName"));
 	}
+
+	@Test
+	public void testNameToMethodNameWithComma() {
+		assertEquals( "entity_Graph", StringUtil.nameToMethodName( "entity,Graph" ) );
+	}
 }

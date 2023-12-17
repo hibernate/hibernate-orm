@@ -22,11 +22,14 @@ import jakarta.persistence.Table;
  *
  * @author Steve Ebersole
  */
+@Table(name = "joined_root")
+//tag::example-soft-delete-secondary[]
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
-@Table(name = "joined_root")
 @SoftDelete(columnName = "removed", converter = YesNoConverter.class)
 public abstract class JoinedRoot {
+	// ...
+//end::example-soft-delete-secondary[]
 	@Id
 	private Integer id;
 	@Basic
@@ -52,4 +55,6 @@ public abstract class JoinedRoot {
 	public void setName(String name) {
 		this.name = name;
 	}
+//tag::example-soft-delete-secondary[]
 }
+//end::example-soft-delete-secondary[]

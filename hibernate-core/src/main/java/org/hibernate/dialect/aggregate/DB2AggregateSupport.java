@@ -20,11 +20,13 @@ import org.hibernate.boot.model.relational.Namespace;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DB2StructJdbcType;
 import org.hibernate.dialect.XmlHelper;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.AggregateColumn;
 import org.hibernate.mapping.Column;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectablePath;
+import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -143,12 +145,14 @@ public class DB2AggregateSupport extends AggregateSupportImpl {
 			final DdlType ddlType = typeConfiguration.getDdlTypeRegistry().getDescriptor(
 					column.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode()
 			);
+			final Size size = new Size();
+			size.setLength( column.getLength() );
+			size.setPrecision( column.getPrecision() );
+			size.setScale( column.getScale() );
 			return ddlType.getCastTypeName(
-					column.getJdbcMapping().getJdbcType(),
-					column.getJdbcMapping().getJavaTypeDescriptor(),
-					column.getLength(),
-					column.getPrecision(),
-					column.getScale()
+					size,
+					(SqlExpressible) column.getJdbcMapping(),
+					typeConfiguration.getDdlTypeRegistry()
 			);
 		}
 		else{

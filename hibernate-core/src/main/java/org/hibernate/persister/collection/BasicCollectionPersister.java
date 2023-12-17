@@ -491,32 +491,8 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// SET
 
-		if ( hasIndex() ) {
-			/*
-				Given :
+		attribute.getElementDescriptor().forEachUpdatable( updateBuilder );
 
-				class MyEntity {
-					@ElementCollection(fetch = FetchType.LAZY)
-					@OrderColumn
-					private List<MyEmbeddable> myEmbeddables;
-				}
-
-				@Embeddable
-				public static class MyEmbeddable {
-					@Column(updatable = false)
-					private String embeddedProperty;
-				}
-
-			 	we cannot understand if the update is due to a change in the value embeddedProperty or because a
-			 	new element has been added to the list in an existing position (update) shifting the old value (insert).
-
-			 	For this reason we cannot take into consideration the `@Column(updatable = false)`
-			 */
-			attribute.getElementDescriptor().forEachNonFormula( updateBuilder );
-		}
-		else {
-			attribute.getElementDescriptor().forEachUpdatable( updateBuilder );
-		}
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// WHERE
 
@@ -552,28 +528,16 @@ public class BasicCollectionPersister extends AbstractCollectionPersister {
 				0,
 				jdbcValueBindings,
 				null,
-				hasIndex() ?
-						(valueIndex, bindings, y, jdbcValue, jdbcValueMapping) -> {
-							if ( jdbcValueMapping.isFormula() ) {
-								return;
-							}
-							bindings.bindValue(
-									jdbcValue,
-									jdbcValueMapping,
-									ParameterUsage.SET
-							);
-						}
-						:
-						(valueIndex, bindings, y, jdbcValue, jdbcValueMapping) -> {
-							if ( !jdbcValueMapping.isUpdateable() || jdbcValueMapping.isFormula() ) {
-								return;
-							}
-							bindings.bindValue(
-									jdbcValue,
-									jdbcValueMapping,
-									ParameterUsage.SET
-							);
-						},
+				(valueIndex, bindings, y, jdbcValue, jdbcValueMapping) -> {
+					if ( !jdbcValueMapping.isUpdateable() || jdbcValueMapping.isFormula() ) {
+						return;
+					}
+					bindings.bindValue(
+							jdbcValue,
+							jdbcValueMapping,
+							ParameterUsage.SET
+					);
+				},
 				session
 		);
 	}

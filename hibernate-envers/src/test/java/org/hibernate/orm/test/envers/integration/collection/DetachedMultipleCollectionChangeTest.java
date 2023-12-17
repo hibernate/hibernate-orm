@@ -15,6 +15,7 @@ import jakarta.persistence.Query;
 import jakarta.transaction.Status;
 import jakarta.transaction.TransactionManager;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.envers.RevisionType;
@@ -41,7 +42,9 @@ import static org.junit.Assert.assertNotNull;
  */
 @TestForIssue(jiraKey = "HHH-6349")
 @SkipForDialect(value = OracleDialect.class,
-				comment = "Oracle does not support identity key generation")
+		comment = "Oracle does not support identity key generation")
+@SkipForDialect(value = AltibaseDialect.class,
+		comment = "Altibase does not support identity key generation")
 public class DetachedMultipleCollectionChangeTest extends BaseEnversJPAFunctionalTestCase {
 	private TransactionManager tm = null;
 

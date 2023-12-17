@@ -9,6 +9,7 @@ package org.hibernate.orm.test.envers.integration.lazy;
 import java.util.List;
 import jakarta.persistence.EntityManager;
 
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.envers.query.AuditEntity;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
@@ -29,6 +30,7 @@ import org.hibernate.envers.AuditReaderFactory;
  */
 @TestForIssue(jiraKey = "HHH-15522")
 @SkipForDialect(value = OracleDialect.class, comment = "Oracle does not support identity key generation")
+@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase does not support identity key generation")
 public class IsCollectionInitializedTest extends BaseEnversJPAFunctionalTestCase {
 
 	private Long mce1Id = null;

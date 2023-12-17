@@ -506,6 +506,13 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 		throw new MappingException("component: " + componentClassName + " property not found: " + propertyName);
 	}
 
+	public boolean matchesAllProperties(String... propertyNames) {
+		return properties.size() == propertyNames.length &&
+				new HashSet<>(properties.stream().map(Property::getName)
+						.collect(toList()))
+						.containsAll(List.of(propertyNames));
+	}
+
 	public boolean hasProperty(String propertyName) {
 		for ( Property prop : properties ) {
 			if ( prop.getName().equals(propertyName) ) {
@@ -571,20 +578,25 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 
 		final CompositeNestedGeneratedValueGenerator.GenerationContextLocator locator =
 				new StandardGenerationContextLocator( rootClass.getEntityName() );
-		final CompositeNestedGeneratedValueGenerator generator = new CompositeNestedGeneratedValueGenerator( locator );
+		final CompositeNestedGeneratedValueGenerator generator = new CompositeNestedGeneratedValueGenerator(
+				locator,
+				getType()
+		);
 
-		for ( Property property : getProperties() ) {
+		final List<Property> properties = getProperties();
+		for ( int i = 0; i < properties.size(); i++ ) {
+			final Property property = properties.get( i );
 			if ( property.getValue().isSimpleValue() ) {
 				final SimpleValue value = (SimpleValue) property.getValue();
 
 				if ( !DEFAULT_ID_GEN_STRATEGY.equals( value.getIdentifierGeneratorStrategy() ) ) {
 					// skip any 'assigned' generators, they would have been handled by
 					// the StandardGenerationContextLocator
-					Generator subgenerator = value.createGenerator( identifierGeneratorFactory, dialect, rootClass );
 					generator.addGeneratedValuePlan( new ValueGenerationPlan(
-							subgenerator,
-							injector( property, attributeDeclarer ) )
-					);
+							value.createGenerator( identifierGeneratorFactory, dialect, rootClass ),
+							getType().isMutable() ? injector( property, attributeDeclarer ) : null,
+							i
+					) );
 				}
 			}
 		}
@@ -632,18 +644,29 @@ public class Component extends SimpleValue implements MetaAttributable, Sortable
 	public static class ValueGenerationPlan implements CompositeNestedGeneratedValueGenerator.GenerationPlan {
 		private final Generator subgenerator;
 		private final Setter injector;
+		private final int propertyIndex;
 
-		public ValueGenerationPlan(Generator subgenerator, Setter injector) {
+		public ValueGenerationPlan(Generator subgenerator, Setter injector, int propertyIndex) {
 			this.subgenerator = subgenerator;
 			this.injector = injector;
+			this.propertyIndex = propertyIndex;
 		}
 
 		@Override
-		public void execute(SharedSessionContractImplementor session, Object incomingObject, Object injectionContext) {
-			if ( !subgenerator.generatedOnExecution() ) {
-				final Object generatedId = ( (BeforeExecutionGenerator) subgenerator)
+		public Setter getInjector() {
+			return injector;
+		}
+
+		@Override
+		public int getPropertyIndex() {
+			return propertyIndex;
+		}
+
+		@Override
+		public Object execute(SharedSessionContractImplementor session, Object incomingObject) {
+			if ( !subgenerator.generatedOnExecution( incomingObject, session ) ) {
+				return ( (BeforeExecutionGenerator) subgenerator)
 						.generate( session, incomingObject, null, INSERT );
-				injector.set( injectionContext, generatedId );
 			}
 			else {
 				throw new IdentifierGenerationException( "Identity generation isn't supported for composite ids" );

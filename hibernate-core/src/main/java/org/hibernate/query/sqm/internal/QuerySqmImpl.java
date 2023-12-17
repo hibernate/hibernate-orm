@@ -766,9 +766,7 @@ public class QuerySqmImpl<R>
 			return new MultiTableDeleteQueryPlan( sqmDelete, domainParameterXref, multiTableStrategy );
 		}
 		else {
-			return persister.getSoftDeleteMapping() != null
-					? new SoftDeleteQueryPlan( persister, sqmDelete, domainParameterXref )
-					: new SimpleDeleteQueryPlan( persister, sqmDelete, domainParameterXref );
+			return new SimpleDeleteQueryPlan( persister, sqmDelete, domainParameterXref );
 		}
 	}
 

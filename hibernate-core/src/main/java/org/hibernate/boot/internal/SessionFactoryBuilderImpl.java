@@ -262,7 +262,7 @@ public class SessionFactoryBuilderImpl implements SessionFactoryBuilderImplement
 	}
 
 	@Override
-	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver resolver) {
+	public SessionFactoryBuilder applyCurrentTenantIdentifierResolver(CurrentTenantIdentifierResolver<?> resolver) {
 		this.optionsBuilder.applyCurrentTenantIdentifierResolver( resolver );
 		return this;
 	}

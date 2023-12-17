@@ -26,6 +26,7 @@ package org.hibernate.orm.test.cfg;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.community.dialect.OracleLegacyDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.OracleDialect;
 
@@ -74,8 +75,16 @@ public class BatchVersionedDataConfigTest extends BaseUnitTestCase {
 	}
 
 	@Test
-	public void testBatchVersionedDataForOracle10gDialect() {
+	public void testBatchVersionedDataForOracleDialect() {
 		cfg.setProperty( AvailableSettings.DIALECT, OracleDialect.class.getName() );
+		sessionFactory = cfg.buildSessionFactory();
+
+		assertThat( sessionFactory.getSessionFactoryOptions().isJdbcBatchVersionedData(), is( true ) );
+	}
+
+	@Test
+	public void testBatchVersionedDataForOracle10gDialect() {
+		cfg.setProperty( AvailableSettings.DIALECT, OracleLegacyDialect.class.getName() );
 		cfg.setProperty( AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION, "10" );
 		sessionFactory = cfg.buildSessionFactory();
 
@@ -84,7 +93,7 @@ public class BatchVersionedDataConfigTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBatchVersionedDataForOracle8iDialect() {
-		cfg.setProperty( AvailableSettings.DIALECT, OracleDialect.class.getName() );
+		cfg.setProperty( AvailableSettings.DIALECT, OracleLegacyDialect.class.getName() );
 		cfg.setProperty( AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION, "8" );
 		sessionFactory = cfg.buildSessionFactory();
 
@@ -93,7 +102,7 @@ public class BatchVersionedDataConfigTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBatchVersionedDataForOracle9iDialect() {
-		cfg.setProperty( AvailableSettings.DIALECT, OracleDialect.class.getName() );
+		cfg.setProperty( AvailableSettings.DIALECT, OracleLegacyDialect.class.getName() );
 		cfg.setProperty( AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION, "9" );
 		sessionFactory = cfg.buildSessionFactory();
 
@@ -102,7 +111,7 @@ public class BatchVersionedDataConfigTest extends BaseUnitTestCase {
 
 	@Test
 	public void testBatchVersionedDataForOracle12cDialect() {
-		cfg.setProperty( AvailableSettings.DIALECT, OracleDialect.class.getName() );
+		cfg.setProperty( AvailableSettings.DIALECT, OracleLegacyDialect.class.getName() );
 		cfg.setProperty( AvailableSettings.JAKARTA_HBM2DDL_DB_MAJOR_VERSION, "12" );
 		sessionFactory = cfg.buildSessionFactory();
 

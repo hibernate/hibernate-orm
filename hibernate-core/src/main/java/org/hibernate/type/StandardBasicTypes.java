@@ -744,6 +744,15 @@ public final class StandardBasicTypes {
 	);
 
 
+	/**
+	 * The standard Hibernate type for mapping {@code float[]} to JDBC {@link org.hibernate.type.SqlTypes#VECTOR VECTOR},
+	 * specifically for embedding vectors like provided by the PostgreSQL extension pgvector.
+	 */
+	public static final BasicTypeReference<float[]> VECTOR = new BasicTypeReference<>(
+			"vector", float[].class, SqlTypes.VECTOR
+	);
+
+
 	public static void prime(TypeConfiguration typeConfiguration) {
 		BasicTypeRegistry basicTypeRegistry = typeConfiguration.getBasicTypeRegistry();
 
@@ -1234,6 +1243,13 @@ public final class StandardBasicTypes {
 				"org.hibernate.type.UrlType",
 				basicTypeRegistry,
 				"url", java.net.URL.class.getName()
+		);
+
+		handle(
+				VECTOR,
+				null,
+				basicTypeRegistry,
+				"vector"
 		);
 
 

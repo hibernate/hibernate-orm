@@ -17,6 +17,7 @@ import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.TrimSpec;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlAppender;
@@ -33,7 +34,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.ServiceRegistryScope;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import org.mockito.Mockito;
@@ -148,7 +148,7 @@ public class AnsiTrimEmulationFunctionTest  {
 				return null;
 			}
 		} );
-    	function.render( walker, sqlAstArguments, walker );
+    	function.render( walker, sqlAstArguments, (ReturnableType<?>) null, walker );
 		return walker.getSql();
 	}
 

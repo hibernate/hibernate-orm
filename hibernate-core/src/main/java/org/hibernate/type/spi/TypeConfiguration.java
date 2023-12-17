@@ -37,7 +37,6 @@ import org.hibernate.Internal;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.annotations.common.reflection.java.generics.ParameterizedTypeImpl;
 import org.hibernate.boot.cfgxml.spi.CfgXmlAccessService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.spi.BasicTypeRegistration;
@@ -58,12 +57,14 @@ import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.IntervalType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
+import org.hibernate.type.QueryParameterJavaObjectType;
 import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.java.JavaType;
@@ -74,6 +75,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
+import org.hibernate.type.internal.ParameterizedTypeImpl;
 
 import jakarta.persistence.TemporalType;
 
@@ -591,10 +593,17 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	public SqmExpressible<?> resolveTupleType(List<? extends SqmTypedNode<?>> typedNodes) {
 		final SqmExpressible<?>[] components = new SqmExpressible<?>[typedNodes.size()];
 		for ( int i = 0; i < typedNodes.size(); i++ ) {
-			final SqmExpressible<?> sqmExpressible = typedNodes.get( i ).getNodeType();
-			components[i] = sqmExpressible != null
-					? sqmExpressible
-					: getBasicTypeForJavaType( Object.class );
+			SqmTypedNode<?> tupleElement = typedNodes.get(i);
+			final SqmExpressible<?> sqmExpressible = tupleElement.getNodeType();
+			// keep null value for Named Parameters
+			if (tupleElement instanceof SqmParameter<?> && sqmExpressible == null) {
+				components[i] = QueryParameterJavaObjectType.INSTANCE;
+			}
+			else {
+				components[i] = sqmExpressible != null
+						? sqmExpressible
+						: getBasicTypeForJavaType( Object.class );
+			}
 		}
 		return arrayTuples.computeIfAbsent(
 				new ArrayCacheKey( components ),
@@ -703,6 +712,20 @@ public class TypeConfiguration implements SessionFactoryObserver, Serializable {
 	}
 
 	public <J> BasicType<J> standardBasicTypeForJavaType(Class<J> javaType) {
+		if ( javaType == null ) {
+			return null;
+		}
+
+		return standardBasicTypeForJavaType(
+				javaType,
+				javaTypeDescriptor -> new BasicTypeImpl<>(
+						javaTypeDescriptor,
+						javaTypeDescriptor.getRecommendedJdbcType( getCurrentBaseSqlTypeIndicators() )
+				)
+		);
+	}
+
+	public BasicType<?> standardBasicTypeForJavaType(Type javaType) {
 		if ( javaType == null ) {
 			return null;
 		}

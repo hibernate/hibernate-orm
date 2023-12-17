@@ -67,6 +67,8 @@ elif [ "$RDBMS" == "hana_cloud" ]; then
   goal="-Pdb=hana_cloud"
 elif [ "$RDBMS" == "cockroachdb" ]; then
   goal="-Pdb=cockroachdb"
+elif [ "$RDBMS" == "altibase" ]; then
+  goal="-Pdb=altibase"
 fi
 
 # Only run checkstyle in the H2 build,
@@ -81,5 +83,4 @@ function logAndExec() {
   exec "${@}"
 }
 
-# Clean by default otherwise the PackagedEntityManager tests fail on a node that previously ran a different DB
-logAndExec ./gradlew clean check ${goal} "${@}" -Plog-test-progress=true --stacktrace
+logAndExec ./gradlew check ${goal} "${@}" -Plog-test-progress=true --stacktrace

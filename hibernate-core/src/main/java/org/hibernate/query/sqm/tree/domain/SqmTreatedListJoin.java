@@ -28,6 +28,14 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 			SqmListJoin<O, T> wrappedPath,
 			EntityDomainType<S> treatTarget,
 			String alias) {
+		this( wrappedPath, treatTarget, alias, false );
+	}
+
+	public SqmTreatedListJoin(
+			SqmListJoin<O, T> wrappedPath,
+			EntityDomainType<S> treatTarget,
+			String alias,
+			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
@@ -37,7 +45,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 				(ListPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
-				wrappedPath.isFetched(),
+				fetched,
 				wrappedPath.nodeBuilder()
 		);
 		this.treatTarget = treatTarget;
@@ -48,7 +56,8 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 			NavigablePath navigablePath,
 			SqmListJoin<O, T> wrappedPath,
 			EntityDomainType<S> treatTarget,
-			String alias) {
+			String alias,
+			boolean fetched) {
 		//noinspection unchecked
 		super(
 				wrappedPath.getLhs(),
@@ -56,7 +65,7 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 				(ListPersistentAttribute<O, S>) wrappedPath.getAttribute(),
 				alias,
 				wrappedPath.getSqmJoinType(),
-				wrappedPath.isFetched(),
+				fetched,
 				wrappedPath.nodeBuilder()
 		);
 		this.treatTarget = treatTarget;
@@ -75,7 +84,8 @@ public class SqmTreatedListJoin<O,T, S extends T> extends SqmListJoin<O,S> imple
 						getNavigablePath(),
 						wrappedPath.copy( context ),
 						treatTarget,
-						getExplicitAlias()
+						getExplicitAlias(),
+						isFetched()
 				)
 		);
 		copyTo( path, context );

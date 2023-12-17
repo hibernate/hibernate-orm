@@ -700,8 +700,7 @@ public class PluralAttributeMappingImpl
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
-		final PredicateCollector predicateCollector = new PredicateCollector();
-
+		final PredicateCollector collectionPredicateCollector = new PredicateCollector();
 		final TableGroup tableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
@@ -709,9 +708,18 @@ public class PluralAttributeMappingImpl
 				explicitSqlAliasBase,
 				requestedJoinType,
 				fetched,
-				predicateCollector::applyPredicate,
+				addsPredicate,
+				collectionPredicateCollector::applyPredicate,
 				creationState
 		);
+		final PredicateCollector predicateCollector;
+		if ( tableGroup.getNestedTableGroupJoins().isEmpty() ) {
+			// No nested table group joins means that the predicate has to be pushed to the last join
+			predicateCollector = new PredicateCollector();
+		}
+		else {
+			predicateCollector = collectionPredicateCollector;
+		}
 
 		getCollectionDescriptor().applyBaseRestrictions(
 				predicateCollector::applyPredicate,
@@ -737,12 +745,23 @@ public class PluralAttributeMappingImpl
 				creationState
 		);
 
-		return new TableGroupJoin(
+		final TableGroupJoin tableGroupJoin = new TableGroupJoin(
 				navigablePath,
 				determineSqlJoinType( lhs, requestedJoinType, fetched ),
 				tableGroup,
-				predicateCollector.getPredicate()
+				collectionPredicateCollector.getPredicate()
 		);
+		if ( predicateCollector != collectionPredicateCollector ) {
+			final TableGroupJoin joinForPredicate;
+			if ( !tableGroup.getNestedTableGroupJoins().isEmpty() || tableGroup.getTableGroupJoins().isEmpty() ) {
+				joinForPredicate = tableGroupJoin;
+			}
+			else {
+				joinForPredicate = tableGroup.getTableGroupJoins().get( tableGroup.getTableGroupJoins().size() - 1 );
+			}
+			joinForPredicate.applyPredicate( predicateCollector.getPredicate() );
+		}
+		return tableGroupJoin;
 	}
 
 	private boolean hasSoftDelete() {
@@ -827,6 +846,29 @@ public class PluralAttributeMappingImpl
 			boolean fetched,
 			Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
+		return createRootTableGroupJoin(
+				navigablePath,
+				lhs,
+				explicitSourceAlias,
+				explicitSqlAliasBase,
+				requestedJoinType,
+				fetched,
+				false,
+				predicateConsumer,
+				creationState
+		);
+	}
+
+	private TableGroup createRootTableGroupJoin(
+			NavigablePath navigablePath,
+			TableGroup lhs,
+			String explicitSourceAlias,
+			SqlAliasBase explicitSqlAliasBase,
+			SqlAstJoinType requestedJoinType,
+			boolean fetched,
+			boolean addsPredicate,
+			Consumer<Predicate> predicateConsumer,
+			SqlAstCreationState creationState) {
 		final CollectionPersister collectionDescriptor = getCollectionDescriptor();
 		final SqlAstJoinType joinType = determineSqlJoinType( lhs, requestedJoinType, fetched );
 		final SqlAliasBase sqlAliasBase = creationState.getSqlAliasBaseGenerator().createSqlAliasBase( getSqlAliasStem() );
@@ -845,8 +887,10 @@ public class PluralAttributeMappingImpl
 		else {
 			tableGroup = createCollectionTableGroup(
 					lhs.canUseInnerJoins() && joinType == SqlAstJoinType.INNER,
+					joinType,
 					navigablePath,
 					fetched,
+					addsPredicate,
 					explicitSourceAlias,
 					sqlAliasBase,
 					creationState
@@ -912,8 +956,10 @@ public class PluralAttributeMappingImpl
 
 	private TableGroup createCollectionTableGroup(
 			boolean canUseInnerJoins,
+			SqlAstJoinType joinType,
 			NavigablePath navigablePath,
 			boolean fetched,
+			boolean addsPredicate,
 			String sourceAlias,
 			SqlAliasBase explicitSqlAliasBase,
 			SqlAstCreationState creationState) {
@@ -944,6 +990,12 @@ public class PluralAttributeMappingImpl
 				null,
 				creationState.getCreationContext().getSessionFactory()
 		);
+		// For inner joins we never need join nesting
+		final boolean nestedJoin = joinType != SqlAstJoinType.INNER
+				// For outer joins we need nesting if there might be an on-condition that refers to the element table
+				&& ( addsPredicate
+				|| isAffectedByEnabledFilters( creationState.getLoadQueryInfluencers() )
+				|| collectionDescriptor.hasWhereRestrictions() );
 
 		if ( elementDescriptor instanceof TableGroupJoinProducer ) {
 			final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) elementDescriptor ).createTableGroupJoin(
@@ -951,12 +1003,12 @@ public class PluralAttributeMappingImpl
 					tableGroup,
 					null,
 					sqlAliasBase,
-					SqlAstJoinType.INNER,
+					nestedJoin ? SqlAstJoinType.INNER : joinType,
 					fetched,
 					false,
 					creationState
 			);
-			tableGroup.registerElementTableGroup( tableGroupJoin );
+			tableGroup.registerElementTableGroup( tableGroupJoin, nestedJoin );
 		}
 
 		if ( indexDescriptor instanceof TableGroupJoinProducer ) {
@@ -965,12 +1017,12 @@ public class PluralAttributeMappingImpl
 					tableGroup,
 					null,
 					sqlAliasBase,
-					SqlAstJoinType.INNER,
+					nestedJoin ? SqlAstJoinType.INNER : joinType,
 					fetched,
 					false,
 					creationState
 			);
-			tableGroup.registerIndexTableGroup( tableGroupJoin );
+			tableGroup.registerIndexTableGroup( tableGroupJoin, nestedJoin );
 		}
 
 		return tableGroup;
@@ -996,7 +1048,9 @@ public class PluralAttributeMappingImpl
 		else {
 			return createCollectionTableGroup(
 					canUseInnerJoins,
+					SqlAstJoinType.INNER,
 					navigablePath,
+					false,
 					false,
 					explicitSourceAlias,
 					explicitSqlAliasBase,

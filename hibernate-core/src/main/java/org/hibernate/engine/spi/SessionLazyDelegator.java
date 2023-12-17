@@ -595,6 +595,11 @@ public class SessionLazyDelegator implements Session {
 	}
 
 	@Override
+	public Object getTenantIdentifierValue() {
+		return this.lazySession.get().getTenantIdentifierValue();
+	}
+
+	@Override
 	public void close() throws HibernateException {
 		this.lazySession.get().close();
 	}

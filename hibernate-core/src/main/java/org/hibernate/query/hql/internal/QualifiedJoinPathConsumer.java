@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
+import org.hibernate.query.sqm.tree.from.SqmAttributeJoin;
 import org.hibernate.query.sqm.tree.from.SqmCteJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
@@ -276,9 +277,14 @@ public class QualifiedJoinPathConsumer implements DotIdentifierConsumer {
 
 		@Override
 		public void consumeTreat(String entityName, boolean isTerminal) {
-			currentPath = isTerminal
-					? currentPath.treatAs( treatTarget( entityName ), alias)
-					: currentPath.treatAs( treatTarget( entityName ) );
+			if ( isTerminal ) {
+				currentPath = fetch
+						? ( (SqmAttributeJoin<?, ?>) currentPath ).treatAs( treatTarget( entityName ), alias, true )
+						: currentPath.treatAs( treatTarget( entityName ), alias );
+			}
+			else {
+				currentPath = currentPath.treatAs( treatTarget( entityName ) );
+			}
 			creationState.getCurrentProcessingState().getPathRegistry().register( currentPath );
 		}
 

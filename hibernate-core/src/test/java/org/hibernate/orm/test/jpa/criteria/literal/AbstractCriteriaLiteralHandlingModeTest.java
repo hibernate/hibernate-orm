@@ -15,6 +15,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.jdbc.Size;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.sqm.CastType;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
@@ -100,8 +101,9 @@ public abstract class AbstractCriteriaLiteralHandlingModeTest extends BaseEntity
 						"?2",
 						typeConfiguration.getDdlTypeRegistry().getDescriptor( SqlTypes.VARCHAR )
 								.getCastTypeName(
-										typeConfiguration.getJdbcTypeRegistry().getDescriptor( SqlTypes.VARCHAR ),
-										typeConfiguration.getJavaTypeRegistry().getDescriptor( String.class )
+										Size.nil(),
+										typeConfiguration.getBasicTypeForJavaType( String.class ),
+										typeConfiguration.getDdlTypeRegistry()
 								)
 				)
 				.replace( "?1", expression );

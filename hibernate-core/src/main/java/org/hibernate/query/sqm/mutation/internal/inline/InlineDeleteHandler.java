@@ -34,8 +34,7 @@ import org.hibernate.sql.ast.tree.update.Assignment;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.spi.JdbcMutationExecutor;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryDelete;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
+import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.exec.spi.StatementCreatorHelper;
 
@@ -208,8 +207,8 @@ public class InlineDeleteHandler implements DeleteHandler {
 				predicate
 		);
 
-		final JdbcOperationQueryUpdate jdbcOperation = sqlAstTranslatorFactory
-				.buildUpdateTranslator( sessionFactory, updateStatement )
+		final JdbcOperationQueryMutation jdbcOperation = sqlAstTranslatorFactory
+				.buildMutationTranslator( sessionFactory, updateStatement )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		jdbcMutationExecutor.execute(
@@ -249,7 +248,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 
 		final DeleteStatement deleteStatement = new DeleteStatement( targetTableReference, matchingIdsPredicate );
 
-		final JdbcOperationQueryDelete jdbcOperation = sqlAstTranslatorFactory.buildDeleteTranslator( sessionFactory, deleteStatement )
+		final JdbcOperationQueryMutation jdbcOperation = sqlAstTranslatorFactory.buildMutationTranslator( sessionFactory, deleteStatement )
 				.translate( jdbcParameterBindings, executionContext.getQueryOptions() );
 
 		jdbcMutationExecutor.execute(

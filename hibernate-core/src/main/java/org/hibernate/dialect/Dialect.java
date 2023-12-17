@@ -444,7 +444,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		ddlTypeRegistry.addDescriptor( simpleSqlType( LONG32VARBINARY ) );
 
 		if ( supportsStandardArrays() ) {
-			ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this ) );
+			ddlTypeRegistry.addDescriptor( new ArrayDdlTypeImpl( this, false ) );
 		}
 		if ( rowId( null ) != null ) {
 			ddlTypeRegistry.addDescriptor( simpleSqlType( ROWID ) );
@@ -4953,6 +4953,31 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Whether this Dialect supports {@linkplain PreparedStatement#addBatch() batch updates}.
+	 *
+	 * @return {@code true} indicates it does; {@code false} indicates it does not; {@code null} indicates
+	 * it might and that database-metadata should be consulted.
+	 *
+	 * @see org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData#supportsBatchUpdates
+	 */
+	public Boolean supportsBatchUpdates() {
+		// are there any databases/drivers which don't?
+		return true;
+	}
+
+	/**
+	 * Whether this Dialect supports the JDBC {@link java.sql.Types#REF_CURSOR} type.
+	 *
+	 * @return {@code true} indicates it does; {@code false} indicates it does not; {@code null} indicates
+	 * it might and that database-metadata should be consulted
+	 *
+	 * @see org.hibernate.engine.jdbc.env.spi.ExtractedDatabaseMetaData#supportsRefCursors
+	 */
+	public Boolean supportsRefCursors() {
+		return null;
+	}
+
+	/**
 	 * Pluggable strategy for determining the {@link Size} to use for
 	 * columns of a given SQL type.
 	 * <p>
@@ -5018,7 +5043,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					length = null;
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					if ( scale != null && scale != 0 ) {
-						throw new IllegalArgumentException("scale has no meaning for floating point numbers");
+						throw new IllegalArgumentException("scale has no meaning for SQL floating point types");
 					}
 					// but if the user explicitly specifies a precision, we need to convert it:
 					if ( precision != null ) {
@@ -5036,7 +5061,7 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 					length = null;
 					size.setPrecision( javaType.getDefaultSqlPrecision( Dialect.this, jdbcType ) );
 					if ( scale != null && scale != 0 ) {
-						throw new IllegalArgumentException("scale has no meaning for timestamps");
+						throw new IllegalArgumentException("scale has no meaning for SQL time or timestamp types");
 					}
 					break;
 				case SqlTypes.NUMERIC:
@@ -5365,5 +5390,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public FunctionalDependencyAnalysisSupport getFunctionalDependencyAnalysisSupport() {
 		return FunctionalDependencyAnalysisSupportImpl.NONE;
+	}
+
+	/**
+	 * Resolves the default scale for a {@link SqlTypes.INTERVAL_SECOND} type code for the given column
+	 * <p>
+	 * Usually 9 (nanosecond) or 6 (microseconds).
+	 *
+	 * @return the default scale, in decimal digits,
+	 *         of the fractional seconds field
+	 */
+	public int getDefaultIntervalSecondScale(){
+		// The default scale necessary is 9 i.e. nanosecond resolution
+		return 9;
 	}
 }

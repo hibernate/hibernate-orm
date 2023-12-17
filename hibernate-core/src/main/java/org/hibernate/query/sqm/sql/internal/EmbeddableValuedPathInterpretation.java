@@ -66,10 +66,8 @@ public class EmbeddableValuedPathInterpretation<T> extends AbstractSqmPathInterp
 
 		final ModelPartContainer modelPartContainer = tableGroup.getModelPart();
 		final EmbeddableValuedModelPart mapping;
-		if ( needsTargetTableMapping( sqmPath, modelPartContainer, sqlAstCreationState ) ) {
-			// In the select, group by, order by and having clause we have to make sure we render
-			// the column of the target table, never the FK column, if the lhs is a join type that
-			// requires it (right, full) or if this path is contained in group by clause
+		if ( needsTargetTableMapping( sqmPath, modelPartContainer ) ) {
+			// We have to make sure we render the column of the target table
 			mapping = (EmbeddableValuedModelPart) ( (ManagedMappingType) modelPartContainer.getPartMappingType() ).findSubPart(
 					sqmPath.getReferencedPathSource().getPathName(),
 					treatTarget

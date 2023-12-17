@@ -248,10 +248,10 @@ public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware 
 					// Check the from-clause
 					assertPluralAttributeJoinedGroup( sqlAst, "shipAddresses", tableGroup -> {
 						if ( graphSemantic == GraphSemantic.LOAD ) {
-							assertThat( tableGroup.getTableGroupJoins(), isEmpty() );
-							assertThat( tableGroup.getNestedTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getNestedTableGroupJoins(), isEmpty() );
 
-							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getNestedTableGroupJoins() )
+							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() )
 									.getJoinedGroup();
 							assertThat( compositeTableGroup, instanceOf( StandardVirtualTableGroup.class ) );
 							assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );
@@ -265,10 +265,10 @@ public class EntityGraphLoadPlanBuilderTest implements SessionFactoryScopeAware 
 							assertThat( countryTableGroup.getNestedTableGroupJoins(), isEmpty() );
 						}
 						else {
-							assertThat( tableGroup.getTableGroupJoins(), isEmpty() );
-							assertThat( tableGroup.getNestedTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getTableGroupJoins(), hasSize( 1 ) );
+							assertThat( tableGroup.getNestedTableGroupJoins(), isEmpty() );
 
-							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getNestedTableGroupJoins() ).getJoinedGroup();
+							final TableGroup compositeTableGroup = CollectionUtils.getOnlyElement( tableGroup.getTableGroupJoins() ).getJoinedGroup();
 							assertThat( compositeTableGroup, instanceOf( StandardVirtualTableGroup.class ) );
 							assertThat( compositeTableGroup.getNestedTableGroupJoins(), isEmpty() );
 							assertThat( compositeTableGroup.getTableGroupJoins(), hasSize( 1 ) );

@@ -6,6 +6,7 @@
  */
 package org.hibernate.dialect.function;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
@@ -41,6 +42,7 @@ public class CurrentFunction
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		sqlAppender.appendSql( sql );
 	}

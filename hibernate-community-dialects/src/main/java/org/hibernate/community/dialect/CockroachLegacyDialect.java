@@ -461,6 +461,25 @@ public class CockroachLegacyDialect extends Dialect {
 		functionFactory.listagg_stringAgg( "string" );
 		functionFactory.inverseDistributionOrderedSetAggregates();
 		functionFactory.hypotheticalOrderedSetAggregates_windowEmulation();
+		functionFactory.array_postgresql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_postgresql();
+		functionFactory.arrayPositions_postgresql();
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_postgresql();
+		functionFactory.arrayPrepend_postgresql();
+		functionFactory.arrayAppend_postgresql();
+		functionFactory.arrayContains_postgresql();
+		functionFactory.arrayOverlaps_postgresql();
+		functionFactory.arrayGet_bracket();
+		functionFactory.arraySet_unnest();
+		functionFactory.arrayRemove();
+		functionFactory.arrayRemoveIndex_unnest( true );
+		functionFactory.arraySlice_operator();
+		functionFactory.arrayReplace();
+		functionFactory.arrayTrim_unnest();
+		functionFactory.arrayFill_cockroachdb();
+		functionFactory.arrayToString_postgresql();
 
 		functionContributions.getFunctionRegistry().register(
 				"trunc",
@@ -1123,6 +1142,12 @@ public class CockroachLegacyDialect extends Dialect {
 					return null;
 			}
 		};
+	}
+
+	@Override
+	public int getDefaultIntervalSecondScale() {
+		// The maximum scale for `interval second` is 6 unfortunately
+		return 6;
 	}
 
 // CockroachDB doesn't support this by default. See sql.multiple_modifications_of_table.enabled

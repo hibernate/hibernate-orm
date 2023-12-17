@@ -9,7 +9,6 @@ package org.hibernate.boot.spi;
 import java.util.List;
 
 import org.hibernate.TimeZoneStorageStrategy;
-import org.hibernate.boot.model.IdGeneratorStrategyInterpreter;
 import org.hibernate.boot.model.naming.ImplicitNamingStrategy;
 import org.hibernate.boot.model.naming.PhysicalNamingStrategy;
 import org.hibernate.boot.model.relational.ColumnOrderingStrategy;
@@ -25,6 +24,7 @@ import org.hibernate.metamodel.internal.ManagedTypeRepresentationResolverStandar
 import org.hibernate.metamodel.spi.ManagedTypeRepresentationResolver;
 import org.hibernate.type.WrapperArrayHandling;
 import org.hibernate.type.spi.TypeConfiguration;
+import org.hibernate.usertype.CompositeUserType;
 
 import jakarta.persistence.SharedCacheMode;
 
@@ -103,6 +103,11 @@ public interface MetadataBuildingOptions {
 	List<BasicTypeRegistration> getBasicTypeRegistrations();
 
 	/**
+	 * Access the list of {@link CompositeUserType} registrations.
+	 */
+	List<CompositeUserType<?>> getCompositeUserTypes();
+
+	/**
 	 * @see org.hibernate.cfg.AvailableSettings#IMPLICIT_NAMING_STRATEGY
 	 */
 	ImplicitNamingStrategy getImplicitNamingStrategy();
@@ -145,12 +150,6 @@ public interface MetadataBuildingOptions {
 	 * @see org.hibernate.cfg.AvailableSettings#MULTI_TENANT_CONNECTION_PROVIDER
 	 */
 	boolean isMultiTenancyEnabled();
-
-	/**
-	 * @deprecated since {@link IdGeneratorStrategyInterpreter} is deprecated
-	 */
-	@Deprecated(since = "6")
-	IdGeneratorStrategyInterpreter getIdGenerationTypeInterpreter();
 
 	/**
 	 * @return the {@link TypeConfiguration} belonging to the {@link BootstrapContext}

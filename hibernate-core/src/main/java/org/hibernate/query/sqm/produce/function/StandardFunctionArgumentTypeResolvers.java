@@ -133,6 +133,23 @@ public final class StandardFunctionArgumentTypeResolvers {
 
 	public static FunctionArgumentTypeResolver composite(FunctionArgumentTypeResolver... resolvers) {
 		return (function, argumentIndex, converter) -> {
+			for ( FunctionArgumentTypeResolver resolver : resolvers ) {
+				final MappingModelExpressible<?> result = resolver.resolveFunctionArgumentType(
+						function,
+						argumentIndex,
+						converter
+				);
+				if ( result != null ) {
+					return result;
+				}
+			}
+
+			return null;
+		};
+	}
+
+	public static FunctionArgumentTypeResolver byArgument(FunctionArgumentTypeResolver... resolvers) {
+		return (function, argumentIndex, converter) -> {
 			return resolvers[argumentIndex].resolveFunctionArgumentType( function, argumentIndex, converter );
 		};
 	}

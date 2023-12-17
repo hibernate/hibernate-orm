@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Locale;
 
 import org.hibernate.QueryException;
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
 import org.hibernate.query.sqm.produce.function.ArgumentsValidator;
@@ -68,6 +69,7 @@ public class ChrLiteralEmulation extends AbstractSqmSelfRenderingFunctionDescrip
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		@SuppressWarnings("unchecked")
 		final QueryLiteral<Number> literal = (QueryLiteral<Number>) arguments.get( 0 );

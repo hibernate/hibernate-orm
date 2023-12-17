@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.TemporalUnit;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
@@ -74,6 +75,7 @@ public class TimestampdiffFunction
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> arguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 
 		final DurationUnit field = (DurationUnit) arguments.get( 0 );
@@ -129,6 +131,15 @@ public class TimestampdiffFunction
 				ReturnableType<?> impliedType,
 				List<? extends SqmTypedNode<?>> arguments,
 				TypeConfiguration typeConfiguration) {
+			return resolveFunctionReturnType( impliedType, null, arguments, typeConfiguration );
+		}
+
+		@Override
+		public ReturnableType<?> resolveFunctionReturnType(
+				ReturnableType<?> impliedType,
+				Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+				List<? extends SqmTypedNode<?>> arguments,
+				TypeConfiguration typeConfiguration) {
 			final BasicType<?> invariantType;
 			if ( ( (SqmDurationUnit<?>) arguments.get( 0 ) ).getUnit() == TemporalUnit.SECOND ) {
 				invariantType = doubleType;
@@ -141,7 +152,9 @@ public class TimestampdiffFunction
 		}
 
 		@Override
-		public BasicValuedMapping resolveFunctionReturnType(Supplier<BasicValuedMapping> impliedTypeAccess, List<? extends SqlAstNode> arguments) {
+		public BasicValuedMapping resolveFunctionReturnType(
+				Supplier<BasicValuedMapping> impliedTypeAccess,
+				List<? extends SqlAstNode> arguments) {
 			final BasicType<?> invariantType;
 			if ( ( (SqmDurationUnit<?>) arguments.get( 0 ) ).getUnit() == TemporalUnit.SECOND ) {
 				invariantType = doubleType;

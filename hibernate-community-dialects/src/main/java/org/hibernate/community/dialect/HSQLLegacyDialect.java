@@ -247,6 +247,25 @@ public class HSQLLegacyDialect extends Dialect {
 			functionFactory.rownum();
 		}
 		functionFactory.listagg_groupConcat();
+		functionFactory.array_hsql();
+		functionFactory.arrayAggregate();
+		functionFactory.arrayPosition_hsql();
+		functionFactory.arrayPositions_hsql();
+		functionFactory.arrayLength_cardinality();
+		functionFactory.arrayConcat_operator();
+		functionFactory.arrayPrepend_operator();
+		functionFactory.arrayAppend_operator();
+		functionFactory.arrayContains_hsql();
+		functionFactory.arrayOverlaps_hsql();
+		functionFactory.arrayGet_unnest();
+		functionFactory.arraySet_hsql();
+		functionFactory.arrayRemove_hsql();
+		functionFactory.arrayRemoveIndex_unnest( false );
+		functionFactory.arraySlice_unnest();
+		functionFactory.arrayReplace_unnest();
+		functionFactory.arrayTrim_trim_array();
+		functionFactory.arrayFill_hsql();
+		functionFactory.arrayToString_hsql();
 	}
 
 	@Override
@@ -403,7 +422,7 @@ public class HSQLLegacyDialect extends Dialect {
 	@Override
 	public LimitHandler getLimitHandler() {
 		return getVersion().isBefore( 2 ) ? LegacyHSQLLimitHandler.INSTANCE
-				: getVersion().isBefore( 2, 5 ) ? LimitOffsetLimitHandler.INSTANCE
+				: getVersion().isBefore( 2, 5 ) ? LimitOffsetLimitHandler.OFFSET_ONLY_INSTANCE
 				: OffsetFetchLimitHandler.INSTANCE;
 	}
 

@@ -122,16 +122,11 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	public <J> BasicType<J> getRegisteredType(java.lang.reflect.Type javaType) {
-		if ( javaType instanceof Class ) {
-			// using `javaType.getTypeName()` causes problems with arrays
-			//noinspection unchecked
-			return getRegisteredType( (Class<J>) javaType );
-		}
 		return getRegisteredType( javaType.getTypeName() );
 	}
 
 	public <J> BasicType<J> getRegisteredType(Class<J> javaType) {
-		return getRegisteredType( javaType.getName() );
+		return getRegisteredType( javaType.getTypeName() );
 	}
 
 	public <J> BasicType<J> resolve(BasicTypeReference<J> basicTypeReference) {
@@ -217,7 +212,7 @@ public class BasicTypeRegistry implements Serializable {
 	}
 
 	public void register(BasicType<?> type, String key) {
-		typesByName.put( key, type );
+		register( type, new String[]{ key } );
 	}
 
 	public void register(BasicType<?> type, String... keys) {

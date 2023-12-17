@@ -55,6 +55,7 @@ import org.hibernate.query.sqm.tree.expression.SqmJpaCriteriaParameterWrapper;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
+import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -127,27 +128,33 @@ public class SqmUtil {
 		);
 	}
 
-	public static boolean needsTargetTableMapping(
-			SqmPath<?> sqmPath,
-			ModelPartContainer modelPartContainer,
-			SqmToSqlAstConverter sqlAstCreationState) {
-		final Clause currentClause = sqlAstCreationState.getCurrentClauseStack().getCurrent();
-		return ( currentClause == Clause.GROUP || currentClause == Clause.SELECT || currentClause == Clause.ORDER || currentClause == Clause.HAVING )
-				&& modelPartContainer.getPartMappingType() != modelPartContainer
+	/**
+	 * Utility that returns {@code true} if the specified {@link SqmPath sqmPath} should be
+	 * dereferenced using the target table mapping, i.e. when the path's lhs is an explicit join.
+	 */
+	public static boolean needsTargetTableMapping(SqmPath<?> sqmPath, ModelPartContainer modelPartContainer) {
+		return modelPartContainer.getPartMappingType() != modelPartContainer
 				&& sqmPath.getLhs() instanceof SqmFrom<?, ?>
-				&& modelPartContainer.getPartMappingType() instanceof ManagedMappingType
-				&& ( groupByClauseContains( sqlAstCreationState.getCurrentSqmQueryPart(), sqmPath.getNavigablePath() )
-				|| isNonOptimizableJoin( sqmPath.getLhs() ) );
+				&& modelPartContainer.getPartMappingType() instanceof ManagedMappingType;
 	}
 
-	private static boolean groupByClauseContains(SqmQueryPart<?> sqmQueryPart, NavigablePath path) {
-		return sqmQueryPart.isSimpleQueryPart() && sqmQueryPart.getFirstQuerySpec().groupByClauseContains( path );
-	}
-
-	private static boolean isNonOptimizableJoin(SqmPath<?> sqmPath) {
+	/**
+	 * Utility that returns {@code false} when the provided {@link SqmPath sqmPath} is
+	 * a join that cannot be dereferenced through the foreign key on the associated table,
+	 * i.e. a join that's neither {@linkplain SqmJoinType#INNER} nor {@linkplain SqmJoinType#LEFT}
+	 * or one that has an explicit on clause predicate.
+	 */
+	public static boolean isFkOptimizationAllowed(SqmPath<?> sqmPath) {
 		if ( sqmPath instanceof SqmJoin<?, ?> ) {
-			final SqmJoinType sqmJoinType = ( (SqmJoin<?, ?>) sqmPath ).getSqmJoinType();
-			return sqmJoinType != SqmJoinType.INNER && sqmJoinType != SqmJoinType.LEFT;
+			final SqmJoin<?, ?> sqmJoin = (SqmJoin<?, ?>) sqmPath;
+			switch ( sqmJoin.getSqmJoinType() ) {
+				case INNER:
+				case LEFT:
+					return !( sqmJoin instanceof SqmQualifiedJoin<?, ?>)
+							|| ( (SqmQualifiedJoin<?, ?>) sqmJoin ).getJoinPredicate() == null;
+				default:
+					return false;
+			}
 		}
 		return false;
 	}

@@ -48,7 +48,7 @@ import static org.hibernate.type.SqlTypes.VARBINARY;
  * @author Gavin King
  */
 public class MariaDBDialect extends MySQLDialect {
-	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 3 );
+	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 10, 4 );
 	private static final DatabaseVersion MYSQL57 = DatabaseVersion.make( 5, 7 );
 
 	public MariaDBDialect() {
@@ -60,7 +60,7 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	public MariaDBDialect(DialectResolutionInfo info) {
-		super( createVersion( info ), MySQLServerConfiguration.fromDatabaseMetadata( info.getDatabaseMetadata() ) );
+		super( createVersion( info ), MySQLServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 

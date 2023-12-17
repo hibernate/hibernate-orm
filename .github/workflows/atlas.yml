@@ -52,7 +52,7 @@ jobs:
           RUNID: ${{ github.run_number }}
         run: ci/database-start.sh
       - name: Set up Java 11
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '11'
@@ -77,7 +77,7 @@ jobs:
         run: ./ci/build-github.sh
         shell: bash
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: test-reports-java11-${{ matrix.rdbms }}

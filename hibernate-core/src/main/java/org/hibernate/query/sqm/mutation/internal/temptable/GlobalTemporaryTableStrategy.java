@@ -30,9 +30,9 @@ public class GlobalTemporaryTableStrategy {
 
 	public static final String SHORT_NAME = "global_temporary";
 
-	public static final String CREATE_ID_TABLES = "hibernate.hql.bulk_id_strategy.global_temporary.create_tables";
+	public static final String CREATE_ID_TABLES = "hibernate.query.mutation_strategy.global_temporary.create_tables";
 
-	public static final String DROP_ID_TABLES = "hibernate.hql.bulk_id_strategy.global_temporary.drop_tables";
+	public static final String DROP_ID_TABLES = "hibernate.query.mutation_strategy.global_temporary.drop_tables";
 
 	private final TemporaryTable temporaryTable;
 

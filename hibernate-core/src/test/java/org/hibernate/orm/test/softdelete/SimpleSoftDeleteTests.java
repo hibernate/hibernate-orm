@@ -12,8 +12,8 @@ import java.util.List;
 import org.hibernate.Hibernate;
 import org.hibernate.ObjectNotFoundException;
 import org.hibernate.annotations.BatchSize;
-import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.type.YesNoConverter;
 
 import org.hibernate.testing.jdbc.SQLStatementInspector;
@@ -34,7 +34,7 @@ import static org.assertj.core.api.Assertions.fail;
 /**
  * @author Steve Ebersole
  */
-@DomainModel(annotatedClasses = { SimpleSoftDeleteTests.SimpleEntity.class, SimpleSoftDeleteTests.BatchLoadable.class })
+@DomainModel(annotatedClasses = { SimpleEntity.class, SimpleSoftDeleteTests.BatchLoadable.class })
 @SessionFactory(useCollectingStatementInspector = true)
 public class SimpleSoftDeleteTests {
 	@BeforeEach
@@ -113,7 +113,7 @@ public class SimpleSoftDeleteTests {
 					.multiLoad( 1, 2, 3 );
 			assertThat( results ).hasSize( 2 );
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "removed='N'" );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "removed='N'", "removed=N'N'" );
 		} );
 	}
 
@@ -125,7 +125,7 @@ public class SimpleSoftDeleteTests {
 			statementInspector.clear();
 			session.bySimpleNaturalId( SimpleEntity.class ).load( "second" );
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "removed='N'" );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "removed='N'", "removed=N'N'" );
 		} );
 	}
 
@@ -145,7 +145,7 @@ public class SimpleSoftDeleteTests {
 			// trigger load
 			first.getName();
 			assertThat( statementInspector.getSqlQueries() ).hasSize( 1 );
-			assertThat( statementInspector.getSqlQueries().get( 0 ) ).contains( "active='Y'" );
+			assertThat( statementInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "active='Y'", "active=N'Y'" );
 
 			assertThat( Hibernate.isInitialized( first ) ).isTrue();
 			assertThat( Hibernate.isInitialized( second ) ).isTrue();
@@ -212,40 +212,10 @@ public class SimpleSoftDeleteTests {
 		} );
 	}
 
-	/**
-	 * @implNote Uses YesNoConverter to work across all databases, even those
-	 * not supporting an actual BOOLEAN datatype
-	 */
-	@Entity(name="SimpleEntity")
-	@Table(name="simple")
-	@SoftDelete(columnName = "removed", converter = YesNoConverter.class)
-	public static class SimpleEntity {
-		@Id
-		private Integer id;
-		@NaturalId
-		private String name;
-
-		public SimpleEntity() {
-		}
-
-		public SimpleEntity(Integer id, String name) {
-			this.id = id;
-			this.name = name;
-		}
-
-		public Integer getId() {
-			return id;
-		}
-
-		public String getName() {
-			return name;
-		}
-	}
-
 	@Entity(name="BatchLoadable")
 	@Table(name="batch_loadable")
 	@BatchSize(size = 5)
-	@SoftDelete(columnName = "active", converter = ReverseYesNoConverter.class)
+	@SoftDelete(converter = YesNoConverter.class, strategy = SoftDeleteType.ACTIVE)
 	public static class BatchLoadable {
 		@Id
 		private Integer id;

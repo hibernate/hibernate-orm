@@ -53,7 +53,12 @@ public class SetInitializer extends AbstractImmediateCollectionInitializer {
 			CollectionKey collectionKey,
 			List<Object> loadingState,
 			RowProcessingState rowProcessingState) {
-		loadingState.add( elementAssembler.assemble( rowProcessingState ) );
+		final Object element = elementAssembler.assemble( rowProcessingState );
+		if ( element == null ) {
+			// If element is null, then NotFoundAction must be IGNORE
+			return;
+		}
+		loadingState.add( element );
 	}
 
 	@Override

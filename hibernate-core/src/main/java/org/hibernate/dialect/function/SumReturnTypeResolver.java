@@ -7,6 +7,8 @@
 package org.hibernate.dialect.function;
 
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
@@ -16,12 +18,12 @@ import org.hibernate.type.spi.TypeConfiguration;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Types;
 import java.util.List;
 import java.util.function.Supplier;
 
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.extractArgumentType;
 import static org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers.extractArgumentValuedMapping;
+import static org.hibernate.type.SqlTypes.*;
 
 /**
  * Resolve according to JPA spec 4.8.5
@@ -59,7 +61,16 @@ class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 			ReturnableType<?> impliedType,
 			List<? extends SqmTypedNode<?>> arguments,
 			TypeConfiguration typeConfiguration) {
-		if (impliedType != null) {
+		return resolveFunctionReturnType( impliedType, null, arguments, typeConfiguration );
+	}
+
+	@Override
+	public ReturnableType<?> resolveFunctionReturnType(
+			ReturnableType<?> impliedType,
+			Supplier<MappingModelExpressible<?>> inferredTypeSupplier,
+			List<? extends SqmTypedNode<?>> arguments,
+			TypeConfiguration typeConfiguration) {
+		if ( impliedType != null ) {
 			return impliedType;
 		}
 		final ReturnableType<?> argType = extractArgumentType( arguments, 1 );
@@ -74,18 +85,20 @@ class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 			}
 		}
 		switch ( basicType.getJdbcType().getDefaultSqlTypeCode() ) {
-			case Types.SMALLINT:
-			case Types.TINYINT:
-			case Types.INTEGER:
-			case Types.BIGINT:
+			case SMALLINT:
+			case TINYINT:
+			case INTEGER:
+			case BIGINT:
 				return longType;
-			case Types.FLOAT:
-			case Types.REAL:
-			case Types.DOUBLE:
+			case FLOAT:
+			case REAL:
+			case DOUBLE:
 				return doubleType;
-			case Types.DECIMAL:
-			case Types.NUMERIC:
+			case DECIMAL:
+			case NUMERIC:
 				return BigInteger.class.isAssignableFrom( basicType.getJavaType() ) ? bigIntegerType : bigDecimalType;
+			case VECTOR:
+				return basicType;
 		}
 		return bigDecimalType;
 	}
@@ -102,22 +115,23 @@ class SumReturnTypeResolver implements FunctionReturnTypeResolver {
 		}
 		// Resolve according to JPA spec 4.8.5
 		final BasicValuedMapping specifiedArgType = extractArgumentValuedMapping( arguments, 1 );
-		switch ( specifiedArgType.getJdbcMapping().getJdbcType().getDefaultSqlTypeCode() ) {
-			case Types.SMALLINT:
-			case Types.TINYINT:
-			case Types.INTEGER:
-			case Types.BIGINT:
+		final JdbcMapping jdbcMapping = specifiedArgType.getJdbcMapping();
+		switch ( jdbcMapping.getJdbcType().getDefaultSqlTypeCode() ) {
+			case SMALLINT:
+			case TINYINT:
+			case INTEGER:
+			case BIGINT:
 				return longType;
-			case Types.FLOAT:
-			case Types.REAL:
-			case Types.DOUBLE:
+			case FLOAT:
+			case REAL:
+			case DOUBLE:
 				return doubleType;
-			case Types.DECIMAL:
-			case Types.NUMERIC:
-				final Class<?> argTypeClass = specifiedArgType.getJdbcMapping()
-						.getJavaTypeDescriptor()
-						.getJavaTypeClass();
-				return BigInteger.class.isAssignableFrom(argTypeClass) ? bigIntegerType : bigDecimalType;
+			case DECIMAL:
+			case NUMERIC:
+				final Class<?> argTypeClass = jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass();
+				return BigInteger.class.isAssignableFrom( argTypeClass ) ? bigIntegerType : bigDecimalType;
+			case VECTOR:
+				return (BasicValuedMapping) jdbcMapping;
 		}
 		return bigDecimalType;
 	}

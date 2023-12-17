@@ -124,11 +124,12 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 					JdbcCoordinatorImpl jdbcCoord = (JdbcCoordinatorImpl) session.getJdbcCoordinator();
 					ResourceRegistry resourceRegistry = jdbcCoord.getLogicalConnection().getResourceRegistry();
 					try {
+						String sql = "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )";
 						PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement(
-								"insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
+								sql );
 						ps.setLong( 1, 1 );
 						ps.setString( 2, "name" );
-						jdbcCoord.getResultSetReturn().execute( ps );
+						jdbcCoord.getResultSetReturn().execute( ps, sql );
                         assertTrue( jdbcCoord.getLogicalConnection().getResourceRegistry().hasRegisteredResources() );
 						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
 						assertEquals( 0, connectionProvider.getReleasedConnections().size() );
@@ -161,11 +162,12 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 					ResourceRegistry resourceRegistry = jdbcCoord.getLogicalConnection().getResourceRegistry();
 
 					try {
+						String sql = "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )";
 						PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement(
-								"insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
+								sql );
 						ps.setLong( 1, 1 );
 						ps.setString( 2, "name" );
-						jdbcCoord.getResultSetReturn().execute( ps );
+						jdbcCoord.getResultSetReturn().execute( ps , sql);
 						assertTrue( resourceRegistry.hasRegisteredResources() );
 						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
 						assertEquals( 0, connectionProvider.getReleasedConnections().size() );
@@ -177,7 +179,7 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 						assertEquals( 1, connectionProvider.getReleasedConnections().size() );
 
 						// open a result set and hold it open...
-						final String sql = "select * from SANDBOX_JDBC_TST";
+						sql = "select * from SANDBOX_JDBC_TST";
 						ps = jdbcCoord.getStatementPreparer().prepareStatement( sql );
 						jdbcCoord.getResultSetReturn().extract( ps, sql );
 						assertTrue( resourceRegistry.hasRegisteredResources() );
@@ -225,11 +227,12 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 					ResourceRegistry resourceRegistry = jdbcCoord.getLogicalConnection().getResourceRegistry();
 
 					try {
+						String sql = "insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )";
 						PreparedStatement ps = jdbcCoord.getStatementPreparer().prepareStatement(
-								"insert into SANDBOX_JDBC_TST( ID, NAME ) values ( ?, ? )" );
+								sql );
 						ps.setLong( 1, 1 );
 						ps.setString( 2, "name" );
-						jdbcCoord.getResultSetReturn().execute( ps );
+						jdbcCoord.getResultSetReturn().execute( ps , sql);
 						assertTrue( resourceRegistry.hasRegisteredResources() );
 						assertEquals( 1, connectionProvider.getAcquiredConnections().size() );
 						assertEquals( 0, connectionProvider.getReleasedConnections().size() );
@@ -243,7 +246,7 @@ public class AggressiveReleaseTest extends BaseSessionFactoryFunctionalTest {
 						jdbcCoord.disableReleases();
 
 						// open a result set...
-						final String sql = "select * from SANDBOX_JDBC_TST";
+						sql = "select * from SANDBOX_JDBC_TST";
 						ps = jdbcCoord.getStatementPreparer().prepareStatement( sql );
 						jdbcCoord.getResultSetReturn().extract( ps, sql );
 						assertTrue( resourceRegistry.hasRegisteredResources() );

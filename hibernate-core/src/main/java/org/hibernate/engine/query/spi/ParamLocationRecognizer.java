@@ -21,7 +21,9 @@ import org.hibernate.query.sql.spi.ParameterRecognizer;
  * of journaling parameter locations.
  *
  * @author Steve Ebersole
+ * @deprecated No longer used
  */
+@Deprecated(since = "6.4", forRemoval = true)
 public class ParamLocationRecognizer implements ParameterRecognizer {
 
 	private Map<String, NamedParameterDescriptor<?>> namedParameterDescriptors;

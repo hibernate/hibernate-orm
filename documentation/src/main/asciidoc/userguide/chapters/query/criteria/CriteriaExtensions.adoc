@@ -1,0 +1,34 @@
+[[criteria-extensions]]
+== Criteria extensions
+:root-project-dir: ../../../../../../../..
+:core-project-dir: {root-project-dir}/hibernate-core
+:example-dir-criteria: {core-project-dir}/src/test/java/org/hibernate/orm/test/query/criteria
+
+Hibernate ORM provides extensions to the JPA Criteria API to allow making use of HQL features through the Criteria API.
+
+The `Session` interface gives access to the `org.hibernate.query.criteria.HibernateCriteriaBuilder`,
+a subtype of `jakarta.persistence.criteria.CriteriaBuilder`,
+through the `Session#getCriteriaBuilder()` method, which is the entry point to the extensions.
+
+The `HibernateCriteriaBuilder` interface offers additional methods, but also provides co-variant overridden methods,
+which return subtypes of that the respective `jakarta.persistence.criteria.CriteriaBuilder` methods return types.
+The subtypes are consistently named by prefixing `Jpa` i.e. `Expression` becomes `JpaExpression`.
+
+These subtypes provide additional methods and co-variant overrides to ease working with the extensions.
+
+[[criteria-extensions-count-query]]
+=== Count query creation
+
+A very common requirement is the creation of a count query based on an existing query.
+This can be done by using the `JpaCriteriaQuery#createCountQuery()` method.
+
+[[criteria-extensions-count-query-example]]
+====
+[source, JAVA, indent=0]
+----
+include::{example-dir-criteria}/CountQueryTests.java[tags=criteria-extensions-count-query-example]
+----
+====
+
+The resulting count query will wrap a copy of the original query as subquery in the from clause and select `count(*)`.
+

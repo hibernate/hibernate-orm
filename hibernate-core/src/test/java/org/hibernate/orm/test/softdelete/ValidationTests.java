@@ -9,9 +9,11 @@ package org.hibernate.orm.test.softdelete;
 import org.hibernate.SessionFactory;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SoftDelete;
+import org.hibernate.annotations.SoftDeleteType;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.metamodel.UnsupportedMappingException;
+import org.hibernate.type.YesNoConverter;
 
 import org.junit.jupiter.api.Test;
 
@@ -64,7 +66,7 @@ public class ValidationTests {
 
 	@Entity(name="Address")
 	@Table(name="addresses")
-	@SoftDelete(columnName = "active", converter = ReverseYesNoConverter.class)
+	@SoftDelete(converter = YesNoConverter.class, strategy = SoftDeleteType.ACTIVE)
 	public static class Address {
 		@Id
 		private Integer id;
@@ -73,7 +75,7 @@ public class ValidationTests {
 
 	@Entity(name="NoNo")
 	@Table(name="nonos")
-	@SoftDelete(columnName = "active", converter = ReverseYesNoConverter.class)
+	@SoftDelete(converter = YesNoConverter.class, strategy = SoftDeleteType.ACTIVE)
 	@SQLDelete( sql = "delete from nonos" )
 	public static class NoNo {
 		@Id

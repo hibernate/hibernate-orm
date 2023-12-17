@@ -13,8 +13,10 @@ import java.sql.SQLException;
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.internal.util.IndexedConsumer;
+import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
+import org.hibernate.metamodel.mapping.MappingType;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.model.domain.internal.BasicTypeImpl;
 import org.hibernate.query.BindableType;
@@ -38,7 +40,7 @@ import org.hibernate.type.spi.TypeConfiguration;
  * @author Steve Ebersole
  */
 public abstract class AbstractJdbcParameter
-		implements JdbcParameter, JdbcParameterBinder, MappingModelExpressible, SqlExpressible {
+		implements JdbcParameter, JdbcParameterBinder, MappingModelExpressible, SqlExpressible, BasicValuedMapping {
 
 	private final JdbcMapping jdbcMapping;
 
@@ -53,6 +55,11 @@ public abstract class AbstractJdbcParameter
 
 	@Override
 	public JdbcMapping getJdbcMapping() {
+		return jdbcMapping;
+	}
+
+	@Override
+	public MappingType getMappedType() {
 		return jdbcMapping;
 	}
 

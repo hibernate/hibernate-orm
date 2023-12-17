@@ -7,6 +7,7 @@
 package org.hibernate.type;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import org.hibernate.type.descriptor.ValueBinder;
 import org.hibernate.type.descriptor.ValueExtractor;
@@ -64,5 +65,19 @@ public class ConvertedBasicCollectionType<C extends Collection<E>, E> extends Ba
 	@Override
 	public JdbcLiteralFormatter<C> getJdbcLiteralFormatter() {
 		return jdbcLiteralFormatter;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		return o == this || super.equals( o )
+				&& o instanceof ConvertedBasicCollectionType<?, ?>
+				&& Objects.equals( converter, ( (ConvertedBasicCollectionType<?, ?>) o ).converter );
+	}
+
+	@Override
+	public int hashCode() {
+		int result = super.hashCode();
+		result = 31 * result + converter.hashCode();
+		return result;
 	}
 }

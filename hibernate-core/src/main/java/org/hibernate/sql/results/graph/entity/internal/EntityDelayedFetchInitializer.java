@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.entity.internal;
 import java.util.function.Consumer;
 
 import org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -24,7 +25,6 @@ import org.hibernate.sql.results.graph.AbstractFetchParentAccess;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.entity.EntityInitializer;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.type.Type;
 
@@ -101,16 +101,9 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 				final EntityKey entityKey = new EntityKey( identifier, concreteDescriptor );
 				final PersistenceContext persistenceContext = session.getPersistenceContext();
 
-				final LoadingEntityEntry loadingEntityLocally = persistenceContext.getLoadContexts()
-						.findLoadingEntityEntry( entityKey );
-				if ( loadingEntityLocally != null ) {
-					entityInstance = loadingEntityLocally.getEntityInstance();
-				}
-				if ( entityInstance == null ) {
-					entityInstance = persistenceContext.getEntity( entityKey );
-					if ( entityInstance != null ) {
-						entityInstance = persistenceContext.proxyFor( entityInstance );
-					}
+				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+				if ( holder != null && holder.getEntity() != null ) {
+					entityInstance = persistenceContext.proxyFor( holder );
 				}
 			}
 			if ( entityInstance == null ) {

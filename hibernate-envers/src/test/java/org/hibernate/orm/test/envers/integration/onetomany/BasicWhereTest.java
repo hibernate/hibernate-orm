@@ -21,12 +21,14 @@ import jakarta.persistence.Table;
 
 import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Where;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.envers.AuditJoinTable;
 import org.hibernate.envers.Audited;
 import org.hibernate.envers.RelationTargetAuditMode;
 import org.hibernate.orm.test.envers.BaseEnversJPAFunctionalTestCase;
 import org.hibernate.orm.test.envers.Priority;
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.testing.transaction.TransactionUtil;
 
 import org.junit.Test;
@@ -45,6 +47,7 @@ import static org.junit.Assert.assertEquals;
  * @author Chris Cranford
  */
 @TestForIssue(jiraKey = "HHH-9432")
+@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "'TYPE' is not escaped even though autoQuoteKeywords is enabled")
 public class BasicWhereTest extends BaseEnversJPAFunctionalTestCase {
 	private Integer aId;
 	private Integer xId;

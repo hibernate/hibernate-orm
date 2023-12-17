@@ -13,7 +13,8 @@ import java.util.function.BiFunction;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
-import org.hibernate.query.results.ResultsHelper;
+import org.hibernate.metamodel.mapping.DiscriminatorMapping;
+import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.query.results.BasicValuedFetchBuilder;
 import org.hibernate.query.results.DomainResultCreationStateImpl;
@@ -112,9 +113,17 @@ public class CompleteFetchBuilderBasicPart implements CompleteFetchBuilder, Basi
 
 		final int valuesArrayPosition = jdbcPositionToValuesArrayPosition( jdbcPosition );
 
+		final JdbcMapping jdbcMapping;
+		if ( referencedModelPart instanceof DiscriminatorMapping ) {
+			jdbcMapping = ( (DiscriminatorMapping) referencedModelPart ).getUnderlyingJdbcMapping();
+		}
+		else {
+			jdbcMapping = referencedModelPart.getJdbcMapping();
+		}
+
 		// we just care about the registration here.  The ModelPart will find it later
 		creationStateImpl.resolveSqlExpression(
-				createColumnReferenceKey( tableReference, referencedModelPart ),
+				createColumnReferenceKey( tableReference, referencedModelPart.getSelectablePath(), jdbcMapping ),
 				processingState -> new ResultSetMappingSqlSelection( valuesArrayPosition, referencedModelPart )
 		);
 

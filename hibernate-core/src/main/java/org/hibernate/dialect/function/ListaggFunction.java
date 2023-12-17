@@ -9,6 +9,7 @@ package org.hibernate.dialect.function;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.function.FunctionKind;
 import org.hibernate.query.sqm.produce.function.ArgumentTypesValidator;
@@ -52,8 +53,9 @@ public class ListaggFunction extends AbstractSqmSelfRenderingFunctionDescriptor 
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, null, Collections.emptyList(), walker );
+		render( sqlAppender, sqlAstArguments, null, Collections.emptyList(), returnType, walker );
 	}
 
 	@Override
@@ -61,8 +63,9 @@ public class ListaggFunction extends AbstractSqmSelfRenderingFunctionDescriptor 
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
-		render( sqlAppender, sqlAstArguments, filter, Collections.emptyList(), walker );
+		render( sqlAppender, sqlAstArguments, filter, Collections.emptyList(), returnType, walker );
 	}
 
 	@Override
@@ -71,6 +74,7 @@ public class ListaggFunction extends AbstractSqmSelfRenderingFunctionDescriptor 
 			List<? extends SqlAstNode> sqlAstArguments,
 			Predicate filter,
 			List<SortSpecification> withinGroup,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> translator) {
 		final boolean caseWrapper = filter != null && !translator.supportsFilterClause();
 		sqlAppender.appendSql( "listagg(" );

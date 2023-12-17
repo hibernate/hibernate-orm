@@ -6,6 +6,7 @@
  */
 package org.hibernate.cfg;
 
+import org.hibernate.boot.spi.SessionFactoryOptions;
 import org.hibernate.query.NullPrecedence;
 import org.hibernate.query.spi.QueryPlan;
 
@@ -123,6 +124,16 @@ public interface QuerySettings {
 	 * @since 6.0
 	 */
 	String CRITERIA_COPY_TREE = "hibernate.criteria.copy_tree";
+
+	/**
+	 * When set to true, indicates that ordinal parameters (represented by the '?' placeholder) in native queries will be ignored.
+	 * <p>
+	 * By default, this is set to false, i.e. native queries will be checked for ordinal placeholders.
+	 * <p>
+	 *
+	 * @see SessionFactoryOptions#getIgnoreNativeJdbcParameters()
+	 */
+	String NATIVE_IGNORE_JDBC_PARAMETERS = "hibernate.query.native.ignore_jdbc_parameters";
 
 	/**
 	 * When {@linkplain org.hibernate.query.Query#setMaxResults(int) pagination} is used

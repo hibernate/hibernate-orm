@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -248,18 +249,15 @@ public class InverseNonAggregatedIdentifierMapping extends EmbeddedAttributeMapp
 						.getEntityPersister();
 				final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
 				final PersistenceContext persistenceContext = session.getPersistenceContext();
-				// it is conceivable there is a proxy, so check that first
-				o = persistenceContext.getProxy( entityKey );
+				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+				// use the managed object i.e. proxy or initialized entity
+				o = holder == null ? null : holder.getManagedObject();
 				if ( o == null ) {
-					// otherwise look for an initialized version
-					o = persistenceContext.getEntity( entityKey );
-					if ( o == null ) {
-						o = entityDescriptor
-								.findAttributeMapping( toOneAttributeMapping.getAttributeName() )
-								.getPropertyAccess()
-								.getGetter()
-								.get( entity );
-					}
+					o = entityDescriptor
+							.findAttributeMapping( toOneAttributeMapping.getAttributeName() )
+							.getPropertyAccess()
+							.getGetter()
+							.get( entity );
 				}
 			}
 			propertyValues[position] = o;

@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.Map;
 import jakarta.persistence.LockModeType;
 import org.hibernate.Session;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.testing.orm.jdbc.PreparedStatementSpyConnectionProvider;
@@ -34,6 +35,7 @@ import static org.junit.Assert.fail;
  */
 @RequiresDialectFeature({DialectChecks.SupportsLockTimeouts.class})
 @SkipForDialect(value = CockroachDialect.class, comment = "for update clause does not imply locking. See https://github.com/cockroachdb/cockroach/issues/88995")
+@SkipForDialect(value = AltibaseDialect.class, comment = "Altibase does not close Statement after lock timeout")
 public class StatementIsClosedAfterALockExceptionTest extends BaseEntityManagerFunctionalTestCase {
 
 	private static final PreparedStatementSpyConnectionProvider CONNECTION_PROVIDER = new PreparedStatementSpyConnectionProvider();

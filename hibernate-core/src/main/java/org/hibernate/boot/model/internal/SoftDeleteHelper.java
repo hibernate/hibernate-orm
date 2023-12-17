@@ -41,9 +41,6 @@ import static org.hibernate.query.sqm.ComparisonOperator.EQUAL;
  * @author Steve Ebersole
  */
 public class SoftDeleteHelper {
-
-	public static final String DEFAULT_COLUMN_NAME = "deleted";
-
 	/**
 	 * Creates and binds the column and value for modeling the soft-delete in the database
 	 *
@@ -57,6 +54,8 @@ public class SoftDeleteHelper {
 			SoftDeletable target,
 			Table table,
 			MetadataBuildingContext context) {
+		assert softDeleteConfig != null;
+
 		final BasicValue softDeleteIndicatorValue = createSoftDeleteIndicatorValue( softDeleteConfig, table, context );
 		final Column softDeleteIndicatorColumn = createSoftDeleteIndicatorColumn(
 				softDeleteConfig,
@@ -67,24 +66,23 @@ public class SoftDeleteHelper {
 		target.enableSoftDelete( softDeleteIndicatorColumn );
 	}
 
-	public static BasicValue createSoftDeleteIndicatorValue(
-			SoftDelete softDelete,
+	private static BasicValue createSoftDeleteIndicatorValue(
+			SoftDelete softDeleteConfig,
 			Table table,
 			MetadataBuildingContext context) {
 		final ClassBasedConverterDescriptor converterDescriptor = new ClassBasedConverterDescriptor(
-				softDelete.converter(),
+				softDeleteConfig.converter(),
 				context.getBootstrapContext().getClassmateContext()
 		);
 
 		final BasicValue softDeleteIndicatorValue = new BasicValue( context, table );
+		softDeleteIndicatorValue.makeSoftDelete( softDeleteConfig.strategy() );
 		softDeleteIndicatorValue.setJpaAttributeConverterDescriptor( converterDescriptor );
-		softDeleteIndicatorValue.setImplicitJavaTypeAccess( (typeConfiguration) -> {
-			return converterDescriptor.getRelationalValueResolvedType().getErasedType();
-		} );
+		softDeleteIndicatorValue.setImplicitJavaTypeAccess( (typeConfiguration) -> converterDescriptor.getRelationalValueResolvedType().getErasedType() );
 		return softDeleteIndicatorValue;
 	}
 
-	public static Column createSoftDeleteIndicatorColumn(
+	private static Column createSoftDeleteIndicatorColumn(
 			SoftDelete softDeleteConfig,
 			BasicValue softDeleteIndicatorValue,
 			MetadataBuildingContext context) {
@@ -109,9 +107,10 @@ public class SoftDeleteHelper {
 			MetadataBuildingContext context) {
 		final Database database = context.getMetadataCollector().getDatabase();
 		final PhysicalNamingStrategy namingStrategy = context.getBuildingOptions().getPhysicalNamingStrategy();
-		final String logicalColumnName = softDeleteConfig == null
-				? DEFAULT_COLUMN_NAME
-				: coalesce( DEFAULT_COLUMN_NAME, softDeleteConfig.columnName() );
+		final String logicalColumnName = coalesce(
+				softDeleteConfig.strategy().getDefaultColumnName(),
+				softDeleteConfig.columnName()
+		);
 		final Identifier physicalColumnName = namingStrategy.toPhysicalColumnName(
 				database.toIdentifier( logicalColumnName ),
 				database.getJdbcEnvironment()
@@ -149,8 +148,17 @@ public class SoftDeleteHelper {
 		//noinspection unchecked
 		final JdbcLiteralFormatter<Object> literalFormatter = resolution.getJdbcMapping().getJdbcLiteralFormatter();
 
-		final Object deletedLiteralValue = converter.toRelationalValue( true );
-		final Object nonDeletedLiteralValue = converter.toRelationalValue( false );
+		final Object deletedLiteralValue;
+		final Object nonDeletedLiteralValue;
+		if ( converter == null ) {
+			// the database column is BIT or BOOLEAN : pass-thru
+			deletedLiteralValue = true;
+			nonDeletedLiteralValue = false;
+		}
+		else {
+			deletedLiteralValue = converter.toRelationalValue( true );
+			nonDeletedLiteralValue = converter.toRelationalValue( false );
+		}
 
 		return new SoftDeleteMappingImpl(
 				softDeletableModelPart,

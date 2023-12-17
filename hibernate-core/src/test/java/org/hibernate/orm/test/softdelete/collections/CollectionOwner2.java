@@ -12,7 +12,9 @@ import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 import org.hibernate.annotations.SoftDelete;
-import org.hibernate.orm.test.softdelete.ReverseYesNoConverter;
+import org.hibernate.annotations.SoftDeleteType;
+import org.hibernate.type.NumericBooleanConverter;
+import org.hibernate.type.YesNoConverter;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.ElementCollection;
@@ -34,13 +36,13 @@ public class CollectionOwner2 {
 	@ElementCollection
 	@CollectionTable(name="batch_loadables", joinColumns = @JoinColumn(name="owner_fk"))
 	@BatchSize(size = 5)
-	@SoftDelete(columnName = "active", converter = ReverseYesNoConverter.class)
+	@SoftDelete(converter = YesNoConverter.class, strategy = SoftDeleteType.ACTIVE)
 	private Set<String> batchLoadable;
 
 	@ElementCollection
 	@CollectionTable(name="subselect_loadables", joinColumns = @JoinColumn(name="owner_fk"))
 	@Fetch(FetchMode.SUBSELECT)
-	@SoftDelete(columnName = "active", converter = ReverseYesNoConverter.class)
+	@SoftDelete(converter = NumericBooleanConverter.class, strategy = SoftDeleteType.ACTIVE)
 	private Set<String> subSelectLoadable;
 
 	public CollectionOwner2() {

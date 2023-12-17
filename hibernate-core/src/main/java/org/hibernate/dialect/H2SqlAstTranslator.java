@@ -281,4 +281,9 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		// Introduction of PERCENT support https://github.com/h2database/h2database/commit/f45913302e5f6ad149155a73763c0c59d8205849
 		return true;
 	}
+
+	@Override
+	protected boolean supportsJoinInMutationStatementSubquery() {
+		return false;
+	}
 }

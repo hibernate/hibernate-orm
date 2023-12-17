@@ -48,6 +48,16 @@ public interface SqmAttributeJoin<O,T> extends SqmQualifiedJoin<O,T>, JpaFetch<O
 	@Override
 	<S extends T> SqmAttributeJoin<O, S> treatAs(EntityDomainType<S> treatTarget);
 
+	@Override
+	<S extends T> SqmAttributeJoin<O, S> treatAs(Class<S> treatJavaType, String alias);
+
+	@Override
+	<S extends T> SqmAttributeJoin<O, S> treatAs(EntityDomainType<S> treatJavaType, String alias);
+
+	<S extends T> SqmAttributeJoin<O, S> treatAs(Class<S> treatJavaType, String alias, boolean fetch);
+
+	<S extends T> SqmAttributeJoin<O, S> treatAs(EntityDomainType<S> treatJavaType, String alias, boolean fetch);
+
 	/*
 		@deprecated not used anymore
 	 */

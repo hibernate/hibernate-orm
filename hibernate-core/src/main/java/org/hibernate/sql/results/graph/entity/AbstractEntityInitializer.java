@@ -19,6 +19,7 @@ import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLaziness
 import org.hibernate.cache.spi.access.EntityDataAccess;
 import org.hibernate.cache.spi.entry.CacheEntry;
 import org.hibernate.engine.spi.EntityEntry;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.EntityUniqueKey;
 import org.hibernate.engine.spi.PersistenceContext;
@@ -27,6 +28,8 @@ import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.engine.spi.Status;
+import org.hibernate.event.spi.EventManager;
+import org.hibernate.event.spi.HibernateMonitoringEvent;
 import org.hibernate.event.spi.PreLoadEvent;
 import org.hibernate.event.spi.PreLoadEventListener;
 import org.hibernate.internal.util.StringHelper;
@@ -40,6 +43,7 @@ import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
 import org.hibernate.metamodel.mapping.ManagedMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
 import org.hibernate.property.access.internal.PropertyAccessStrategyBackRefImpl;
@@ -386,17 +390,20 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				missing = true;
 				return;
 			}
-			// Special case map proxy to avoid stack overflows
-			// We know that a map proxy will always be of "the right type" so just use that object
-			final LoadingEntityEntry existingLoadingEntry =
-					rowProcessingState.getSession().getPersistenceContextInternal().getLoadContexts()
-							.findLoadingEntityEntry( entityKey );
-			setIsOwningInitializer( entityKey.getIdentifier(), existingLoadingEntry );
+			final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
+			final EntityHolder holder = persistenceContext.claimEntityHolderIfPossible(
+					entityKey,
+					null,
+					rowProcessingState.getJdbcValuesSourceProcessingState(),
+					this
+			);
+			isOwningInitializer = holder.getEntityInitializer() == this;
 
 			if ( entityInstance == null ) {
-				resolveEntityInstance( rowProcessingState, existingLoadingEntry, entityKey.getIdentifier() );
+				resolveEntityInstance( rowProcessingState, holder, entityKey.getIdentifier() );
 			}
-			else if ( existingLoadingEntry != null && existingLoadingEntry.getEntityInitializer() != this ) {
+			else if ( !isOwningInitializer ) {
+				entityInstance = holder.getManagedObject();
 				isInitialized = true;
 			}
 		}
@@ -414,7 +421,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					currentNavigablePath = currentNavigablePath.getParent();
 					parentInitializer = rowProcessingState.resolveInitializer( currentNavigablePath.getParent() );
 				}
-				if ( parentInitializer != null && parentInitializer.asEntityInitializer()
+				if ( modelPart.isEntityIdentifierMapping() ) {
+					return false;
+				}
+				else if ( parentInitializer != null && parentInitializer.asEntityInitializer()
 						.getEntityDescriptor()
 						.getEntityMetamodel()
 						.isPolymorphic() ) {
@@ -484,7 +494,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	protected void resolveEntityInstance(
 			RowProcessingState rowProcessingState,
-			LoadingEntityEntry existingLoadingEntry,
+			EntityHolder holder,
 			Object entityIdentifier) {
 
 		if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isTraceEnabled() ) {
@@ -496,45 +506,66 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			);
 		}
 
-		final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
-		final Object proxy = getProxy( persistenceContext );
-		final Object entityInstanceFromExecutionContext = getEntityInstanceFromExecutionContext( rowProcessingState );
-		if ( isProxyInstance( proxy ) ) {
-			if ( entityInstanceFromExecutionContext != null ) {
-				entityInstance = entityInstanceFromExecutionContext;
-				registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
+		final Object proxy = holder.getProxy();
+		final boolean unwrapProxy = proxy != null && referencedModelPart instanceof ToOneAttributeMapping
+				&& ( (ToOneAttributeMapping) referencedModelPart ).isUnwrapProxy()
+				&& getConcreteDescriptor().getBytecodeEnhancementMetadata().isEnhancedForLazyLoading();
+		final Object entityFromExecutionContext;
+		if ( !unwrapProxy && isProxyInstance( proxy ) ) {
+			if ( ( entityFromExecutionContext = getEntityFromExecutionContext( rowProcessingState ) ) != null ) {
+				entityInstance = entityFromExecutionContext;
+				// If the entity comes from the execution context, it is treated as not initialized
+				// so that we can refresh the data as requested
+				registerReloadedEntity( rowProcessingState, holder );
 			}
 			else {
 				entityInstance = proxy;
+				if ( Hibernate.isInitialized( entityInstance ) ) {
+					registerReloadedEntity( rowProcessingState, holder );
+					if ( rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
+						// We need to read result set values to correctly populate the query cache
+						resolveState( rowProcessingState );
+					}
+					this.isInitialized = true;
+				}
+				else if ( isOwningInitializer ) {
+					// Resolve the real entity instance for this proxy early so that potentially nested calls
+					// for eager association loading can leverage the real instance if needed
+					assert holder.getEntity() == null;
+					resolveEntityInstance( entityIdentifier, rowProcessingState );
+				}
 			}
 		}
 		else {
-			final Object existingEntity = persistenceContext.getEntity( entityKey );
+			final Object existingEntity = holder.getEntity();
 			if ( existingEntity != null ) {
 				entityInstance = existingEntity;
-				if ( existingLoadingEntry == null ) {
+				if ( holder.getEntityInitializer() == null ) {
 					if ( isExistingEntityInitialized( existingEntity ) ) {
-						this.isInitialized = true;
-						registerReloadedEntity( rowProcessingState, existingEntity );
+						registerReloadedEntity( rowProcessingState, holder );
 						notifyResolutionListeners( entityInstance );
 						if ( rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
-							// We still need to read result set values to correctly populate the query cache
+							// We need to read result set values to correctly populate the query cache
 							resolveState( rowProcessingState );
 						}
+						this.isInitialized = true;
 					}
 					else {
 						registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
 					}
 				}
+				else if ( !isOwningInitializer ) {
+					this.isInitialized = true;
+				}
 			}
-			else if ( entityInstanceFromExecutionContext != null ) {
-				entityInstance = entityInstanceFromExecutionContext;
+			else if ( ( entityFromExecutionContext = getEntityFromExecutionContext( rowProcessingState ) ) != null ) {
+				entityInstance = entityFromExecutionContext;
 				registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
 			}
 			else {
 				// look to see if another initializer from a parent load context or an earlier
 				// initializer is already loading the entity
-				entityInstance = resolveInstance( entityIdentifier, existingLoadingEntry, rowProcessingState );
+				entityInstance = resolveInstance( entityIdentifier, holder, rowProcessingState );
 				if ( isOwningInitializer && !isInitialized && identifierAssembler instanceof EmbeddableAssembler ) {
 					// If this is the owning initializer and the returned object is not initialized,
 					// this means that the entity instance was just instantiated.
@@ -543,16 +574,15 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					identifierAssembler.assemble( rowProcessingState );
 				}
 			}
-
-			upgradeLockMode( rowProcessingState );
 		}
+		upgradeLockMode( rowProcessingState );
 	}
 
 	protected abstract void registerLoadingEntityInstanceFromExecutionContext(
 			RowProcessingState rowProcessingState,
 			Object instance);
 
-	protected Object getEntityInstanceFromExecutionContext(RowProcessingState rowProcessingState) {
+	protected Object getEntityFromExecutionContext(RowProcessingState rowProcessingState) {
 		final ExecutionContext executionContext = rowProcessingState.getJdbcValuesSourceProcessingState()
 				.getExecutionContext();
 		if ( rootEntityDescriptor == executionContext.getRootEntityDescriptor()
@@ -608,41 +638,15 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	}
 
-	protected Object getProxy(PersistenceContext persistenceContext) {
-		return persistenceContext.getProxy( entityKey );
-	}
-
-	private void setIsOwningInitializer(Object entityIdentifier,LoadingEntityEntry existingLoadingEntry) {
-		if ( existingLoadingEntry != null ) {
-			if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
-				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
-						"(%s) Found existing loading entry [%s] - using loading instance",
-						getSimpleConcreteImplName(),
-						toLoggableString( getNavigablePath(), entityIdentifier )
-				);
-			}
-			if ( existingLoadingEntry.getEntityInitializer() == this ) {
-				isOwningInitializer = true;
-			}
-			else {
-				isInitialized = true;
-			}
-		}
-		else {
-			isOwningInitializer = true;
-		}
-	}
-
-	protected boolean isOwningInitializer() {
-		return isOwningInitializer;
-	}
-
-	private Object resolveInstance(
+	/**
+	 * Used by Hibernate Reactive
+	 */
+	protected Object resolveInstance(
 			Object entityIdentifier,
-			LoadingEntityEntry existingLoadingEntry,
+			EntityHolder holder,
 			RowProcessingState rowProcessingState) {
 		if ( isOwningInitializer ) {
-			assert existingLoadingEntry == null || existingLoadingEntry.getEntityInstance() == null;
+			assert holder.getEntity() == null;
 			return resolveEntityInstance( entityIdentifier, rowProcessingState );
 		}
 		else {
@@ -652,10 +656,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						"(%s) Entity [%s] being loaded by another initializer [%s] - skipping processing",
 						getSimpleConcreteImplName(),
 						toLoggableString( getNavigablePath(), entityIdentifier ),
-						existingLoadingEntry.getEntityInitializer()
+						holder.getEntityInitializer()
 				);
 			}
-			return existingLoadingEntry.getEntityInstance();
+			return holder.getEntity();
 		}
 	}
 
@@ -673,7 +677,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					// EARLY EXIT!!!
 					// because the second level cache has reference cache entries, the entity is initialized
 					isInitialized = true;
-					registerReloadedEntity( rowProcessingState, cached );
+					registerReloadedEntity( rowProcessingState );
 					return cached;
 				}
 			}
@@ -727,21 +731,25 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	protected void registerLoadingEntity(RowProcessingState rowProcessingState, Object instance) {
-		rowProcessingState.getJdbcValuesSourceProcessingState()
-				.registerLoadingEntity(
-						entityKey,
-						new LoadingEntityEntry( this, entityKey, concreteDescriptor, instance )
-				);
+		rowProcessingState.getSession().getPersistenceContextInternal().claimEntityHolderIfPossible(
+				entityKey,
+				instance,
+				rowProcessingState.getJdbcValuesSourceProcessingState(),
+				this
+		);
 	}
 
-	protected void registerReloadedEntity(RowProcessingState rowProcessingState, Object instance) {
+	protected void registerReloadedEntity(RowProcessingState rowProcessingState) {
+		if ( rowProcessingState.hasCallbackActions() ) {
+			rowProcessingState.getSession().getPersistenceContextInternal().getEntityHolder( entityKey )
+					.markAsReloaded( rowProcessingState.getJdbcValuesSourceProcessingState() );
+		}
+	}
+
+	protected void registerReloadedEntity(RowProcessingState rowProcessingState, EntityHolder holder) {
 		if ( rowProcessingState.hasCallbackActions() ) {
 			// This is only needed for follow-on locking, so skip registering the entity if there is no callback
-			rowProcessingState.getJdbcValuesSourceProcessingState()
-					.registerReloadedEntity(
-							entityKey,
-							new LoadingEntityEntry( this, entityKey, concreteDescriptor, instance )
-					);
+			holder.markAsReloaded( rowProcessingState.getJdbcValuesSourceProcessingState() );
 		}
 	}
 
@@ -752,13 +760,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			final SharedSessionContractImplementor session = rowProcessingState.getSession();
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			if ( lazyInitializer != null ) {
-				Object instance = persistenceContext.getEntity( entityKey );
-				if ( instance == null ) {
-					instance = resolveInstance(
-							entityKey.getIdentifier(),
-							persistenceContext.getLoadContexts().findLoadingEntityEntry( entityKey ),
-							rowProcessingState
-					);
+				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+				final Object instance = holder.getEntity();
+				assert instance != null : "The real entity instance must be resolved in the `resolveInstance()` phase";
+				if ( holder.getEntityInitializer() == this ) {
 					initializeEntity( instance, rowProcessingState );
 				}
 				lazyInitializer.setImplementation( instance );
@@ -786,15 +791,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						then when the EntitySelectFetchInitializer#initializeInstance() is executed before the EntityResultInitializer one
 						the persistence context will contain the instances retrieved form the 2LC
 					 */
-					final Object entity = persistenceContext.getEntity( entityKey );
-					if ( entity != null ) {
-						entityInstance = entity;
-						registerLoadingEntity( rowProcessingState, entityInstance );
-						initializeEntityInstance( entityInstance, rowProcessingState );
-					}
-					else {
-						initializeEntity( entityInstance, rowProcessingState );
-					}
+					assert persistenceContext.getEntityHolder( entityKey ).getEntityInitializer() == this;
+					initializeEntity( entityInstance, rowProcessingState );
 					entityInstanceForNotify = entityInstance;
 				}
 				else {
@@ -820,8 +818,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final PersistenceContext persistenceContextInternal =
 				rowProcessingState.getSession().getPersistenceContextInternal();
 		// Only call PersistenceContext#getEntity within the assert expression, as it is costly
-		return !persistenceContextInternal.containsEntity( entityKey )
-			|| persistenceContextInternal.getEntity( entityKey ) == toInitialize;
+		final Object entity = persistenceContextInternal.getEntity( entityKey );
+		return entity == null || entity == toInitialize;
 	}
 
 	private void initializeEntityInstance(Object toInitialize, RowProcessingState rowProcessingState) {
@@ -993,20 +991,37 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		// 		2) Session#clear + some form of load
 		//
 		// we need to be careful not to clobber the lock here in the cache so that it can be rolled back if need be
+		final EventManager eventManager = session.getEventManager();
 		if ( persistenceContext.wasInsertedDuringTransaction( concreteDescriptor, entityIdentifier) ) {
-			cacheAccess.update(
-					session,
-					cacheKey,
-					concreteDescriptor.getCacheEntryStructure().structure( cacheEntry ),
-					version,
-					version
-			);
+			boolean update = false;
+			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
+			try {
+				update = cacheAccess.update(
+						session,
+						cacheKey,
+						concreteDescriptor.getCacheEntryStructure().structure( cacheEntry ),
+						version,
+						version
+				);
+			}
+			finally {
+				eventManager.completeCachePutEvent(
+						cachePutEvent,
+						session,
+						cacheAccess,
+						concreteDescriptor,
+						update,
+						EventManager.CacheActionDescription.ENTITY_UPDATE
+				);
+			}
 		}
 		else {
 			final SessionEventListenerManager eventListenerManager = session.getEventListenerManager();
+			boolean put = false;
+			final HibernateMonitoringEvent cachePutEvent = eventManager.beginCachePutEvent();
 			try {
 				eventListenerManager.cachePutStart();
-				final boolean put = cacheAccess.putFromLoad(
+				put = cacheAccess.putFromLoad(
 						session,
 						cacheKey,
 						concreteDescriptor.getCacheEntryStructure().structure( cacheEntry ),
@@ -1014,13 +1029,20 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 						//useMinimalPuts( session, entityEntry )
 						false
 				);
-
+			}
+			finally {
+				eventManager.completeCachePutEvent(
+						cachePutEvent,
+						session,
+						cacheAccess,
+						concreteDescriptor,
+						put,
+						EventManager.CacheActionDescription.ENTITY_LOAD
+				);
 				final StatisticsImplementor statistics = factory.getStatistics();
 				if ( put && statistics.isStatisticsEnabled() ) {
 					statistics.entityCachePut( rootEntityDescriptor.getNavigableRole(), cacheAccess.getRegion().getName() );
 				}
-			}
-			finally {
 				eventListenerManager.cachePutEnd();
 			}
 		}
@@ -1098,8 +1120,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			if ( entry.getStatus() != Status.LOADING ) {
 				// If the instance to initialize is the main entity, we can't skip this.
 				// This can happen if we initialize an enhanced proxy.
-				return !isEntityReturn()
-					|| rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
+				return rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions()
 							.getEffectiveOptionalObject() != toInitialize;
 			}
 			else {

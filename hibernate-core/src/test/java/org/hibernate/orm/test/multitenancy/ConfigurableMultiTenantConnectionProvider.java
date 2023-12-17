@@ -17,7 +17,7 @@ import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
  */
 //tag::multitenacy-hibernate-ConfigurableMultiTenantConnectionProvider-example[]
 public class ConfigurableMultiTenantConnectionProvider
-        extends AbstractMultiTenantConnectionProvider {
+        extends AbstractMultiTenantConnectionProvider<String> {
 
     private final Map<String, ConnectionProvider> connectionProviderMap =
         new HashMap<>();

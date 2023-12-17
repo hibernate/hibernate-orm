@@ -46,7 +46,7 @@ Maven::
 <dependencyManagement>
     <dependencies>
         <dependency>
-            <groupId>org.hibernate.search</groupId>
+            <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-platform</artifactId>
             <version>{fullVersion}</version>
             <type>pom</type>

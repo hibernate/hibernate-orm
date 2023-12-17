@@ -58,6 +58,6 @@ public class ConvertedSoftDeleteTests {
 		assertThat( sqlInspector.getSqlQueries() ).hasSize( 1 );
 		assertThat( sqlInspector.getSqlQueries().get( 0 ) ).doesNotContainIgnoringCase( "delete " );
 		assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsIgnoringCase( "update " );
-		assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( "deleted='Y'" );
+		assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsAnyOf( "deleted='Y'", "deleted=N'Y'" );
 	}
 }

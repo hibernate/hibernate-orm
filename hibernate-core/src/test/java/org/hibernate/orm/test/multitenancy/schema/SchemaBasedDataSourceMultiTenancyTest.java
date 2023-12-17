@@ -9,7 +9,6 @@ package org.hibernate.orm.test.multitenancy.schema;
 import javax.sql.DataSource;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.jdbc.connections.internal.DatasourceConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.AbstractDataSourceBasedMultiTenantConnectionProviderImpl;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.engine.jdbc.connections.spi.MultiTenantConnectionProvider;
@@ -28,12 +27,12 @@ import static org.junit.Assert.assertThat;
  */
 @RequiresDialectFeature( value = ConnectionProviderBuilder.class )
 public class SchemaBasedDataSourceMultiTenancyTest  extends AbstractSchemaBasedMultiTenancyTest<
-		AbstractDataSourceBasedMultiTenantConnectionProviderImpl, ConnectionProvider> {
+		AbstractDataSourceBasedMultiTenantConnectionProviderImpl<String>, ConnectionProvider> {
 
-	protected AbstractDataSourceBasedMultiTenantConnectionProviderImpl buildMultiTenantConnectionProvider() {
+	protected AbstractDataSourceBasedMultiTenantConnectionProviderImpl<String> buildMultiTenantConnectionProvider() {
 		acmeProvider = ConnectionProviderBuilder.buildDataSourceConnectionProvider( "acme" );
 		jbossProvider = ConnectionProviderBuilder.buildDataSourceConnectionProvider( "jboss" );
-		return new AbstractDataSourceBasedMultiTenantConnectionProviderImpl() {
+		return new AbstractDataSourceBasedMultiTenantConnectionProviderImpl<>() {
 			@Override
 			protected DataSource selectAnyDataSource() {
 				return acmeProvider.unwrap( DataSource.class );
@@ -55,7 +54,7 @@ public class SchemaBasedDataSourceMultiTenancyTest  extends AbstractSchemaBasedM
 	@Test
 	@TestForIssue( jiraKey = "HHH-11651")
 	public void testUnwrappingConnectionProvider() {
-		final MultiTenantConnectionProvider multiTenantConnectionProvider = serviceRegistry.getService(
+		final MultiTenantConnectionProvider<String> multiTenantConnectionProvider = serviceRegistry.getService(
 				MultiTenantConnectionProvider.class );
 		final DataSource dataSource = multiTenantConnectionProvider.unwrap( DataSource.class );
 		assertThat( dataSource, is( notNullValue() ) );
@@ -64,7 +63,7 @@ public class SchemaBasedDataSourceMultiTenancyTest  extends AbstractSchemaBasedM
 	@Test
 	@TestForIssue(jiraKey = "HHH-11651")
 	public void testUnwrappingAbstractMultiTenantConnectionProvider() {
-		final MultiTenantConnectionProvider multiTenantConnectionProvider = serviceRegistry.getService(
+		final MultiTenantConnectionProvider<String> multiTenantConnectionProvider = serviceRegistry.getService(
 				MultiTenantConnectionProvider.class );
 		final AbstractDataSourceBasedMultiTenantConnectionProviderImpl dataSourceBasedMultiTenantConnectionProvider = multiTenantConnectionProvider.unwrap(
 				AbstractDataSourceBasedMultiTenantConnectionProviderImpl.class );
@@ -74,9 +73,9 @@ public class SchemaBasedDataSourceMultiTenancyTest  extends AbstractSchemaBasedM
 	@Test
 	@TestForIssue(jiraKey = "HHH-11651")
 	public void testUnwrappingMultiTenantConnectionProvider() {
-		final MultiTenantConnectionProvider multiTenantConnectionProvider = serviceRegistry.getService(
+		final MultiTenantConnectionProvider<String> multiTenantConnectionProvider = serviceRegistry.getService(
 				MultiTenantConnectionProvider.class );
-		final MultiTenantConnectionProvider connectionProvider = multiTenantConnectionProvider.unwrap(
+		final MultiTenantConnectionProvider<String> connectionProvider = multiTenantConnectionProvider.unwrap(
 				MultiTenantConnectionProvider.class );
 		assertThat( connectionProvider, is( notNullValue() ) );
 	}

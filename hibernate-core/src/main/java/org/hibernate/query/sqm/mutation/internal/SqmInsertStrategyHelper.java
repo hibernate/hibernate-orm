@@ -44,7 +44,7 @@ public final class SqmInsertStrategyHelper {
 
 			functionExpression = new SelfRenderingWindowFunctionSqlAstExpression(
 					"dense_rank",
-					(appender, args, walker) -> appender.appendSql( "dense_rank()" ),
+					(appender, args, returnType, walker) -> appender.appendSql( "dense_rank()" ),
 					Collections.emptyList(),
 					null,
 					null,
@@ -71,7 +71,7 @@ public final class SqmInsertStrategyHelper {
 		else {
 			functionExpression = new SelfRenderingWindowFunctionSqlAstExpression(
 					"row_number",
-					(appender, args, walker) -> appender.appendSql( "row_number()" ),
+					(appender, args, returnType, walker) -> appender.appendSql( "row_number()" ),
 					Collections.emptyList(),
 					null,
 					null,

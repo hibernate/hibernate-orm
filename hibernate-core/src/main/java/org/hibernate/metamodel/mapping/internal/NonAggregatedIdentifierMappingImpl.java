@@ -11,6 +11,7 @@ import java.util.function.BiConsumer;
 
 import org.hibernate.cache.MutableCacheKeyBuilder;
 import org.hibernate.engine.FetchTiming;
+import org.hibernate.engine.spi.EntityHolder;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -45,7 +46,6 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.internal.NonAggregatedIdentifierMappingFetch;
 import org.hibernate.sql.results.graph.embeddable.internal.NonAggregatedIdentifierMappingResult;
-import org.hibernate.sql.results.graph.entity.LoadingEntityEntry;
 
 /**
  * A "non-aggregated" composite identifier.
@@ -282,23 +282,18 @@ public class NonAggregatedIdentifierMappingImpl extends AbstractCompositeIdentif
 				final EntityPersister entityPersister = toOneAttributeMapping.getEntityMappingType().getEntityPersister();
 				final EntityKey entityKey = session.generateEntityKey( o, entityPersister );
 				final PersistenceContext persistenceContext = session.getPersistenceContext();
-				// it is conceivable there is a proxy, so check that first
-				o = persistenceContext.getProxy( entityKey );
+				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
+				// use the managed object i.e. proxy or initialized entity
+				o = holder == null ? null : holder.getManagedObject();
 				if ( o == null ) {
-					// otherwise look for an initialized version
-					o = persistenceContext.getEntity( entityKey );
+					// get the association out of the entity itself
+					o = entityDescriptor.getPropertyValue(
+							entity,
+							toOneAttributeMapping.getAttributeName()
+					);
 					if ( o == null ) {
-						// get the association out of the entity itself
-						o = entityDescriptor.getPropertyValue(
-								entity,
-								toOneAttributeMapping.getAttributeName()
-						);
-					}
-					if ( o == null ) {
-						final LoadingEntityEntry loadingEntityEntry = persistenceContext.getLoadContexts()
-								.findLoadingEntityEntry( entityKey );
-						if ( loadingEntityEntry != null ) {
-							o = loadingEntityEntry.getEntityInstance();
+						if ( holder != null && holder.isEventuallyInitialized() ) {
+							o = holder.getEntity();
 						}
 						else {
 							o = session.internalLoad(

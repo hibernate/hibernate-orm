@@ -14,10 +14,10 @@ package org.hibernate.dialect;
  * @deprecated use {@code MariaDBDialect(1060)}
  */
 @Deprecated
-public class MariaDB106Dialect extends MariaDB103Dialect {
+public class MariaDB106Dialect extends MariaDBDialect {
 
 	public MariaDB106Dialect() {
-		super();
+		super( DatabaseVersion.make( 10, 6 ) );
 	}
 
 	@Override

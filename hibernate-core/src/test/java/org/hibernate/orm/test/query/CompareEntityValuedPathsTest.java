@@ -249,7 +249,7 @@ public class CompareEntityValuedPathsTest {
 							"select " +
 									"1 " +
 									"from PERSON_TABLE p1_0 " +
-									"join (children_uks cu1_0 join PERSON_TABLE cu1_1 on cu1_1.uk=cu1_0.child_uk) on p1_0.uk=cu1_0.owner_uk " +
+									"join children_uks cu1_0 on p1_0.uk=cu1_0.owner_uk join PERSON_TABLE cu1_1 on cu1_1.uk=cu1_0.child_uk " +
 									"join PERSON_TABLE_PERSON_TABLE c1_0 on p1_0.id=c1_0.Person_id " +
 									"where cu1_1.id=c1_0.children_id",
 							statementInspector.getSqlQueries().get( 0 )
@@ -272,7 +272,7 @@ public class CompareEntityValuedPathsTest {
 									"1 " +
 									"from PERSON_TABLE p1_0 " +
 									"join PERSON_TABLE_PERSON_TABLE c1_0 on p1_0.id=c1_0.Person_id " +
-									"join (children_uks cu1_0 join PERSON_TABLE cu1_1 on cu1_1.uk=cu1_0.child_uk) on p1_0.uk=cu1_0.owner_uk " +
+									"join children_uks cu1_0 on p1_0.uk=cu1_0.owner_uk join PERSON_TABLE cu1_1 on cu1_1.uk=cu1_0.child_uk " +
 									"where c1_0.children_id=cu1_1.id",
 							statementInspector.getSqlQueries().get( 0 )
 					);
@@ -293,7 +293,7 @@ public class CompareEntityValuedPathsTest {
 							"select " +
 									"1 " +
 									"from PERSON_TABLE p1_0 " +
-									"join (children_uks cu1_0 join PERSON_TABLE cu1_1 on cu1_1.uk=cu1_0.child_uk) on p1_0.uk=cu1_0.owner_uk " +
+									"join children_uks cu1_0 on p1_0.uk=cu1_0.owner_uk join PERSON_TABLE cu1_1 on cu1_1.uk=cu1_0.child_uk " +
 									"where cu1_1.id in (select c1_0.children_id from PERSON_TABLE_PERSON_TABLE c1_0 where p1_0.id=c1_0.Person_id)",
 							statementInspector.getSqlQueries().get( 0 )
 					);

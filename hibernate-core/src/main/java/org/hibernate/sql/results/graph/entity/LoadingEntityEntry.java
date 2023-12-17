@@ -15,7 +15,9 @@ import org.hibernate.persister.entity.EntityPersister;
  * Representation of an entity being loaded, containing its state
  *
  * @author Steve Ebersole
+ * @deprecated Now modeled through {@link org.hibernate.engine.spi.EntityHolder}
  */
+@Deprecated(forRemoval = true)
 public class LoadingEntityEntry {
 	private final EntityInitializer entityInitializer;
 	private final EntityKey entityKey;

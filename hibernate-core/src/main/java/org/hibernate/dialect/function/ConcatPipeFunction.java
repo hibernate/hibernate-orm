@@ -9,6 +9,7 @@ package org.hibernate.dialect.function;
 import java.util.Collections;
 import java.util.List;
 
+import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
 import org.hibernate.query.sqm.produce.function.StandardArgumentsValidators;
 import org.hibernate.query.sqm.produce.function.StandardFunctionArgumentTypeResolvers;
@@ -48,6 +49,7 @@ public class ConcatPipeFunction extends AbstractSqmSelfRenderingFunctionDescript
 	public void render(
 			SqlAppender sqlAppender,
 			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
 			SqlAstTranslator<?> walker) {
 		String separator = "(";
 		for ( int i = 0; i < sqlAstArguments.size(); i++ ) {

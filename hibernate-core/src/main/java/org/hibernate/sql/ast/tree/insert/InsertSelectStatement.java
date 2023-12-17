@@ -38,25 +38,18 @@ public class InsertSelectStatement extends AbstractMutationStatement implements 
 	private List<Values> valuesList = new ArrayList<>();
 
 	public InsertSelectStatement(NamedTableReference targetTable) {
-		super( targetTable );
+		this( null, targetTable, Collections.emptyList() );
 	}
 
 	public InsertSelectStatement(NamedTableReference targetTable, List<ColumnReference> returningColumns) {
-		super( new LinkedHashMap<>(), targetTable, returningColumns );
+		this( null, targetTable, returningColumns );
 	}
 
 	public InsertSelectStatement(
 			CteContainer cteContainer,
 			NamedTableReference targetTable,
 			List<ColumnReference> returningColumns) {
-		this( cteContainer.getCteStatements(), targetTable, returningColumns );
-	}
-
-	public InsertSelectStatement(
-			Map<String, CteStatement> cteStatements,
-			NamedTableReference targetTable,
-			List<ColumnReference> returningColumns) {
-		super( cteStatements, targetTable, returningColumns );
+		super( cteContainer, targetTable, returningColumns );
 	}
 
 	@Override

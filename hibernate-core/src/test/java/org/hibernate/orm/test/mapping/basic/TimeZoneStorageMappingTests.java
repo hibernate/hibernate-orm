@@ -20,6 +20,7 @@ import org.hibernate.annotations.TimeZoneColumn;
 import org.hibernate.annotations.TimeZoneStorage;
 import org.hibernate.annotations.TimeZoneStorageType;
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.dialect.H2Dialect;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
@@ -29,6 +30,7 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -107,12 +109,14 @@ public class TimeZoneStorageMappingTests {
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase doesn't allow function in date format string")
 	public void testOffsetRetainedFormatAuto(SessionFactoryScope scope) {
 		testOffsetRetainedFormat( scope, "Auto" );
 	}
 
 	@Test
 	@RequiresDialectFeature(feature = DialectFeatureChecks.SupportsFormat.class)
+	@SkipForDialect( dialectClass = AltibaseDialect.class, reason = "Altibase doesn't allow function in date format string")
 	public void testOffsetRetainedFormatColumn(SessionFactoryScope scope) {
 		testOffsetRetainedFormat( scope, "Column" );
 	}

@@ -15,7 +15,6 @@ import java.util.Set;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.model.domain.EmbeddableDomainType;
-import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaExpression;
 import org.hibernate.query.criteria.JpaOrder;
@@ -23,10 +22,12 @@ import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaQueryStructure;
 import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSelection;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmNode;
+import org.hibernate.query.sqm.tree.domain.SqmEmbeddedValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmEntityValuedSimplePath;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.domain.SqmTreatedPath;
@@ -47,6 +48,7 @@ import org.hibernate.spi.NavigablePath;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.metamodel.SingularAttribute;
 
 /**
  * Defines the commonality between a root query and a subquery.
@@ -519,6 +521,10 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 				collectSelectedFromSet( selectedFromSet, (SqmFrom<?, ?>) path.getLhs() );
 			}
 		}
+		else if ( selectableNode instanceof SqmEmbeddedValuedSimplePath<?> ) {
+			final SqmEmbeddedValuedSimplePath<?> path = (SqmEmbeddedValuedSimplePath<?>) selectableNode;
+			assertEmbeddableCollections( path.getNavigablePath(), (EmbeddableDomainType<?>) path.getSqmType() );
+		}
 	}
 
 	private void collectSelectedFromSet(Set<SqmFrom<?, ?>> selectedFromSet, SqmFrom<?, ?> sqmFrom) {
@@ -566,6 +572,22 @@ public class SqmQuerySpec<T> extends SqmQueryPart<T>
 							"of the fetched association was not present in the select list " +
 							"[" + fetchJoin.asLoggableText() + "]"
 			);
+		}
+	}
+
+	private void assertEmbeddableCollections(NavigablePath navigablePath, EmbeddableDomainType<?> embeddableType) {
+		if ( !embeddableType.getPluralAttributes().isEmpty() ) {
+			throw new SemanticException( String.format(
+					"Explicit selection of an embeddable containing associated collections is not supported: %s",
+					navigablePath
+			) );
+		}
+		else {
+			for ( SingularAttribute<?, ?> attribute : embeddableType.getSingularAttributes() ) {
+				if ( attribute.getType() instanceof EmbeddableDomainType<?> ) {
+					assertEmbeddableCollections( navigablePath, (EmbeddableDomainType<?>) attribute.getType() );
+				}
+			}
 		}
 	}
 

@@ -32,6 +32,8 @@ import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.type.CollectionType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
@@ -61,7 +63,23 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final PersistenceContext persistenceContext = source.getPersistenceContextInternal();
 		final Object object = event.getObject();
 		if ( persistenceContext.reassociateIfUninitializedProxy( object ) ) {
-			if ( isTransient( event, source, object ) ) {
+			final boolean isTransient = isTransient( event, source, object );
+
+			if ( event.getLockOptions().getLockMode().greaterThan( LockMode.READ ) ) {
+				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+				final EntityPersister persister = source.getEntityPersister( lazyInitializer.getEntityName(), object );
+				refresh(
+						event,
+						null,
+						source,
+						persister,
+						null,
+						persister.getIdentifier( object, event.getSession() ),
+						persistenceContext
+				);
+			}
+
+			if ( isTransient ) {
 				source.setReadOnly( object, source.isDefaultReadOnly() );
 			}
 		}
@@ -142,6 +160,18 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 
 		evictEntity( object, persister, id, source );
 		evictCachedCollections( persister, id, source );
+
+		refresh( event, object, source, persister, entry, id, persistenceContext );
+	}
+
+	private static void refresh(
+			RefreshEvent event,
+			Object object,
+			EventSource source,
+			EntityPersister persister,
+			EntityEntry entry,
+			Object id,
+			PersistenceContext persistenceContext) {
 
 		final Object result = source.getLoadQueryInfluencers().fromInternalFetchProfile(
 				CascadingFetchProfile.REFRESH,

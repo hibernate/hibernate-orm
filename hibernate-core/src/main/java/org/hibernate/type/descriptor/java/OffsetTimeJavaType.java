@@ -251,7 +251,10 @@ public class OffsetTimeJavaType extends AbstractTemporalJavaType<OffsetTime> {
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		return dialect.getDefaultTimestampPrecision();
+		// times represent repeating events - they
+		// almost never come equipped with seconds,
+		// let alone fractional seconds!
+		return 0;
 	}
 
 }

@@ -52,6 +52,7 @@ public class DateJavaType extends AbstractTemporalJavaType<Date> implements Vers
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
+		// this "Date" is really a timestamp
 		return dialect.getDefaultTimestampPrecision();
 	}
 

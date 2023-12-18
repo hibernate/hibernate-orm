@@ -1102,7 +1102,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		s.setReadOnly( dp, true );
 		assertFalse( Hibernate.isInitialized( dp ) );
 		s.refresh( dp );
-		assertFalse( Hibernate.isInitialized( dp ) );
+		assertTrue( Hibernate.isInitialized( dp ) );
 		assertEquals( "original", dp.getDescription() );
 		assertTrue( Hibernate.isInitialized( dp ) );
 		dp.setDescription( "changed" );
@@ -1232,7 +1232,7 @@ public class ReadOnlyProxyTest extends AbstractReadOnlyTest {
 		assertTrue( s.isReadOnly( dp ) );
 		s.evict( dp );
 		s.refresh( dp );
-		assertFalse( Hibernate.isInitialized( dp ) );
+		assertTrue( Hibernate.isInitialized( dp ) );
 		assertFalse( s.isReadOnly( dp ) );
 		dp.setDescription( "changed" );
 		assertEquals( "changed", dp.getDescription() );

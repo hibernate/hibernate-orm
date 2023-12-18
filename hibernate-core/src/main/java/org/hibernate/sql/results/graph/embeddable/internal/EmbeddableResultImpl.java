@@ -6,10 +6,8 @@
  */
 package org.hibernate.sql.results.graph.embeddable.internal;
 
-import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
-import org.hibernate.query.SemanticException;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
@@ -46,10 +44,6 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 
 		this.fetchContainer = modelPart.getEmbeddableTypeDescriptor();
 		this.resultVariable = resultVariable;
-
-		// We currently don't support explicitly selecting embeddables that contain collections
-		// as we wouldn't be able to correctly initialize their owning entity instances
-		checkContainsCollections( modelPart, navigablePath );
 
 		/*
 			An `{embeddable_result}` sub-path is created for the corresponding initializer to differentiate it from a fetch-initializer if this embedded is also fetched.
@@ -94,25 +88,6 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 		}
 
 		return false;
-	}
-
-	private static void checkContainsCollections(
-			EmbeddableValuedModelPart embeddableModelPart,
-			NavigablePath navigablePath) {
-		embeddableModelPart.forEachSubPart( (index, modelPart) -> {
-			final AttributeMapping attribute = modelPart.asAttributeMapping();
-			if ( attribute != null ) {
-				if ( attribute.isPluralAttributeMapping() ) {
-					throw new SemanticException( String.format(
-							"Explicit selection of an embeddable containing collections is not supported: %s",
-							navigablePath
-					) );
-				}
-				else if ( attribute.isEmbeddedAttributeMapping() ) {
-					checkContainsCollections( attribute.asEmbeddedAttributeMapping(), navigablePath );
-				}
-			}
-		} );
 	}
 
 	@Override

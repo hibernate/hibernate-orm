@@ -273,7 +273,10 @@ public class JdbcTimeJavaType extends AbstractTemporalJavaType<Date> {
 
 	@Override
 	public int getDefaultSqlPrecision(Dialect dialect, JdbcType jdbcType) {
-		return dialect.getDefaultTimestampPrecision();
+		// times represent repeating events - they
+		// almost never come equipped with seconds,
+		// let alone fractional seconds!
+		return 0;
 	}
 
 	@Override

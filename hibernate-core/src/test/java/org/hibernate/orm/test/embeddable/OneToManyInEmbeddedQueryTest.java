@@ -1,6 +1,7 @@
 package org.hibernate.orm.test.embeddable;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.query.SemanticException;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import jakarta.persistence.AssociationOverride;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -21,6 +23,9 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,6 +33,8 @@ import static org.assertj.core.api.Assertions.fail;
 
 @DomainModel( annotatedClasses = {
 		OneToManyInEmbeddedQueryTest.EntityA.class,
+		OneToManyInEmbeddedQueryTest.EntityBToOne.class,
+		OneToManyInEmbeddedQueryTest.EntityBToMany.class,
 		OneToManyInEmbeddedQueryTest.EntityC.class,
 } )
 @SessionFactory
@@ -49,6 +56,8 @@ public class OneToManyInEmbeddedQueryTest {
 	@AfterAll
 	public void tearDown(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
+			session.createMutationQuery( "delete from EntityBToOne" ).executeUpdate();
+			session.createMutationQuery( "delete from EntityBToMany" ).executeUpdate();
 			session.createMutationQuery( "delete from EntityC" ).executeUpdate();
 			session.createMutationQuery( "delete from EntityA" ).executeUpdate();
 		} );
@@ -88,9 +97,29 @@ public class OneToManyInEmbeddedQueryTest {
 				final Throwable cause = e.getCause();
 				assertThat( cause ).isInstanceOf( SemanticException.class );
 				assertThat( cause.getMessage() ).contains(
-						"selection of an embeddable containing collections is not supported"
+						"selection of an embeddable containing associated collections is not supported"
 				);
 			}
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17572" )
+	public void testPersistToOneWithEmbeddedWithCollections(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final EntityC entityC = new EntityC( "entitc_b1" );
+			final EntityBToMany toMany = new EntityBToMany( 1, new ManyToManyEmbeddable( entityC ) );
+			final EntityBToOne toOne = new EntityBToOne( 2, toMany );
+			session.persist( toOne );
+			session.persist( toMany );
+			session.persist( entityC );
+		} );
+		scope.inTransaction( session -> {
+			final EntityBToMany result = session.createQuery(
+					"select b.toMany from EntityBToOne b",
+					EntityBToMany.class
+			).getSingleResult();
+			assertThat( result.getEmbedded().getContainedList() ).hasSize( 1 );
 		} );
 	}
 
@@ -137,6 +166,66 @@ public class OneToManyInEmbeddedQueryTest {
 
 		public List<EntityC> getEntityCList() {
 			return entityCList;
+		}
+	}
+
+	@Entity( name = "EntityBToOne" )
+	public static class EntityBToOne {
+		@Id
+		private Integer id;
+
+		@ManyToOne
+		private EntityBToMany toMany;
+
+		public EntityBToOne() {
+		}
+
+		public EntityBToOne(Integer id, EntityBToMany toMany) {
+			this.id = id;
+			this.toMany = toMany;
+		}
+	}
+
+	@Entity( name = "EntityBToMany" )
+	public static class EntityBToMany {
+		@Id
+		private Integer id;
+
+		@Embedded
+		@AssociationOverride(
+				name = "containedList",
+				joinTable = @JoinTable( name = "containing_embeddedList",
+						inverseJoinColumns = @JoinColumn( name = "CEList_containedList" ) )
+		)
+		private ManyToManyEmbeddable embedded;
+
+		public EntityBToMany() {
+		}
+
+		public EntityBToMany(Integer id, ManyToManyEmbeddable embedded) {
+			this.id = id;
+			this.embedded = embedded;
+		}
+
+		public ManyToManyEmbeddable getEmbedded() {
+			return embedded;
+		}
+	}
+
+	@Embeddable
+	public static class ManyToManyEmbeddable {
+		@ManyToMany
+		private List<EntityC> containedList = new ArrayList<>();
+
+		protected ManyToManyEmbeddable() {
+		}
+
+		public ManyToManyEmbeddable(EntityC entityC) {
+			containedList.add( entityC );
+		}
+
+		public List<EntityC> getContainedList() {
+			return containedList;
 		}
 	}
 

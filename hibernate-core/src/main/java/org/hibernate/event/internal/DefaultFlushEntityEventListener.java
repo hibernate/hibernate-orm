@@ -34,7 +34,10 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.ArrayHelper;
 import org.hibernate.jpa.event.spi.CallbackRegistry;
 import org.hibernate.jpa.event.spi.CallbackRegistryConsumer;
+import org.hibernate.metamodel.mapping.AttributeMapping;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
+import org.hibernate.metamodel.mapping.internal.ToOneAttributeMapping;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -523,7 +526,35 @@ public class DefaultFlushEntityEventListener implements FlushEntityEventListener
 				// dirty check against the database snapshot, if possible/necessary
 				final Object[] databaseSnapshot = getDatabaseSnapshot( persister, entry.getId(), session );
 				if ( databaseSnapshot != null ) {
-					dirtyProperties = persister.findModified( databaseSnapshot, values, entity, session );
+					if ( databaseSnapshot.length < values.length ) {
+						final Object[] oldValues = new Object[values.length];
+						int j = 0;
+						for ( int i = 0; i < values.length; i++ ) {
+							final AttributeMapping attributeMapping = persister.getAttributeMapping( i );
+							if ( attributeMapping instanceof ToOneAttributeMapping && ( (ToOneAttributeMapping) attributeMapping ).getSideNature() != ForeignKeyDescriptor.Nature.KEY ) {
+								// databaseSnapshot does not contain value of the FK when it belongs to the parentTableGroup
+								oldValues[i] = null;
+							}
+							else {
+								oldValues[i] = databaseSnapshot[j];
+								j++;
+							}
+						}
+						dirtyProperties = persister.findModified(
+								oldValues,
+								values,
+								entity,
+								session
+						);
+					}
+					else {
+						dirtyProperties = persister.findModified(
+								databaseSnapshot,
+								values,
+								entity,
+								session
+						);
+					}
 					dirtyCheckPossible = true;
 					event.setDatabaseSnapshot( databaseSnapshot );
 				}

@@ -1,0 +1,268 @@
+/*
+ * Hibernate, Relational Persistence for Idiomatic Java
+ *
+ * License: GNU Lesser General Public License (LGPL), version 2.1 or later.
+ * See the lgpl.txt file in the root directory or http://www.gnu.org/licenses/lgpl-2.1.html.
+ */
+package org.hibernate.orm.test.temporal;
+
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
+
+import org.hibernate.annotations.FractionalSeconds;
+import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.DerbyDialect;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
+import org.hibernate.engine.jdbc.Size;
+import org.hibernate.mapping.BasicValue;
+import org.hibernate.mapping.Column;
+import org.hibernate.mapping.PersistentClass;
+import org.hibernate.mapping.Property;
+import org.hibernate.type.descriptor.DateTimeUtils;
+
+import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.DomainModelScope;
+import org.hibernate.testing.orm.junit.SessionFactory;
+import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.junit.jupiter.api.Test;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * @author Steve Ebersole
+ */
+@SuppressWarnings("JUnitMalformedDeclaration")
+public class FractionalSecondsTests {
+	@Test
+	@DomainModel(annotatedClasses = {TestEntity.class, TestEntity0.class, TestEntity3.class, TestEntity9.class} )
+	void testMapping(DomainModelScope scope) {
+		final MetadataImplementor domainModel = scope.getDomainModel();
+
+		final Dialect dialect = domainModel.getDatabase().getDialect();
+		final int defaultPrecision = dialect.getDefaultTimestampPrecision();
+
+		final PersistentClass entityBinding = scope.getEntityBinding( TestEntity.class );
+		checkPrecision( "theInstant", defaultPrecision, entityBinding, domainModel );
+		checkPrecision( "theLocalDateTime", defaultPrecision, entityBinding, domainModel );
+		checkPrecision( "theLocalTime", defaultPrecision, entityBinding, domainModel );
+		checkPrecision( "theOffsetDateTime", defaultPrecision, entityBinding, domainModel );
+		checkPrecision( "theOffsetTime", defaultPrecision, entityBinding, domainModel );
+		checkPrecision( "theZonedDateTime", defaultPrecision, entityBinding, domainModel );
+
+		final PersistentClass entityBinding0 = scope.getEntityBinding( TestEntity0.class );
+		checkPrecision( "theInstant", 0, entityBinding0, domainModel );
+
+		final PersistentClass entityBinding3 = scope.getEntityBinding( TestEntity3.class );
+		checkPrecision( "theInstant", 3, entityBinding3, domainModel );
+		checkPrecision( "theLocalDateTime", 3, entityBinding3, domainModel );
+		checkPrecision( "theLocalTime", 3, entityBinding3, domainModel );
+
+		final PersistentClass entityBinding9 = scope.getEntityBinding( TestEntity9.class );
+		checkPrecision( "theInstant", 9, entityBinding9, domainModel );
+		checkPrecision( "theOffsetDateTime", 9, entityBinding9, domainModel );
+		checkPrecision( "theOffsetTime", 9, entityBinding9, domainModel );
+		checkPrecision( "theZonedDateTime", 9, entityBinding9, domainModel );
+	}
+
+	private void checkPrecision(
+			String propertyName,
+			int expectedMinimumSize,
+			PersistentClass entityBinding,
+			MetadataImplementor domainModel) {
+		final Property theInstant = entityBinding.getProperty( propertyName );
+		final BasicValue value = (BasicValue) theInstant.getValue();
+		final Column column = (Column) value.getColumn();
+		final Size columnSize = column.getColumnSize( value.getDialect(), domainModel );
+		assertThat( columnSize.getPrecision() ).isEqualTo( expectedMinimumSize );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = TestEntity.class)
+	@SessionFactory
+	@SkipForDialect( dialectClass = DB2Dialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
+	void testUsage(SessionFactoryScope scope) {
+		final Instant start = Instant.now();
+
+		scope.inTransaction( (session) -> {
+			final TestEntity testEntity = new TestEntity();
+			testEntity.id = 1;
+			testEntity.theInstant = start;
+			session.persist( testEntity );
+		} );
+
+		scope.inTransaction( (session) -> {
+			final TestEntity testEntity = session.find( TestEntity.class, 1 );
+
+			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
+			if ( dialect instanceof DerbyDialect
+					|| dialect instanceof MariaDBDialect ) {
+				assertThat( testEntity.theInstant ).isEqualTo( start );
+			}
+			else {
+				assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( start, 6 ) );
+			}
+		} );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = TestEntity0.class)
+	@SessionFactory
+	@SkipForDialect( dialectClass = H2Dialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = MySQLDialect.class, reason = "Occasional mismatch in rounding versus our code", matchSubTypes = true )
+	@SkipForDialect( dialectClass = OracleDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = SQLServerDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = PostgreSQLDialect.class, reason = "Occasional mismatch in rounding versus our code", matchSubTypes = true )
+	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby does not support sized timestamp" )
+	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
+	void testUsage0(SessionFactoryScope scope) {
+		final Instant start = Instant.now();
+
+		scope.inTransaction( (session) -> {
+			final TestEntity0 testEntity = new TestEntity0();
+			testEntity.id = 1;
+			testEntity.theInstant = start;
+			session.persist( testEntity );
+		} );
+
+		scope.inTransaction( (session) -> {
+			final TestEntity0 testEntity = session.find( TestEntity0.class, 1 );
+			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( start, 0 ) );
+		} );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = TestEntity3.class)
+	@SessionFactory
+	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = HSQLDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = DB2Dialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby does not support sized timestamp" )
+	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
+	void testUsage3(SessionFactoryScope scope) {
+		final Instant start = Instant.now();
+
+		scope.inTransaction( (session) -> {
+			final TestEntity3 testEntity = new TestEntity3();
+			testEntity.id = 1;
+			testEntity.theInstant = start;
+			session.persist( testEntity );
+		} );
+
+		scope.inTransaction( (session) -> {
+			final TestEntity3 testEntity = session.find( TestEntity3.class, 1 );
+			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( start, 3 ) );
+		} );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = TestEntity9.class)
+	@SessionFactory
+	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "MariaDB only supports precision <= 6" )
+	@SkipForDialect( dialectClass = MySQLDialect.class, reason = "MySQL only supports precision <= 6", matchSubTypes = true )
+	@SkipForDialect( dialectClass = SQLServerDialect.class, reason = "SQL Server only supports precision <= 6" )
+	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
+	void testUsage9(SessionFactoryScope scope) {
+		final Instant start = Instant.now();
+
+		scope.inTransaction( (session) -> {
+			final TestEntity9 testEntity = new TestEntity9();
+			testEntity.id = 1;
+			testEntity.theInstant = start;
+			session.persist( testEntity );
+		} );
+
+		scope.inTransaction( (session) -> {
+			final TestEntity9 testEntity = session.find( TestEntity9.class, 1 );
+
+			assertThat( testEntity.theInstant ).isEqualTo( start );
+		} );
+	}
+
+	@Entity(name="TestEntity")
+	@Table(name="TestEntity")
+	public static class TestEntity {
+		@Id
+		private Integer id;
+
+		private Instant theInstant;
+
+		private LocalDateTime theLocalDateTime;
+
+		private LocalTime theLocalTime;
+
+		private OffsetDateTime theOffsetDateTime;
+
+		private OffsetTime theOffsetTime;
+
+		private ZonedDateTime theZonedDateTime;
+
+	}
+
+	@Entity(name="TestEntity0")
+	@Table(name="TestEntity0")
+	public static class TestEntity0 {
+		@Id
+		private Integer id;
+
+		@FractionalSeconds(0)
+		private Instant theInstant;
+
+	}
+
+	@Entity(name="TestEntity3")
+	@Table(name="TestEntity3")
+	public static class TestEntity3 {
+		@Id
+		private Integer id;
+
+		@FractionalSeconds(3)
+		private Instant theInstant;
+
+		@FractionalSeconds(3)
+		private LocalDateTime theLocalDateTime;
+
+		@FractionalSeconds(3)
+		private LocalTime theLocalTime;
+
+	}
+
+	@Entity(name="TestEntity9")
+	@Table(name="TestEntity9")
+	public static class TestEntity9 {
+		@Id
+		private Integer id;
+
+		@FractionalSeconds(9)
+		private Instant theInstant;
+
+		@FractionalSeconds(9)
+		private OffsetDateTime theOffsetDateTime;
+
+		@FractionalSeconds(9)
+		private OffsetTime theOffsetTime;
+
+		@FractionalSeconds(9)
+		private ZonedDateTime theZonedDateTime;
+
+	}
+}

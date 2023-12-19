@@ -63,7 +63,6 @@ import org.hibernate.type.descriptor.java.BasicJavaType;
 import org.hibernate.type.descriptor.java.BasicPluralJavaType;
 import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.MutabilityPlan;
-import org.hibernate.type.descriptor.java.spi.FormatMapperBasedJavaType;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.descriptor.java.spi.JsonJavaType;
 import org.hibernate.type.descriptor.java.spi.RegistryHelper;
@@ -233,9 +232,10 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	@Override
 	public long getColumnLength() {
-		final Selectable column = getColumn();
-		if ( column instanceof Column ) {
-			final Long length = ( (Column) column ).getLength();
+		final Selectable selectable = getColumn();
+		if ( selectable instanceof Column ) {
+			final Column column = (Column) selectable;
+			final Long length = column.getLength();
 			return length == null ? NO_COLUMN_LENGTH : length;
 		}
 		else {
@@ -245,10 +245,14 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	@Override
 	public int getColumnPrecision() {
-		final Selectable column = getColumn();
-		if ( column instanceof Column ) {
-			final Integer length = ( (Column) column ).getPrecision();
-			return length == null ? NO_COLUMN_PRECISION : length;
+		final Selectable selectable = getColumn();
+		if ( selectable instanceof Column ) {
+			final Column column = (Column) selectable;
+			if ( column.getTemporalPrecision() != null ) {
+				return column.getTemporalPrecision();
+			}
+			final Integer precision = column.getPrecision();
+			return precision == null ? NO_COLUMN_PRECISION : precision;
 		}
 		else {
 			return NO_COLUMN_PRECISION;
@@ -257,10 +261,11 @@ public class BasicValue extends SimpleValue implements JdbcTypeIndicators, Resol
 
 	@Override
 	public int getColumnScale() {
-		final Selectable column = getColumn();
-		if ( column instanceof Column ) {
-			final Integer length = ( (Column) column ).getScale();
-			return length == null ? NO_COLUMN_SCALE : length;
+		final Selectable selectable = getColumn();
+		if ( selectable instanceof Column ) {
+			final Column column = (Column) selectable;
+			final Integer scale = column.getScale();
+			return scale == null ? NO_COLUMN_SCALE : scale;
 		}
 		else {
 			return NO_COLUMN_SCALE;

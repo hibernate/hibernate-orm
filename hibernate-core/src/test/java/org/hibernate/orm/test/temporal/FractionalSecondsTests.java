@@ -17,6 +17,7 @@ import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
@@ -46,20 +47,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SuppressWarnings("JUnitMalformedDeclaration")
 public class FractionalSecondsTests {
 	@Test
-	@DomainModel(annotatedClasses = {TestEntity.class, TestEntity3.class, TestEntity9.class} )
+	@DomainModel(annotatedClasses = {TestEntity.class, TestEntity0.class, TestEntity3.class, TestEntity9.class} )
 	void testMapping(DomainModelScope scope) {
 		final MetadataImplementor domainModel = scope.getDomainModel();
 
 		final Dialect dialect = domainModel.getDatabase().getDialect();
 		final int defaultPrecision = dialect.getDefaultTimestampPrecision();
-		final PersistentClass entityBinding = scope.getEntityBinding( TestEntity.class );
 
+		final PersistentClass entityBinding = scope.getEntityBinding( TestEntity.class );
 		checkPrecision( "theInstant", defaultPrecision, entityBinding, domainModel );
 		checkPrecision( "theLocalDateTime", defaultPrecision, entityBinding, domainModel );
 		checkPrecision( "theLocalTime", defaultPrecision, entityBinding, domainModel );
 		checkPrecision( "theOffsetDateTime", defaultPrecision, entityBinding, domainModel );
 		checkPrecision( "theOffsetTime", defaultPrecision, entityBinding, domainModel );
 		checkPrecision( "theZonedDateTime", defaultPrecision, entityBinding, domainModel );
+
+		final PersistentClass entityBinding0 = scope.getEntityBinding( TestEntity0.class );
+		checkPrecision( "theInstant", 0, entityBinding0, domainModel );
 
 		final PersistentClass entityBinding3 = scope.getEntityBinding( TestEntity3.class );
 		checkPrecision( "theInstant", 3, entityBinding3, domainModel );
@@ -89,10 +93,12 @@ public class FractionalSecondsTests {
 	@DomainModel(annotatedClasses = TestEntity.class)
 	@SessionFactory
 	void testUsage(SessionFactoryScope scope) {
+		final Instant start = Instant.now();
+
 		scope.inTransaction( (session) -> {
 			final TestEntity testEntity = new TestEntity();
 			testEntity.id = 1;
-			testEntity.theInstant = Instant.now();
+			testEntity.theInstant = start;
 			session.persist( testEntity );
 		} );
 
@@ -102,18 +108,39 @@ public class FractionalSecondsTests {
 			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
 			if ( dialect instanceof DerbyDialect
 					|| dialect instanceof MariaDBDialect ) {
-				assertThat( testEntity.theInstant ).isEqualTo( testEntity.theInstant );
+				assertThat( testEntity.theInstant ).isEqualTo( start );
 			}
 			else {
-				assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( testEntity.theInstant, 6 ) );
+				assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( start, 6 ) );
 			}
+		} );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = TestEntity0.class)
+	@SessionFactory
+	@SkipForDialect( dialectClass = H2Dialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	void testUsage0(SessionFactoryScope scope) {
+		final Instant start = Instant.now();
+
+		scope.inTransaction( (session) -> {
+			final TestEntity0 testEntity = new TestEntity0();
+			testEntity.id = 1;
+			testEntity.theInstant = start;
+			session.persist( testEntity );
+		} );
+
+		scope.inTransaction( (session) -> {
+			final TestEntity0 testEntity = session.find( TestEntity0.class, 1 );
+			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( start, 0 ) );
 		} );
 	}
 
 	@Test
 	@DomainModel(annotatedClasses = TestEntity3.class)
 	@SessionFactory
-	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "MariaDB does some occasionally funky rounding/truncation" )
+	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "Occasional mismatch in rounding versus our code" )
 	void testUsage3(SessionFactoryScope scope) {
 		final Instant start = Instant.now();
 
@@ -177,6 +204,17 @@ public class FractionalSecondsTests {
 		private OffsetTime theOffsetTime;
 
 		private ZonedDateTime theZonedDateTime;
+
+	}
+
+	@Entity(name="TestEntity0")
+	@Table(name="TestEntity0")
+	public static class TestEntity0 {
+		@Id
+		private Integer id;
+
+		@FractionalSeconds(0)
+		private Instant theInstant;
 
 	}
 

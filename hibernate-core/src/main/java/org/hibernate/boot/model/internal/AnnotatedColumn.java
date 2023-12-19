@@ -78,6 +78,7 @@ public class AnnotatedColumn {
 	private Long length;
 	private Integer precision;
 	private Integer scale;
+	private Integer temporalPrecision; // technically scale, but most dbs call it precision so...
 	private Integer arrayLength;
 	private String logicalColumnName;
 	private boolean unique;
@@ -184,6 +185,10 @@ public class AnnotatedColumn {
 		this.scale = scale;
 	}
 
+	public void setTemporalPrecision(Integer temporalPrecision) {
+		this.temporalPrecision = temporalPrecision;
+	}
+
 	public void setLogicalColumnName(String logicalColumnName) {
 		this.logicalColumnName = logicalColumnName;
 	}
@@ -240,6 +245,7 @@ public class AnnotatedColumn {
 					length,
 					precision,
 					scale,
+					temporalPrecision,
 					arrayLength,
 					nullable,
 					sqlType,
@@ -270,6 +276,7 @@ public class AnnotatedColumn {
 			Long length,
 			Integer precision,
 			Integer scale,
+			Integer temporalPrecision,
 			Integer arrayLength,
 			boolean nullable,
 			String sqlType,
@@ -287,6 +294,9 @@ public class AnnotatedColumn {
 			if ( precision != null && precision > 0 ) {  //relevant precision
 				mappingColumn.setPrecision( precision );
 				mappingColumn.setScale( scale );
+			}
+			if ( temporalPrecision != null ) {
+				mappingColumn.setTemporalPrecision( temporalPrecision );
 			}
 			mappingColumn.setArrayLength( arrayLength );
 			mappingColumn.setNullable( nullable );
@@ -760,7 +770,7 @@ public class AnnotatedColumn {
 		annotatedColumn.setSqlType( sqlType );
 		annotatedColumn.setLength( (long) column.length() );
 		if ( fractionalSeconds != null ) {
-			annotatedColumn.setPrecision( fractionalSeconds.value() );
+			annotatedColumn.setTemporalPrecision( fractionalSeconds.value() );
 		}
 		else {
 			annotatedColumn.setPrecision( column.precision() );
@@ -944,7 +954,7 @@ public class AnnotatedColumn {
 		column.extractDataFromPropertyData( propertyHolder, inferredData );
 		column.handleArrayLength( inferredData );
 		if ( fractionalSeconds != null ) {
-			column.setPrecision( fractionalSeconds.value() );
+			column.setTemporalPrecision( fractionalSeconds.value() );
 		}
 		column.bind();
 		return columns;

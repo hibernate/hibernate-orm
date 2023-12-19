@@ -23,12 +23,15 @@ import org.hibernate.engine.spi.Mapping;
 import org.hibernate.loader.internal.AliasConstantsHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.sqm.function.SqmFunctionRegistry;
+import org.hibernate.query.sqm.internal.TypecheckUtil;
 import org.hibernate.sql.Template;
 import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.ComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
+import org.hibernate.type.descriptor.java.JavaTypeHelper;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.sql.DdlType;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
@@ -51,6 +54,7 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 	private Long length;
 	private Integer precision;
 	private Integer scale;
+	private Integer temporalPrecision;
 	private Integer arrayLength;
 	private Value value;
 	private int typeIndex;
@@ -422,11 +426,22 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	Size calculateColumnSize(Dialect dialect, Mapping mapping) {
 		Type type = getValue().getType();
+		Long lengthToUse = getLength();
+		Integer precisionToUse = getPrecision();
+		Integer scaleToUse = getScale();
 		if ( type instanceof EntityType ) {
 			type = getTypeForEntityValue( mapping, type, getTypeIndex() );
 		}
 		if ( type instanceof ComponentType ) {
 			type = getTypeForComponentValue( mapping, type, getTypeIndex() );
+		}
+		if ( type instanceof BasicType ) {
+			final BasicType<?> basicType = (BasicType<?>) type;
+			if ( JavaTypeHelper.isTemporal( basicType.getExpressibleJavaType() ) ) {
+				precisionToUse = getTemporalPrecision();
+				lengthToUse = null;
+				scaleToUse = null;
+			}
 		}
 		if ( type == null ) {
 			throw new AssertionFailure( "no typing information available to determine column size" );
@@ -435,9 +450,9 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 		Size size = dialect.getSizeStrategy().resolveSize(
 				jdbcMapping.getJdbcType(),
 				jdbcMapping.getJdbcJavaType(),
-				precision,
-				scale,
-				length
+				precisionToUse,
+				scaleToUse,
+				lengthToUse
 		);
 		size.setArrayLength( arrayLength );
 		return size;
@@ -672,6 +687,14 @@ public class Column implements Selectable, Serializable, Cloneable, ColumnTypeIn
 
 	public void setScale(Integer scale) {
 		this.scale = scale;
+	}
+
+	public Integer getTemporalPrecision() {
+		return temporalPrecision;
+	}
+
+	public void setTemporalPrecision(Integer temporalPrecision) {
+		this.temporalPrecision = temporalPrecision;
 	}
 
 	public String getComment() {

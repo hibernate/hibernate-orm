@@ -463,6 +463,14 @@ public final class DateTimeUtils {
 		);
 	}
 
+	public static <T extends Temporal> T roundToSecondPrecision(T temporal, int precision) {
+		//noinspection unchecked
+		return (T) temporal.with(
+				ChronoField.NANO_OF_SECOND,
+				roundToPrecision( temporal.get( ChronoField.NANO_OF_SECOND ), precision )
+		);
+	}
+
 	public static long roundToPrecision(int nano, int precision) {
 		final int precisionMask = pow10( 9 - precision );
 		final int nanosToRound = nano % precisionMask;

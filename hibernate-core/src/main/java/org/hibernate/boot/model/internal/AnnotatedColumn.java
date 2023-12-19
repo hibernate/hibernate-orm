@@ -17,6 +17,7 @@ import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.ColumnTransformers;
+import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.GeneratedColumn;
 import org.hibernate.annotations.Index;
 import org.hibernate.annotations.common.reflection.XProperty;
@@ -488,6 +489,7 @@ public class AnnotatedColumn {
 		return buildColumnOrFormulaFromAnnotation(
 				null,
 				formulaAnn,
+				null,
 //				commentAnn,
 				nullability,
 				propertyHolder,
@@ -498,6 +500,7 @@ public class AnnotatedColumn {
 	}
 
 	public static AnnotatedColumns buildColumnFromNoAnnotation(
+			FractionalSeconds fractionalSeconds,
 //			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
@@ -506,6 +509,7 @@ public class AnnotatedColumn {
 			MetadataBuildingContext context) {
 		return buildColumnsFromAnnotations(
 				null,
+				fractionalSeconds,
 //				commentAnn,
 				nullability,
 				propertyHolder,
@@ -517,6 +521,7 @@ public class AnnotatedColumn {
 
 	public static AnnotatedColumns buildColumnFromAnnotation(
 			jakarta.persistence.Column column,
+			org.hibernate.annotations.FractionalSeconds fractionalSeconds,
 //			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
@@ -526,6 +531,7 @@ public class AnnotatedColumn {
 		return buildColumnOrFormulaFromAnnotation(
 				column,
 				null,
+				fractionalSeconds,
 //				commentAnn,
 				nullability,
 				propertyHolder,
@@ -537,6 +543,7 @@ public class AnnotatedColumn {
 
 	public static AnnotatedColumns buildColumnsFromAnnotations(
 			jakarta.persistence.Column[] columns,
+			FractionalSeconds fractionalSeconds,
 //			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
@@ -546,6 +553,7 @@ public class AnnotatedColumn {
 		return buildColumnsOrFormulaFromAnnotation(
 				columns,
 				null,
+				fractionalSeconds,
 //				commentAnn,
 				nullability,
 				propertyHolder,
@@ -568,6 +576,7 @@ public class AnnotatedColumn {
 		return buildColumnsOrFormulaFromAnnotation(
 				columns,
 				null,
+				null,
 //				commentAnn,
 				nullability,
 				propertyHolder,
@@ -581,6 +590,7 @@ public class AnnotatedColumn {
 	public static AnnotatedColumns buildColumnOrFormulaFromAnnotation(
 			jakarta.persistence.Column column,
 			org.hibernate.annotations.Formula formulaAnn,
+			org.hibernate.annotations.FractionalSeconds fractionalSeconds,
 //			Comment commentAnn,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
@@ -590,6 +600,7 @@ public class AnnotatedColumn {
 		return buildColumnsOrFormulaFromAnnotation(
 				column==null ? null : new jakarta.persistence.Column[] { column },
 				formulaAnn,
+				fractionalSeconds,
 //				commentAnn,
 				nullability,
 				propertyHolder,
@@ -603,6 +614,7 @@ public class AnnotatedColumn {
 	public static AnnotatedColumns buildColumnsOrFormulaFromAnnotation(
 			jakarta.persistence.Column[] columns,
 			org.hibernate.annotations.Formula formulaAnn,
+			org.hibernate.annotations.FractionalSeconds fractionalSeconds,
 //			Comment comment,
 			Nullability nullability,
 			PropertyHolder propertyHolder,
@@ -630,6 +642,7 @@ public class AnnotatedColumn {
 			final jakarta.persistence.Column[]  actualColumns = overrideColumns( columns, propertyHolder, inferredData );
 			if ( actualColumns == null ) {
 				return buildImplicitColumn(
+						fractionalSeconds,
 						inferredData,
 						suffixForDefaultColumnName,
 						secondaryTables,
@@ -647,7 +660,8 @@ public class AnnotatedColumn {
 						suffixForDefaultColumnName,
 						secondaryTables,
 						context,
-						actualColumns
+						actualColumns,
+						fractionalSeconds
 				);
 			}
 		}
@@ -684,7 +698,8 @@ public class AnnotatedColumn {
 			String suffixForDefaultColumnName,
 			Map<String, Join> secondaryTables,
 			MetadataBuildingContext context,
-			jakarta.persistence.Column[] actualCols) {
+			jakarta.persistence.Column[] actualCols,
+			FractionalSeconds fractionalSeconds) {
 		final AnnotatedColumns parent = new AnnotatedColumns();
 		parent.setPropertyHolder( propertyHolder );
 		parent.setPropertyName( getRelativePath( propertyHolder, inferredData.getPropertyName() ) );
@@ -708,6 +723,7 @@ public class AnnotatedColumn {
 					actualCols.length,
 					database,
 					column,
+					fractionalSeconds,
 					sqlType,
 					tableName
 			);
@@ -734,6 +750,7 @@ public class AnnotatedColumn {
 			int numberOfColumns,
 			Database database,
 			jakarta.persistence.Column column,
+			FractionalSeconds fractionalSeconds,
 			String sqlType,
 			String tableName) {
 		final String columnName = logicalColumnName( inferredData, suffixForDefaultColumnName, database, column );
@@ -742,7 +759,12 @@ public class AnnotatedColumn {
 		annotatedColumn.setImplicit( false );
 		annotatedColumn.setSqlType( sqlType );
 		annotatedColumn.setLength( (long) column.length() );
-		annotatedColumn.setPrecision( column.precision() );
+		if ( fractionalSeconds != null ) {
+			annotatedColumn.setPrecision( fractionalSeconds.value() );
+		}
+		else {
+			annotatedColumn.setPrecision( column.precision() );
+		}
 		annotatedColumn.setScale( column.scale() );
 		annotatedColumn.handleArrayLength( inferredData );
 //		annotatedColumn.setPropertyHolder( propertyHolder );
@@ -881,6 +903,7 @@ public class AnnotatedColumn {
 	}
 
 	private static AnnotatedColumns buildImplicitColumn(
+			FractionalSeconds fractionalSeconds,
 			PropertyData inferredData,
 			String suffixForDefaultColumnName,
 			Map<String, Join> secondaryTables,
@@ -920,6 +943,9 @@ public class AnnotatedColumn {
 		column.applyCheckConstraint( inferredData, 1 );
 		column.extractDataFromPropertyData( propertyHolder, inferredData );
 		column.handleArrayLength( inferredData );
+		if ( fractionalSeconds != null ) {
+			column.setPrecision( fractionalSeconds.value() );
+		}
 		column.bind();
 		return columns;
 	}

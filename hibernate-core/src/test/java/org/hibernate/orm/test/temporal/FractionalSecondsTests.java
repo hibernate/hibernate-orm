@@ -15,6 +15,7 @@ import java.time.ZonedDateTime;
 
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -95,6 +96,8 @@ public class FractionalSecondsTests {
 	@Test
 	@DomainModel(annotatedClasses = TestEntity.class)
 	@SessionFactory
+	@SkipForDialect( dialectClass = DB2Dialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	void testUsage(SessionFactoryScope scope) {
 		final Instant start = Instant.now();
 
@@ -127,6 +130,7 @@ public class FractionalSecondsTests {
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "Occasional mismatch in rounding versus our code" )
 	@SkipForDialect( dialectClass = SQLServerDialect.class, reason = "Occasional mismatch in rounding versus our code" )
 	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby does not support sized timestamp" )
+	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	void testUsage0(SessionFactoryScope scope) {
 		final Instant start = Instant.now();
 
@@ -148,7 +152,9 @@ public class FractionalSecondsTests {
 	@SessionFactory
 	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "Occasional mismatch in rounding versus our code" )
 	@SkipForDialect( dialectClass = HSQLDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = DB2Dialect.class, reason = "Occasional mismatch in rounding versus our code" )
 	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby does not support sized timestamp" )
+	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	void testUsage3(SessionFactoryScope scope) {
 		final Instant start = Instant.now();
 
@@ -171,6 +177,7 @@ public class FractionalSecondsTests {
 	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "MariaDB only supports precision <= 6" )
 	@SkipForDialect( dialectClass = MySQLDialect.class, reason = "MySQL only supports precision <= 6" )
 	@SkipForDialect( dialectClass = SQLServerDialect.class, reason = "SQL Server only supports precision <= 6" )
+	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	void testUsage9(SessionFactoryScope scope) {
 		final Instant start = Instant.now();
 

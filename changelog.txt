@@ -3,6 +3,15 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.17.Final (December 19, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32229
+
+** Bug
+    * [HHH-17405] - Cannot resolve path of generic mapped-superclass association path 
+
+
 Changes in 6.2.16.Final (December 15, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

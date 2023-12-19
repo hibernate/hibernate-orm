@@ -182,7 +182,11 @@ public class EntityRepresentationStrategyPojoStandard implements EntityRepresent
 			BytecodeProvider bytecodeProvider,
 			RuntimeModelCreationContext creationContext) {
 
-		final Set<Class<?>> proxyInterfaces = new java.util.HashSet<>();
+		// HHH-17578 - We need to preserve the order of the interfaces to ensure
+		// that the most general @Proxy declared interface at the top of a class
+		// hierarchy will be used first when a HibernateProxy decides what it
+		// should implement.
+		final Set<Class<?>> proxyInterfaces = new java.util.LinkedHashSet<>();
 
 		final Class<?> mappedClass = mappedJtd.getJavaTypeClass();
 		Class<?> proxyInterface;

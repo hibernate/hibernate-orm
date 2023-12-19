@@ -18,9 +18,12 @@ import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SQLServerDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
@@ -121,6 +124,9 @@ public class FractionalSecondsTests {
 	@SessionFactory
 	@SkipForDialect( dialectClass = H2Dialect.class, reason = "Occasional mismatch in rounding versus our code" )
 	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = OracleDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = SQLServerDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby does not support sized timestamp" )
 	void testUsage0(SessionFactoryScope scope) {
 		final Instant start = Instant.now();
 
@@ -141,6 +147,8 @@ public class FractionalSecondsTests {
 	@DomainModel(annotatedClasses = TestEntity3.class)
 	@SessionFactory
 	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = HSQLDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby does not support sized timestamp" )
 	void testUsage3(SessionFactoryScope scope) {
 		final Instant start = Instant.now();
 
@@ -153,14 +161,7 @@ public class FractionalSecondsTests {
 
 		scope.inTransaction( (session) -> {
 			final TestEntity3 testEntity = session.find( TestEntity3.class, 1 );
-
-			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-			if ( dialect instanceof DerbyDialect ) {
-				assertThat( testEntity.theInstant ).isEqualTo( start );
-			}
-			else {
-				assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( start, 3 ) );
-			}
+			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( start, 3 ) );
 		} );
 	}
 

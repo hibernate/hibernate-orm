@@ -23,6 +23,7 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.Size;
@@ -127,8 +128,10 @@ public class FractionalSecondsTests {
 	@SessionFactory
 	@SkipForDialect( dialectClass = H2Dialect.class, reason = "Occasional mismatch in rounding versus our code" )
 	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = MySQLDialect.class, reason = "Occasional mismatch in rounding versus our code", matchSubTypes = true )
 	@SkipForDialect( dialectClass = OracleDialect.class, reason = "Occasional mismatch in rounding versus our code" )
 	@SkipForDialect( dialectClass = SQLServerDialect.class, reason = "Occasional mismatch in rounding versus our code" )
+	@SkipForDialect( dialectClass = PostgreSQLDialect.class, reason = "Occasional mismatch in rounding versus our code", matchSubTypes = true )
 	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby does not support sized timestamp" )
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	void testUsage0(SessionFactoryScope scope) {

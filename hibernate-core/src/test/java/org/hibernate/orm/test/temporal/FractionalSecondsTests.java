@@ -15,7 +15,11 @@ import java.time.ZonedDateTime;
 
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.boot.spi.MetadataImplementor;
+import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.MariaDBDialect;
+import org.hibernate.dialect.MySQLDialect;
+import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.engine.jdbc.Size;
 import org.hibernate.mapping.BasicValue;
 import org.hibernate.mapping.Column;
@@ -27,6 +31,7 @@ import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.DomainModelScope;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
+import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.Test;
 
 import jakarta.persistence.Entity;
@@ -41,31 +46,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 @SuppressWarnings("JUnitMalformedDeclaration")
 public class FractionalSecondsTests {
 	@Test
-	@DomainModel(annotatedClasses = TestEntity.class)
+	@DomainModel(annotatedClasses = {TestEntity.class, TestEntity3.class, TestEntity9.class} )
 	void testMapping(DomainModelScope scope) {
 		final MetadataImplementor domainModel = scope.getDomainModel();
-		final PersistentClass entityBinding = scope.getEntityBinding( TestEntity.class );
 
 		final Dialect dialect = domainModel.getDatabase().getDialect();
 		final int defaultPrecision = dialect.getDefaultTimestampPrecision();
+		final PersistentClass entityBinding = scope.getEntityBinding( TestEntity.class );
 
-		checkPrecision( "theInstant", 3, entityBinding, domainModel );
-		checkPrecision( "theInstant2", defaultPrecision, entityBinding, domainModel );
+		checkPrecision( "theInstant", defaultPrecision, entityBinding, domainModel );
+		checkPrecision( "theLocalDateTime", defaultPrecision, entityBinding, domainModel );
+		checkPrecision( "theLocalTime", defaultPrecision, entityBinding, domainModel );
+		checkPrecision( "theOffsetDateTime", defaultPrecision, entityBinding, domainModel );
+		checkPrecision( "theOffsetTime", defaultPrecision, entityBinding, domainModel );
+		checkPrecision( "theZonedDateTime", defaultPrecision, entityBinding, domainModel );
 
-		checkPrecision( "theLocalDateTime", 3, entityBinding, domainModel );
-		checkPrecision( "theLocalDateTime2", defaultPrecision, entityBinding, domainModel );
+		final PersistentClass entityBinding3 = scope.getEntityBinding( TestEntity3.class );
+		checkPrecision( "theInstant", 3, entityBinding3, domainModel );
+		checkPrecision( "theLocalDateTime", 3, entityBinding3, domainModel );
+		checkPrecision( "theLocalTime", 3, entityBinding3, domainModel );
 
-		checkPrecision( "theLocalTime", 3, entityBinding, domainModel );
-		checkPrecision( "theLocalTime2", defaultPrecision, entityBinding, domainModel );
-
-		checkPrecision( "theOffsetDateTime", 9, entityBinding, domainModel );
-		checkPrecision( "theOffsetDateTime2", defaultPrecision, entityBinding, domainModel );
-
-		checkPrecision( "theOffsetTime", 9, entityBinding, domainModel );
-		checkPrecision( "theOffsetTime2", defaultPrecision, entityBinding, domainModel );
-
-		checkPrecision( "theZonedDateTime", 9, entityBinding, domainModel );
-		checkPrecision( "theZonedDateTime2", defaultPrecision, entityBinding, domainModel );
+		final PersistentClass entityBinding9 = scope.getEntityBinding( TestEntity9.class );
+		checkPrecision( "theInstant", 9, entityBinding9, domainModel );
+		checkPrecision( "theOffsetDateTime", 9, entityBinding9, domainModel );
+		checkPrecision( "theOffsetTime", 9, entityBinding9, domainModel );
+		checkPrecision( "theZonedDateTime", 9, entityBinding9, domainModel );
 	}
 
 	private void checkPrecision(
@@ -83,7 +88,7 @@ public class FractionalSecondsTests {
 	@Test
 	@DomainModel(annotatedClasses = TestEntity.class)
 	@SessionFactory
-	void testBasicUsage(SessionFactoryScope scope) {
+	void testUsage(SessionFactoryScope scope) {
 		scope.inTransaction( (session) -> {
 			final TestEntity testEntity = new TestEntity();
 			testEntity.id = 1;
@@ -94,7 +99,64 @@ public class FractionalSecondsTests {
 		scope.inTransaction( (session) -> {
 			final TestEntity testEntity = session.find( TestEntity.class, 1 );
 
-			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( testEntity.theInstant, 3 ) );
+			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
+			if ( dialect instanceof DerbyDialect
+					|| dialect instanceof MariaDBDialect ) {
+				assertThat( testEntity.theInstant ).isEqualTo( testEntity.theInstant );
+			}
+			else {
+				assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( testEntity.theInstant, 6 ) );
+			}
+		} );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = TestEntity3.class)
+	@SessionFactory
+	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "MariaDB does some occasionally funky rounding/truncation" )
+	void testUsage3(SessionFactoryScope scope) {
+		final Instant start = Instant.now();
+
+		scope.inTransaction( (session) -> {
+			final TestEntity3 testEntity = new TestEntity3();
+			testEntity.id = 1;
+			testEntity.theInstant = start;
+			session.persist( testEntity );
+		} );
+
+		scope.inTransaction( (session) -> {
+			final TestEntity3 testEntity = session.find( TestEntity3.class, 1 );
+
+			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
+			if ( dialect instanceof DerbyDialect ) {
+				assertThat( testEntity.theInstant ).isEqualTo( start );
+			}
+			else {
+				assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( start, 3 ) );
+			}
+		} );
+	}
+
+	@Test
+	@DomainModel(annotatedClasses = TestEntity9.class)
+	@SessionFactory
+	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "MariaDB only supports precision <= 6" )
+	@SkipForDialect( dialectClass = MySQLDialect.class, reason = "MySQL only supports precision <= 6" )
+	@SkipForDialect( dialectClass = SQLServerDialect.class, reason = "SQL Server only supports precision <= 6" )
+	void testUsage9(SessionFactoryScope scope) {
+		final Instant start = Instant.now();
+
+		scope.inTransaction( (session) -> {
+			final TestEntity9 testEntity = new TestEntity9();
+			testEntity.id = 1;
+			testEntity.theInstant = start;
+			session.persist( testEntity );
+		} );
+
+		scope.inTransaction( (session) -> {
+			final TestEntity9 testEntity = session.find( TestEntity9.class, 1 );
+
+			assertThat( testEntity.theInstant ).isEqualTo( start );
 		} );
 	}
 
@@ -104,29 +166,54 @@ public class FractionalSecondsTests {
 		@Id
 		private Integer id;
 
+		private Instant theInstant;
+
+		private LocalDateTime theLocalDateTime;
+
+		private LocalTime theLocalTime;
+
+		private OffsetDateTime theOffsetDateTime;
+
+		private OffsetTime theOffsetTime;
+
+		private ZonedDateTime theZonedDateTime;
+
+	}
+
+	@Entity(name="TestEntity3")
+	@Table(name="TestEntity3")
+	public static class TestEntity3 {
+		@Id
+		private Integer id;
+
 		@FractionalSeconds(3)
 		private Instant theInstant;
-		private Instant theInstant2;
 
 		@FractionalSeconds(3)
 		private LocalDateTime theLocalDateTime;
-		private LocalDateTime theLocalDateTime2;
 
 		@FractionalSeconds(3)
 		private LocalTime theLocalTime;
-		private LocalTime theLocalTime2;
+
+	}
+
+	@Entity(name="TestEntity9")
+	@Table(name="TestEntity9")
+	public static class TestEntity9 {
+		@Id
+		private Integer id;
+
+		@FractionalSeconds(9)
+		private Instant theInstant;
 
 		@FractionalSeconds(9)
 		private OffsetDateTime theOffsetDateTime;
-		private OffsetDateTime theOffsetDateTime2;
 
 		@FractionalSeconds(9)
 		private OffsetTime theOffsetTime;
-		private OffsetTime theOffsetTime2;
 
 		@FractionalSeconds(9)
 		private ZonedDateTime theZonedDateTime;
-		private ZonedDateTime theZonedDateTime2;
 
 	}
 }

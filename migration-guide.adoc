@@ -78,9 +78,9 @@ To get rid of that error:
 
 1. Check out the specific sections in the User Guide for a guideline on how to properly harness the annotation processor classpath to use `hibernate-jpamodelgen`:
    see {userGuideBase}#tooling-gradle-modelgen[here for Gradle] or {userGuideBase_6_4}#tooling-maven-modelgen[here for Maven].
-2. If the annotation processor classpath doesn't work in your case because you use Maven and need the version of `hibernate-jpamodelgen` managed through a BOM,
-   watch for new releases of the Maven Compiler Plugin, which should handle dependency management for `annotationProcessorPath` entries in version 3.12.0;
-   see https://issues.apache.org/jira/browse/MCOMPILER-391.
+2. If you use Maven and the annotation processor classpath doesn't seem to properly get the version of `hibernate-jpamodelgen` from dependency management or your BOM,
+   make sure you're using Maven Compiler Plugin 3.12.0 or later:
+   https://issues.apache.org/jira/browse/MCOMPILER-391[older versions didn't handle dependency management for `annotationProcessorPath` entries].
 
 [[hql-null-literal-comparison]]
 == HQL null literal comparison

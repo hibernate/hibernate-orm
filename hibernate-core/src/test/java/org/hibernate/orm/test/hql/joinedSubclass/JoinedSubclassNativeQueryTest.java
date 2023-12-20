@@ -6,6 +6,9 @@
  */
 package org.hibernate.orm.test.hql.joinedSubclass;
 
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.SqlTypes;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -57,7 +60,12 @@ public class JoinedSubclassNativeQueryTest {
 	public void testJoinedInheritanceNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Person p = session.createNativeQuery( "select p.*, null as companyName, 0 as clazz_  from Person p", Person.class ).getSingleResult();
+					final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+					final String nullColumnString = sessionFactory
+							.getJdbcServices()
+							.getDialect()
+							.getSelectClauseNullString( SqlTypes.VARCHAR, sessionFactory.getTypeConfiguration() );
+					Person p = session.createNativeQuery( "select p.*, " + nullColumnString + " as companyName, 0 as clazz_  from Person p", Person.class ).getSingleResult();
 					Assertions.assertNotNull( p );
 					Assertions.assertEquals( p.getFirstName(), "Jan" );
 				}

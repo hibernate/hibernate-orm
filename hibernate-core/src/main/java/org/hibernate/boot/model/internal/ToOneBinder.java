@@ -57,6 +57,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getCascadeStrategy;
 import static org.hibernate.boot.model.internal.BinderHelper.getFetchMode;
 import static org.hibernate.boot.model.internal.BinderHelper.getPath;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
+import static org.hibernate.boot.model.internal.BinderHelper.noConstraint;
 import static org.hibernate.internal.CoreLogging.messageLogger;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
 import static org.hibernate.internal.util.StringHelper.isNotEmpty;
@@ -610,8 +611,9 @@ public class ToOneBinder {
 		else {
 			final JoinColumn joinColumn = property.getAnnotation( JoinColumn.class );
 			final JoinColumns joinColumns = property.getAnnotation( JoinColumns.class );
-			if ( joinColumn!=null && noConstraint( joinColumn.foreignKey(), context )
-					|| joinColumns!=null && noConstraint( joinColumns.foreignKey(), context ) ) {
+			final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
+			if ( joinColumn != null && noConstraint( joinColumn.foreignKey(), noConstraintByDefault )
+					|| joinColumns != null && noConstraint( joinColumns.foreignKey(), noConstraintByDefault ) ) {
 				value.disableForeignKey();
 			}
 			else {
@@ -621,12 +623,15 @@ public class ToOneBinder {
 					value.setForeignKeyName( fk.name() );
 				}
 				else {
-					if ( noConstraint( foreignKey, context ) ) {
+					if ( noConstraint( foreignKey, noConstraintByDefault ) ) {
 						value.disableForeignKey();
 					}
 					else if ( foreignKey != null ) {
 						value.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
 						value.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+					}
+					else if ( noConstraintByDefault ) {
+						value.disableForeignKey();
 					}
 					else if ( joinColumns != null ) {
 						value.setForeignKeyName( nullIfEmpty( joinColumns.foreignKey().name() ) );
@@ -638,17 +643,6 @@ public class ToOneBinder {
 					}
 				}
 			}
-		}
-	}
-
-	private static boolean noConstraint(ForeignKey joinColumns, MetadataBuildingContext context) {
-		if ( joinColumns == null ) {
-			return false;
-		}
-		else {
-			final ConstraintMode mode = joinColumns.value();
-			return mode == NO_CONSTRAINT
-				|| mode == PROVIDER_DEFAULT && context.getBuildingOptions().isNoConstraintByDefault();
 		}
 	}
 

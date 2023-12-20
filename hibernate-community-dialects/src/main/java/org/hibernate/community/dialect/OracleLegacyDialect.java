@@ -1015,13 +1015,13 @@ public class OracleLegacyDialect extends Dialect {
 
 				case 30006:
 					// ORA-30006: resource busy; acquire with WAIT timeout expired
-					throw new LockTimeoutException(message, sqlException, sql);
+					return new LockTimeoutException(message, sqlException, sql);
 				case 54:
 					// ORA-00054: resource busy and acquire with NOWAIT specified or timeout expired
-					throw new LockTimeoutException(message, sqlException, sql);
+					return new LockTimeoutException(message, sqlException, sql);
 				case 4021:
 					// ORA-04021 timeout occurred while waiting to lock object
-					throw new LockTimeoutException(message, sqlException, sql);
+					return new LockTimeoutException(message, sqlException, sql);
 
 				// deadlocks ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1036,7 +1036,7 @@ public class OracleLegacyDialect extends Dialect {
 
 				case 1013:
 					// ORA-01013: user requested cancel of current operation
-					throw new QueryTimeoutException(  message, sqlException, sql );
+					return new QueryTimeoutException(  message, sqlException, sql );
 
 				// data integrity violation ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 

@@ -52,7 +52,7 @@ public class SQLExceptionTypeDelegate extends AbstractSQLExceptionConversionDele
 		}
 		else if ( sqlException instanceof DataTruncation ||
 				sqlException instanceof SQLDataException ) {
-			throw new DataException( message, sqlException, sql );
+			return new DataException( message, sqlException, sql );
 		}
 		else if ( sqlException instanceof SQLIntegrityConstraintViolationException ) {
 			return new ConstraintViolationException(

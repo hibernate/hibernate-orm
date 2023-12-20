@@ -11,10 +11,14 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.BitSet;
 
+import org.hibernate.JDBCException;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.cache.spi.QueryKey;
 import org.hibernate.cache.spi.QueryResultsCache;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.exception.DataException;
+import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.query.spi.QueryOptions;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.exec.ExecutionException;
@@ -259,13 +263,18 @@ public class JdbcValuesResultSetImpl extends AbstractJdbcValues {
 	}
 
 	private ExecutionException makeExecutionException(String message, SQLException cause) {
-		return new ExecutionException(
-				message + " [" + cause.getMessage() + "]",
-				executionContext.getSession().getJdbcServices().getSqlExceptionHelper().convert(
-						cause,
-						message
-				)
+		final JDBCException jdbcException = executionContext.getSession().getJdbcServices().getSqlExceptionHelper().convert(
+				cause,
+				message
 		);
+		if ( jdbcException instanceof QueryTimeoutException
+				|| jdbcException instanceof DataException
+				|| jdbcException instanceof LockTimeoutException ) {
+			// So far, the exception helper threw these exceptions more or less directly during conversion,
+			// so to retain the same behavior, we throw that directly now as well instead of wrapping it
+			throw jdbcException;
+		}
+		return new ExecutionException( message + " [" + cause.getMessage() + "]", jdbcException );
 	}
 
 	private void readCurrentRowValues() {

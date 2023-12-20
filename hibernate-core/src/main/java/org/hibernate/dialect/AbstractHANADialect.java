@@ -515,7 +515,7 @@ public abstract class AbstractHANADialect extends Dialect {
 			// 262 - Invalid query name
 			// 263 - Invalid alias name
 			if ( errorCode == 257 || ( errorCode >= 259 && errorCode <= 263 ) ) {
-				throw new SQLGrammarException( message, sqlException, sql );
+				return new SQLGrammarException( message, sqlException, sql );
 			}
 
 			// 257 - Cannot insert NULL or update to NULL

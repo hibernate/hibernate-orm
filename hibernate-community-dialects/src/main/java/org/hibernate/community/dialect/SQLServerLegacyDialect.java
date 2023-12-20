@@ -731,14 +731,25 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 		}
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
-			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 			if ( "HY008".equals( sqlState ) ) {
-				throw new QueryTimeoutException( message, sqlException, sql );
+				return new QueryTimeoutException( message, sqlException, sql );
 			}
-			if ( 1222 == errorCode ) {
-				throw new LockTimeoutException( message, sqlException, sql );
+
+			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			switch ( errorCode ) {
+				case 1222:
+					return new LockTimeoutException( message, sqlException, sql );
+				case 2627:
+				case 2601:
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							getViolatedConstraintNameExtractor().extractConstraintName( sqlException )
+					);
+				default:
+					return null;
 			}
-			return null;
 		};
 	}
 
@@ -1105,4 +1116,14 @@ public class SQLServerLegacyDialect extends AbstractTransactSQLDialect {
 //	public String getEnableConstraintStatement(String tableName, String name) {
 //		return "alter table " + tableName + " with check check constraint " + name;
 //	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
+	}
 }

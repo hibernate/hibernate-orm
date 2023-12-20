@@ -6,6 +6,7 @@
  */
 package org.hibernate.orm.test.hql.joinedSubclass;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.SqlTypes;
 
@@ -65,6 +66,9 @@ public class JoinedSubclassNativeQueryTest {
 							.getJdbcServices()
 							.getDialect()
 							.getSelectClauseNullString( SqlTypes.VARCHAR, sessionFactory.getTypeConfiguration() );
+					// PostgreSQLDialect#getSelectClauseNullString produces e.g. `null::text` which we interpret as parameter,
+					// so workaround this problem by configuring to ignore JDBC parameters
+					session.setProperty( AvailableSettings.NATIVE_IGNORE_JDBC_PARAMETERS, true );
 					Person p = session.createNativeQuery( "select p.*, " + nullColumnString + " as companyName, 0 as clazz_  from Person p", Person.class ).getSingleResult();
 					Assertions.assertNotNull( p );
 					Assertions.assertEquals( p.getFirstName(), "Jan" );

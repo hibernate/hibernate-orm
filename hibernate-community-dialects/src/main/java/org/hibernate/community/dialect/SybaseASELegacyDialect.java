@@ -667,7 +667,7 @@ public class SybaseASELegacyDialect extends SybaseLegacyDialect {
 				switch ( sqlState ) {
 					case "JZ0TO":
 					case "JZ006":
-						throw new LockTimeoutException( message, sqlException, sql );
+						return new LockTimeoutException( message, sqlException, sql );
 					case "S1000":
 						switch ( errorCode ) {
 							case 515:

@@ -976,11 +976,10 @@ public class DB2Dialect extends Dialect {
 	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
-			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
-
-			if ( -952 == errorCode && "57014".equals( sqlState ) ) {
-				throw new LockTimeoutException( message, sqlException, sql );
+			switch ( errorCode ) {
+				case -952:
+					return new LockTimeoutException( message, sqlException, sql );
 			}
 			return null;
 		};

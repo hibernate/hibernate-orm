@@ -700,7 +700,7 @@ public class DerbyDialect extends Dialect {
 				switch ( sqlState ) {
 					case "40XL1":
 					case "40XL2":
-						throw new LockTimeoutException( message, sqlException, sql );
+						return new LockTimeoutException( message, sqlException, sql );
 				}
 			}
 			return null;

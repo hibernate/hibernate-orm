@@ -1126,10 +1126,17 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected Predicate determineWhereClauseRestrictionWithJoinEmulation(AbstractUpdateOrDeleteStatement statement) {
+		return determineWhereClauseRestrictionWithJoinEmulation( statement, null );
+	}
+
+	protected Predicate determineWhereClauseRestrictionWithJoinEmulation(
+			AbstractUpdateOrDeleteStatement statement,
+			String dmlTargetAlias) {
 		final QuerySpec querySpec = new QuerySpec( false );
 		querySpec.getSelectClause().addSqlSelection(
 				new SqlSelectionImpl( new QueryLiteral<>( 1, getIntegerType() ) )
 		);
+		querySpec.applyPredicate( statement.getRestriction() );
 
 		if ( supportsJoinInMutationStatementSubquery() ) {
 			for ( TableGroup root : statement.getFromClause().getRoots() ) {
@@ -1158,46 +1165,22 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 		}
 		else {
-			emulateWhereClauseRestrictionJoins( statement, querySpec, tableGroupJoin -> {
-				if ( tableGroupJoin.getJoinType() == SqlAstJoinType.INNER ) {
-					querySpec.getFromClause().addRoot( tableGroupJoin.getJoinedGroup() );
-					querySpec.applyPredicate( tableGroupJoin.getPredicate() );
-				}
-			} );
-			if ( querySpec.getFromClause().getRoots().isEmpty() ) {
-				return statement.getRestriction();
-			}
-		}
-
-		querySpec.applyPredicate( statement.getRestriction() );
-		return new ExistsPredicate( querySpec, false, getBooleanType() );
-	}
-
-	private void emulateWhereClauseRestrictionJoins(
-			AbstractUpdateOrDeleteStatement statement,
-			QuerySpec querySpec,
-			Consumer<TableGroupJoin> joinConsumer) {
-		for ( TableGroup root : statement.getFromClause().getRoots() ) {
-			if ( root.getPrimaryTableReference() == statement.getTargetTable() ) {
-				for ( TableReferenceJoin tableReferenceJoin : root.getTableReferenceJoins() ) {
-					assert tableReferenceJoin.getJoinType() == SqlAstJoinType.INNER;
-					querySpec.getFromClause().addRoot(
-							new TableGroupImpl(
-									root.getNavigablePath(),
-									null,
-									tableReferenceJoin.getJoinedTableReference(),
-									root.getModelPart()
-							)
-					);
-					querySpec.applyPredicate( tableReferenceJoin.getPredicate() );
-				}
-				root.getTableGroupJoins().forEach( joinConsumer );
-				root.getNestedTableGroupJoins().forEach( joinConsumer );
-			}
-			else {
+			assert dmlTargetAlias != null;
+			final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
+			assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
+			for ( TableGroup root : statement.getFromClause().getRoots() ) {
 				querySpec.getFromClause().addRoot( root );
 			}
+			querySpec.applyPredicate(
+					createRowMatchingPredicate(
+							dmlTargetTableGroup,
+							dmlTargetAlias,
+							dmlTargetTableGroup.getPrimaryTableReference().getIdentificationVariable()
+					)
+			);
 		}
+
+		return new ExistsPredicate( querySpec, false, getBooleanType() );
 	}
 
 	protected void renderSetClause(List<Assignment> assignments) {
@@ -1241,6 +1224,50 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			appendSql( ")=" );
 			assignment.getAssignedValue().accept( this );
 		}
+	}
+
+	protected void visitSetAssignmentEmulateJoin(Assignment assignment, UpdateStatement statement) {
+		final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+		final Expression valueExpression;
+		if ( columnReferences.size() == 1 ) {
+			columnReferences.get( 0 ).appendColumnForWrite( this, null );
+			appendSql( '=' );
+			final Expression assignedValue = assignment.getAssignedValue();
+			final SqlTuple sqlTuple = SqlTupleContainer.getSqlTuple( assignedValue );
+			if ( sqlTuple != null ) {
+				assert sqlTuple.getExpressions().size() == 1;
+				valueExpression = sqlTuple.getExpressions().get( 0 );
+			}
+			else {
+				valueExpression = assignedValue;
+			}
+		}
+		else {
+			char separator = OPEN_PARENTHESIS;
+			for ( ColumnReference columnReference : columnReferences ) {
+				appendSql( separator );
+				columnReference.appendColumnForWrite( this, null );
+				separator = COMMA_SEPARATOR_CHAR;
+			}
+			appendSql( ")=" );
+			valueExpression = assignment.getAssignedValue();
+		}
+
+		final QuerySpec querySpec = new QuerySpec( false, 1 );
+		final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
+		assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
+		for ( TableGroup root : statement.getFromClause().getRoots() ) {
+			querySpec.getFromClause().addRoot( root );
+		}
+		querySpec.getSelectClause().addSqlSelection( new SqlSelectionImpl( valueExpression ) );
+		querySpec.applyPredicate(
+				createRowMatchingPredicate(
+						dmlTargetTableGroup,
+						"dml_target_",
+						dmlTargetTableGroup.getPrimaryTableReference().getIdentificationVariable()
+				)
+		);
+		new SelectStatement( querySpec ).accept( this );
 	}
 
 	protected boolean isStruct(JdbcMappingContainer expressionType) {
@@ -8024,64 +8051,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			}
 			return;
 		}
-		else if ( !supportsJoinInMutationStatementSubquery() && expression instanceof EntityValuedPathInterpretation<?> ) {
-			final AbstractUpdateOrDeleteStatement statement = getCurrentOrParentUpdateOrDeleteStatement( true );
-			if ( statement != null ) {
-				final TableGroup tableGroup = ( (EntityValuedPathInterpretation<?>) expression ).getTableGroup();
-				final TableGroupJoin tableGroupJoin = findTableGroupJoin(
-						tableGroup,
-						statement.getFromClause().getRoots()
-				);
-				if ( tableGroupJoin != null && tableGroupJoin.getJoinType() != SqlAstJoinType.INNER ) {
-					emulateNullnessPredicateWithExistsSubquery( nullnessPredicate, tableGroup, tableGroupJoin );
-					return;
-				}
-			}
-		}
 		expression.accept( this );
 		appendSql( predicateValue );
-	}
-
-	private void emulateNullnessPredicateWithExistsSubquery(
-			NullnessPredicate nullnessPredicate,
-			TableGroup tableGroup,
-			TableGroupJoin tableGroupJoin) {
-		final QuerySpec querySpec = new QuerySpec( false );
-		querySpec.getSelectClause().addSqlSelection(
-				new SqlSelectionImpl( new QueryLiteral<>( 1, getIntegerType() ) )
-		);
-		querySpec.getFromClause().getRoots().add( tableGroup );
-		querySpec.applyPredicate( tableGroupJoin.getPredicate() );
-
-		if ( !nullnessPredicate.isNegated() ) {
-			appendSql( "not " );
-		}
-		appendSql( "exists(" );
-		statementStack.push( new SelectStatement( querySpec ) );
-		visitQuerySpec( querySpec );
-		statementStack.pop();
-		appendSql( ")" );
-	}
-
-	private AbstractUpdateOrDeleteStatement getCurrentOrParentUpdateOrDeleteStatement(boolean checkParent) {
-		if ( statementStack.getCurrent() instanceof AbstractUpdateOrDeleteStatement ) {
-			return (AbstractUpdateOrDeleteStatement) statementStack.getCurrent();
-		}
-		else if ( checkParent && statementStack.depth() > 1
-				&& statementStack.peek( 1 ) instanceof AbstractUpdateOrDeleteStatement ) {
-			return (AbstractUpdateOrDeleteStatement) statementStack.peek( 1 );
-		}
-		return null;
-	}
-
-	private TableGroupJoin findTableGroupJoin(TableGroup tableGroup, List<TableGroup> roots) {
-		for ( TableGroup root : roots ) {
-			final TableGroupJoin tableGroupJoin = root.findTableGroupJoin( tableGroup );
-			if ( tableGroupJoin != null ) {
-				return tableGroupJoin;
-			}
-		}
-		return null;
 	}
 
 	@Override

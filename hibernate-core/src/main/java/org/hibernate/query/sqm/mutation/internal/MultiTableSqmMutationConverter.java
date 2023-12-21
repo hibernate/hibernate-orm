@@ -18,8 +18,8 @@ import org.hibernate.query.sqm.tree.SqmStatement;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
-import org.hibernate.sql.ast.spi.SqlAstHelper;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -124,7 +124,7 @@ public class MultiTableSqmMutationConverter extends BaseSqmToSqlAstConverter<Sta
 
 	@Override
 	public Predicate visitWhereClause(SqmWhereClause whereClause) {
-		return SqlAstHelper.combinePredicates( super.visitWhereClause( whereClause ), discriminatorPredicate );
+		return SqlAstTreeHelper.combinePredicates( super.visitWhereClause( whereClause ), discriminatorPredicate );
 	}
 
 }

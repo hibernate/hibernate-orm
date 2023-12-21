@@ -11,6 +11,7 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
@@ -19,6 +20,7 @@ import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -94,6 +96,27 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 		}
 		else {
 			visitInsertStatementEmulateMerge( statement );
+		}
+	}
+
+	@Override
+	protected void visitDeleteStatementOnly(DeleteStatement statement) {
+		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			appendSql( "delete from " );
+			final Stack<Clause> clauseStack = getClauseStack();
+			try {
+				clauseStack.push( Clause.DELETE );
+				super.renderDmlTargetTableExpression( statement.getTargetTable() );
+				append( " dml_target_" );
+			}
+			finally {
+				clauseStack.pop();
+			}
+			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement, "dml_target_" ) );
+			visitReturningColumns( statement.getReturningColumns() );
+		}
+		else {
+			super.visitDeleteStatementOnly( statement );
 		}
 	}
 

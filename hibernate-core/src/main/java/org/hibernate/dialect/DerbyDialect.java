@@ -1045,4 +1045,9 @@ public class DerbyDialect extends Dialect {
 		return uniqueDelegate;
 	}
 
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
 }

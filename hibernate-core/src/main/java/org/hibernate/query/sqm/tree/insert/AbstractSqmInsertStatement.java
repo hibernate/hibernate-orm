@@ -14,14 +14,17 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaConflictClause;
 import org.hibernate.query.criteria.JpaCriteriaInsert;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
@@ -80,6 +83,19 @@ public abstract class AbstractSqmInsertStatement<T> extends AbstractSqmDmlStatem
 			}
 			return insertionTargetPaths;
 		}
+	}
+
+	@Override
+	public void setTarget(JpaRoot<T> root) {
+		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
+			throw new SemanticException(
+					String.format(
+							"Target type '%s' is not an entity",
+							root.getModel().getHibernateEntityName()
+					)
+			);
+		}
+		super.setTarget( root );
 	}
 
 	@Override

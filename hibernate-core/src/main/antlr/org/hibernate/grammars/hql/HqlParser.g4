@@ -55,14 +55,14 @@ targetEntity
  * A 'delete' statement
  */
 deleteStatement
-	: DELETE FROM? targetEntity whereClause?
+	: DELETE FROM? entityWithJoins whereClause?
 	;
 
 /**
  * An 'update' statement
  */
 updateStatement
-	: UPDATE VERSIONED? targetEntity setClause whereClause?
+	: UPDATE VERSIONED? entityWithJoins setClause whereClause?
 	;
 
 /**

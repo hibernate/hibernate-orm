@@ -67,6 +67,7 @@ import org.hibernate.query.SyntaxException;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
@@ -618,29 +619,18 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmUpdateStatement<R> visitUpdateStatement(HqlParser.UpdateStatementContext ctx) {
-		final boolean versioned = ctx.VERSIONED() != null;
-		final HqlParser.TargetEntityContext dmlTargetContext = ctx.targetEntity();
-		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
-		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
-			throw new SemanticException(
-					String.format(
-							"Target type '%s' in 'update' statement is not an entity",
-							root.getModel().getHibernateEntityName()
-					)
-			);
-		}
-
-		final SqmUpdateStatement<R> updateStatement = new SqmUpdateStatement<>( root, creationContext.getNodeBuilder() );
+		final SqmUpdateStatement<R> updateStatement = new SqmUpdateStatement<>( creationContext.getNodeBuilder() );
 		parameterCollector = updateStatement;
 		final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
 				updateStatement,
 				this
 		);
 		processingStateStack.push( processingState );
-		processingState.getPathRegistry().register( root );
 
 		try {
-			updateStatement.versioned( versioned );
+			updateStatement.versioned( ctx.VERSIONED() != null );
+			//noinspection unchecked
+			updateStatement.setTarget( (JpaRoot<R>) visitEntityWithJoins( ctx.entityWithJoins() ) );
 			final HqlParser.SetClauseContext setClauseCtx = ctx.setClause();
 			for ( ParseTree subCtx : setClauseCtx.children ) {
 				if ( subCtx instanceof HqlParser.AssignmentContext ) {
@@ -686,10 +676,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 
 	@Override
 	public SqmDeleteStatement<R> visitDeleteStatement(HqlParser.DeleteStatementContext ctx) {
-		final HqlParser.TargetEntityContext dmlTargetContext = ctx.targetEntity();
-		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
-
-		final SqmDeleteStatement<R> deleteStatement = new SqmDeleteStatement<>( root, SqmQuerySource.HQL, creationContext.getNodeBuilder() );
+		final SqmDeleteStatement<R> deleteStatement = new SqmDeleteStatement<>( creationContext.getNodeBuilder() );
 
 		parameterCollector = deleteStatement;
 
@@ -698,10 +685,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				this
 		);
 
-		sqmDeleteCreationState.getPathRegistry().register( root );
-
 		processingStateStack.push( sqmDeleteCreationState );
 		try {
+			//noinspection unchecked
+			deleteStatement.setTarget( (JpaRoot<R>) visitEntityWithJoins( ctx.entityWithJoins() ) );
 			final HqlParser.WhereClauseContext whereClauseContext = ctx.whereClause();
 			if ( whereClauseContext != null ) {
 				deleteStatement.applyPredicate( visitWhereClause( whereClauseContext ) );

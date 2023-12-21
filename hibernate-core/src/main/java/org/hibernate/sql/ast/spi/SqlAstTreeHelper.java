@@ -12,21 +12,15 @@ import org.hibernate.sql.ast.tree.predicate.Predicate;
 /**
  * @author Steve Ebersole
  */
-public class SqlAstTreeHelper {
-	/**
-	 * Singleton access
-	 */
-	public static final SqlAstTreeHelper INSTANCE = new SqlAstTreeHelper();
+public final class SqlAstTreeHelper {
 
 	private SqlAstTreeHelper() {
 	}
-
 
 	public static Predicate combinePredicates(Predicate baseRestriction, Predicate incomingRestriction) {
 		if ( baseRestriction == null ) {
 			return incomingRestriction;
 		}
-
 		if ( incomingRestriction == null ) {
 			return baseRestriction;
 		}
@@ -52,7 +46,16 @@ public class SqlAstTreeHelper {
 			combinedPredicate.add( baseRestriction );
 		}
 
-		combinedPredicate.add( incomingRestriction );
+		final Junction secondJunction;
+		if ( incomingRestriction instanceof Junction
+				&& ( secondJunction = (Junction) incomingRestriction ).getNature() == Junction.Nature.CONJUNCTION ) {
+			for ( Predicate predicate : secondJunction.getPredicates() ) {
+				combinedPredicate.add( predicate );
+			}
+		}
+		else {
+			combinedPredicate.add( incomingRestriction );
+		}
 
 		return combinedPredicate;
 	}

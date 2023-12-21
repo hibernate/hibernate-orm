@@ -341,7 +341,7 @@ public class SqmCriteriaNodeBuilder implements NodeBuilder, SqmCreationContext, 
 
 	@Override
 	public <T> SqmDeleteStatement<T> createCriteriaDelete(Class<T> targetEntity) {
-		return new SqmDeleteStatement<>( targetEntity, SqmQuerySource.CRITERIA, this );
+		return new SqmDeleteStatement<>( targetEntity, this );
 	}
 
 	@Override

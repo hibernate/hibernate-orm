@@ -10,13 +10,11 @@ import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlAstHelper;
 import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 
 /**
@@ -56,33 +54,6 @@ public class DeleteStatement extends AbstractUpdateOrDeleteStatement {
 			Predicate restriction,
 			List<ColumnReference> returningColumns) {
 		super( cteContainer, targetTable, fromClause, restriction, returningColumns );
-	}
-
-	public static class DeleteStatementBuilder {
-		private final NamedTableReference targetTable;
-		private Predicate restriction;
-
-		public DeleteStatementBuilder(NamedTableReference targetTable) {
-			this.targetTable = targetTable;
-		}
-
-		public DeleteStatementBuilder addRestriction(Predicate restriction) {
-			this.restriction = SqlAstHelper.combinePredicates( this.restriction, restriction );
-			return this;
-		}
-
-		public DeleteStatementBuilder setRestriction(Predicate restriction) {
-			this.restriction = restriction;
-			return this;
-		}
-
-		public DeleteStatement createDeleteStatement() {
-			return new DeleteStatement(
-					targetTable,
-					new FromClause(),
-					restriction != null ? restriction : new Junction( Junction.Nature.CONJUNCTION )
-			);
-		}
 	}
 
 	@Override

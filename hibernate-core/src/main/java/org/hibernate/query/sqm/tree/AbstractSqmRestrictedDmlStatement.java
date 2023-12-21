@@ -22,7 +22,6 @@ import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 
 import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import jakarta.persistence.metamodel.EntityType;
 
 /**
@@ -33,15 +32,21 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 
 	private SqmWhereClause whereClause;
 
+	/**
+	 * Constructor for HQL statements.
+	 */
 	public AbstractSqmRestrictedDmlStatement(SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super( querySource, nodeBuilder );
 	}
 
+	/**
+	 * Constructor for Criteria statements.
+	 */
 	public AbstractSqmRestrictedDmlStatement(SqmRoot<T> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super( target, querySource, nodeBuilder );
 	}
 
-	public AbstractSqmRestrictedDmlStatement(
+	protected AbstractSqmRestrictedDmlStatement(
 			NodeBuilder builder,
 			SqmQuerySource querySource,
 			Set<SqmParameter<?>> parameters,
@@ -61,20 +66,26 @@ public abstract class AbstractSqmRestrictedDmlStatement<T> extends AbstractSqmDm
 		}
 	}
 
-	public Root<T> from(Class<T> entityClass) {
-		final EntityDomainType<T> entity = nodeBuilder().getDomainModel().entity( entityClass );
-		SqmRoot<T> root = new SqmRoot<>( entity, null, false, nodeBuilder() );
-		setTarget( root );
+	public SqmRoot<T> from(Class<T> entityClass) {
+		return from( nodeBuilder().getDomainModel().entity( entityClass ) );
+	}
+
+	public SqmRoot<T> from(EntityType<T> entity) {
+		final EntityDomainType<T> entityDomainType = (EntityDomainType<T>) entity;
+		final SqmRoot<T> root = getTarget();
+		if ( root.getModel() != entity ) {
+			throw new IllegalArgumentException(
+					String.format(
+							"Expecting DML target entity type [%s] but got [%s]",
+							root.getModel().getHibernateEntityName(),
+							entityDomainType.getName()
+					)
+			);
+		}
 		return root;
 	}
 
-	public Root<T> from(EntityType<T> entity) {
-		SqmRoot<T> root = new SqmRoot<>( (EntityDomainType<T>) entity, null, false, nodeBuilder() );
-		setTarget( root );
-		return root;
-	}
-
-	public Root<T> getRoot() {
+	public SqmRoot<T> getRoot() {
 		return getTarget();
 	}
 

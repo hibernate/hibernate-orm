@@ -60,13 +60,17 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
+import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.persister.entity.mutation.InsertCoordinator;
+import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -76,6 +80,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class CustomPersister implements EntityPersister {
 
@@ -503,52 +509,80 @@ public class CustomPersister implements EntityPersister {
 		throw new UnsupportedOperationException();
 	}
 
-	public GeneratedValues insertReturning(
-			Object id,
-			Object[] fields,
-			Object object,
-			SharedSessionContractImplementor session
-	) throws HibernateException {
+	@Override
+	public InsertCoordinator getInsertCoordinator() {
+		return new InsertCoordinator() {
+			@Override
+			public @Nullable GeneratedValues insert(
+					Object entity,
+					Object[] values,
+					SharedSessionContractImplementor session) {
+				throw new UnsupportedOperationException();
+			}
 
-		INSTANCES.put(id, ( (Custom) object ).clone() );
+			@Override
+			public @Nullable GeneratedValues insert(
+					Object entity,
+					Object id,
+					Object[] values,
+					SharedSessionContractImplementor session) {
+				INSTANCES.put( id, ( (Custom) entity ).clone() );
+				return null;
+			}
 
-		return null;
+			@Override
+			public MutationOperationGroup getStaticMutationOperationGroup() {
+				return null;
+			}
+		};
 	}
 
-	public GeneratedValues insertReturning(Object[] fields, Object object, SharedSessionContractImplementor session)
-	throws HibernateException {
+	@Override
+	public UpdateCoordinator getUpdateCoordinator() {
+		return new UpdateCoordinator() {
+			@Override
+			public @Nullable GeneratedValues update(
+					Object entity,
+					Object id,
+					Object rowId,
+					Object[] values,
+					Object oldVersion,
+					Object[] incomingOldValues,
+					int[] dirtyAttributeIndexes,
+					boolean hasDirtyCollection,
+					SharedSessionContractImplementor session) {
+				INSTANCES.put( id, ( (Custom) entity ).clone() );
+				return null;
+			}
 
-		throw new UnsupportedOperationException();
+			@Override
+			public void forceVersionIncrement(
+					Object id,
+					Object currentVersion,
+					Object nextVersion,
+					SharedSessionContractImplementor session) {
+			}
+
+			@Override
+			public MutationOperationGroup getStaticMutationOperationGroup() {
+				return null;
+			}
+		};
 	}
 
-	public void delete(
-			Object id,
-			Object version,
-			Object object,
-			SharedSessionContractImplementor session
-	) throws HibernateException {
+	@Override
+	public DeleteCoordinator getDeleteCoordinator() {
+		return new DeleteCoordinator() {
+			@Override
+			public void delete(Object entity, Object id, Object version, SharedSessionContractImplementor session) {
+				INSTANCES.remove( id );
+			}
 
-		INSTANCES.remove(id);
-	}
-
-	/**
-	 * @see EntityPersister
-	 */
-	public GeneratedValues updateReturning(
-			Object id,
-			Object[] fields,
-			int[] dirtyFields,
-			boolean hasDirtyCollection,
-			Object[] oldFields,
-			Object oldVersion,
-			Object object,
-			Object rowId,
-			SharedSessionContractImplementor session
-	) throws HibernateException {
-
-		INSTANCES.put( id, ( (Custom) object ).clone() );
-
-		return null;
+			@Override
+			public MutationOperationGroup getStaticMutationOperationGroup() {
+				return null;
+			}
+		};
 	}
 
 	private static final BasicType<String> STRING_TYPE = new BasicTypeImpl<>(

@@ -64,7 +64,10 @@ import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
+import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.persister.entity.mutation.InsertCoordinator;
+import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
@@ -403,30 +406,17 @@ public class GoofyPersisterClassProvider implements PersisterClassResolver {
 		}
 
 		@Override
-		public GeneratedValues insertReturning(Object id, Object[] fields, Object object, SharedSessionContractImplementor session) {
+		public InsertCoordinator getInsertCoordinator() {
 			return null;
 		}
 
 		@Override
-		public GeneratedValues insertReturning(Object[] fields, Object object, SharedSessionContractImplementor session) {
+		public UpdateCoordinator getUpdateCoordinator() {
 			return null;
 		}
 
 		@Override
-		public void delete(Object id, Object version, Object object, SharedSessionContractImplementor session) {
-		}
-
-		@Override
-		public GeneratedValues updateReturning(
-				Object id,
-				Object[] fields,
-				int[] dirtyFields,
-				boolean hasDirtyCollection,
-				Object[] oldFields,
-				Object oldVersion,
-				Object object,
-				Object rowId,
-				SharedSessionContractImplementor session) {
+		public DeleteCoordinator getDeleteCoordinator() {
 			return null;
 		}
 

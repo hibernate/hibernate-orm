@@ -166,15 +166,15 @@ public class EntityUpdateAction extends EntityAction {
 			final Object instance = getInstance();
 			final Object previousVersion = getPreviousVersion();
 			final Object ck = lockCacheItem( previousVersion );
-			final GeneratedValues generatedValues = persister.updateReturning(
+			final GeneratedValues generatedValues = persister.getUpdateCoordinator().update(
+					instance,
 					id,
+					rowId,
 					state,
+					previousVersion,
+					previousState,
 					dirtyFields,
 					hasDirtyCollection,
-					previousState,
-					previousVersion,
-					instance,
-					rowId,
 					session
 			);
 			final EntityEntry entry = session.getPersistenceContextInternal().getEntry( instance );

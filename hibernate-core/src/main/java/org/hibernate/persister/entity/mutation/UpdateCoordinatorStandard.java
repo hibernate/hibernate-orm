@@ -68,7 +68,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.trim;
 /**
  * Coordinates the updating of an entity.
  *
- * @see #coordinateUpdate
+ * @see #update
  *
  * @author Steve Ebersole
  */
@@ -125,7 +125,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	@Override
-	public MutationOperationGroup getStaticUpdateGroup() {
+	public MutationOperationGroup getStaticMutationOperationGroup() {
 		return staticUpdateGroup;
 	}
 
@@ -167,7 +167,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	@Override
-	public GeneratedValues coordinateUpdate(
+	public GeneratedValues update(
 			Object entity,
 			Object id,
 			Object rowId,

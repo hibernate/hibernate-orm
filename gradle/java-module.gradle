@@ -269,6 +269,7 @@ processTestResources {
 	duplicatesStrategy DuplicatesStrategy.INCLUDE
 	inputs.property( "db", db )
 	inputs.property( "dbHost", dbHost )
+	inputs.file( rootProject.file( "gradle/databases.gradle" ) )
 	doLast {
 		copy {
 			from( sourceSets.test.java.srcDirs ) {

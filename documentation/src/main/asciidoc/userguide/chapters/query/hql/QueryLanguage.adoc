@@ -232,9 +232,22 @@ include::{example-dir-hql}/../batch/BatchTests.java[tags=batch-bulk-hql-update-v
 
 Update statements are polymorphic, and affect mapped subclasses of the given entity class.
 
-[IMPORTANT]
+An `update` statement may use implicit or explicit joins. Beware that if joins lead to row duplications,
+e.g. when joining the target row against a non-unique column,
+it is undefined which row is updated or whether an error is thrown.
+
+[[hql-update-join-example]]
+//.Example update join queries
 ====
-No `update` or `delete` statement may have an implicit (or explicit) join.
+[source, JAVA, indent=0]
+----
+include::{example-dir-hql}/../query/hql/UpdateJoinTests.java[tags=hql-update-join-example]
+----
+====
+
+[NOTE]
+====
+With JPA compliance enabled, `update` or `delete` statement may not have an implicit (or explicit) join.
 ====
 
 [[hql-delete]]
@@ -256,6 +269,22 @@ A single HQL `delete` statement might result in multiple SQL delete statements e
 The integer value returned by `executeUpdate()` indicates the number of entity instances affected by the operation.
 
 Delete statements are polymorphic, and affect mapped subclasses of the given entity class.
+
+A `delete` statement may use implicit or explicit joins.
+
+[[hql-delete-join-example]]
+//.Example delete join queries
+====
+[source, JAVA, indent=0]
+----
+include::{example-dir-hql}/../query/hql/DeleteJoinTests.java[tags=hql-delete-join-example]
+----
+====
+
+[NOTE]
+====
+With JPA compliance enabled, `update` or `delete` statement may not have an implicit (or explicit) join.
+====
 
 [[hql-insert]]
 ==== Insert statements

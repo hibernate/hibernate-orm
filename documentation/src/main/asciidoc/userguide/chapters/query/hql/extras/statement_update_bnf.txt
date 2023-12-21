@@ -1,5 +1,11 @@
 updateStatement
-    : "UPDATE" "VERSIONED"? targetEntity setClause whereClause?
+    : "UPDATE" "VERSIONED"? entityWithJoins setClause whereClause?
+
+entityWithJoins
+	: fromRoot (join | crossJoin | jpaCollectionJoin)*
+
+fromRoot
+	: entityName variable?
 
 targetEntity
 	: entityName variable?

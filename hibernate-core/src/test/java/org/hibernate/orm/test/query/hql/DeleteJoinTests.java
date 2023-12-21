@@ -63,10 +63,12 @@ public class DeleteJoinTests {
 	public void testDeleteWithJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					//tag::hql-delete-join-example[]
 					int updated = session.createMutationQuery(
 							"delete from BasicEntity b left join Contact c on b.id = c.id " +
 									"where c.id is not null"
 					).executeUpdate();
+					//end::hql-delete-join-example[]
 					assertEquals( 1, updated );
 					assertNull( session.find( BasicEntity.class, 1 ) );
 				}

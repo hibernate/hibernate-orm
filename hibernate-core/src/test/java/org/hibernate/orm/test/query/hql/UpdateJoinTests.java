@@ -62,11 +62,13 @@ public class UpdateJoinTests {
 	public void testUpdateWithJoin(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					//tag::hql-update-join-example[]
 					int updated = session.createMutationQuery(
 							"update BasicEntity b left join Contact c on b.id = c.id " +
 									"set b.data = c.name.first " +
 									"where c.id is not null"
 					).executeUpdate();
+					//end::hql-update-join-example[]
 					assertEquals( 1, updated );
 					final BasicEntity basicEntity = session.find( BasicEntity.class, 1 );
 					assertEquals( "A", basicEntity.getData() );

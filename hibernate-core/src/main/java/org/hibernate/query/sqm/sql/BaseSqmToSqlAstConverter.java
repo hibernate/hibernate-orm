@@ -14,7 +14,6 @@ import org.hibernate.Internal;
 import org.hibernate.LockMode;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.function.TimestampaddFunction;
 import org.hibernate.dialect.function.TimestampdiffFunction;
 import org.hibernate.engine.FetchStyle;
@@ -29,7 +28,6 @@ import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
-import org.hibernate.internal.FilterHelper;
 import org.hibernate.internal.util.MutableBoolean;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
@@ -140,6 +138,7 @@ import org.hibernate.query.sqm.sql.internal.EntityValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.NonAggregatedCompositeValuedPathInterpretation;
 import org.hibernate.query.sqm.sql.internal.PluralValuedSimplePathInterpretation;
 import org.hibernate.query.sqm.sql.internal.SqlAstProcessingStateImpl;
+import org.hibernate.query.sqm.sql.internal.SqlAstQueryNodeProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqlAstQueryPartProcessingStateImpl;
 import org.hibernate.query.sqm.sql.internal.SqmMapEntryResult;
 import org.hibernate.query.sqm.sql.internal.SqmParameterInterpretation;
@@ -278,6 +277,7 @@ import org.hibernate.sql.ast.spi.SqlAliasBaseManager;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
+import org.hibernate.sql.ast.spi.SqlAstQueryNodeProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -638,6 +638,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		lastPoppedProcessingState = processingStateStack.pop();
 	}
 
+	private SqlAstQueryNodeProcessingState currentQueryNodeProcessingState() {
+		return (SqlAstQueryNodeProcessingState) getProcessingStateStack().getCurrent();
+	}
+
 	private QuerySpec currentQuerySpec() {
 		return currentQueryPart().getLastQuerySpec();
 	}
@@ -809,46 +813,21 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				.getEntityDescriptor( entityName );
 		assert entityDescriptor != null;
 
-		pushProcessingState(
-				new SqlAstProcessingStateImpl(
-						getCurrentProcessingState(),
-						this,
-						getCurrentClauseStack()::getCurrent
-				)
+		final FromClause fromClause = new FromClause( 1 );
+		final SqlAstQueryNodeProcessingStateImpl queryNodeProcessingState = new SqlAstQueryNodeProcessingStateImpl(
+				fromClause,
+				getCurrentProcessingState(),
+				this,
+				getCurrentClauseStack()::getCurrent
 		);
+		pushProcessingState( queryNodeProcessingState );
 
 		try {
-			final NavigablePath rootPath = sqmTarget.getNavigablePath();
-			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
-					true,
-					rootPath,
-					sqmStatement.getRoot().getAlias(),
-					null,
-					() -> predicate -> additionalRestrictions = combinePredicates( additionalRestrictions, predicate ),
-					this
-			);
-
-			if ( ! rootTableGroup.getTableReferenceJoins().isEmpty() ) {
-				throw new HibernateException( "Not expecting multiple table references for an SQM UPDATE" );
-			}
-
-			if ( sqmTarget.hasJoins() ) {
-				throw new HibernateException( "SQM UPDATE does not support explicit joins" );
-			}
-
-			getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
+			consumeFromClauseRoot( sqmTarget );
+			final TableGroup rootTableGroup = getFromClauseAccess().getTableGroup( sqmTarget.getNavigablePath() );
 
 			final List<Assignment> assignments = visitSetClause( sqmStatement.getSetClause() );
 			addVersionedAssignment( assignments::add, sqmStatement );
-
-			FilterHelper.applyBaseRestrictions(
-					(filterPredicate) -> additionalRestrictions = combinePredicates( additionalRestrictions, filterPredicate),
-					entityDescriptor,
-					rootTableGroup,
-					getDialect().getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.TABLE_ALIAS,
-					getLoadQueryInfluencers(),
-					this
-			);
 
 			Predicate suppliedPredicate = null;
 			final SqmWhereClause whereClause = sqmStatement.getWhereClause();
@@ -856,14 +835,18 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				suppliedPredicate = visitWhereClause( whereClause.getPredicate() );
 			}
 
-			final FromClause fromClause = new FromClause();
-			fromClause.addRoot( rootTableGroup );
 			return new UpdateStatement(
 					cteContainer,
 					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
 					fromClause,
 					assignments,
-					combinePredicates( suppliedPredicate, additionalRestrictions ),
+					combinePredicates(
+							suppliedPredicate,
+							combinePredicates(
+									queryNodeProcessingState.getPredicate(),
+									additionalRestrictions
+							)
+					),
 					Collections.emptyList()
 			);
 		}
@@ -871,17 +854,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			popProcessingStateStack();
 			this.currentSqmStatement = oldSqmStatement;
 			this.cteContainer = oldCteContainer;
-		}
-	}
-
-	private static void verifyManipulationImplicitJoin(TableGroup tableGroup) {
-		//noinspection StatementWithEmptyBody
-		if ( !tableGroup.isInitialized() || tableGroup.isVirtual() ) {
-			// this is fine
-		}
-		else {
-			// otherwise...
-			throw new SemanticException( "Mutation query may not contain joins in the SET clause" );
 		}
 	}
 
@@ -1082,45 +1054,26 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final SqmStatement<?> oldSqmStatement = this.currentSqmStatement;
 
 		this.currentSqmStatement = statement;
-		final String entityName = statement.getTarget().getEntityName();
+		final SqmRoot<?> sqmTarget = statement.getTarget();
+		final String entityName = sqmTarget.getEntityName();
 		final EntityPersister entityDescriptor = creationContext.getSessionFactory()
 				.getRuntimeMetamodels()
 				.getMappingMetamodel()
 				.getEntityDescriptor( entityName );
 		assert entityDescriptor != null;
 
-		pushProcessingState(
-				new SqlAstProcessingStateImpl(
-						getCurrentProcessingState(),
-						this,
-						getCurrentClauseStack()::getCurrent
-				)
+		final FromClause fromClause = new FromClause( 1 );
+		final SqlAstQueryNodeProcessingStateImpl queryNodeProcessingState = new SqlAstQueryNodeProcessingStateImpl(
+				fromClause,
+				getCurrentProcessingState(),
+				this,
+				getCurrentClauseStack()::getCurrent
 		);
+		pushProcessingState( queryNodeProcessingState );
 
 		try {
-			final NavigablePath rootPath = statement.getTarget().getNavigablePath();
-			final TableGroup rootTableGroup = entityDescriptor.createRootTableGroup(
-					true,
-					rootPath,
-					statement.getRoot().getAlias(),
-					null,
-					() -> (predicate) -> additionalRestrictions = combinePredicates( additionalRestrictions, predicate ),
-					this
-			);
-			getFromClauseAccess().registerTableGroup( rootPath, rootTableGroup );
-
-			if ( !rootTableGroup.getTableReferenceJoins().isEmpty() ) {
-				throw new HibernateException( "Not expecting multiple table references for an SQM DELETE" );
-			}
-
-			FilterHelper.applyBaseRestrictions(
-					(filterPredicate) -> additionalRestrictions = combinePredicates( additionalRestrictions, filterPredicate),
-					entityDescriptor,
-					rootTableGroup,
-					getDialect().getDmlTargetColumnQualifierSupport() == DmlTargetColumnQualifierSupport.TABLE_ALIAS,
-					getLoadQueryInfluencers(),
-					this
-			);
+			consumeFromClauseRoot( sqmTarget );
+			final TableGroup rootTableGroup = getFromClauseAccess().getTableGroup( sqmTarget.getNavigablePath() );
 
 			Predicate suppliedPredicate = null;
 			final SqmWhereClause whereClause = statement.getWhereClause();
@@ -1128,13 +1081,17 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				suppliedPredicate = visitWhereClause( whereClause.getPredicate() );
 			}
 
-			final FromClause fromClause = new FromClause();
-			fromClause.addRoot( rootTableGroup );
 			return new DeleteStatement(
 					cteContainer,
 					(NamedTableReference) rootTableGroup.getPrimaryTableReference(),
 					fromClause,
-					combinePredicates( suppliedPredicate, additionalRestrictions ),
+					combinePredicates(
+							suppliedPredicate,
+							combinePredicates(
+									queryNodeProcessingState.getPredicate(),
+									additionalRestrictions
+							)
+					),
 					Collections.emptyList()
 			);
 		}
@@ -2640,11 +2597,11 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
 			log.tracef( "Already resolved SqmRoot [%s] to TableGroup", sqmRoot );
 		}
-		final QuerySpec currentQuerySpec = currentQuerySpec();
 		final TableGroup tableGroup;
 		if ( !sqmRoot.isCorrelated() ) {
 			return;
 		}
+		final QuerySpec currentQuerySpec = currentQuerySpec();
 		final SessionFactoryImplementor sessionFactory = creationContext.getSessionFactory();
 		if ( sqmRoot.containsOnlyInnerJoins() ) {
 			// If we have just inner joins against a correlated root, we can render the joins as references
@@ -2807,10 +2764,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( fromClauseIndex.isResolved( sqmRoot ) ) {
 			log.tracef( "Already resolved SqmRoot [%s] to TableGroup", sqmRoot );
 		}
-		final QuerySpec currentQuerySpec = currentQuerySpec();
 		if ( sqmRoot.isCorrelated() ) {
 			return;
 		}
+		final SqlAstQueryNodeProcessingState currentQueryNodeProcessingState = currentQueryNodeProcessingState();
 		final TableGroup tableGroup;
 		if ( sqmRoot instanceof SqmDerivedRoot<?> ) {
 			final SqmDerivedRoot<?> derivedRoot = (SqmDerivedRoot<?>) sqmRoot;
@@ -2860,7 +2817,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			);
 
 			entityDescriptor.applyBaseRestrictions(
-					currentQuerySpec::applyPredicate,
+					currentQueryNodeProcessingState::applyPredicate,
 					tableGroup,
 					true,
 					getLoadQueryInfluencers().getEnabledFilters(),
@@ -2872,7 +2829,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		log.tracef( "Resolved SqmRoot [%s] to new TableGroup [%s]", sqmRoot, tableGroup );
 
 		registerSqmFromTableGroup( sqmRoot, tableGroup );
-		currentQuerySpec.getFromClause().addRoot( tableGroup );
+		currentQueryNodeProcessingState.getFromClause().addRoot( tableGroup );
 
 		consumeJoins( sqmRoot, fromClauseIndex, tableGroup );
 	}
@@ -3645,12 +3602,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			Supplier<X> supplier,
 			boolean allowLeftJoins) {
 		final Consumer<TableGroup> implicitJoinChecker;
-		if ( getCurrentClauseStack().getCurrent() != Clause.SET_EXPRESSION ) {
-			implicitJoinChecker = tg -> {};
-		}
-		else {
-			implicitJoinChecker = BaseSqmToSqlAstConverter::verifyManipulationImplicitJoin;
-		}
+		implicitJoinChecker = tg -> {};
+//		if ( getCurrentClauseStack().getCurrent() != Clause.SET_EXPRESSION ) {
+//			implicitJoinChecker = tg -> {};
+//		}
+//		else {
+//			implicitJoinChecker = BaseSqmToSqlAstConverter::verifyManipulationImplicitJoin;
+//		}
 		prepareReusablePath( fromClauseIndex, sqmPath, implicitJoinChecker );
 
 		// Create the table group for every path that can potentially require one,
@@ -3835,7 +3793,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) subPart;
 			if ( fromClauseIndex.findTableGroupOnCurrentFromClause( parentTableGroup.getNavigablePath() ) == null
 					&& !isRecursiveCte( parentTableGroup ) ) {
-				final QuerySpec querySpec = currentQuerySpec();
+				final SqlAstQueryNodeProcessingState queryNodeProcessingState = currentQueryNodeProcessingState();
 				// The parent table group is on a parent query, so we need a root table group
 				tableGroup = joinProducer.createRootTableGroupJoin(
 						joinedPath.getNavigablePath(),
@@ -3844,10 +3802,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						null,
 						null,
 						false,
-						querySpec::applyPredicate,
+						queryNodeProcessingState::applyPredicate,
 						this
 				);
-				querySpec.getFromClause().addRoot( tableGroup );
+				queryNodeProcessingState.getFromClause().addRoot( tableGroup );
 			}
 			else {
 				final TableGroupJoin compatibleLeftJoin;

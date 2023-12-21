@@ -18,26 +18,10 @@ import org.hibernate.sql.ast.tree.select.QueryPart;
  *
  * @author Steve Ebersole
  */
-public interface SqlAstQueryPartProcessingState extends SqlAstProcessingState {
+public interface SqlAstQueryPartProcessingState extends SqlAstQueryNodeProcessingState {
 	/**
 	 * Get the QueryPart being processed as part of this state.  It is
 	 * considered in-flight as it is probably still being built.
 	 */
 	QueryPart getInflightQueryPart();
-
-	/**
-	 * Registers that the given SqmFrom is treated.
-	 */
-	void registerTreatedFrom(SqmFrom<?, ?> sqmFrom);
-
-	/**
-	 * Registers that the given SqmFrom was used in an expression and whether to downgrade {@link org.hibernate.persister.entity.EntityNameUse#TREAT} of it.
-	 */
-	void registerFromUsage(SqmFrom<?, ?> sqmFrom, boolean downgradeTreatUses);
-
-	/**
-	 * Returns the treated SqmFroms and whether their {@link org.hibernate.persister.entity.EntityNameUse#TREAT}
-	 * should be downgraded to {@link org.hibernate.persister.entity.EntityNameUse#EXPRESSION}.
-	 */
-	Map<SqmFrom<?, ?>, Boolean> getFromRegistrations();
 }

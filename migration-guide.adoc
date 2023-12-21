@@ -1,78 +1,18 @@
-= 6.4 Migration Guide
+= 6.5 Migration Guide
 :toc:
 :toclevels: 4
 :docsBase: https://docs.jboss.org/hibernate/orm
-:versionDocBase: {docsBase}/6.4
+:versionDocBase: {docsBase}/6.5
 :userGuideBase: {versionDocBase}/userguide/html_single/Hibernate_User_Guide.html
 :javadocsBase: {versionDocBase}/javadocs
 
 
-This guide discusses migration to Hibernate ORM version 6.4. For migration from
+This guide discusses migration to Hibernate ORM version 6.5. For migration from
 earlier versions, see any other pertinent migration guides as well.
 
+* link:{docsBase}/6.4/migration-guide/migration-guide.html[6.4 Migration guide]
 * link:{docsBase}/6.3/migration-guide/migration-guide.html[6.3 Migration guide]
 * link:{docsBase}/6.2/migration-guide/migration-guide.html[6.2 Migration guide]
 * link:{docsBase}/6.1/migration-guide/migration-guide.html[6.1 Migration guide]
 * link:{docsBase}/6.0/migration-guide/migration-guide.html[6.0 Migration guide]
 
-
-[[soft-delete]]
-== Soft Delete
-
-6.4 adds support for soft deletes, using the new `@SoftDelete` annotation.
-See the link:{userGuideBase}#soft-delete[User Guide] for details.
-
-In previous versions, support for soft-deletes was somewhat implementable using
-a combination of any or all of event-listeners, filters, `@Where`, etc.
-Applications using such implementations are encouraged to switch.
-
-
-[[custom-tenant-identifier-type]]
-== Custom tenant identifier type
-
-The `CurrentTenantIdentifierResolver` and `MultiTenantConnectionProvider` SPIs were generified to support custom tenant identifier types.
-Both types now accept a type parameter that represents the tenant identifier type.
-Methods that were accepting or returning a tenant identifier value of type `String` were changed to use the type variable.
-
-Applications can migrate by specifying the type parameter `<String>` when extending `CurrentTenantIdentifierResolver`
-or one of the `MultiTenantConnectionProvider` subtypes.
-
-
-[[IdGeneratorStrategyInterpreter]]
-== Removed IdGeneratorStrategyInterpreter
-
-`IdGeneratorStrategyInterpreter` has been deprecated since 6.0 and has been removed to simplify id generator internals.
-
-[[function-rendering-support-deprecation]]
-== Deprecation of `FunctionRenderingSupport`
-
-The `FunctionRenderingSupport` interface was deprecated for removal in favor of the new `FunctionRenderer` interface.
-`FunctionRenderer` extends `FunctionRenderingSupport`, so switching to the new type should not be a big deal.
-Classes the previously implemented the `FunctionRenderingSupport` interface should switch to implement `FunctionRenderer`
-and the signature of the implemented `render(SqlAppender, List, SqlAstTranslator)` method has to be changed to
-`render(SqlAppender, List, ReturnableType, SqlAstTranslator)` i.e. add `ReturnableType` as second last argument.
-
-The newly passed `ReturnableType` argument allows the rendering process to consider the resolved function result type
-during rendering, which is common for certain array specific functions, especially for Oracle.
-
-Note that the deprecation also affects some methods/constructors of the `SelfRenderingSqlAstExpression` type hierarchy,
-which were previously accepting/returning a `FunctionRenderingSupport`. Constructors that accept a `FunctionRenderer`
-have been added to:
-
-* `SelfRenderingSqmFunction`
-* `SelfRenderingSqmWindowFunction`
-* `SelfRenderingSqmAggregateFunction`
-* `SelfRenderingSqmOrderedSetAggregateFunction`
-* `SelfRenderingFunctionSqlAstExpression`
-* `SelfRenderingWindowFunctionSqlAstExpression`
-* `SelfRenderingAggregateFunctionSqlAstExpression`
-* `SelfRenderingOrderedSetAggregateFunctionSqlAstExpression`
-
-In addition, the `SelfRenderingSqmFunction.getRenderingSupport()` method was deprecated in favor of the new `SelfRenderingSqmFunction.getFunctionRenderer()` method.
-Finally, the `SelfRenderingFunctionSqlAstExpression.getRenderer()` method was deprecated in favor of the new `SelfRenderingFunctionSqlAstExpression.getFunctionRenderer()` method.
-
-
-[[SupportedDialects]]
-== Supported Dialects
-
-Please also do have a look at the link:{versionDocBase}/dialect/dialect.html[Supported Dialects] document to check for potential upgrades to the minimum version of the databases underpinning the dialects that Hibernate currently supports.

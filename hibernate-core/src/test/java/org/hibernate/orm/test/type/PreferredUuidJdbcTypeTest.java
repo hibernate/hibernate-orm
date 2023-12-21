@@ -4,9 +4,9 @@ import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.H2Dialect;
 import org.hibernate.dialect.PostgreSQLDialect;
+import org.hibernate.dialect.PostgreSQLUUIDJdbcType;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.EntityPersister;
@@ -55,7 +55,7 @@ public class PreferredUuidJdbcTypeTest {
 		assertThat( uuidJdbcType ).isEqualTo( CharJdbcType.INSTANCE );
 
 		final JdbcType uuidType = jdbcTypeRegistry.getDescriptor( SqlTypes.UUID );
-		assertThat( uuidType ).isOfAnyClassIn( UUIDJdbcType.class );
+		assertThat( uuidType ).isOfAnyClassIn( UUIDJdbcType.class, PostgreSQLUUIDJdbcType.class );
 
 		// a simple duration field with no overrides - so should be using a default JdbcType
 		assertThat( entityDescriptor.findAttributeMapping( "uuid" )

@@ -63,7 +63,6 @@ import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
@@ -352,7 +351,7 @@ public class CockroachLegacyDialect extends Dialect {
 		// Don't use this type due to https://github.com/pgjdbc/pgjdbc/issues/2862
 		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
-			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );
 			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getIntervalJdbcType( serviceRegistry ) );
 
@@ -376,7 +375,7 @@ public class CockroachLegacyDialect extends Dialect {
 			}
 		}
 		else {
-			jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingIntervalSecondJdbcType.INSTANCE );
 			if ( getVersion().isSameOrAfter( 20, 0 ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingInetJdbcType.INSTANCE );

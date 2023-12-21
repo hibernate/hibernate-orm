@@ -32,6 +32,7 @@ import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
 
 /**
@@ -61,8 +62,8 @@ public abstract class AbstractDomainPath implements DomainPath {
 			TableGroup tableGroup,
 			String modelPartName,
 			SqlAstCreationState creationState) {
-		if ( referenceModelPart instanceof BasicValuedModelPart ) {
-			final BasicValuedModelPart selection = (BasicValuedModelPart) referenceModelPart;
+		final BasicValuedModelPart selection = referenceModelPart.asBasicValuedModelPart();
+		if ( selection != null ) {
 			final TableReference tableReference = tableGroup.resolveTableReference(
 					null,
 					selection,
@@ -104,7 +105,7 @@ public abstract class AbstractDomainPath implements DomainPath {
 			}
 			else {
 				ModelPart subPart = embeddableValuedModelPart.findSubPart( modelPartName, null );
-				assert subPart instanceof BasicValuedModelPart;
+				assert subPart.asBasicValuedModelPart() != null;
 				return resolve( subPart, ast, tableGroup, modelPartName, creationState );
 			}
 		}
@@ -144,9 +145,10 @@ public abstract class AbstractDomainPath implements DomainPath {
 			SortDirection sortOrder,
 			NullPrecedence nullPrecedence,
 			SqlAstCreationState creationState) {
-		if ( referenceModelPart instanceof BasicValuedModelPart ) {
+		final BasicValuedModelPart basicPart = referenceModelPart.asBasicValuedModelPart();
+		if ( basicPart != null ) {
 			addSortSpecification(
-					(BasicValuedModelPart) referenceModelPart,
+					basicPart,
 					ast,
 					tableGroup,
 					collation,
@@ -231,9 +233,8 @@ public abstract class AbstractDomainPath implements DomainPath {
 		}
 		else {
 			ModelPart subPart = embeddableValuedModelPart.findSubPart( modelPartName, null );
-			assert subPart instanceof BasicValuedModelPart;
 			addSortSpecification(
-					(BasicValuedModelPart) subPart,
+					castNonNull( subPart.asBasicValuedModelPart() ),
 					ast,
 					tableGroup,
 					collation,

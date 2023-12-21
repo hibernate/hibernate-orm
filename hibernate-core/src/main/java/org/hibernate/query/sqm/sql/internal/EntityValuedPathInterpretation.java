@@ -325,8 +325,8 @@ public class EntityValuedPathInterpretation<T> extends AbstractSqmPathInterpreta
 			sqlExpression = new SqlTuple( expressions, entityMappingType );
 		}
 		else {
-			if ( resultModelPart instanceof BasicValuedModelPart ) {
-				final BasicValuedModelPart basicValuedModelPart = (BasicValuedModelPart) resultModelPart;
+			final BasicValuedModelPart basicValuedModelPart = resultModelPart.asBasicValuedModelPart();
+			if ( basicValuedModelPart != null ) {
 				final TableReference tableReference = tableGroup.resolveTableReference(
 						navigablePath,
 						basicValuedModelPart,

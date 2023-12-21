@@ -620,14 +620,15 @@ public class ManyToManyCollectionPart extends AbstractEntityCollectionPart imple
 
 		final String collectionTableName = ( (CollectionMutationTarget) getCollectionDescriptor() ).getCollectionTableMapping().getTableName();
 
-		if ( fkTargetModelPart instanceof BasicValuedModelPart ) {
+		final BasicValuedModelPart basicFkTarget = fkTargetModelPart.asBasicValuedModelPart();
+		if ( basicFkTarget != null ) {
 			return createSimpleForeignKeyDescriptor(
 					fkBootDescriptorSource,
 					entityType,
 					creationProcess,
 					dialect,
 					collectionTableName,
-					(BasicValuedModelPart) fkTargetModelPart
+					basicFkTarget
 			);
 		}
 

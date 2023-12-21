@@ -1907,7 +1907,7 @@ public abstract class AbstractEntityPersister
 			// Ignore plural attributes
 			if ( !( fetchable instanceof PluralAttributeMapping ) ) {
 				final FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
-				if ( fetchable instanceof BasicValuedModelPart ) {
+				if ( fetchable.asBasicValuedModelPart() != null ) {
 					// Ignore lazy basic columns
 					if ( fetchTiming == FetchTiming.DELAYED ) {
 						continue;
@@ -4660,7 +4660,7 @@ public abstract class AbstractEntityPersister
 		final List<ModelPart> generatedBasicAttributes = new ArrayList<>( originalSize );
 		for ( AttributeMapping generatedAttribute : generatedAttributes ) {
 			// todo (7.0) : support non selectable mappings? Component, ToOneAttributeMapping, ...
-			if ( generatedAttribute instanceof BasicValuedModelPart
+			if ( generatedAttribute.asBasicValuedModelPart() != null
 					&& generatedAttribute.getContainingTableExpression().equals( getSubclassTableName( 0 ) ) ) {
 				generatedBasicAttributes.add( generatedAttribute );
 			}

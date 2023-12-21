@@ -50,6 +50,7 @@ import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -108,11 +109,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					persister.setValues( entity, state );
 				}
 			}
-			persister.insertReturning( id, state, entity, this );
+			persister.getInsertCoordinator().insert( entity, id, state, this );
 		}
 		else {
-			final GeneratedValues generatedValues = persister.insertReturning( state, entity, this );
-			id = generatedValues.getGeneratedValue( persister.getIdentifierMapping() );
+			final GeneratedValues generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
+			id = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 		}
 		persister.setIdentifier( entity, id, this );
 		return id;
@@ -133,7 +134,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		final Object version = persister.getVersion( entity );
-		persister.delete( id, version, entity, this );
+		persister.getDeleteCoordinator().delete( entity, id, version, this );
 	}
 
 
@@ -167,7 +168,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		else {
 			oldVersion = null;
 		}
-		persister.updateReturning( id, state, null, false, null, oldVersion, entity, null, this );
+		persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
 	}
 
 	@Override
@@ -203,7 +204,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		else {
 			oldVersion = null;
 		}
-		persister.merge( id, state, null, false, null, oldVersion, entity, null, this );
+		persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
 //		persister.setIdentifier( entity, id, this );
 	}
 

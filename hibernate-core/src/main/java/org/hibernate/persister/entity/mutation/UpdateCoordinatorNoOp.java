@@ -24,12 +24,12 @@ public class UpdateCoordinatorNoOp implements UpdateCoordinator {
 	}
 
 	@Override
-	public MutationOperationGroup getStaticUpdateGroup() {
+	public MutationOperationGroup getStaticMutationOperationGroup() {
 		return operationGroup;
 	}
 
 	@Override
-	public GeneratedValues coordinateUpdate(Object entity, Object id, Object rowId, Object[] values, Object oldVersion, Object[] incomingOldValues, int[] dirtyAttributeIndexes, boolean hasDirtyCollection, SharedSessionContractImplementor session) {
+	public GeneratedValues update(Object entity, Object id, Object rowId, Object[] values, Object oldVersion, Object[] incomingOldValues, int[] dirtyAttributeIndexes, boolean hasDirtyCollection, SharedSessionContractImplementor session) {
 		// nothing to do
 		return null;
 	}

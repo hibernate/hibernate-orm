@@ -47,7 +47,10 @@ import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.internal.InFlightEntityMappingType;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
+import org.hibernate.persister.entity.mutation.DeleteCoordinator;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
+import org.hibernate.persister.entity.mutation.InsertCoordinator;
+import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.walking.spi.AttributeSource;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
@@ -627,34 +630,45 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * Persist an instance
+	 *
+	 * @see #getInsertCoordinator()
+	 * @deprecated Use {@link InsertCoordinator#insert(Object, Object, Object[], SharedSessionContractImplementor)} instead.
 	 */
+	@Deprecated( forRemoval = true, since = "6.5" )
 	default void insert(Object id, Object[] fields, Object object, SharedSessionContractImplementor session) {
-		insertReturning( id, fields, object, session );
+		getInsertCoordinator().insert( object, id, fields, session );
 	}
 
 	/**
 	 * Persist an instance
+	 *
+	 * @see #getInsertCoordinator()
+	 * @deprecated Use {@link InsertCoordinator#insert(Object, Object[], SharedSessionContractImplementor)} instead.
 	 */
-	GeneratedValues insertReturning(Object id, Object[] fields, Object object, SharedSessionContractImplementor session);
-
-	/**
-	 * Persist an instance
-	 */
+	@Deprecated( forRemoval = true, since = "6.5" )
 	default Object insert(Object[] fields, Object object, SharedSessionContractImplementor session) {
-		final GeneratedValues generatedValues = insertReturning( fields, object, session );
-		return generatedValues.getGeneratedValue( getIdentifierMapping() );
+		final GeneratedValues generatedValues = getInsertCoordinator().insert( object, fields, session );
+		return generatedValues == null ? null : generatedValues.getGeneratedValue( getIdentifierMapping() );
 	}
-
-	/**
-	 * Persist an instance, using a natively generated identifier (optional operation)
-	 */
-	GeneratedValues insertReturning(Object[] fields, Object object, SharedSessionContractImplementor session);
 
 	/**
 	 * Delete a persistent instance
+	 *
+	 * @see #getDeleteCoordinator()
+	 * @deprecated Use {@link DeleteCoordinator#delete} instead.
 	 */
-	void delete(Object id, Object version, Object object, SharedSessionContractImplementor session);
+	@Deprecated( forRemoval = true, since = "6.5" )
+	default void delete(Object id, Object version, Object object, SharedSessionContractImplementor session) {
+		getDeleteCoordinator().delete( object, id, version, session );
+	}
 
+	/**
+	 * Update a persistent instance
+	 *
+	 * @see #getUpdateCoordinator()
+	 * @deprecated Use {@link UpdateCoordinator#update} instead.
+	 */
+	@Deprecated( forRemoval = true, since = "6.5" )
 	default void update(
 			Object id,
 			Object[] fields,
@@ -665,26 +679,26 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 			Object object,
 			Object rowId,
 			SharedSessionContractImplementor session) {
-		updateReturning( id, fields, dirtyFields, hasDirtyCollection, oldFields, oldVersion, object, rowId, session );
+		getUpdateCoordinator().update(
+				object,
+				id,
+				rowId,
+				fields,
+				oldVersion,
+				oldFields,
+				dirtyFields,
+				hasDirtyCollection,
+				session
+		);
 	}
 
 	/**
-	 * Update a persistent instance
-	 */
-	GeneratedValues updateReturning(
-			Object id,
-			Object[] fields,
-			int[] dirtyFields,
-			boolean hasDirtyCollection,
-			Object[] oldFields,
-			Object oldVersion,
-			Object object,
-			Object rowId,
-			SharedSessionContractImplementor session);
-
-	/**
 	 * Merge a persistent instance
+	 *
+	 * @see #getMergeCoordinator()
+	 * @deprecated Use {@link UpdateCoordinator#update} instead.
 	 */
+	@Deprecated( forRemoval = true, since = "6.5" )
 	default void merge(
 			Object id,
 			Object[] fields,
@@ -695,6 +709,46 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 			Object object,
 			Object rowId,
 			SharedSessionContractImplementor session) {
+		getMergeCoordinator().update(
+				object,
+				id,
+				rowId,
+				fields,
+				oldVersion,
+				oldFields,
+				dirtyFields,
+				hasDirtyCollection,
+				session
+		);
+	}
+
+	/**
+	 * Get the insert coordinator instance.
+	 *
+	 * @since 6.5
+	 */
+	InsertCoordinator getInsertCoordinator();
+
+	/**
+	 * Get the update coordinator instance.
+	 *
+	 * @since 6.5
+	 */
+	UpdateCoordinator getUpdateCoordinator();
+
+	/**
+	 * Get the delete coordinator instance.
+	 *
+	 * @since 6.5
+	 */
+	DeleteCoordinator getDeleteCoordinator();
+
+	/**
+	 * Get the merge coordinator instance.
+	 *
+	 * @since 6.5
+	 */
+	default UpdateCoordinator getMergeCoordinator() {
 		throw new UnsupportedOperationException();
 	}
 
@@ -811,7 +865,7 @@ public interface EntityPersister extends EntityMappingType, EntityMutationTarget
 
 	/**
 	 * The batch size for batch loading.
-	 * 
+	 *
 	 * @see org.hibernate.engine.spi.LoadQueryInfluencers#effectiveBatchSize(EntityPersister)
 	 */
 	default int getBatchSize() {

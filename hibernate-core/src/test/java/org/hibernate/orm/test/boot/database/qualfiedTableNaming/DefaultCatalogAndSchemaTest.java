@@ -408,7 +408,7 @@ public class DefaultCatalogAndSchemaTest {
 		// because ID generators table/sequence names are prefixed with the owning entity name.
 
 		{
-			final MutationOperationGroup staticSqlInsertGroup = persister.getInsertCoordinator().getStaticInsertGroup();
+			final MutationOperationGroup staticSqlInsertGroup = persister.getInsertCoordinator().getStaticMutationOperationGroup();
 			final String[] insertSqls = new String[staticSqlInsertGroup.getNumberOfOperations()];
 			for ( int tablePosition = 0;
 					tablePosition < staticSqlInsertGroup.getNumberOfOperations();
@@ -427,7 +427,7 @@ public class DefaultCatalogAndSchemaTest {
 		}
 
 		{
-			final MutationOperationGroup staticSqlUpdateGroup = persister.getUpdateCoordinator().getStaticUpdateGroup();
+			final MutationOperationGroup staticSqlUpdateGroup = persister.getUpdateCoordinator().getStaticMutationOperationGroup();
 			final String[] sqlUpdateStrings = new String[staticSqlUpdateGroup.getNumberOfOperations()];
 			for ( int tablePosition = 0;
 					tablePosition < staticSqlUpdateGroup.getNumberOfOperations();
@@ -442,7 +442,7 @@ public class DefaultCatalogAndSchemaTest {
 
 
 		{
-			final MutationOperationGroup staticDeleteGroup = persister.getDeleteCoordinator().getStaticDeleteGroup();
+			final MutationOperationGroup staticDeleteGroup = persister.getDeleteCoordinator().getStaticMutationOperationGroup();
 			final String[] sqlDeleteStrings = new String[staticDeleteGroup.getNumberOfOperations()];
 			for ( int tablePosition = 0; tablePosition < staticDeleteGroup.getNumberOfOperations(); tablePosition++ ) {
 				final MutationOperation operation = staticDeleteGroup.getOperation( tablePosition );

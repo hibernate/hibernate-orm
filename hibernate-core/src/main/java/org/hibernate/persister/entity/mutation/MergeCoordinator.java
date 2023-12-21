@@ -11,7 +11,6 @@ import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.sql.model.MutationOperation;
 import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableMergeBuilder;
-import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 
 /**
  * Specialized {@link UpdateCoordinator} for {@code merge into}.

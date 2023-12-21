@@ -6,23 +6,24 @@
  */
 package org.hibernate.persister.entity.mutation;
 
-import org.hibernate.Internal;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.values.GeneratedValues;
-import org.hibernate.sql.model.MutationOperationGroup;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * Coordinates the updating of an entity.
  *
- * @see #coordinateUpdate
- *
  * @author Steve Ebersole
+ * @see #update
  */
-@Internal
-public interface UpdateCoordinator {
-	MutationOperationGroup getStaticUpdateGroup();
-
-	GeneratedValues coordinateUpdate(
+public interface UpdateCoordinator extends MutationCoordinator {
+	/**
+	 * Update a persistent instance.
+	 *
+	 * @return The {@linkplain GeneratedValues generated values} if any, {@code null} otherwise.
+	 */
+	@Nullable GeneratedValues update(
 			Object entity,
 			Object id,
 			Object rowId,
@@ -44,7 +45,7 @@ public interface UpdateCoordinator {
 			Object currentVersion,
 			Object nextVersion,
 			boolean batching,
-			SharedSessionContractImplementor session){
+			SharedSessionContractImplementor session) {
 		forceVersionIncrement( id, currentVersion, nextVersion, session );
 	}
 }

@@ -18,7 +18,6 @@ import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.contacts.Contact;
 import org.hibernate.testing.orm.domain.contacts.Contact.Name;
 import org.hibernate.testing.orm.domain.gambit.BasicEntity;
-import org.hibernate.testing.orm.junit.DialectFeatureCheck;
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -90,12 +89,14 @@ public class InsertConflictTests {
 	public void testOnConflictDoUpdate(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
+					//tag::hql-insert-conflict-example[]
 					int updated = session.createMutationQuery(
 							"insert into BasicEntity (id, data) " +
 									"values (1, 'John') " +
 									"on conflict(id) do update " +
 									"set data = excluded.data"
 					).executeUpdate();
+					//end::hql-insert-conflict-example[]
 					if ( scope.getSessionFactory().getJdbcServices().getDialect() instanceof MySQLDialect ) {
 						// Strange MySQL returns 2 if the conflict action updates a row
 						// Also see https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html

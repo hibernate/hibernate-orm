@@ -1966,7 +1966,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		// To allow meaningful usage, we simply ignore the constraint column names in this emulation.
 		// A possible problem with this is when the constraint column names contain the primary key columns,
 		// but the insert fails due to a unique constraint violation. This emulation will not cause a failure to be
-		// propagated, but instead will run the respective conflict action. todo: document this
+		// propagated, but instead will run the respective conflict action.
 		final String constraintName = conflictClause.getConstraintName();
 		if ( constraintName != null ) {
 			throw new IllegalQueryOperationException( "Dialect does not support constraint name in conflict clause" );

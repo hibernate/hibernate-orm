@@ -276,6 +276,11 @@ It's usually better to just use `persist()`.
 On the other hand, you might consider using it to set up test data.
 ====
 
+[NOTE]
+====
+`insert` statements are not available in JPQL.
+====
+
 The BNF for an `insert` statement is:
 
 [[hql-insert-bnf-example]]
@@ -331,9 +336,37 @@ It's not available for entities whose id generator is implemented in Java, nor f
 The same two options are available for a `@Version` attribute.
 When no version is explicitly specified, the version for a new entity instance is used.
 
+To implement "upsert" semantics i.e. insert-or-update, the `on conflict` clause can be used.
+Reacting on conflicts can be either based on the name or the list of attribute paths of a unique constraint.
+Using the unique constraint name as conflict target requires either native database support,
+which at the time of writing is only available in PostgreSQL, or that the statement is a single row insert.
+A single row insert can be ensured by specifying only a single values tuple in case of an insert-values statement,
+or using `fetch first 1 rows only` in case of an insert-select statement.
+
+Possible conflict actions are to ignore the conflict or update conflicting objects/rows.
+
+[[hql-insert-conflict-example]]
+====
+[source, SQL, indent=0]
+----
+include::{example-dir-hql}/../query/hql/InsertConflictTests.java[tags=hql-insert-conflict-example]
+----
+====
+
+The special alias `excluded` is available in the `update set` clause of the `conflict clause`
+and refers to the values that failed insertion due to a unique constraint conflict.
+
 [NOTE]
 ====
-`insert ... select` statements are not available in JPQL.
+The MySQL/MariaDB implementation leverages the native `on duplicate key` clause
+which does not support specifying an explicit column list or constraint name.
+Beware that this implementation might produce different results than on other databases
+if a table has more than a single unique constraint.
+
+Another quirk of this implementation is that the MySQL/MariaDB JDBC driver returns surprising update counts.
+For every row that is inserted, the update count is incremented by 1, but for rows that are updated,
+the update count is incremented by 2.
+To learn more about this, refer to the https://dev.mysql.com/doc/refman/8.0/en/insert-on-duplicate.html[MySQL documentation].
 ====
 
 [[hql-literals]]

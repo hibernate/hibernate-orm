@@ -2991,7 +2991,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final ModelPart subPart = parentType.findSubPart( attributeName );
 				final EntityNameUse entityNameUse;
 				// We only apply this optimization for basic valued model parts for now
-				if ( subPart instanceof BasicValuedModelPart ) {
+				if ( subPart.asBasicValuedModelPart() != null ) {
 					entityNameUse = EntityNameUse.OPTIONAL_TREAT;
 				}
 				else {
@@ -4206,50 +4206,52 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					tableGroup
 			);
 		}
-		else if ( actualModelPart instanceof BasicValuedModelPart ) {
-			final BasicValuedModelPart mapping = (BasicValuedModelPart) actualModelPart;
-			final TableReference tableReference = tableGroup.resolveTableReference(
-					navigablePath.append( actualModelPart.getPartName() ),
-					mapping,
-					mapping.getContainingTableExpression()
-			);
+		else {
+			final BasicValuedModelPart mapping = actualModelPart.asBasicValuedModelPart();
+			if ( mapping != null ) {
+				final TableReference tableReference = tableGroup.resolveTableReference(
+						navigablePath.append( actualModelPart.getPartName() ),
+						mapping,
+						mapping.getContainingTableExpression()
+				);
 
-			final Expression expression = getSqlExpressionResolver().resolveSqlExpression(
-					tableReference,
-					mapping
-			);
-			final ColumnReference columnReference;
-			if ( expression instanceof ColumnReference ) {
-				columnReference = (ColumnReference) expression;
+				final Expression expression = getSqlExpressionResolver().resolveSqlExpression(
+						tableReference,
+						mapping
+				);
+				final ColumnReference columnReference;
+				if ( expression instanceof ColumnReference ) {
+					columnReference = (ColumnReference) expression;
+				}
+				else if ( expression instanceof SqlSelectionExpression ) {
+					final Expression selectedExpression = ( (SqlSelectionExpression) expression ).getSelection().getExpression();
+					assert selectedExpression instanceof ColumnReference;
+					columnReference = (ColumnReference) selectedExpression;
+				}
+				else {
+					throw new UnsupportedOperationException( "Unsupported basic-valued path expression : " + expression );
+				}
+				result = new BasicValuedPathInterpretation<>(
+						columnReference,
+						navigablePath,
+						mapping,
+						tableGroup
+				);
 			}
-			else if ( expression instanceof SqlSelectionExpression ) {
-				final Expression selectedExpression = ( (SqlSelectionExpression) expression ).getSelection().getExpression();
-				assert selectedExpression instanceof ColumnReference;
-				columnReference = (ColumnReference) selectedExpression;
+			else if ( actualModelPart instanceof AnonymousTupleTableGroupProducer ) {
+				throw new SemanticException(
+						"The derived SqmFrom" + ( (AnonymousTupleType<?>) path.getReferencedPathSource() ).getComponentNames() + " can not be used in a context where the expression needs to " +
+								"be expanded to identifying parts, because a derived model part does not have identifying parts. " +
+								"Replace uses of the root with paths instead e.g. `derivedRoot.get(\"alias1\")` or `derivedRoot.alias1`"
+				);
 			}
 			else {
-				throw new UnsupportedOperationException( "Unsupported basic-valued path expression : " + expression );
+				throw new SemanticException(
+						"The SqmFrom node [" + path + "] can not be used in a context where the expression needs to " +
+								"be expanded to identifying parts, because the model part [" + actualModelPart +
+								"] does not have identifying parts."
+				);
 			}
-			result = new BasicValuedPathInterpretation<>(
-					columnReference,
-					navigablePath,
-					mapping,
-					tableGroup
-			);
-		}
-		else if ( actualModelPart instanceof AnonymousTupleTableGroupProducer ) {
-			throw new SemanticException(
-					"The derived SqmFrom" + ( (AnonymousTupleType<?>) path.getReferencedPathSource() ).getComponentNames() + " can not be used in a context where the expression needs to " +
-							"be expanded to identifying parts, because a derived model part does not have identifying parts. " +
-							"Replace uses of the root with paths instead e.g. `derivedRoot.get(\"alias1\")` or `derivedRoot.alias1`"
-			);
-		}
-		else {
-			throw new SemanticException(
-					"The SqmFrom node [" + path + "] can not be used in a context where the expression needs to " +
-							"be expanded to identifying parts, because the model part [" + actualModelPart +
-							"] does not have identifying parts."
-			);
 		}
 
 		return withTreatRestriction( result, path );
@@ -4434,9 +4436,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		final TableReference tableReference = tableGroup.resolveTableReference( toOneMapping.getContainingTableExpression() );
 
 		final ModelPart fkKeyPart = fkDescriptor.getPart( toOneMapping.getSideNature() );
-		if ( fkKeyPart instanceof BasicValuedModelPart ) {
-			final BasicValuedModelPart basicFkPart = (BasicValuedModelPart) fkKeyPart;
-
+		final BasicValuedModelPart basicFkPart = fkKeyPart.asBasicValuedModelPart();
+		if ( basicFkPart != null ) {
 			return getSqlExpressionResolver().resolveSqlExpression(
 					tableReference,
 					basicFkPart
@@ -4965,8 +4966,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						)
 				);
 				final Set<String> compatibleTableExpressions;
-				if ( modelPart instanceof BasicValuedModelPart ) {
-					compatibleTableExpressions = Collections.singleton( ( (BasicValuedModelPart) modelPart ).getContainingTableExpression() );
+				final BasicValuedModelPart basicPart = modelPart.asBasicValuedModelPart();
+				if ( basicPart != null ) {
+					compatibleTableExpressions = Collections.singleton( basicPart.getContainingTableExpression() );
 				}
 				else if ( modelPart instanceof EmbeddableValuedModelPart ) {
 					compatibleTableExpressions = Collections.singleton( ( (EmbeddableValuedModelPart) modelPart ).getContainingTableExpression() );

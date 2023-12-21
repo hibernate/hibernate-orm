@@ -25,6 +25,8 @@ import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.predicate.InListPredicate;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * MatchingIdRestrictionProducer producing a restriction based on an in-values-list predicate.  E.g.:
  *
@@ -88,7 +90,7 @@ public class InPredicateRestrictionProducer implements MatchingIdRestrictionProd
 		final InListPredicate predicate;
 
 		if ( idColumnCount == 1 ) {
-			final BasicValuedModelPart basicIdMapping = (BasicValuedModelPart) identifierMapping;
+			final BasicValuedModelPart basicIdMapping = castNonNull( identifierMapping.asBasicValuedModelPart() );
 			final String idColumn = basicIdMapping.getSelectionExpression();
 			final Expression inFixture = new ColumnReference(
 					mutatingTableReference,

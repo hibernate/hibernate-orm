@@ -42,7 +42,6 @@ import org.hibernate.dialect.sequence.PostgreSQLSequenceSupport;
 import org.hibernate.dialect.sequence.SequenceSupport;
 import org.hibernate.dialect.unique.CreateTableUniqueDelegate;
 import org.hibernate.dialect.unique.UniqueDelegate;
-import org.hibernate.engine.jdbc.Size;
 import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierCaseStrategy;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
@@ -83,7 +82,6 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
@@ -1365,8 +1363,8 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			}
 
 			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
-				// HHH-9562
-				jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+				// HHH-9562 / HHH-14358
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );
 				if ( getVersion().isSameOrAfter( 9, 2 ) ) {
 					if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 						if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
@@ -1393,7 +1391,7 @@ public class PostgreSQLLegacyDialect extends Dialect {
 			jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLStructCastingJdbcType.INSTANCE );
 
 			if ( getVersion().isSameOrAfter( 8, 2 ) ) {
-				jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
+				jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLUUIDJdbcType.INSTANCE );
 				if ( getVersion().isSameOrAfter( 9, 2 ) ) {
 					if ( getVersion().isSameOrAfter( 9, 4 ) ) {
 						jdbcTypeRegistry.addDescriptorIfAbsent( PostgreSQLCastingJsonJdbcType.JSONB_INSTANCE );

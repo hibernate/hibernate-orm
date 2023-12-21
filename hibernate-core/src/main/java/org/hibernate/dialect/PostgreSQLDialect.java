@@ -84,7 +84,6 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
@@ -1413,7 +1412,6 @@ public class PostgreSQLDialect extends Dialect {
 		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 
-		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE ); // HHH-9562
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
@@ -1449,6 +1447,7 @@ public class PostgreSQLDialect extends Dialect {
 		);
 
 		jdbcTypeRegistry.addDescriptor( new PostgreSQLEnumJdbcType() );
+		jdbcTypeRegistry.addDescriptor( PostgreSQLUUIDJdbcType.INSTANCE );
 	}
 
 	@Override

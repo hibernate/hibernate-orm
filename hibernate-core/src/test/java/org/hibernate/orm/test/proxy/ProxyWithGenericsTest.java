@@ -114,7 +114,7 @@ public class ProxyWithGenericsTest {
 	@Access(AccessType.FIELD)
 	public static abstract class AbstractEntityImpl {
 		@Id
-		@GeneratedValue(strategy = GenerationType.IDENTITY)
+		@GeneratedValue
 		@Column(name = "ID")
 		Long id;
 	}

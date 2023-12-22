@@ -1421,7 +1421,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		appendSql( " as t" );
 		clauseStack.pop();
 
-		final QueryPartTableReference inlineView = updateSourceAsSubquery( statement );
+		final QueryPartTableReference inlineView = updateSourceAsSubquery( statement, false );
 		appendSql( " using " );
 		clauseStack.push( Clause.FROM );
 		visitQueryPartTableReference( inlineView );
@@ -1456,8 +1456,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		visitReturningColumns( statement.getReturningColumns() );
 	}
 
-	private QueryPartTableReference updateSourceAsSubquery(UpdateStatement statement) {
-		final QuerySpec inlineView = new QuerySpec( true );
+	private QueryPartTableReference updateSourceAsSubquery(UpdateStatement statement, boolean correlated) {
+		final QuerySpec inlineView = new QuerySpec( !correlated );
 		final SelectClause selectClause = inlineView.getSelectClause();
 		final List<Assignment> assignments = statement.getAssignments();
 		final List<String> columnNames = new ArrayList<>( assignments.size() );
@@ -1479,36 +1479,67 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				throw new IllegalQueryOperationException( "Unsupported tuple assignment in update query with joins." );
 			}
 		}
-		final String rowIdExpression = dialect.rowId( null );
-		if ( rowIdExpression == null ) {
-			final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
-			assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
-			final EntityIdentifierMapping identifierMapping = dmlTargetTableGroup.getModelPart()
-					.asEntityMappingType()
-					.getIdentifierMapping();
-			identifierMapping.forEachSelectable(
-					0,
-					(selectionIndex, selectableMapping) -> {
-						selectClause.addSqlSelection( new SqlSelectionImpl(
-								new ColumnReference( statement.getTargetTable(), selectableMapping )
-						) );
-						columnNames.add( selectableMapping.getSelectionExpression() );
+		if ( !correlated ) {
+			final String rowIdExpression = dialect.rowId( null );
+			if ( rowIdExpression == null ) {
+				final TableGroup dmlTargetTableGroup = statement.getFromClause().getRoots().get( 0 );
+				assert dmlTargetTableGroup.getPrimaryTableReference() == statement.getTargetTable();
+				final EntityIdentifierMapping identifierMapping = dmlTargetTableGroup.getModelPart()
+						.asEntityMappingType()
+						.getIdentifierMapping();
+				identifierMapping.forEachSelectable(
+						0,
+						(selectionIndex, selectableMapping) -> {
+							selectClause.addSqlSelection( new SqlSelectionImpl(
+									new ColumnReference( statement.getTargetTable(), selectableMapping )
+							) );
+							columnNames.add( selectableMapping.getSelectionExpression() );
+						}
+				);
+			}
+			else {
+				selectClause.addSqlSelection( new SqlSelectionImpl(
+						new ColumnReference(
+								statement.getTargetTable(),
+								rowIdExpression,
+								sessionFactory.getTypeConfiguration().getBasicTypeRegistry()
+										.resolve( Object.class, dialect.rowIdSqlType() )
+						)
+				) );
+				columnNames.add( "c" + columnNames.size() );
+			}
+		}
+
+		if ( correlated ) {
+			for ( TableGroup root : statement.getFromClause().getRoots() ) {
+				if ( statement.getTargetTable() == root.getPrimaryTableReference() ) {
+					final TableGroup dmlTargetTableGroup = new StandardTableGroup(
+							true,
+							new NavigablePath( "dual" ),
+							null,
+							null,
+							new NamedTableReference( getDual(), "d_" ),
+							null,
+							sessionFactory
+					);
+					inlineView.getFromClause().addRoot( dmlTargetTableGroup );
+					dmlTargetTableGroup.getTableReferenceJoins().addAll( root.getTableReferenceJoins() );
+					for ( TableGroupJoin tableGroupJoin : root.getTableGroupJoins() ) {
+						dmlTargetTableGroup.addTableGroupJoin( tableGroupJoin );
 					}
-			);
+					for ( TableGroupJoin tableGroupJoin : root.getNestedTableGroupJoins() ) {
+						dmlTargetTableGroup.addNestedTableGroupJoin( tableGroupJoin );
+					}
+				}
+				else {
+					inlineView.getFromClause().addRoot( root );
+				}
+			}
 		}
 		else {
-			selectClause.addSqlSelection( new SqlSelectionImpl(
-					new ColumnReference(
-							statement.getTargetTable(),
-							rowIdExpression,
-							sessionFactory.getTypeConfiguration().getBasicTypeRegistry()
-									.resolve( Object.class, dialect.rowIdSqlType() )
-					)
-			) );
-			columnNames.add( "c" + columnNames.size() );
-		}
-		for ( TableGroup root : statement.getFromClause().getRoots() ) {
-			inlineView.getFromClause().addRoot( root );
+			for ( TableGroup root : statement.getFromClause().getRoots() ) {
+				inlineView.getFromClause().addRoot( root );
+			}
 		}
 		inlineView.applyPredicate( statement.getRestriction() );
 
@@ -1543,6 +1574,30 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			clauseStack.pop();
 		}
 		visitReturningColumns( statement.getReturningColumns() );
+	}
+
+	protected void visitUpdateStatementEmulateTupleSet(UpdateStatement statement) {
+		renderUpdateClause( statement );
+		appendSql( " set " );
+		char separator = '(';
+		try {
+			clauseStack.push( Clause.SET );
+			for ( Assignment assignment : statement.getAssignments() ) {
+				final List<ColumnReference> columnReferences = assignment.getAssignable().getColumnReferences();
+				for ( ColumnReference columnReference : columnReferences ) {
+					appendSql( separator );
+					separator = COMMA_SEPARATOR_CHAR;
+					columnReference.appendColumnForWrite( this, null );
+				}
+			}
+			appendSql( ")=" );
+			updateSourceAsSubquery( statement, true ).getStatement().accept( this );
+		}
+		finally {
+			clauseStack.pop();
+		}
+
+		visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement ) );
 	}
 
 	private QueryPartTableReference updateSourceAsInlineView(UpdateStatement statement) {

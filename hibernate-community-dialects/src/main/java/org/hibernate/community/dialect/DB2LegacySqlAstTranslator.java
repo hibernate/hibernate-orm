@@ -339,10 +339,25 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	@Override
 	protected void visitUpdateStatementOnly(UpdateStatement statement) {
 		final boolean closeWrapper = renderReturningClause( statement );
-		super.visitUpdateStatementOnly( statement );
+		if ( supportsFromClauseInUpdate() || !hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			super.visitUpdateStatementOnly( statement );
+		}
+		else {
+			if ( closeWrapper ) {
+				// Merge statements can't be used in the `from final table( ... )` syntax
+				visitUpdateStatementEmulateTupleSet( statement );
+			}
+			else {
+				visitUpdateStatementEmulateMerge( statement );
+			}
+		}
 		if ( closeWrapper ) {
 			appendSql( ')' );
 		}
+	}
+
+	protected boolean supportsFromClauseInUpdate() {
+		return getDB2Version().isSameOrAfter( 11 );
 	}
 
 	@Override

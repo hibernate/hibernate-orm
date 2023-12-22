@@ -12,6 +12,7 @@ import jakarta.persistence.metamodel.Type;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
+import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.function.TimestampaddFunction;
@@ -64,6 +65,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.SelectableMappings;
+import org.hibernate.metamodel.mapping.SoftDeleteMapping;
 import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.metamodel.mapping.SqlTypedMapping;
 import org.hibernate.metamodel.mapping.ValueMapping;
@@ -3471,6 +3473,24 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				null
 		);
 		lhsTableGroup.addTableGroupJoin( tableGroupJoin );
+
+		entityDescriptor.applyBaseRestrictions(
+				tableGroupJoin::applyPredicate,
+				tableGroup,
+				true,
+				getLoadQueryInfluencers().getEnabledFilters(),
+				null,
+				this
+		);
+
+		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
+		if ( softDeleteMapping != null ) {
+			final Predicate softDeleteRestriction = SoftDeleteHelper.createNonSoftDeletedRestriction(
+					tableGroup.resolveTableReference( entityDescriptor.getSoftDeleteTableDetails().getTableName() ),
+					softDeleteMapping
+			);
+			tableGroupJoin.applyPredicate( softDeleteRestriction );
+		}
 
 		if ( sqmJoin.getJoinPredicate() != null ) {
 			final SqmJoin<?, ?> oldJoin = currentlyProcessingJoin;

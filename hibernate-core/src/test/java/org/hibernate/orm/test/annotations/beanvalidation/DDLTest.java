@@ -12,7 +12,6 @@ import org.hibernate.mapping.Column;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.Property;
 
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
 import org.junit.Test;
 
@@ -37,6 +36,20 @@ public class DDLTest extends BaseNonConfigCoreFunctionalTestCase {
 		assertFalse( zipColumn.isNullable() );
 	}
 
+
+	@Test
+	public void testNotNullDDL() {
+		PersistentClass classMapping = metadata().getEntityBinding( Address.class.getName() );
+		Column stateColumn = classMapping.getProperty( "state" ).getColumns().get(0);
+		assertFalse("Validator annotations are applied on state as it is @NotNull", stateColumn.isNullable());
+
+		Column line1Column = classMapping.getProperty( "line1" ).getColumns().get(0);
+		assertFalse("Validator annotations are applied on line1 as it is @NotEmpty", line1Column.isNullable());
+
+		Column line2Column = classMapping.getProperty( "line2" ).getColumns().get(0);
+		assertFalse("Validator annotations are applied on line2 as it is @NotBlank", line2Column.isNullable());
+	}
+
 	@Test
 	public void testApplyOnIdColumn() {
 		PersistentClass classMapping = metadata().getEntityBinding( Tv.class.getName() );
@@ -45,7 +58,6 @@ public class DDLTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@TestForIssue( jiraKey = "HHH-5281" )
 	public void testLengthConstraint() {
 		PersistentClass classMapping = metadata().getEntityBinding( Tv.class.getName() );
 		Column modelColumn = classMapping.getProperty( "model" ).getColumns().get(0);

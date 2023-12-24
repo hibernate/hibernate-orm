@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import jakarta.validation.constraints.*;
 import org.hibernate.AssertionFailure;
 import org.hibernate.MappingException;
 import org.hibernate.boot.internal.ClassLoaderAccessImpl;
@@ -43,11 +44,6 @@ import org.jboss.logging.Logger;
 
 import jakarta.validation.Validation;
 import jakarta.validation.ValidatorFactory;
-import jakarta.validation.constraints.Digits;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import jakarta.validation.metadata.BeanDescriptor;
 import jakarta.validation.metadata.ConstraintDescriptor;
 import jakarta.validation.metadata.PropertyDescriptor;
@@ -321,7 +317,10 @@ class TypeSafeActivator {
 
 	private static boolean applyNotNull(Property property, ConstraintDescriptor<?> descriptor) {
 		boolean hasNotNull = false;
-		if ( NotNull.class.equals( descriptor.getAnnotation().annotationType() ) ) {
+		// NotNull, NotEmpty, and NotBlank annotation add not-null on column
+		if ( NotNull.class.equals( descriptor.getAnnotation().annotationType())
+				|| NotEmpty.class.equals( descriptor.getAnnotation().annotationType())
+				|| NotBlank.class.equals( descriptor.getAnnotation().annotationType())) {
 			// single table inheritance should not be forced to null due to shared state
 			if ( !( property.getPersistentClass() instanceof SingleTableSubclass ) ) {
 				//composite should not add not-null on all columns

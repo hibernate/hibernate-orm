@@ -50,6 +50,9 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 		if ( value == null ) {
 			return null;
 		}
+		if ( value instanceof Currency ) {
+			return (Currency) value;
+		}
 		if (value instanceof String) {
 			return Currency.getInstance( (String) value );
 		}

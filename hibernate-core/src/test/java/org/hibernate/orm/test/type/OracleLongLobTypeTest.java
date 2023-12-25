@@ -40,6 +40,22 @@ import static org.junit.Assert.assertSame;
  */
 public class OracleLongLobTypeTest extends BaseUnitTestCase {
 
+	@Test
+	@TestForIssue( jiraKey = "HHH-10345" )
+	public void testOracle12() {
+		check( OracleDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY );
+		check( OracleDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY );
+		check( OracleDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB );
+	}
+
+	@Test
+	@TestForIssue( jiraKey = "HHH-10345" )
+	public void testOracle12PreferLongRaw() {
+		check( OracleDialect.class, Primitives.class, StandardBasicTypes.BINARY, StandardBasicTypes.CHAR_ARRAY, true );
+		check( OracleDialect.class, LobPrimitives.class, StandardBasicTypes.MATERIALIZED_BLOB, StandardBasicTypes.MATERIALIZED_CLOB_CHAR_ARRAY, true );
+		check( OracleDialect.class, LobLocators.class, StandardBasicTypes.BLOB, StandardBasicTypes.CLOB, true );
+	}
+
 	private void check(
 			Class<? extends Dialect> dialectClass,
 			Class entityClass,

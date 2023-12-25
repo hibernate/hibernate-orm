@@ -39,6 +39,9 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 		if ( value == null ) {
 			return null;
 		}
+		if ( Currency.class.isAssignableFrom( type ) ) {
+			return (X) value;
+		}
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) value.getCurrencyCode();
 		}
@@ -49,6 +52,9 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 	public <X> Currency wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
+		}
+		if ( value instanceof Currency ) {
+			return (Currency) value;
 		}
 		if (value instanceof String) {
 			return Currency.getInstance( (String) value );

@@ -11,27 +11,19 @@ import java.util.Objects;
 import org.hibernate.boot.registry.selector.spi.DialectSelector;
 import org.hibernate.boot.registry.selector.spi.StrategySelectionException;
 import org.hibernate.dialect.CockroachDialect;
-import org.hibernate.dialect.DB2400Dialect;
-import org.hibernate.dialect.DB2400V7R3Dialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DB2iDialect;
 import org.hibernate.dialect.DB2zDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HANACloudColumnStoreDialect;
-import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.dialect.HANADialect;
-import org.hibernate.dialect.HANARowStoreDialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.MariaDBDialect;
-import org.hibernate.dialect.MySQL8Dialect;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.PostgresPlusDialect;
-import org.hibernate.dialect.SQLServer2012Dialect;
-import org.hibernate.dialect.SQLServer2016Dialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SpannerDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -59,10 +51,6 @@ public class DefaultDialectSelector implements DialectSelector {
 			case "DB2390":
 			case "DB2390V8":
 				return findCommunityDialect( name );
-			case "DB2400":
-				return DB2400Dialect.class;
-			case "DB2400V7R3":
-				return DB2400V7R3Dialect.class;
 			case "Derby":
 				return DerbyDialect.class;
 			case "DerbyTenFive":
@@ -73,12 +61,6 @@ public class DefaultDialectSelector implements DialectSelector {
 				return H2Dialect.class;
 			case "HANA":
 				return HANADialect.class;
-			case "HANACloudColumnStore":
-				return HANACloudColumnStoreDialect.class;
-			case "HANAColumnStore":
-				return HANAColumnStoreDialect.class;
-			case "HANARowStore":
-				return HANARowStoreDialect.class;
 			case "HSQL":
 				return HSQLDialect.class;
 			case "MariaDB":
@@ -94,8 +76,6 @@ public class DefaultDialectSelector implements DialectSelector {
 			case "MySQL55":
 			case "MySQL57":
 				return findCommunityDialect( name );
-			case "MySQL8":
-				return MySQL8Dialect.class;
 			case "Oracle":
 				return OracleDialect.class;
 			case "Oracle8i":
@@ -124,10 +104,6 @@ public class DefaultDialectSelector implements DialectSelector {
 			case "SQLServer2005":
 			case "SQLServer2008":
 				return findCommunityDialect( name );
-			case "SQLServer2012":
-				return SQLServer2012Dialect.class;
-			case "SQLServer2016":
-				return SQLServer2016Dialect.class;
 			case "Sybase":
 				return SybaseDialect.class;
 			case "Sybase11":

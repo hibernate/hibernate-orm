@@ -7,13 +7,6 @@
 package org.hibernate.orm.test.strategyselectors;
 
 import org.hibernate.boot.registry.selector.internal.DefaultDialectSelector;
-import org.hibernate.community.dialect.DerbyTenFiveDialect;
-import org.hibernate.community.dialect.DerbyTenSevenDialect;
-import org.hibernate.community.dialect.DerbyTenSixDialect;
-import org.hibernate.community.dialect.MySQL57Dialect;
-import org.hibernate.community.dialect.MySQL5Dialect;
-import org.hibernate.community.dialect.Oracle12cDialect;
-import org.hibernate.community.dialect.SQLServer2008Dialect;
 import org.hibernate.dialect.*;
 
 import org.junit.jupiter.api.Test;
@@ -28,34 +21,21 @@ public class DefaultDialectSelectorTest {
 	@Test
 	public void verifyAllDialectNamingResolve() {
 		testDialectNamingResolution( DB2Dialect.class );
-		testDialectNamingResolution( DB2400Dialect.class );
-		testDialectNamingResolution( DB2400V7R3Dialect.class );
 
 		testDialectNamingResolution( DerbyDialect.class );
-		testDialectNamingResolution( DerbyTenFiveDialect.class );
-		testDialectNamingResolution( DerbyTenSixDialect.class );
-		testDialectNamingResolution( DerbyTenSevenDialect.class );
 
 		testDialectNamingResolution( H2Dialect.class );
 		testDialectNamingResolution( HANADialect.class );
-		testDialectNamingResolution( HANAColumnStoreDialect.class );
-		testDialectNamingResolution( HANARowStoreDialect.class );
 		testDialectNamingResolution( HSQLDialect.class );
 
 		testDialectNamingResolution( MySQLDialect.class );
-		testDialectNamingResolution( MySQL5Dialect.class );
-		testDialectNamingResolution( MySQL57Dialect.class );
-		testDialectNamingResolution( MySQL8Dialect.class );
 
 		testDialectNamingResolution( OracleDialect.class );
-		testDialectNamingResolution( Oracle12cDialect.class );
 
 		testDialectNamingResolution( PostgreSQLDialect.class );
 		testDialectNamingResolution( PostgresPlusDialect.class );
 
 		testDialectNamingResolution( SQLServerDialect.class );
-		testDialectNamingResolution( SQLServer2008Dialect.class );
-		testDialectNamingResolution( SQLServer2012Dialect.class );
 
 		testDialectNamingResolution( SybaseDialect.class );
 	}

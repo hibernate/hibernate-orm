@@ -21,7 +21,7 @@ import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
@@ -41,7 +41,7 @@ import static org.junit.Assert.fail;
 /**
  * @author Jonathan Bregler
  */
-@RequiresDialect(value = AbstractHANADialect.class)
+@RequiresDialect(value = HANADialect.class)
 public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctionalTestCase {
 
 	private File output;
@@ -75,8 +75,8 @@ public class HANASchemaMigrationTargetScriptCreationTest extends BaseCoreFunctio
 	protected void afterSessionFactoryBuilt() {
 		super.afterSessionFactoryBuilt();
 		final Dialect dialect = sessionFactory().getJdbcServices().getDialect();
-		this.varcharType = ( (AbstractHANADialect) dialect ).isUseUnicodeStringTypes() ? "nvarchar" : "varchar";
-		this.clobType = ( (AbstractHANADialect) dialect ).isUseUnicodeStringTypes() ? "nclob" : "clob";
+		this.varcharType = ( (HANADialect) dialect ).isUseUnicodeStringTypes() ? "nvarchar" : "varchar";
+		this.clobType = ( (HANADialect) dialect ).isUseUnicodeStringTypes() ? "nclob" : "clob";
 	}
 
 	@After

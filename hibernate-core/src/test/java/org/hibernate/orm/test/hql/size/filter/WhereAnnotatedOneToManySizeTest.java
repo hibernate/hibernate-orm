@@ -10,7 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
@@ -92,7 +92,7 @@ public class WhereAnnotatedOneToManySizeTest extends BaseCoreFunctionalTestCase 
 
 	@Test
 	@SkipForDialect(value = DB2Dialect.class, comment = "DB2 does not support correlated subqueries in the ORDER BY clause")
-	@SkipForDialect(value = AbstractHANADialect.class, comment = "HANA db does not support correlated subqueries in the ORDER BY clause")
+	@SkipForDialect(value = HANADialect.class, comment = "HANA db does not support correlated subqueries in the ORDER BY clause")
 	@SkipForDialect(value = TiDBDialect.class, comment = "TiDB db does not support correlated subqueries in the ORDER BY clause")
 	@SkipForDialect(value = SybaseDialect.class, comment = "Sybase db does not support subqueries in the ORDER BY clause")
 	public void orderBy_sizeOf() {

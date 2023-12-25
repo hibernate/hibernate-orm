@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.query.BindableType;
@@ -102,7 +102,7 @@ public class BasicListTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = AbstractHANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
+	@SkipForDialect( value = HANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
 	public void testQuery() {
 		inSession( em -> {
 			TypedQuery<TableWithIntegerList> tq = em.createNamedQuery( "TableWithIntegerList.JPQL.getByData", TableWithIntegerList.class );

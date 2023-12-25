@@ -28,7 +28,7 @@ import org.hibernate.Transaction;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
@@ -1061,7 +1061,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 			s.createQuery( "from Animal where lower(upper('foo') || upper(:bar)) like 'f%'" ).setParameter( "bar", "xyz" ).list();
 		}
 
-		if ( getDialect() instanceof AbstractHANADialect ) {
+		if ( getDialect() instanceof HANADialect ) {
 			s.createQuery( "from Animal where abs(cast(1 as double) - cast(:param as double)) = 1.0" ).setParameter( "param", 1 ).list();
 		}
 		else if ( !( getDialect() instanceof PostgreSQLDialect || getDialect() instanceof MySQLDialect ) ) {
@@ -1991,7 +1991,7 @@ public class ASTParserLoadingTest extends BaseCoreFunctionalTestCase {
 		// note: simply performing syntax and column/table resolution checking in the db
 		Session s = openSession();
 		s.beginTransaction();
-		if ( getDialect() instanceof AbstractHANADialect ) {
+		if ( getDialect() instanceof HANADialect ) {
 			s.createQuery( "from Animal where mother is null" ).list();
 		}
 		else {

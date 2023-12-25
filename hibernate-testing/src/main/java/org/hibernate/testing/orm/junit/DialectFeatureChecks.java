@@ -10,7 +10,7 @@ import java.sql.Types;
 
 import org.hibernate.boot.model.TruthValue;
 import org.hibernate.community.dialect.FirebirdDialect;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
@@ -152,7 +152,7 @@ abstract public class DialectFeatureChecks {
 	public static class SupportsRowValueConstructorSyntaxCheck implements DialectFeatureCheck {
 		public boolean apply(Dialect dialect) {
 			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
-			return dialect instanceof AbstractHANADialect
+			return dialect instanceof HANADialect
 					|| dialect instanceof CockroachDialect
 					|| dialect instanceof MySQLDialect
 					|| dialect instanceof PostgreSQLDialect;
@@ -373,7 +373,7 @@ abstract public class DialectFeatureChecks {
 			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect.supportsOrderByInSubquery()
 					// For some reason, HANA doesn't support order by in correlated subqueries...
-					&& !( dialect instanceof AbstractHANADialect );
+					&& !( dialect instanceof HANADialect );
 		}
 	}
 
@@ -408,7 +408,7 @@ abstract public class DialectFeatureChecks {
 					|| dialect instanceof HSQLDialect
 					|| dialect instanceof MySQLDialect
 					|| dialect instanceof PostgreSQLDialect
-					|| dialect instanceof AbstractHANADialect
+					|| dialect instanceof HANADialect
 					|| dialect instanceof CockroachDialect
 					|| dialect instanceof DB2Dialect
 					|| dialect instanceof OracleDialect
@@ -422,7 +422,7 @@ abstract public class DialectFeatureChecks {
 			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof H2Dialect
 					|| dialect instanceof PostgreSQLDialect
-					|| dialect instanceof AbstractHANADialect
+					|| dialect instanceof HANADialect
 					|| dialect instanceof CockroachDialect
 					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isSameOrAfter( 11 )
 					|| dialect instanceof OracleDialect
@@ -436,7 +436,7 @@ abstract public class DialectFeatureChecks {
 			dialect = DialectDelegateWrapper.extractRealDialect( dialect );
 			return dialect instanceof H2Dialect
 					|| dialect instanceof PostgreSQLDialect
-					|| dialect instanceof AbstractHANADialect
+					|| dialect instanceof HANADialect
 					|| dialect instanceof CockroachDialect
 					|| dialect instanceof DB2Dialect && ( (DB2Dialect) dialect ).getDB2Version().isSameOrAfter( 11 )
 					|| dialect instanceof OracleDialect

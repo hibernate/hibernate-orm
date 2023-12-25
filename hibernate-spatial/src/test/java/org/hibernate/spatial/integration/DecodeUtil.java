@@ -7,7 +7,7 @@
 
 package org.hibernate.spatial.integration;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.Dialect;
 
@@ -21,7 +21,7 @@ public class DecodeUtil {
 
 	public static WktDecoder getWktDecoder(Dialect dialect) {
 		WktDecoder decoder = null;
-		if ( dialect instanceof AbstractHANADialect ) {
+		if ( dialect instanceof HANADialect ) {
 			decoder = Wkt.newDecoder( Wkt.Dialect.HANA_EWKT );
 		}
 		else if ( dialect instanceof DB2Dialect ) {

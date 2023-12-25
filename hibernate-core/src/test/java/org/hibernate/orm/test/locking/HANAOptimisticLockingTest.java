@@ -6,7 +6,7 @@
  */
 package org.hibernate.orm.test.locking;
 
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -34,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 )
 @SessionFactory
 @TestForIssue(jiraKey = "HHH-11656")
-@RequiresDialect(AbstractHANADialect.class)
+@RequiresDialect(HANADialect.class)
 public class HANAOptimisticLockingTest {
 
 	@Test

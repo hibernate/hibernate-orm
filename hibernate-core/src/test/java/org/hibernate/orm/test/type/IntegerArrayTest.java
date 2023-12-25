@@ -9,7 +9,7 @@ package org.hibernate.orm.test.type;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.AbstractHANADialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseASEDialect;
@@ -100,7 +100,7 @@ public class IntegerArrayTest extends BaseNonConfigCoreFunctionalTestCase {
 	}
 
 	@Test
-	@SkipForDialect( value = AbstractHANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
+	@SkipForDialect( value = HANADialect.class, comment = "For some reason, HANA can't intersect VARBINARY values, but funnily can do a union...")
 	public void testQuery() {
 		inSession( em -> {
 			TypedQuery<TableWithIntegerArrays> tq = em.createNamedQuery( "TableWithIntegerArrays.JPQL.getByData", TableWithIntegerArrays.class );

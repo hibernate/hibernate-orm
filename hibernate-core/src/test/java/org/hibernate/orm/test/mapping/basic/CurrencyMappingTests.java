@@ -21,6 +21,7 @@ import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
+import org.hibernate.orm.test.mapping.type.java.YearMappingTests;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -32,6 +33,7 @@ import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Types;
+import java.time.Year;
 import java.util.Currency;
 import java.util.HashSet;
 import java.util.Set;
@@ -61,14 +63,10 @@ public class CurrencyMappingTests {
 		assertThat(jdbcMapping.getJavaTypeDescriptor().getJavaTypeClass(), equalTo(Currency.class));
 		assertThat( jdbcMapping.getJdbcType(), equalTo( jdbcRegistry.getDescriptor( Types.VARCHAR)));
 
-		final Currency currency = Currency.getInstance("USD");
-
-		final Set<Currency> currencies = new HashSet<>();
-		currencies.add(Currency.getInstance("CHF"));
-		currencies.add(Currency.getInstance("EUR"));
+		final EntityWithCurrency entity = createEntityWithCurrency();
 
 		scope.inTransaction(
-			(session) -> session.persist(new EntityWithCurrency(1, currency, currencies))
+			(session) -> session.persist(entity)
 		);
 
 		scope.inTransaction(
@@ -181,6 +179,28 @@ public class CurrencyMappingTests {
 				currencyJavaType.wrap(usingSelf, options)
 			).isInstanceOf(HibernateException.class);
 		}
+	}
+
+	@Test
+	public void testUsage(final SessionFactoryScope scope) {
+		final EntityWithCurrency entity = createEntityWithCurrency();
+		scope.inTransaction((session) -> session.persist(entity));
+		try {
+			scope.inTransaction(session -> session.createQuery("from EntityWithCurrency", EntityWithCurrency.class).list());
+		}
+		finally {
+			scope.inTransaction( session -> session.remove( entity ) );
+		}
+	}
+
+	private static EntityWithCurrency createEntityWithCurrency() {
+		final Currency currency = Currency.getInstance("USD");
+
+		final Set<Currency> currencies = new HashSet<>();
+		currencies.add(Currency.getInstance("CHF"));
+		currencies.add(Currency.getInstance("EUR"));
+
+		return new EntityWithCurrency( 1, currency, currencies );
 	}
 
 	@Entity(name = "EntityWithCurrency")

@@ -15,7 +15,7 @@ import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
 
 /**
- * Describes the {@link java.time.Year} Java type
+ * Describes the {@link Year} Java type
  */
 public class YearJavaType extends AbstractClassJavaType<Year> {
 	private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy" );
@@ -70,6 +70,10 @@ public class YearJavaType extends AbstractClassJavaType<Year> {
 	public <X> Year wrap(X value, WrapperOptions options) {
 		if ( value == null ) {
 			return null;
+		}
+
+		if ( value instanceof Year) {
+			return (Year) value;
 		}
 
 		if ( value instanceof Number ) {

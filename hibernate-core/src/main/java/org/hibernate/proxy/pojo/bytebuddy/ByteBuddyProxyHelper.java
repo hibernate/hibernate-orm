@@ -41,6 +41,7 @@ public class ByteBuddyProxyHelper implements Serializable {
 
 	private static final CoreMessageLogger LOG = messageLogger( ByteBuddyProxyHelper.class );
 	private static final String PROXY_NAMING_SUFFIX = "HibernateProxy";
+	private static final TypeDescription OBJECT = TypeDescription.ForLoadedType.of(Object.class);
 
 	private final ByteBuddyState byteBuddyState;
 
@@ -84,8 +85,8 @@ public class ByteBuddyProxyHelper implements Serializable {
 		ByteBuddyState.ProxyDefinitionHelpers helpers = byteBuddyState.getProxyDefinitionHelpers();
 		return byteBuddy -> helpers.appendIgnoreAlsoAtEnd( byteBuddy
 				.ignore( helpers.getGroovyGetMetaClassFilter() )
-				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.SuffixingRandom.BaseNameResolver.ForFixedValue( persistentClass.getTypeName() ) ) )
-				.subclass( interfaces.size() == 1 ? persistentClass : TypeDescription.OBJECT, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
+				.with( new NamingStrategy.SuffixingRandom( PROXY_NAMING_SUFFIX, new NamingStrategy.Suffixing.BaseNameResolver.ForFixedValue( persistentClass.getTypeName() ) ) )
+				.subclass( interfaces.size() == 1 ? persistentClass : OBJECT, ConstructorStrategy.Default.IMITATE_SUPER_CLASS_OPENING )
 				.implement( interfaces )
 				.method( helpers.getVirtualNotFinalizerFilter() )
 						.intercept( helpers.getDelegateToInterceptorDispatcherMethodDelegation() )

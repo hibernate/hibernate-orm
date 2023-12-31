@@ -60,7 +60,7 @@ public class OverrideRepository  {
 
 	final private Set<TableColumnKey> excludedColumns;
 
-	final private Map<TableIdentifier, String> tableToClassName;
+	final private TableToClassName tableToClassName;
 
 	final private List<SchemaSelection> schemaSelections;
 
@@ -99,7 +99,7 @@ public class OverrideRepository  {
 		identifierPropertiesForTable = new HashMap<TableIdentifier, Properties>();
 		primaryKeyColumnsForTable = new HashMap<TableIdentifier, List<String>>();
 		propertyNameForPrimaryKey = new HashMap<TableIdentifier, String>();
-		tableToClassName = new HashMap<TableIdentifier, String>();
+		tableToClassName = new TableToClassName();
 		excludedColumns = new HashSet<TableColumnKey>();
 		schemaSelections = new ArrayList<SchemaSelection>();
 		compositeIdNameForTable = new HashMap<TableIdentifier, String>();
@@ -600,12 +600,23 @@ public class OverrideRepository  {
 			existing.add( fk );
 		}
 
-		tables.add(table);
-
 		if(StringHelper.isNotEmpty(wantedClassName)) {
-			tableToClassName.put(TableIdentifier.create(table), wantedClassName);
+      TableIdentifier tableIdentifier = TableIdentifier.create(table);
+      String className = wantedClassName;
+      /* If wantedClassName specifies a package, it is given by
+         <hibernate-reverse-engineering><table class="xxx"> config so do no more. */
+			if(!wantedClassName.contains(".")) { 
+        /* Now look for the package name specified by 
+          <hibernate-reverse-engineering><table-filter package="xxx"> config. */
+        String packageName = getPackageName(tableIdentifier);
+        if (packageName != null && !packageName.isBlank()) {
+          className = packageName + "." + wantedClassName;
+        }
+      }
+			tableToClassName.put(tableIdentifier, className);
 		}
-	}
+		tables.add(table);
+  }
 
 	static class TableColumnKey {
 		private TableIdentifier query;
@@ -739,7 +750,60 @@ public class OverrideRepository  {
 
 	}
 
+  /*It is not possible to match a table on TableMapper alone because RootClassBinder.bind()
+   calls nullifyDefaultCatalogAndSchema(table) before doing this TableToClassName lookup.
+   So only use the table name for initial matching, and catalog or schema names when they
+   are not null.
+  */
 
+  private class TableToClassName {
+    Map<String, TableMapper> map = new HashMap<String, TableMapper>();
 
+    private String get(TableIdentifier tableIdentifier) {
+      TableMapper mapper = map.get(tableIdentifier.getName());
+      if (mapper != null) {
+        if (mapper.catalog == null || tableIdentifier.getCatalog() == null ||
+            mapper.catalog.equals(tableIdentifier.getCatalog())){
+          if (mapper.schema == null || tableIdentifier.getSchema() == null ||
+              mapper.schema.equals(tableIdentifier.getSchema())){
+            if (mapper.packageName.length() == 0) {
+              return mapper.className;
+            } else {
+              return  mapper.packageName + "." + mapper.className;
+            }
+          }
+        }
+      }
+      return null;
+    }
 
+    private void put(TableIdentifier tableIdentifier, String wantedClassName) {
+      TableMapper tableMapper = new TableMapper(
+          tableIdentifier.getCatalog(),
+          tableIdentifier.getSchema(),
+          tableIdentifier.getName(),
+          wantedClassName);
+      map.put(tableIdentifier.getName(), tableMapper);
+    }
+  }
+
+  private class TableMapper {
+    String catalog;
+    String schema;
+    String className;
+    String packageName;
+
+    private TableMapper(String catalog, String schema, String name, String wantedClassName) {
+      this.catalog = catalog;
+      this.schema = schema;
+      if (wantedClassName.contains(".")) {
+        int nameStartPos = wantedClassName.lastIndexOf(".");
+        this.className = wantedClassName.substring(nameStartPos+1);
+        this.packageName = wantedClassName.substring(0, nameStartPos);
+      } else {
+        this.className = wantedClassName;
+        this.packageName = "";
+      }
+    }
+  }
 }

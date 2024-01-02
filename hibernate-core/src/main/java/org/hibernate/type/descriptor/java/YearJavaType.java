@@ -42,7 +42,7 @@ public class YearJavaType extends AbstractClassJavaType<Year> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public <X> X unwrap(Year value, Class<X> type, WrapperOptions options) {
+	public <X> X unwrap(final Year value, final Class<X> type, final WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}
@@ -67,7 +67,7 @@ public class YearJavaType extends AbstractClassJavaType<Year> {
 	}
 
 	@Override
-	public <X> Year wrap(X value, WrapperOptions options) {
+	public <X> Year wrap(final X value, final WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}

@@ -13,7 +13,6 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
-import org.hibernate.orm.test.mapping.type.wrapperoptions.MockWrapperOptions;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -79,62 +78,81 @@ public class YearMappingTests {
 			scope.inTransaction( session -> session.remove( entity2 ) );
 		}
 	}
-
 	@Test
-	public void testWrapNoOptionsPass( final SessionFactoryScope scope ) {
-		testWrapPass( scope, null );
+	public void testUnwrapPass() {
+		final YearJavaType yearJavaType = new YearJavaType();
+		final Year year = Year.of(1943);
+		{
+			final Year y = yearJavaType.unwrap(year, Year.class, null);
+			Assertions.assertThat( y ).isEqualTo( year );
+		}
+		{
+			final Integer y = yearJavaType.unwrap(year, Integer.class, null);
+			Assertions.assertThat( y ).isEqualTo( Integer.valueOf( 1943 ) );
+		}
+		{
+			final Long y = yearJavaType.unwrap(year, Long.class, null);
+			Assertions.assertThat( y ).isEqualTo( Long.valueOf( 1943L ) );
+		}
+		{
+			final String y = yearJavaType.unwrap(year, String.class, null);
+			Assertions.assertThat( y ).isEqualTo( "1943" );
+		}
+		{
+			final Object y = yearJavaType.unwrap(year, Object.class, null);
+			Assertions.assertThat( y.toString() ).isEqualTo( "1943" );
+		}
 	}
 
 	@Test
-	public void testWrapWithOptionsPass( final SessionFactoryScope scope ) {
-		testWrapPass( scope, new MockWrapperOptions( false ) );
+	public void testUnwrapFail() {
+		final YearJavaType yearJavaType = new YearJavaType();
+		final Year year = Year.of(1943);
+		{
+			Assertions.assertThatThrownBy( () ->
+				yearJavaType.unwrap(year, Boolean.class, null)
+			).isInstanceOf( HibernateException.class );
+		}
 	}
 
 	@Test
-	public void testWrapNoOptionsFail( final SessionFactoryScope scope ) {
-		testWrapFail( scope, null );
-	}
-
-	@Test
-	public void testWrapWithOptionsFail( final SessionFactoryScope scope ) {
-		testWrapFail( scope, new MockWrapperOptions( false ) );
-	}
-	private static void testWrapPass( final SessionFactoryScope scope, final WrapperOptions options ) {
+	public void testWrapPass() {
 		final YearJavaType yearJavaType = new YearJavaType();
 		{
-			final Year usingNull = yearJavaType.wrap( null, options );
+			final Year usingNull = yearJavaType.wrap( null, null );
 			Assertions.assertThat( usingNull ).isNull();
 		}
 		{
-			final Year usingNumber = yearJavaType.wrap( 1943, options );
+			final Year usingNumber = yearJavaType.wrap( 1943, null );
 			Assertions.assertThat( usingNumber ).isNotNull();
 		}
 		{
-			final Year usingNegative = yearJavaType.wrap( -1, options );
+			final Year usingNegative = yearJavaType.wrap( -1, null );
 			Assertions.assertThat( usingNegative ).isNotNull();
 		}
 		{
-			final Year usingString = yearJavaType.wrap( "1943", options );
+			final Year usingString = yearJavaType.wrap( "1943", null );
 			Assertions.assertThat( usingString ).isNotNull();
 		}
 		{
-			final Year usingYear = yearJavaType.wrap( Year.of( 1943), options );
+			final Year usingYear = yearJavaType.wrap( Year.of( 1943), null );
 			Assertions.assertThat( usingYear ).isNotNull();
 		}
 	}
 
-	private static void testWrapFail( final SessionFactoryScope scope, final WrapperOptions options ) {
+	@Test
+	public void testWrapFail() {
 		final YearJavaType yearJavaType = new YearJavaType();
 		{
 			final String usingEmptyString = "";
 			Assertions.assertThatThrownBy(() ->
-				yearJavaType.wrap( usingEmptyString, options )
+				yearJavaType.wrap( usingEmptyString, null )
 			).isInstanceOf(DateTimeParseException.class);
 		}
 		{
 			final Date usingDate = new Date();
 			Assertions.assertThatThrownBy(() ->
-				yearJavaType.wrap( usingDate, options )
+				yearJavaType.wrap( usingDate, null )
 			).isInstanceOf(HibernateException.class);
 		}
 	}

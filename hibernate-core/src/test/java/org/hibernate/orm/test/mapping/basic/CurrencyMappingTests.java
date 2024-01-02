@@ -22,7 +22,6 @@ import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.orm.test.mapping.type.java.YearMappingTests;
-import org.hibernate.orm.test.mapping.type.wrapperoptions.MockWrapperOptions;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
@@ -101,7 +100,36 @@ public class CurrencyMappingTests {
 	}
 
 	@Test
-	public void testCurrencyJavaTypeWrapNoOptionsPass(final SessionFactoryScope scope) {
+	public void testUnwrapPass() {
+		final CurrencyJavaType currencyJavaType = new CurrencyJavaType();
+		final Currency currency = Currency.getInstance("CHF");
+		{
+			final Currency c = currencyJavaType.unwrap(currency, Currency.class, null);
+			Assertions.assertThat( c ).isEqualTo( currency );
+		}
+		{
+			final String c = currencyJavaType.unwrap(currency, String.class, null);
+			Assertions.assertThat( c ).isEqualTo( "CHF" );
+		}
+		{
+			final Object c = currencyJavaType.unwrap(currency, Object.class, null);
+			Assertions.assertThat( c.toString() ).isEqualTo( "CHF" );
+		}
+	}
+
+	@Test
+	public void testUnwrapFail() {
+		final CurrencyJavaType currencyJavaType = new CurrencyJavaType();
+		final Currency currency = Currency.getInstance("CHF");
+		{
+			Assertions.assertThatThrownBy( () ->
+				currencyJavaType.unwrap(currency, Boolean.class, null)
+			).isInstanceOf( HibernateException.class );
+		}
+	}
+
+	@Test
+	public void testWrapPass() {
 		final CurrencyJavaType currencyJavaType = new CurrencyJavaType();
 		{
 			final Currency usingNull = currencyJavaType.wrap(null, null);
@@ -118,7 +146,7 @@ public class CurrencyMappingTests {
 	}
 
 	@Test
-	public void testCurrencyJavaTypeWrapNoOptionsFail(final SessionFactoryScope scope) {
+	public void testWrapFail() {
 		final CurrencyJavaType currencyJavaType = new CurrencyJavaType();
 		{
 			final String usingEmptyString = "";
@@ -136,48 +164,6 @@ public class CurrencyMappingTests {
 			final CurrencyJavaType usingSelf = new CurrencyJavaType();
 			Assertions.assertThatThrownBy(() ->
 				currencyJavaType.wrap(usingSelf, null)
-			).isInstanceOf(HibernateException.class);
-		}
-	}
-
-	@Test
-	public void testCurrencyJavaTypeWrapWithOptionsPass(final SessionFactoryScope scope) {
-		final CurrencyJavaType currencyJavaType = new CurrencyJavaType();
-		final MockWrapperOptions options = new MockWrapperOptions(false);
-		{
-			final Currency usingNull = currencyJavaType.wrap(null, options);
-			Assertions.assertThat(usingNull).isNull();
-		}
-		{
-			final Currency usingString = currencyJavaType.wrap("CHF", options);
-			Assertions.assertThat(usingString).isNotNull();
-		}
-		{
-			final Currency usingCurrency = currencyJavaType.wrap(Currency.getInstance("CHF"), options);
-			Assertions.assertThat(usingCurrency).isNotNull();
-		}
-	}
-
-	@Test
-	public void testCurrencyJavaTypeWrapWithOptionsFail(final SessionFactoryScope scope) {
-		final CurrencyJavaType currencyJavaType = new CurrencyJavaType();
-		final MockWrapperOptions options = new MockWrapperOptions(false);
-		{
-			final String usingEmptyString = "";
-			Assertions.assertThatThrownBy(() ->
-				currencyJavaType.wrap(usingEmptyString, options)
-			).isInstanceOf(IllegalArgumentException.class);
-		}
-		{
-			final Integer usingInteger = Integer.valueOf(269);
-			Assertions.assertThatThrownBy(() ->
-				currencyJavaType.wrap(usingInteger, options)
-			).isInstanceOf(HibernateException.class);
-		}
-		{
-			final CurrencyJavaType usingSelf = new CurrencyJavaType();
-			Assertions.assertThatThrownBy(() ->
-				currencyJavaType.wrap(usingSelf, options)
 			).isInstanceOf(HibernateException.class);
 		}
 	}

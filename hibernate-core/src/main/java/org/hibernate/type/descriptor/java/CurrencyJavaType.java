@@ -35,9 +35,12 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 	}
 
 	@SuppressWarnings("unchecked")
-	public <X> X unwrap(Currency value, Class<X> type, WrapperOptions options) {
+	public <X> X unwrap(final Currency value, final Class<X> type, final WrapperOptions options) {
 		if ( value == null ) {
 			return null;
+		}
+		if ( type.isInstance( value ) ) {
+			return (X) value;
 		}
 		if ( String.class.isAssignableFrom( type ) ) {
 			return (X) value.getCurrencyCode();
@@ -46,7 +49,7 @@ public class CurrencyJavaType extends AbstractClassJavaType<Currency> {
 	}
 
 	@Override
-	public <X> Currency wrap(X value, WrapperOptions options) {
+	public <X> Currency wrap(final X value, final WrapperOptions options) {
 		if ( value == null ) {
 			return null;
 		}

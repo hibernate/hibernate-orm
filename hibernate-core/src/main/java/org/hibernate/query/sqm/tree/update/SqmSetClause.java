@@ -47,4 +47,19 @@ public class SqmSetClause {
 	public <Y> void addAssignment(SqmPath<Y> targetPath, SqmExpression<? extends Y> value) {
 		addAssignment( new SqmAssignment<>( targetPath, value ) );
 	}
+
+	public void appendHqlString(StringBuilder sb) {
+		sb.append( " set " );
+		appendAssignment( assignments.get( 0 ), sb );
+		for ( int i = 1; i < assignments.size(); i++ ) {
+			sb.append( ", " );
+			appendAssignment( assignments.get( i ), sb );
+		}
+	}
+
+	private static void appendAssignment(SqmAssignment<?> sqmAssignment, StringBuilder sb) {
+		sqmAssignment.getTargetPath().appendHqlString( sb );
+		sb.append( " = " );
+		sqmAssignment.getValue().appendHqlString( sb );
+	}
 }

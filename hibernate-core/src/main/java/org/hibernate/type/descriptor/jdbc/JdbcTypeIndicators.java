@@ -70,6 +70,13 @@ public interface JdbcTypeIndicators {
 	}
 
 	/**
+	 * @see org.hibernate.cfg.MappingSettings#PREFER_JAVA_TYPE_JDBC_TYPES
+	 */
+	default boolean isPreferJavaTimeJdbcTypesEnabled() {
+		return getCurrentBaseSqlTypeIndicators().isPreferJavaTimeJdbcTypesEnabled();
+	}
+
+	/**
 	 * When mapping a boolean type to the database what is the preferred SQL type code to use?
 	 * <p>
 	 * Returns a key into the {@link JdbcTypeRegistry}.

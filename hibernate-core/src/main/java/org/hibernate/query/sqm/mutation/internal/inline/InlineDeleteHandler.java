@@ -28,6 +28,7 @@ import org.hibernate.query.sqm.mutation.internal.SqmMutationStrategyHelper;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.sql.ast.SqlAstTranslatorFactory;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
+import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.update.Assignment;
@@ -93,6 +94,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 		final String mutatingEntityName = sqmDeleteStatement.getTarget().getModel().getHibernateEntityName();
 		final EntityMappingType entityDescriptor = factory.getRuntimeMetamodels().getEntityMappingType( mutatingEntityName );
 
+		final List<Expression> inListExpressions = matchingIdsPredicateProducer.produceIdExpressionList( idsAndFks, entityDescriptor );
 		final JdbcParameterBindings jdbcParameterBindings = new JdbcParameterBindingsImpl( domainParameterXref.getQueryParameterCount() );
 
 		// delete from the tables
@@ -125,7 +127,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 								pluralAttribute.getSeparateCollectionTable(),
 								entityDescriptor,
 								() -> fkTargetPart::forEachSelectable,
-								idsAndFks,
+								inListExpressions,
 								valueIndex,
 								fkTargetPart,
 								jdbcParameterBindings,
@@ -139,7 +141,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 		if ( softDeleteMapping != null ) {
 			performSoftDelete(
 					entityDescriptor,
-					idsAndFks,
+					inListExpressions,
 					jdbcParameterBindings,
 					executionContext
 			);
@@ -150,7 +152,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 							tableExpression,
 							entityDescriptor,
 							tableKeyColumnsVisitationSupplier,
-							idsAndFks,
+							inListExpressions,
 							0,
 							null,
 							jdbcParameterBindings,
@@ -167,7 +169,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 	 */
 	private void performSoftDelete(
 			EntityMappingType entityDescriptor,
-			List<Object> idsAndFks,
+			List<Expression> idExpressions,
 			JdbcParameterBindings jdbcParameterBindings,
 			DomainQueryExecutionContext executionContext) {
 		final TableDetails softDeleteTable = entityDescriptor.getSoftDeleteTableDetails();
@@ -182,7 +184,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext );
 
 		final Predicate matchingIdsPredicate = matchingIdsPredicateProducer.produceRestriction(
-				idsAndFks,
+				idExpressions,
 				entityDescriptor,
 				0,
 				entityDescriptor.getIdentifierMapping(),
@@ -224,7 +226,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 			String targetTableExpression,
 			EntityMappingType entityDescriptor,
 			Supplier<Consumer<SelectableConsumer>> tableKeyColumnsVisitationSupplier,
-			List<Object> ids,
+			List<Expression> idExpressions,
 			int valueIndex,
 			ModelPart valueModelPart,
 			JdbcParameterBindings jdbcParameterBindings,
@@ -237,7 +239,7 @@ public class InlineDeleteHandler implements DeleteHandler {
 		final SqmJdbcExecutionContextAdapter executionContextAdapter = SqmJdbcExecutionContextAdapter.omittingLockingAndPaging( executionContext );
 
 		final Predicate matchingIdsPredicate = matchingIdsPredicateProducer.produceRestriction(
-				ids,
+				idExpressions,
 				entityDescriptor,
 				valueIndex,
 				valueModelPart,

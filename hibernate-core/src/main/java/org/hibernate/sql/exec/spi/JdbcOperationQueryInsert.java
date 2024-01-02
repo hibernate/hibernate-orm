@@ -12,4 +12,5 @@ package org.hibernate.sql.exec.spi;
  * @author Steve Ebersole
  */
 public interface JdbcOperationQueryInsert extends JdbcOperationQueryMutation {
+	String getUniqueConstraintNameThatMayFail();
 }

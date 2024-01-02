@@ -8,13 +8,15 @@ package org.hibernate.id.insert;
 
 import java.sql.PreparedStatement;
 
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 
 /**
@@ -37,17 +39,23 @@ import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
  * @see org.hibernate.generator.OnExecutionGenerator
  *
  * @author Steve Ebersole
+ *
+ * @deprecated Use {@link GeneratedValuesMutationDelegate} instead.
  */
-public interface InsertGeneratedIdentifierDelegate {
+@Deprecated( forRemoval = true, since = "6.5" )
+public interface InsertGeneratedIdentifierDelegate extends GeneratedValuesMutationDelegate {
 	/**
 	 * Create a {@link TableInsertBuilder} with any specific identity
 	 * handling already built in.
 	 */
-	TableInsertBuilder createTableInsertBuilder(
+	default TableInsertBuilder createTableInsertBuilder(
 			BasicEntityIdentifierMapping identifierMapping,
 			Expectation expectation,
-			SessionFactoryImplementor sessionFactory);
+			SessionFactoryImplementor sessionFactory) {
+		return (TableInsertBuilder) createTableMutationBuilder( expectation, sessionFactory );
+	}
 
+	@Override
 	PreparedStatement prepareStatement(String insertSql, SharedSessionContractImplementor session);
 
 	/**
@@ -56,23 +64,20 @@ public interface InsertGeneratedIdentifierDelegate {
 	 *
 	 * @see #createTableInsertBuilder
 	 */
-	Object performInsert(
+	default Object performInsert(
 			PreparedStatementDetails insertStatementDetails,
 			JdbcValueBindings valueBindings,
 			Object entity,
-			SharedSessionContractImplementor session);
-
-	/**
-	 * Build an {@linkplain org.hibernate.sql.Insert insert statement}
-	 * specific to the delegate's mode of handling generated key values.
-	 *
-	 * @param context A context to help generate SQL strings
-	 * @return An {@link IdentifierGeneratingInsert}
-	 *
-	 * @deprecated this is no longer called
-	 */
-	@Deprecated(since = "6.2")
-	IdentifierGeneratingInsert prepareIdentifierGeneratingInsert(SqlStringGenerationContext context);
+			SharedSessionContractImplementor session) {
+		final EntityPersister entityPersister = session.getEntityPersister( null, entity );
+		final GeneratedValues generatedValues = performMutation(
+				insertStatementDetails,
+				valueBindings,
+				entity,
+				session
+		);
+		return generatedValues.getGeneratedValue( entityPersister.getIdentifierMapping() );
+	}
 
 	/**
 	 * Append SQL specific to this delegate's mode of handling generated
@@ -91,9 +96,24 @@ public interface InsertGeneratedIdentifierDelegate {
 	 * @param insertSQL The {@code insert} statement string
 	 * @param session The session in which we are operating
 	 * @param binder The parameter binder
+	 *
+	 * @return The generated identifier value
+	 */
+	default Object performInsert(String insertSQL, SharedSessionContractImplementor session, Binder binder) {
+		final EntityPersister entityPersister = session.getEntityPersister( null, binder.getEntity() );
+		final GeneratedValues generatedValues = performInsertReturning( insertSQL, session, binder );
+		return generatedValues.getGeneratedValue( entityPersister.getIdentifierMapping() );
+	}
+
+	/**
+	 * Execute the given {@code insert} statement and return the generated
+	 * key value.
+	 *
+	 * @param insertSQL The {@code insert} statement string
+	 * @param session The session in which we are operating
+	 * @param binder The parameter binder
 	 * 
 	 * @return The generated identifier value
 	 */
-	Object performInsert(String insertSQL, SharedSessionContractImplementor session, Binder binder);
-
+	GeneratedValues performInsertReturning(String insertSQL, SharedSessionContractImplementor session, Binder binder);
 }

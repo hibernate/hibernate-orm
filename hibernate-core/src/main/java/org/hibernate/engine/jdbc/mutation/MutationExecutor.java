@@ -9,6 +9,7 @@ package org.hibernate.engine.jdbc.mutation;
 import org.hibernate.Incubating;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.sql.model.ValuesAnalysis;
 
 /**
@@ -42,7 +43,7 @@ public interface MutationExecutor {
 	 * @param resultChecker Custom result checking; pass {@code null} to perform
 	 * 		the standard check using the statement's {@linkplain org.hibernate.jdbc.Expectation expectation}
 	 */
-	Object execute(
+	GeneratedValues execute(
 			Object modelReference,
 			ValuesAnalysis valuesAnalysis,
 			TableInclusionChecker inclusionChecker,

@@ -46,6 +46,7 @@ public enum Clause {
 	 * delete
 	 */
 	DELETE,
+	MERGE,
 
 	SELECT,
 	FROM,
@@ -62,6 +63,7 @@ public enum Clause {
 	WITH,
 	WITHIN_GROUP,
 	PARTITION,
+	CONFLICT,
 	CALL,
 
 	/**

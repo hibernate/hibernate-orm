@@ -478,6 +478,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isPreferJavaTimeJdbcTypesEnabled() {
+		return delegate.isPreferJavaTimeJdbcTypesEnabled();
+	}
+
+	@Override
 	public FormatMapper getJsonFormatMapper() {
 		return delegate.getJsonFormatMapper();
 	}

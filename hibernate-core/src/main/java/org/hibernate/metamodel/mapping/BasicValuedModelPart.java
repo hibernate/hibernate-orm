@@ -59,4 +59,9 @@ public interface BasicValuedModelPart extends BasicValuedMapping, ValuedModelPar
 	default boolean hasPartitionedSelectionMapping() {
 		return isPartitioned();
 	}
+
+	@Override
+	default BasicValuedModelPart asBasicValuedModelPart() {
+		return this;
+	}
 }

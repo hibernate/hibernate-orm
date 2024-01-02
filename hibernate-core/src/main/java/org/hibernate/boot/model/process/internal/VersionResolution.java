@@ -61,6 +61,11 @@ public class VersionResolution<E> implements BasicValue.Resolution<E> {
 					}
 
 					@Override
+					public boolean isPreferJavaTimeJdbcTypesEnabled() {
+						return context.isPreferJavaTimeJdbcTypesEnabled();
+					}
+
+					@Override
 					public TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy() {
 						return BasicValue.timeZoneStorageStrategy( timeZoneStorageType, context );
 					}

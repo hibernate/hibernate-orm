@@ -13,43 +13,58 @@ import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
 import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.values.AbstractGeneratedValuesMutationDelegate;
+import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.id.PostInsertIdentityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
 /**
- * Abstract {@link InsertGeneratedIdentifierDelegate} implementation where
+ * Abstract {@link org.hibernate.generator.values.GeneratedValuesMutationDelegate} implementation where
  * the underlying strategy causes the generated identifier to be returned as
  * an effect of performing the insert statement.  Thus, there is no need for
  * an additional sql statement to determine the generated identifier.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractReturningDelegate implements InsertGeneratedIdentifierDelegate {
-	private final PostInsertIdentityPersister persister;
-
+public abstract class AbstractReturningDelegate extends AbstractGeneratedValuesMutationDelegate
+		implements InsertGeneratedIdentifierDelegate {
+	/**
+	 * @deprecated Use {@link #AbstractReturningDelegate(EntityPersister, EventType, boolean, boolean)} instead.
+	 */
+	@Deprecated( forRemoval = true, since = "6.5" )
 	public AbstractReturningDelegate(PostInsertIdentityPersister persister) {
-		this.persister = persister;
+		super( persister, EventType.INSERT );
+	}
+
+	public AbstractReturningDelegate(
+			EntityPersister persister,
+			EventType timing,
+			boolean supportsArbitraryValues,
+			boolean supportsRowId) {
+		super( persister, timing, supportsArbitraryValues, supportsRowId );
 	}
 
 	@Override
-	public Object performInsert(
-			PreparedStatementDetails insertStatementDetails,
+	public GeneratedValues performMutation(
+			PreparedStatementDetails statementDetails,
 			JdbcValueBindings valueBindings,
 			Object entity,
 			SharedSessionContractImplementor session) {
-		session.getJdbcServices().getSqlStatementLogger().logStatement( insertStatementDetails.getSqlString() );
-		valueBindings.beforeStatement( insertStatementDetails );
-		return executeAndExtract( insertStatementDetails.getSqlString(), insertStatementDetails.getStatement(), session );
+		session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
+		valueBindings.beforeStatement( statementDetails );
+		return executeAndExtractReturning( statementDetails.getSqlString(), statementDetails.getStatement(), session );
 	}
 
 	@Override
-	public final Object performInsert(String insertSql, SharedSessionContractImplementor session, Binder binder) {
+	public final GeneratedValues performInsertReturning(String sql, SharedSessionContractImplementor session, Binder binder) {
 		try {
 			// prepare and execute the insert
-			PreparedStatement insert = prepareStatement( insertSql, session );
+			PreparedStatement insert = prepareStatement( sql, session );
 			try {
 				binder.bindValues( insert );
-				return executeAndExtract( insertSql, insert, session );
+				return executeAndExtractReturning( sql, insert, session );
 			}
 			finally {
 				releaseStatement( insert, session );
@@ -59,23 +74,31 @@ public abstract class AbstractReturningDelegate implements InsertGeneratedIdenti
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not insert: " + MessageHelper.infoString( persister ),
-					insertSql
+					sql
 			);
 		}
 	}
 
-	protected PostInsertIdentityPersister getPersister() {
-		return persister;
+	/**
+	 * @deprecated
+	 */
+	@Deprecated( forRemoval = true, since = "6.5" )
+	protected Object executeAndExtract(
+			String sql,
+			PreparedStatement preparedStatement,
+			SharedSessionContractImplementor session) {
+		final GeneratedValues generatedValues = executeAndExtractReturning( sql, preparedStatement, session );
+		return generatedValues.getGeneratedValue( persister.getIdentifierMapping() );
 	}
 
-	protected abstract Object executeAndExtract(
-			String insertSql,
-			PreparedStatement insertStatement,
+	protected abstract GeneratedValues executeAndExtractReturning(
+			String sql,
+			PreparedStatement preparedStatement,
 			SharedSessionContractImplementor session);
 
-	protected void releaseStatement(PreparedStatement insert, SharedSessionContractImplementor session) {
+	protected void releaseStatement(PreparedStatement preparedStatement, SharedSessionContractImplementor session) {
 		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
-		jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insert );
+		jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( preparedStatement );
 		jdbcCoordinator.afterStatementExecution();
 	}
 }

@@ -19,15 +19,26 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class ConstraintViolationException extends JDBCException {
 
+	private final ConstraintKind kind;
 	private final @Nullable String constraintName;
 
 	public ConstraintViolationException(String message, SQLException root, @Nullable String constraintName) {
-		super( message, root );
-		this.constraintName = constraintName;
+		this( message, root, ConstraintKind.OTHER, constraintName );
 	}
 
 	public ConstraintViolationException(String message, SQLException root, String sql, @Nullable String constraintName) {
+		this( message, root, sql, ConstraintKind.OTHER, constraintName );
+	}
+
+	public ConstraintViolationException(String message, SQLException root, ConstraintKind kind, @Nullable String constraintName) {
+		super( message, root );
+		this.kind = kind;
+		this.constraintName = constraintName;
+	}
+
+	public ConstraintViolationException(String message, SQLException root, String sql, ConstraintKind kind, @Nullable String constraintName) {
 		super( message, root, sql );
+		this.kind = kind;
 		this.constraintName = constraintName;
 	}
 
@@ -38,5 +49,17 @@ public class ConstraintViolationException extends JDBCException {
 	 */
 	public @Nullable String getConstraintName() {
 		return constraintName;
+	}
+
+	/**
+	 * Returns the kind of constraint that was violated.
+	 */
+	public ConstraintKind getKind() {
+		return kind;
+	}
+
+	public enum ConstraintKind {
+		UNIQUE,
+		OTHER
 	}
 }

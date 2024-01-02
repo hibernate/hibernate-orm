@@ -380,6 +380,11 @@ public class EntityTableMapping implements TableMapping {
 		}
 
 		@Override
+		public Integer getTemporalPrecision() {
+			return null;
+		}
+
+		@Override
 		public String getCustomReadExpression() {
 			return null;
 		}

@@ -26,6 +26,7 @@ import org.hibernate.event.spi.PostInsertEvent;
 import org.hibernate.event.spi.PostInsertEventListener;
 import org.hibernate.event.spi.PreInsertEvent;
 import org.hibernate.event.spi.PreInsertEventListener;
+import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.stat.internal.StatsHelper;
 import org.hibernate.stat.spi.StatisticsImplementor;
@@ -84,6 +85,11 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 	}
 
 	@Override
+	protected Object getRowId() {
+		return null ;
+	}
+
+	@Override
 	protected EntityKey getEntityKey() {
 		return getSession().generateEntityKey( getId(), getPersister() );
 	}
@@ -101,14 +107,19 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		if ( !veto ) {
 			final EntityPersister persister = getPersister();
 			final Object instance = getInstance();
-			persister.insert( id, getState(), instance, session );
+			final GeneratedValues generatedValues = persister.getInsertCoordinator().insert(
+					instance,
+					id,
+					getState(),
+					session
+			);
 			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
 			final EntityEntry entry = persistenceContext.getEntry( instance );
 			if ( entry == null ) {
 				throw new AssertionFailure( "possible non-threadsafe access to session" );
 			}
 			entry.postInsert( getState() );
-			handleGeneratedProperties( entry );
+			handleGeneratedProperties( entry, generatedValues, persistenceContext );
 			persistenceContext.registerInsertedKey( persister, getId() );
 			addCollectionsByKeyToPersistenceContext( persistenceContext, getState() );
 		}
@@ -124,11 +135,14 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		markExecuted();
 	}
 
-	private void handleGeneratedProperties(EntityEntry entry) {
+	private void handleGeneratedProperties(
+			EntityEntry entry,
+			GeneratedValues generatedValues,
+			PersistenceContext persistenceContext) {
 		final EntityPersister persister = getPersister();
 		if ( persister.hasInsertGeneratedProperties() ) {
 			final Object instance = getInstance();
-			persister.processInsertGeneratedProperties( getId(), instance, getState(), getSession() );
+			persister.processInsertGeneratedProperties( getId(), instance, getState(), generatedValues, getSession() );
 			if ( persister.isVersionPropertyGenerated() ) {
 				version = Versioning.getVersion( getState(), persister );
 			}
@@ -137,6 +151,13 @@ public class EntityInsertAction extends AbstractEntityInsertAction {
 		else if ( persister.isVersionPropertyGenerated() ) {
 			version = Versioning.getVersion( getState(), persister );
 			entry.postInsert( version );
+		}
+		// Process row-id values when available early by replacing the entity entry
+		if ( generatedValues != null && persister.getRowIdMapping() != null ) {
+			final Object rowId = generatedValues.getGeneratedValue( persister.getRowIdMapping() );
+			if ( rowId != null ) {
+				persistenceContext.replaceEntityEntryRowId( getInstance(), rowId );
+			}
 		}
 	}
 

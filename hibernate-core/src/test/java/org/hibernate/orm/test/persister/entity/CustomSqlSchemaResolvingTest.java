@@ -45,9 +45,9 @@ public class CustomSqlSchemaResolvingTest {
 		String className = CustomEntity.class.getName();
 
         final AbstractEntityPersister persister = (AbstractEntityPersister) scope.getSessionFactory().getMappingMetamodel().getEntityDescriptor(className);
-		String insertQuery = ( (JdbcMutationOperation) persister.getInsertCoordinator().getStaticInsertGroup().getSingleOperation() ).getSqlString();
-		String updateQuery = ( (JdbcMutationOperation) persister.getUpdateCoordinator().getStaticUpdateGroup().getSingleOperation() ).getSqlString();
-		String deleteQuery = ( (JdbcMutationOperation) persister.getDeleteCoordinator().getStaticDeleteGroup().getSingleOperation() ).getSqlString();
+		String insertQuery = ( (JdbcMutationOperation) persister.getInsertCoordinator().getStaticMutationOperationGroup().getSingleOperation() ).getSqlString();
+		String updateQuery = ( (JdbcMutationOperation) persister.getUpdateCoordinator().getStaticMutationOperationGroup().getSingleOperation() ).getSqlString();
+		String deleteQuery = ( (JdbcMutationOperation) persister.getDeleteCoordinator().getStaticMutationOperationGroup().getSingleOperation() ).getSqlString();
 
 		assertEquals( "Incorrect custom SQL for insert in  Entity: " + className,
 				"INSERT INTO FOO (name, id) VALUES (?, ?)", insertQuery );

@@ -6,6 +6,12 @@
  */
 package org.hibernate.orm.test.jpa.query;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
+import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
+
 import java.util.List;
 
 import org.hibernate.LockMode;
@@ -14,6 +20,7 @@ import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 import org.hibernate.query.NativeQuery;
 
 import org.hibernate.testing.TestForIssue;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,11 +34,7 @@ import jakarta.persistence.NamedQueries;
 import jakarta.persistence.NamedQuery;
 import jakarta.persistence.Query;
 import jakarta.persistence.TypedQuery;
-
-import static org.hibernate.jpa.HibernateHints.HINT_NATIVE_LOCK_MODE;
-import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import org.assertj.core.api.InstanceOfAssertFactories;
 
 /**
  * @author Andrea Boriero
@@ -200,12 +203,72 @@ public class NamedQueryTest extends BaseEntityManagerFunctionalTestCase {
 	@TestForIssue(jiraKey = "HHH-11413")
 	public void testNamedQueryAddedFromTypedNativeQuery() {
 		doInJPA( this::entityManagerFactory, entityManager -> {
-			final Query query = entityManager.createNativeQuery( "select g.title from Game g where title = ?", String.class );
+			final Query query = entityManager.createNativeQuery(
+					"select g.title from Game g where title = ?", String.class );
 			entityManagerFactory().addNamedQuery( "the-query", query );
 
 			final TypedQuery<String> namedQuery = entityManager.createNamedQuery( "the-query", String.class );
 			namedQuery.setParameter( 1, "abc" );
 			namedQuery.getResultList();
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-17566")
+	public void testNamedQueryAddedFromEntityNativeQuery() {
+		// Check that the native query works
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			final Query query = entityManager.createNativeQuery(
+					"select g.* from Game g where title = ?", Game.class );
+			query.setParameter( 1, "Halo" );
+			assertThat( (List<?>) query.getResultList() )
+					.hasSize( 1 )
+					.element( 0 )
+					.asInstanceOf( InstanceOfAssertFactories.type( Game.class ) )
+					.returns( "Halo", Game::getTitle );
+		} );
+		// Check corresponding named query can be used as a typed query
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			final Query query = entityManager.createNativeQuery(
+					"select g.* from Game g where title = ?", Game.class );
+			entityManagerFactory().addNamedQuery( "the-query", query );
+
+			final TypedQuery<Game> namedQuery = entityManager.createNamedQuery( "the-query", Game.class );
+			namedQuery.setParameter( 1, "Halo" );
+			assertThat( namedQuery.getResultList() )
+					.hasSize( 1 )
+					.element( 0 )
+					.returns( "Halo", Game::getTitle );
+		} );
+	}
+
+	@Test
+	@JiraKey("HHH-17566")
+	public void testNamedQueryAddedFromEntityNativeQueryUsedAsUntyped() {
+		// Check corresponding named query can be used as an untyped query
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			final Query query = entityManager.createNativeQuery(
+					"select g.* from Game g where title = ?", Game.class );
+			query.setParameter( 1, "Halo" );
+			assertThat( (List<?>) query.getResultList() )
+					.hasSize( 1 )
+					.element( 0 )
+					.asInstanceOf( InstanceOfAssertFactories.type( Game.class ) )
+					.returns( "Halo", Game::getTitle );
+		} );
+		// Check naming the native query works
+		doInJPA( this::entityManagerFactory, entityManager -> {
+			final Query query = entityManager.createNativeQuery(
+					"select g.* from Game g where title = ?", Game.class );
+			entityManagerFactory().addNamedQuery( "the-query", query );
+
+			final Query namedQuery = entityManager.createNamedQuery( "the-query" );
+			namedQuery.setParameter( 1, "Halo" );
+			assertThat( (List<?>) namedQuery.getResultList() )
+					.hasSize( 1 )
+					.element( 0 )
+					.asInstanceOf( InstanceOfAssertFactories.type( Game.class ) )
+					.returns( "Halo", Game::getTitle );
 		} );
 	}
 

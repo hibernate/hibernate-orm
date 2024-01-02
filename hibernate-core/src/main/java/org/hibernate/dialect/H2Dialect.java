@@ -721,8 +721,19 @@ public class H2Dialect extends Dialect {
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			final String constraintName;
 
 			switch (errorCode) {
+				case 23505:
+					// Unique constraint violation
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
+					return new ConstraintViolationException(
+							message,
+							sqlException,
+							sql,
+							ConstraintViolationException.ConstraintKind.UNIQUE,
+							constraintName
+					);
 				case 40001:
 					// DEADLOCK DETECTED
 					return new LockAcquisitionException(message, sqlException, sql);
@@ -731,7 +742,7 @@ public class H2Dialect extends Dialect {
 					return new PessimisticLockException(message, sqlException, sql);
 				case 90006:
 					// NULL not allowed for column [90006-145]
-					final String constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
+					constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
 					return new ConstraintViolationException(message, sqlException, sql, constraintName);
 				case 57014:
 					return new QueryTimeoutException( message, sqlException, sql );
@@ -820,6 +831,21 @@ public class H2Dialect extends Dialect {
 	 */
 	@Override
 	public boolean supportsInsertReturning() {
+		return true;
+	}
+
+	@Override
+	public boolean supportsInsertReturningRowId() {
+		return false;
+	}
+
+	@Override
+	public boolean supportsInsertReturningGeneratedKeys() {
+		return true;
+	}
+
+	@Override
+	public boolean unquoteGetGeneratedKeys() {
 		return true;
 	}
 
@@ -934,5 +960,10 @@ public class H2Dialect extends Dialect {
 		public String createMarker(int position, JdbcType jdbcType) {
 			return "?" + position;
 		}
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 }

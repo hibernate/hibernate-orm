@@ -59,6 +59,7 @@ import org.hibernate.query.results.Builders;
 import org.hibernate.query.results.ResultBuilder;
 import org.hibernate.query.results.ResultSetMapping;
 import org.hibernate.query.results.dynamic.DynamicFetchBuilderLegacy;
+import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityCalculated;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderEntityStandard;
 import org.hibernate.query.results.dynamic.DynamicResultBuilderInstantiation;
 import org.hibernate.query.results.implicit.ImplicitModelPartResultBuilderEntity;
@@ -475,13 +476,10 @@ public class NativeQueryImpl<R>
 		final List<ResultBuilder> resultBuilders = resultSetMapping.getResultBuilders();
 		if ( resultBuilders.size() == 1 ) {
 			final ResultBuilder resultBuilder = resultBuilders.get( 0 );
-			if ( resultBuilder instanceof ImplicitResultClassBuilder ) {
-				final ImplicitResultClassBuilder resultTypeBuilder = (ImplicitResultClassBuilder) resultBuilder;
-				return resultTypeBuilder.getJavaType();
-			}
-			else if ( resultBuilder instanceof ImplicitModelPartResultBuilderEntity ) {
-				final ImplicitModelPartResultBuilderEntity resultTypeBuilder = (ImplicitModelPartResultBuilderEntity) resultBuilder;
-				return resultTypeBuilder.getJavaType();
+			if ( resultBuilder instanceof ImplicitResultClassBuilder
+					|| resultBuilder instanceof ImplicitModelPartResultBuilderEntity
+					|| resultBuilder instanceof DynamicResultBuilderEntityCalculated ) {
+				return resultBuilder.getJavaType();
 			}
 		}
 		return null;

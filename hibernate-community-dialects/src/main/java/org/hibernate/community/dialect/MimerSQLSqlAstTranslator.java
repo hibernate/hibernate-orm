@@ -83,12 +83,7 @@ public class MimerSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from (values(0))";
-	}
-
-	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return " from " + getDual();
 	}
 }

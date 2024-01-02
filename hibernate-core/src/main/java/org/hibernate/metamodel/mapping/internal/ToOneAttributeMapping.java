@@ -65,7 +65,6 @@ import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.TreatedNavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBase;
@@ -84,11 +83,14 @@ import org.hibernate.sql.ast.tree.from.TableGroupProducer;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
+import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchOptions;
 import org.hibernate.sql.results.graph.FetchParent;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
 import org.hibernate.sql.results.graph.entity.EntityFetch;
@@ -97,6 +99,7 @@ import org.hibernate.sql.results.graph.entity.internal.EntityDelayedFetchImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchJoinedImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
 import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
+import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
 import org.hibernate.type.ComponentType;
@@ -104,6 +107,7 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
+import org.hibernate.type.descriptor.java.JavaType;
 
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
 
@@ -1780,7 +1784,34 @@ public class ToOneAttributeMapping
 			);
 		}
 		else {
+			return new NullDomainResult( foreignKeyDescriptor.getKeyPart().getJavaType() );
+		}
+	}
+
+	public static class NullDomainResult implements DomainResult {
+		private final DomainResultAssembler resultAssembler;
+		private final JavaType<?> resultJavaType;
+
+		public NullDomainResult(JavaType<?> javaType) {
+			resultAssembler = new NullValueAssembler( javaType );
+			this.resultJavaType = javaType;
+		}
+
+		@Override
+		public String getResultVariable() {
 			return null;
+		}
+
+		@Override
+		public DomainResultAssembler createResultAssembler(
+				FetchParentAccess parentAccess,
+				AssemblerCreationState creationState) {
+			return resultAssembler;
+		}
+
+		@Override
+		public JavaType<?> getResultJavaType() {
+			return resultJavaType;
 		}
 	}
 

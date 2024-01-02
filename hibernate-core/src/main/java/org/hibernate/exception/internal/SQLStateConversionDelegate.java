@@ -117,7 +117,7 @@ public class SQLStateConversionDelegate extends AbstractSQLExceptionConversionDe
 			if ( "70100".equals( sqlState ) ||
 					// Oracle user requested cancel of current operation
 					( "72000".equals( sqlState ) && errorCode == 1013 ) ) {
-				throw new QueryTimeoutException(  message, sqlException, sql );
+				return new QueryTimeoutException(  message, sqlException, sql );
 			}
 		}
 

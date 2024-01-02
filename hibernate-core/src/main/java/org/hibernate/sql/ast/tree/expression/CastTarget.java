@@ -61,6 +61,11 @@ public class CastTarget implements Expression, SqlAstNode, SqlTypedMapping {
 		return precision;
 	}
 
+	@Override
+	public Integer getTemporalPrecision() {
+		return null;
+	}
+
 	public Integer getScale() {
 		return scale;
 	}

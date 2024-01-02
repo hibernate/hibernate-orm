@@ -82,10 +82,11 @@ jobs:
       - name: Run build script
         env:
           RDBMS: ${{ matrix.rdbms }}
+          GRADLE_ENTERPRISE_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_TOKEN }}"
         run: ./ci/build-github.sh
         shell: bash
       - name: Upload test reports (if Gradle failed)
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         if: failure()
         with:
           name: test-reports-java11-${{ matrix.rdbms }}

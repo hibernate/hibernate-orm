@@ -52,6 +52,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
+	private final Integer temporalPrecision;
 
 	private final BasicType versionBasicType;
 
@@ -69,6 +70,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 			Long length,
 			Integer precision,
 			Integer scale,
+			Integer temporalPrecision,
 			BasicType<?> versionBasicType,
 			EntityMappingType declaringType,
 			MappingModelCreationProcess creationProcess) {
@@ -77,6 +79,7 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
+		this.temporalPrecision = temporalPrecision;
 		this.declaringType = declaringType;
 
 		this.columnTableExpression = columnTableExpression;
@@ -176,6 +179,11 @@ public class EntityVersionMappingImpl implements EntityVersionMapping, FetchOpti
 	@Override
 	public Integer getScale() {
 		return scale;
+	}
+
+	@Override
+	public Integer getTemporalPrecision() {
+		return temporalPrecision;
 	}
 
 	@Override

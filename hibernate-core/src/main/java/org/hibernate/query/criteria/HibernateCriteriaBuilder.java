@@ -123,6 +123,12 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 
 	<T> JpaCriteriaInsertSelect<T> createCriteriaInsertSelect(Class<T> targetEntity);
 
+	@Incubating
+	JpaValues values(Expression<?>... expressions);
+
+	@Incubating
+	JpaValues values(List<? extends Expression<?>> expressions);
+
 	/**
 	 * Transform the given HQL {@code select} query to an equivalent criteria query.
 	 *
@@ -692,8 +698,6 @@ public interface HibernateCriteriaBuilder extends CriteriaBuilder {
 	<K, L extends List<?>> JpaExpression<Set<K>> indexes(L list);
 
 	<T> JpaExpression<T> value(T value);
-
-	<V, C extends Collection<V>> JpaExpression<Collection<V>> values(C collection);
 
 	@Override
 	<V, M extends Map<?, V>> Expression<Collection<V>> values(M map);

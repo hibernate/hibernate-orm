@@ -6,24 +6,17 @@
  */
 package org.hibernate.query.sqm.mutation.internal;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.EmbeddedAttributeMapping;
-import org.hibernate.persister.internal.SqlFragmentPredicate;
 import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
-import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
-import org.hibernate.sql.ast.tree.predicate.FilterPredicate;
-import org.hibernate.sql.ast.tree.predicate.Junction;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.exec.spi.ExecutionContext;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
@@ -185,87 +178,5 @@ public class SqmMutationStrategyHelper {
 					executionContext
 			);
 		}
-	}
-
-	/**
-	 * Translates the original delete predicate to be used in the id subquery
-	 * forcing the use of the table alias qualifier
-	 */
-	public static Predicate getIdSubqueryPredicate(
-			Predicate predicate,
-			EntityMappingType entityDescriptor,
-			TableGroup tableGroup,
-			SharedSessionContractImplementor session) {
-		if ( predicate instanceof FilterPredicate || predicate instanceof SqlFragmentPredicate ) {
-			return getBaseRestrictions( entityDescriptor, tableGroup, session ).get( 0 );
-		}
-		else if ( predicate instanceof Junction ) {
-			final Junction original = (Junction) predicate;
-			if ( original.getPredicates().size() > 1 ) {
-				final Junction junction = new Junction(
-						original.getNature(),
-						original.getExpressionType()
-				);
-				junction.getPredicates().addAll( original.getPredicates() );
-				final Predicate secondToLastPredicate = junction.getPredicates().get( junction.getPredicates().size() - 2 );
-				final Predicate lastPredicate = junction.getPredicates().get( junction.getPredicates().size() - 1 );
-				int filterPredicateIndex = -1;
-				int fragmentPredicateIndex = -1;
-				if ( lastPredicate instanceof Junction ) {
-					// If the mutation query specified an explicit where condition and there are multiple base
-					// restrictions they will be in a nested Junction predicate, so we need to process that one
-					final Predicate baseRestrictions = getIdSubqueryPredicate(
-							lastPredicate,
-							entityDescriptor,
-							tableGroup,
-							session
-					);
-					junction.getPredicates().set( junction.getPredicates().size() - 1, baseRestrictions );
-					predicate = junction;
-				}
-				else if ( secondToLastPredicate instanceof FilterPredicate ) {
-					filterPredicateIndex = junction.getPredicates().size() - 2;
-					fragmentPredicateIndex = filterPredicateIndex + 1;
-				}
-				else if ( lastPredicate instanceof FilterPredicate ) {
-					filterPredicateIndex = junction.getPredicates().size() - 1;
-				}
-				else if ( lastPredicate instanceof SqlFragmentPredicate ) {
-					fragmentPredicateIndex = junction.getPredicates().size() - 1;
-				}
-				if ( filterPredicateIndex != -1 || fragmentPredicateIndex != -1 ) {
-					final List<Predicate> baseRestrictions = getBaseRestrictions(
-							entityDescriptor,
-							tableGroup,
-							session
-					);
-					int index = 0;
-					if ( filterPredicateIndex != -1 ) {
-						junction.getPredicates().set( filterPredicateIndex, baseRestrictions.get( index++ ) );
-					}
-					if ( fragmentPredicateIndex != -1 ) {
-						junction.getPredicates().set( fragmentPredicateIndex, baseRestrictions.get( index ) );
-					}
-					predicate = junction;
-				}
-			}
-		}
-		return predicate;
-	}
-
-	private static List<Predicate> getBaseRestrictions(
-			EntityMappingType entityDescriptor,
-			TableGroup tableGroup,
-			SharedSessionContractImplementor session) {
-		final List<Predicate> baseRestrictions = new ArrayList<>( 2 );
-		entityDescriptor.applyBaseRestrictions(
-				baseRestrictions::add,
-				tableGroup,
-				true,
-				session.getLoadQueryInfluencers().getEnabledFilters(),
-				null,
-				null
-		);
-		return baseRestrictions;
 	}
 }

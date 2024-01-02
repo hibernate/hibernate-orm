@@ -19,35 +19,14 @@ package org.hibernate.dialect;
  * 
  * @author Jonathan Bregler
  *
- * @deprecated use HANAColumnStoreDialect(400)
+ * @deprecated use {@link HANADialect} with {@code DatabaseVersion.make( 4 )} instead
  */
-@Deprecated
+@Deprecated(forRemoval = true)
 public class HANACloudColumnStoreDialect extends HANAColumnStoreDialect {
 
 	public HANACloudColumnStoreDialect() {
 		// No idea how the versioning scheme is here, but since this is deprecated anyway, keep it as is
-		super( DatabaseVersion.make( 4 ) );
-	}
-
-	@Override
-	public boolean supportsLateral() {
-		// Couldn't find a reference since when this is supported
-		return true;
-	}
-
-	@Override
-	protected boolean supportsAsciiStringTypes() {
-		return getVersion().isBefore( 4 );
-	}
-
-	@Override
-	protected Boolean useUnicodeStringTypesDefault() {
-		return getVersion().isSameOrAfter( 4 );
-	}
-
-	@Override
-	public boolean isUseUnicodeStringTypes() {
-		return getVersion().isSameOrAfter( 4 ) || super.isUseUnicodeStringTypes();
+		super( new HANAServerConfiguration( DatabaseVersion.make( 4 ) ) );
 	}
 
 }

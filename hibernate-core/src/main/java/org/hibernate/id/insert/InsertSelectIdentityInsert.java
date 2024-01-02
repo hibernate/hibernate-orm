@@ -6,7 +6,6 @@
  */
 package org.hibernate.id.insert;
 import org.hibernate.MappingException;
-import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.sql.Insert;
 import org.hibernate.generator.OnExecutionGenerator;
@@ -17,7 +16,11 @@ import org.hibernate.generator.OnExecutionGenerator;
  * to the end of the insert statement.
  * 
  * @author Steve Ebersole
+ *
+ * @deprecated This is not used anymore in any of the
+ * {@link org.hibernate.generator.values.GeneratedValuesMutationDelegate} implementations.
  */
+@Deprecated( since = "6.5" )
 public class InsertSelectIdentityInsert extends IdentifierGeneratingInsert {
 	protected String identityColumnName;
 

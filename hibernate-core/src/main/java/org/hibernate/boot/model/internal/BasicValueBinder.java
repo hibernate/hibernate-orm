@@ -221,6 +221,11 @@ public class BasicValueBinder implements JdbcTypeIndicators {
 	}
 
 	@Override
+	public boolean isPreferJavaTimeJdbcTypesEnabled() {
+		return buildingContext.isPreferJavaTimeJdbcTypesEnabled();
+	}
+
+	@Override
 	public int getPreferredSqlTypeCodeForBoolean() {
 		return resolveJdbcTypeCode( buildingContext.getPreferredSqlTypeCodeForBoolean() );
 	}

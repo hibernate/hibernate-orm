@@ -269,8 +269,8 @@ public class Builders {
 			NavigablePath fetchPath,
 			Fetchable fetchable,
 			DomainResultCreationState creationState) {
-		if ( fetchable instanceof BasicValuedModelPart ) {
-			final BasicValuedModelPart basicValuedFetchable = (BasicValuedModelPart) fetchable;
+		final BasicValuedModelPart basicValuedFetchable = fetchable.asBasicValuedModelPart();
+		if ( basicValuedFetchable != null ) {
 			return new ImplicitFetchBuilderBasic( fetchPath, basicValuedFetchable, creationState );
 		}
 

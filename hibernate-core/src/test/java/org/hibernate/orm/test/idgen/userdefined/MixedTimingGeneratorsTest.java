@@ -9,6 +9,7 @@ package org.hibernate.orm.test.idgen.userdefined;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 import java.util.EnumSet;
+import java.util.Properties;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -23,8 +24,11 @@ import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.EventTypeSets;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.IdentityGenerator;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.service.ServiceRegistry;
+import org.hibernate.type.Type;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -43,6 +47,7 @@ import static java.lang.annotation.ElementType.FIELD;
 import static java.lang.annotation.ElementType.METHOD;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hibernate.generator.EventTypeSets.INSERT_ONLY;
 
 /**
  * @author Marco Belladelli
@@ -255,15 +260,11 @@ public class MixedTimingGeneratorsTest {
 		}
 	}
 
-	public static class IdentityOrAssignedGenerator extends IdentityGenerator implements BeforeExecutionGenerator {
+	public static class IdentityOrAssignedGenerator extends IdentityGenerator implements IdentifierGenerator {
 		@Override
-		public Object generate(
-				SharedSessionContractImplementor session,
-				Object owner,
-				Object currentValue,
-				EventType eventType) {
-			final EntityPersister entityPersister = session.getEntityPersister( null, owner );
-			return entityPersister.getIdentifier( owner, session );
+		public Object generate(SharedSessionContractImplementor session, Object object) {
+			final EntityPersister entityPersister = session.getEntityPersister( null, object );
+			return entityPersister.getIdentifier( object, session );
 		}
 
 		@Override
@@ -274,6 +275,20 @@ public class MixedTimingGeneratorsTest {
 		@Override
 		public boolean generatedOnExecution(Object owner, SharedSessionContractImplementor session) {
 			return generate( session, owner, null, null ) == null;
+		}
+
+		@Override
+		public boolean allowAssignedIdentifiers() {
+			return true;
+		}
+
+		@Override
+		public EnumSet<EventType> getEventTypes() {
+			return INSERT_ONLY;
+		}
+
+		@Override
+		public void configure(Type type, Properties params, ServiceRegistry serviceRegistry) {
 		}
 	}
 

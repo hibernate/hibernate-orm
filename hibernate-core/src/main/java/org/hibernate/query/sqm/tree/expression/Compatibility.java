@@ -75,14 +75,6 @@ public class Compatibility {
 				return areAssignmentCompatiblePrimitive( to, primitiveEquivalent( from ) );
 			}
 		}
-		else if ( isWrapper( to ) ) {
-			if ( from.isPrimitive() ) {
-				return areAssignmentCompatiblePrimitive( primitiveEquivalent( to ), from );
-			}
-			else if ( isWrapper( from ) ) {
-				return areAssignmentCompatiblePrimitive( primitiveEquivalent( to ), primitiveEquivalent( from ) );
-			}
-		}
 
 		return false;
 	}

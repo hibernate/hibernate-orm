@@ -6,17 +6,6 @@
  */
 package org.hibernate.id;
 
-import org.hibernate.HibernateException;
-import org.hibernate.Internal;
-import org.hibernate.dialect.Dialect;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.internal.CoreMessageLogger;
-import org.hibernate.internal.util.StringHelper;
-import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.metamodel.mapping.SqlTypedMapping;
-import org.hibernate.metamodel.model.domain.NavigableRole;
-import org.hibernate.type.descriptor.WrapperOptions;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -26,6 +15,18 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Objects;
+
+import org.hibernate.HibernateException;
+import org.hibernate.Internal;
+import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.values.internal.GeneratedValuesHelper;
+import org.hibernate.internal.CoreLogging;
+import org.hibernate.internal.CoreMessageLogger;
+import org.hibernate.internal.util.StringHelper;
+import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.metamodel.mapping.SqlTypedMapping;
+import org.hibernate.metamodel.model.domain.NavigableRole;
+import org.hibernate.type.descriptor.WrapperOptions;
 
 /**
  * Factory and helper methods for {@link IdentifierGenerator} framework.
@@ -76,7 +77,10 @@ public final class IdentifierGeneratorHelper {
 	 * @return The generated identity value
 	 * @throws SQLException       Can be thrown while accessing the result set
 	 * @throws HibernateException Indicates a problem reading back a generated identity value.
+	 *
+	 * @deprecated Use {@link GeneratedValuesHelper#getGeneratedValues} instead
 	 */
+	@Deprecated( since = "6.5", forRemoval = true )
 	public static Object getGeneratedIdentity(
 			String path,
 			ResultSet resultSet,
@@ -112,7 +116,7 @@ public final class IdentifierGeneratorHelper {
 
 	private static boolean equal(String keyColumnName, String alias, Dialect dialect) {
 		return alias.equalsIgnoreCase( keyColumnName )
-			|| alias.equalsIgnoreCase( StringHelper.unquote( keyColumnName, dialect ) );
+				|| alias.equalsIgnoreCase( StringHelper.unquote( keyColumnName, dialect ) );
 	}
 
 	public static IntegralDataTypeHolder getIntegralDataTypeHolder(Class<?> integralType) {

@@ -12,7 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.dialect.AbstractTransactSQLDialect;
 import org.hibernate.dialect.OracleDialect;
+import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.engine.jdbc.connections.spi.ConnectionProvider;
 import org.hibernate.query.NativeQuery;
 import org.hibernate.query.Query;
@@ -70,17 +72,26 @@ public class QueryTimeOutTest extends BaseNonConfigCoreFunctionalTestCase {
 		);
 		final String baseQuery;
 		if ( DialectContext.getDialect() instanceof OracleDialect ) {
-			baseQuery = "update AnEntity ae1_0 set ae1_0.name=";
+			baseQuery = "update AnEntity ae1_0 set ae1_0.name=?";
+		}
+		else if ( DialectContext.getDialect() instanceof SybaseDialect ) {
+			baseQuery = "update AnEntity set name=? from AnEntity ae1_0";
+		}
+		else if ( DialectContext.getDialect() instanceof AbstractTransactSQLDialect ) {
+			baseQuery = "update ae1_0 set name=? from AnEntity ae1_0";
 		}
 		else {
-			baseQuery = "update AnEntity set name=";
+			baseQuery = "update AnEntity ae1_0 set name=?";
 		}
-		expectedSqlQuery = baseQuery + jdbcType.getJdbcLiteralFormatter( StringJavaType.INSTANCE )
-				.toJdbcLiteral(
-						"abc",
-						sessionFactory().getJdbcServices().getDialect(),
-						sessionFactory().getWrapperOptions()
-				);
+		expectedSqlQuery = baseQuery.replace(
+				"?",
+				jdbcType.getJdbcLiteralFormatter( StringJavaType.INSTANCE )
+						.toJdbcLiteral(
+								"abc",
+								sessionFactory().getJdbcServices().getDialect(),
+								sessionFactory().getWrapperOptions()
+						)
+		);
 	}
 
 	@Test

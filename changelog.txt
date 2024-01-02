@@ -3,6 +3,68 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.4.1.Final (December 15, 2023)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32216
+
+** Bug
+    * [HHH-17570] - Wrong name provided when checking Oracle autonomous JSON database
+    * [HHH-17561] - NullPointerException at OracleServerConfiguration class
+    * [HHH-17555] - equals hashcode combined with naturalId
+    * [HHH-17553] - java.util.ConcurrentModificationException: null when loading an entity
+    * [HHH-17551] - Gradle Enterprise improvements
+    * [HHH-17528] - Explicit selection of an @Embeddable property containing associated collections doesn't work
+    * [HHH-17525] - StackOverflowError when using @ManyToMany with composite id
+    * [HHH-17520] - Schema creation fails with interval second data type on PostgreSQL
+    * [HHH-17519] - Initializing a lazy association with a non aggregate id causes a NPE
+    * [HHH-17515] - DynamicInstantiationResult wrong java type constructor selected
+    * [HHH-17499] - SemanticException when querying embedded id entity with positional parameter
+    * [HHH-17494] - Metamodel generator produces an uncompilable class when an EntityGraph name contains a comma
+    * [HHH-17491] - UnknownEntityTypeException thrown when multiple subclasses define an attribute with the same name and one is a MappedSuperclass
+    * [HHH-17489] - ConcurrentModificationException after upgrading to 6.4.0
+    * [HHH-17466] - Exception on query: Could not convert 'java.util.Locale' to 'java.util.Locale' using 'org.hibernate.type.descriptor.java.LocaleJavaType' to wrap
+    * [HHH-17464] - 6.4.0 regression: NullPointerException in DefaultEvictEventListener#onEvict
+    * [HHH-17456] - java.util.UnknownFormatConversionException thrown why logging set to TRACE
+    * [HHH-17445] - Subquery correlated path expressions do not work with nullness predicates
+    * [HHH-17418] - Bytecode enchanced read accessor for a final field uses "missing" writer method
+    * [HHH-17416] - Using tuples in WHERE clause throws SemanticException
+    * [HHH-17413] - Invalid SQL with TYPE() function and CASE expression in SELECT clause
+    * [HHH-17408] - Unproxying leads to uninitialized one-to-one associations in some cases involving polymorphism
+    * [HHH-17407] - AssertionError when using JpaEntityJoin with correlated subqery if criteria copy tree is enabled
+    * [HHH-17405] - Cannot resolve path of generic mapped-superclass association path 
+    * [HHH-17402] - UnknownEntityTypeException: Unable to locate persister - when comparing generic interface ToOne attribute to parameter
+    * [HHH-17397] - Count with right join returns count on the left entity although requested by the right one
+    * [HHH-17395] - Refresh with PESSIMISTIC_WRITE ignored for lazy loaded entity
+    * [HHH-17393] - Incorrect return type for List attribute, wrap in additional list
+    * [HHH-17392] - UnsupportedOperationException when using row_number() window function without top level GROUP BY
+    * [HHH-17391] - AssertionError when using row_number() window function with ORDER BY
+    * [HHH-17387] - Can't use EAGER ManyToOne on parent abstract class of joined table entity
+    * [HHH-17379] - Right join does not return records from the right table if there is condition on ID field and there's no matching record in the from clause
+    * [HHH-17359] - Query Cache contains null values for entity associations when entity was already loaded
+    * [HHH-17334] - Duplicated columns when updating indexed @ElementCollection with non updatable fields
+    * [HHH-17293] - Schema validation fails on postgres interval seconds type
+    * [HHH-17280] - UnknownTableReferenceException in subquery selecting embeddable foreign key
+    * [HHH-16967] - Missing join on inheritance parent table to validate @Where condition
+    * [HHH-16756] - orphanRemoval does not work when bytecode enhancement is enabled
+    * [HHH-16306] - CountExpressionTest.testCountDistinctTuple fails on Sybase
+    * [HHH-16100] - Dynamic-map entity mode does not register a column for one-to-one associations
+    * [HHH-1645] - refresh with LockMode on an unitialized proxy does not work
+
+** Improvement
+    * [HHH-17554] - No join on the table of the parent class with JOINED inheritance strategy when the select not contains a column used in @Where or @SQLRestriction
+    * [HHH-16809] - Add JavaType#createArray
+
+** Task
+    * [HHH-17565] - Add testing for JDK 22-ea
+    * [HHH-17546] - Update Cockroach CI testing to 23.1.12
+    * [HHH-17545] - Update SAP HANA JDBC driver to 2.19.11
+    * [HHH-17544] - Update SAP HANA CI testing to 2.00.072.00.20231123.1
+    * [HHH-17543] - Update DB2 CI testing to 11.5.9.0
+    * [HHH-17542] - Update DB2 JDBC driver to 11.5.9.0
+    * [HHH-17541] - Update SQL Server JDBC driver to 12.4.2
+
+
 Changes in 6.4.0.Final (November 23, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

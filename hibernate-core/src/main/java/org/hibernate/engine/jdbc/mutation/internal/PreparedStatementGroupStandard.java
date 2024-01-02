@@ -22,7 +22,7 @@ import org.hibernate.engine.jdbc.mutation.group.PreparedStatementGroup;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.MutationStatementPreparer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.persister.entity.mutation.EntityMutationTarget;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.PreparableMutationOperation;
@@ -46,6 +46,7 @@ public class PreparedStatementGroupStandard implements PreparedStatementGroup {
 	public PreparedStatementGroupStandard(
 			MutationType mutationType,
 			MutationTarget<?> mutationTarget,
+			GeneratedValuesMutationDelegate generatedValuesDelegate,
 			List<PreparableMutationOperation> jdbcMutations,
 			SharedSessionContractImplementor session) {
 		this.mutationType = mutationType;
@@ -54,7 +55,7 @@ public class PreparedStatementGroupStandard implements PreparedStatementGroup {
 
 		this.session = session;
 
-		this.statementMap = createStatementDetailsMap( jdbcMutations, mutationType, mutationTarget, session );
+		this.statementMap = createStatementDetailsMap( jdbcMutations, mutationType, generatedValuesDelegate, session );
 	}
 
 	@Override
@@ -112,8 +113,7 @@ public class PreparedStatementGroupStandard implements PreparedStatementGroup {
 
 	private static PreparedStatementDetails createPreparedStatementDetails(
 			PreparableMutationOperation jdbcMutation,
-			MutationType mutationType,
-			MutationTarget<?> mutationTarget,
+			GeneratedValuesMutationDelegate generatedValuesDelegate,
 			SharedSessionContractImplementor session) {
 		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		final MutationStatementPreparer statementPreparer = jdbcCoordinator.getMutationStatementPreparer();
@@ -121,11 +121,8 @@ public class PreparedStatementGroupStandard implements PreparedStatementGroup {
 		final TableMapping tableDetails = jdbcMutation.getTableDetails();
 
 		final Supplier<PreparedStatement> jdbcStatementCreator;
-		if ( mutationType == MutationType.INSERT
-				&& mutationTarget instanceof EntityMutationTarget
-				&& ( (EntityMutationTarget) mutationTarget ).getIdentityInsertDelegate() != null
-				&& tableDetails.getTableName().equals( mutationTarget.getIdentifierTableName() ) ) {
-			jdbcStatementCreator = () -> ( (EntityMutationTarget) mutationTarget ).getIdentityInsertDelegate().prepareStatement(
+		if ( tableDetails.isIdentifierTable() && generatedValuesDelegate != null ) {
+			jdbcStatementCreator = () -> generatedValuesDelegate.prepareStatement(
 					jdbcMutation.getSqlString(),
 					session
 			);
@@ -152,26 +149,26 @@ public class PreparedStatementGroupStandard implements PreparedStatementGroup {
 	}
 
 
-	private SortedMap<String, PreparedStatementDetails> createStatementDetailsMap(
+	private static SortedMap<String, PreparedStatementDetails> createStatementDetailsMap(
 			List<PreparableMutationOperation> jdbcMutations,
 			MutationType mutationType,
-			MutationTarget<?> mutationTarget,
+			GeneratedValuesMutationDelegate generatedValuesDelegate,
 			SharedSessionContractImplementor session) {
 		final Comparator<String> comparator;
 
 		if ( mutationType == MutationType.DELETE ) {
 			// reverse order
 			comparator = Comparator.comparingInt( (tableName) -> {
-				final TableMapping tableMapping = locateTableMapping( tableName );
+				final TableMapping tableMapping = locateTableMapping( jdbcMutations, tableName );
 				if ( tableMapping == null ) {
 					return -1;
 				}
-				return this.jdbcMutations.size() - tableMapping.getRelativePosition();
+				return jdbcMutations.size() - tableMapping.getRelativePosition();
 			} );
 		}
 		else {
 			comparator = Comparator.comparingInt( (tableName) -> {
-				final TableMapping tableMapping = locateTableMapping( tableName );
+				final TableMapping tableMapping = locateTableMapping( jdbcMutations, tableName );
 				if ( tableMapping == null ) {
 					return -1;
 				}
@@ -181,20 +178,19 @@ public class PreparedStatementGroupStandard implements PreparedStatementGroup {
 
 		final TreeMap<String, PreparedStatementDetails> map = new TreeMap<>( comparator );
 
-		for ( int i = 0; i < jdbcMutations.size(); i++ ) {
-			final PreparableMutationOperation jdbcMutation = jdbcMutations.get( i );
+		for ( final PreparableMutationOperation jdbcMutation : jdbcMutations ) {
 			map.put(
 					jdbcMutation.getTableDetails().getTableName(),
-					createPreparedStatementDetails( jdbcMutation, mutationType, mutationTarget, session )
+					createPreparedStatementDetails( jdbcMutation, generatedValuesDelegate, session )
 			);
 		}
 
 		return map;
 	}
 
-	private TableMapping locateTableMapping(String name) {
-		for ( int i = 0; i < jdbcMutations.size(); i++ ) {
-			final TableMapping tableMapping = jdbcMutations.get( i ).getTableDetails();
+	private static TableMapping locateTableMapping(List<PreparableMutationOperation> jdbcMutations, String name) {
+		for ( final PreparableMutationOperation jdbcMutation : jdbcMutations ) {
+			final TableMapping tableMapping = jdbcMutation.getTableDetails();
 			if ( tableMapping.getTableName().equals( name ) ) {
 				return tableMapping;
 			}

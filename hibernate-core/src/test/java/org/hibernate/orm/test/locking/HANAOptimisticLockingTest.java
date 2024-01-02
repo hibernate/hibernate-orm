@@ -6,8 +6,7 @@
  */
 package org.hibernate.orm.test.locking;
 
-import org.hibernate.dialect.HANAColumnStoreDialect;
-import org.hibernate.dialect.HANARowStoreDialect;
+import org.hibernate.dialect.AbstractHANADialect;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -18,7 +17,6 @@ import jakarta.persistence.Version;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialect;
-import org.hibernate.testing.orm.junit.RequiresDialects;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
@@ -36,7 +34,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 )
 @SessionFactory
 @TestForIssue(jiraKey = "HHH-11656")
-@RequiresDialects({ @RequiresDialect(HANAColumnStoreDialect.class), @RequiresDialect(HANARowStoreDialect.class) })
+@RequiresDialect(AbstractHANADialect.class)
 public class HANAOptimisticLockingTest {
 
 	@Test

@@ -328,6 +328,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 	@Incubating
 	TimeZoneStorageStrategy getDefaultTimeZoneStorageStrategy();
 
+	boolean isPreferJavaTimeJdbcTypesEnabled();
+
 	/**
 	 * The format mapper to use for serializing/deserializing JSON data.
 	 *

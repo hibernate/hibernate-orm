@@ -54,9 +54,22 @@
 <p>
     The JPA interfaces are defined by the JPA specification. For details see the latest
     <a href="https://jakarta.ee/specifications/persistence/">specification</a> along with the
-    <a href="https://jakarta.ee/specifications/persistence/2.2/apidocs/">API documentation</a>
+    <a href="https://jakarta.ee/specifications/persistence/3.1/apidocs/">API documentation</a>
     for the package {@link jakarta.persistence}.
 </p>
+<p>
+    Along with {@link jakarta.persistence.EntityManagerFactory} and
+    {@link jakarta.persistence.EntityManager}, programs based on the standard JPA API often use:
+</p>
+<ul>
+    <li>{@link jakarta.persistence.Persistence} to bootstrap Hibernate via JPA,</li>
+    <li>{@link jakarta.persistence.TypedQuery} to execute queries,</li>
+    <li>{@link jakarta.persistence.EntityGraph} to control the boundaries of fetched data,</li>
+    <li>{@link jakarta.persistence.EntityTransaction} to control local transactions,</li>
+    <li>{@link jakarta.persistence.Metamodel} to implement generic code which makes use of
+        persistent entity classes in a reflective fashion, and</li>
+    <li>{@link jakarta.persistence.criteria.CriteriaBuilder} to build JPA criteria queries.</li>
+</ul>
 <p>
     Note that since Hibernate 5.2, the native API extends the JPA API rather than wrapping it.
     For example, <code>SessionFactory</code> extends <code>EntityManagerFactory</code>, and

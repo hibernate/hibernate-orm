@@ -21,12 +21,13 @@ import jakarta.persistence.SecondaryTable;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
+import jakarta.persistence.UniqueConstraint;
 
 /**
  * @author Steve Ebersole
  */
 @Entity
-@Table( name = "contacts" )
+@Table( name = "contacts", uniqueConstraints = @UniqueConstraint( name = "contacts_pk", columnNames = "id" ) )
 @SecondaryTable( name="contact_supp" )
 public class Contact {
 	private Integer id;

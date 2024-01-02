@@ -37,6 +37,7 @@ public class DefaultDialectSelectorTest {
 		testDialectNamingResolution( DerbyTenSevenDialect.class );
 
 		testDialectNamingResolution( H2Dialect.class );
+		testDialectNamingResolution( HANADialect.class );
 		testDialectNamingResolution( HANAColumnStoreDialect.class );
 		testDialectNamingResolution( HANARowStoreDialect.class );
 		testDialectNamingResolution( HSQLDialect.class );

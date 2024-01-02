@@ -50,6 +50,7 @@ public class BasicAttributeMapping
 
 	private final String tableExpression;
 	private final String mappedColumnExpression;
+	private final Integer temporalPrecision;
 	private final SelectablePath selectablePath;
 	private final boolean isFormula;
 	private final String customReadExpression;
@@ -86,6 +87,7 @@ public class BasicAttributeMapping
 			Long length,
 			Integer precision,
 			Integer scale,
+			Integer temporalPrecision,
 			boolean isLob,
 			boolean nullable,
 			boolean insertable,
@@ -107,6 +109,7 @@ public class BasicAttributeMapping
 		this.navigableRole = navigableRole;
 		this.tableExpression = tableExpression;
 		this.mappedColumnExpression = mappedColumnExpression;
+		this.temporalPrecision = temporalPrecision;
 		if ( selectablePath == null ) {
 			this.selectablePath = new SelectablePath( mappedColumnExpression );
 		}
@@ -186,6 +189,7 @@ public class BasicAttributeMapping
 				selectableMapping.getLength(),
 				selectableMapping.getPrecision(),
 				selectableMapping.getScale(),
+				selectableMapping.getTemporalPrecision(),
 				selectableMapping.isLob(),
 				selectableMapping.isNullable(),
 				insertable,
@@ -290,6 +294,11 @@ public class BasicAttributeMapping
 	@Override
 	public Integer getScale() {
 		return scale;
+	}
+
+	@Override
+	public Integer getTemporalPrecision() {
+		return temporalPrecision;
 	}
 
 	@Override

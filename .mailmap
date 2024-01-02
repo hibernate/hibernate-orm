@@ -1,0 +1,119 @@
+#
+# This is a .mailmap file : see gitmailmap for format specification and documentation.
+#
+# We use this as helper metadata to recognize that sometimes contributors change
+# email addresses, preferred names, or perhaps have had mistakes in their git
+# configuration at the time of contributing a patch and wich to correct them.
+# This can be useful in various ways, such as to allow contributors to let others
+# know their preferred name and contact point should they change in the future.
+#
+# This file is taken into account by various `git log` options; for example use:
+# # git log --mailmap --format="%aN %aE" | sort | uniq
+# to produce a list of contributors which applies the normalization rules from this file;
+# this is also a reasonable strategy to verify effectiveness of updates to this file.
+#
+# # MAINTENANCE
+# Feel free to provide mappings for your own git identifiers, should you wish to
+# update your own preferred name and/or email address.
+# Bear in mind that in doing so, you're making such information public.
+#
+# The team might occasionally try to keep this file up to date, but we won't always
+# have the necessary information to do so.
+# For example, if two records have the same email address we can assume they refer to the
+# same person, and we might be able to guess which name format is preferred, but
+# we might not absolute certainty about the preference.
+# On the other hand, if two records show the same name but different email addresses
+# we won't know for sure if they are not two different persons happening to have the
+# same name; even if they are the same person we wouldn't be able to tell which one
+# is their preferred email address.
+# In particular we would prefer to be cautious to not choose an email address which is
+# potentially no longer in use, so we'd rather keep both records rather than risk
+# no longer being able to get in touch.
+# For all these reasons, please only add a mapping to this file if you are the person
+# affected by the record, or if you know with certainty that the mapping is correct.
+#
+# # IMPORTANT !
+# Do not add personal information here which was not explicitly contributed by the person:
+# you might have got information about a more suitable email address of someone listed here
+# but you can't publish such information here without their permission.
+# We only use this file to re-map, and reorganize information which was already contributed,
+# even if this comes at a potential risk of maintaining information which is no longer
+# accurate.
+# This also comes with no guarantees whatsoever, in fact I would suggest to never
+# assume any information here is accurate.
+
+Adam Warski <adam@warski.org> adamw <adam@warski.org>
+Alex Snaps <alex.snaps@gmail.com> <alex.snaps@shopify.com>
+Andrea Boriero <andrea@hibernate.org> <dreborier@gmail.com>
+Andrej Golovnin <andrej.golovnin@googlemail.com> Andrej Golovnin <andrej.golovnin@gmail.com>
+Andrig Miller <andy.miller@jboss.com> andrigtmiller <andy.miller@jboss.com>
+Andrig Miller <andy.miller@jboss.com> andy.miller <andy.miller@jboss.com>
+Barry LaFond <blafond@redhat.com> blafond <blafond@redhat.com>
+Boris Korogvich <b.korogvich@gmail.com> VEINHORN <b.korogvich@gmail.com>
+Brett Meyer <brmeyer@redhat.com> <brett@3riverdev.com>
+Brett Meyer <brmeyer@redhat.com> brmeyer <brmeyer@BRMEYER-W7E.home>
+Brett Meyer <brmeyer@redhat.com> brmeyer <brmeyer@redhat.com>
+Brian Stansberry <brian.stansberry@redhat.com> <brian.stansberry@jboss.com>
+Chris Cranford <chris@hibernate.org> <ccranfor@ccranfor.lan>
+Chris Cranford <chris@hibernate.org> <ccranfor@redhat.com>
+Chris Cranford <chris@hibernate.org> Chris Canford <chris@hibernate.org>
+Chris Cranford <chris@hibernate.org> <chris@hibernate.org> Naros
+Chris Cranford <chris@hibernate.org> <crancran@gmail.com>
+Chris Cranford <chris@hibernate.org> cranforc <chris.cranford@setech.com>
+Christoph Dreis <christoph.dreis@freenet.de> ChristophDreis <christoph.dreis@freenet.de>
+Dave Repshas <David.Repshas@Teradata.com> drepshas <David.Repshas@Teradata.com>
+David M. Carr <david@carrclan.us> davidmc24 <david@carrclan.us>
+David M. Carr <dcarr@commercehub.com> dcarr <dcarr@commercehub.com>
+Eric Dalquist <eric.dalquist@gmail.com> edalquist <eric.dalquist@gmail.com>
+Erik-Berndt Scheper <erik.berndt.scheper@gmail.com> <schepeer@sogeti.nl>
+Gail Badner <gail@redhat.com> Gail Badner <gbadner@redhat.com>
+Gail Badner <gail@redhat.com> <gbadner@gbadner.fedora>
+Gail Badner <gail@redhat.com> gbadner <gbadner@redhat.com>
+Galder Zamarreño <galder.zamarreno@redhat.com> <galder@jboss.org>
+Galder Zamarreño <galder.zamarreno@redhat.com> <galder@zamarreno.com>
+Galder Zamarreño <galder.zamarreno@redhat.com> <galder@zamarreno.com>
+Galder Zamarreño <galder.zamarreno@redhat.com> <galder@zamarreno.com>
+Galder Zamarreño <galder.zamarreno@redhat.com> <galder.zamarreno@jboss.com>
+Gavin King <gavin@hibernate.org> <gavin@ceylon-lang.org>
+Gavin King <gavin@hibernate.org> Gavin <gavin@hibernate.org>
+Greg Luck <gluck@gregluck.com> Greg Luck <gluck@Greg-Lucks-Laptop.local>
+Guillaume Smet <guillaume@hibernate.org> Guillaume Smet <guillaume.smet@gmail.com>
+Hardy Ferentschik <hardy@hibernate.org> <hardy@ferentschik.de>
+Hardy Ferentschik <hardy@hibernate.org> <hibernate@ferentschik.de>
+Harsh Panchal <panchal.harsh18@gmail.com> BOOTMGR <panchal.harsh18@gmail.com>
+Hernán Chanfreau <hchanfreau@gmail.com> hernan <hchanfreau@gmail.com>
+Jaikiran Pai <jaikiran.pai@gmail.com> Jaikiran <jaikiran@users.noreply.github.com>
+Jeremy Whiting <jwhiting@redhat.com> Jeremy Whiting <whitingjr@hotmail.com>
+John O'Hara <johara@redhat.com> johara <johnaohara80@gmail.com>
+John O'Hara <johara@redhat.com> <johara@localhost.localdomain>
+John O'Hara <johara@redhat.com> JohnOhara <johara@redhat.com>
+John O'Hara <johara@redhat.com> John OHara <johara@redhat.com>
+John Verhaeg <jverhaeg@redhat.com> John Verhaeg <john.verhaeg@gmail.com>
+John Verhaeg <jverhaeg@redhat.com> JPAV <jverhaeg@redhat.com>
+Loïc LEFEVRE <loic.lefevre@gmail.com> LLEFEVRE <loic.lefevre@gmail.com>
+Luis Barreiro <lbarreiro@redhat.com> barreiro <lbbbarreiro@gmail.com>
+Lukasz Antoniak <lukasz.antoniak@gmail.com> lukasz-antoniak <lukasz.antoniak@gmail.com>
+Marco Belladelli <marco@hibernate.org> marco <marco.belladelli@semenda.it>
+Marco Belladelli <marco@hibernate.org> <mbellade@redhat.com>
+Misty Stanley-Jones <misty@redhat.com> misty <misty@redhat.com>
+Misty Stanley-Jones <misty@redhat.com> <mstanley@cheezel.(none)>
+Misty Stanley-Jones <misty@redhat.com> mstanleyjones <misty@redhat.com>
+Nathan Xu <nathan.qingyang.xu@gmail.com> <nathan.xu@procor.com>
+Nathan Xu <nathan.qingyang.xu@gmail.com> <nathan_xu@ultimatesoftware.com>
+Oliver Breidenbach <obr@xima.de> obr <obr@xima.de>
+Radim Vansa <rvansa@redhat.com> rvansa <rvansa@redhat.com> 
+Sanne Grinovero <sanne@hibernate.org> <sanne.grinovero@gmail.com>
+Scott Marlow <smarlow@redhat.com> Scott Marlow <scott.marlow@gmail.com>
+Scott Marlow <smarlow@redhat.com> smarlow <smarlow@redhat.com>
+Simeon <simeon.malchev@gmail.com> simeonmalchev <simeon.malchev@gmail.com>
+Ståle W. Pedersen <stale.pedersen@jboss.org> <stalep@gmail.com>
+Steve Ebersole <steve@hibernate.org> <steve@apollo.(none)>
+Steve Ebersole <steve@hibernate.org> <steve@t510.(none)>
+Strong Liu <stliu@hibernate.org> <stliu@redhat.com>
+Vlad Mihalcea <mihalcea.vlad@gmail.com> <mihalcea.vlad@gmail.com>
+Vlad Mihalcea <mihalcea.vlad@gmail.com> <mih_vlad@yahoo.com>
+Vlad Mihalcea <mihalcea.vlad@gmail.com> <Vlad Mihalcea>
+Vlad Mihalcea <mihalcea.vlad@gmail.com> <vlad@vladmihalcea.com>
+Yoann Rodière <yoann@hibernate.org> Yoann Rodière <yoann.rodiere@openwide.fr>
+Yoann Rodière <yoann@hibernate.org> Yoann Rodière <yrodiere@redhat.com>
+

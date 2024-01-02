@@ -20,6 +20,7 @@ import jakarta.persistence.TemporalType;
 
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.type.SqlTypes;
 import org.hibernate.type.descriptor.WrapperOptions;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
@@ -48,6 +49,9 @@ public class LocalDateTimeJavaType extends AbstractTemporalJavaType<LocalDateTim
 
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators context) {
+		if ( context.isPreferJavaTimeJdbcTypesEnabled() ) {
+			return context.getJdbcType( SqlTypes.LOCAL_DATE_TIME );
+		}
 		return context.getJdbcType( Types.TIMESTAMP );
 	}
 

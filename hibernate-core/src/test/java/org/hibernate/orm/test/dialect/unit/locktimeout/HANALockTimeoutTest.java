@@ -9,7 +9,7 @@ package org.hibernate.orm.test.dialect.unit.locktimeout;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.HANARowStoreDialect;
+import org.hibernate.dialect.HANADialect;
 
 import org.hibernate.testing.junit4.BaseUnitTestCase;
 import org.junit.Test;
@@ -25,7 +25,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class HANALockTimeoutTest extends BaseUnitTestCase {
 
-	private final Dialect dialect = new HANARowStoreDialect();
+	private final Dialect dialect = new HANADialect();
 
 	@Test
 	public void testLockTimeoutNoAliasNoTimeout() {

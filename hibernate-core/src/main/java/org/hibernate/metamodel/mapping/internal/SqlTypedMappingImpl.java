@@ -18,6 +18,7 @@ public class SqlTypedMappingImpl implements SqlTypedMapping {
 	private final Long length;
 	private final Integer precision;
 	private final Integer scale;
+	private final Integer temporalPrecision;
 	private final JdbcMapping jdbcMapping;
 
 	public SqlTypedMappingImpl(
@@ -25,12 +26,14 @@ public class SqlTypedMappingImpl implements SqlTypedMapping {
 			Long length,
 			Integer precision,
 			Integer scale,
+			Integer temporalPrecision,
 			JdbcMapping jdbcMapping) {
 		// Save memory by using interned strings. Probability is high that we have multiple duplicate strings
 		this.columnDefinition = columnDefinition == null ? null : columnDefinition.intern();
 		this.length = length;
 		this.precision = precision;
 		this.scale = scale;
+		this.temporalPrecision = temporalPrecision;
 		this.jdbcMapping = jdbcMapping;
 	}
 
@@ -47,6 +50,11 @@ public class SqlTypedMappingImpl implements SqlTypedMapping {
 	@Override
 	public Integer getPrecision() {
 		return precision;
+	}
+
+	@Override
+	public Integer getTemporalPrecision() {
+		return temporalPrecision;
 	}
 
 	@Override

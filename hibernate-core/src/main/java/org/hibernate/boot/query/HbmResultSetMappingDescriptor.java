@@ -674,10 +674,11 @@ public class HbmResultSetMappingDescriptor implements NamedResultSetMappingDescr
 				navigablePath = navigablePath.append( fetchable.getFetchableName() );
 			}
 
-			if ( fetchable instanceof BasicValuedModelPart ) {
+			final BasicValuedModelPart basicPart = fetchable.asBasicValuedModelPart();
+			if ( basicPart != null ) {
 				return new FetchMementoBasicStandard(
 						navigablePath,
-						(BasicValuedModelPart) fetchable,
+						basicPart,
 						columnAliases.get( 0 )
 				);
 			}

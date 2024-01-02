@@ -8,8 +8,10 @@ package org.hibernate.dialect.identity;
 
 import org.hibernate.Remove;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.generator.EventType;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Andrea Boriero
@@ -18,7 +20,15 @@ import org.hibernate.id.insert.GetGeneratedKeysDelegate;
  */
 @Deprecated(forRemoval = true) @Remove
 public class Oracle12cGetGeneratedKeysDelegate extends GetGeneratedKeysDelegate {
+	/**
+	 * @deprecated Use {@link #Oracle12cGetGeneratedKeysDelegate(EntityPersister)} instead.
+	 */
+	@Deprecated( forRemoval = true, since = "6.5" )
 	public Oracle12cGetGeneratedKeysDelegate(PostInsertIdentityPersister persister, Dialect dialect) {
-		super( persister, dialect, false );
+		this( persister );
+	}
+
+	public Oracle12cGetGeneratedKeysDelegate(EntityPersister persister) {
+		super( persister, false, EventType.INSERT );
 	}
 }

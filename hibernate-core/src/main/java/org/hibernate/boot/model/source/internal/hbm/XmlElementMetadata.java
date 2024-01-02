@@ -119,7 +119,7 @@ public enum XmlElementMetadata {
 	 */
 	MANY_TO_MANY( false, false ),
 	/**
-	 * Describes the {@code <many-to-aany/>} element
+	 * Describes the {@code <many-to-any/>} element
 	 */
 	MANY_TO_ANY( false, false ),
 	/**

@@ -10,27 +10,17 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-import org.hibernate.MappingException;
-import org.hibernate.boot.model.relational.SqlStringGenerationContext;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.engine.jdbc.mutation.JdbcValueBindings;
-import org.hibernate.engine.jdbc.mutation.group.PreparedStatementDetails;
 import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
-import org.hibernate.engine.jdbc.spi.StatementPreparer;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.id.PostInsertIdentityPersister;
-import org.hibernate.internal.CoreLogging;
-import org.hibernate.jdbc.Expectation;
 import org.hibernate.metamodel.mapping.BasicEntityIdentifierMapping;
-import org.hibernate.pretty.MessageHelper;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
-import org.hibernate.sql.model.ast.builder.TableInsertBuilderStandard;
+import org.hibernate.persister.entity.EntityPersister;
 
-import static java.sql.Statement.NO_GENERATED_KEYS;
-import static org.hibernate.id.IdentifierGeneratorHelper.getGeneratedIdentity;
+import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getGeneratedValues;
 
 /**
  * Specialized {@link IdentifierGeneratingInsert} which appends the database
@@ -40,41 +30,47 @@ import static org.hibernate.id.IdentifierGeneratorHelper.getGeneratedIdentity;
  * @author Christian Beikov
  */
 public class SybaseJConnGetGeneratedKeysDelegate extends GetGeneratedKeysDelegate {
-	private final PostInsertIdentityPersister persister;
-	private final Dialect dialect;
-
+	/**
+	 * @deprecated Use {@link #SybaseJConnGetGeneratedKeysDelegate(EntityPersister)} instead.
+	 */
+	@Deprecated( forRemoval = true, since = "6.5" )
 	public SybaseJConnGetGeneratedKeysDelegate(PostInsertIdentityPersister persister, Dialect dialect) {
-		super( persister, dialect, true );
-		this.persister = persister;
-		this.dialect = dialect;
+		this( persister );
+	}
+
+	public SybaseJConnGetGeneratedKeysDelegate(EntityPersister persister) {
+		super( persister, true, EventType.INSERT );
 	}
 
 	@Override
 	public String prepareIdentifierGeneratingInsert(String insertSQL) {
-		return dialect.getIdentityColumnSupport().appendIdentitySelectToInsert( insertSQL );
+		return dialect().getIdentityColumnSupport().appendIdentitySelectToInsert(
+				( (BasicEntityIdentifierMapping) persister.getRootEntityDescriptor().getIdentifierMapping() ).getSelectionExpression(),
+				insertSQL
+		);
 	}
 
 	@Override
-	public Object executeAndExtract(
-			String insertSql,
-			PreparedStatement insertStatement,
+	public GeneratedValues executeAndExtractReturning(
+			String sql,
+			PreparedStatement preparedStatement,
 			SharedSessionContractImplementor session) {
 		JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		final JdbcServices jdbcServices = session.getJdbcServices();
 
-		ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( insertStatement, insertSql );
+		ResultSet resultSet = jdbcCoordinator.getResultSetReturn().execute( preparedStatement, sql );
 		try {
-			return getGeneratedIdentity( persister.getNavigableRole().getFullPath(), resultSet, persister, session );
+			return getGeneratedValues( resultSet, persister, getTiming(), session );
 		}
 		catch (SQLException e) {
 			throw jdbcServices.getSqlExceptionHelper().convert(
 					e,
 					"Unable to extract generated-keys ResultSet",
-					insertSql
+					sql
 			);
 		}
 		finally {
-			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, insertStatement );
+			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, preparedStatement );
 			jdbcCoordinator.afterStatementExecution();
 		}
 	}

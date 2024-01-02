@@ -32,6 +32,7 @@ import org.hibernate.query.criteria.JpaPredicate;
 import org.hibernate.query.criteria.JpaSearchedCase;
 import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSimpleCase;
+import org.hibernate.query.criteria.JpaValues;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.spi.QueryEngine;
 import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
@@ -48,6 +49,7 @@ import org.hibernate.query.sqm.tree.expression.SqmTuple;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
+import org.hibernate.query.sqm.tree.insert.SqmValues;
 import org.hibernate.query.sqm.tree.predicate.SqmInPredicate;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
@@ -523,6 +525,12 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 	<T> SqmInsertSelectStatement<T> createCriteriaInsertSelect(Class<T> targetEntity);
 
 	@Override
+	SqmValues values(Expression<?>... expressions);
+
+	@Override
+	SqmValues values(List<? extends Expression<?>> expressions);
+
+	@Override
 	<N extends Number> SqmExpression<N> abs(Expression<N> x);
 
 	@Override
@@ -774,9 +782,6 @@ public interface NodeBuilder extends HibernateCriteriaBuilder {
 
 	@Override
 	<K, L extends List<?>> SqmExpression<Set<K>> indexes(L list);
-
-	@Override
-	<V, C extends Collection<V>> SqmExpression<Collection<V>> values(C collection);
 
 	@Override
 	<V, M extends Map<?, V>> Expression<Collection<V>> values(M map);

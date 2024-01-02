@@ -29,11 +29,14 @@ import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
  *
  * @author Andrew Clemons
  * @author Jonathan Bregler
+ *
+ * @deprecated use {@link HANADialect} instead
  */
+@Deprecated(forRemoval = true)
 public class HANARowStoreDialect extends AbstractHANADialect {
 
 	public HANARowStoreDialect(DialectResolutionInfo info) {
-		this( AbstractHANADialect.createVersion( info ) );
+		this( HANAServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 
@@ -43,71 +46,10 @@ public class HANARowStoreDialect extends AbstractHANADialect {
 	}
 
 	public HANARowStoreDialect(DatabaseVersion version) {
-		super( version );
+		this( new HANAServerConfiguration( version ) );
 	}
 
-	@Override
-	public String getCreateTableString() {
-		return "create row table";
-	}
-
-	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType entityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						entityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType entityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						entityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
-	}
-
-	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.GLOBAL;
-	}
-
-	@Override
-	public String getTemporaryTableCreateOptions() {
-		return "on commit delete rows";
-	}
-
-	@Override
-	public String getTemporaryTableCreateCommand() {
-		return "create global temporary row table";
-	}
-
-	@Override
-	public String getTemporaryTableTruncateCommand() {
-		return "truncate table";
-	}
-
-	@Override
-	protected boolean supportsAsciiStringTypes() {
-		return true;
-	}
-
-	@Override
-	protected Boolean useUnicodeStringTypesDefault() {
-		return Boolean.FALSE;
+	public HANARowStoreDialect(HANAServerConfiguration configuration) {
+		super( configuration, false );
 	}
 }

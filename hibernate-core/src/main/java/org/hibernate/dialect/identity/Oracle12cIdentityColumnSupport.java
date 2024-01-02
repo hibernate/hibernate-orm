@@ -7,8 +7,9 @@
 package org.hibernate.dialect.identity;
 
 import org.hibernate.dialect.Dialect;
-import org.hibernate.id.PostInsertIdentityPersister;
+import org.hibernate.generator.EventType;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * @author Andrea Boriero
@@ -28,9 +29,8 @@ public class Oracle12cIdentityColumnSupport extends IdentityColumnSupportImpl {
 	}
 
 	@Override
-	public GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(
-			PostInsertIdentityPersister persister, Dialect dialect) {
-		return new GetGeneratedKeysDelegate( persister, dialect, false );
+	public GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(EntityPersister persister) {
+		return new GetGeneratedKeysDelegate( persister, false, EventType.INSERT );
 	}
 
 	@Override

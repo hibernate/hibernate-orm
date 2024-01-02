@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.model.ast.builder;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.hibernate.HibernateException;
@@ -96,7 +97,8 @@ public class TableUpdateBuilderStandard<O extends MutationOperation> extends Abs
 				getKeyRestrictionBindings(),
 				getOptimisticLockBindings(),
 				whereFragment,
-				null
+				null,
+				Collections.emptyList()
 		);
 	}
 }

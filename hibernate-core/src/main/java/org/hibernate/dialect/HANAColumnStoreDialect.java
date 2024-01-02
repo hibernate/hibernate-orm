@@ -34,11 +34,14 @@ import static org.hibernate.query.sqm.produce.function.FunctionParameterType.ANY
  * 
  * @author Andrew Clemons
  * @author Jonathan Bregler
+ *
+ * @deprecated use {@link HANADialect} instead
  */
+@Deprecated(forRemoval = true)
 public class HANAColumnStoreDialect extends AbstractHANADialect {
 
 	public HANAColumnStoreDialect(DialectResolutionInfo info) {
-		this( AbstractHANADialect.createVersion( info ) );
+		this( HANAServerConfiguration.fromDialectResolutionInfo( info ) );
 		registerKeywords( info );
 	}
 	
@@ -48,129 +51,10 @@ public class HANAColumnStoreDialect extends AbstractHANADialect {
 	}
 
 	public HANAColumnStoreDialect(DatabaseVersion version) {
-		super( version );
+		this( new HANAServerConfiguration( version ) );
 	}
 
-	@Override
-	public boolean isUseUnicodeStringTypes() {
-		return getVersion().isSameOrAfter( 4 ) || super.isUseUnicodeStringTypes();
-	}
-
-	@Override
-	public int getMaxVarcharLength() {
-		return 5000;
-	}
-
-	@Override
-	protected void registerDefaultKeywords() {
-		super.registerDefaultKeywords();
-		registerKeyword( "array" );
-		registerKeyword( "at" );
-		registerKeyword( "authorization" );
-		registerKeyword( "between" );
-		registerKeyword( "by" );
-		registerKeyword( "collate" );
-		registerKeyword( "empty" );
-		registerKeyword( "filter" );
-		registerKeyword( "grouping" );
-		registerKeyword( "no" );
-		registerKeyword( "not" );
-		registerKeyword( "of" );
-		registerKeyword( "over" );
-		registerKeyword( "recursive" );
-		registerKeyword( "row" );
-		registerKeyword( "table" );
-		registerKeyword( "to" );
-		registerKeyword( "window" );
-		registerKeyword( "within" );
-	}
-
-
-	@Override
-	public void initializeFunctionRegistry(FunctionContributions functionContributions) {
-		super.initializeFunctionRegistry(functionContributions);
-		final TypeConfiguration typeConfiguration = functionContributions.getTypeConfiguration();
-
-		// full-text search functions
-		functionContributions.getFunctionRegistry().registerNamed(
-				"score",
-				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.DOUBLE )
-		);
-		functionContributions.getFunctionRegistry().registerNamed( "snippets" );
-		functionContributions.getFunctionRegistry().registerNamed( "highlighted" );
-		functionContributions.getFunctionRegistry().registerBinaryTernaryPattern(
-				"contains",
-				typeConfiguration.getBasicTypeRegistry().resolve( StandardBasicTypes.BOOLEAN ),
-				"contains(?1,?2)",
-				"contains(?1,?2,?3)",
-				ANY, ANY, ANY,
-				typeConfiguration
-		);
-	}
-
-	@Override
-	public String getCreateTableString() {
-		return "create column table";
-	}
-
-	@Override
-	public SqmMultiTableMutationStrategy getFallbackSqmMutationStrategy(
-			EntityMappingType entityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableMutationStrategy(
-				TemporaryTable.createIdTable(
-						entityDescriptor,
-						basename -> TemporaryTable.ID_TABLE_PREFIX + basename,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
-	}
-
-	@Override
-	public SqmMultiTableInsertStrategy getFallbackSqmInsertStrategy(
-			EntityMappingType entityDescriptor,
-			RuntimeModelCreationContext runtimeModelCreationContext) {
-		return new GlobalTemporaryTableInsertStrategy(
-				TemporaryTable.createEntityTable(
-						entityDescriptor,
-						name -> TemporaryTable.ENTITY_TABLE_PREFIX + name,
-						this,
-						runtimeModelCreationContext
-				),
-				runtimeModelCreationContext.getSessionFactory()
-		);
-	}
-
-	@Override
-	public TemporaryTableKind getSupportedTemporaryTableKind() {
-		return TemporaryTableKind.GLOBAL;
-	}
-
-	@Override
-	public String getTemporaryTableCreateOptions() {
-		return "on commit delete rows";
-	}
-
-	@Override
-	public String getTemporaryTableCreateCommand() {
-		// We use a row table for temporary tables here because HANA doesn't support UPDATE on temporary column tables
-		return "create global temporary row table";
-	}
-
-	@Override
-	public String getTemporaryTableTruncateCommand() {
-		return "truncate table";
-	}
-
-	@Override
-	protected boolean supportsAsciiStringTypes() {
-		return true;
-	}
-
-	@Override
-	protected Boolean useUnicodeStringTypesDefault() {
-		return true;
+	public HANAColumnStoreDialect(HANAServerConfiguration configuration) {
+		super( configuration, true );
 	}
 }

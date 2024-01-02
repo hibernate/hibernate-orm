@@ -6,7 +6,9 @@
  */
 package org.hibernate.sql.ast.tree.predicate;
 
-public class PredicateCollector {
+import java.util.function.Consumer;
+
+public class PredicateCollector implements Consumer<Predicate> {
 	private Predicate predicate;
 
 	public PredicateCollector() {
@@ -18,6 +20,11 @@ public class PredicateCollector {
 
 	public void applyPredicate(Predicate incomingPredicate) {
 		this.predicate = Predicate.combinePredicates( this.predicate, incomingPredicate );
+	}
+
+	@Override
+	public void accept(Predicate predicate) {
+		applyPredicate( predicate );
 	}
 
 	public Predicate getPredicate() {

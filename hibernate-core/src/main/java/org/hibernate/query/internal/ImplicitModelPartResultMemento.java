@@ -40,8 +40,9 @@ public class ImplicitModelPartResultMemento implements ModelPartResultMemento {
 	public ResultBuilder resolve(
 			Consumer<String> querySpaceConsumer,
 			ResultSetMappingResolutionContext context) {
-		if ( referencedModelPart instanceof BasicValuedModelPart ) {
-			return new ImplicitModelPartResultBuilderBasic( navigablePath, (BasicValuedModelPart) referencedModelPart );
+		final BasicValuedModelPart basicPart = referencedModelPart.asBasicValuedModelPart();
+		if ( basicPart != null ) {
+			return new ImplicitModelPartResultBuilderBasic( navigablePath, basicPart );
 		}
 
 		if ( referencedModelPart instanceof EmbeddableValuedModelPart ) {

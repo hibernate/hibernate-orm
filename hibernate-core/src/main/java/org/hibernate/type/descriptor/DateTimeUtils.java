@@ -463,7 +463,19 @@ public final class DateTimeUtils {
 		);
 	}
 
+	public static <T extends Temporal> T roundToSecondPrecision(T temporal, int precision) {
+		//noinspection unchecked
+		return (T) temporal.with(
+				ChronoField.NANO_OF_SECOND,
+				roundToPrecision( temporal.get( ChronoField.NANO_OF_SECOND ), precision )
+		);
+	}
+
 	public static long roundToPrecision(int nano, int precision) {
+		assert precision < 9 : "Precision (scale) should be less-than 9 - " + precision;
+		if ( precision == 0 ) {
+			return 0;
+		}
 		final int precisionMask = pow10( 9 - precision );
 		final int nanosToRound = nano % precisionMask;
 		return nano - nanosToRound + ( nanosToRound >= ( precisionMask >> 1 ) ? precisionMask : 0 );
@@ -478,17 +490,17 @@ public final class DateTimeUtils {
 			case 2:
 				return 100;
 			case 3:
-				return 1000;
+				return 1_000;
 			case 4:
-				return 10000;
+				return 10_000;
 			case 5:
-				return 100000;
+				return 100_000;
 			case 6:
-				return 1000000;
+				return 1_000_000;
 			case 7:
-				return 10000000;
+				return 10_000_000;
 			case 8:
-				return 100000000;
+				return 100_000_000;
 			default:
 				return (int) Math.pow( 10, exponent );
 		}

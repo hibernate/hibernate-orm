@@ -9,6 +9,7 @@ package org.hibernate.boot.model.internal;
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Columns;
 import org.hibernate.annotations.Formula;
+import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.annotations.JoinColumnOrFormula;
 import org.hibernate.annotations.JoinColumnsOrFormulas;
 import org.hibernate.annotations.JoinFormula;
@@ -85,6 +86,7 @@ class ColumnsBuilder {
 		if ( property.isAnnotationPresent( Column.class ) ) {
 			columns = buildColumnFromAnnotation(
 					property.getAnnotation( Column.class ),
+					property.getAnnotation( FractionalSeconds.class ),
 //					comment,
 					nullability,
 					propertyHolder,
@@ -107,6 +109,7 @@ class ColumnsBuilder {
 		else if ( property.isAnnotationPresent( Columns.class ) ) {
 			columns = buildColumnsFromAnnotations(
 					property.getAnnotation( Columns.class ).columns(),
+					null,
 //					comment,
 					nullability,
 					propertyHolder,
@@ -144,6 +147,7 @@ class ColumnsBuilder {
 		if ( columns == null && !property.isAnnotationPresent( ManyToMany.class ) ) {
 			//useful for collection of embedded elements
 			columns = buildColumnFromNoAnnotation(
+					property.getAnnotation( FractionalSeconds.class ),
 //					comment,
 					nullability,
 					propertyHolder,

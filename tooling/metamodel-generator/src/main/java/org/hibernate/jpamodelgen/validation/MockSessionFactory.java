@@ -394,6 +394,11 @@ public abstract class MockSessionFactory
 	}
 
 	@Override
+	public boolean isPreferJavaTimeJdbcTypesEnabled() {
+		return MetadataBuildingContext.super.isPreferJavaTimeJdbcTypesEnabled();
+	}
+
+	@Override
 	public FastSessionServices getFastSessionServices() {
 		throw new UnsupportedOperationException();
 	}

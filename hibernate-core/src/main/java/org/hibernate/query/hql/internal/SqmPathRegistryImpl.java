@@ -71,26 +71,7 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 		if ( sqmPath instanceof SqmFrom<?, ?> ) {
 			final SqmFrom<?, ?> sqmFrom = (SqmFrom<?, ?>) sqmPath;
 
-			final String alias = sqmPath.getExplicitAlias();
-			if ( alias != null ) {
-				final String aliasToUse = jpaCompliance.isJpaQueryComplianceEnabled()
-						? alias.toLowerCase( Locale.getDefault() )
-						: alias;
-
-				final SqmFrom<?, ?> previousFrom = sqmFromByAlias.put( aliasToUse, sqmFrom );
-
-				if ( previousFrom != null ) {
-					throw new AliasCollisionException(
-							String.format(
-									Locale.ENGLISH,
-									"Alias [%s] used for multiple from-clause elements : %s, %s",
-									alias,
-									previousFrom,
-									sqmPath
-							)
-					);
-				}
-			}
+			registerByAliasOnly( sqmFrom );
 
 			final SqmFrom<?, ?> previousFromByPath = sqmFromByPath.put( sqmPath.getNavigablePath(), sqmFrom );
 
@@ -121,6 +102,30 @@ public class SqmPathRegistryImpl implements SqmPathRegistry {
 							sqmPath
 					)
 			);
+		}
+	}
+
+	@Override
+	public void registerByAliasOnly(SqmFrom<?, ?> sqmFrom) {
+		final String alias = sqmFrom.getExplicitAlias();
+		if ( alias != null ) {
+			final String aliasToUse = jpaCompliance.isJpaQueryComplianceEnabled()
+					? alias.toLowerCase( Locale.getDefault() )
+					: alias;
+
+			final SqmFrom<?, ?> previousFrom = sqmFromByAlias.put( aliasToUse, sqmFrom );
+
+			if ( previousFrom != null ) {
+				throw new AliasCollisionException(
+						String.format(
+								Locale.ENGLISH,
+								"Alias [%s] used for multiple from-clause elements : %s, %s",
+								alias,
+								previousFrom,
+								sqmFrom
+						)
+				);
+			}
 		}
 	}
 

@@ -83,13 +83,13 @@ public class PostgreSQLEnumJdbcType implements JdbcType {
 			@Override
 			protected void doBind(PreparedStatement st, X value, int index, WrapperOptions options)
 					throws SQLException {
-				st.setObject( index, value, Types.OTHER );
+				st.setObject( index, ((Enum<?>) value).name(), Types.OTHER );
 			}
 
 			@Override
 			protected void doBind(CallableStatement st, X value, String name, WrapperOptions options)
 					throws SQLException {
-				st.setObject( name, value, Types.OTHER );
+				st.setObject( name, ((Enum<?>) value).name(), Types.OTHER );
 			}
 		};
 	}

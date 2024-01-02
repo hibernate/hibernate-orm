@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 import org.hibernate.query.sqm.tree.predicate.SqmWhereClause;
 
@@ -31,10 +32,22 @@ public class SqmDeleteStatement<T>
 		extends AbstractSqmRestrictedDmlStatement<T>
 		implements SqmDeleteOrUpdateStatement<T>, JpaCriteriaDelete<T> {
 
+	public SqmDeleteStatement(NodeBuilder nodeBuilder) {
+		super( SqmQuerySource.HQL, nodeBuilder );
+	}
+
+	/**
+	 * @deprecated was previously used for HQL. Use {@link SqmDeleteStatement#SqmDeleteStatement(NodeBuilder)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public SqmDeleteStatement(SqmRoot<T> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super( target, querySource, nodeBuilder );
 	}
 
+	/**
+	 * @deprecated was previously used for Criteria. Use {@link SqmDeleteStatement#SqmDeleteStatement(Class,NodeBuilder)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	public SqmDeleteStatement(Class<T> targetEntity, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super(
 				new SqmRoot<>(
@@ -44,6 +57,19 @@ public class SqmDeleteStatement<T>
 						nodeBuilder
 				),
 				querySource,
+				nodeBuilder
+		);
+	}
+
+	public SqmDeleteStatement(Class<T> targetEntity, NodeBuilder nodeBuilder) {
+		super(
+				new SqmRoot<>(
+						nodeBuilder.getDomainModel().entity( targetEntity ),
+						null,
+						!nodeBuilder.isJpaQueryComplianceEnabled(),
+						nodeBuilder
+				),
+				SqmQuerySource.CRITERIA,
 				nodeBuilder
 		);
 	}
@@ -98,8 +124,11 @@ public class SqmDeleteStatement<T>
 	public void appendHqlString(StringBuilder sb) {
 		appendHqlCteString( sb );
 		sb.append( "delete from " );
-		sb.append( getTarget().getEntityName() );
-		sb.append( ' ' ).append( getTarget().resolveAlias() );
+		final SqmRoot<T> root = getTarget();
+		sb.append( root.getEntityName() );
+		sb.append( ' ' ).append( root.resolveAlias() );
+		SqmFromClause.appendJoins( root, sb );
+		SqmFromClause.appendTreatJoins( root, sb );
 		super.appendHqlString( sb );
 	}
 }

@@ -15,6 +15,7 @@ import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.sql.internal.DomainResultProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.SqlTreeCreationLogger;
+import org.hibernate.sql.ast.tree.update.Assignable;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.tuple.TupleResult;
@@ -23,7 +24,7 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Steve Ebersole
  */
-public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProducer {
+public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProducer, Assignable {
 	private final List<? extends Expression> expressions;
 	private final MappingModelExpressible valueMapping;
 
@@ -49,6 +50,11 @@ public class SqlTuple implements Expression, SqlTupleContainer, DomainResultProd
 
 	public List<? extends Expression> getExpressions(){
 		return expressions;
+	}
+
+	@Override
+	public List<ColumnReference> getColumnReferences() {
+		return (List<ColumnReference>) expressions;
 	}
 
 	@Override

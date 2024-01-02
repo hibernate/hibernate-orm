@@ -80,6 +80,8 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
+import org.hibernate.query.sqm.tree.insert.SqmConflictUpdateAction;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
@@ -166,6 +168,10 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 			stateField.accept( this );
 		}
 		statement.getSelectQueryPart().accept( this );
+		final SqmConflictClause<?> conflictClause = statement.getConflictClause();
+		if ( conflictClause != null ) {
+			visitConflictClause( conflictClause );
+		}
 		return statement;
 	}
 
@@ -179,7 +185,27 @@ public abstract class BaseSemanticQueryWalker implements SemanticQueryWalker<Obj
 		for ( SqmValues sqmValues : statement.getValuesList() ) {
 			visitValues( sqmValues );
 		}
+		final SqmConflictClause<?> conflictClause = statement.getConflictClause();
+		if ( conflictClause != null ) {
+			visitConflictClause( conflictClause );
+		}
 		return statement;
+	}
+
+	@Override
+	public Object visitConflictClause(SqmConflictClause<?> sqmConflictClause) {
+		final SqmConflictUpdateAction<?> updateAction = sqmConflictClause.getConflictAction();
+		for ( SqmPath<?> stateField : sqmConflictClause.getConstraintPaths() ) {
+			stateField.accept( this );
+		}
+		if ( updateAction != null ) {
+			visitSetClause( updateAction.getSetClause() );
+			final SqmWhereClause whereClause = updateAction.getWhereClause();
+			if ( whereClause != null ) {
+				visitWhereClause( whereClause );
+			}
+		}
+		return sqmConflictClause;
 	}
 
 	@Override

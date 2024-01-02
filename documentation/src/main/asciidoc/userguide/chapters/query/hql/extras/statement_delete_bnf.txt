@@ -1,2 +1,8 @@
 deleteStatement
-    : "DELETE" "FROM"? targetEntity whereClause?
+    : "DELETE" "FROM"? entityWithJoins whereClause?
+
+entityWithJoins
+	: fromRoot (join | crossJoin | jpaCollectionJoin)*
+
+fromRoot
+	: entityName variable?

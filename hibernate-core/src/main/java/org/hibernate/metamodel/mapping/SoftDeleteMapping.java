@@ -126,4 +126,9 @@ public interface SoftDeleteMapping extends SelectableMapping, VirtualModelPart, 
 	default Integer getScale() {
 		return null;
 	}
+
+	@Override
+	default Integer getTemporalPrecision() {
+		return null;
+	}
 }

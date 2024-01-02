@@ -53,6 +53,7 @@ import org.hibernate.query.criteria.JpaSelection;
 import org.hibernate.query.criteria.JpaSetJoin;
 import org.hibernate.query.criteria.JpaSimpleCase;
 import org.hibernate.query.criteria.JpaSubQuery;
+import org.hibernate.query.criteria.JpaValues;
 import org.hibernate.query.criteria.JpaWindow;
 import org.hibernate.query.criteria.JpaWindowFrame;
 import org.hibernate.query.NullPrecedence;
@@ -146,6 +147,18 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public <T> JpaCriteriaInsertSelect<T> createCriteriaInsertSelect(Class<T> targetEntity) {
 		return criteriaBuilder.createCriteriaInsertSelect( targetEntity );
+	}
+
+	@Override
+	@Incubating
+	public JpaValues values(Expression<?>... expressions) {
+		return criteriaBuilder.values( expressions );
+	}
+
+	@Override
+	@Incubating
+	public JpaValues values(List<? extends Expression<?>> expressions) {
+		return criteriaBuilder.values( expressions );
 	}
 
 	@Override
@@ -744,11 +757,6 @@ public class HibernateCriteriaBuilderDelegate implements HibernateCriteriaBuilde
 	@Override
 	public <T> JpaExpression<T> value(T value) {
 		return criteriaBuilder.value( value );
-	}
-
-	@Override
-	public <V, C extends Collection<V>> JpaExpression<Collection<V>> values(C collection) {
-		return criteriaBuilder.values( collection );
 	}
 
 	@Override

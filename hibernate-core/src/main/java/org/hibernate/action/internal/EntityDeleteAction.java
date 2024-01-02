@@ -128,7 +128,7 @@ public class EntityDeleteAction extends EntityAction {
 		final Object ck = lockCacheItem();
 
 		if ( !isCascadeDeleteEnabled && !veto ) {
-			persister.delete( id, version, instance, session );
+			persister.getDeleteCoordinator().delete( instance, id, version, session );
 		}
 
 		if ( isInstanceLoaded() ) {

@@ -44,7 +44,9 @@ public class VersionTypeSeedParameterSpecification extends AbstractJdbcParameter
 				statement,
 				versionMapping.getJavaType().seed(
 						versionMapping.getLength(),
-						versionMapping.getPrecision(),
+						versionMapping.getTemporalPrecision() != null
+								? versionMapping.getTemporalPrecision()
+								: versionMapping.getPrecision(),
 						versionMapping.getScale(),
 						executionContext.getSession()
 				),

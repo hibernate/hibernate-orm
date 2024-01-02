@@ -68,6 +68,11 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 	public static final String VIBUR_STRATEGY = "vibur";
 
 	/**
+	 * The strategy for oracle ucp connection pooling
+	 */
+	public static final String UCP_STRATEGY = "ucp";
+
+	/**
 	 * The strategy for agroal connection pooling
 	 */
 	public static final String AGROAL_STRATEGY = "agroal";
@@ -184,6 +189,12 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		if ( connectionProvider == null ) {
 			if ( viburConfigDefined( configurationValues ) ) {
 				connectionProvider = instantiateViburProvider( strategySelector );
+			}
+		}
+
+		if ( connectionProvider == null ) {
+			if ( oracleUCPConfigDefined( configurationValues ) ) {
+				connectionProvider = instantiateUCPProvider( strategySelector );
 			}
 		}
 
@@ -339,6 +350,25 @@ public class ConnectionProviderInitiator implements StandardServiceInitiator<Con
 		}
 		catch (Exception e) {
 			LOG.agroalProviderClassNotFound();
+			return null;
+		}
+	}
+
+	private boolean oracleUCPConfigDefined(Map<String, Object> configValues) {
+		for ( String key : configValues.keySet() ) {
+			if ( key.startsWith( "hibernate.oracleucp." ) ) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private ConnectionProvider instantiateUCPProvider(StrategySelector strategySelector) {
+		try {
+			return strategySelector.selectStrategyImplementor( ConnectionProvider.class, UCP_STRATEGY ).newInstance();
+		}
+		catch ( Exception e ) {
+			LOG.ucpProviderClassNotFound();
 			return null;
 		}
 	}

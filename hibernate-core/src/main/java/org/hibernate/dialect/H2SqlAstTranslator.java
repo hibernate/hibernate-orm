@@ -11,28 +11,39 @@ import java.util.List;
 import org.hibernate.LockMode;
 import org.hibernate.dialect.identity.H2IdentityColumnSupport;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.internal.util.collections.Stack;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.SqlSelection;
+import org.hibernate.sql.ast.tree.MutationStatement;
 import org.hibernate.sql.ast.tree.Statement;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
 import org.hibernate.sql.ast.tree.cte.CteTableGroup;
+import org.hibernate.sql.ast.tree.delete.DeleteStatement;
 import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
+import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.LikePredicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.SelectClause;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 
+import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 
 /**
@@ -50,14 +61,44 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 
 	@Override
 	public void visitStandardTableInsert(TableInsertStandard tableInsert) {
-		if ( isNotEmpty( tableInsert.getReturningColumns() ) ) {
-			visitReturningInsertStatement( tableInsert );
-		}
-		else {
-			super.visitStandardTableInsert( tableInsert );
+		final boolean closeWrapper = renderReturningClause( tableInsert.getReturningColumns() );
+		super.visitStandardTableInsert( tableInsert );
+		if ( closeWrapper ) {
+			appendSql( ')' );
 		}
 	}
 
+	@Override
+	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
+		final boolean closeWrapper = renderReturningClause( tableUpdate.getReturningColumns() );
+		super.visitStandardTableUpdate( tableUpdate );
+		if ( closeWrapper ) {
+			appendSql( ')' );
+		}
+	}
+
+	protected boolean renderReturningClause(List<ColumnReference> returningColumns) {
+		if ( isEmpty( returningColumns ) ) {
+			return false;
+		}
+		appendSql( "select " );
+		for ( int i = 0; i < returningColumns.size(); i++ ) {
+			if ( i > 0 ) {
+				appendSql( ", " );
+			}
+			appendSql( returningColumns.get( i ).getColumnExpression() );
+		}
+		appendSql( " from final table (" );
+		return true;
+	}
+
+
+	@Override
+	protected void visitReturningColumns(List<ColumnReference> returningColumns) {
+		// do nothing - this is handled via `#renderReturningClause`
+	}
+
+	@Deprecated( forRemoval = true, since = "6.5" )
 	public void visitReturningInsertStatement(TableInsertStandard tableInsert) {
 		assert tableInsert.getReturningColumns() != null
 				&& !tableInsert.getReturningColumns().isEmpty();
@@ -81,8 +122,62 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	protected void visitReturningColumns(List<ColumnReference> returningColumns) {
-		// do nothing - this is handled via `#visitReturningInsertStatement`
+	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
+		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
+			// Render plain insert statement and possibly run into unique constraint violation
+			super.visitInsertStatementOnly( statement );
+		}
+		else {
+			visitInsertStatementEmulateMerge( statement );
+		}
+	}
+
+	@Override
+	protected void visitDeleteStatementOnly(DeleteStatement statement) {
+		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			appendSql( "delete from " );
+			final Stack<Clause> clauseStack = getClauseStack();
+			try {
+				clauseStack.push( Clause.DELETE );
+				super.renderDmlTargetTableExpression( statement.getTargetTable() );
+				append( " dml_target_" );
+			}
+			finally {
+				clauseStack.pop();
+			}
+			visitWhereClause( determineWhereClauseRestrictionWithJoinEmulation( statement, "dml_target_" ) );
+			visitReturningColumns( statement.getReturningColumns() );
+		}
+		else {
+			super.visitDeleteStatementOnly( statement );
+		}
+	}
+
+	@Override
+	protected void visitUpdateStatementOnly(UpdateStatement statement) {
+		if ( hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			visitUpdateStatementEmulateMerge( statement );
+		}
+		else {
+			super.visitUpdateStatementOnly( statement );
+		}
+	}
+
+	@Override
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		super.renderDmlTargetTableExpression( tableReference );
+		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause != null ) {
+			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
+				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+			}
+		}
 	}
 
 	@Override
@@ -267,10 +362,9 @@ public class H2SqlAstTranslator<T extends JdbcOperation> extends SqlAstTranslato
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from dual";
+	protected String getDual() {
+		return "dual";
 	}
-
 
 	private boolean supportsOffsetFetchClause() {
 		return true;

@@ -33,6 +33,8 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
 import org.hibernate.internal.util.IndexedConsumer;
@@ -59,6 +61,10 @@ import org.hibernate.orm.test.jpa.SettingsGenerator;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
+import org.hibernate.persister.entity.mutation.DeleteCoordinator;
+import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.persister.entity.mutation.InsertCoordinator;
+import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.internal.PersisterClassResolverInitiator;
 import org.hibernate.persister.spi.PersisterClassResolver;
 import org.hibernate.persister.spi.PersisterCreationContext;
@@ -442,20 +448,18 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public void insert(Object id, Object[] fields, Object object, SharedSessionContractImplementor session) {
-		}
-
-		@Override
-		public Serializable insert(Object[] fields, Object object, SharedSessionContractImplementor session) {
+		public InsertCoordinator getInsertCoordinator() {
 			return null;
 		}
 
 		@Override
-		public void delete(Object id, Object version, Object object, SharedSessionContractImplementor session) {
+		public UpdateCoordinator getUpdateCoordinator() {
+			return null;
 		}
 
 		@Override
-		public void update(Object id, Object[] fields, int[] dirtyFields, boolean hasDirtyCollection, Object[] oldFields, Object oldVersion, Object object, Object rowId, SharedSessionContractImplementor session) {
+		public DeleteCoordinator getDeleteCoordinator() {
+			return null;
 		}
 
 		@Override
@@ -622,11 +626,11 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
-		public void processInsertGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
+		public void processInsertGeneratedProperties(Object id, Object entity, Object[] state, GeneratedValues generatedValues, SharedSessionContractImplementor session) {
 		}
 
 		@Override
-		public void processUpdateGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
+		public void processUpdateGeneratedProperties(Object id, Object entity, Object[] state, GeneratedValues generatedValues, SharedSessionContractImplementor session) {
 		}
 
 		@Override
@@ -731,6 +735,31 @@ public class PersisterClassProviderTest {
 		}
 
 		@Override
+		public String getSelectByUniqueKeyString(String propertyName) {
+			return null;
+		}
+
+		@Override
+		public String getSelectByUniqueKeyString(String[] propertyNames, String[] columnNames) {
+			return null;
+		}
+
+		@Override
+		public String[] getRootTableKeyColumnNames() {
+			return new String[0];
+		}
+
+		@Override
+		public String getIdentitySelectString() {
+			return null;
+		}
+
+		@Override
+		public String[] getIdentifierColumnNames() {
+			return new String[0];
+		}
+
+		@Override
 		public CacheEntry buildCacheEntry(Object entity, Object[] state, Object version, SharedSessionContractImplementor session) {
 			return null;
 		}
@@ -807,6 +836,51 @@ public class PersisterClassProviderTest {
 
 		@Override
 		public JavaType getMappedJavaType() {
+			return null;
+		}
+
+		@Override
+		public EntityMappingType getTargetPart() {
+			return null;
+		}
+
+		@Override
+		public void forEachMutableTable(Consumer<EntityTableMapping> consumer) {
+
+		}
+
+		@Override
+		public void forEachMutableTableReverse(Consumer<EntityTableMapping> consumer) {
+
+		}
+
+		@Override
+		public String getIdentifierTableName() {
+			return null;
+		}
+
+		@Override
+		public EntityTableMapping getIdentifierTableMapping() {
+			return null;
+		}
+
+		@Override
+		public ModelPart getIdentifierDescriptor() {
+			return null;
+		}
+
+		@Override
+		public boolean hasSkippableTables() {
+			return false;
+		}
+
+		@Override
+		public GeneratedValuesMutationDelegate getInsertDelegate() {
+			return null;
+		}
+
+		@Override
+		public GeneratedValuesMutationDelegate getUpdateDelegate() {
 			return null;
 		}
 	}

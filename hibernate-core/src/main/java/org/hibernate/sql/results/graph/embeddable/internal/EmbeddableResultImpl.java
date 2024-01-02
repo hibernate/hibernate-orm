@@ -41,8 +41,10 @@ public class EmbeddableResultImpl<T> extends AbstractFetchParent implements Embe
 			String resultVariable,
 			DomainResultCreationState creationState) {
 		super( navigablePath );
+
 		this.fetchContainer = modelPart.getEmbeddableTypeDescriptor();
 		this.resultVariable = resultVariable;
+
 		/*
 			An `{embeddable_result}` sub-path is created for the corresponding initializer to differentiate it from a fetch-initializer if this embedded is also fetched.
 			The Jakarta Persistence spec says that any embedded value selected in the result should not be part of the state of any managed entity.

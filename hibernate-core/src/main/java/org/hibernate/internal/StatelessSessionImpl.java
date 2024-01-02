@@ -8,7 +8,6 @@ package org.hibernate.internal;
 
 import java.util.Set;
 
-import jakarta.persistence.EntityGraph;
 import org.hibernate.CacheMode;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
@@ -31,16 +30,18 @@ import org.hibernate.engine.spi.PersistentAttributeInterceptable;
 import org.hibernate.engine.spi.PersistentAttributeInterceptor;
 import org.hibernate.engine.transaction.internal.jta.JtaStatusHelper;
 import org.hibernate.engine.transaction.jta.platform.spi.JtaPlatform;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.graph.GraphSemantic;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.proxy.LazyInitializer;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.tuple.entity.EntityMetamodel;
 
+import jakarta.persistence.EntityGraph;
 import jakarta.transaction.SystemException;
 
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
@@ -49,6 +50,7 @@ import static org.hibernate.engine.internal.Versioning.incrementVersion;
 import static org.hibernate.engine.internal.Versioning.seedVersion;
 import static org.hibernate.engine.internal.Versioning.setVersion;
 import static org.hibernate.generator.EventType.INSERT;
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.pretty.MessageHelper.infoString;
 import static org.hibernate.proxy.HibernateProxy.extractLazyInitializer;
 
@@ -107,10 +109,11 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 					persister.setValues( entity, state );
 				}
 			}
-			persister.insert( id, state, entity, this );
+			persister.getInsertCoordinator().insert( entity, id, state, this );
 		}
 		else {
-			id = persister.insert( state, entity, this );
+			final GeneratedValues generatedValues = persister.getInsertCoordinator().insert( entity, state, this );
+			id = castNonNull( generatedValues ).getGeneratedValue( persister.getIdentifierMapping() );
 		}
 		persister.setIdentifier( entity, id, this );
 		return id;
@@ -131,7 +134,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		final EntityPersister persister = getEntityPersister( entityName, entity );
 		final Object id = persister.getIdentifier( entity, this );
 		final Object version = persister.getVersion( entity );
-		persister.delete( id, version, entity, this );
+		persister.getDeleteCoordinator().delete( entity, id, version, this );
 	}
 
 
@@ -165,7 +168,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		else {
 			oldVersion = null;
 		}
-		persister.update( id, state, null, false, null, oldVersion, entity, null, this );
+		persister.getUpdateCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
 	}
 
 	@Override
@@ -201,7 +204,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		else {
 			oldVersion = null;
 		}
-		persister.merge( id, state, null, false, null, oldVersion, entity, null, this );
+		persister.getMergeCoordinator().update( entity, id, null, state, oldVersion, null, null, false, this );
 //		persister.setIdentifier( entity, id, this );
 	}
 

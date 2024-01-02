@@ -38,6 +38,8 @@ import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.spi.SqlAstProcessingState;
 import org.hibernate.sql.ast.spi.SqlAstQueryPartProcessingState;
 import org.hibernate.sql.ast.spi.SqlExpressionResolver;
+import org.hibernate.sql.ast.tree.from.FromClause;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.sql.results.graph.FetchParent;
@@ -103,6 +105,16 @@ public class LoaderSqlAstCreationState
 	@Override
 	public QueryPart getInflightQueryPart() {
 		return processingState.getInflightQueryPart();
+	}
+
+	@Override
+	public FromClause getFromClause() {
+		return processingState.getFromClause();
+	}
+
+	@Override
+	public void applyPredicate(Predicate predicate) {
+		processingState.applyPredicate( predicate );
 	}
 
 	@Override

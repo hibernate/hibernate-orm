@@ -209,13 +209,13 @@ public interface TableGroup extends SqlAstNode, ColumnReferenceQualifier, SqmPat
 	default boolean hasRealJoins() {
 		for ( TableGroupJoin join : getTableGroupJoins() ) {
 			final TableGroup joinedGroup = join.getJoinedGroup();
-			if ( !joinedGroup.isVirtual() || joinedGroup.hasRealJoins() ) {
+			if ( joinedGroup.isInitialized() && !joinedGroup.isVirtual() || joinedGroup.hasRealJoins() ) {
 				return true;
 			}
 		}
 		for ( TableGroupJoin join : getNestedTableGroupJoins() ) {
 			final TableGroup joinedGroup = join.getJoinedGroup();
-			if ( !joinedGroup.isVirtual() || joinedGroup.hasRealJoins() ) {
+			if ( joinedGroup.isInitialized() && !joinedGroup.isVirtual() || joinedGroup.hasRealJoins() ) {
 				return true;
 			}
 		}

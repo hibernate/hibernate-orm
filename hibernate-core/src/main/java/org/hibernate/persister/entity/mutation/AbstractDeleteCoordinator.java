@@ -52,7 +52,7 @@ public abstract class AbstractDeleteCoordinator
 	}
 
 	@Override
-	public MutationOperationGroup getStaticDeleteGroup() {
+	public MutationOperationGroup getStaticMutationOperationGroup() {
 		return staticOperationGroup;
 	}
 
@@ -68,7 +68,7 @@ public abstract class AbstractDeleteCoordinator
 			SharedSessionContractImplementor session);
 
 	@Override
-	public void coordinateDelete(
+	public void delete(
 			Object entity,
 			Object id,
 			Object version,

@@ -570,6 +570,7 @@ public abstract class CollectionBinder {
 		if ( property.isAnnotationPresent( jakarta.persistence.Column.class ) ) {
 			return buildColumnFromAnnotation(
 					property.getAnnotation( jakarta.persistence.Column.class ),
+					null,
 //					comment,
 					nullability,
 					propertyHolder,
@@ -592,6 +593,7 @@ public abstract class CollectionBinder {
 		else if ( property.isAnnotationPresent( Columns.class ) ) {
 			return buildColumnsFromAnnotations(
 					property.getAnnotation( Columns.class ).columns(),
+					null,
 //					comment,
 					nullability,
 					propertyHolder,
@@ -602,6 +604,7 @@ public abstract class CollectionBinder {
 		}
 		else {
 			return buildColumnFromNoAnnotation(
+					null,
 //					comment,
 					nullability,
 					propertyHolder,

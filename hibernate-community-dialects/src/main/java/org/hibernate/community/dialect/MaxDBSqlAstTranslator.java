@@ -94,12 +94,12 @@ public class MaxDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlA
 	}
 
 	@Override
-	public String getFromDual() {
-		return " from dual";
+	protected String getDual() {
+		return "dual";
 	}
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return " from " + getDual();
 	}
 }

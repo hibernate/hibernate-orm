@@ -610,3 +610,11 @@ create table JsonHolder as (
 ====
 
 Again, the name and the nullability of the `aggregate` column can be refined through applying a `@Column` on the persistent attribute.
+
+[[embeddable-mapping-aggregate]]
+==== Embeddable mappings containing collections
+
+Mapping <<chapters/domain/collections.adoc#collections,collections>> inside an `@Embeddable` value is supported in most cases. There are a couple exceptions:
+
+* If the values of an <<chapters/domain/collections.adoc#collections-elemental,@ElementCollection>> is of embeddable type, that embeddable cannot contain nested collections;
+* Explicitly selecting an embeddable that contains collections in a query is currently not supported (we wouldn't be able to correctly initialize the collection since its owning entity instance would be missing from the Persistence Context).

@@ -6,9 +6,12 @@
  */
 package org.hibernate.sql.model.internal;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 import org.hibernate.sql.ast.SqlAstWalker;
+import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.model.MutationTarget;
 import org.hibernate.sql.model.ast.AbstractTableUpdate;
 import org.hibernate.sql.model.ast.ColumnValueBinding;
@@ -61,6 +64,16 @@ public class TableUpdateCustomSql
 	@Override
 	public boolean isCallable() {
 		return getMutatingTable().getTableMapping().getUpdateDetails().isCallable();
+	}
+
+	@Override
+	public List<ColumnReference> getReturningColumns() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	public void forEachReturningColumn(BiConsumer<Integer, ColumnReference> consumer) {
+		// nothing to do
 	}
 
 	@Override

@@ -227,7 +227,7 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	public ForeignKeyDescriptor withTargetPart(ValuedModelPart targetPart) {
 		return new SimpleForeignKeyDescriptor(
 				keySide.getModelPart(),
-				(BasicValuedModelPart) targetPart,
+				targetPart.asBasicValuedModelPart(),
 				refersToPrimaryKey,
 				hasConstraint,
 				false
@@ -661,6 +661,11 @@ public class SimpleForeignKeyDescriptor implements ForeignKeyDescriptor, BasicVa
 	@Override
 	public Integer getScale() {
 		return keySide.getModelPart().getScale();
+	}
+
+	@Override
+	public Integer getTemporalPrecision() {
+		return keySide.getModelPart().getTemporalPrecision();
 	}
 
 	@Override

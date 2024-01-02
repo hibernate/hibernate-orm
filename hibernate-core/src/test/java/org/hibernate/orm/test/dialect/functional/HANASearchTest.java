@@ -9,7 +9,7 @@ package org.hibernate.orm.test.dialect.functional;
 import java.sql.PreparedStatement;
 
 import org.hibernate.Transaction;
-import org.hibernate.dialect.HANAColumnStoreDialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.query.Query;
 
 import org.hibernate.testing.TestForIssue;
@@ -38,8 +38,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 		annotatedClasses = { HANASearchTest.SearchEntity.class }
 )
 @SessionFactory(exportSchema = false)
-@RequiresDialect(HANAColumnStoreDialect.class)
-@SkipForDialect(dialectClass = HANAColumnStoreDialect.class, majorVersion = 4)
+@RequiresDialect(HANADialect.class)
+@SkipForDialect(dialectClass = HANADialect.class, majorVersion = 4)
 public class HANASearchTest {
 
 	private static final String ENTITY_NAME = "SearchEntity";

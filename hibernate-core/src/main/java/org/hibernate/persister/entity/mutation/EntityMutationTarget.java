@@ -9,10 +9,12 @@ package org.hibernate.persister.entity.mutation;
 import org.hibernate.Incubating;
 import org.hibernate.annotations.Table;
 import org.hibernate.engine.jdbc.mutation.MutationExecutor;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.sql.model.MutationTarget;
+import org.hibernate.sql.model.MutationType;
 
 /**
  * Anything that can be the target of {@linkplain MutationExecutor mutations}
@@ -47,6 +49,30 @@ public interface EntityMutationTarget extends MutationTarget<EntityTableMapping>
 	/**
 	 * The delegate for executing inserts against the root table for
 	 * targets defined using post-insert id generation
+	 *
+	 * @deprecated use {@link #getInsertDelegate()} instead
 	 */
-	InsertGeneratedIdentifierDelegate getIdentityInsertDelegate();
+	@Deprecated( forRemoval = true, since = "6.5" )
+	default InsertGeneratedIdentifierDelegate getIdentityInsertDelegate() {
+		final GeneratedValuesMutationDelegate insertDelegate = getInsertDelegate();
+		if ( insertDelegate instanceof InsertGeneratedIdentifierDelegate ) {
+			return (InsertGeneratedIdentifierDelegate) insertDelegate;
+		}
+		return null;
+	}
+
+	GeneratedValuesMutationDelegate getInsertDelegate();
+
+	GeneratedValuesMutationDelegate getUpdateDelegate();
+
+	default GeneratedValuesMutationDelegate getMutationDelegate(MutationType mutationType) {
+		switch ( mutationType ) {
+			case INSERT:
+				return getInsertDelegate();
+			case UPDATE:
+				return getUpdateDelegate();
+			default:
+				return null;
+		}
+	}
 }

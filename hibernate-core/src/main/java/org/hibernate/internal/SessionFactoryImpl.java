@@ -77,6 +77,7 @@ import org.hibernate.jpa.internal.PersistenceUnitUtilImpl;
 import org.hibernate.mapping.Collection;
 import org.hibernate.mapping.PersistentClass;
 import org.hibernate.mapping.RootClass;
+import org.hibernate.mapping.SimpleValue;
 import org.hibernate.metadata.CollectionMetadata;
 import org.hibernate.metamodel.internal.RuntimeMetamodelsImpl;
 import org.hibernate.metamodel.mapping.JdbcMapping;
@@ -460,7 +461,11 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 							(RootClass) model
 					);
 					if ( generator instanceof IdentifierGenerator ) {
-						( (IdentifierGenerator) generator ).initialize( sqlStringGenerationContext );
+						final IdentifierGenerator identifierGenerator = (IdentifierGenerator) generator;
+						identifierGenerator.initialize( sqlStringGenerationContext );
+						if ( identifierGenerator.allowAssignedIdentifiers() ) {
+							( (SimpleValue) model.getIdentifier() ).setNullValue( "undefined" );
+						}
 					}
 					generators.put( model.getEntityName(), generator );
 				} );

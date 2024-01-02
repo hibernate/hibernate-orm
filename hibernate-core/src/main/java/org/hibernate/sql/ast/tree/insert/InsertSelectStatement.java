@@ -36,6 +36,7 @@ public class InsertSelectStatement extends AbstractMutationStatement implements 
 	private List<ColumnReference> targetColumnReferences;
 	private QueryPart sourceSelectStatement;
 	private List<Values> valuesList = new ArrayList<>();
+	private ConflictClause conflictClause;
 
 	public InsertSelectStatement(NamedTableReference targetTable) {
 		this( null, targetTable, Collections.emptyList() );
@@ -98,6 +99,14 @@ public class InsertSelectStatement extends AbstractMutationStatement implements 
 
 	public void setValuesList(List<Values> valuesList) {
 		this.valuesList = valuesList;
+	}
+
+	public ConflictClause getConflictClause() {
+		return conflictClause;
+	}
+
+	public void setConflictClause(ConflictClause conflictClause) {
+		this.conflictClause = conflictClause;
 	}
 
 	@Override

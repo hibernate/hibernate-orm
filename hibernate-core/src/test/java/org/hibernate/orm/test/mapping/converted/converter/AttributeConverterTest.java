@@ -23,7 +23,6 @@ import org.hibernate.boot.spi.MetadataBuildingContext;
 import org.hibernate.boot.spi.MetadataImplementor;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.dialect.HANAColumnStoreDialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.ConfigHelper;
 import org.hibernate.mapping.BasicValue;
@@ -473,17 +472,7 @@ public class AttributeConverterTest extends BaseUnitTestCase {
 			final JdbcMapping jdbcMapping = (JdbcMapping) type;
 
 			assertThat( jdbcMapping.getJavaTypeDescriptor(), instanceOf( EnumJavaType.class ) );
-
-			final int expectedJdbcTypeCode;
-			if ( metadata.getDatabase().getDialect() instanceof HANAColumnStoreDialect
-					// Only for SAP HANA Cloud
-					&& metadata.getDatabase().getDialect().getVersion().isSameOrAfter( 4 ) ) {
-				expectedJdbcTypeCode = Types.NVARCHAR;
-			}
-			else {
-				expectedJdbcTypeCode = Types.VARCHAR;
-			}
-			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( expectedJdbcTypeCode ) ) );
+			assertThat( jdbcMapping.getJdbcType(), is( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) ) );
 
 			// then lets build the SF and verify its use...
 			final SessionFactory sf = metadata.buildSessionFactory();

@@ -10,6 +10,7 @@ import org.hibernate.MappingException;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.insert.GetGeneratedKeysDelegate;
+import org.hibernate.persister.entity.EntityPersister;
 
 /**
  * A set of operations providing support for identity columns
@@ -55,7 +56,10 @@ public interface IdentityColumnSupport {
 	 *
 	 * @return The insert command with any necessary identity select
 	 * clause attached.
+	 *
+	 * @deprecated Use {@link #appendIdentitySelectToInsert(String, String)} instead.
 	 */
+	@Deprecated( forRemoval = true, since = "6.5" )
 	String appendIdentitySelectToInsert(String insertString);
 
 	/**
@@ -127,8 +131,23 @@ public interface IdentityColumnSupport {
 	 * @param dialect The dialect against which to generate the delegate
 	 *
 	 * @return the dialect specific GetGeneratedKeys delegate
+	 *
+	 * @deprecated Use {@link #buildGetGeneratedKeysDelegate(EntityPersister, Dialect)} instead.
 	 */
-	GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(
+	@Deprecated( forRemoval = true, since = "6.5" )
+	default GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(
 			PostInsertIdentityPersister persister,
-			Dialect dialect);
+			Dialect dialect) {
+		return buildGetGeneratedKeysDelegate( persister );
+	}
+
+	/**
+	 * The Delegate for dealing with IDENTITY columns using JDBC3 getGeneratedKeys
+	 *
+	 * @param persister The persister
+	 * @param dialect The dialect against which to generate the delegate
+	 *
+	 * @return the dialect specific GetGeneratedKeys delegate
+	 */
+	GetGeneratedKeysDelegate buildGetGeneratedKeysDelegate(EntityPersister persister);
 }

@@ -126,12 +126,12 @@ public class RDMSOS2200SqlAstTranslator<T extends JdbcOperation> extends Abstrac
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from rdms.rdms_dummy where key_col=1";
+	protected String getDual() {
+		return "rdms.rdms_dummy";
 	}
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return " from " + getDual() + " where key_col=1";
 	}
 }

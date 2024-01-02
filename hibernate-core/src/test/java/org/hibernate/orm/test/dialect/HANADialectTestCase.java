@@ -15,7 +15,7 @@ import org.hibernate.MappingException;
 import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.cfg.AvailableSettings;
-import org.hibernate.dialect.HANAColumnStoreDialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import org.hibernate.testing.TestForIssue;
@@ -39,7 +39,7 @@ public class HANADialectTestCase extends BaseUnitTestCase {
 	public void testSqlGeneratedForIdentityInsertNoColumns() {
 		ServiceRegistryScope.using(
 				() -> ServiceRegistryUtil.serviceRegistryBuilder()
-						.applySetting( AvailableSettings.DIALECT, HANAColumnStoreDialect.class )
+						.applySetting( AvailableSettings.DIALECT, HANADialect.class )
 						.build(),
 				registryScope -> {
 					final StandardServiceRegistry registry = registryScope.getRegistry();
@@ -52,7 +52,7 @@ public class HANADialectTestCase extends BaseUnitTestCase {
 						}
 					} ).getMessage();
 					assertThat( errorMessage )
-							.matches( "The INSERT statement for table \\[EntityWithIdentity\\] contains no column, and this is not supported by \\[" + HANAColumnStoreDialect.class.getName() + ", version: [\\d\\.]+\\]" );
+							.matches( "The INSERT statement for table \\[EntityWithIdentity\\] contains no column, and this is not supported by \\[" + HANADialect.class.getName() + ", version: [\\d\\.]+\\]" );
 				}
 		);
 	}
@@ -83,7 +83,7 @@ public class HANADialectTestCase extends BaseUnitTestCase {
 	@Test
 	@TestForIssue(jiraKey = "HHH-13239")
 	public void testLockWaitTimeout() {
-		HANAColumnStoreDialect dialect = new HANAColumnStoreDialect();
+		HANADialect dialect = new HANADialect();
 
 		String sql = "select dummy from sys.dummy";
 

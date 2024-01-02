@@ -140,6 +140,13 @@ public interface SelectableConsumer {
 		}
 
 		@Override
+		public Integer getTemporalPrecision() {
+			// we could probably use the details from `base`, but
+			// this method should really never be called on this object
+			return null;
+		}
+
+		@Override
 		public String getCustomReadExpression() {
 			return null;
 		}
@@ -201,6 +208,11 @@ public interface SelectableConsumer {
 
 			@Override
 			public Integer getScale() {
+				return null;
+			}
+
+			@Override
+			public Integer getTemporalPrecision() {
 				return null;
 			}
 

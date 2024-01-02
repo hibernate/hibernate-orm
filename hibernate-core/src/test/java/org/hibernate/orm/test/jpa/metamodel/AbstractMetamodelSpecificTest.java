@@ -20,7 +20,7 @@ public abstract class AbstractMetamodelSpecificTest extends EntityManagerFactory
 
 	@AfterAll
 	public final void closeEntityManager() {
-		if ( em != null ) {
+		if ( em != null && em.isOpen() ) {
 			em.close();
 		}
 	}

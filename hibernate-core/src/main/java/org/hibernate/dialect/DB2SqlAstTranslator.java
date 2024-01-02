@@ -12,8 +12,10 @@ import java.util.function.Consumer;
 import org.hibernate.LockMode;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.query.IllegalQueryOperationException;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -27,10 +29,12 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.SqlTuple;
 import org.hibernate.sql.ast.tree.expression.Summarization;
+import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.QueryPartTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.BooleanExpressionPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -41,6 +45,7 @@ import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperation;
 import org.hibernate.sql.model.internal.TableInsertStandard;
+import org.hibernate.sql.model.internal.TableUpdateStandard;
 import org.hibernate.type.SqlTypes;
 
 import static org.hibernate.internal.util.collections.CollectionHelper.isEmpty;
@@ -338,19 +343,62 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	@Override
 	protected void visitUpdateStatementOnly(UpdateStatement statement) {
 		final boolean closeWrapper = renderReturningClause( statement );
-		super.visitUpdateStatementOnly( statement );
+		if ( supportsFromClauseInUpdate() || !hasNonTrivialFromClause( statement.getFromClause() ) ) {
+			super.visitUpdateStatementOnly( statement );
+		}
+		else {
+			if ( closeWrapper ) {
+				// Merge statements can't be used in the `from final table( ... )` syntax
+				visitUpdateStatementEmulateTupleSet( statement );
+			}
+			else {
+				visitUpdateStatementEmulateMerge( statement );
+			}
+		}
+		if ( closeWrapper ) {
+			appendSql( ')' );
+		}
+	}
+
+	protected boolean supportsFromClauseInUpdate() {
+		return getDB2Version().isSameOrAfter( 11 );
+	}
+
+	@Override
+	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
+		final boolean closeWrapper = renderReturningClause( statement );
+		if ( statement.getConflictClause() == null || statement.getConflictClause().isDoNothing() ) {
+			// Render plain insert statement and possibly run into unique constraint violation
+			super.visitInsertStatementOnly( statement );
+		}
+		else {
+			visitInsertStatementEmulateMerge( statement );
+		}
 		if ( closeWrapper ) {
 			appendSql( ')' );
 		}
 	}
 
 	@Override
-	protected void visitInsertStatementOnly(InsertSelectStatement statement) {
-		final boolean closeWrapper = renderReturningClause( statement );
-		super.visitInsertStatementOnly( statement );
-		if ( closeWrapper ) {
-			appendSql( ')' );
+	protected void visitConflictClause(ConflictClause conflictClause) {
+		if ( conflictClause != null ) {
+			if ( conflictClause.isDoUpdate() && conflictClause.getConstraintName() != null ) {
+				throw new IllegalQueryOperationException( "Insert conflict do update clause with constraint name is not supported" );
+			}
 		}
+	}
+
+	@Override
+	protected void renderDmlTargetTableExpression(NamedTableReference tableReference) {
+		super.renderDmlTargetTableExpression( tableReference );
+		if ( getClauseStack().getCurrent() != Clause.INSERT ) {
+			renderTableReferenceIdentificationVariable( tableReference );
+		}
+	}
+
+	@Override
+	protected void renderFromClauseAfterUpdateSet(UpdateStatement statement) {
+		renderFromClauseExcludingDmlTargetReference( statement );
 	}
 
 	protected boolean renderReturningClause(MutationStatement statement) {
@@ -387,12 +435,34 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 				appendSql( returningColumns.get( i ).getColumnExpression() );
 			}
 
-			appendSql( " from new table ( " ); // 'from final table' does not seem to play well with triggers
+			appendSql( " from new table (" ); // 'from final table' does not seem to play well with triggers
 			super.visitStandardTableInsert( tableInsert );
 			appendSql( ")" );
 		}
 		else {
 			super.visitStandardTableInsert( tableInsert );
+		}
+	}
+
+	@Override
+	public void visitStandardTableUpdate(TableUpdateStandard tableUpdate) {
+		final List<ColumnReference> returningColumns = tableUpdate.getReturningColumns();
+		if ( isNotEmpty( returningColumns ) ) {
+			appendSql( "select " );
+
+			for ( int i = 0; i < returningColumns.size(); i++ ) {
+				if ( i > 0 ) {
+					appendSql( ", " );
+				}
+				appendSql( returningColumns.get( i ).getColumnExpression() );
+			}
+
+			appendSql( " from final table (" );
+			super.visitStandardTableUpdate( tableUpdate );
+			appendSql( ")" );
+		}
+		else {
+			super.visitStandardTableUpdate( tableUpdate );
 		}
 	}
 
@@ -521,13 +591,13 @@ public class DB2SqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAst
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from sysibm.dual";
+	protected String getDual() {
+		return "sysibm.dual";
 	}
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return " from " + getDual();
 	}
 
 	@Override

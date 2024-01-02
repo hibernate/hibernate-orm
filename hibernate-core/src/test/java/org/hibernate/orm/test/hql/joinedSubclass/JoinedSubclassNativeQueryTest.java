@@ -6,6 +6,10 @@
  */
 package org.hibernate.orm.test.hql.joinedSubclass;
 
+import org.hibernate.cfg.AvailableSettings;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.type.SqlTypes;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
@@ -27,7 +31,8 @@ import jakarta.persistence.InheritanceType;
  */
 @DomainModel(
 		annotatedClasses = {
-				JoinedSubclassNativeQueryTest.Person.class
+				JoinedSubclassNativeQueryTest.Person.class,
+				JoinedSubclassNativeQueryTest.Employee.class
 		}
 )
 @SessionFactory
@@ -56,7 +61,15 @@ public class JoinedSubclassNativeQueryTest {
 	public void testJoinedInheritanceNativeQuery(SessionFactoryScope scope) {
 		scope.inTransaction(
 				session -> {
-					Person p = session.createNativeQuery( "select p.*, 0 as clazz_ from Person p", Person.class ).getSingleResult();
+					final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
+					final String nullColumnString = sessionFactory
+							.getJdbcServices()
+							.getDialect()
+							.getSelectClauseNullString( SqlTypes.VARCHAR, sessionFactory.getTypeConfiguration() );
+					// PostgreSQLDialect#getSelectClauseNullString produces e.g. `null::text` which we interpret as parameter,
+					// so workaround this problem by configuring to ignore JDBC parameters
+					session.setProperty( AvailableSettings.NATIVE_IGNORE_JDBC_PARAMETERS, true );
+					Person p = session.createNativeQuery( "select p.*, " + nullColumnString + " as companyName, 0 as clazz_  from Person p", Person.class ).getSingleResult();
 					Assertions.assertNotNull( p );
 					Assertions.assertEquals( p.getFirstName(), "Jan" );
 				}
@@ -81,4 +94,19 @@ public class JoinedSubclassNativeQueryTest {
 			this.firstName = firstName;
 		}
 	}
+
+	@Entity(name = "Employee")
+	public static class Employee extends Person {
+		@Basic(optional = false)
+		private String companyName;
+
+		public String getCompanyName() {
+			return companyName;
+		}
+
+		public void setCompanyName(String companyName) {
+			this.companyName = companyName;
+		}
+	}
+
 }

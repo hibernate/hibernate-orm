@@ -502,16 +502,44 @@ settingsDocumentation {
 			description = "Settings related to integrating with the Proxool Connection pool"
 			settingsClassName "org.hibernate.cfg.ProxoolSettings"
 		}
-		mapping {
+		transaction {
 			explicitPosition = 6
+			summary = "Proxool Connection Pool Settings"
+			description = "Settings which control how Hibernate interacts with and manages transactions"
+			settingsClassName "org.hibernate.cfg.TransactionSettings"
+		}
+		mapping {
+			explicitPosition = 7
 			summary = "Domain Mapping Settings"
 			description = "Settings which control how domain mappings are handled"
 			settingsClassName "org.hibernate.cfg.MappingSettings"
+		}
+		fetch {
+			explicitPosition = 8
+			summary = "Fetch Related Settings"
+			description = "Settings which control aspects of fetching data from the database"
+			settingsClassName "org.hibernate.cfg.FetchSettings"
+		}
+		batch {
+			explicitPosition = 9
+			summary = "JDBC Batch Settings"
+			description = "Settings which control how Hibernate performs JDBC batching updating"
+			settingsClassName "org.hibernate.cfg.BatchSettings"
 		}
 		environment {
 			summary = "Runtime Environment Settings"
 			description = "Settings related to JNDI and ClassLoaders"
 			settingsClassName "org.hibernate.cfg.EnvironmentSettings"
+		}
+		tenancy {
+			summary = "Multi-tenancy Settings"
+			description = "Settings related multi-tenancy support"
+			settingsClassName "org.hibernate.cfg.MultiTenancySettings"
+		}
+		cdi {
+			summary = "CDI Settings"
+			description = "Settings related to CDI"
+			settingsClassName "org.hibernate.cfg.ManagedBeanSettings"
 		}
 		schema {
 			summary = "Schema Tooling Settings"
@@ -559,6 +587,11 @@ settingsDocumentation {
 			description = "Settings which control Hibernate's support for spatial data (hibernate-spatial)"
 			settingsClassName "org.hibernate.spatial.HibernateSpatialConfigurationSettings"
 			settingsClassName "org.hibernate.spatial.integration.SpatialService"
+		}
+		session {
+			summary = "Session Event Settings"
+			description = "Settings related to Session events"
+			settingsClassName "org.hibernate.cfg.SessionEventSettings"
 		}
 		misc {
 			summary = "Miscellaneous Settings"

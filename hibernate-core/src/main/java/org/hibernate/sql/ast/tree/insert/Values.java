@@ -14,10 +14,6 @@ import java.util.List;
 public class Values {
 	private final List<Expression> expressions;
 
-	public Values() {
-		this.expressions = new ArrayList<>();
-	}
-
 	public Values(List<Expression> expressions) {
 		this.expressions = expressions;
 	}

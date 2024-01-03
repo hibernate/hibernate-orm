@@ -12,7 +12,7 @@
         <attributes>
             <id name="id" />
             <basic name="name" />
-            <basic name="myData" />
+            <basic name="data" />
         </attributes>
     </entity>
     <converter class="org.hibernate.orm.test.cdi.converters.OrmXmlConverterBean" auto-apply="true"/>

@@ -38,7 +38,7 @@ public interface PersistentAttributeMemberResolver {
 	 */
 	List<MemberDetails> resolveAttributesMembers(
 			ClassDetails classDetails,
-			AccessType classLevelAccessType,
+			ClassAttributeAccessType classLevelAccessType,
 			AllMemberConsumer allMemberConsumer);
 
 }

@@ -24,7 +24,7 @@ import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
-import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
+import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.FieldDetails;
@@ -51,7 +51,7 @@ public class ManyToOneTests {
 	@SuppressWarnings("JUnitMalformedDeclaration")
 	void testSimpleManyToOne(ServiceRegistryScope scope) {
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final ManagedResources managedResources = new ManagedResourcesImpl.Builder()
+		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/attr/many-to-one/simple.xml" )
 				.build();
 

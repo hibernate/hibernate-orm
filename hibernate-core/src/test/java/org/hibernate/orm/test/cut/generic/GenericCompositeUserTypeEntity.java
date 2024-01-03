@@ -12,7 +12,6 @@ import jakarta.persistence.Lob;
 
 @Entity
 public class GenericCompositeUserTypeEntity {
-	@Lob
 	@Embedded
 	@CompositeType(value = EnumPlaceholderUserType.class)
 	@AttributeOverrides({

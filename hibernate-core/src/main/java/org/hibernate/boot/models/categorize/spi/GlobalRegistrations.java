@@ -8,6 +8,7 @@ package org.hibernate.boot.models.categorize.spi;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -35,11 +36,15 @@ public interface GlobalRegistrations {
 
 	Map<String, FilterDefRegistration> getFilterDefRegistrations();
 
+	Map<String, String> getImportedRenames();
+
 	Map<String, SequenceGeneratorRegistration> getSequenceGeneratorRegistrations();
 
 	Map<String, TableGeneratorRegistration> getTableGeneratorRegistrations();
 
 	Map<String, GenericGeneratorRegistration> getGenericGeneratorRegistrations();
+
+	Set<ConverterRegistration> getJpaConverters();
 
 	// todo : named entity graphs
 	// todo : named queries

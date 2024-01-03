@@ -32,7 +32,7 @@ public interface ManagedTypeMetadata {
 	/**
 	 * The class-level access type
 	 */
-	AccessType getAccessType();
+	ClassAttributeAccessType getClassLevelAccessType();
 
 	/**
 	 * Get the number of declared attributes

@@ -504,4 +504,38 @@ public final class CollectionHelper {
 		}
 		return result;
 	}
+
+	public static <E> List<E> mutableJoin(Collection<E> first, Collection<E> second) {
+		final int totalCount = ( first == null ? 0 : first.size() )
+				+ ( second == null ? 0 : second.size() );
+		if ( totalCount == 0 ) {
+			return new ArrayList<>();
+		}
+		final ArrayList<E> joined = new ArrayList<>( totalCount );
+		if ( first != null ) {
+			joined.addAll( first );
+		}
+		if ( second != null ) {
+			joined.addAll( second );
+		}
+		return joined;
+	}
+
+	public static <E> List<E> mutableJoin(Collection<E> first, Collection<E>... others) {
+		// it can be empty, but not null
+		assert first != null;
+
+		if ( isEmpty( others ) ) {
+			final ArrayList<E> list = new ArrayList<>( first.size() );
+			list.addAll( first );
+			return list;
+		}
+
+		final List<E> joined = arrayList( first.size() + ( isEmpty( others ) ? 0 : others.length * 8 ) );
+		joined.addAll( first );
+		for ( Collection<E> other : others ) {
+			joined.addAll( other );
+		}
+		return joined;
+	}
 }

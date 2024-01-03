@@ -1,9 +1,9 @@
 package org.hibernate.orm.test.graph;
 
 import java.util.Map;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
@@ -61,7 +61,6 @@ public class GraphParsingTestEntity {
 	}
 
 	@OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-	@ElementCollection(targetClass = GraphParsingTestEntity.class)
 	public Map<GraphParsingTestEntity, GraphParsingTestEntity> getMap() {
 		return map;
 	}

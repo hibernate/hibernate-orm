@@ -12,10 +12,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import org.hibernate.boot.models.categorize.spi.ClassAttributeAccessType;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.IdentifiableTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
+import org.hibernate.boot.models.categorize.spi.MappedSuperclassTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.ModelCategorizationContext;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.AnnotationUsage;
@@ -35,33 +37,34 @@ public abstract class AbstractIdentifiableTypeMetadata
 		extends AbstractManagedTypeMetadata
 		implements IdentifiableTypeMetadata {
 	private final EntityHierarchy hierarchy;
-	private final AbstractIdentifiableTypeMetadata superType;
+	private final IdentifiableTypeMetadata superType;
 	private final Set<IdentifiableTypeMetadata> subTypes = new HashSet<>();
-	private final AccessType accessType;
+	private final ClassAttributeAccessType classLevelAccessType;
 
 	/**
 	 * Used when creating the hierarchy root-root
 	 *
-	 * @param accessType This is the hierarchy default
+	 * @param implicitAccessType This is the hierarchy default
 	 */
 	public AbstractIdentifiableTypeMetadata(
 			ClassDetails classDetails,
 			EntityHierarchy hierarchy,
-			AccessType accessType,
+			MappedSuperclassTypeMetadata superTypeMetadata,
+			AccessType implicitAccessType,
 			ModelCategorizationContext processingContext) {
 		super( classDetails, processingContext );
 
 		this.hierarchy = hierarchy;
-		this.superType = null;
+		this.superType = superTypeMetadata;
 
-		this.accessType = CategorizationHelper.determineAccessType( classDetails, accessType );
+		this.classLevelAccessType = CategorizationHelper.determineAccessType( classDetails, implicitAccessType );
 	}
 
 
 	public AbstractIdentifiableTypeMetadata(
 			ClassDetails classDetails,
 			EntityHierarchy hierarchy,
-			AbstractIdentifiableTypeMetadata superType,
+			IdentifiableTypeMetadata superType,
 			ModelCategorizationContext processingContext) {
 		super( classDetails, processingContext );
 
@@ -70,14 +73,20 @@ public abstract class AbstractIdentifiableTypeMetadata
 		this.hierarchy = hierarchy;
 		this.superType = superType;
 
-		this.accessType = CategorizationHelper.determineAccessType( classDetails, superType.getAccessType() );
+		// this is arguably more logical, but the specification is very clear that this should come
+		// from the hierarchy default not the super in section _2.3.2 Explicit Access Type_
+		//this.accessType = CategorizationHelper.determineAccessType( classDetails, superType.getAccessType() );
+		this.classLevelAccessType = CategorizationHelper.determineAccessType( classDetails, hierarchy.getDefaultAccessType() );
 	}
 
-	protected void postInstantiate(HierarchyTypeConsumer typeConsumer) {
+	protected void postInstantiate(boolean rootEntityOrSubclass, HierarchyTypeConsumer typeConsumer) {
 		typeConsumer.acceptType( this );
 
-		// now we can effectively walk subs
-		walkSubclasses( typeConsumer );
+		// now we can effectively walk subs, although we skip that for the mapped-superclasses
+		// "above" the root entity
+		if ( rootEntityOrSubclass ) {
+			walkSubclasses( typeConsumer );
+		}
 
 		// the idea here is to collect up class-level annotations and to apply
 		// the maps from supers
@@ -122,7 +131,7 @@ public abstract class AbstractIdentifiableTypeMetadata
 
 	}
 
-	private void addSubclass(IdentifiableTypeMetadata subclass) {
+	protected void addSubclass(IdentifiableTypeMetadata subclass) {
 		subTypes.add( subclass );
 	}
 
@@ -165,8 +174,8 @@ public abstract class AbstractIdentifiableTypeMetadata
 	}
 
 	@Override
-	public AccessType getAccessType() {
-		return accessType;
+	public ClassAttributeAccessType getClassLevelAccessType() {
+		return classLevelAccessType;
 	}
 
 	protected void collectConversionInfo() {

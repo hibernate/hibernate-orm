@@ -85,7 +85,7 @@ public class CacheableFileXmlSource extends XmlSource {
 		else {
 			if ( !isSerfileObsolete() ) {
 				try {
-					return readSerFile();
+					return new Binding( readSerFile(), getOrigin() );
 				}
 				catch ( SerializationException e ) {
 					log.unableToDeserializeCache( serFile.getName(), e );
@@ -117,6 +117,9 @@ public class CacheableFileXmlSource extends XmlSource {
 	}
 
 	private static void writeSerFile(Serializable binding, File xmlFile, File serFile) {
+		if ( binding instanceof Binding<?> bindingWrapper ) {
+			binding = (Serializable) bindingWrapper.getRoot();
+		}
 		try ( FileOutputStream fos = new FileOutputStream( serFile ) ) {
 			if ( log.isDebugEnabled() ) {
 				log.debugf( "Writing cache file for: %s to: %s", xmlFile.getAbsolutePath(), serFile.getAbsolutePath() );

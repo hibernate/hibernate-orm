@@ -9,11 +9,14 @@ package org.hibernate.boot.models.categorize.spi;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.internal.util.IndexedConsumer;
 import org.hibernate.internal.util.KeyedConsumer;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
+
+import org.jboss.jandex.IndexView;
 
 /**
  * The application's domain model, understood at a very rudimentary level - we know
@@ -35,6 +38,15 @@ public interface CategorizedDomainModel {
 	 * Registry of all known {@linkplain java.lang.annotation.Annotation} descriptors (classes)
 	 */
 	AnnotationDescriptorRegistry getAnnotationDescriptorRegistry();
+
+	IndexView getJandexIndex();
+
+	PersistenceUnitMetadata getPersistenceUnitMetadata();
+
+	/**
+	 * Global registrations collected while processing the persistence-unit.
+	 */
+	GlobalRegistrations getGlobalRegistrations();
 
 	/**
 	 * All entity hierarchies defined in the persistence unit
@@ -91,9 +103,4 @@ public interface CategorizedDomainModel {
 
 		embeddables.forEach( consumer::accept );
 	}
-
-	/**
-	 * Global registrations collected while processing the persistence-unit.
-	 */
-	GlobalRegistrations getGlobalRegistrations();
 }

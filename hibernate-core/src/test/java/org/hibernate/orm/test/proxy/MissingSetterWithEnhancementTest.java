@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.proxy;
 
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -70,9 +72,11 @@ public class MissingSetterWithEnhancementTest {
 	}
 
 	@Entity
+	@Access(AccessType.PROPERTY)
 	public static class EntityWithMissingSetter {
     	private Long id;
     	@Column
+		@Access(AccessType.FIELD)
 		private int someInt;
 
     	@Id

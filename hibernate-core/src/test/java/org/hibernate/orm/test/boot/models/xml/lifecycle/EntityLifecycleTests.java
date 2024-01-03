@@ -14,7 +14,7 @@ import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
-import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
+import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -42,7 +42,7 @@ import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor
 public class EntityLifecycleTests {
 	@Test
 	void testEntityLifecycle() {
-		final ManagedResources managedResources = new ManagedResourcesImpl.Builder()
+		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/lifecycle/entity-lifecycle.xml" )
 				.build();
 		try (StandardServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().build()) {

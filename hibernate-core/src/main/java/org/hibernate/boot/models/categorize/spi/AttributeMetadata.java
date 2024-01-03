@@ -32,12 +32,17 @@ public interface AttributeMetadata extends TableOwner {
 
 	/**
 	 * An enum defining the nature (categorization) of a persistent attribute.
+	 *
+	 * @see jakarta.persistence.metamodel.Attribute.PersistentAttributeType
 	 */
 	enum AttributeNature {
 		BASIC,
 		EMBEDDED,
 		ANY,
 		TO_ONE,
-		PLURAL
+		ELEMENT_COLLECTION,
+		MANY_TO_ANY,
+		MANY_TO_MANY,
+		ONE_TO_MANY
 	}
 }

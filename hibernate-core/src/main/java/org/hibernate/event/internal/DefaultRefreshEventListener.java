@@ -92,6 +92,10 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			//refresh() does not pass an entityName
 			persister = source.getEntityPersister( event.getEntityName(), object );
 			id = persister.getIdentifier( object, event.getSession() );
+			if ( id == null ) {
+				throw new HibernateException( "attempted to refresh an instance that is not part of the persistence context yet: "
+								+ infoString( persister, id, source.getFactory() ));
+			}
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
 						"Refreshing transient {0}",

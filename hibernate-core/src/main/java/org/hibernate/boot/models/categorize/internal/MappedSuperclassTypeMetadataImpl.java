@@ -28,22 +28,35 @@ public class MappedSuperclassTypeMetadataImpl
 	private final List<JpaEventListener> hierarchyEventListeners;
 	private final List<JpaEventListener> completeEventListeners;
 
+	/**
+	 * Form used when the mapped-superclass is the absolute-root of the hierarchy ("above" the root entity)
+	 */
 	public MappedSuperclassTypeMetadataImpl(
 			ClassDetails classDetails,
 			EntityHierarchy hierarchy,
+			MappedSuperclassTypeMetadataImpl superTypeMetadata,
 			AccessType defaultAccessType,
 			HierarchyTypeConsumer typeConsumer,
 			ModelCategorizationContext modelContext) {
-		super( classDetails, hierarchy, defaultAccessType, modelContext );
+		super( classDetails, hierarchy, superTypeMetadata, defaultAccessType, modelContext );
 
 		final LifecycleCallbackCollector lifecycleCallbackCollector = new LifecycleCallbackCollector( classDetails, modelContext );
 		this.attributeList = resolveAttributes( lifecycleCallbackCollector );
 		this.hierarchyEventListeners = collectHierarchyEventListeners( lifecycleCallbackCollector.resolve() );
 		this.completeEventListeners = collectCompleteEventListeners( modelContext );
 
-		postInstantiate( typeConsumer );
+		if ( superTypeMetadata != null ) {
+			superTypeMetadata.addSubclass( this );
+		}
+
+		postInstantiate( false, typeConsumer );
 	}
 
+
+
+	/**
+	 * Form used when the mapped-superclass is NOT the absolute-root of the hierarchy
+	 */
 	public MappedSuperclassTypeMetadataImpl(
 			ClassDetails classDetails,
 			EntityHierarchy hierarchy,
@@ -57,7 +70,7 @@ public class MappedSuperclassTypeMetadataImpl
 		this.hierarchyEventListeners = collectHierarchyEventListeners( lifecycleCallbackCollector.resolve() );
 		this.completeEventListeners = collectCompleteEventListeners( modelContext );
 
-		postInstantiate( typeConsumer );
+		postInstantiate( true, typeConsumer );
 	}
 
 	@Override

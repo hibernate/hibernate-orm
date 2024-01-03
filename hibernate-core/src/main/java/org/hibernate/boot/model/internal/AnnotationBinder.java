@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.Internal;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.CollectionTypeRegistrations;
@@ -388,7 +389,7 @@ public final class AnnotationBinder {
 
 		bindQueries( annotatedClass, context );
 		handleImport( annotatedClass, context );
-		bindFilterDefs( annotatedClass, context );
+		//bindFilterDefs( annotatedClass, context );
 		bindTypeDescriptorRegistrations( annotatedClass, context );
 		bindEmbeddableInstantiatorRegistrations( annotatedClass, context );
 		bindUserTypeRegistrations( annotatedClass, context );

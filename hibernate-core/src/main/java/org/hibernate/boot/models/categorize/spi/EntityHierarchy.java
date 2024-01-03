@@ -8,6 +8,7 @@ package org.hibernate.boot.models.categorize.spi;
 
 import org.hibernate.engine.OptimisticLockStyle;
 
+import jakarta.persistence.AccessType;
 import jakarta.persistence.InheritanceType;
 
 /**
@@ -32,6 +33,12 @@ public interface EntityHierarchy {
 	 * Visit each type in the hierarchy, top down starting from {@linkplain #getAbsoluteRoot()}
 	 */
 	void forEachType(HierarchyTypeVisitor typeVisitor);
+
+	/**
+	 * The default access-type for the hierarchy.  See section <i>2.3.1 Default Access Type</i>
+	 * of the Jakarta Persistence specification.
+	 */
+	AccessType getDefaultAccessType();
 
 	/**
 	 * The inheritance strategy for the hierarchy.

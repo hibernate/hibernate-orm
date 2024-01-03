@@ -134,14 +134,14 @@ public abstract class AbstractManagedTypeMetadata implements ManagedTypeMetadata
 	protected List<AttributeMetadata> resolveAttributes(AllMemberConsumer memberConsumer) {
 		final List<MemberDetails> backingMembers = getModelContext()
 				.getPersistentAttributeMemberResolver()
-				.resolveAttributesMembers( classDetails, getAccessType(), memberConsumer );
+				.resolveAttributesMembers( classDetails, getClassLevelAccessType(), memberConsumer );
 
 		final List<AttributeMetadata> attributeList = arrayList( backingMembers.size() );
 
 		for ( MemberDetails backingMember : backingMembers ) {
 			final AttributeMetadata attribute = new AttributeMetadataImpl(
 					backingMember.resolveAttributeName(),
-					CategorizationHelper.determineAttributeNature( backingMember ),
+					CategorizationHelper.determineAttributeNature( classDetails, backingMember ),
 					backingMember
 			);
 			attributeList.add( attribute );

@@ -18,7 +18,7 @@ import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.internal.AnyKeyType;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
-import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
+import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.FieldDetails;
@@ -45,7 +45,7 @@ public class AnyTests {
 	@SuppressWarnings("JUnitMalformedDeclaration")
 	void testSimpleAnyAttribute(ServiceRegistryScope scope) {
 		final StandardServiceRegistry serviceRegistry = scope.getRegistry();
-		final ManagedResources managedResources = new ManagedResourcesImpl.Builder()
+		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addLoadedClasses( Entity1.class )
 				.addLoadedClasses( Entity2.class )
 				.addXmlMappings( "mappings/models/attr/any/simple.xml" )

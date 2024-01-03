@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.SessionFactory;
+import org.hibernate.boot.models.AccessTypeDeterminationException;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
@@ -35,7 +36,7 @@ public class SafeMappingTest {
 			sessionFactory = cfg.buildSessionFactory( serviceRegistry );
 			fail( "Entity wo id should fail" );
 		}
-		catch (AnnotationException e) {
+		catch (AnnotationException | AccessTypeDeterminationException e) {
 			//success
 		}
 		finally {

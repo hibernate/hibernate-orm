@@ -14,9 +14,9 @@ import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
 import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.categorize.internal.GlobalRegistrationsImpl;
 import org.hibernate.boot.models.categorize.spi.FilterDefRegistration;
-import org.hibernate.boot.models.categorize.xml.internal.XmlDocumentImpl;
-import org.hibernate.boot.models.categorize.xml.internal.XmlPreProcessingResultImpl;
-import org.hibernate.boot.models.categorize.xml.spi.PersistenceUnitMetadata;
+import org.hibernate.boot.models.xml.internal.XmlDocumentImpl;
+import org.hibernate.boot.models.xml.internal.XmlPreProcessingResultImpl;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.models.internal.StringTypeDescriptor;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.SourceModelBuildingContext;
@@ -127,7 +127,8 @@ public class XmlProcessingSmokeTests {
 		final DomainModelCategorizationCollector collector = new DomainModelCategorizationCollector(
 				false,
 				buildingContext.getClassDetailsRegistry(),
-				buildingContext.getAnnotationDescriptorRegistry()
+				buildingContext.getAnnotationDescriptorRegistry(),
+				null
 		);
 		collectedXmlResources.getDocuments().forEach( collector::apply );
 

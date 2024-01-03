@@ -10,17 +10,20 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.hibernate.AnnotationException;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.Imported;
 import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCollectionUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbCompositeUserTypeRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConfigurationParameterImpl;
+import org.hibernate.boot.jaxb.mapping.spi.JaxbConverterImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbConverterRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEmbeddableInstantiatorRegistrationImpl;
 import org.hibernate.boot.jaxb.mapping.spi.JaxbEntityListenerImpl;
@@ -35,6 +38,7 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbUserTypeRegistrationImpl;
 import org.hibernate.boot.models.categorize.spi.CollectionTypeRegistration;
 import org.hibernate.boot.models.categorize.spi.CompositeUserTypeRegistration;
 import org.hibernate.boot.models.categorize.spi.ConversionRegistration;
+import org.hibernate.boot.models.categorize.spi.ConverterRegistration;
 import org.hibernate.boot.models.categorize.spi.EmbeddableInstantiatorRegistration;
 import org.hibernate.boot.models.categorize.spi.FilterDefRegistration;
 import org.hibernate.boot.models.categorize.spi.GenericGeneratorRegistration;
@@ -46,7 +50,7 @@ import org.hibernate.boot.models.categorize.spi.JpaEventListenerStyle;
 import org.hibernate.boot.models.categorize.spi.SequenceGeneratorRegistration;
 import org.hibernate.boot.models.categorize.spi.TableGeneratorRegistration;
 import org.hibernate.boot.models.categorize.spi.UserTypeRegistration;
-import org.hibernate.boot.models.categorize.xml.internal.XmlAnnotationHelper;
+import org.hibernate.boot.models.xml.internal.XmlAnnotationHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.CollectionClassification;
@@ -65,6 +69,7 @@ import jakarta.persistence.TableGenerator;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.emptySet;
 import static org.hibernate.boot.models.HibernateAnnotations.COLLECTION_TYPE_REG;
 import static org.hibernate.boot.models.HibernateAnnotations.COMPOSITE_TYPE_REG;
 import static org.hibernate.boot.models.HibernateAnnotations.CONVERTER_REG;
@@ -91,10 +96,13 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	private List<CollectionTypeRegistration> collectionTypeRegistrations;
 	private List<EmbeddableInstantiatorRegistration> embeddableInstantiatorRegistrations;
 	private Map<String, FilterDefRegistration> filterDefRegistrations;
+	private Map<String,String> importedRenameMap;
 
 	private Map<String, SequenceGeneratorRegistration> sequenceGeneratorRegistrations;
 	private Map<String, TableGeneratorRegistration> tableGeneratorRegistrations;
 	private Map<String, GenericGeneratorRegistration> genericGeneratorRegistrations;
+
+	private Set<ConverterRegistration> jpaConverters;
 
 	public GlobalRegistrationsImpl(SourceModelContext sourceModelContext) {
 		this( sourceModelContext.getClassDetailsRegistry(), sourceModelContext.getAnnotationDescriptorRegistry() );
@@ -151,6 +159,11 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	}
 
 	@Override
+	public Map<String, String> getImportedRenames() {
+		return importedRenameMap == null ? emptyMap() : importedRenameMap;
+	}
+
+	@Override
 	public Map<String, SequenceGeneratorRegistration> getSequenceGeneratorRegistrations() {
 		return sequenceGeneratorRegistrations == null ? emptyMap() : sequenceGeneratorRegistrations;
 	}
@@ -164,6 +177,12 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 	public Map<String, GenericGeneratorRegistration> getGenericGeneratorRegistrations() {
 		return genericGeneratorRegistrations == null ? emptyMap() : genericGeneratorRegistrations;
 	}
+
+	@Override
+	public Set<ConverterRegistration> getJpaConverters() {
+		return jpaConverters == null ? emptySet() : jpaConverters;
+	}
+
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// JavaTypeRegistration
@@ -472,9 +491,38 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 			filterDefRegistrations = new HashMap<>();
 		}
 
-		if ( filterDefRegistrations.put( name, new FilterDefRegistration( name, defaultCondition, parameters ) ) != null ) {
-			throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + name + "'" );
+		final FilterDefRegistration previousEntry = filterDefRegistrations.put(
+				name,
+				new FilterDefRegistration( name, defaultCondition, parameters )
+		);
+		if ( previousEntry != null ) {
+			// legacy code simply allows the collision overwriting the previous
+			// todo (jpa32) : re-enable this, especially if the conditions differ
+			//throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + name + "'" );
 		}
+	}
+
+	public void collectImportRename(ClassDetails classDetails) {
+		final AnnotationUsage<Imported> importedUsage = classDetails.getAnnotationUsage( Imported.class );
+
+		if ( importedUsage == null ) {
+			return;
+		}
+
+		final String explicitRename = importedUsage.getString( "rename" );
+		final String rename = StringHelper.isNotEmpty( explicitRename )
+				? explicitRename
+				: StringHelper.unqualify( classDetails.getName() );
+
+		collectImportRename( rename, classDetails.getName() );
+	}
+
+	public void collectImportRename(String rename, String name) {
+		if ( importedRenameMap == null ) {
+			importedRenameMap = new HashMap<>();
+		}
+
+		importedRenameMap.put( rename, name );
 	}
 
 
@@ -629,5 +677,36 @@ public class GlobalRegistrationsImpl implements GlobalRegistrations {
 		}
 
 		genericGeneratorRegistrations.put( generatorRegistration.getName(), generatorRegistration );
+	}
+
+
+	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	// Converters
+
+	public void collectConverter(ClassDetails converterClassDetails) {
+		if ( jpaConverters == null ) {
+			jpaConverters = new HashSet<>();
+		}
+
+		jpaConverters.add( new ConverterRegistration( converterClassDetails, null ) );
+	}
+
+	public void collectConverters(List<JaxbConverterImpl> converters) {
+		if ( CollectionHelper.isEmpty( converters ) ) {
+			return;
+		}
+
+		if ( jpaConverters == null ) {
+			jpaConverters = CollectionHelper.setOfSize( converters.size() );
+		}
+
+		converters.forEach( (jaxbConverter) -> {
+			final String converterClassName = jaxbConverter.getClazz();
+			assert converterClassName != null;
+			final ClassDetails converterType = classDetailsRegistry.resolveClassDetails( converterClassName );
+			final boolean autoApply = jaxbConverter.isAutoApply();
+
+			jpaConverters.add( new ConverterRegistration( converterType, autoApply ) );
+		} );
 	}
 }

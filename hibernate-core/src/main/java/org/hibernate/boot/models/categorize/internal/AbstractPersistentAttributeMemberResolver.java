@@ -14,13 +14,12 @@ import java.util.function.Function;
 
 import org.hibernate.boot.models.JpaAnnotations;
 import org.hibernate.boot.models.categorize.spi.AllMemberConsumer;
+import org.hibernate.boot.models.categorize.spi.ClassAttributeAccessType;
 import org.hibernate.boot.models.categorize.spi.PersistentAttributeMemberResolver;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.FieldDetails;
 import org.hibernate.models.spi.MemberDetails;
 import org.hibernate.models.spi.MethodDetails;
-
-import jakarta.persistence.AccessType;
 
 /**
  * "Template" support for writing PersistentAttributeMemberResolver
@@ -49,12 +48,12 @@ public abstract class AbstractPersistentAttributeMemberResolver implements Persi
 			Function<FieldDetails,Boolean> transientFieldChecker,
 			Function<MethodDetails,Boolean> transientMethodChecker,
 			ClassDetails classDetails,
-			AccessType classLevelAccessType);
+			ClassAttributeAccessType classLevelAccessType);
 
 	@Override
 	public List<MemberDetails> resolveAttributesMembers(
 			ClassDetails classDetails,
-			AccessType classLevelAccessType,
+			ClassAttributeAccessType classLevelAccessType,
 			AllMemberConsumer memberConsumer) {
 
 		final Set<FieldDetails> transientFields = new HashSet<>();

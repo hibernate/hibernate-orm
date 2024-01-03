@@ -97,15 +97,46 @@ public class EntityHierarchyBuilder {
 	private AccessType determineDefaultAccessTypeForHierarchy(ClassDetails rootEntityType) {
 		assert rootEntityType != null;
 
+//		// look for `@Access` at class level
+//		final AccessType classAnnotationValue = resolveDefaultAccessTypeFromClassAnnotation( rootEntityType );
+//		if ( classAnnotationValue != null ) {
+//			return classAnnotationValue;
+//		}
+
+		// look for `@Id` or `@EmbeddedId`
+		// todo (jpa32) : technically we could probably look for member with any "mapping" annotation
+		final AccessType accessFromAttribute = resolveDefaultAccessTypeFromMembers( rootEntityType );
+		if ( accessFromAttribute != null ) {
+			return accessFromAttribute;
+		}
+
+
+//		// 2.3.1 Default Access Type
+//		//    It is an error if a default access type cannot be determined and an access type is not explicitly specified
+//		//    by means of annotations or the XML descriptor.
+//		throw new AccessTypeDeterminationException( rootEntityType );
+
+		return null;
+	}
+
+	private AccessType resolveDefaultAccessTypeFromClassAnnotation(ClassDetails rootEntityType) {
 		ClassDetails current = rootEntityType;
 		while ( current != null ) {
-			// look for `@Access` on the class
 			final AnnotationUsage<Access> accessAnnotation = current.getAnnotationUsage( JpaAnnotations.ACCESS );
 			if ( accessAnnotation != null ) {
 				return accessAnnotation.getAttributeValue( "value" );
 			}
 
-			// look for `@Id` or `@EmbeddedId`
+			current = current.getSuperType();
+		}
+
+		return null;
+	}
+
+	private AccessType resolveDefaultAccessTypeFromMembers(ClassDetails rootEntityType) {
+		ClassDetails current = rootEntityType;
+		while ( current != null ) {
+			// look for `@Id` or `@EmbeddedId` (w/o `@Access`)
 			final AnnotationTarget idMember = determineIdMember( current );
 			if ( idMember != null ) {
 				switch ( idMember.getKind() ) {
@@ -124,11 +155,7 @@ public class EntityHierarchyBuilder {
 			current = current.getSuperType();
 		}
 
-		// 2.3.1 Default Access Type
-		//    It is an error if a default access type cannot be determined and an access type is not explicitly specified
-		//    by means of annotations or the XML descriptor.
-
-		throw new AccessTypeDeterminationException( rootEntityType );
+		return null;
 	}
 
 	private AnnotationTarget determineIdMember(ClassDetails current) {
@@ -137,7 +164,9 @@ public class EntityHierarchyBuilder {
 			final MethodDetails methodDetails = methods.get( i );
 			if ( methodDetails.getAnnotationUsage( JpaAnnotations.ID ) != null
 					|| methodDetails.getAnnotationUsage( JpaAnnotations.EMBEDDED_ID ) != null ) {
-				return methodDetails;
+				if ( methodDetails.getAnnotationUsage( Access.class ) == null ) {
+					return methodDetails;
+				}
 			}
 		}
 
@@ -146,7 +175,9 @@ public class EntityHierarchyBuilder {
 			final FieldDetails fieldDetails = fields.get( i );
 			if ( fieldDetails.getAnnotationUsage( JpaAnnotations.ID ) != null
 					|| fieldDetails.getAnnotationUsage( JpaAnnotations.EMBEDDED_ID ) != null ) {
-				return fieldDetails;
+				if ( fieldDetails.getAnnotationUsage( Access.class ) == null ) {
+					return fieldDetails;
+				}
 			}
 		}
 
@@ -183,8 +214,8 @@ public class EntityHierarchyBuilder {
 
 		ClassDetails current = classInfo.getSuperType();
 		while (  current != null ) {
-			if ( current.getAnnotationUsage( JpaAnnotations.ENTITY ) != null ) {
-				// a super type has `@Entity`, cannot be root
+			if ( current.getAnnotationUsage( JpaAnnotations.ENTITY ) != null && !current.isAbstract() ) {
+				// a non-abstract super type has `@Entity` -> classInfo cannot be a root entity
 				return false;
 			}
 			current = current.getSuperType();

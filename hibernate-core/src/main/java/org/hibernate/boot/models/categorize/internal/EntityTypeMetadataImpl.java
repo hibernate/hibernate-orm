@@ -6,7 +6,11 @@
  */
 package org.hibernate.boot.models.categorize.internal;
 
+import java.lang.annotation.Annotation;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.DynamicInsert;
@@ -28,6 +32,7 @@ import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
 import org.hibernate.boot.models.categorize.spi.ModelCategorizationContext;
 import org.hibernate.engine.spi.ExecuteUpdateResultCheckStyle;
+import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.models.spi.AnnotationUsage;
 import org.hibernate.models.spi.ClassDetails;
 
@@ -60,21 +65,24 @@ public class EntityTypeMetadataImpl
 	private final boolean isSelectBeforeUpdate;
 	private final boolean isDynamicInsert;
 	private final boolean isDynamicUpdate;
-	private final CustomSql customInsert;
-	private final CustomSql customUpdate;
-	private final CustomSql customDelete;
+	private final Map<String,CustomSql> customInsertMap;
+	private final Map<String,CustomSql>  customUpdateMap;
+	private final Map<String,CustomSql>  customDeleteMap;
 	private final String[] synchronizedTableNames;
 
 	private List<JpaEventListener> hierarchyEventListeners;
 	private List<JpaEventListener> completeEventListeners;
 
+	/**
+	 * Form used when the entity is the absolute-root (no mapped-super) of the hierarchy
+	 */
 	public EntityTypeMetadataImpl(
 			ClassDetails classDetails,
 			EntityHierarchy hierarchy,
 			AccessType defaultAccessType,
 			HierarchyTypeConsumer typeConsumer,
 			ModelCategorizationContext modelContext) {
-		super( classDetails, hierarchy, defaultAccessType, modelContext );
+		super( classDetails, hierarchy, null, defaultAccessType, modelContext );
 
 		// NOTE: There is no annotation for `entity-name` - it comes exclusively from XML
 		// 		mappings.  By default, the `entityName` is simply the entity class name.
@@ -96,9 +104,9 @@ public class EntityTypeMetadataImpl
 		this.isSelectBeforeUpdate = decodeSelectBeforeUpdate();
 		this.isDynamicInsert = decodeDynamicInsert();
 		this.isDynamicUpdate = decodeDynamicUpdate();
-		this.customInsert = extractCustomSql( classDetails.getAnnotationUsage( SQLInsert.class ) );
-		this.customUpdate = extractCustomSql( classDetails.getAnnotationUsage( SQLUpdate.class ) );
-		this.customDelete = extractCustomSql( classDetails.getAnnotationUsage( SQLDelete.class ) );
+		this.customInsertMap = extractCustomSql( classDetails, SQLInsert.class );
+		this.customUpdateMap = extractCustomSql( classDetails, SQLUpdate.class );
+		this.customDeleteMap = extractCustomSql( classDetails, SQLDelete.class );
 
 		//noinspection deprecation
 		final AnnotationUsage<Proxy> proxyAnnotation = classDetails.getAnnotationUsage( Proxy.class );
@@ -133,9 +141,12 @@ public class EntityTypeMetadataImpl
 			this.discriminatorMatchValue = null;
 		}
 
-		postInstantiate( typeConsumer );
+		postInstantiate( true, typeConsumer );
 	}
 
+	/**
+	 * Form used when the entity is NOT the absolute-root of the hierarchy
+	 */
 	public EntityTypeMetadataImpl(
 			ClassDetails classDetails,
 			EntityHierarchy hierarchy,
@@ -164,9 +175,9 @@ public class EntityTypeMetadataImpl
 		this.isSelectBeforeUpdate = decodeSelectBeforeUpdate();
 		this.isDynamicInsert = decodeDynamicInsert();
 		this.isDynamicUpdate = decodeDynamicUpdate();
-		this.customInsert = extractCustomSql( classDetails.getAnnotationUsage( SQLInsert.class ) );
-		this.customUpdate = extractCustomSql( classDetails.getAnnotationUsage( SQLUpdate.class ) );
-		this.customDelete = extractCustomSql( classDetails.getAnnotationUsage( SQLDelete.class ) );
+		this.customInsertMap = extractCustomSql( classDetails, SQLInsert.class );
+		this.customUpdateMap = extractCustomSql( classDetails, SQLUpdate.class );
+		this.customDeleteMap = extractCustomSql( classDetails, SQLDelete.class );
 
 		//noinspection deprecation
 		final AnnotationUsage<Proxy> proxyAnnotation = classDetails.getAnnotationUsage( Proxy.class );
@@ -201,7 +212,7 @@ public class EntityTypeMetadataImpl
 			this.discriminatorMatchValue = null;
 		}
 
-		postInstantiate( typeConsumer );
+		postInstantiate( true, typeConsumer );
 	}
 
 	@Override
@@ -260,18 +271,18 @@ public class EntityTypeMetadataImpl
 	}
 
 	@Override
-	public CustomSql getCustomInsert() {
-		return customInsert;
+	public Map<String, CustomSql> getCustomInserts() {
+		return customInsertMap;
 	}
 
 	@Override
-	public CustomSql getCustomUpdate() {
-		return customUpdate;
+	public Map<String, CustomSql> getCustomUpdates() {
+		return customUpdateMap;
 	}
 
 	@Override
-	public CustomSql getCustomDelete() {
-		return customDelete;
+	public Map<String, CustomSql> getCustomDeletes() {
+		return customDeleteMap;
 	}
 
 	public String getDiscriminatorMatchValue() {
@@ -355,26 +366,34 @@ public class EntityTypeMetadataImpl
 	 * {@link SQLUpdate}, {@link SQLDelete}
 	 * or {@link org.hibernate.annotations.SQLDeleteAll} annotations
 	 */
-	public static CustomSql extractCustomSql(AnnotationUsage<?> customSqlAnnotation) {
-		if ( customSqlAnnotation == null ) {
-			return null;
+	public static <A extends Annotation> Map<String,CustomSql> extractCustomSql(ClassDetails classDetails, Class<A> annotationType) {
+		final List<AnnotationUsage<A>> annotationUsages = classDetails.getRepeatedAnnotationUsages(	annotationType );
+		if ( CollectionHelper.isEmpty( annotationUsages ) ) {
+			return Collections.emptyMap();
 		}
 
-		final String sql = customSqlAnnotation.getAttributeValue( "sql" );
-		final boolean isCallable = customSqlAnnotation.getAttributeValue( "callable" );
+		final Map<String, CustomSql> result = new HashMap<>();
+		annotationUsages.forEach( (customSqlAnnotation) -> {
+			final String sql = customSqlAnnotation.getAttributeValue( "sql" );
+			final boolean isCallable = customSqlAnnotation.getAttributeValue( "callable" );
 
-		final ResultCheckStyle checkValue = customSqlAnnotation.getAttributeValue( "check" );
-		final ExecuteUpdateResultCheckStyle checkStyle;
-		if ( checkValue == null ) {
-			checkStyle = isCallable
-					? ExecuteUpdateResultCheckStyle.NONE
-					: ExecuteUpdateResultCheckStyle.COUNT;
-		}
-		else {
-			checkStyle = ExecuteUpdateResultCheckStyle.fromResultCheckStyle( checkValue );
-		}
+			final ResultCheckStyle checkValue = customSqlAnnotation.getAttributeValue( "check" );
+			final ExecuteUpdateResultCheckStyle checkStyle;
+			if ( checkValue == null ) {
+				checkStyle = isCallable
+						? ExecuteUpdateResultCheckStyle.NONE
+						: ExecuteUpdateResultCheckStyle.COUNT;
+			}
+			else {
+				checkStyle = ExecuteUpdateResultCheckStyle.fromResultCheckStyle( checkValue );
+			}
 
-		return new CustomSql( sql, isCallable, checkStyle );
+			result.put(
+					customSqlAnnotation.getString( "table" ),
+					new CustomSql( sql, isCallable, checkStyle )
+			);
+		} );
+		return result;
 	}
 
 	private String[] determineSynchronizedTableNames() {

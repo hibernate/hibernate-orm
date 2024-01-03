@@ -28,7 +28,6 @@
                 <column name="fld_id"/>
                 <generated-value strategy="TABLE" generator="generator"/>
             </id>
-            <basic name="unknownProperty"/>
             <many-to-one name="manufacturer" fetch="LAZY">
                 <join-column name="manufacturer_pk"/>
             </many-to-one>

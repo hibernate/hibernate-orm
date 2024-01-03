@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
+import org.hibernate.AnnotationException;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.NaturalId;
 import org.hibernate.annotations.NaturalIdCache;
@@ -109,6 +110,10 @@ public class HierarchyMetadataCollector implements HierarchyTypeConsumer {
 	}
 
 	private KeyMapping buildIdMapping() {
+		if ( collectedIdAttributes == null ) {
+			throw new AnnotationException( "Unable to determine id attribute(s) - " + rootEntityClassDetails.getName() );
+		}
+
 		if ( collectedIdAttributes instanceof List ) {
 			//noinspection unchecked
 			final List<AttributeMetadata> idAttributes = (List<AttributeMetadata>) collectedIdAttributes;
@@ -130,6 +135,18 @@ public class HierarchyMetadataCollector implements HierarchyTypeConsumer {
 
 		if ( idAttribute.getNature() == AttributeMetadata.AttributeNature.EMBEDDED ) {
 			return new AggregatedKeyMappingImpl( idAttribute );
+		}
+
+		if ( idAttribute.getNature() == AttributeMetadata.AttributeNature.TO_ONE ) {
+			final List<AttributeMetadata> idAttributes = List.of( idAttribute );
+			final ClassDetails idClassDetails;
+			if ( idClassAnnotation == null ) {
+				idClassDetails = null;
+			}
+			else {
+				idClassDetails = idClassAnnotation.getAttributeValue( "value" );
+			}
+			return new NonAggregatedKeyMappingImpl( idAttributes, idClassDetails );
 		}
 
 		throw new ModelsException(
@@ -161,6 +178,10 @@ public class HierarchyMetadataCollector implements HierarchyTypeConsumer {
 
 		if ( attribute.getNature() == AttributeMetadata.AttributeNature.EMBEDDED ) {
 			return new AggregatedKeyMappingImpl( attribute );
+		}
+
+		if ( attribute.getNature() == AttributeMetadata.AttributeNature.TO_ONE ) {
+			return new BasicKeyMappingImpl( attribute );
 		}
 
 		throw new ModelsException(

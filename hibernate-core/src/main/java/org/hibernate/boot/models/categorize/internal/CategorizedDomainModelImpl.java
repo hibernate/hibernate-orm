@@ -12,34 +12,44 @@ import java.util.Set;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.GlobalRegistrations;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
+
+import org.jboss.jandex.IndexView;
 
 /**
  * @author Steve Ebersole
  */
 public class CategorizedDomainModelImpl implements CategorizedDomainModel {
-	private final ClassDetailsRegistry classDetailsRegistry;
-	private final AnnotationDescriptorRegistry annotationDescriptorRegistry;
 	private final Set<EntityHierarchy> entityHierarchies;
 	private final Map<String, ClassDetails> mappedSuperclasses;
 	private final Map<String, ClassDetails> embeddables;
 	private final GlobalRegistrations globalRegistrations;
 
+	private final ClassDetailsRegistry classDetailsRegistry;
+	private final AnnotationDescriptorRegistry annotationDescriptorRegistry;
+	private final IndexView jandexIndex;
+	private final PersistenceUnitMetadata persistenceUnitMetadata;
+
 	public CategorizedDomainModelImpl(
 			ClassDetailsRegistry classDetailsRegistry,
 			AnnotationDescriptorRegistry annotationDescriptorRegistry,
+			IndexView jandexIndex,
+			PersistenceUnitMetadata persistenceUnitMetadata,
 			Set<EntityHierarchy> entityHierarchies,
 			Map<String, ClassDetails> mappedSuperclasses,
 			Map<String, ClassDetails> embeddables,
 			GlobalRegistrations globalRegistrations) {
 		this.classDetailsRegistry = classDetailsRegistry;
 		this.annotationDescriptorRegistry = annotationDescriptorRegistry;
+		this.persistenceUnitMetadata = persistenceUnitMetadata;
 		this.entityHierarchies = entityHierarchies;
 		this.mappedSuperclasses = mappedSuperclasses;
 		this.embeddables = embeddables;
 		this.globalRegistrations = globalRegistrations;
+		this.jandexIndex = jandexIndex;
 	}
 
 	@Override
@@ -50,6 +60,21 @@ public class CategorizedDomainModelImpl implements CategorizedDomainModel {
 	@Override
 	public AnnotationDescriptorRegistry getAnnotationDescriptorRegistry() {
 		return annotationDescriptorRegistry;
+	}
+
+	@Override
+	public IndexView getJandexIndex() {
+		return jandexIndex;
+	}
+
+	@Override
+	public PersistenceUnitMetadata getPersistenceUnitMetadata() {
+		return persistenceUnitMetadata;
+	}
+
+	@Override
+	public GlobalRegistrations getGlobalRegistrations() {
+		return globalRegistrations;
 	}
 
 	@Override
@@ -64,10 +89,5 @@ public class CategorizedDomainModelImpl implements CategorizedDomainModel {
 	@Override
 	public Map<String, ClassDetails> getEmbeddables() {
 		return embeddables;
-	}
-
-	@Override
-	public GlobalRegistrations getGlobalRegistrations() {
-		return globalRegistrations;
 	}
 }

@@ -24,7 +24,7 @@ import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
-import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
+import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 
 /**
  * @author Steve Ebersole
@@ -112,7 +112,7 @@ public class BindingTestingHelper {
 	}
 
 	public static Set<EntityHierarchy> buildHierarchyMetadata(Class<?>... classes) {
-		final ManagedResources managedResources = new ManagedResourcesImpl.Builder()
+		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addLoadedClasses(classes)
 				.build();
 
@@ -130,7 +130,7 @@ public class BindingTestingHelper {
 	}
 
 	public static CategorizedDomainModel buildCategorizedDomainModel(Class<?>... classes) {
-		final ManagedResources managedResources = new ManagedResourcesImpl.Builder()
+		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addLoadedClasses(classes)
 				.build();
 

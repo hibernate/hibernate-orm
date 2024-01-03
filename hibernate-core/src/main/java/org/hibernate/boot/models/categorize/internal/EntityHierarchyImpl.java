@@ -38,6 +38,7 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	private final EntityTypeMetadata rootEntityTypeMetadata;
 
 	private final InheritanceType inheritanceType;
+	private final jakarta.persistence.AccessType defaultAccessType;
 	private final OptimisticLockStyle optimisticLockStyle;
 
 	private final KeyMapping idMapping;
@@ -54,31 +55,38 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 			AccessType defaultCacheAccessType,
 			HierarchyTypeConsumer typeConsumer,
 			ModelCategorizationContext modelBuildingContext) {
+		this.defaultAccessType = defaultAccessType;
+
 		final ClassDetails absoluteRootClassDetails = findRootRoot( rootEntityClassDetails );
 		final HierarchyMetadataCollector metadataCollector = new HierarchyMetadataCollector( this, rootEntityClassDetails, typeConsumer );
 
 		if ( CategorizationHelper.isEntity( absoluteRootClassDetails ) ) {
-			this.absoluteRootTypeMetadata = new EntityTypeMetadataImpl(
+			this.rootEntityTypeMetadata = new EntityTypeMetadataImpl(
 					absoluteRootClassDetails,
 					this,
 					defaultAccessType,
 					metadataCollector,
 					modelBuildingContext
 			);
+			this.absoluteRootTypeMetadata = rootEntityTypeMetadata;
 		}
 		else {
 			assert CategorizationHelper.isMappedSuperclass( absoluteRootClassDetails );
-			this.absoluteRootTypeMetadata = new MappedSuperclassTypeMetadataImpl(
+			this.absoluteRootTypeMetadata = processRootMappedSuperclasses(
 					absoluteRootClassDetails,
 					this,
 					defaultAccessType,
 					metadataCollector,
 					modelBuildingContext
 			);
+			this.rootEntityTypeMetadata = new EntityTypeMetadataImpl(
+					rootEntityClassDetails,
+					this,
+					(AbstractIdentifiableTypeMetadata) absoluteRootTypeMetadata,
+					metadataCollector,
+					modelBuildingContext
+			);
 		}
-
-		this.rootEntityTypeMetadata = metadataCollector.getRootEntityMetadata();
-		assert rootEntityTypeMetadata != null;
 
 		this.inheritanceType = determineInheritanceType( metadataCollector );
 		this.optimisticLockStyle = determineOptimisticLockStyle( metadataCollector );
@@ -90,6 +98,22 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 
 		this.cacheRegion = determineCacheRegion( metadataCollector, defaultCacheAccessType );
 		this.naturalIdCacheRegion = determineNaturalIdCacheRegion( metadataCollector, cacheRegion );
+	}
+
+	private static IdentifiableTypeMetadata processRootMappedSuperclasses(
+			ClassDetails absoluteRootClassDetails,
+			EntityHierarchyImpl entityHierarchy,
+			jakarta.persistence.AccessType defaultAccessType,
+			HierarchyMetadataCollector metadataCollector,
+			ModelCategorizationContext modelBuildingContext) {
+		return new MappedSuperclassTypeMetadataImpl(
+				absoluteRootClassDetails,
+				entityHierarchy,
+				null,
+				defaultAccessType,
+				metadataCollector,
+				modelBuildingContext
+		);
 	}
 
 	private ClassDetails findRootRoot(ClassDetails rootEntityClassDetails) {
@@ -132,6 +156,11 @@ public class EntityHierarchyImpl implements EntityHierarchy {
 	@Override
 	public InheritanceType getInheritanceType() {
 		return inheritanceType;
+	}
+
+	@Override
+	public jakarta.persistence.AccessType getDefaultAccessType() {
+		return defaultAccessType;
 	}
 
 	@Override

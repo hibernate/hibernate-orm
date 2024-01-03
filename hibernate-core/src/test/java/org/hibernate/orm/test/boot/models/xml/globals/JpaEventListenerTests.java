@@ -13,7 +13,7 @@ import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.JpaEventListener;
-import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
+import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.models.internal.jdk.VoidClassDetails;
@@ -30,7 +30,7 @@ import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor
 public class JpaEventListenerTests {
 	@Test
 	void testGlobalRegistration() {
-		final ManagedResources managedResources = new ManagedResourcesImpl.Builder()
+		final ManagedResources managedResources = new AdditionalManagedResourcesImpl.Builder()
 				.addXmlMappings( "mappings/models/globals.xml" )
 				.build();
 

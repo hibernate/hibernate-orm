@@ -6,6 +6,8 @@
  */
 package org.hibernate.boot.models.categorize.spi;
 
+import java.util.Map;
+
 import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.model.naming.EntityNaming;
 
@@ -81,15 +83,15 @@ public interface EntityTypeMetadata extends IdentifiableTypeMetadata, EntityNami
 	/**
 	 * Custom SQL to perform an INSERT of this entity
 	 */
-	CustomSql getCustomInsert();
+	Map<String, CustomSql> getCustomInserts();
 
 	/**
 	 * Custom SQL to perform an UPDATE of this entity
 	 */
-	CustomSql getCustomUpdate();
+	Map<String, CustomSql> getCustomUpdates();
 
 	/**
 	 * Custom SQL to perform an DELETE of this entity
 	 */
-	CustomSql getCustomDelete();
+	Map<String, CustomSql> getCustomDeletes();
 }

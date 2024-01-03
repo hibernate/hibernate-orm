@@ -12,7 +12,7 @@ import java.util.Map;
 import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.orm.test.boot.models.BootstrapContextTesting;
-import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
+import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.orm.test.boot.models.MyStringConverter;
 import org.hibernate.orm.test.boot.models.MyUuidConverter;
 import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
@@ -51,7 +51,7 @@ public class SimpleProcessorTests {
 		// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 		// ManagedResources is built by scanning and from explicit resources
 		// during ORM bootstrap
-		final ManagedResourcesImpl.Builder managedResourcesBuilder = new ManagedResourcesImpl.Builder();
+		final AdditionalManagedResourcesImpl.Builder managedResourcesBuilder = new AdditionalManagedResourcesImpl.Builder();
 		managedResourcesBuilder
 				.addLoadedClasses( Person.class, Root.class, Sub.class, MyStringConverter.class, MyUuidConverter.class )
 				.addPackages( "org.hibernate.models.orm.process" );

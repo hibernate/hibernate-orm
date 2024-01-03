@@ -18,10 +18,15 @@ import org.hibernate.boot.jaxb.mapping.spi.JaxbPersistenceUnitMetadataImpl;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor;
+import org.hibernate.boot.models.xml.spi.PersistenceUnitMetadata;
 import org.hibernate.models.spi.AnnotationDescriptorRegistry;
 import org.hibernate.models.spi.ClassDetails;
 import org.hibernate.models.spi.ClassDetailsRegistry;
 
+import org.jboss.jandex.IndexView;
+
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Entity;
 import jakarta.persistence.MappedSuperclass;
@@ -36,17 +41,26 @@ import jakarta.persistence.MappedSuperclass;
 
 public class DomainModelCategorizationCollector {
 	private final boolean areIdGeneratorsGlobal;
+	private final IndexView jandexIndex;
+
+	private final GlobalRegistrationsImpl globalRegistrations;
+
 	private final Set<ClassDetails> rootEntities = new HashSet<>();
 	private final Map<String,ClassDetails> mappedSuperclasses = new HashMap<>();
 	private final Map<String,ClassDetails> embeddables = new HashMap<>();
-	private final GlobalRegistrationsImpl globalRegistrations;
 
 	public DomainModelCategorizationCollector(
 			boolean areIdGeneratorsGlobal,
 			ClassDetailsRegistry classDetailsRegistry,
-			AnnotationDescriptorRegistry descriptorRegistry) {
+			AnnotationDescriptorRegistry descriptorRegistry,
+			IndexView jandexIndex) {
 		this.areIdGeneratorsGlobal = areIdGeneratorsGlobal;
+		this.jandexIndex = jandexIndex;
 		this.globalRegistrations = new GlobalRegistrationsImpl( classDetailsRegistry, descriptorRegistry );
+	}
+
+	public GlobalRegistrationsImpl getGlobalRegistrations() {
+		return globalRegistrations;
 	}
 
 	public Set<ClassDetails> getRootEntities() {
@@ -61,15 +75,11 @@ public class DomainModelCategorizationCollector {
 		return embeddables;
 	}
 
-	public GlobalRegistrationsImpl getGlobalRegistrations() {
-		return globalRegistrations;
-	}
-
-
 	public void apply(JaxbEntityMappingsImpl jaxbRoot) {
 		getGlobalRegistrations().collectJavaTypeRegistrations( jaxbRoot.getJavaTypeRegistrations() );
 		getGlobalRegistrations().collectJdbcTypeRegistrations( jaxbRoot.getJdbcTypeRegistrations() );
 		getGlobalRegistrations().collectConverterRegistrations( jaxbRoot.getConverterRegistrations() );
+		getGlobalRegistrations().collectConverters( jaxbRoot.getConverters() );
 		getGlobalRegistrations().collectUserTypeRegistrations( jaxbRoot.getUserTypeRegistrations() );
 		getGlobalRegistrations().collectCompositeUserTypeRegistrations( jaxbRoot.getCompositeUserTypeRegistrations() );
 		getGlobalRegistrations().collectCollectionTypeRegistrations( jaxbRoot.getCollectionUserTypeRegistrations() );
@@ -79,9 +89,11 @@ public class DomainModelCategorizationCollector {
 		final JaxbPersistenceUnitMetadataImpl persistenceUnitMetadata = jaxbRoot.getPersistenceUnitMetadata();
 		if ( persistenceUnitMetadata != null ) {
 			final JaxbPersistenceUnitDefaultsImpl persistenceUnitDefaults = persistenceUnitMetadata.getPersistenceUnitDefaults();
-			final JaxbEntityListenerContainerImpl listenerContainer = persistenceUnitDefaults.getEntityListenerContainer();
-			if ( listenerContainer != null ) {
-				getGlobalRegistrations().collectEntityListenerRegistrations( listenerContainer.getEntityListeners() );
+			if ( persistenceUnitDefaults != null ) {
+				final JaxbEntityListenerContainerImpl listenerContainer = persistenceUnitDefaults.getEntityListenerContainer();
+				if ( listenerContainer != null ) {
+					getGlobalRegistrations().collectEntityListenerRegistrations( listenerContainer.getEntityListeners() );
+				}
 			}
 		}
 
@@ -105,6 +117,8 @@ public class DomainModelCategorizationCollector {
 			getGlobalRegistrations().collectIdGenerators( classDetails );
 		}
 
+		getGlobalRegistrations().collectImportRename( classDetails );
+
 		// todo : named queries
 		// todo : named graphs
 
@@ -124,7 +138,10 @@ public class DomainModelCategorizationCollector {
 			}
 		}
 
-		// todo : converters?  - @Converter / AttributeConverter, as opposed to @ConverterRegistration which is already collected
+		if ( ( classDetails.getClassName() != null && classDetails.isImplementor( AttributeConverter.class ) )
+				|| classDetails.getAnnotationUsage( Converter.class ) != null ) {
+			globalRegistrations.collectConverter( classDetails );
+		}
 	}
 
 	/**
@@ -138,11 +155,14 @@ public class DomainModelCategorizationCollector {
 	 */
 	public CategorizedDomainModel createResult(
 			Set<EntityHierarchy> entityHierarchies,
+			PersistenceUnitMetadata persistenceUnitMetadata,
 			ClassDetailsRegistry classDetailsRegistry,
 			AnnotationDescriptorRegistry annotationDescriptorRegistry) {
 		return new CategorizedDomainModelImpl(
 				classDetailsRegistry,
 				annotationDescriptorRegistry,
+				jandexIndex,
+				persistenceUnitMetadata,
 				entityHierarchies,
 				mappedSuperclasses,
 				embeddables,

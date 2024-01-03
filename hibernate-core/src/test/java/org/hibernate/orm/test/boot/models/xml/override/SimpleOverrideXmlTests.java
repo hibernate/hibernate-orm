@@ -13,7 +13,7 @@ import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
-import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
+import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -35,7 +35,7 @@ public class SimpleOverrideXmlTests {
 	@Test
 	void testSimpleCompleteEntity() {
 
-		final ManagedResourcesImpl.Builder managedResourcesBuilder = new ManagedResourcesImpl.Builder();
+		final AdditionalManagedResourcesImpl.Builder managedResourcesBuilder = new AdditionalManagedResourcesImpl.Builder();
 		managedResourcesBuilder.addXmlMappings( "mappings/models/override/simple-override.xml" );
 		final ManagedResources managedResources = managedResourcesBuilder.build();
 

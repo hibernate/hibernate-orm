@@ -34,7 +34,12 @@ public class MultipleAttributeNaturesException extends MappingException {
 		final StringBuilder buffer = new StringBuilder( "Attribute `" )
 				.append( attributeName )
 				.append( "` expressed multiple natures [" );
-		natures.forEach( buffer::append );
+		String separator = "";
+		for ( AttributeMetadata.AttributeNature nature : natures ) {
+			buffer.append( separator );
+			buffer.append( nature.name() );
+			separator = ",";
+		}
 		return buffer.append( "]" ).toString();
 	}
 }

@@ -29,7 +29,7 @@ import jakarta.persistence.PreUpdate;
  *
  * Represents a global entity listener defined in the persistence unit
  *
- * @see JaxbPersistenceUnitDefaultsImpl#getEntityListeners()
+ * @see JaxbPersistenceUnitDefaultsImpl#getEntityListenerContainer()
  * @see JaxbEntityListenerImpl
  * @see GlobalRegistrations#getEntityListenerRegistrations()
  *
@@ -109,9 +109,9 @@ public class JpaEventListener {
 	}
 
 	/**
-	 * Create a listener descriptor from XML (with explicitly named methods)
+	 * Create a listener descriptor from XML
 	 *
-	 * @see JaxbPersistenceUnitDefaultsImpl#getEntityListeners()
+	 * @see JaxbPersistenceUnitDefaultsImpl#getEntityListenerContainer()
 	 * @see JaxbEntityListenerImpl
 	 * @see GlobalRegistrations#getEntityListenerRegistrations()
 	 */
@@ -127,13 +127,17 @@ public class JpaEventListener {
 		final MutableObject<MethodDetails> postUpdateMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postLoadMethod = new MutableObject<>();
 
+		if ( isImplicitMethodMappings( jaxbMapping ) ) {
+			return from( consumerType, listenerClassDetails );
+		}
+
 		listenerClassDetails.forEachMethod( (index, methodDetails) -> {
 			if ( jaxbMapping.getPrePersist() != null
 					&& methodDetails.getName().equals( jaxbMapping.getPrePersist().getMethodName() )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				prePersistMethod.set( methodDetails );
 			}
-			else if ( jaxbMapping.getPostPersist().getMethodName() != null
+			else if ( jaxbMapping.getPostPersist() != null
 					&& methodDetails.getName().equals( jaxbMapping.getPostPersist().getMethodName() )
 					&& matchesSignature( consumerType, methodDetails ) ) {
 				postPersistMethod.set( methodDetails );
@@ -182,6 +186,16 @@ public class JpaEventListener {
 		return jpaEventListener;
 	}
 
+	private static boolean isImplicitMethodMappings(JaxbEntityListenerImpl jaxbMapping) {
+		return jaxbMapping.getPrePersist() == null
+				&& jaxbMapping.getPreUpdate() == null
+				&& jaxbMapping.getPreRemove() == null
+				&& jaxbMapping.getPostLoad() == null
+				&& jaxbMapping.getPostPersist() == null
+				&& jaxbMapping.getPostUpdate() == null
+				&& jaxbMapping.getPostRemove() == null;
+	}
+
 	private static void errorIfEmpty(JpaEventListener jpaEventListener) {
 		if ( jpaEventListener.prePersistMethod == null
 				&& jpaEventListener.postPersistMethod == null
@@ -194,6 +208,12 @@ public class JpaEventListener {
 		}
 	}
 
+	/**
+	 * Create a listener descriptor from annotations
+	 *
+	 * @see jakarta.persistence.EntityListeners
+	 * @see GlobalRegistrations#getEntityListenerRegistrations()
+	 */
 	public static JpaEventListener from(JpaEventListenerStyle consumerType, ClassDetails listenerClassDetails) {
 		final MutableObject<MethodDetails> prePersistMethod = new MutableObject<>();
 		final MutableObject<MethodDetails> postPersistMethod = new MutableObject<>();

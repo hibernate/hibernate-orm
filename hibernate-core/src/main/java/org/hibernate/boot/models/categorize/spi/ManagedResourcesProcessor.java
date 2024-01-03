@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.categorize.ModelCategorizationLogging;
@@ -17,10 +18,10 @@ import org.hibernate.boot.models.categorize.internal.ClassLoaderServiceLoading;
 import org.hibernate.boot.models.categorize.internal.DomainModelCategorizationCollector;
 import org.hibernate.boot.models.categorize.internal.ModelCategorizationContextImpl;
 import org.hibernate.boot.models.categorize.internal.OrmAnnotationHelper;
-import org.hibernate.boot.models.categorize.xml.spi.XmlPreProcessingResult;
-import org.hibernate.boot.models.categorize.xml.spi.XmlPreProcessor;
-import org.hibernate.boot.models.categorize.xml.spi.XmlProcessingResult;
-import org.hibernate.boot.models.categorize.xml.spi.XmlProcessor;
+import org.hibernate.boot.models.xml.spi.XmlPreProcessingResult;
+import org.hibernate.boot.models.xml.spi.XmlPreProcessor;
+import org.hibernate.boot.models.xml.spi.XmlProcessingResult;
+import org.hibernate.boot.models.xml.spi.XmlProcessor;
 import org.hibernate.boot.registry.classloading.spi.ClassLoaderService;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
 import org.hibernate.boot.spi.BootstrapContext;
@@ -41,7 +42,7 @@ import org.jboss.jandex.IndexView;
 import org.jboss.jandex.Indexer;
 
 import static org.hibernate.boot.models.categorize.internal.EntityHierarchyBuilder.createEntityHierarchies;
-import static org.hibernate.models.internal.util.CollectionHelper.mutableJoin;
+import static org.hibernate.internal.util.collections.CollectionHelper.mutableJoin;
 
 /**
  * Processes a {@linkplain ManagedResources} (classes, mapping, etc.) and
@@ -75,7 +76,9 @@ public class ManagedResourcesProcessor {
 
 		final XmlPreProcessingResult xmlPreProcessingResult = XmlPreProcessor.preProcessXmlResources( managedResources );
 
+		//noinspection unchecked
 		final List<String> allKnownClassNames = mutableJoin(
+				managedResources.getAnnotatedClassReferences().stream().map( Class::getName ).collect( Collectors.toList() ),
 				managedResources.getAnnotatedClassNames(),
 				xmlPreProcessingResult.getMappedClasses()
 		);
@@ -118,22 +121,23 @@ public class ManagedResourcesProcessor {
 
 		// JPA id generator global-ity thing
 		final boolean areIdGeneratorsGlobal = true;
-		final ClassDetailsRegistry mutableClassDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
+		final ClassDetailsRegistry classDetailsRegistry = sourceModelBuildingContext.getClassDetailsRegistry();
 		final AnnotationDescriptorRegistry descriptorRegistry = sourceModelBuildingContext.getAnnotationDescriptorRegistry();
 		final DomainModelCategorizationCollector modelCategorizationCollector = new DomainModelCategorizationCollector(
 				areIdGeneratorsGlobal,
-				mutableClassDetailsRegistry,
-				descriptorRegistry
+				classDetailsRegistry,
+				descriptorRegistry,
+				jandexIndex
 		);
 
 		final XmlProcessingResult xmlProcessingResult = XmlProcessor.processXml( xmlPreProcessingResult, modelCategorizationCollector, sourceModelBuildingContext );
 
 		allKnownClassNames.forEach( (className) -> {
-			final ClassDetails classDetails = mutableClassDetailsRegistry.resolveClassDetails( className );
+			final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( className );
 			modelCategorizationCollector.apply( classDetails );
 		} );
 		xmlPreProcessingResult.getMappedNames().forEach( (className) -> {
-			final ClassDetails classDetails = mutableClassDetailsRegistry.resolveClassDetails( className );
+			final ClassDetails classDetails = classDetailsRegistry.resolveClassDetails( className );
 			modelCategorizationCollector.apply( classDetails );
 		} );
 
@@ -152,7 +156,7 @@ public class ManagedResourcesProcessor {
 		// OUTPUTS:
 		//		- CategorizedDomainModel
 
-		final ClassDetailsRegistry classDetailsRegistryImmutable = mutableClassDetailsRegistry
+		final ClassDetailsRegistry classDetailsRegistryImmutable = classDetailsRegistry
 				.makeImmutableCopy();
 
 		final AnnotationDescriptorRegistry annotationDescriptorRegistryImmutable = descriptorRegistry
@@ -187,7 +191,12 @@ public class ManagedResourcesProcessor {
 			);
 		}
 
-		return modelCategorizationCollector.createResult( entityHierarchies, classDetailsRegistryImmutable, annotationDescriptorRegistryImmutable );
+		return modelCategorizationCollector.createResult(
+				entityHierarchies,
+				xmlPreProcessingResult.getPersistenceUnitMetadata(),
+				classDetailsRegistryImmutable,
+				annotationDescriptorRegistryImmutable
+		);
 	}
 
 	private static void ignore(IdentifiableTypeMetadata identifiableTypeMetadata) {

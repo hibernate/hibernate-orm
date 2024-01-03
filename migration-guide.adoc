@@ -30,6 +30,38 @@ earlier versions, see any other pertinent migration guides as well.
   ** JPA has added support in its Graph API for things Hibernate has supported for some time.  Some of those are collisions
         requiring changes to the Hibernate API.
 
+[[annotation-validation]]
+== Annotation Validations
+
+7.0 adds many more checks about illegal use of annotations.
+
+=== Access
+
+The Jakarta Persistence specification says that it is illegal to specify `@Access(FIELD)` on a property (getter)
+or to use `@Access(PROPERTY)` on a field.  As of 7.0, Hibernate now throws an exception when this condition is
+discovered.
+
+=== PersistentAttributeType
+
+As of 7.0, Hibernate applies much better validation of an attribute specifying multiple PersistentAttributeTypes.
+Jakarta Persistence 3.2 has clarified this in the specification.  E.g., the following examples are all now illegal -
+
+[source,java]
+----
+@Basic
+@ManyToOne
+private Employee manager;
+----
+
+or
+
+[source,java]
+----
+@Lob
+@ManyToOne
+private Employee manager;
+----
+
 
 [[cleanup]]
 == Some Cleanup

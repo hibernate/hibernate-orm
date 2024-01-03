@@ -16,7 +16,7 @@ import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.orm.test.boot.models.BootstrapContextTesting;
 import org.hibernate.orm.test.boot.models.SourceModelTestHelper;
-import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
+import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 
 import org.junit.jupiter.api.Test;
 
@@ -36,7 +36,7 @@ public class CompleteXmlInheritanceTests {
 	@Test
 	void testIt() {
 
-		final ManagedResourcesImpl.Builder managedResourcesBuilder = new ManagedResourcesImpl.Builder();
+		final AdditionalManagedResourcesImpl.Builder managedResourcesBuilder = new AdditionalManagedResourcesImpl.Builder();
 		managedResourcesBuilder.addXmlMappings( "mappings/models/complete/simple-inherited.xml" );
 		final ManagedResources managedResources = managedResourcesBuilder.build();
 

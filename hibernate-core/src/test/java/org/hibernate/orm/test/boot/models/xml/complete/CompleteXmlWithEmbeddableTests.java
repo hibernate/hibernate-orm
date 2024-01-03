@@ -11,9 +11,10 @@ import org.hibernate.boot.internal.MetadataBuilderImpl;
 import org.hibernate.boot.model.process.spi.ManagedResources;
 import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
+import org.hibernate.boot.models.categorize.spi.ClassAttributeAccessType;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
-import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
+import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 
@@ -35,7 +36,7 @@ import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor
 public class CompleteXmlWithEmbeddableTests {
 	@Test
 	void testIt() {
-		final ManagedResourcesImpl.Builder managedResourcesBuilder = new ManagedResourcesImpl.Builder();
+		final AdditionalManagedResourcesImpl.Builder managedResourcesBuilder = new AdditionalManagedResourcesImpl.Builder();
 		managedResourcesBuilder.addXmlMappings( "mappings/models/complete/simple-person.xml" );
 		final ManagedResources managedResources = managedResourcesBuilder.build();
 
@@ -53,7 +54,7 @@ public class CompleteXmlWithEmbeddableTests {
 
 			final EntityHierarchy hierarchy = categorizedDomainModel.getEntityHierarchies().iterator().next();
 			final EntityTypeMetadata personMetadata = hierarchy.getRoot();
-			assertThat( personMetadata.getAccessType() ).isEqualTo( AccessType.FIELD );
+			assertThat( personMetadata.getClassLevelAccessType() ).isEqualTo( ClassAttributeAccessType.EXPLICIT_FIELD );
 
 			assertThat( personMetadata.getAttributes() ).hasSize( 2 );
 

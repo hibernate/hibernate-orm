@@ -31,7 +31,6 @@ public class ShoppingBaskets implements Serializable {
 	@Id
 	@ManyToOne(cascade={ CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
 	@JoinColumn(name="customerID", referencedColumnName="customerID")
-	@Basic(fetch=FetchType.LAZY)
 	private Customers owner;
 
 	@Column(name="basketDatetime", nullable=false)

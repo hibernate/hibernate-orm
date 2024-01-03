@@ -20,7 +20,7 @@ import org.hibernate.boot.models.categorize.spi.AttributeMetadata;
 import org.hibernate.boot.models.categorize.spi.CategorizedDomainModel;
 import org.hibernate.boot.models.categorize.spi.EntityHierarchy;
 import org.hibernate.boot.models.categorize.spi.EntityTypeMetadata;
-import org.hibernate.orm.test.boot.models.ManagedResourcesImpl;
+import org.hibernate.boot.model.source.internal.annotations.AdditionalManagedResourcesImpl;
 import org.hibernate.orm.test.boot.models.xml.SimpleEntity;
 import org.hibernate.boot.registry.StandardServiceRegistry;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
@@ -42,8 +42,7 @@ import static org.hibernate.boot.models.categorize.spi.ManagedResourcesProcessor
 public class SimpleCompleteXmlTests {
 	@Test
 	void testSimpleCompleteEntity() {
-
-		final ManagedResourcesImpl.Builder managedResourcesBuilder = new ManagedResourcesImpl.Builder();
+		final AdditionalManagedResourcesImpl.Builder managedResourcesBuilder = new AdditionalManagedResourcesImpl.Builder();
 		managedResourcesBuilder.addXmlMappings( "mappings/models/complete/simple-complete.xml" );
 		final ManagedResources managedResources = managedResourcesBuilder.build();
 

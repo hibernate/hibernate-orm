@@ -1,7 +1,5 @@
 package org.hibernate.orm.test.annotations.various;
 
-import org.hibernate.annotations.Generated;
-import org.hibernate.annotations.GenerationTime;
 import org.hibernate.annotations.Subselect;
 
 import org.hibernate.testing.TestForIssue;
@@ -56,7 +54,6 @@ public class OneOneGeneratedValueTest {
 
 		private String name;
 
-		@Generated(GenerationTime.INSERT)
 		@OneToOne(mappedBy = "a")
 		private EntityB b;
 

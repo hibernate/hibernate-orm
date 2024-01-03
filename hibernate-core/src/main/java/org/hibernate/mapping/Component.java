@@ -60,8 +60,8 @@ import static org.hibernate.mapping.MappingHelper.checkPropertyColumnDuplication
 /**
  * A mapping model object that represents an {@linkplain jakarta.persistence.Embeddable embeddable class}.
  *
- * @apiNote The name of this class is historical and unfortunate. An embeddable class holds a "component"
- *          of the state of an entity. It has absolutely nothing to do with modularity in software engineering.
+ * @apiNote The name of this class is historical and unfortunate. It reflects modeling a *composition*
+ *          of state. It has absolutely nothing to do with modularity in software engineering.
  *
  * @author Gavin King
  * @author Steve Ebersole

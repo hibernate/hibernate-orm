@@ -9,7 +9,10 @@ package org.hibernate.orm.test.filter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.FilterDefs;
@@ -18,11 +21,12 @@ import org.hibernate.annotations.ParamDef;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -43,12 +47,11 @@ import static org.junit.Assert.assertThat;
 				FilterDotNameTest.PurchaseItem.class
 		}
 )
-@SessionFactory
 @TestForIssue(jiraKey = "HHH-11250")
-public class FilterDotNameTest {
+public class FilterDotNameTest extends AbstractStatefulStatelessFilterTest {
 
 	@BeforeEach
-	void setUp(SessionFactoryScope scope) {
+	void setUp() {
 		scope.inTransaction( session -> {
 			final PurchaseOrder order1 = new PurchaseOrder( 1L, 10L, 1000L );
 			final Set<PurchaseItem> items1 = new HashSet<>();
@@ -67,16 +70,18 @@ public class FilterDotNameTest {
 	}
 
 	@AfterEach
-	void tearDown(SessionFactoryScope scope) {
+	void tearDown() {
 		scope.inTransaction( session -> {
 			session.createQuery( "DELETE FROM PurchaseItem" ).executeUpdate();
 			session.createQuery( "DELETE FROM PurchaseOrder" ).executeUpdate();
 		} );
 	}
 
-	@Test
-	void testEntityFilterNameWithoutDots(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testEntityFilterNameWithoutDots(
+			BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "customerIdFilter" ).setParameter( "customerId", 10L );
 
 			final List<PurchaseOrder> orders = session.createQuery( "FROM PurchaseOrder", PurchaseOrder.class ).getResultList();
@@ -84,9 +89,11 @@ public class FilterDotNameTest {
 		} );
 	}
 
-	@Test
-	void testEntityFilterNameWithDots(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testEntityFilterNameWithDots(
+			BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "PurchaseOrder.customerIdFilter" ).setParameter( "customerId", 20L );
 
 			final List<PurchaseOrder> orders = session.createQuery( "FROM PurchaseOrder", PurchaseOrder.class ).getResultList();
@@ -95,7 +102,7 @@ public class FilterDotNameTest {
 	}
 
 	@Test
-	void testCollectionFilterNameWithoutDots(SessionFactoryScope scope) {
+	void testCollectionFilterNameWithoutDots() {
 		scope.inTransaction( session -> {
 			session.enableFilter( "itemIdFilter" ).setParameter( "itemId", 100L );
 
@@ -105,7 +112,7 @@ public class FilterDotNameTest {
 	}
 
 	@Test
-	public void testCollectionFilterNameWithDots(SessionFactoryScope scope) {
+	public void testCollectionFilterNameWithDots() {
 		scope.inTransaction( session -> {
 			session.enableFilter( "PurchaseOrder.itemIdFilter" ).setParameter( "itemId", 100L );
 

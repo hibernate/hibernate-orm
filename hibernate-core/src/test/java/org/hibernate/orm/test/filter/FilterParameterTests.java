@@ -7,6 +7,9 @@
 package org.hibernate.orm.test.filter;
 
 import java.sql.Types;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -14,6 +17,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -37,15 +41,15 @@ import org.hibernate.type.NumericBooleanConverter;
 import org.hibernate.type.YesNoConverter;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.fail;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author Steve Ebersole
@@ -55,17 +59,17 @@ import static org.assertj.core.api.Assertions.fail;
 		FilterParameterTests.EntityTwo.class,
 		FilterParameterTests.EntityThree.class
 } )
-@SessionFactory
-public class FilterParameterTests {
+public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
-	@Test
-	public void testYesNo(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	public void testYesNo(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
-		scope.inTransaction( (session) -> {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "filterYesNoConverter" ).setParameter( "yesNo", Boolean.FALSE );
 
 			final EntityOne loaded = session.createQuery( "from EntityOne e where e.id = :id", EntityOne.class )
@@ -75,7 +79,8 @@ public class FilterParameterTests {
 		} );
 	}
 
-	@Test
+	@ParameterizedTest
+	@MethodSource("transactionKind")
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL silently converts a boolean to string types")
 	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby silently converts a boolean to string types")
@@ -90,35 +95,31 @@ public class FilterParameterTests {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, reason = "Firebird silently converts a boolean to string")
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase silently converts a boolean to string")
 	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, reason = "Oracle 23 interprets Y and T as true and N and F as false, so this works")
-	public void testYesNoMismatch(SessionFactoryScope scope) {
+	public void testYesNoMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
-		scope.inTransaction( (session) -> {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "filterYesNoBoolean" ).setParameter( "yesNo", Boolean.FALSE );
 
-			try {
-				session.createQuery( "from EntityOne e where e.id = :id", EntityOne.class )
-						.setParameter( "id", 1 )
-						.getSingleResultOrNull();
-				fail( "Expecting an exception" );
-			}
-			catch (Exception expected) {
-				System.out.println(expected.getMessage());
-			}
+			assertThatThrownBy( () -> session.createQuery( "from EntityOne e where e.id = :id", EntityOne.class )
+					.setParameter( "id", 1 )
+					.getSingleResultOrNull() )
+					.isInstanceOf( Exception.class );
 		} );
 	}
 
-	@Test
-	public void testNumeric(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	public void testNumeric(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
-		scope.inTransaction( (session) -> {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "filterNumberConverter" ).setParameter( "zeroOne", Boolean.FALSE );
 
 			final EntityTwo loaded = session.createQuery( "from EntityTwo e where e.id = :id", EntityTwo.class )
@@ -128,7 +129,8 @@ public class FilterParameterTests {
 		} );
 	}
 
-	@Test
+	@ParameterizedTest
+	@MethodSource("transactionKind")
 	@SkipForDialect(dialectClass = H2Dialect.class, reason = "H2 silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = HSQLDialect.class, reason = "HSQL silently converts a boolean to integral types")
@@ -142,56 +144,47 @@ public class FilterParameterTests {
 	@SkipForDialect(dialectClass = SybaseDialect.class, matchSubTypes = true, reason = "Sybase silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = AbstractHANADialect.class, matchSubTypes = true, reason = "HANA silently converts a boolean to integral types")
 	@SkipForDialect(dialectClass = FirebirdDialect.class, matchSubTypes = true, reason = "Firebird silently converts a boolean to integral types")
-	public void testNumericMismatch(SessionFactoryScope scope) {
+	public void testNumericMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
-		scope.inTransaction( (session) -> {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "filterNumberBoolean" ).setParameter( "zeroOne", Boolean.FALSE );
 
-			try {
-				session.createQuery( "from EntityTwo e where e.id = :id", EntityTwo.class )
-						.setParameter( "id", 1 )
-						.getSingleResultOrNull();
-				fail( "Expecting an exception" );
-			}
-			catch (Exception expected) {
-				System.out.println(expected.getMessage());
-			}
+			assertThatThrownBy( () -> session.createQuery( "from EntityTwo e where e.id = :id", EntityTwo.class )
+					.setParameter( "id", 1 )
+					.getSingleResultOrNull() )
+					.isInstanceOf( Exception.class );
 		} );
 	}
 
-	@Test
+	@ParameterizedTest
+	@MethodSource("transactionKind")
 	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL silently converts strings to integral types")
 	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB silently converts strings to integral types")
 	@SkipForDialect(dialectClass = TiDBDialect.class, reason = "TiDB silently converts strings to integral types")
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus silently converts strings to integral types")
-	public void testMismatch(SessionFactoryScope scope) {
+	public void testMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
 			final EntityThree loaded = session.byId( EntityThree.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
-		scope.inTransaction( (session) -> {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "filterMismatchConverter" ).setParameter( "mismatch", Boolean.FALSE );
 
-			try {
-				session.createQuery( "from EntityThree e where e.id = :id", EntityThree.class )
-						.setParameter( "id", 1 )
-						.getSingleResultOrNull();
-				fail( "Expecting an exception" );
-			}
-			catch (Exception expected) {
-				System.out.println(expected.getMessage());
-			}
+			assertThatThrownBy( () -> session.createQuery( "from EntityThree e where e.id = :id", EntityThree.class )
+					.setParameter( "id", 1 )
+					.getSingleResultOrNull() )
+					.isInstanceOf( Exception.class );
 		} );
 	}
 
 
 	@BeforeEach
-	public void prepareTestData(SessionFactoryScope scope) {
+	public void prepareTestData() {
 		scope.inTransaction( (session) -> {
 			session.persist( new EntityOne( 1, "one" ) );
 			session.persist( new EntityTwo( 1, "two" ) );
@@ -200,7 +193,7 @@ public class FilterParameterTests {
 	}
 
 	@AfterEach
-	public void dropTestData(SessionFactoryScope scope) {
+	public void dropTestData() {
 		scope.inTransaction( (session) -> {
 			session.createMutationQuery( "delete EntityOne" ).executeUpdate();
 			session.createMutationQuery( "delete EntityTwo" ).executeUpdate();

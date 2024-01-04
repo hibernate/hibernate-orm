@@ -6,22 +6,27 @@
  */
 package org.hibernate.orm.test.filter.hql;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.orm.test.filter.AbstractStatefulStatelessFilterTest;
 
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
-import static org.junit.Assert.assertEquals;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * Tests for application of filters
@@ -33,31 +38,33 @@ import static org.junit.Assert.assertEquals;
 				BasicFilteredBulkManipulationTest.Person.class
 		}
 )
-@SessionFactory
-public class BasicFilteredBulkManipulationTest {
+public class BasicFilteredBulkManipulationTest extends AbstractStatefulStatelessFilterTest {
 
-	@Test
-	void testBasicFilteredHqlDelete(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testBasicFilteredHqlDelete(
+			BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( session -> {
 			session.save( new Person( "Steve", 'M' ) );
 			session.save( new Person( "Emmanuel", 'M' ) );
 			session.save( new Person( "Gail", 'F' ) );
 		} );
-		scope.inTransaction( session -> {
+		inTransaction.accept(scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
 			int count = session.createQuery( "delete Person" ).executeUpdate();
 			assertEquals( 2, count );
 		} );
 	}
 
-	@Test
-	void testBasicFilteredHqlUpdate(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testBasicFilteredHqlUpdate(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( session -> {
 			session.save( new Person( "Shawn", 'M' ) );
 			session.save( new Person( "Sally", 'F' ) );
 		} );
 
-		scope.inTransaction( session -> {
+		inTransaction.accept(scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
 			int count = session.createQuery( "update Person p set p.name = 'Shawn'" ).executeUpdate();
 			assertEquals( 1, count );
@@ -65,7 +72,7 @@ public class BasicFilteredBulkManipulationTest {
 	}
 
 	@AfterEach
-	void tearDown(SessionFactoryScope scope) {
+	void tearDown() {
 		scope.inTransaction( session -> session.createQuery( "delete Person" ).executeUpdate() );
 	}
 

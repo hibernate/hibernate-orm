@@ -1893,29 +1893,6 @@ public class SessionImpl
 		return loadQueryInfluencers;
 	}
 
-	// filter support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-	@Override
-	public Filter getEnabledFilter(String filterName) {
-		pulseTransactionCoordinator();
-		return loadQueryInfluencers.getEnabledFilter( filterName );
-	}
-
-	@Override
-	public Filter enableFilter(String filterName) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		return loadQueryInfluencers.enableFilter( filterName );
-	}
-
-	@Override
-	public void disableFilter(String filterName) {
-		checkOpen();
-		pulseTransactionCoordinator();
-		loadQueryInfluencers.disableFilter( filterName );
-	}
-
-
 	// fetch profile support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 	@Override

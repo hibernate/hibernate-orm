@@ -313,6 +313,39 @@ public interface SharedSessionContract extends QueryProducer, Closeable, Seriali
 	<T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass);
 
 	/**
+	 * Enable the named {@linkplain Filter filter} for this current session.
+	 * <p>
+	 * The returned {@link Filter} object must be used to bind arguments
+	 * to parameters of the filter, and every parameter must be set before
+	 * any other operation of this session is called.
+	 *
+	 * @param filterName the name of the filter to be enabled.
+	 *
+	 * @return the {@link Filter} instance representing the enabled filter.
+	 *
+	 * @throws UnknownFilterException if there is no such filter
+	 *
+	 * @see org.hibernate.annotations.FilterDef
+	 */
+	Filter enableFilter(String filterName);
+
+	/**
+	 * Retrieve a currently enabled {@linkplain Filter filter} by name.
+	 *
+	 * @param filterName the name of the filter to be retrieved.
+	 *
+	 * @return the {@link Filter} instance representing the enabled filter.
+	 */
+	Filter getEnabledFilter(String filterName);
+
+	/**
+	 * Disable the named {@linkplain Filter filter} for the current session.
+	 *
+	 * @param filterName the name of the filter to be disabled.
+	 */
+	void disableFilter(String filterName);
+
+	/**
 	 * The factory which created this session.
 	 */
 	SessionFactory getFactory();

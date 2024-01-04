@@ -8,6 +8,9 @@ package org.hibernate.orm.test.filter;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.Embedded;
@@ -19,6 +22,7 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
@@ -29,7 +33,8 @@ import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.hamcrest.core.Is.is;
 import static org.junit.Assert.assertThat;
@@ -44,12 +49,12 @@ import static org.junit.Assert.assertThat;
 )
 @SessionFactory
 @TestForIssue(jiraKey = "HHH-10991")
-public class CriteriaQueryWithAppliedFilterTest {
+public class CriteriaQueryWithAppliedFilterTest extends AbstractStatefulStatelessFilterTest {
 
 	private final static Identifier STUDENT_ID = new Identifier( 2, new Identifier2( 4, 5L ) );
 
 	@BeforeEach
-	void setUP(SessionFactoryScope scope) {
+	void setUP() {
 		scope.inTransaction( session -> {
 			final Student student = new Student();
 			student.setId( STUDENT_ID );
@@ -70,12 +75,13 @@ public class CriteriaQueryWithAppliedFilterTest {
 	}
 
 	@AfterEach
-	void tearDown(SessionFactoryScope scope) {
+	void tearDown() {
 		scope.inTransaction( session -> session.createQuery( "delete from Student" ).executeUpdate() );
 	}
 
-	@Test
-	void testSubquery(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testSubquery(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		final CriteriaBuilder detachedCriteriaBuilder = scope.getSessionFactory().getCriteriaBuilder();
 		final CriteriaQuery<Student> criteria = detachedCriteriaBuilder.createQuery( Student.class );
 		criteria.from( Student.class );
@@ -83,7 +89,7 @@ public class CriteriaQueryWithAppliedFilterTest {
 		final Root<Student> studentRoot = subquery.from( Student.class );
 		subquery.select( detachedCriteriaBuilder.min( studentRoot.get( "age" ) ));
 
-		scope.inTransaction( session -> {
+		inTransaction.accept( scope, session -> {
 			final CriteriaBuilder criteriaBuilder = session.getCriteriaBuilder();
 			final CriteriaQuery<Student> query = criteriaBuilder.createQuery( Student.class );
 			final Root<Student> root = query.from( Student.class );
@@ -130,8 +136,9 @@ public class CriteriaQueryWithAppliedFilterTest {
 	   	});
 	}
 
-	@Test
-	void testSubqueryWithRestrictionsOnComponentTypes(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testSubqueryWithRestrictionsOnComponentTypes(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		final CriteriaBuilder detachedCriteriaBuilder = scope.getSessionFactory().getCriteriaBuilder();
 		final CriteriaQuery<Student> criteria = detachedCriteriaBuilder.createQuery( Student.class );
 		criteria.from( Student.class );
@@ -140,7 +147,7 @@ public class CriteriaQueryWithAppliedFilterTest {
 		subquery.select( detachedCriteriaBuilder.max( studentRoot.get( "age" ) ) );
 		subquery.where( detachedCriteriaBuilder.equal( studentRoot.get( "id" ), STUDENT_ID ) );
 
-		scope.inTransaction( session -> {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "statusFilter" ).setParameter( "status", "active" );
 
 //			final Criteria query = session.createCriteria( Student.class );
@@ -168,8 +175,9 @@ public class CriteriaQueryWithAppliedFilterTest {
 		});
 	}
 
-	@Test
-	void testSubqueryWithRestrictionsOnComponentTypes2(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testSubqueryWithRestrictionsOnComponentTypes2(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		final CriteriaBuilder detachedCriteriaBuilder = scope.getSessionFactory().getCriteriaBuilder();
 		final CriteriaQuery<Student> criteria = detachedCriteriaBuilder.createQuery( Student.class );
 		criteria.from( Student.class );
@@ -183,7 +191,7 @@ public class CriteriaQueryWithAppliedFilterTest {
 			)
 		);
 
-		scope.inTransaction( session -> {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "statusFilter" ).setParameter( "status", "active" );
 
 //			final Criteria query = session.createCriteria( Student.class );
@@ -212,9 +220,10 @@ public class CriteriaQueryWithAppliedFilterTest {
 		});
 	}
 
-	@Test
-	void testRestrictionsOnComponentTypes(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testRestrictionsOnComponentTypes(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "statusFilter" ).setParameter( "status", "active" );
 
 //			final Criteria query = session.createCriteria( Student.class );

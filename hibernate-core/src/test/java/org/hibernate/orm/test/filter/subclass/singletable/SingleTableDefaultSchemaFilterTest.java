@@ -7,11 +7,15 @@
 package org.hibernate.orm.test.filter.subclass.singletable;
 
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.orm.test.filter.AbstractStatefulStatelessFilterTest;
 import org.hibernate.query.MutationQuery;
 
 import org.hibernate.testing.orm.junit.DomainModel;
@@ -24,6 +28,8 @@ import org.hibernate.testing.orm.junit.Setting;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorType;
@@ -37,7 +43,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /**
  * @author Marco Belladelli
  */
-@SessionFactory
 @DomainModel(
 		annotatedClasses = {
 				SingleTableDefaultSchemaFilterTest.AbstractSuperClass.class,
@@ -48,9 +53,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ServiceRegistry( settings = @Setting( name = AvailableSettings.DEFAULT_SCHEMA, value = "public" ) )
 @RequiresDialect( H2Dialect.class )
 @Jira( "https://hibernate.atlassian.net/browse/HHH-16661" )
-public class SingleTableDefaultSchemaFilterTest {
+public class SingleTableDefaultSchemaFilterTest extends AbstractStatefulStatelessFilterTest {
 	@BeforeEach
-	public void setUp(SessionFactoryScope scope) {
+	public void setUp() {
 		scope.inTransaction( session -> {
 			session.persist( new ChildEntityOne() );
 			session.persist( new ChildEntityTwo() );
@@ -58,22 +63,23 @@ public class SingleTableDefaultSchemaFilterTest {
 	}
 
 	@AfterEach
-	public void cleanup(SessionFactoryScope scope) {
+	public void cleanup() {
 		scope.inTransaction(
 				session -> session.createMutationQuery( "delete from AbstractSuperClass" ).executeUpdate()
 		);
 	}
 
-	@Test
-	public void testUpdate(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	public void testUpdate(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "dummy_filter" );
 			final MutationQuery updateQuery = session.createMutationQuery(
 					"update ChildEntityTwo cet set cet.name = 'John'" );
 			final int updated = updateQuery.executeUpdate();
 			assertEquals( 1, updated );
 		} );
-		scope.inTransaction( session -> {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "dummy_filter" );
 			final List<AbstractSuperClass> resultList = session.createQuery(
 					"select p from AbstractSuperClass p where p.name = 'John'",
@@ -83,15 +89,16 @@ public class SingleTableDefaultSchemaFilterTest {
 		} );
 	}
 
-	@Test
-	public void testDelete(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	public void testDelete(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "dummy_filter" );
 			final MutationQuery deleteQuery = session.createMutationQuery( "delete from ChildEntityOne" );
 			final int deleted = deleteQuery.executeUpdate();
 			assertEquals( 1, deleted );
 		} );
-		scope.inTransaction( session -> {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "dummy_filter" );
 			final List<AbstractSuperClass> resultList = session.createQuery(
 					"select p from AbstractSuperClass p",

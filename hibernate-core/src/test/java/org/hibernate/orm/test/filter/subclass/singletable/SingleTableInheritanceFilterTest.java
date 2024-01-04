@@ -14,19 +14,24 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
+import org.hibernate.orm.test.filter.AbstractStatefulStatelessFilterTest;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.Query;
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.DomainModel;
-import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * @author Jan Schatteman
@@ -39,18 +44,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 				SingleTableInheritanceFilterTest.ChildEntityTwo.class
 		}
 )
-@SessionFactory
-public class SingleTableInheritanceFilterTest {
+public class SingleTableInheritanceFilterTest extends AbstractStatefulStatelessFilterTest {
 
 	@AfterEach
-	public void cleanup( SessionFactoryScope scope ) {
+	public void cleanup() {
 		scope.inTransaction(
 				s -> s.createMutationQuery( "delete from AbstractSuperClass" ).executeUpdate()
 		);
 	}
 
-	@Test
-	public void testFilterAppliedOnSingleTableInheritance(SessionFactoryScope scope) {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	public void testFilterAppliedOnSingleTableInheritance(
+			BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction(
 				s -> {
 					s.persist( new ChildEntityOne() );
@@ -59,7 +65,8 @@ public class SingleTableInheritanceFilterTest {
 		);
 
 		// test update
-		scope.inTransaction(
+		inTransaction.accept(
+				scope,
 				s -> {
 					s.enableFilter( "dummy_filter" );
 					MutationQuery updateQuery = s.createMutationQuery( "update ChildEntityTwo cet set cet.name = 'John'");
@@ -72,7 +79,8 @@ public class SingleTableInheritanceFilterTest {
 		);
 
 		// test delete
-		scope.inTransaction(
+		inTransaction.accept(
+				scope,
 				s -> {
 					s.enableFilter( "dummy_filter" );
 					MutationQuery deleteQuery = s.createMutationQuery( "delete from ChildEntityTwo");

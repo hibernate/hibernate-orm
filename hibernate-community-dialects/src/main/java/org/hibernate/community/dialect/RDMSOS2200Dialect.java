@@ -431,7 +431,7 @@ public class RDMSOS2200Dialect extends Dialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return AbstractTransactSQLDialect.replaceLtrimRtrim( specification, character);
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
+		return AbstractTransactSQLDialect.replaceLtrimRtrim( specification, isWhitespace );
 	}
 }

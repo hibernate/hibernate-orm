@@ -34,6 +34,7 @@ import org.hibernate.dialect.function.CountFunction;
 import org.hibernate.dialect.function.DB2FormatEmulation;
 import org.hibernate.dialect.function.DB2PositionFunction;
 import org.hibernate.dialect.function.DB2SubstringFunction;
+import org.hibernate.dialect.function.TrimFunction;
 import org.hibernate.dialect.identity.DB2IdentityColumnSupport;
 import org.hibernate.dialect.identity.IdentityColumnSupport;
 import org.hibernate.dialect.pagination.DB2LimitHandler;
@@ -402,6 +403,13 @@ public class DB2LegacyDialect extends Dialect {
 				.setParameterTypes(FunctionParameterType.STRING, FunctionParameterType.STRING)
 				.setArgumentListSignature("(STRING string, STRING pattern)")
 				.register();
+
+		//trim() requires trim characters to be constant literals
+		functionContributions.getFunctionRegistry().register( "trim", new TrimFunction(
+				this,
+				functionContributions.getTypeConfiguration(),
+				SqlAstNodeRenderingMode.INLINE_PARAMETERS
+		) );
 
 		functionFactory.windowFunctions();
 		if ( getDB2Version().isSameOrAfter( 9, 5 ) ) {

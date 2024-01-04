@@ -49,9 +49,7 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.TypeMismatchException;
 import org.hibernate.UnknownProfileException;
 import org.hibernate.UnresolvableObjectException;
-import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.NonContextualLobCreator;
@@ -268,7 +266,7 @@ public class SessionImpl
 			setHibernateFlushMode( getInitialFlushMode() );
 		}
 
-		setUpMultitenancy( factory );
+		setUpMultitenancy( factory, loadQueryInfluencers );
 
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), currentTimeMillis() );
@@ -281,24 +279,6 @@ public class SessionImpl
 		return properties == null
 				? fastSessionServices.initialSessionFlushMode
 				: ConfigurationHelper.getFlushMode( getSessionProperty( HINT_FLUSH_MODE ), FlushMode.AUTO );
-	}
-
-	private void setUpMultitenancy(SessionFactoryImplementor factory) {
-		if ( factory.getDefinedFilterNames().contains( TenantIdBinder.FILTER_NAME ) ) {
-			final Object tenantIdentifier = getTenantIdentifierValue();
-			if ( tenantIdentifier == null ) {
-				throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
-			}
-			else {
-				final CurrentTenantIdentifierResolver<Object> resolver = factory.getCurrentTenantIdentifierResolver();
-				if ( resolver==null || !resolver.isRoot( tenantIdentifier ) ) {
-					// turn on the filter, unless this is the "root" tenant with access to all partitions
-					loadQueryInfluencers
-							.enableFilter( TenantIdBinder.FILTER_NAME )
-							.setParameter( TenantIdBinder.PARAMETER_NAME, tenantIdentifier );
-				}
-			}
-		}
 	}
 
 	protected StatefulPersistenceContext createPersistenceContext() {

@@ -138,23 +138,23 @@ public class AltibaseDialect extends Dialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		switch ( specification ) {
 			case BOTH:
-				return character == ' '
+				return isWhitespace
 						? "trim(?1)"
-						: "trim(?1, '" + character + "')";
+						: "trim(?1,?2)";
 			case LEADING:
-				return character == ' '
+				return isWhitespace
 						? "ltrim(?1)"
-						: "ltrim(?1,'" + character + "')";
+						: "ltrim(?1,?2)";
 			case TRAILING:
-				return character == ' '
+				return isWhitespace
 						? "rtrim(?1)"
-						: "rtrim(?1,'" + character + "')";
+						: "rtrim(?1,?2)";
 		}
 
-		return super.trimPattern( specification, character );
+		return super.trimPattern( specification, isWhitespace );
 	}
 
 	@Override

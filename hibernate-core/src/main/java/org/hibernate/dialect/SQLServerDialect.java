@@ -396,25 +396,25 @@ public class SQLServerDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
 		if ( getVersion().isSameOrAfter( 16 ) ) {
 			switch ( specification ) {
 				case BOTH:
-					return character == ' '
+					return isWhitespace
 							? "trim(?1)"
-							: "trim('" + character + "' from ?1)";
+							: "trim(?2 from ?1)";
 				case LEADING:
-					return character == ' '
+					return isWhitespace
 							? "ltrim(?1)"
-							: "ltrim(?1,'" + character + "')";
+							: "ltrim(?1,?2)";
 				case TRAILING:
-					return character == ' '
+					return isWhitespace
 							? "rtrim(?1)"
-							: "rtrim(?1,'" + character + "')";
+							: "rtrim(?1,?2)";
 			}
 			throw new UnsupportedOperationException( "Unsupported specification: " + specification );
 		}
-		return super.trimPattern( specification, character );
+		return super.trimPattern( specification, isWhitespace );
 	}
 
 	@Override

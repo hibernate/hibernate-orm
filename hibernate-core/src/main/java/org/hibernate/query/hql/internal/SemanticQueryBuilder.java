@@ -4724,7 +4724,7 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	public SqmExpression<?> visitTrimFunction(HqlParser.TrimFunctionContext ctx) {
 		final SqmExpression<?> source = (SqmExpression<?>) ctx.expression().accept( this );
 		final SqmTrimSpecification trimSpec = visitTrimSpecification( ctx.trimSpecification() );;
-		final SqmLiteral<Character> trimChar = visitTrimCharacter( ctx.trimCharacter() );
+		final SqmExpression<Character> trimChar = visitTrimCharacter( ctx.trimCharacter() );
 
 		return getFunctionDescriptor("trim").generateSqmExpression(
 				asList(
@@ -4758,15 +4758,25 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmLiteral<Character> visitTrimCharacter(HqlParser.TrimCharacterContext ctx) {
-		final String trimCharText = ctx != null
-				? unquoteStringLiteral( ctx.getText() )
-				: " "; // JPA says space is the default
-
-		if ( trimCharText.length() != 1 ) {
-			throw new SemanticException( "Trim character for trim() function must be single character, found '" + trimCharText + "'" );
+	public SqmExpression<Character> visitTrimCharacter(HqlParser.TrimCharacterContext ctx) {
+		final String trimCharText;
+		if ( ctx == null ) {
+			// JPA says space is the default
+			trimCharText = " ";
 		}
-
+		else {
+			final ParseTree child = ctx.getChild( 0 );
+			if ( child instanceof HqlParser.ParameterContext ) {
+				//noinspection unchecked
+				return (SqmExpression<Character>) child.accept( this );
+			}
+			else {
+				trimCharText = unquoteStringLiteral( ctx.getText() );
+				if ( trimCharText.length() != 1 ) {
+					throw new SemanticException( "Trim character for trim() function must be single character, found '" + trimCharText + "'" );
+				}
+			}
+		}
 		return new SqmLiteral<>(
 				trimCharText.charAt( 0 ),
 				resolveExpressibleTypeBasic( Character.class ),

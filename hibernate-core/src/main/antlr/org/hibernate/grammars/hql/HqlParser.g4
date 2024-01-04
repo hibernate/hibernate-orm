@@ -1357,6 +1357,7 @@ trimSpecification
 
 trimCharacter
 	: STRING_LITERAL
+	| parameter
 	;
 
 /**

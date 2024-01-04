@@ -80,6 +80,7 @@ public class StatelessSessionImpl extends AbstractSharedSessionContract implemen
 		connectionProvided = options.getConnection() != null;
 		temporaryPersistenceContext = new StatefulPersistenceContext( this );
 		influencers = new LoadQueryInfluencers( getFactory() );
+		setUpMultitenancy( factory, influencers );
 	}
 
 	@Override

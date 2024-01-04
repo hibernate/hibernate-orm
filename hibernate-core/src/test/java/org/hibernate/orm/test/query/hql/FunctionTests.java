@@ -19,6 +19,8 @@ import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
+import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
+
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.domain.StandardDomainModel;
 import org.hibernate.testing.orm.domain.gambit.EntityOfBasics;
@@ -826,6 +828,52 @@ public class FunctionTests {
 		}
 		catch (IllegalArgumentException e) {
 			assertThat( e.getCause(), is(instanceOf(QueryException.class)) );
+		}
+	}
+
+	@Test
+	@JiraKey( "HHH-17435" )
+	public void testTrimFunctionParameters(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertThat( session.createQuery( "select trim(:param)", String.class )
+										.setParameter( "param", "  hello   " )
+										.getSingleResult(), is( "hello" ) );
+					assertThat( session.createQuery( "select trim(' ' from :param)", String.class )
+										.setParameter( "param", "  hello   " )
+										.getSingleResult(), is( "hello" ) );
+					assertThat( session.createQuery( "select trim('''' from :param)", String.class )
+										.setParameter( "param", "''hello'''" )
+										.getSingleResult(), is( "hello" ) );
+					assertThat( session.createQuery( "select trim(:param from '-- hello it''s me  ---')", String.class )
+										.setParameter( "param", '-' )
+										.getSingleResult(), is( " hello it's me  " ) );
+					assertThat( session.createQuery( "select trim(:param from '---  hello it''s me -- ')", String.class )
+										.setParameter( "param", '-' )
+										.getSingleResult(), is( "  hello it's me -- " ) );
+					assertThat( session.createQuery( "select trim(leading ?1 from '  hello it''s me   ')", String.class )
+										.setParameter( 1, ' ' )
+										.getSingleResult(), is( "hello it's me   " ) );
+					assertThat( session.createQuery( "select trim(trailing ?1 from '  hello it''s me   ')", String.class )
+										.setParameter( 1, ' ' )
+										.getSingleResult(), is( "  hello it's me" ) );
+					assertThat( session.createQuery( "select trim(?1 from ?2)", String.class )
+										.setParameter( 1, ' ' )
+										.setParameter( 2, "  hello it's me   " )
+										.getSingleResult(), is( "hello it's me" ) );
+				}
+		);
+
+		try {
+			scope.inTransaction(
+					session -> session.createQuery( "select trim(:param from 'hello')", String.class )
+							.setParameter( "param", 1 )
+							.getResultList()
+			);
+			fail();
+		}
+		catch (IllegalArgumentException e) {
+			assertThat( e.getCause(), is( instanceOf( FunctionArgumentException.class ) ) );
 		}
 	}
 

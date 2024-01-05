@@ -109,10 +109,8 @@ sourceSets {
         }
     }
 
-    // resources inherently exclude sources
     test {
         resources {
-            srcDir 'src/test/java'
             srcDir 'src/test/resources'
             srcDir 'src/test/bundles'
         }

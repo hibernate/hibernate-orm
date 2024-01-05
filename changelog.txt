@@ -3,6 +3,18 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.18.Final (January 05, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32230
+
+** Bug
+    * [HHH-17606] - Cannot resolve path of nested generic mapped-superclass joins
+    * [HHH-17380] - Persisting an entity with a non generated id and @MapsId throws PropertyValueException
+    * [HHH-16935] - Hibernate cdi extension Regression introduced by HHH-16096
+    * [HHH-16881] - Envers RevisionListener is not created when Hibernate CDI Extensions are enabled
+
+
 Changes in 6.2.17.Final (December 19, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

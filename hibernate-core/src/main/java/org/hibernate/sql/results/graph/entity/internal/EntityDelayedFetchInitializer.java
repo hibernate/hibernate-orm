@@ -157,7 +157,7 @@ public class EntityDelayedFetchInitializer implements EntityInitializer {
 				final EntityKey entityKey = new EntityKey( identifier, concreteDescriptor );
 				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
 				if ( holder != null && holder.getEntity() != null ) {
-					entityInstance = persistenceContext.proxyFor( holder );
+					entityInstance = persistenceContext.proxyFor( holder, concreteDescriptor );
 				}
 				// For primary key based mappings we only use bytecode-laziness if the attribute is optional,
 				// because the non-optionality implies that it is safe to have a proxy

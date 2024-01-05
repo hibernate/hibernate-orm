@@ -40,14 +40,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 @TestForIssue( jiraKey = "HHH-11330" )
 @ServiceRegistry(
 		settings = {
-				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
-				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" )
+				@Setting(name = AvailableSettings.GENERATE_STATISTICS, value = "true"),
+				@Setting(name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true")
 		}
 )
 @DomainModel( annotatedClasses = IdentityGeneratorWithNaturalIdCacheTest.Person.class )
 @SessionFactory
 @RequiresDialectFeature(feature = DialectFeatureChecks.SupportsIdentityColumns.class)
 public class IdentityGeneratorWithNaturalIdCacheTest {
+
 	@BeforeEach
 	public void prepareTestData(SessionFactoryScope scope) {
 		scope.inTransaction(
@@ -69,25 +70,24 @@ public class IdentityGeneratorWithNaturalIdCacheTest {
 	@Test
 	@TestForIssue(jiraKey = "HHH-10659")
 	public void testNaturalIdCacheEntry(SessionFactoryScope scope) {
+
 		final StatisticsImplementor statistics = scope.getSessionFactory().getStatistics();
 		statistics.clear();
-
-		assertThat( statistics.getSecondLevelCacheHitCount(), Matchers.is( 0L ) );
-		assertThat( statistics.getNaturalIdCacheHitCount(), Matchers.is( 0L ) );
-
+		final var enableNaturalIdCache = scope.getSessionFactory().getSessionFactoryOptions().isEnableNaturalIdCache();
+		assertThat(statistics.getSecondLevelCacheHitCount(), Matchers.is(0L));
+		assertThat(statistics.getNaturalIdCacheHitCount(), Matchers.is(0L));
 		scope.inTransaction(
 				(session) -> {
-					session.bySimpleNaturalId( Person.class ).load( "John Doe" );
-					assertThat( statistics.getSecondLevelCacheHitCount(), Matchers.is( 0L ) );
-					assertThat( statistics.getNaturalIdCacheHitCount(), Matchers.is( 1L ) );
+					session.bySimpleNaturalId(Person.class).load("John Doe");
+					assertThat(statistics.getSecondLevelCacheHitCount(), Matchers.is(0L));
+					assertThat(statistics.getNaturalIdCacheHitCount(), Matchers.is(enableNaturalIdCache?1L:0L));
 				}
 		);
-
 		scope.inTransaction(
 				(session) -> {
-					session.bySimpleNaturalId( Person.class ).load( "John Doe" );
-					assertThat( statistics.getSecondLevelCacheHitCount(), Matchers.is( 1L ) );
-					assertThat( statistics.getNaturalIdCacheHitCount(), Matchers.is( 2L ) );
+					session.bySimpleNaturalId(Person.class).load("John Doe");
+					assertThat(statistics.getSecondLevelCacheHitCount(), Matchers.is(enableNaturalIdCache?1L:0));
+					assertThat(statistics.getNaturalIdCacheHitCount(), Matchers.is(enableNaturalIdCache?2L:0));
 				}
 		);
 	}

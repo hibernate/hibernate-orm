@@ -11,9 +11,12 @@ import jakarta.persistence.Id;
 
 import org.hibernate.Session;
 import org.hibernate.annotations.NaturalId;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.orm.test.jpa.BaseEntityManagerFunctionalTestCase;
 
 import org.junit.Test;
+
+import java.util.Map;
 
 import static org.hibernate.testing.transaction.TransactionUtil.doInJPA;
 import static org.junit.Assert.assertEquals;
@@ -31,6 +34,11 @@ public class MutableNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 		return new Class<?>[] {
 			Author.class
 		};
+	}
+
+	@Override
+	protected void addConfigOptions(Map options) {
+		options.put(AvailableSettings.DISABLE_NATURAL_ID_RESOLUTIONS_CACHE, false);
 	}
 
 	@Test
@@ -61,7 +69,6 @@ public class MutableNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 					.setSynchronizationEnabled(false)
 					.load("john.doe@acme.com")
 			);
-
 			assertSame(author,
 				entityManager
 					.unwrap(Session.class)
@@ -73,6 +80,11 @@ public class MutableNaturalIdTest extends BaseEntityManagerFunctionalTestCase {
 
 			//end::naturalid-mutable-synchronized-example[]
 		});
+	}
+
+	@Override
+	public void buildEntityManagerFactory() {
+		super.buildEntityManagerFactory();
 	}
 
 	//tag::naturalid-mutable-mapping-example[]

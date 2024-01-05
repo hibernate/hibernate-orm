@@ -36,28 +36,14 @@ import org.hibernate.TransientObjectException;
 import org.hibernate.bytecode.enhance.spi.interceptor.BytecodeLazyAttributeInterceptor;
 import org.hibernate.bytecode.enhance.spi.interceptor.EnhancementAsProxyLazinessInterceptor;
 import org.hibernate.collection.spi.PersistentCollection;
-import org.hibernate.engine.spi.AssociationKey;
-import org.hibernate.engine.spi.BatchFetchQueue;
-import org.hibernate.engine.spi.CollectionEntry;
-import org.hibernate.engine.spi.CollectionKey;
-import org.hibernate.engine.spi.EntityEntry;
-import org.hibernate.engine.spi.EntityHolder;
-import org.hibernate.engine.spi.EntityKey;
-import org.hibernate.engine.spi.EntityUniqueKey;
-import org.hibernate.engine.spi.NaturalIdResolutions;
-import org.hibernate.engine.spi.PersistenceContext;
-import org.hibernate.engine.spi.PersistentAttributeInterceptable;
-import org.hibernate.engine.spi.PersistentAttributeInterceptor;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.engine.spi.SessionImplementor;
-import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.engine.spi.Status;
+import org.hibernate.engine.spi.*;
 import org.hibernate.event.service.spi.EventListenerGroup;
 import org.hibernate.event.spi.PostLoadEvent;
 import org.hibernate.event.spi.PostLoadEventListener;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.IdentityMap;
+import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
@@ -2215,13 +2201,76 @@ public class StatefulPersistenceContext implements PersistenceContext {
 
 	// NATURAL ID RESOLUTION HANDLING ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-	private NaturalIdResolutionsImpl naturalIdResolutions;
-
+	private NaturalIdResolutions naturalIdResolutions;
 
 	@Override
 	public NaturalIdResolutions getNaturalIdResolutions() {
 		if ( naturalIdResolutions == null ) {
-			naturalIdResolutions = new NaturalIdResolutionsImpl( this );
+			final var delegate = new NaturalIdResolutionsImpl(this);
+			if (getSession().getFactory().getSessionFactoryOptions().isEnableNaturalIdCache()) {
+				naturalIdResolutions = delegate;
+			} else {
+				naturalIdResolutions = new NaturalIdResolutions() {
+					@Override
+					public boolean cacheResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+						return false;
+					}
+
+					@Override
+					public Object removeResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+						return null;
+					}
+
+					@Override
+					public void cacheResolutionFromLoad(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+					}
+
+					@Override
+					public void manageLocalResolution(Object id, Object naturalIdValue, EntityMappingType entityDescriptor, CachedNaturalIdValueSource source) {
+					}
+
+					@Override
+					public Object removeLocalResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+						return delegate.removeLocalResolution(id, naturalId, entityDescriptor);
+					}
+
+					@Override
+					public void manageSharedResolution(Object id, Object naturalId, Object previousNaturalId, EntityMappingType entityDescriptor, CachedNaturalIdValueSource source) {
+					}
+
+					@Override
+					public void removeSharedResolution(Object id, Object naturalId, EntityMappingType entityDescriptor) {
+						delegate.removeSharedResolution(id, naturalId, entityDescriptor);
+					}
+
+					@Override
+					public Object findCachedNaturalIdById(Object id, EntityMappingType entityDescriptor) {
+						return null;
+					}
+
+					@Override
+					public Object findCachedIdByNaturalId(Object naturalId, EntityMappingType entityDescriptor) {
+						return null;
+					}
+
+					@Override
+					public Collection<?> getCachedPkResolutions(EntityMappingType entityDescriptor) {
+						return Collections.emptyList();
+					}
+
+					@Override
+					public void handleSynchronization(Object id, Object entity, EntityMappingType entityDescriptor) {
+					}
+
+					@Override
+					public void cleanupFromSynchronizations() {
+					}
+
+					@Override
+					public void handleEviction(Object id, Object object, EntityMappingType entityDescriptor) {
+					}
+				};
+			}
 		}
 		return naturalIdResolutions;
 	}

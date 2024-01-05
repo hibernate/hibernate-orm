@@ -33,6 +33,8 @@ import static org.hamcrest.Matchers.notNullValue;
 		settings = {
 				@Setting( name = AvailableSettings.USE_SECOND_LEVEL_CACHE, value = "true" ),
 				@Setting( name = AvailableSettings.GENERATE_STATISTICS, value = "true" ),
+				//inherently tests internal caches
+				@Setting( name = AvailableSettings.DISABLE_NATURAL_ID_RESOLUTIONS_CACHE, value = "false" ),
 		}
 )
 @DomainModel( annotatedClasses = BasicNaturalIdCachingTests.CachedEntity.class )

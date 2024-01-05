@@ -106,6 +106,8 @@ public interface SessionFactoryOptions extends QueryEngineOptions {
 
 	boolean isStatisticsEnabled();
 
+	boolean isEnableNaturalIdCache();
+
 	/**
 	 * Get the interceptor to use by default for all sessions opened from this factory.
 	 *

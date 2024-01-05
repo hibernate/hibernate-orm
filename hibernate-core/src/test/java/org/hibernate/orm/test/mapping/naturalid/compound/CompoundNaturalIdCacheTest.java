@@ -44,6 +44,7 @@ import static org.hibernate.testing.cache.CachingRegionFactory.DEFAULT_ACCESSTYP
 				@Setting(name = DEFAULT_ACCESSTYPE, value = "nonstrict-read-write"),
 				@Setting(name = AvailableSettings.USE_QUERY_CACHE, value = "true"),
 				@Setting(name = AvailableSettings.SHOW_SQL, value = "false"),
+				@Setting(name = AvailableSettings.DISABLE_NATURAL_ID_RESOLUTIONS_CACHE, value = "false"),
 		}
 )
 @SessionFactory(generateStatistics = true)
@@ -65,7 +66,8 @@ public class CompoundNaturalIdCacheTest {
 						EntityWithSimpleNaturalId withSimpleNaturalIdEntity = new EntityWithSimpleNaturalId();
 						withSimpleNaturalIdEntity.setName( str );
 						session.persist( withSimpleNaturalIdEntity );
-						NaturalIdResolutionsImpl naturalIdResolutions = (NaturalIdResolutionsImpl) session.getPersistenceContext()
+						//??
+						session.getPersistenceContext()
 								.getNaturalIdResolutions();
 					}
 				}

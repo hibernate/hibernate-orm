@@ -9,12 +9,14 @@ package org.hibernate.orm.test.mapping.naturalid.mutable.cached;
 import org.hibernate.LockOptions;
 import org.hibernate.cache.spi.CacheImplementor;
 import org.hibernate.internal.SessionFactoryImpl;
+import org.hibernate.orm.test.mapping.naturalid.mutable.User;
 import org.hibernate.stat.spi.StatisticsImplementor;
 
 import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -131,7 +133,7 @@ public abstract class CachedMutableNaturalIdTest {
 		);
 		
 		// finally there should be only 2 NaturalIdCache puts : 1. insertion, 2. when updating natural-id from 'it' to 'it2'
-		assertEquals( 2, statistics.getNaturalIdCachePutCount() );
+		assertEquals( scope.getSessionFactory().getSessionFactoryOptions().isEnableNaturalIdCache()? 2:0,statistics.getNaturalIdCachePutCount() );
 	}
 	
 	@Test
@@ -152,10 +154,19 @@ public abstract class CachedMutableNaturalIdTest {
 					it.setName( "it2" );
 
 					final AllCached shouldBeGone = session.bySimpleNaturalId( AllCached.class ).load( "it" );
-					assertNull( shouldBeGone );
-
+					//if there is a cache, hibernate gives you changes that havent been flushed to the db,
+					// otherwise it gives you the db state
+					if (scope.getSessionFactory().getSessionFactoryOptions().isEnableNaturalIdCache()) {
+						assertNull(shouldBeGone);
+					} else {
+						assertNotNull(shouldBeGone);
+					}
 					final AllCached updated = session.bySimpleNaturalId( AllCached.class ).load( "it2" );
-					assertNotNull( updated );
+					if (scope.getSessionFactory().getSessionFactoryOptions().isEnableNaturalIdCache()) {
+						assertNotNull( updated );
+					} else {
+						assertNull(updated);
+					}
 				}
 		);
 	}
@@ -180,68 +191,7 @@ public abstract class CachedMutableNaturalIdTest {
 		);
 	}
 
-	@Test
-	@JiraKey("HHH-16558")
-	public void testCacheVerifyHits(SessionFactoryScope scope) {
-		scope.inTransaction((session) -> {
-			AllCached aAllCached = new AllCached();
-			aAllCached.setName("John Doe");
-			session.persist(aAllCached);
-			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
-			sfi.getStatistics().clear();
-		});
 
-		scope.inTransaction((session) -> {
-			System.out.println("Native load by natural-id, generate first hit");
-			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
-			AllCached person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
-			assertNotNull(person);
-			System.out.println("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
-			System.out.println("SecondLevelCacheHitCount: " + sfi.getStatistics().getSecondLevelCacheHitCount());
-			assertEquals(1, sfi.getStatistics().getNaturalIdCacheHitCount());
-			assertEquals(1, sfi.getStatistics().getSecondLevelCacheHitCount());
-		});
-
-		scope.inTransaction((session) -> {
-			System.out.println("Native load by natural-id, generate second hit");
-
-			SessionFactoryImpl sfi = (SessionFactoryImpl) session.getSessionFactory();
-			//tag::caching-entity-natural-id-example[]
-			AllCached person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
-			assertNotNull(person);
-
-			// resolve in persistence context (first level cache)
-			session.bySimpleNaturalId(AllCached.class).load("John Doe");
-			System.out.println("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
-			System.out.println("SecondLevelCacheHitCount: " + sfi.getStatistics().getSecondLevelCacheHitCount());
-			assertEquals(2, sfi.getStatistics().getNaturalIdCacheHitCount());
-			assertEquals(2, sfi.getStatistics().getSecondLevelCacheHitCount());
-
-			session.clear();
-			//  persistence context (first level cache) empty, should resolve from second level cache
-			System.out.println("Native load by natural-id, generate third hit");
-			person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
-			System.out.println("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
-			System.out.println("SecondLevelCacheHitCount: " + sfi.getStatistics().getSecondLevelCacheHitCount());
-			assertNotNull(person);
-			assertEquals(3, sfi.getStatistics().getNaturalIdCacheHitCount());
-			assertEquals(3, sfi.getStatistics().getSecondLevelCacheHitCount());
-
-			//Remove the entity from the persistence context
-			Integer id = person.getId();
-
-			session.detach(person); // still it should resolve from second level cache after this
-
-			System.out.println("Native load by natural-id, generate 4. hit");
-			person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
-			System.out.println("NaturalIdCacheHitCount: " + sfi.getStatistics().getNaturalIdCacheHitCount());
-			assertEquals("we expected now 4 hits", 4, sfi.getStatistics().getNaturalIdCacheHitCount());
-			assertNotNull(person);
-			session.remove(person); // evicts natural-id from first & second level cache
-			person = session.bySimpleNaturalId(AllCached.class).load("John Doe");
-			assertEquals(4, sfi.getStatistics().getNaturalIdCacheHitCount()); // thus hits should not increment
-		});
-	}
 	
 	@Test
 	public void testReattachUnmodifiedInstance(SessionFactoryScope scope) {

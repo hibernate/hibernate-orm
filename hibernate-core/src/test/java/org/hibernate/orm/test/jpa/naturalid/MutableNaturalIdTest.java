@@ -14,10 +14,10 @@ import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.orm.junit.SkipForDialect;
 import org.hibernate.orm.test.jpa.model.AbstractJPATest;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * @author Steve Ebersole
@@ -71,7 +71,13 @@ public class MutableNaturalIdTest extends AbstractJPATest {
 					e.setName( "Dampf" );
 					session.save( e );
 					e.setName( "Klein" );
-					assertNotNull( session.bySimpleNaturalId( ClassWithIdentityColumn.class ).load( "Klein" ) );
+					final var klein = session.bySimpleNaturalId(ClassWithIdentityColumn.class).load("Klein");
+					final var enableNaturalIdCache = sessionFactory().getSessionFactoryOptions().isEnableNaturalIdCache();
+					if (enableNaturalIdCache) {
+						assertNotNull(klein);
+					} else {
+						assertNull(klein);
+					}
 				}
 		);
 	}

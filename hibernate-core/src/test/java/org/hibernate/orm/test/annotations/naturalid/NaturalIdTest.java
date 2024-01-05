@@ -13,6 +13,7 @@ import jakarta.persistence.criteria.Root;
 import org.hibernate.NaturalIdLoadAccess;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.NaturalIdMapping;
@@ -380,5 +381,6 @@ public class NaturalIdTest extends BaseCoreFunctionalTestCase {
 	@Override
 	protected void configure(Configuration cfg) {
 		cfg.setProperty( "hibernate.cache.use_query_cache", "true" );
+		cfg.setProperty(AvailableSettings.DISABLE_NATURAL_ID_RESOLUTIONS_CACHE, "false");
 	}
 }

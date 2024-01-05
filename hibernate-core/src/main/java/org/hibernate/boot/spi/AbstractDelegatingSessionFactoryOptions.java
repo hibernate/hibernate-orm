@@ -119,6 +119,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	}
 
 	@Override
+	public boolean isEnableNaturalIdCache() {
+		return delegate.isEnableNaturalIdCache();
+	}
+
+	@Override
 	public Interceptor getInterceptor() {
 		return delegate.getInterceptor();
 	}

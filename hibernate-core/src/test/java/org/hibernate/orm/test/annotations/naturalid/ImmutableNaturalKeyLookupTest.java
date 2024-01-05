@@ -11,6 +11,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Root;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -355,6 +356,7 @@ public class ImmutableNaturalKeyLookupTest extends BaseCoreFunctionalTestCase {
 	protected void configure(Configuration cfg) {
 		cfg.setProperty( Environment.GENERATE_STATISTICS, "true" );
 		cfg.setProperty( Environment.USE_QUERY_CACHE, "true" );
+		cfg.setProperty(AvailableSettings.DISABLE_NATURAL_ID_RESOLUTIONS_CACHE, "false" );
 	}
 
 

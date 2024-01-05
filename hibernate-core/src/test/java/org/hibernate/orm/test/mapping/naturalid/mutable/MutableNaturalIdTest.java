@@ -28,11 +28,7 @@ import org.junit.jupiter.api.Test;
 import static org.hibernate.cfg.AvailableSettings.GENERATE_STATISTICS;
 import static org.hibernate.cfg.AvailableSettings.USE_QUERY_CACHE;
 import static org.hibernate.cfg.AvailableSettings.USE_SECOND_LEVEL_CACHE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.*;
 
 /**
  * @author Gavin King
@@ -85,8 +81,14 @@ public class MutableNaturalIdTest {
 							.using( "name", "gavin" )
 							.using( "org", "hb" )
 							.load();
-					assertNull( original );
-					assertNotSame( user, original );
+					//if there is a cache, hibernate gives you changes that havent been flushed to the db,
+					// otherwise it gives you the db state
+					if (scope.getSessionFactory().getSessionFactoryOptions().isEnableNaturalIdCache()) {
+						assertNull( original );
+						assertNotSame( user, original );
+					} else {
+						assertSame( user, original );
+					}
 				}
 		);
 	}
@@ -114,7 +116,13 @@ public class MutableNaturalIdTest {
 								.using( "name", "Gavin" )
 								.using( "org", "hb" )
 								.load();
-						assertNotNull( loaded );
+						//if there is a cache, hibernate gives you changes that havent been flushed to the db,
+						// otherwise it gives you the db state
+						if (scope.getSessionFactory().getSessionFactoryOptions().isEnableNaturalIdCache()) {
+							assertNotNull(loaded);
+						} else {
+							assertNull(loaded);
+						}
 					}
 					catch( HibernateException expected ) {
 						session.getTransaction().markRollbackOnly();
@@ -156,7 +164,20 @@ public class MutableNaturalIdTest {
 								.using( "name", "Gavin" )
 								.using( "org", "hb" )
 								.load();
-						assertNotNull( loaded );
+						//if there is a cache, hibernate gives you changes that havent been flushed to the db,
+						// otherwise it gives you the db state
+						if (scope.getSessionFactory().getSessionFactoryOptions().isEnableNaturalIdCache()) {
+							assertNotNull(loaded);
+						} else {
+							assertNull(loaded);
+							assertNotNull(session
+									.byNaturalId(User.class)
+									.using("name", "gavin")
+									.using("org", "hb")
+									.load());
+
+						}
+
 					}
 					catch (Throwable t) {
 						try {

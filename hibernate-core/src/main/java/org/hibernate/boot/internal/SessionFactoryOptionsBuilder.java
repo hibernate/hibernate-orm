@@ -267,6 +267,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	private final boolean inClauseParameterPaddingEnabled;
 
 	private final int queryStatisticsMaxSize;
+	private boolean enableNaturalIdCache;
 
 
 	public SessionFactoryOptionsBuilder(StandardServiceRegistry serviceRegistry, BootstrapContext context) {
@@ -335,6 +336,7 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.autoCloseSessionEnabled = configurationService.getSetting( AUTO_CLOSE_SESSION, BOOLEAN, false );
 
 		this.statisticsEnabled = configurationService.getSetting( GENERATE_STATISTICS, BOOLEAN, false );
+		this.enableNaturalIdCache = !configurationService.getSetting(AvailableSettings.DISABLE_NATURAL_ID_RESOLUTIONS_CACHE, BOOLEAN,false);
 		this.interceptor = determineInterceptor( configurationSettings, strategySelector );
 		this.statelessInterceptorSupplier = determineStatelessInterceptor( configurationSettings, strategySelector );
 		this.statementInspector = strategySelector.resolveStrategy(
@@ -904,6 +906,11 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 	}
 
 	@Override
+	public boolean isEnableNaturalIdCache() {
+		return enableNaturalIdCache;
+	}
+
+	@Override
 	public Interceptor getInterceptor() {
 		return interceptor == null ? EmptyInterceptor.INSTANCE : interceptor;
 	}
@@ -1263,6 +1270,8 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		return xmlFormatMapper;
 	}
 
+
+
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 	// In-flight mutation access
 
@@ -1306,6 +1315,10 @@ public class SessionFactoryOptionsBuilder implements SessionFactoryOptions {
 		this.preferUserTransaction = preferUserTransaction;
 	}
 
+	public void enableNaturalIdCache(boolean enabled) {
+		this.enableNaturalIdCache = enabled;
+	}
+	
 	public void enableStatisticsSupport(boolean enabled) {
 		this.statisticsEnabled = enabled;
 	}

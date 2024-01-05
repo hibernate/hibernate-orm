@@ -221,4 +221,5 @@ public interface AvailableSettings
 	@Deprecated(since = "6.0")
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	String IDENTIFIER_GENERATOR_STRATEGY_PROVIDER = "hibernate.identifier_generator_strategy_provider";
+	String DISABLE_NATURAL_ID_RESOLUTIONS_CACHE = "hibernate.cache.natural_id_cache";
 }

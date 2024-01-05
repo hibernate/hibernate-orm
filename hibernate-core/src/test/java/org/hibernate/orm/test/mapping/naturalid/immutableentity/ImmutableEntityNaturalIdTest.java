@@ -23,7 +23,9 @@ import org.hibernate.testing.orm.junit.ServiceRegistry;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.Setting;
+import org.junit.Assume;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -74,7 +76,9 @@ public class ImmutableEntityNaturalIdTest {
 
 		assertEquals( "Cache hits should be empty", 0, stats.getNaturalIdCacheHitCount() );
 		assertEquals( "Cache misses should be empty", 0, stats.getNaturalIdCacheMissCount() );
-		assertEquals( "Cache put should be one after insert", 1, stats.getNaturalIdCachePutCount() );
+		if (sessionFactory.getSessionFactoryOptions().isEnableNaturalIdCache()) {
+			assertEquals( "Cache put should be one after insert", 1, stats.getNaturalIdCachePutCount() );
+		}
 	}
 
 	@AfterEach
@@ -120,6 +124,7 @@ public class ImmutableEntityNaturalIdTest {
 
 	@Test
 	public void testImmutableNaturalIdLifecycle(SessionFactoryScope scope) {
+		Assumptions.assumeTrue(scope.getSessionFactory().getSessionFactoryOptions().isEnableNaturalIdCache());
 		final SessionFactoryImplementor sessionFactory = scope.getSessionFactory();
 		final StatisticsImplementor stats = sessionFactory.getStatistics();
 

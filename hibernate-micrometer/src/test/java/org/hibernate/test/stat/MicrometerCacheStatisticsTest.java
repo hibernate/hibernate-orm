@@ -152,8 +152,8 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 		Assert.assertEquals( 1, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
 		Assert.assertEquals( 1, registry.get("hibernate.entities.inserts").functionCounter().count(), 0 );
 		Assert.assertEquals( 1, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
-		Assert.assertEquals( 1, registry.get("hibernate.cache.natural.id.puts").functionCounter().count(), 0);
-		Assert.assertEquals(2, registry.get("hibernate.second.level.cache.puts").tags("region", REGION).functionCounter().count(), 0);
+		Assert.assertEquals( cached() ?1:0, registry.get("hibernate.cache.natural.id.puts").functionCounter().count(), 0);
+		Assert.assertEquals(cached()?2:1, registry.get("hibernate.second.level.cache.puts").tags("region", REGION).functionCounter().count(), 0);
 
 		final String queryString = "select p from Person p";
 		inTransaction(
@@ -165,8 +165,8 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 		Assert.assertEquals( 2, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
 		Assert.assertEquals( 0, registry.get("hibernate.entities.deletes").functionCounter().count(), 0 );
 		Assert.assertEquals( 2, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
-		Assert.assertEquals( 1, registry.get("hibernate.cache.natural.id.puts").functionCounter().count(), 0);
-		Assert.assertEquals(3, registry.get("hibernate.second.level.cache.puts").tags("region", REGION).functionCounter().count(), 0);
+		Assert.assertEquals( cached()?1:0, registry.get("hibernate.cache.natural.id.puts").functionCounter().count(), 0);
+		Assert.assertEquals(cached()?3:2 ,registry.get("hibernate.second.level.cache.puts").tags("region", REGION).functionCounter().count(), 0);
 
 		// clean up
 		session = openSession();
@@ -179,6 +179,10 @@ public class MicrometerCacheStatisticsTest extends BaseNonConfigCoreFunctionalTe
 		Assert.assertEquals( 3, registry.get("hibernate.sessions.closed").functionCounter().count(), 0 );
 		Assert.assertEquals( 1, registry.get("hibernate.entities.deletes").functionCounter().count(), 0 );
 		Assert.assertEquals( 3, registry.get("hibernate.transactions").tags("result", "success").functionCounter().count(), 0 );
+	}
+
+	private boolean cached() {
+		return sessionFactory().getSessionFactoryOptions().isEnableNaturalIdCache();
 	}
 
 	@Entity( name = "Person" )

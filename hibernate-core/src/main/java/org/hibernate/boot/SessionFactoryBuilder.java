@@ -120,6 +120,19 @@ public interface SessionFactoryBuilder {
 	SessionFactoryBuilder applyStatisticsSupport(boolean enabled);
 
 	/**
+	 * Allows you to disable hibernates NaturalID Cache.
+	 * This might be confusing because there is also {@link org.hibernate.annotations.NaturalIdCache}
+	 * The Annotations only seems to affect the 2 level cache. But Hibernate also has a sort of first level
+	 * cache which caches all natural ids anyway.
+	 * If you are not {@link org.hibernate.NaturalIdLoadAccess} or not do not rely on it to hit caches its better
+	 * to turn this cache off
+	 *
+	 * @param enabled {@code false} no first or second level caching of natural Ids
+	 * @return {@code this}, for method chaining
+	 */
+	SessionFactoryBuilder enableNaturalIdCache(boolean enabled);
+
+	/**
 	 * Specifies an {@link Interceptor} associated with the {@link SessionFactory},
 	 * which will be used by all sessions unless an interceptor is explicitly
 	 * specified using {@link org.hibernate.SessionBuilder#interceptor}.

@@ -6,8 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Set;
 
-import org.hibernate.HibernateException;
-
+import org.hibernate.TransientObjectException;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -81,7 +80,7 @@ public class RefreshTest {
 	@Test
 	public void testRefreshWithNullId(SessionFactoryScope scope) {
 		Assertions.assertThrows(
-				HibernateException.class,
+				TransientObjectException.class,
 				() -> {
 					scope.inTransaction(
 							session -> {
@@ -90,8 +89,7 @@ public class RefreshTest {
 								session.refresh( se );
 							}
 					);
-				},
-				"attempted to refresh an instance that is not part of the persistence context yet: [org.hibernate.orm.test.refresh.RefreshTest$SimpleEntity#<null>]"
+				}
 		);
 	}
 

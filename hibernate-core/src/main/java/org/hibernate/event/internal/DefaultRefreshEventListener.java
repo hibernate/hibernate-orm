@@ -9,7 +9,8 @@ package org.hibernate.event.internal;
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
-import org.hibernate.PersistentObjectException;
+import org.hibernate.NonUniqueObjectException;
+import org.hibernate.TransientObjectException;
 import org.hibernate.UnresolvableObjectException;
 import org.hibernate.cache.spi.access.CollectionDataAccess;
 import org.hibernate.cache.spi.access.EntityDataAccess;
@@ -128,8 +129,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 			persister = source.getEntityPersister( event.getEntityName(), object );
 			id = persister.getIdentifier( object, event.getSession() );
 			if ( id == null ) {
-				throw new HibernateException( "attempted to refresh an instance that is not part of the persistence context yet: "
-								+ infoString( persister, id, source.getFactory() ));
+				throw new TransientObjectException( "transient instance passed to refresh");
 			}
 			if ( LOG.isTraceEnabled() ) {
 				LOG.tracev(
@@ -138,10 +138,7 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 				);
 			}
 			if ( persistenceContext.getEntry( source.generateEntityKey( id, persister ) ) != null ) {
-				throw new PersistentObjectException(
-						"attempted to refresh transient instance when persistent instance was already associated with the Session: "
-								+ infoString( persister, id, source.getFactory() )
-				);
+				throw new NonUniqueObjectException( id, persister.getEntityName() );
 			}
 		}
 		else {

@@ -103,7 +103,7 @@ public class EntityDelayedFetchInitializer extends AbstractFetchParentAccess imp
 
 				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
 				if ( holder != null && holder.getEntity() != null ) {
-					entityInstance = persistenceContext.proxyFor( holder );
+					entityInstance = persistenceContext.proxyFor( holder, concreteDescriptor );
 				}
 			}
 			if ( entityInstance == null ) {

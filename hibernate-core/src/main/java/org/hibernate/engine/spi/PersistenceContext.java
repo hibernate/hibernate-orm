@@ -348,10 +348,20 @@ public interface PersistenceContext {
 	Object proxyFor(Object impl);
 
 	/**
-	 * Return the existing proxy associated with the given {@code EntityKey}, or the
-	 * argument (the entity associated with the key) if no proxy exists.
-	 * (slower than the form above)
+	 * Return the existing {@linkplain EntityHolder#getProxy() proxy} associated with
+	 * the given {@link EntityHolder}, or the {@linkplain EntityHolder#getEntity() entity}
+	 * if no proxy exists.
 	 */
+	Object proxyFor(EntityHolder holder, EntityPersister persister);
+
+	/**
+	 * Return the existing {@linkplain EntityHolder#getProxy() proxy} associated with
+	 * the given {@link EntityHolder}, or the {@linkplain EntityHolder#getEntity() entity}
+	 * if it contains no proxy.
+	 *
+	 * @deprecated Use {@link #proxyFor(EntityHolder, EntityPersister)} instead.
+	 */
+	@Deprecated( forRemoval = true )
 	Object proxyFor(EntityHolder holder);
 
 	/**

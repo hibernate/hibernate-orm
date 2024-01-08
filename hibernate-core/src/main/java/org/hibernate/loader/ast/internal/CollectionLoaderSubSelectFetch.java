@@ -138,7 +138,7 @@ public class CollectionLoaderSubSelectFetch implements CollectionLoader {
 				this.subselect.getLoadingJdbcParameterBindings(),
 				new ExecutionContextWithSubselectFetchHandler( session, subSelectFetchableKeysHandler ),
 				RowTransformerStandardImpl.instance(),
-				ListResultsConsumer.UniqueSemantic.FILTER
+				ListResultsConsumer.UniqueSemantic.NONE
 		);
 
 		if ( subSelectFetchedCollections != null && ! subSelectFetchedCollections.isEmpty() ) {

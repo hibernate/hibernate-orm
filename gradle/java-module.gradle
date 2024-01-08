@@ -246,13 +246,6 @@ tasks.withType( Test.class ).each { test ->
 sourceSets {
 	test {
 		resources {
-			// add `src/test/java` as a test-resources dir
-			configure( srcDir('src/test/java') ) {
-				filter {
-					include '**/*.properties'
-					include '**/*.xml'
-				}
-			}
 			configure( srcDir('src/test/resources') ) {
 				filter {
 					include '*.properties'

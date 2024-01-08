@@ -82,7 +82,7 @@ Considering the following HBM mapping:
 ====
 [source, JAVA, indent=0]
 ----
-include::{example-dir-schemagen}/SchemaGenerationTest.hbm.xml[]
+include::{example-dir-schemagen-resources}/org/hibernate/orm/test/schema/SchemaGenerationTest.hbm.xml[]
 ----
 ====
 

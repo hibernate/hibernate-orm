@@ -149,9 +149,9 @@ public class EnumeratedValueResolution<E extends Enum<E>,R> implements BasicValu
 		}
 		else if ( style == EnumType.STRING ) {
 			jdbcType = jdbcTypeRegistry.getDescriptor( jdbcTypeIndicators.getColumnLength() == 1 ? CHAR : VARCHAR );
-			final JavaType<String> jdbcJavaType = jdbcType.getJdbcRecommendedJavaTypeMapping(
-					jdbcTypeIndicators.getColumnPrecision(),
-					jdbcTypeIndicators.getColumnScale(),
+			final JavaType<Object> jdbcJavaType = jdbcType.getJdbcRecommendedJavaTypeMapping(
+					(int) jdbcTypeIndicators.getColumnLength(),
+					null,
 					typeConfiguration
 			);
 			converter = new NamedEnumValueConverter<>( enumJavaType, jdbcType, jdbcJavaType );

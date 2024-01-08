@@ -576,6 +576,12 @@ public class HSQLDialect extends Dialect {
 	}
 
 	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		// HSQLDB does truncation
+		return false;
+	}
+
+	@Override
 	public boolean supportsCommentOn() {
 		return true;
 	}

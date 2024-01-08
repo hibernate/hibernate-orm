@@ -715,6 +715,12 @@ public class HSQLLegacyDialect extends Dialect {
 		return "call current_timestamp";
 	}
 
+	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		// HSQLDB does truncation
+		return false;
+	}
+
 	/**
 	 * For HSQLDB 2.0, this is a copy of the base class implementation.
 	 * For HSQLDB 1.8, only READ_UNCOMMITTED is supported.

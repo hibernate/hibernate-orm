@@ -14,6 +14,7 @@ import org.hibernate.annotations.SourceType;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
+import org.hibernate.id.insert.AbstractSelectingDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationType;
 
@@ -70,7 +71,9 @@ public class MutationDelegateJoinedInheritanceTest {
 
 			assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "insert" );
 			inspector.assertExecutedCount(
-					delegate != null && delegate.supportsArbitraryValues() ? 1 : 2
+					delegate instanceof AbstractSelectingDelegate
+							? 3
+							: delegate != null && delegate.supportsArbitraryValues() ? 1 : 2
 			);
 		} );
 	}
@@ -89,12 +92,28 @@ public class MutationDelegateJoinedInheritanceTest {
 			assertThat( entity.getName() ).isEqualTo( "default_name" );
 			assertThat( entity.getChildName() ).isEqualTo( "default_child_name" );
 
-			assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "insert" );
-			assertThat( inspector.getSqlQueries().get( 1 ) ).contains( "insert" );
-			// Note: this is a current restriction, mutation delegates only retrieve generated values
-			// on the "root" table, and we expect other values to be read through a subsequent select
-			inspector.assertIsSelect( 2 );
-			inspector.assertExecutedCount( 3 );
+			final GeneratedValuesMutationDelegate delegate = getDelegate(
+					scope,
+					ChildEntity.class,
+					MutationType.INSERT
+			);
+
+			if ( delegate instanceof AbstractSelectingDelegate ) {
+				assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "insert" );
+				assertThat( inspector.getSqlQueries().get( 2 ) ).contains( "insert" );
+				// Note: this is a current restriction, mutation delegates only retrieve generated values
+				// on the "root" table, and we expect other values to be read through a subsequent select
+				inspector.assertIsSelect( 3 );
+				inspector.assertExecutedCount( 4 );
+			}
+			else {
+				assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "insert" );
+				assertThat( inspector.getSqlQueries().get( 1 ) ).contains( "insert" );
+				// Note: this is a current restriction, mutation delegates only retrieve generated values
+				// on the "root" table, and we expect other values to be read through a subsequent select
+				inspector.assertIsSelect( 2 );
+				inspector.assertExecutedCount( 3 );
+			}
 		} );
 	}
 
@@ -106,7 +125,7 @@ public class MutationDelegateJoinedInheritanceTest {
 				MutationType.UPDATE
 		);
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
-		final Integer id = scope.fromTransaction( session -> {
+		final Long id = scope.fromTransaction( session -> {
 			final BaseEntity entity = new BaseEntity();
 			session.persist( entity );
 			session.flush();
@@ -133,7 +152,7 @@ public class MutationDelegateJoinedInheritanceTest {
 	@Test
 	public void testUpdateChildEntity(SessionFactoryScope scope) {
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
-		final Integer id = scope.fromTransaction( session -> {
+		final Long id = scope.fromTransaction( session -> {
 			final ChildEntity entity = new ChildEntity();
 			session.persist( entity );
 			session.flush();
@@ -175,7 +194,7 @@ public class MutationDelegateJoinedInheritanceTest {
 	public static class BaseEntity {
 		@Id
 		@GeneratedValue( strategy = GenerationType.IDENTITY )
-		private Integer id;
+		private Long id;
 
 		@Generated( event = EventType.INSERT )
 		@ColumnDefault( "'default_name'" )
@@ -187,7 +206,7 @@ public class MutationDelegateJoinedInheritanceTest {
 		@SuppressWarnings( "FieldCanBeLocal" )
 		private String data;
 
-		public Integer getId() {
+		public Long getId() {
 			return id;
 		}
 

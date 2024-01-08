@@ -4762,6 +4762,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect round a temporal when converting from a precision higher to a lower one?
+	 *
+	 * @return true if rounding is applied, false if truncation is applied
+	 */
+	public boolean doesRoundTemporalOnOverflow() {
+		return true;
+	}
+
+	/**
 	 * This is the default precision for a generated
 	 * column mapped to a Java {@link Float} or
 	 * {@code float}. That is, a value representing

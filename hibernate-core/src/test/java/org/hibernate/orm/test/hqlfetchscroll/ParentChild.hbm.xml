@@ -27,7 +27,7 @@
 		
 	</class>
 	
-	<class name="Child" table="chlidren">
+	<class name="Child" table="children">
 		<!-- A numeric id must be the <id> field.  Some databases (Sybase, etc.)
         require identifier columns in order to support scrollable results. -->
         <id name="id">

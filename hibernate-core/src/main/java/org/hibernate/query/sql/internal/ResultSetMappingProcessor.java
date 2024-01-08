@@ -298,7 +298,7 @@ public class ResultSetMappingProcessor implements SQLQueryParser.ParserContext {
 				rootReturn.getTableAlias(),
 				suffix,
 				rootReturn.getLockMode(),
-				new NavigablePath( rootReturn.getEntityMapping().getEntityName() )
+				new NavigablePath( rootReturn.getEntityMapping().getEntityName(), rootReturn.getTableAlias() )
 		);
 	}
 

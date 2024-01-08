@@ -85,12 +85,12 @@ public class BasicColumnProcessor {
                 	if(JdbcToHibernateTypeHelper.typeHasLength(sqlType) ) {
                 		column.setLength(size);
                 	} 
-                	if(JdbcToHibernateTypeHelper.typeHasScaleAndPrecision(sqlType) ) {
+                	if(JdbcToHibernateTypeHelper.typeHasPrecision(sqlType) ) {
                 		column.setPrecision(size); 
                 	}
 				} 
                 if(intBounds(decimalDigits) ) {
-                	if(JdbcToHibernateTypeHelper.typeHasScaleAndPrecision(sqlType) ) {
+                	if(JdbcToHibernateTypeHelper.typeHasScale(sqlType) ) {
                 		column.setScale(decimalDigits);
                 	}
 				}

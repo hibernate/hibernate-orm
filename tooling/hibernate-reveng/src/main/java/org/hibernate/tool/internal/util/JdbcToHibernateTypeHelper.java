@@ -183,17 +183,25 @@ public final class JdbcToHibernateTypeHelper {
 			 * @throws SQLException
 			 */
 			
-	//		 scale and precision have numeric column
-    public static boolean typeHasScaleAndPrecision(int sqlType) {
-    	return (sqlType == Types.DECIMAL || sqlType == Types.NUMERIC
-    			|| sqlType == Types.REAL || sqlType == Types.FLOAT || sqlType == Types.DOUBLE);
-    }
-    
-    // length is for string column
-    public static boolean typeHasLength(int sqlType) {
-    	return (sqlType == Types.CHAR || sqlType == Types.DATE
-    			|| sqlType == Types.LONGVARCHAR || sqlType == Types.TIME || sqlType == Types.TIMESTAMP
-    			|| sqlType == Types.VARCHAR );
-    }
-}
+	// scale is for non floating point numeric columns
+	public static boolean typeHasScale(int sqlType) {
+		return (sqlType == Types.DECIMAL || sqlType == Types.NUMERIC);
+	}
 
+	// precision is for numeric columns
+	public static boolean typeHasPrecision(int sqlType) {
+		return (sqlType == Types.DECIMAL || sqlType == Types.NUMERIC
+				|| sqlType == Types.REAL || sqlType == Types.FLOAT || sqlType == Types.DOUBLE);
+	}
+
+	public static boolean typeHasScaleAndPrecision(int sqlType) {
+		return typeHasScale(sqlType) && typeHasPrecision(sqlType);
+	}
+
+	// length is for string columns
+	public static boolean typeHasLength(int sqlType) {
+		return (sqlType == Types.CHAR || sqlType == Types.DATE
+				|| sqlType == Types.LONGVARCHAR || sqlType == Types.TIME || sqlType == Types.TIMESTAMP
+				|| sqlType == Types.VARCHAR );
+	}
+}

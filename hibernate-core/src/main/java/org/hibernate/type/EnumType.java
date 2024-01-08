@@ -273,19 +273,22 @@ public class EnumType<T extends Enum<T>>
 		);
 	}
 
-	private JavaType<String> getStringType() {
-		return typeConfiguration.getJavaTypeRegistry().getDescriptor(String.class);
+	private JavaType<Object> namedJavaType(JdbcTypeIndicators stdIndicators) {
+		return typeConfiguration.getJavaTypeRegistry().getDescriptor(
+				stdIndicators.getColumnLength() == 1 ? Character.class : String.class
+		);
 	}
 
 	private EnumValueConverter<T,?> getConverter(
 			EnumJavaType<T> enumJavaType,
 			EnumType<T>.LocalJdbcTypeIndicators localIndicators,
 			boolean useNamed) {
-		if (useNamed) {
+		if ( useNamed ) {
+			final JavaType<Object> relationalJavaType = namedJavaType( localIndicators );
 			return new NamedEnumValueConverter<>(
 					enumJavaType,
-					getStringType().getRecommendedJdbcType( localIndicators ),
-					getStringType()
+					relationalJavaType.getRecommendedJdbcType( localIndicators ),
+					relationalJavaType
 			);
 		}
 		else {
@@ -310,11 +313,12 @@ public class EnumType<T extends Enum<T>>
 					relationalJavaType
 			);
 		}
-		else if ( isCharacterType(type) ) {
+		else if ( isCharacterType( type ) ) {
+			final JavaType<Object> relationalJavaType = namedJavaType( localIndicators );
 			return new NamedEnumValueConverter<>(
 					enumJavaType,
-					getStringType().getRecommendedJdbcType( localIndicators ),
-					getStringType()
+					relationalJavaType.getRecommendedJdbcType( localIndicators ),
+					relationalJavaType
 			);
 		}
 		else {

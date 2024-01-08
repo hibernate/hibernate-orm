@@ -11,6 +11,13 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.OffsetTime;
+import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
 import java.util.Date;
@@ -74,15 +81,24 @@ import org.hibernate.tool.schema.extract.internal.SequenceInformationExtractorNo
 import org.hibernate.tool.schema.extract.spi.SequenceInformationExtractor;
 import org.hibernate.type.JavaObjectType;
 import org.hibernate.type.StandardBasicTypes;
+import org.hibernate.type.descriptor.ValueExtractor;
+import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.CharJdbcType;
 import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.DecimalJdbcType;
+import org.hibernate.type.descriptor.jdbc.InstantJdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalDateJdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullResolvingJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetDateTimeJdbcType;
+import org.hibernate.type.descriptor.jdbc.OffsetTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.SmallIntJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarbinaryJdbcType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
+import org.hibernate.type.descriptor.jdbc.ZonedDateTimeJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.CapacityDependentDdlType;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
@@ -889,6 +905,12 @@ public class DB2Dialect extends Dialect {
 	}
 
 	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		// DB2 does truncation
+		return false;
+	}
+
+	@Override
 	public boolean isCurrentTimestampSelectStringCallable() {
 		return false;
 	}
@@ -960,6 +982,49 @@ public class DB2Dialect extends Dialect {
 								.getDescriptor( Object.class )
 				)
 		);
+
+		typeContributions.contributeJdbcType( new InstantJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, Instant.class );
+			}
+		} );
+		typeContributions.contributeJdbcType( new LocalDateTimeJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, LocalDateTime.class );
+			}
+		} );
+		typeContributions.contributeJdbcType( new LocalDateJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, LocalDate.class );
+			}
+		} );
+		typeContributions.contributeJdbcType( new LocalTimeJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, LocalTime.class );
+			}
+		} );
+		typeContributions.contributeJdbcType( new OffsetDateTimeJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, OffsetDateTime.class );
+			}
+		} );
+		typeContributions.contributeJdbcType( new OffsetTimeJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, OffsetTime.class );
+			}
+		} );
+		typeContributions.contributeJdbcType( new ZonedDateTimeJdbcType() {
+			@Override
+			public <X> ValueExtractor<X> getExtractor(JavaType<X> javaType) {
+				return new DB2GetObjectExtractor<>( javaType, this, ZonedDateTime.class );
+			}
+		} );
 	}
 
 	@Override

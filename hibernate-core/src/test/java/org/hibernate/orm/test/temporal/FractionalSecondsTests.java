@@ -15,14 +15,12 @@ import java.time.ZonedDateTime;
 
 import org.hibernate.annotations.FractionalSeconds;
 import org.hibernate.boot.spi.MetadataImplementor;
-import org.hibernate.dialect.DB2Dialect;
+import org.hibernate.dialect.CockroachDialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.H2Dialect;
-import org.hibernate.dialect.HSQLDialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.MariaDBDialect;
 import org.hibernate.dialect.MySQLDialect;
-import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.PostgreSQLDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
@@ -97,7 +95,6 @@ public class FractionalSecondsTests {
 	@Test
 	@DomainModel(annotatedClasses = TestEntity.class)
 	@SessionFactory
-	@SkipForDialect( dialectClass = DB2Dialect.class, reason = "Occasional mismatch in rounding versus our code" )
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	void testUsage(SessionFactoryScope scope) {
 		final Instant start = Instant.now();
@@ -111,28 +108,16 @@ public class FractionalSecondsTests {
 
 		scope.inTransaction( (session) -> {
 			final TestEntity testEntity = session.find( TestEntity.class, 1 );
-
 			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
-			if ( dialect instanceof DerbyDialect
-					|| dialect instanceof MariaDBDialect ) {
-				assertThat( testEntity.theInstant ).isEqualTo( start );
-			}
-			else {
-				assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( start, 6 ) );
-			}
+			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.adjustToDefaultPrecision( start, dialect ) );
 		} );
 	}
 
 	@Test
 	@DomainModel(annotatedClasses = TestEntity0.class)
 	@SessionFactory
-	@SkipForDialect( dialectClass = H2Dialect.class, reason = "Occasional mismatch in rounding versus our code" )
-	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "Occasional mismatch in rounding versus our code" )
-	@SkipForDialect( dialectClass = MySQLDialect.class, reason = "Occasional mismatch in rounding versus our code", matchSubTypes = true )
-	@SkipForDialect( dialectClass = OracleDialect.class, reason = "Occasional mismatch in rounding versus our code" )
-	@SkipForDialect( dialectClass = SQLServerDialect.class, reason = "Occasional mismatch in rounding versus our code" )
-	@SkipForDialect( dialectClass = PostgreSQLDialect.class, reason = "Occasional mismatch in rounding versus our code", matchSubTypes = true )
-	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby does not support sized timestamp" )
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby does not support sized timestamp")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	void testUsage0(SessionFactoryScope scope) {
 		final Instant start = Instant.now();
@@ -146,17 +131,16 @@ public class FractionalSecondsTests {
 
 		scope.inTransaction( (session) -> {
 			final TestEntity0 testEntity = session.find( TestEntity0.class, 1 );
-			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( start, 0 ) );
+			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
+			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.adjustToPrecision( start, 0, dialect ) );
 		} );
 	}
 
 	@Test
 	@DomainModel(annotatedClasses = TestEntity3.class)
 	@SessionFactory
-	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "Occasional mismatch in rounding versus our code" )
-	@SkipForDialect( dialectClass = HSQLDialect.class, reason = "Occasional mismatch in rounding versus our code" )
-	@SkipForDialect( dialectClass = DB2Dialect.class, reason = "Occasional mismatch in rounding versus our code" )
-	@SkipForDialect( dialectClass = DerbyDialect.class, reason = "Derby does not support sized timestamp" )
+	@SkipForDialect(dialectClass = DerbyDialect.class, reason = "Derby does not support sized timestamp")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA does not support specifying a precision on timestamps")
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
 	void testUsage3(SessionFactoryScope scope) {
 		final Instant start = Instant.now();
@@ -170,17 +154,21 @@ public class FractionalSecondsTests {
 
 		scope.inTransaction( (session) -> {
 			final TestEntity3 testEntity = session.find( TestEntity3.class, 1 );
-			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.roundToSecondPrecision( start, 3 ) );
+			final Dialect dialect = session.getSessionFactory().getJdbcServices().getDialect();
+			assertThat( testEntity.theInstant ).isEqualTo( DateTimeUtils.adjustToPrecision( start, 3, dialect ) );
 		} );
 	}
 
 	@Test
 	@DomainModel(annotatedClasses = TestEntity9.class)
 	@SessionFactory
-	@SkipForDialect( dialectClass = MariaDBDialect.class, reason = "MariaDB only supports precision <= 6" )
-	@SkipForDialect( dialectClass = MySQLDialect.class, reason = "MySQL only supports precision <= 6", matchSubTypes = true )
-	@SkipForDialect( dialectClass = SQLServerDialect.class, reason = "SQL Server only supports precision <= 6" )
+	@SkipForDialect(dialectClass = MariaDBDialect.class, reason = "MariaDB only supports precision <= 6")
+	@SkipForDialect(dialectClass = MySQLDialect.class, reason = "MySQL only supports precision <= 6", matchSubTypes = true)
+	@SkipForDialect(dialectClass = SQLServerDialect.class, reason = "SQL Server only supports precision <= 6")
 	@SkipForDialect(dialectClass = SybaseDialect.class, reason = "Because... Sybase...", matchSubTypes = true)
+	@SkipForDialect(dialectClass = PostgreSQLDialect.class, reason = "PostgreSQL only supports precision <= 6", matchSubTypes = true)
+	@SkipForDialect(dialectClass = CockroachDialect.class, reason = "CockroachDB only supports precision <= 6")
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA does not support specifying a precision on timestamps")
 	void testUsage9(SessionFactoryScope scope) {
 		final Instant start = Instant.now();
 

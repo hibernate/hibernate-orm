@@ -180,6 +180,12 @@ public class MariaDBDialect extends MySQLDialect {
 	}
 
 	@Override
+	public boolean doesRoundTemporalOnOverflow() {
+		// See https://jira.mariadb.org/browse/MDEV-16991
+		return false;
+	}
+
+	@Override
 	protected MySQLStorageEngine getDefaultMySQLStorageEngine() {
 		return InnoDBStorageEngine.INSTANCE;
 	}

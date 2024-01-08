@@ -41,9 +41,9 @@ pipeline {
 						// Need to override the default maven configuration this way, because there is no other way to do it
 						sh "sed -i 's/-Xmx5g/-Xmx1920m/' ./.mvn/jvm.config"
 						sh "echo -e '\\n-XX:MaxMetaspaceSize=768m'>>./.mvn/jvm.config"
-						sh "./mvnw -Dquickly install"
+						sh "./mvnw -pl !docs -Dquickly install"
 						// Need to kill the gradle daemons started during the Maven install run
-						sh "pkill -f '.*GradleDaemon.*' || true"
+						sh "sudo pkill -f '.*GradleDaemon.*' || true"
 						// Need to override the default maven configuration this way, because there is no other way to do it
 						sh "sed -i 's/-Xmx1920m/-Xmx1372m/' ./.mvn/jvm.config"
 						sh "sed -i 's/MaxMetaspaceSize=768m/MaxMetaspaceSize=512m/' ./.mvn/jvm.config"

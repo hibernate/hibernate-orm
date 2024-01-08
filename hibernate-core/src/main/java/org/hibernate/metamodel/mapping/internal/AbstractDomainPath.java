@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.EmbeddableValuedModelPart;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
+import org.hibernate.metamodel.mapping.ForeignKeyDescriptor;
 import org.hibernate.metamodel.mapping.ModelPart;
 import org.hibernate.metamodel.mapping.SelectableMapping;
 import org.hibernate.metamodel.mapping.ordering.ast.DomainPath;
@@ -163,19 +164,8 @@ public abstract class AbstractDomainPath implements DomainPath {
 				subPart = ( (EntityValuedModelPart) referenceModelPart ).getEntityMappingType().getIdentifierMapping();
 			}
 			else {
-				subPart = ( (EntityValuedModelPart) referenceModelPart ).findSubPart( modelPartName );
-				if ( subPart == null && referenceModelPart instanceof ToOneAttributeMapping ) {
-					// this is the case of sort by to-one attribute inside an embedded item,
-					// at this stage the foreign key descriptor should have been set on the attribute mapping,
-					// so we can generate a sub part valid for the order-by generation
-					ToOneAttributeMapping toOneAttribute = (ToOneAttributeMapping) referenceModelPart;
-					String foreignKeyModelPart = toOneAttribute.getAttributeName() + "."
-							+ toOneAttribute.getTargetKeyPropertyName();
-
-					if ( modelPartName.equals( foreignKeyModelPart ) ) {
-						subPart = toOneAttribute.findSubPart( toOneAttribute.getTargetKeyPropertyName() );
-					}
-				}
+				// Default to using the foreign key of an entity valued model part
+				subPart = ( (EntityValuedModelPart) referenceModelPart ).findSubPart( ForeignKeyDescriptor.PART_NAME );
 			}
 			apply(
 					subPart,

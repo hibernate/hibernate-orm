@@ -191,27 +191,26 @@ public class TypeHelper {
 			}
 			else {
 				final Type type = types[i];
-				if ( type.isComponentType() ) {
-					final CompositeType compositeType = (CompositeType) type;
-					if ( target[i] != null ) {
-						// need to extract the component values and check for subtype replacements...
-						final Object[] objects = replaceCompositeAssociations(
-								session,
-								copyCache,
-								foreignKeyDirection,
-								target[i],
-								currentOriginal,
-								compositeType
-						);
-						target[i] = compositeType.replacePropertyValues( target[i], objects, session );
-					}
-					copied[i] = target[i];
-				}
-				else if ( !type.isAssociationType() ) {
-					copied[i] = target[i];
+				if ( type.isAssociationType() ) {
+					copied[i] = types[i].replace( currentOriginal, target[i], session, owner, copyCache, foreignKeyDirection );
 				}
 				else {
-					copied[i] = types[i].replace( currentOriginal, target[i], session, owner, copyCache, foreignKeyDirection );
+					if ( type.isComponentType() ) {
+						final CompositeType compositeType = (CompositeType) type;
+						if ( target[i] != null ) {
+							// need to extract the component values and check for subtype replacements...
+							final Object[] objects = replaceCompositeAssociations(
+									session,
+									copyCache,
+									foreignKeyDirection,
+									target[i],
+									currentOriginal,
+									compositeType
+							);
+							target[i] = compositeType.replacePropertyValues( target[i], objects, session );
+						}
+					}
+					copied[i] = target[i];
 				}
 			}
 		}

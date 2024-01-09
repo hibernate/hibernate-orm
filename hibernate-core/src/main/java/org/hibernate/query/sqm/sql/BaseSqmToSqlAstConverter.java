@@ -12,7 +12,6 @@ import jakarta.persistence.metamodel.Type;
 import org.hibernate.HibernateException;
 import org.hibernate.Internal;
 import org.hibernate.LockMode;
-import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.boot.model.process.internal.InferredBasicValueResolver;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
@@ -31,7 +30,6 @@ import org.hibernate.id.CompositeNestedGeneratedValueGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.internal.FilterHelper;
-import org.hibernate.internal.util.MutableBoolean;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.internal.util.collections.StandardStack;
@@ -422,6 +420,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static java.util.Collections.singletonList;
+import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
 import static org.hibernate.generator.EventType.INSERT;
 import static org.hibernate.internal.util.NullnessHelper.coalesceSuppliedValues;
 import static org.hibernate.query.sqm.BinaryArithmeticOperator.ADD;
@@ -3441,7 +3440,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	}
 
 	private TableGroup consumeEntityJoin(SqmEntityJoin<?> sqmJoin, TableGroup lhsTableGroup, boolean transitive) {
-		final MutableBoolean needsTreat = new MutableBoolean( false );
 		final EntityPersister entityDescriptor = resolveEntityPersister( sqmJoin.getReferencedPathSource() );
 
 		final SqlAstJoinType correspondingSqlJoinType = sqmJoin.getSqmJoinType().getCorrespondingSqlJoinType();
@@ -3450,12 +3448,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				sqmJoin.getNavigablePath(),
 				sqmJoin.getExplicitAlias(),
 				null,
-				() -> p -> needsTreat.setValue( true ),
+				() -> p -> {},
 				this
 		);
 		registerSqmFromTableGroup( sqmJoin, tableGroup );
 
-		if ( needsTreat.getValue() ) {
+		if ( entityDescriptor.isInherited() && !sqmJoin.hasTreats() ) {
 			// Register new treat to apply the discriminator condition to the table reference itself, see #pruneTableGroupJoins
 			registerEntityNameUsage( tableGroup, EntityNameUse.TREAT, entityDescriptor.getEntityName() );
 		}
@@ -3479,8 +3477,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 
 		final SoftDeleteMapping softDeleteMapping = entityDescriptor.getSoftDeleteMapping();
 		if ( softDeleteMapping != null ) {
-			final Predicate softDeleteRestriction = SoftDeleteHelper.createNonSoftDeletedRestriction(
-					tableGroup.resolveTableReference( entityDescriptor.getSoftDeleteTableDetails().getTableName() ),
+			final Predicate softDeleteRestriction = createNonSoftDeletedRestriction(
+					tableGroup.resolveTableReference( softDeleteMapping.getTableName() ),
 					softDeleteMapping
 			);
 			tableGroupJoin.applyPredicate( softDeleteRestriction );

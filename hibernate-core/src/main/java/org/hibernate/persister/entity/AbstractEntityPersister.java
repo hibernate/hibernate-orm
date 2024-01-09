@@ -3117,6 +3117,10 @@ public abstract class AbstractEntityPersister
 						creationState.getSqlExpressionResolver()
 				);
 				additionalPredicateCollectorAccess.get().accept( softDeletePredicate );
+				if ( tableReference != rootTableReference && creationState.supportsEntityNameUsage() ) {
+					// Register entity name usage for the hierarchy root table to avoid pruning
+					creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, getRootEntityName() );
+				}
 			}
 		}
 

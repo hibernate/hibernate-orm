@@ -61,9 +61,9 @@ public class LocaleMappingTests {
 		}
 
 		{
-			final PluralAttributeMapping yearsAttribute = (PluralAttributeMapping) entityDescriptor.findAttributeMapping(
+			final PluralAttributeMapping localesAttribute = (PluralAttributeMapping) entityDescriptor.findAttributeMapping(
 					"locales" );
-			final BasicValuedCollectionPart elementDescriptor = (BasicValuedCollectionPart) yearsAttribute.getElementDescriptor();
+			final BasicValuedCollectionPart elementDescriptor = (BasicValuedCollectionPart) localesAttribute.getElementDescriptor();
 			assertThat( elementDescriptor.getJdbcMapping().getJdbcType() )
 					.isEqualTo( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) );
 			assertThat( elementDescriptor.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo(
@@ -71,9 +71,9 @@ public class LocaleMappingTests {
 		}
 
 		{
-			final PluralAttributeMapping countByYearAttribute = (PluralAttributeMapping) entityDescriptor.findAttributeMapping(
+			final PluralAttributeMapping countByLocaleAttribute = (PluralAttributeMapping) entityDescriptor.findAttributeMapping(
 					"countByLocale" );
-			final BasicValuedCollectionPart keyDescriptor = (BasicValuedCollectionPart) countByYearAttribute.getIndexDescriptor();
+			final BasicValuedCollectionPart keyDescriptor = (BasicValuedCollectionPart) countByLocaleAttribute.getIndexDescriptor();
 			assertThat( keyDescriptor.getJdbcMapping().getJdbcType() )
 					.isEqualTo( jdbcTypeRegistry.getDescriptor( Types.VARCHAR ) );
 			assertThat( keyDescriptor.getJdbcMapping().getJavaTypeDescriptor().getJavaTypeClass() ).isEqualTo(

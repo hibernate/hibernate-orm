@@ -12,6 +12,7 @@ import java.util.List;
 import org.hibernate.ObjectNotFoundException;
 
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
@@ -55,11 +56,28 @@ public class JoinedSubclassSoftDeleteTests {
 		scope.inTransaction( (session) -> {
 			// should not return #1
 			assertThat( session.createQuery( "from JoinedRoot" ).list() ).hasSize( 2 );
+			assertThat( session.createQuery( "from JoinedRoot where id = 1" ).list() ).isEmpty();
 		} );
 
 		scope.inTransaction( (session) -> {
 			// should not return #1
-			assertThat( session.createQuery( "from JoinedSub" ).list() ).hasSize( 2 );
+			assertThat( session.createQuery( "from JoinedSub where id = 1" ).list() ).isEmpty();
+		} );
+	}
+
+	@Test
+	@Jira( "https://hibernate.atlassian.net/browse/HHH-17615" )
+	void testCountQuery(SessionFactoryScope scope) {
+		scope.inTransaction( (session) -> {
+			// should not return #1
+			assertThat( session.createQuery( "select count(*) from JoinedRoot" ).uniqueResult() ).isEqualTo( 2L );
+			assertThat( session.createQuery( "select count(*) from JoinedRoot where id = 1" ).uniqueResult() ).isEqualTo( 0L );
+		} );
+
+		scope.inTransaction( (session) -> {
+			// should not return #1
+			assertThat( session.createQuery( "select count(*) from JoinedSub" ).uniqueResult() ).isEqualTo( 2L );
+			assertThat( session.createQuery( "select count(*) from JoinedSub where id = 1" ).uniqueResult() ).isEqualTo( 0L );
 		} );
 	}
 

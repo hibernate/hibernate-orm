@@ -452,7 +452,7 @@ See the https://docs.jboss.org/hibernate/orm/{majorMinorVersion}/javadocs/org/hi
 [[hql-read-only-entities]]
 ==== Querying for read-only entities
 
-As explained in <<chapters/domain/immutability.adoc#entity-immutability,entity immutability>>, fetching entities in read-only mode is more efficient than fetching entities whose state changes might need to be written to the database.
+As explained in <<chapters/domain/immutability.adoc#mutability-entity,entity immutability>>, fetching entities in read-only mode is more efficient than fetching entities whose state changes might need to be written to the database.
 Fortunately, even mutable entities may be fetched in read-only mode, with the benefit of reduced memory footprint and of a faster flushing process.
 
 Read-only entities are skipped by the dirty checking mechanism as illustrated by the following example:

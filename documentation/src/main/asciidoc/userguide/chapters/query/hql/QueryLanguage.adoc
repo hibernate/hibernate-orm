@@ -1450,11 +1450,11 @@ include::{array-example-dir-hql}/ArrayRemoveIndexTest.java[tags=hql-array-remove
 Returns the sub-array as specified by the given start and end index. Returns `null` if any of the arguments is `null`
 and also if the index is out of bounds.
 
-[[hql-array-remove-index-example]]
+[[hql-array-slice-example]]
 ====
 [source, JAVA, indent=0]
 ----
-include::{array-example-dir-hql}/ArrayRemoveIndexTest.java[tags=hql-array-remove-index-example]
+include::{array-example-dir-hql}/ArraySliceTest.java[tags=hql-array-slice-example]
 ----
 ====
 

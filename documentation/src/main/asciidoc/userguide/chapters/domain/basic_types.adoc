@@ -2247,7 +2247,7 @@ See also <<basic-jpa-convert-mutability>>.
 [[basic-bitset-java-type]]
 ===== Using a custom `JavaTypeDescriptor`
 
-As covered in <<basic-mapping-explicit>>, we will define a `JavaType`
+As covered in <<basic-mapping-composition-java>>, we will define a `JavaType`
 for `BitSet` that maps values to `VARCHAR` for storage by default.
 
 [[basic-bitset-example-java-type]]

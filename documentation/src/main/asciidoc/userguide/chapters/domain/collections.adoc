@@ -132,7 +132,7 @@ include::{example-dir-collection}/classification/list/EntityWithIndexBasedList.j
 
 
 
-[[collections-set]]
+[[collections-set-mapping]]
 ==== Mapping Sets
 
 `java.util.Set` defines a collection of unique, though unordered elements.  Hibernate supports
@@ -201,7 +201,7 @@ instead.
 
 
 
-[[collections-map]]
+[[collections-map-mapping]]
 ==== Mapping Maps
 
 A `java.util.Map` is a collection of key/value pairs.
@@ -242,7 +242,7 @@ include::{example-dir-collection}/classification/map/EntityWithSortedMap.java[ta
 
 
 
-[[collections-bag]]
+[[collections-mapping]]
 ==== Mapping Collections
 
 Without any other mapping influencers, `java.util.Collection` is interpreted using BAG
@@ -293,14 +293,14 @@ table.  `@CollectionId` is the annotation to configure this identifier
 
 
 
-[[collections-array]]
+[[collections-array-mapping]]
 ==== Mapping Arrays
 
 Hibernate is able to map Object and primitive arrays as collections.  Mapping an array is essentially
 the same as mapping a <<collection-list,list>>.
 
 There is a major limitation of mapping arrays to be aware of - the array cannot be lazy using
-<<collection-wrapper,wrappers>>.  It can, however, be lazy via <<bytecode-enhancement-guide,bytecode enhancement>>
+<<collection-wrapper,wrappers>>.  It can, however, be lazy via <<chapters/pc/BytecodeEnhancement.adoc#BytecodeEnhancement,bytecode enhancement>>
 of its owner.
 
 Note that Jakarta Persistence does not define support for arrays as plural attributes; according to the specification,

@@ -138,14 +138,13 @@ include::{extrasdir}/embeddable/embeddable-type-override-mapping-example.sql[]
 [[embeddable-collections]]
 ==== Collections of embeddable types
 
-Collections of embeddable types are specifically valued collections (as embeddable types are value types).
-Value collections are covered in detail in <<chapters/domain/collections.adoc#collections-value,Collections of value types>>.
+Collections of embeddable types are specifically valued collections (as embeddable types are value types). For more information and examples, check out <<chapters/domain/collections.adoc#collections-elemental,Collections of value types>>.
 
 [[embeddable-mapkey]]
 ==== Embeddable type as a Map key
 
 Embeddable types can also be used as `Map` keys.
-This topic is converted in detail in <<chapters/domain/collections.adoc#collections-map,Map - key>>.
+This topic is converted in detail in <<chapters/domain/collections.adoc#collections-map-mapping,Map - key>>.
 
 [[embeddable-identifier]]
 ==== Embeddable type as identifier
@@ -611,7 +610,7 @@ create table JsonHolder as (
 
 Again, the name and the nullability of the `aggregate` column can be refined through applying a `@Column` on the persistent attribute.
 
-[[embeddable-mapping-aggregate]]
+[[embeddable-mapping-collections]]
 ==== Embeddable mappings containing collections
 
 Mapping <<chapters/domain/collections.adoc#collections,collections>> inside an `@Embeddable` value is supported in most cases. There are a couple exceptions:

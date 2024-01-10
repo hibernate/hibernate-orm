@@ -3,6 +3,16 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.19.Final (January 10, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32236
+
+** Bug
+    * [HHH-17623] - Ordering collection @OrderBy based on association fails
+    * [HHH-17106] - Varchar(1) column for Java Enum fails with ClassCastException
+
+
 Changes in 6.2.18.Final (January 05, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

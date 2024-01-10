@@ -1108,7 +1108,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				final AttributeAnalysis attributeAnalysis = updateValuesAnalysis.attributeAnalyses.get( attributeIndex );
 
 				if ( attributeAnalysis.includeInSet() ) {
-					assert updateValuesAnalysis.tablesNeedingUpdate.contains( tableMapping );
+					assert updateValuesAnalysis.tablesNeedingUpdate.contains( tableMapping ) || updateValuesAnalysis.tablesNeedingDynamicUpdate.contains( tableMapping );
 					applyAttributeUpdateDetails(
 							entity,
 							updateGroupBuilder,

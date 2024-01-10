@@ -47,7 +47,7 @@ public class ConvertedListAttributeQueryTest {
 
 	@Test
 	@SuppressWarnings( "rawtypes" )
-	public void testHQL(SessionFactoryScope scope) {
+	public void testListHQL(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final List resultList = session.createQuery(
 					"select emp.phoneNumbers from Employee emp where emp.id = :EMP_ID",
@@ -59,7 +59,7 @@ public class ConvertedListAttributeQueryTest {
 
 	@Test
 	@SuppressWarnings( "rawtypes" )
-	public void testCriteria(SessionFactoryScope scope) {
+	public void testListCriteria(SessionFactoryScope scope) {
 		scope.inTransaction( session -> {
 			final CriteriaBuilder cb = session.getCriteriaBuilder();
 			final CriteriaQuery<List> q = cb.createQuery( List.class );
@@ -68,6 +68,20 @@ public class ConvertedListAttributeQueryTest {
 			q.where( cb.equal( r.get( "id" ), 1 ) );
 			final List resultList = session.createQuery( q ).getSingleResult();
 			assertThat( resultList ).isEqualTo( PHONE_NUMBERS );
+		} );
+	}
+
+	@Test
+	public void testArrayCriteria(SessionFactoryScope scope) {
+		scope.inTransaction( session -> {
+			final CriteriaBuilder cb = session.getCriteriaBuilder();
+			final CriteriaQuery<Integer[]> q = cb.createQuery( Integer[].class );
+			final Root<Employee> r = q.from( Employee.class );
+			q.multiselect( r.get( "id" ), r.get( "id" ) );
+			q.where( cb.equal( r.get( "id" ), 1 ) );
+			final Object result = session.createQuery( q ).getSingleResult();
+			assertThat( result ).isInstanceOf( Object[].class );
+			assertThat( ( (Object[]) result ) ).containsExactly( 1, 1 );
 		} );
 	}
 

@@ -125,7 +125,7 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 			return sessionFactory;
 		}
 		else {
-			throw new IllegalStateException( "Could not identify any active SessionFactory having UUID " + sessionFactoryUuid );
+			throw new IllegalStateException( "Could not identify any active SessionFactory having SessionFactory name " + sessionFactoryName + " or UUID " + sessionFactoryUuid  );
 		}
 	}
 

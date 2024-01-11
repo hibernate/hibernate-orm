@@ -30,6 +30,8 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 
 	private final CompositeType componentIdType;
 
+	private static volatile BytecodeProviderImpl bytecodeProvider;
+
 	public SerializableProxy(
 			String entityName,
 			Class<?> persistentClass,
@@ -120,16 +122,15 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 
 	private static SessionFactoryImplementor retrieveMatchingSessionFactory(final String sessionFactoryUuid, final String sessionFactoryName) {
 		Objects.requireNonNull( sessionFactoryUuid );
-		final SessionFactoryImplementor sessionFactory = SessionFactoryRegistry.INSTANCE.findSessionFactory( sessionFactoryUuid, sessionFactoryName );
-		if ( sessionFactory != null ) {
-			return sessionFactory;
-		}
-		else {
-			throw new IllegalStateException( "Could not identify any active SessionFactory having UUID " + sessionFactoryUuid );
-		}
+		return SessionFactoryRegistry.INSTANCE.findSessionFactory( sessionFactoryUuid, sessionFactoryName );
 	}
 
 	private static BytecodeProviderImpl retrieveByteBuddyBytecodeProvider(final SessionFactoryImplementor sessionFactory) {
+		if ( sessionFactory == null ) {
+			// When the session factory is not available fallback to local bytecode provider
+			return getBytecodeProvider();
+		}
+
 		final BytecodeProvider bytecodeProvider = sessionFactory.getServiceRegistry().getService( BytecodeProvider.class );
 		if ( bytecodeProvider instanceof BytecodeProviderImpl ) {
 			return (BytecodeProviderImpl) bytecodeProvider;
@@ -139,4 +140,11 @@ public final class SerializableProxy extends AbstractSerializableProxy {
 		}
 	}
 
+	private static BytecodeProviderImpl getBytecodeProvider() {
+		BytecodeProviderImpl provider = bytecodeProvider;
+		if ( provider == null ) {
+			provider = bytecodeProvider = new BytecodeProviderImpl();
+		}
+		return provider;
+	}
 }

@@ -609,6 +609,11 @@ public class MetadataBuildingProcess {
 			public void contributeAttributeConverter(Class<? extends AttributeConverter<?, ?>> converterClass) {
 				metadataCollector.getConverterRegistry().addAttributeConverter( converterClass );
 			}
+
+			@Override
+			public void contributeType(CompositeUserType<?> type) {
+				options.getCompositeUserTypes().add( type );
+			}
 		};
 
 		if ( options.getWrapperArrayHandling() == WrapperArrayHandling.LEGACY ) {

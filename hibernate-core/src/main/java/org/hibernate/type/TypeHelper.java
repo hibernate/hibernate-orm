@@ -191,6 +191,8 @@ public class TypeHelper {
 			}
 			else {
 				final Type type = types[i];
+				// AnyType is both a CompositeType and an AssociationType
+				// but here we want to treat it as an association
 				if ( type.isAssociationType() ) {
 					copied[i] = types[i].replace( currentOriginal, target[i], session, owner, copyCache, foreignKeyDirection );
 				}

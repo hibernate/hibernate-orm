@@ -3167,7 +3167,6 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					null,
 					stringType
 			);
-			arguments.add( new QueryLiteral<>( "%", stringType ) );
 			for ( CteColumn cycleColumn : currentCteStatement.getCycleColumns() ) {
 				final int selectionIndex = currentCteStatement.getCteTable()
 						.getCteColumns()
@@ -3190,14 +3189,20 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				arguments.add( nullSeparator );
 			}
 			arguments.add( nullSeparator );
-			arguments.add( new QueryLiteral<>( "%", stringType ) );
 
 			if ( !supportsRecursiveCycleClause() ) {
 				// Cycle mark
 				appendSql( "case when " );
-				visitColumnReference( cyclePathColumnReference );
-				appendSql( " like " );
-				concat.render( this, arguments, stringType, this );
+				renderStringContainsExactlyPredicate(
+						cyclePathColumnReference,
+						new SelfRenderingFunctionSqlAstExpression(
+								"concat",
+								concat,
+								arguments,
+								stringType,
+								stringType
+						)
+				);
 				appendSql( " then " );
 				currentCteStatement.getCycleValue().accept( this );
 				appendSql( " else " );
@@ -3206,9 +3211,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 				appendSql( COMMA_SEPARATOR );
 			}
 
-			// Remove the wildcard literals
-			arguments.remove( arguments.size() - 1 );
-			arguments.set( 0, cyclePathColumnReference );
+			// Add the previous path
+			arguments.add( 0, cyclePathColumnReference );
 			// Cycle path
 			concat.render( this, arguments, stringType, this );
 		}
@@ -3255,6 +3259,18 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 					columnSizeEstimate * MAX_RECURSION_DEPTH_ESTIMATE
 			);
 		}
+	}
+
+	protected void renderStringContainsExactlyPredicate(Expression haystack, Expression needle) {
+		final AbstractSqmSelfRenderingFunctionDescriptor position = findSelfRenderingFunction( "position", 2 );
+		new SelfRenderingFunctionSqlAstExpression(
+				"position",
+				position,
+				List.of( needle, haystack ),
+				getStringType(),
+				getStringType()
+		).accept( this );
+		append( ">0" );
 	}
 
 	/**

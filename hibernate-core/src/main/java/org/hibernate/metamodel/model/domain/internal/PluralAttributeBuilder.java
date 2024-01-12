@@ -16,7 +16,6 @@ import org.hibernate.mapping.Property;
 import org.hibernate.metamodel.AttributeClassification;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.UnsupportedMappingException;
-import org.hibernate.metamodel.internal.AttributeFactory;
 import org.hibernate.metamodel.internal.MetadataContext;
 import org.hibernate.metamodel.internal.PluralAttributeMetadata;
 import org.hibernate.metamodel.model.domain.DomainType;
@@ -81,7 +80,7 @@ public class PluralAttributeBuilder<D, C, E, K> {
 				isGeneric,
 				attributeMetadata.getAttributeClassification(),
 				attributeMetadata.getCollectionClassification(),
-				AttributeFactory.determineSimpleType(
+				determineSimpleType(
 						attributeMetadata.getElementValueContext(),
 						metadataContext
 				),

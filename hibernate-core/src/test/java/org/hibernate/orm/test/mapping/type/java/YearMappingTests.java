@@ -6,40 +6,33 @@
  */
 package org.hibernate.orm.test.mapping.type.java;
 
-import java.sql.Types;
-import java.time.Year;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
+import jakarta.persistence.*;
+import org.assertj.core.api.Assertions;
+import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicAttributeMapping;
 import org.hibernate.metamodel.mapping.internal.BasicValuedCollectionPart;
 import org.hibernate.persister.entity.EntityPersister;
-
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
-
+import org.hibernate.type.descriptor.WrapperOptions;
+import org.hibernate.type.descriptor.java.YearJavaType;
 import org.junit.jupiter.api.Test;
 
-import jakarta.persistence.CollectionTable;
-import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.MapKeyColumn;
-import jakarta.persistence.Table;
+import java.sql.Types;
+import java.time.Year;
+import java.time.format.DateTimeParseException;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DomainModel( annotatedClasses = YearMappingTests.YearMappingTestEntity.class )
 @SessionFactory
 @JiraKey( "HHH-10558" )
+@JiraKey( "HHH-17507" )
 public class YearMappingTests {
 	@Test
 	public void basicAssertions(SessionFactoryScope scope) {
@@ -69,20 +62,98 @@ public class YearMappingTests {
 
 	@Test
 	public void testUsage(SessionFactoryScope scope) {
-		final YearMappingTestEntity entity = new YearMappingTestEntity( 1, "one", Year.now() );
+		final YearMappingTestEntity entity1 = new YearMappingTestEntity( 1, "one", Year.now() );
 		final YearMappingTestEntity entity2 = new YearMappingTestEntity( 2, "two", Year.parse( "+10000" ) );
 
 		scope.inTransaction( (session) -> {
-			session.save( entity );
-			session.save( entity2 );
+			session.persist( entity1 );
+			session.persist( entity2 );
 		} );
 
 		try {
-			scope.inTransaction( (session) -> session.createQuery( "from YearMappingTestEntity" ).list() );
+			scope.inTransaction( (session) -> session.createQuery( "from YearMappingTestEntity", YearMappingTestEntity.class ).list() );
 		}
 		finally {
-			scope.inTransaction( session -> session.delete( entity ) );
-			scope.inTransaction( session -> session.delete( entity2 ) );
+			scope.inTransaction( session -> session.remove( entity1 ) );
+			scope.inTransaction( session -> session.remove( entity2 ) );
+		}
+	}
+	@Test
+	public void testUnwrapPass() {
+		final YearJavaType yearJavaType = new YearJavaType();
+		final Year year = Year.of(1943);
+		{
+			final Year y = yearJavaType.unwrap(year, Year.class, null);
+			Assertions.assertThat( y ).isEqualTo( year );
+		}
+		{
+			final Integer y = yearJavaType.unwrap(year, Integer.class, null);
+			Assertions.assertThat( y ).isEqualTo( Integer.valueOf( 1943 ) );
+		}
+		{
+			final Long y = yearJavaType.unwrap(year, Long.class, null);
+			Assertions.assertThat( y ).isEqualTo( Long.valueOf( 1943L ) );
+		}
+		{
+			final String y = yearJavaType.unwrap(year, String.class, null);
+			Assertions.assertThat( y ).isEqualTo( "1943" );
+		}
+		{
+			final Object y = yearJavaType.unwrap(year, Object.class, null);
+			Assertions.assertThat( y.toString() ).isEqualTo( "1943" );
+		}
+	}
+
+	@Test
+	public void testUnwrapFail() {
+		final YearJavaType yearJavaType = new YearJavaType();
+		final Year year = Year.of(1943);
+		{
+			Assertions.assertThatThrownBy( () ->
+				yearJavaType.unwrap(year, Boolean.class, null)
+			).isInstanceOf( HibernateException.class );
+		}
+	}
+
+	@Test
+	public void testWrapPass() {
+		final YearJavaType yearJavaType = new YearJavaType();
+		{
+			final Year usingNull = yearJavaType.wrap( null, null );
+			Assertions.assertThat( usingNull ).isNull();
+		}
+		{
+			final Year usingNumber = yearJavaType.wrap( 1943, null );
+			Assertions.assertThat( usingNumber ).isNotNull();
+		}
+		{
+			final Year usingNegative = yearJavaType.wrap( -1, null );
+			Assertions.assertThat( usingNegative ).isNotNull();
+		}
+		{
+			final Year usingString = yearJavaType.wrap( "1943", null );
+			Assertions.assertThat( usingString ).isNotNull();
+		}
+		{
+			final Year usingYear = yearJavaType.wrap( Year.of( 1943), null );
+			Assertions.assertThat( usingYear ).isNotNull();
+		}
+	}
+
+	@Test
+	public void testWrapFail() {
+		final YearJavaType yearJavaType = new YearJavaType();
+		{
+			final String usingEmptyString = "";
+			Assertions.assertThatThrownBy(() ->
+				yearJavaType.wrap( usingEmptyString, null )
+			).isInstanceOf(DateTimeParseException.class);
+		}
+		{
+			final Date usingDate = new Date();
+			Assertions.assertThatThrownBy(() ->
+				yearJavaType.wrap( usingDate, null )
+			).isInstanceOf(HibernateException.class);
 		}
 	}
 
@@ -156,4 +227,5 @@ public class YearMappingTests {
 			this.countByYear = countByYear;
 		}
 	}
+
 }

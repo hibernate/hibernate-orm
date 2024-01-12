@@ -8,6 +8,8 @@ package org.hibernate.metamodel.mapping;
 
 import org.hibernate.persister.entity.UnionSubclassEntityPersister;
 
+import static org.hibernate.internal.util.NullnessUtil.castNonNull;
+
 /**
  * @author Steve Ebersole
  */
@@ -134,18 +136,21 @@ public class MappingModelHelper {
 			}
 			return true;
 		}
-		else if ( attribute1 instanceof BasicValuedModelPart ) {
-			final BasicValuedModelPart basic1 = (BasicValuedModelPart) attribute1;
-			final BasicValuedModelPart basic2 = (BasicValuedModelPart) attribute2;
-			if ( !basic1.getSelectionExpression().equals( basic2.getSelectionExpression() ) ) {
-				return false;
+		else {
+			final BasicValuedModelPart basic1 = attribute1.asBasicValuedModelPart();
+			if ( basic1 != null ) {
+				final BasicValuedModelPart basic2 = castNonNull( attribute2.asBasicValuedModelPart() );
+				if ( !basic1.getSelectionExpression().equals( basic2.getSelectionExpression() ) ) {
+					return false;
+				}
+				if ( basic1.getContainingTableExpression().equals( basic2.getContainingTableExpression() ) ) {
+					return true;
+				}
+				// For union subclass mappings we also consider mappings compatible that just match the selection expression,
+				// because we match up columns of disjoint union subclass types by column name
+				return attribute1.findContainingEntityMapping()
+						.getEntityPersister() instanceof UnionSubclassEntityPersister;
 			}
-			if ( basic1.getContainingTableExpression().equals( basic2.getContainingTableExpression() ) ) {
-				return true;
-			}
-			// For union subclass mappings we also consider mappings compatible that just match the selection expression,
-			// because we match up columns of disjoint union subclass types by column name
-			return attribute1.findContainingEntityMapping().getEntityPersister() instanceof UnionSubclassEntityPersister;
 		}
 		return false;
 	}

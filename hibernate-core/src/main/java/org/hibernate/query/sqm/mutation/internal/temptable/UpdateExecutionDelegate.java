@@ -92,8 +92,6 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 			Map<String, TableReference> tableReferenceByAlias,
 			List<Assignment> assignments,
 			Predicate suppliedPredicate,
-			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
-			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			DomainQueryExecutionContext executionContext) {
 		this.sqmConverter = sqmConverter;
 		this.idTable = idTable;
@@ -130,14 +128,14 @@ public class UpdateExecutionDelegate implements TableBasedUpdateHandler.Executio
 				domainParameterXref,
 				SqmUtil.generateJdbcParamsXref(
 						domainParameterXref,
-						() -> parameterResolutions
+						sqmConverter::getJdbcParamsBySqmParam
 				),
 				sessionFactory.getRuntimeMetamodels().getMappingMetamodel(),
 				navigablePath -> updatingTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressible<T>) paramTypeResolutions.get(parameter);
+						return (MappingModelExpressible<T>) sqmConverter.getSqmParameterMappingModelExpressibleResolutions().get(parameter);
 					}
 				},
 				executionContext.getSession()

@@ -32,7 +32,9 @@ public class DynamicInstantiationArgument<T> {
 				.getCurrentProcessingState()
 				.getSqlExpressionResolver();
 		if ( sqlExpressionResolver instanceof BaseSqmToSqlAstConverter.SqmAliasedNodeCollector ) {
-			( (BaseSqmToSqlAstConverter.SqmAliasedNodeCollector) sqlExpressionResolver ).next();
+			if ( !( argumentResultProducer instanceof DynamicInstantiation<?> ) ) {
+				( (BaseSqmToSqlAstConverter.SqmAliasedNodeCollector) sqlExpressionResolver ).next();
+			}
 		}
 		return new ArgumentDomainResult<>( argumentResultProducer.createDomainResult( alias, creationState ) );
 	}

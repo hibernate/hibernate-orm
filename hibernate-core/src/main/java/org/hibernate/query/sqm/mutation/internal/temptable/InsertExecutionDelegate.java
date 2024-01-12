@@ -22,9 +22,12 @@ import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.BeforeExecutionGenerator;
+import org.hibernate.generator.Generator;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
-import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.enhanced.Optimizer;
 import org.hibernate.id.insert.Binder;
 import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
@@ -37,11 +40,13 @@ import org.hibernate.metamodel.mapping.MappingModelExpressible;
 import org.hibernate.metamodel.mapping.ModelPartContainer;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityPersister;
+import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.query.SemanticException;
 import org.hibernate.query.SortDirection;
 import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.FetchClauseType;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmUtil;
 import org.hibernate.query.sqm.mutation.internal.MultiTableSqmMutationConverter;
@@ -50,10 +55,12 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
+import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
@@ -67,17 +74,12 @@ import org.hibernate.sql.exec.internal.JdbcParameterBindingImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterBindingsImpl;
 import org.hibernate.sql.exec.internal.JdbcParameterImpl;
 import org.hibernate.sql.exec.spi.ExecutionContext;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryInsert;
 import org.hibernate.sql.exec.spi.JdbcOperationQueryMutation;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
-import org.hibernate.sql.exec.spi.JdbcOperationQueryUpdate;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
-import org.hibernate.generator.Generator;
-import org.hibernate.generator.OnExecutionGenerator;
-import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.type.descriptor.ValueBinder;
 
 import static org.hibernate.generator.EventType.INSERT;
@@ -95,6 +97,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 	private final DomainParameterXref domainParameterXref;
 	private final TableGroup updatingTableGroup;
 	private final InsertSelectStatement insertStatement;
+	private final ConflictClause conflictClause;
 
 	private final EntityMappingType entityDescriptor;
 
@@ -102,7 +105,6 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 	private final JdbcParameter sessionUidParameter;
 
 	private final Map<TableReference, List<Assignment>> assignmentsByTable;
-	private final Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions;
 	private final SessionFactoryImplementor sessionFactory;
 
 	public InsertExecutionDelegate(
@@ -116,9 +118,8 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			Map<String, TableReference> tableReferenceByAlias,
 			List<Assignment> assignments,
 			InsertSelectStatement insertStatement,
-			Map<SqmParameter<?>, List<List<JdbcParameter>>> parameterResolutions,
+			ConflictClause conflictClause,
 			JdbcParameter sessionUidParameter,
-			Map<SqmParameter<?>, MappingModelExpressible<?>> paramTypeResolutions,
 			DomainQueryExecutionContext executionContext) {
 		this.sqmInsert = sqmInsert;
 		this.sqmConverter = sqmConverter;
@@ -127,8 +128,8 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		this.sessionUidAccess = sessionUidAccess;
 		this.domainParameterXref = domainParameterXref;
 		this.updatingTableGroup = insertingTableGroup;
+		this.conflictClause = conflictClause;
 		this.sessionUidParameter = sessionUidParameter;
-		this.paramTypeResolutions = paramTypeResolutions;
 		this.insertStatement = insertStatement;
 
 		this.sessionFactory = executionContext.getSession().getFactory();
@@ -145,14 +146,14 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				domainParameterXref,
 				SqmUtil.generateJdbcParamsXref(
 						domainParameterXref,
-						() -> parameterResolutions
+						sqmConverter::getJdbcParamsBySqmParam
 				),
 				sessionFactory.getRuntimeMetamodels().getMappingMetamodel(),
 				navigablePath -> insertingTableGroup,
 				new SqmParameterMappingModelResolutionAccess() {
 					@Override @SuppressWarnings("unchecked")
 					public <T> MappingModelExpressible<T> getResolvedMappingModelType(SqmParameter<T> parameter) {
-						return (MappingModelExpressible<T>) paramTypeResolutions.get(parameter);
+						return (MappingModelExpressible<T>) sqmConverter.getSqmParameterMappingModelExpressibleResolutions().get( parameter );
 					}
 				}
 				,
@@ -218,7 +219,12 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			if ( rows != 0 ) {
 				final AbstractEntityPersister persister = (AbstractEntityPersister) entityDescriptor.getEntityPersister();
 				final int tableSpan = persister.getTableSpan();
-				insertRootTable( persister.getTableName( 0 ), rows, persister.getKeyColumns( 0 ), executionContext );
+				final int insertedRows = insertRootTable(
+						persister.getTableName( 0 ),
+						rows,
+						persister.getKeyColumns( 0 ),
+						executionContext
+				);
 
 				if ( persister.hasDuplicateTables() ) {
 					final String[] insertedTables = new String[tableSpan];
@@ -251,6 +257,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 						);
 					}
 				}
+				return insertedRows;
 			}
 
 			return rows;
@@ -294,7 +301,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		}
 	}
 
-	private void insertRootTable(
+	private int insertRootTable(
 			String tableExpression,
 			int rows,
 			String[] keyColumns,
@@ -322,7 +329,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		final QuerySpec querySpec = new QuerySpec( true );
 		final NamedTableReference temporaryTableReference = new NamedTableReference(
 				insertStatement.getTargetTable().getTableExpression(),
-				updatingTableReference.getIdentificationVariable()
+				"hte_tmp"
 		);
 		final TableGroupImpl temporaryTableGroup = new TableGroupImpl(
 				updatingTableGroup.getNavigablePath(),
@@ -331,7 +338,18 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				entityDescriptor
 		);
 		querySpec.getFromClause().addRoot( temporaryTableGroup );
+		if ( insertStatement.getValuesList().size() == 1 ) {
+			// Potentially apply a limit 1 to allow the use of the conflict clause emulation
+			querySpec.setFetchClauseExpression(
+					new QueryLiteral<>(
+							1,
+							executionContext.getSession().getFactory().getNodeBuilder() .getIntegerType()
+					),
+					FetchClauseType.ROWS_ONLY
+			);
+		}
 		final InsertSelectStatement insertStatement = new InsertSelectStatement( dmlTableReference );
+		insertStatement.setConflictClause( conflictClause );
 		insertStatement.setSourceSelectStatement( querySpec );
 		if ( assignments != null ) {
 			for ( Assignment assignment : assignments ) {
@@ -341,7 +359,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
 									new ColumnReference(
-											updatingTableReference.getIdentificationVariable(),
+											temporaryTableReference.getIdentificationVariable(),
 											columnReference.getColumnExpression(),
 											false,
 											null,
@@ -528,7 +546,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				querySpec.getSelectClause().addSqlSelection(
 						new SqlSelectionImpl(
 								new ColumnReference(
-										updatingTableReference.getIdentificationVariable(),
+										temporaryTableReference.getIdentificationVariable(),
 										idColumnReference.getColumnExpression(),
 										false,
 										null,
@@ -545,15 +563,16 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 				.translate( null, executionContext.getQueryOptions() );
 
 		if ( generator.generatedOnExecution() ) {
-			final OnExecutionGenerator databaseGenerator = (OnExecutionGenerator) generator;
-			final InsertGeneratedIdentifierDelegate identifierDelegate =
-					databaseGenerator.getGeneratedIdentifierDelegate( (PostInsertIdentityPersister) entityPersister );
+			final GeneratedValuesMutationDelegate insertDelegate = ( (EntityMutationTarget) entityDescriptor.getEntityPersister() ).getInsertDelegate();
+			// todo 7.0 : InsertGeneratedIdentifierDelegate will be removed once we're going to handle
+			//  generated values within the jdbc insert operaetion itself
+			final InsertGeneratedIdentifierDelegate identifierDelegate = (InsertGeneratedIdentifierDelegate) insertDelegate;
 			final String finalSql = identifierDelegate.prepareIdentifierGeneratingInsert( jdbcInsert.getSqlString() );
 			final BasicEntityIdentifierMapping identifierMapping =
 					(BasicEntityIdentifierMapping) entityDescriptor.getIdentifierMapping();
 			final ValueBinder jdbcValueBinder = identifierMapping.getJdbcMapping().getJdbcValueBinder();
 			for ( Map.Entry<Object, Object> entry : entityTableToRootIdentity.entrySet() ) {
-				final Object rootIdentity = identifierDelegate.performInsert(
+				final GeneratedValues generatedValues = identifierDelegate.performInsertReturning(
 						finalSql,
 						session,
 						new Binder() {
@@ -567,6 +586,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 							}
 						}
 				);
+				final Object rootIdentity = generatedValues.getGeneratedValue( identifierMapping );
 				entry.setValue( rootIdentity );
 			}
 
@@ -617,9 +637,11 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 						executionContext
 				);
 			}
+
+			return entityTableToRootIdentity.size();
 		}
 		else {
-			jdbcServices.getJdbcMutationExecutor().execute(
+			return jdbcServices.getJdbcMutationExecutor().execute(
 					jdbcInsert,
 					JdbcParameterBindings.NO_BINDINGS,
 					sql -> session
@@ -668,13 +690,14 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 		final NamedTableReference dmlTargetTableReference = resolveUnionTableReference( updatingTableReference, tableExpression );
 
 		final QuerySpec querySpec = new QuerySpec( true );
+		final NamedTableReference temporaryTableReference = new NamedTableReference(
+				insertStatement.getTargetTable().getTableExpression(),
+				"hte_tmp"
+		);
 		final TableGroupImpl temporaryTableGroup = new TableGroupImpl(
 				updatingTableGroup.getNavigablePath(),
 				null,
-				new NamedTableReference(
-						insertStatement.getTargetTable().getTableExpression(),
-						updatingTableReference.getIdentificationVariable()
-				),
+				temporaryTableReference,
 				entityDescriptor
 		);
 		querySpec.getFromClause().addRoot( temporaryTableGroup );
@@ -687,7 +710,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 					querySpec.getSelectClause().addSqlSelection(
 							new SqlSelectionImpl(
 									new ColumnReference(
-											updatingTableReference.getIdentificationVariable(),
+											temporaryTableReference.getIdentificationVariable(),
 											columnReference.getColumnExpression(),
 											false,
 											null,
@@ -730,7 +753,7 @@ public class InsertExecutionDelegate implements TableBasedInsertHandler.Executio
 			querySpec.getSelectClause().addSqlSelection(
 					new SqlSelectionImpl(
 							new ColumnReference(
-									updatingTableReference.getIdentificationVariable(),
+									temporaryTableReference.getIdentificationVariable(),
 									identifierMapping
 							)
 					)

@@ -43,8 +43,6 @@ public interface TableInsert extends TableMutation<JdbcInsertMutation> {
 
 	/**
 	 * The columns to return from the insert.
-	 *
-	 * @see java.sql.Connection#prepareStatement(String, String[])
 	 */
 	List<ColumnReference> getReturningColumns();
 

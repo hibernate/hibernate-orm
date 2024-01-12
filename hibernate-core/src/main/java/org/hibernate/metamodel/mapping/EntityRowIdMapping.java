@@ -11,6 +11,6 @@ package org.hibernate.metamodel.mapping;
  *
  * @see org.hibernate.annotations.RowId
  */
-public interface EntityRowIdMapping extends VirtualModelPart, SelectableMapping {
+public interface EntityRowIdMapping extends BasicValuedModelPart, VirtualModelPart, SelectableMapping {
 	String getRowIdName();
 }

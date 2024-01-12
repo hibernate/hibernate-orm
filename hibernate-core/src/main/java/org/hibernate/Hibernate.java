@@ -269,6 +269,8 @@ public final class Hibernate {
 	 *
 	 * @param proxy an entity instance or proxy
 	 * @return the true class of the instance
+	 *
+	 * @since 6.3
 	 */
 	@SuppressWarnings("unchecked")
 	public static <T> Class<? extends T> getClassLazy(T proxy) {

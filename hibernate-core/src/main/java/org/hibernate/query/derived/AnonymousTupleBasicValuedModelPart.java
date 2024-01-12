@@ -177,6 +177,11 @@ public class AnonymousTupleBasicValuedModelPart implements OwnedValuedModelPart,
 	}
 
 	@Override
+	public Integer getTemporalPrecision() {
+		return null;
+	}
+
+	@Override
 	public MappingType getMappedType() {
 		return this;
 	}

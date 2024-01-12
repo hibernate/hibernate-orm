@@ -78,6 +78,8 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
+import org.hibernate.query.sqm.tree.insert.SqmConflictUpdateAction;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
@@ -330,10 +332,39 @@ public class SqmTreePrinter implements SemanticQueryWalker<Object> {
 								"into",
 								() -> statement.getInsertionTargetPaths().forEach( sqmPath -> sqmPath.accept( this ) )
 						);
+						if ( statement.getConflictClause() != null ) {
+							processStanza(
+									"on conflict",
+									() -> statement.getConflictClause().accept( this )
+							);
+						}
 					}
 			);
 		}
 
+		return null;
+	}
+
+	@Override
+	public Object visitConflictClause(SqmConflictClause<?> sqmConflictClause) {
+		if ( sqmConflictClause.getConstraintName() != null ) {
+			logWithIndentation( "[constraintName = %s]", sqmConflictClause.getConstraintName() );
+		}
+		else {
+			processStanza(
+					"constraint attributes",
+					() -> sqmConflictClause.getConstraintPaths().forEach( sqmPath -> sqmPath.accept( this ) )
+			);
+		}
+		final SqmConflictUpdateAction<?> updateAction = sqmConflictClause.getConflictAction();
+		if ( updateAction == null ) {
+			logWithIndentation( "do nothing" );
+		}
+		else {
+			logWithIndentation( "do update " );
+			visitSetClause( updateAction.getSetClause() );
+			visitWhereClause( updateAction.getWhereClause() );
+		}
 		return null;
 	}
 

@@ -84,7 +84,6 @@ import org.hibernate.type.descriptor.jdbc.ClobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsBinaryTypeJdbcType;
-import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.XmlJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.ArrayDdlTypeImpl;
@@ -787,6 +786,10 @@ public class PostgreSQLDialect extends Dialect {
 	public boolean supportsNonQueryWithCTE() {
 		return true;
 	}
+	@Override
+	public boolean supportsConflictClauseForInsertCTE() {
+		return true;
+	}
 
 	@Override
 	public SequenceSupport getSequenceSupport() {
@@ -883,7 +886,7 @@ public class PostgreSQLDialect extends Dialect {
 	public String getSelectClauseNullString(int sqlType, TypeConfiguration typeConfiguration) {
 		// TODO: adapt this to handle named enum types!
 		// Workaround for postgres bug #1453
-		return "null::" + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName();
+		return "cast(null as " + typeConfiguration.getDdlTypeRegistry().getDescriptor( sqlType ).getRawTypeName() + ")";
 	}
 
 	@Override
@@ -1413,7 +1416,6 @@ public class PostgreSQLDialect extends Dialect {
 		//jdbcTypeRegistry.addDescriptor( TimestampUtcAsOffsetDateTimeJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptor( XmlJdbcType.INSTANCE );
 
-		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE ); // HHH-9562
 		if ( driverKind == PostgreSQLDriverKind.PG_JDBC ) {
 			if ( PgJdbcHelper.isUsable( serviceRegistry ) ) {
 				jdbcTypeRegistry.addDescriptorIfAbsent( PgJdbcHelper.getInetJdbcType( serviceRegistry ) );
@@ -1449,6 +1451,7 @@ public class PostgreSQLDialect extends Dialect {
 		);
 
 		jdbcTypeRegistry.addDescriptor( new PostgreSQLEnumJdbcType() );
+		jdbcTypeRegistry.addDescriptor( PostgreSQLUUIDJdbcType.INSTANCE );
 	}
 
 	@Override
@@ -1546,5 +1549,15 @@ public class PostgreSQLDialect extends Dialect {
 	public int getDefaultIntervalSecondScale() {
 		// The maximum scale for `interval second` is 6 unfortunately
 		return 6;
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
 	}
 }

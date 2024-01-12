@@ -109,10 +109,8 @@ sourceSets {
         }
     }
 
-    // resources inherently exclude sources
     test {
         resources {
-            srcDir 'src/test/java'
             srcDir 'src/test/resources'
             srcDir 'src/test/bundles'
         }
@@ -152,6 +150,7 @@ task copyBundleResourcesXml (type: Copy) {
                 'jdbc.user' : dbBundle[db]['jdbc.user'].replace("&", "&amp;"),
                 'jdbc.pass' : dbBundle[db]['jdbc.pass'].replace("&", "&amp;"),
                 'jdbc.url' : dbBundle[db]['jdbc.url'].replace("&", "&amp;"),
+                'jdbc.datasource' : dbBundle[db]['jdbc.datasource'].replace("&", "&amp;"),
                 'connection.init_sql' : dbBundle[db]['connection.init_sql'].replace("&", "&amp;")
         ]
         ext.bundleTokens['buildDirName'] = project.relativePath( buildDir )

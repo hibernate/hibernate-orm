@@ -72,6 +72,10 @@ public class YearJavaType extends AbstractClassJavaType<Year> {
 			return null;
 		}
 
+		if ( value instanceof Year) {
+			return (Year) value;
+		}
+
 		if ( value instanceof Number ) {
 			return Year.of( ( (Number) value ).intValue() );
 		}

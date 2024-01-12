@@ -24,9 +24,11 @@ import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -65,6 +67,7 @@ import org.hibernate.query.SyntaxException;
 import org.hibernate.query.criteria.JpaCteCriteria;
 import org.hibernate.query.criteria.JpaCteCriteriaAttribute;
 import org.hibernate.query.criteria.JpaCteCriteriaType;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.criteria.JpaSearchOrder;
 import org.hibernate.query.hql.HqlLogging;
 import org.hibernate.query.hql.spi.DotIdentifierConsumer;
@@ -105,6 +108,7 @@ import org.hibernate.query.sqm.produce.function.FunctionArgumentException;
 import org.hibernate.query.sqm.produce.function.StandardFunctionReturnTypeResolvers;
 import org.hibernate.query.sqm.spi.ParameterDeclarationContext;
 import org.hibernate.query.sqm.spi.SqmCreationContext;
+import org.hibernate.query.sqm.tree.AbstractSqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmQuery;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -171,6 +175,8 @@ import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
+import org.hibernate.query.sqm.tree.insert.SqmConflictUpdateAction;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -207,7 +213,10 @@ import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSelection;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.query.sqm.tree.select.SqmSubQuery;
+import org.hibernate.query.sqm.tree.update.SqmAssignment;
+import org.hibernate.query.sqm.tree.update.SqmSetClause;
 import org.hibernate.query.sqm.tree.update.SqmUpdateStatement;
+import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.tree.cte.CteMaterialization;
 import org.hibernate.sql.ast.tree.cte.CteSearchClauseKind;
@@ -487,8 +496,6 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			processingStateStack.push( processingState );
 
 			try {
-				queryExpressionContext.accept( this );
-
 				final SqmCreationProcessingState stateFieldsProcessingState = new SqmCreationProcessingStateImpl(
 						insertStatement,
 						this
@@ -506,6 +513,9 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 					processingStateStack.pop();
 				}
 
+				queryExpressionContext.accept( this );
+
+				insertStatement.onConflict( visitConflictClause( ctx.conflictClause() ) );
 				return insertStatement;
 			}
 			finally {
@@ -526,21 +536,43 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 			processingState.getPathRegistry().register( root );
 
 			try {
-				final HqlParser.ValuesListContext valuesListContext = ctx.valuesList();
-				for ( int i = 1; i < valuesListContext.getChildCount(); i += 2 ) {
-					final ParseTree values = valuesListContext.getChild( i );
-					final SqmValues sqmValues = new SqmValues();
-					for ( int j = 1; j < values.getChildCount(); j += 2 ) {
-						sqmValues.getExpressions().add( (SqmExpression<?>) values.getChild( j ).accept( this ) );
-					}
-					insertStatement.getValuesList().add( sqmValues );
-				}
-
 				for ( HqlParser.SimplePathContext stateFieldCtx : targetFieldsSpecContext.simplePath() ) {
 					final SqmPath<?> stateField = (SqmPath<?>) visitSimplePath( stateFieldCtx );
 					insertStatement.addInsertTargetStateField( stateField );
 				}
 
+				final ArrayList<SqmValues> valuesList = new ArrayList<>();
+				final HqlParser.ValuesListContext valuesListContext = ctx.valuesList();
+				for ( int i = 1; i < valuesListContext.getChildCount(); i += 2 ) {
+					final ParseTree values = valuesListContext.getChild( i );
+					final ArrayList<SqmExpression<?>> valuesExpressions = new ArrayList<>();
+					final Iterator<SqmPath<?>> iterator = insertStatement.getInsertionTargetPaths().iterator();
+					for ( int j = 1; j < values.getChildCount(); j += 2 ) {
+						final SqmPath<?> targetPath = iterator.next();
+						final Class<?> targetPathJavaType = targetPath.getJavaType();
+						final boolean isEnum = targetPathJavaType != null && targetPathJavaType.isEnum();
+						final ParseTree valuesContext = values.getChild( j );
+						final HqlParser.ExpressionContext expressionContext;
+						final Map<Class<?>, Enum<?>> possibleEnumValues;
+						final SqmExpression<?> value;
+						if ( isEnum && valuesContext.getChild( 0 ) instanceof HqlParser.ExpressionContext
+								&& ( possibleEnumValues = getPossibleEnumValues( expressionContext = (HqlParser.ExpressionContext) valuesContext.getChild( 0 ) ) ) != null ) {
+							value = resolveEnumShorthandLiteral(
+									expressionContext,
+									possibleEnumValues,
+									targetPathJavaType
+							);
+						}
+						else {
+							value = (SqmExpression<?>) valuesContext.accept( this );
+						}
+						valuesExpressions.add( value );
+					}
+					valuesList.add( new SqmValues( valuesExpressions ) );
+				}
+
+				insertStatement.values( valuesList );
+				insertStatement.onConflict( visitConflictClause( ctx.conflictClause() ) );
 				return insertStatement;
 			}
 			finally {
@@ -550,54 +582,59 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmUpdateStatement<R> visitUpdateStatement(HqlParser.UpdateStatementContext ctx) {
-		final boolean versioned = ctx.VERSIONED() != null;
-		final HqlParser.TargetEntityContext dmlTargetContext = ctx.targetEntity();
-		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
-		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
-			throw new SemanticException(
-					String.format(
-							"Target type '%s' in 'update' statement is not an entity",
-							root.getModel().getHibernateEntityName()
-					)
-			);
+	public SqmConflictClause<R> visitConflictClause(HqlParser.ConflictClauseContext ctx) {
+		if ( ctx == null ) {
+			return null;
 		}
+		final SqmCreationProcessingState processingState = processingStateStack.getCurrent();
+		final SqmInsertStatement<R> statement = (SqmInsertStatement<R>) processingState.getProcessingQuery();
+		final SqmConflictClause<R> conflictClause = new SqmConflictClause<>( statement );
+		final HqlParser.ConflictTargetContext conflictTargetContext = ctx.conflictTarget();
+		if ( conflictTargetContext != null ) {
+			final HqlParser.IdentifierContext identifierCtx = conflictTargetContext.identifier();
+			if ( identifierCtx != null ) {
+				conflictClause.conflictOnConstraint( visitIdentifier( identifierCtx ) );
+			}
+			else {
+				final List<SqmPath<?>> constraintAttributes = new ArrayList<>();
+				for ( HqlParser.SimplePathContext pathContext : conflictTargetContext.simplePath() ) {
+					constraintAttributes.add( consumeDomainPath( pathContext ) );
+				}
+				conflictClause.conflictOnConstraintPaths( constraintAttributes );
+			}
+		}
+		final HqlParser.ConflictActionContext conflictActionContext = ctx.conflictAction();
+		final HqlParser.SetClauseContext setClauseContext = conflictActionContext.setClause();
+		if ( setClauseContext != null ) {
+			processingState.getPathRegistry().registerByAliasOnly( conflictClause.getExcludedRoot() );
+			final SqmConflictUpdateAction<R> updateAction = conflictClause.onConflictDoUpdate();
+			for ( HqlParser.AssignmentContext assignmentContext : setClauseContext.assignment() ) {
+				updateAction.addAssignment( visitAssignment( assignmentContext ) );
+			}
+			final SqmPredicate sqmPredicate = visitWhereClause( conflictActionContext.whereClause() );
+			updateAction.where( sqmPredicate );
+		}
+		return conflictClause;
+	}
 
-		final SqmUpdateStatement<R> updateStatement = new SqmUpdateStatement<>( root, creationContext.getNodeBuilder() );
+	@Override
+	public SqmUpdateStatement<R> visitUpdateStatement(HqlParser.UpdateStatementContext ctx) {
+		final SqmUpdateStatement<R> updateStatement = new SqmUpdateStatement<>( creationContext.getNodeBuilder() );
 		parameterCollector = updateStatement;
 		final SqmDmlCreationProcessingState processingState = new SqmDmlCreationProcessingState(
 				updateStatement,
 				this
 		);
 		processingStateStack.push( processingState );
-		processingState.getPathRegistry().register( root );
 
 		try {
-			updateStatement.versioned( versioned );
+			updateStatement.versioned( ctx.VERSIONED() != null );
+			//noinspection unchecked
+			updateStatement.setTarget( (JpaRoot<R>) visitEntityWithJoins( ctx.entityWithJoins() ) );
 			final HqlParser.SetClauseContext setClauseCtx = ctx.setClause();
 			for ( ParseTree subCtx : setClauseCtx.children ) {
 				if ( subCtx instanceof HqlParser.AssignmentContext ) {
-					final HqlParser.AssignmentContext assignmentContext = (HqlParser.AssignmentContext) subCtx;
-					//noinspection unchecked
-					final SqmPath<Object> targetPath = (SqmPath<Object>) consumeDomainPath( assignmentContext.simplePath() );
-					final Class<?> targetPathJavaType = targetPath.getJavaType();
-					final boolean isEnum = targetPathJavaType != null && targetPathJavaType.isEnum();
-					final ParseTree rightSide = assignmentContext.getChild( 2 );
-					final HqlParser.ExpressionContext expressionContext;
-					final Map<Class<?>, Enum<?>> possibleEnumValues;
-					final SqmExpression<?> value;
-					if ( isEnum && rightSide.getChild( 0 ) instanceof HqlParser.ExpressionContext
-							&& ( possibleEnumValues = getPossibleEnumValues( expressionContext = (HqlParser.ExpressionContext) rightSide.getChild( 0 ) ) ) != null ) {
-						value = resolveEnumShorthandLiteral(
-								expressionContext,
-								possibleEnumValues,
-								targetPathJavaType
-						);
-					}
-					else {
-						value = (SqmExpression<?>) rightSide.accept( this );
-					}
-					updateStatement.applyAssignment( targetPath, value );
+					updateStatement.applyAssignment( visitAssignment( (HqlParser.AssignmentContext) subCtx ) );
 				}
 			}
 
@@ -614,11 +651,32 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 	}
 
 	@Override
-	public SqmDeleteStatement<R> visitDeleteStatement(HqlParser.DeleteStatementContext ctx) {
-		final HqlParser.TargetEntityContext dmlTargetContext = ctx.targetEntity();
-		final SqmRoot<R> root = visitTargetEntity( dmlTargetContext );
+	public SqmAssignment<?> visitAssignment(HqlParser.AssignmentContext ctx) {
+		//noinspection unchecked
+		final SqmPath<Object> targetPath = (SqmPath<Object>) consumeDomainPath( ctx.simplePath() );
+		final Class<?> targetPathJavaType = targetPath.getJavaType();
+		final boolean isEnum = targetPathJavaType != null && targetPathJavaType.isEnum();
+		final ParseTree rightSide = ctx.getChild( 2 );
+		final HqlParser.ExpressionContext expressionContext;
+		final Map<Class<?>, Enum<?>> possibleEnumValues;
+		final SqmExpression<?> value;
+		if ( isEnum && rightSide.getChild( 0 ) instanceof HqlParser.ExpressionContext
+				&& ( possibleEnumValues = getPossibleEnumValues( expressionContext = (HqlParser.ExpressionContext) rightSide.getChild( 0 ) ) ) != null ) {
+			value = resolveEnumShorthandLiteral(
+					expressionContext,
+					possibleEnumValues,
+					targetPathJavaType
+			);
+		}
+		else {
+			value = (SqmExpression<?>) rightSide.accept( this );
+		}
+		return new SqmAssignment<>( targetPath, value );
+	}
 
-		final SqmDeleteStatement<R> deleteStatement = new SqmDeleteStatement<>( root, SqmQuerySource.HQL, creationContext.getNodeBuilder() );
+	@Override
+	public SqmDeleteStatement<R> visitDeleteStatement(HqlParser.DeleteStatementContext ctx) {
+		final SqmDeleteStatement<R> deleteStatement = new SqmDeleteStatement<>( creationContext.getNodeBuilder() );
 
 		parameterCollector = deleteStatement;
 
@@ -627,10 +685,10 @@ public class SemanticQueryBuilder<R> extends HqlParserBaseVisitor<Object> implem
 				this
 		);
 
-		sqmDeleteCreationState.getPathRegistry().register( root );
-
 		processingStateStack.push( sqmDeleteCreationState );
 		try {
+			//noinspection unchecked
+			deleteStatement.setTarget( (JpaRoot<R>) visitEntityWithJoins( ctx.entityWithJoins() ) );
 			final HqlParser.WhereClauseContext whereClauseContext = ctx.whereClause();
 			if ( whereClauseContext != null ) {
 				deleteStatement.applyPredicate( visitWhereClause( whereClauseContext ) );

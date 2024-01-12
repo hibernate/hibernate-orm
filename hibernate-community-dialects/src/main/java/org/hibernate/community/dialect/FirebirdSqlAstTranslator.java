@@ -229,7 +229,7 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	public void visitInListPredicate(InListPredicate inListPredicate) {
 		final List<Expression> listExpressions = inListPredicate.getListExpressions();
 		if ( listExpressions.isEmpty() ) {
-			appendSql( "1=0" );
+			appendSql( "1=" + ( inListPredicate.isNegated() ? "1" : "0" ) );
 			return;
 		}
 		final Expression testExpression = inListPredicate.getTestExpression();
@@ -263,13 +263,13 @@ public class FirebirdSqlAstTranslator<T extends JdbcOperation> extends AbstractS
 	}
 
 	@Override
-	protected String getFromDual() {
-		return " from rdb$database";
+	protected String getDual() {
+		return "rdb$database";
 	}
 
 	@Override
 	protected String getFromDualForSelectOnly() {
-		return getFromDual();
+		return " from " + getDual();
 	}
 
 	private boolean supportsOffsetFetchClause() {

@@ -46,7 +46,9 @@ public final class Versioning {
 	public static Object seed(EntityVersionMapping versionMapping, SharedSessionContractImplementor session) {
 		final Object seed = versionMapping.getJavaType().seed(
 				versionMapping.getLength(),
-				versionMapping.getPrecision(),
+				versionMapping.getTemporalPrecision() != null
+						? versionMapping.getTemporalPrecision()
+						: versionMapping.getPrecision(),
 				versionMapping.getScale(),
 				session
 		);
@@ -165,7 +167,9 @@ public final class Versioning {
 		final Object next = versionType.next(
 				version,
 				versionMapping.getLength(),
-				versionMapping.getPrecision(),
+				versionMapping.getTemporalPrecision() != null
+						? versionMapping.getTemporalPrecision()
+						: versionMapping.getPrecision(),
 				versionMapping.getScale(),
 				session
 		);

@@ -34,6 +34,8 @@ import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.event.spi.EventSource;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.UUIDHexGenerator;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -58,12 +60,17 @@ import org.hibernate.metamodel.model.domain.NavigableRole;
 import org.hibernate.metamodel.spi.EntityRepresentationStrategy;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.UniqueKeyEntry;
+import org.hibernate.persister.entity.mutation.DeleteCoordinator;
+import org.hibernate.persister.entity.mutation.EntityTableMapping;
+import org.hibernate.persister.entity.mutation.InsertCoordinator;
+import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.spi.PersisterCreationContext;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableInsertStrategy;
 import org.hibernate.query.sqm.mutation.spi.SqmMultiTableMutationStrategy;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.from.TableGroup;
+import org.hibernate.sql.model.MutationOperationGroup;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.tuple.entity.EntityMetamodel;
@@ -73,6 +80,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 import org.hibernate.type.descriptor.java.StringJavaType;
 import org.hibernate.type.descriptor.jdbc.VarcharJdbcType;
 import org.hibernate.type.internal.BasicTypeImpl;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 public class CustomPersister implements EntityPersister {
 
@@ -264,10 +273,10 @@ public class CustomPersister implements EntityPersister {
 		return getPropertyValues( object );
 	}
 
-	public void processInsertGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
+	public void processInsertGeneratedProperties(Object id, Object entity, Object[] state, GeneratedValues generatedValues, SharedSessionContractImplementor session) {
 	}
 
-	public void processUpdateGeneratedProperties(Object id, Object entity, Object[] state, SharedSessionContractImplementor session) {
+	public void processUpdateGeneratedProperties(Object id, Object entity, Object[] state, GeneratedValues generatedValues, SharedSessionContractImplementor session) {
 	}
 
 	@Override
@@ -500,49 +509,80 @@ public class CustomPersister implements EntityPersister {
 		throw new UnsupportedOperationException();
 	}
 
-	public void insert(
-			Object id,
-			Object[] fields,
-			Object object,
-			SharedSessionContractImplementor session
-	) throws HibernateException {
+	@Override
+	public InsertCoordinator getInsertCoordinator() {
+		return new InsertCoordinator() {
+			@Override
+			public @Nullable GeneratedValues insert(
+					Object entity,
+					Object[] values,
+					SharedSessionContractImplementor session) {
+				throw new UnsupportedOperationException();
+			}
 
-		INSTANCES.put(id, ( (Custom) object ).clone() );
+			@Override
+			public @Nullable GeneratedValues insert(
+					Object entity,
+					Object id,
+					Object[] values,
+					SharedSessionContractImplementor session) {
+				INSTANCES.put( id, ( (Custom) entity ).clone() );
+				return null;
+			}
+
+			@Override
+			public MutationOperationGroup getStaticMutationOperationGroup() {
+				return null;
+			}
+		};
 	}
 
-	public Serializable insert(Object[] fields, Object object, SharedSessionContractImplementor session)
-	throws HibernateException {
+	@Override
+	public UpdateCoordinator getUpdateCoordinator() {
+		return new UpdateCoordinator() {
+			@Override
+			public @Nullable GeneratedValues update(
+					Object entity,
+					Object id,
+					Object rowId,
+					Object[] values,
+					Object oldVersion,
+					Object[] incomingOldValues,
+					int[] dirtyAttributeIndexes,
+					boolean hasDirtyCollection,
+					SharedSessionContractImplementor session) {
+				INSTANCES.put( id, ( (Custom) entity ).clone() );
+				return null;
+			}
 
-		throw new UnsupportedOperationException();
+			@Override
+			public void forceVersionIncrement(
+					Object id,
+					Object currentVersion,
+					Object nextVersion,
+					SharedSessionContractImplementor session) {
+			}
+
+			@Override
+			public MutationOperationGroup getStaticMutationOperationGroup() {
+				return null;
+			}
+		};
 	}
 
-	public void delete(
-			Object id,
-			Object version,
-			Object object,
-			SharedSessionContractImplementor session
-	) throws HibernateException {
+	@Override
+	public DeleteCoordinator getDeleteCoordinator() {
+		return new DeleteCoordinator() {
+			@Override
+			public void delete(Object entity, Object id, Object version, SharedSessionContractImplementor session) {
+				INSTANCES.remove( id );
+			}
 
-		INSTANCES.remove(id);
-	}
-
-	/**
-	 * @see EntityPersister
-	 */
-	public void update(
-			Object id,
-			Object[] fields,
-			int[] dirtyFields,
-			boolean hasDirtyCollection,
-			Object[] oldFields,
-			Object oldVersion,
-			Object object,
-			Object rowId,
-			SharedSessionContractImplementor session
-	) throws HibernateException {
-
-		INSTANCES.put( id, ( (Custom) object ).clone() );
-
+			@Override
+			public MutationOperationGroup getStaticMutationOperationGroup() {
+				return null;
+			}
+		};
 	}
 
 	private static final BasicType<String> STRING_TYPE = new BasicTypeImpl<>(
@@ -852,6 +892,31 @@ public class CustomPersister implements EntityPersister {
 	}
 
 	@Override
+	public String getSelectByUniqueKeyString(String propertyName) {
+		return null;
+	}
+
+	@Override
+	public String getSelectByUniqueKeyString(String[] propertyNames, String[] columnNames) {
+		return null;
+	}
+
+	@Override
+	public String getIdentitySelectString() {
+		return null;
+	}
+
+	@Override
+	public String[] getIdentifierColumnNames() {
+		return new String[0];
+	}
+
+	@Override
+	public String[] getRootTableKeyColumnNames() {
+		return new String[0];
+	}
+
+	@Override
 	public boolean isAffectedByEntityGraph(LoadQueryInfluencers loadQueryInfluencers) {
 		return loadQueryInfluencers.getEffectiveEntityGraph().getGraph() != null;
 	}
@@ -878,6 +943,51 @@ public class CustomPersister implements EntityPersister {
 
 	@Override
 	public JavaType getMappedJavaType() {
+		return null;
+	}
+
+	@Override
+	public EntityMappingType getTargetPart() {
+		return null;
+	}
+
+	@Override
+	public void forEachMutableTable(Consumer<EntityTableMapping> consumer) {
+
+	}
+
+	@Override
+	public void forEachMutableTableReverse(Consumer<EntityTableMapping> consumer) {
+
+	}
+
+	@Override
+	public String getIdentifierTableName() {
+		return null;
+	}
+
+	@Override
+	public EntityTableMapping getIdentifierTableMapping() {
+		return null;
+	}
+
+	@Override
+	public ModelPart getIdentifierDescriptor() {
+		return null;
+	}
+
+	@Override
+	public boolean hasSkippableTables() {
+		return false;
+	}
+
+	@Override
+	public GeneratedValuesMutationDelegate getInsertDelegate() {
+		return null;
+	}
+
+	@Override
+	public GeneratedValuesMutationDelegate getUpdateDelegate() {
 		return null;
 	}
 }

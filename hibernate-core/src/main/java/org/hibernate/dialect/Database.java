@@ -135,7 +135,7 @@ public enum Database {
 	HANA {
 		@Override
 		public Dialect createDialect(DialectResolutionInfo info) {
-			return new HANAColumnStoreDialect( info );
+			return new HANADialect( info );
 		}
 		@Override
 		public boolean productNameMatches(String databaseName) {

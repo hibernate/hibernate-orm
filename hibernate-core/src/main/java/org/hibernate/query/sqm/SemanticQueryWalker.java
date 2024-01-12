@@ -87,6 +87,7 @@ import org.hibernate.query.sqm.tree.from.SqmDerivedJoin;
 import org.hibernate.query.sqm.tree.from.SqmEntityJoin;
 import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
+import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
 import org.hibernate.query.sqm.tree.insert.SqmValues;
@@ -135,6 +136,8 @@ public interface SemanticQueryWalker<T> {
 	T visitInsertSelectStatement(SqmInsertSelectStatement<?> statement);
 
 	T visitInsertValuesStatement(SqmInsertValuesStatement<?> statement);
+
+	T visitConflictClause(SqmConflictClause<?> sqmConflictClause);
 
 	T visitDeleteStatement(SqmDeleteStatement<?> statement);
 

@@ -8,6 +8,9 @@ package org.hibernate.query.criteria;
 
 import org.hibernate.Incubating;
 
+import jakarta.persistence.Tuple;
+import jakarta.persistence.criteria.CriteriaQuery;
+
 /**
  * A representation of SqmInsertSelectStatement at the
  * {@link org.hibernate.query.criteria} level, even though JPA does
@@ -30,5 +33,10 @@ import org.hibernate.Incubating;
  * @author Steve Ebersole
  */
 @Incubating
-public interface JpaCriteriaInsertSelect<T> extends JpaManipulationCriteria<T> {
+public interface JpaCriteriaInsertSelect<T> extends JpaCriteriaInsert<T> {
+
+	JpaCriteriaInsertSelect<T> select(CriteriaQuery<Tuple> criteriaQuery);
+
+	@Override
+	JpaCriteriaInsertSelect<T> onConflict(JpaConflictClause<T> conflictClause);
 }

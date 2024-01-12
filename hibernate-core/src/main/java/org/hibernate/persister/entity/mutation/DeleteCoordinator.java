@@ -7,28 +7,16 @@
 package org.hibernate.persister.entity.mutation;
 
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.sql.model.MutationOperationGroup;
 
 /**
  * Coordinates the deleting of an entity.
  *
- * @see #coordinateDelete
- *
  * @author Steve Ebersole
+ * @see #delete
  */
-public interface DeleteCoordinator {
+public interface DeleteCoordinator extends MutationCoordinator {
 	/**
-	 * The operation group used to perform the deletion unless some form
-	 * of dynamic delete is necessary
+	 * Delete a persistent instance.
 	 */
-	MutationOperationGroup getStaticDeleteGroup();
-
-	/**
-	 * Perform the deletions
-	 */
-	void coordinateDelete(
-			Object entity,
-			Object id,
-			Object version,
-			SharedSessionContractImplementor session);
+	void delete(Object entity, Object id, Object version, SharedSessionContractImplementor session);
 }

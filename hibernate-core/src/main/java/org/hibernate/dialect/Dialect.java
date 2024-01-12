@@ -4042,13 +4042,39 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *         {@code false} if {@code InsertReturningDelegate} does not work, or only
 	 *         works for specialized identity/"autoincrement" columns
 	 *
-	 * @see org.hibernate.generator.OnExecutionGenerator#getGeneratedIdentifierDelegate
 	 * @see org.hibernate.id.insert.InsertReturningDelegate
 	 *
 	 * @since 6.2
 	 */
 	public boolean supportsInsertReturning() {
 		return false;
+	}
+
+	/**
+	 * Does this dialect supports returning the {@link org.hibernate.annotations.RowId} column
+	 * after execution of an {@code insert} statement, using native SQL syntax?
+	 *
+	 * @return {@code true} is the dialect supports returning the rowid column
+	 *
+	 * @see #supportsInsertReturning()
+	 * @since 6.5
+	 */
+	public boolean supportsInsertReturningRowId() {
+		return supportsInsertReturning();
+	}
+
+	/**
+	 * Does this dialect fully support returning arbitrary generated column values
+	 * after execution of an {@code update} statement, using native SQL syntax?
+	 * <p>
+	 * Defaults to the value of {@link #supportsInsertReturning()} but can be overridden
+	 * to explicitly disable this for updates.
+	 *
+	 * @see #supportsInsertReturning()
+	 * @since 6.5
+	 */
+	public boolean supportsUpdateReturning() {
+		return supportsInsertReturning();
 	}
 
 	/**
@@ -4072,6 +4098,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	public boolean supportsInsertReturningGeneratedKeys() {
 		return false;
 	}
+
+	/**
+	 * Does this dialect require unquoting identifiers when passing them to the
+	 * {@link Connection#prepareStatement(String, String[])} JDBC method.
+	 *
+	 * @see Dialect#supportsInsertReturningGeneratedKeys()
+	 */
+	public boolean unquoteGetGeneratedKeys() {
+		return false;
+	}
+
 	/**
 	 * Does this dialect support the given {@code FETCH} clause type.
 	 *
@@ -4360,6 +4397,17 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	}
 
 	/**
+	 * Does this dialect support the {@code conflict} clause for insert statements
+	 * that appear in a CTE?
+	 *
+	 * @return {@code true} if {@code conflict} clause is supported
+	 * @since 6.5
+	 */
+	public boolean supportsConflictClauseForInsertCTE() {
+		return false;
+	}
+
+	/**
 	 * Does this dialect support {@code values} lists of form
 	 * {@code VALUES (1), (2), (3)}?
 	 *
@@ -4378,6 +4426,16 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 */
 	public boolean supportsValuesListForInsert() {
 		return true;
+	}
+
+	/**
+	 * Does this dialect support the {@code from} clause for update statements?
+	 *
+	 * @return {@code true} if {@code from} clause is supported
+	 * @since 6.5
+	 */
+	public boolean supportsFromClauseInUpdate() {
+		return false;
 	}
 
 	/**

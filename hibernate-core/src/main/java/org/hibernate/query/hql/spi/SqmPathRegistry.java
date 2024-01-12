@@ -37,6 +37,13 @@ public interface SqmPathRegistry {
 	void register(SqmPath<?> sqmPath);
 
 	/**
+	 * Register an SqmFrom by alias only.
+	 * Effectively, this makes the from node only resolvable via the alias,
+	 * which means that the from node is ignored in {@link #findFromExposing(String)}.
+	 */
+	void registerByAliasOnly(SqmFrom<?, ?> sqmFrom);
+
+	/**
 	 * Used with {@linkplain JpaCompliance#isJpaQueryComplianceEnabled() JPA compliance}
 	 * to treat secondary query roots as cross-joins.  Here we will replace the {@code sqmRoot}
 	 * with the {@code sqmJoin}

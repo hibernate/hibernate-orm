@@ -678,4 +678,10 @@ abstract public class DialectFeatureChecks {
 			return dialect.getPreferredSqlTypeCodeForArray() != SqlTypes.VARBINARY;
 		}
 	}
+
+	public static class SupportsUpsertOrMerge implements DialectFeatureCheck {
+		public boolean apply(Dialect dialect) {
+			return !( dialect instanceof DerbyDialect );
+		}
+	}
 }

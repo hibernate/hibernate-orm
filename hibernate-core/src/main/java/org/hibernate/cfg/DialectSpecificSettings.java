@@ -57,4 +57,12 @@ public interface DialectSpecificSettings {
 	 */
 	public static final String COCKROACH_VERSION_STRING = "hibernate.dialect.cockroach.version_string";
 
+	/**
+	 * Specifies the LOB prefetch size. LOBs larger than this value will be read into memory as the HANA JDBC driver closes
+	 * the LOB when the result set is closed.
+	 *
+	 * @settingDefault {@code 1024}
+	 */
+	public static final String HANA_MAX_LOB_PREFETCH_SIZE = "hibernate.dialect.hana.max_lob_prefetch_size";
+
 }

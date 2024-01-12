@@ -3,6 +3,7 @@
 :root-project-dir: ../../../../../../..
 :core-project-dir: {root-project-dir}/hibernate-core
 :example-dir-event: {core-project-dir}/src/test/java/org/hibernate/orm/test/events
+:example-dir-event-resources: {core-project-dir}/src/test/resources/org/hibernate/orm/test/events
 :extrasdir: extras
 
 It is useful for the application to react to certain events that occur inside Hibernate.
@@ -179,7 +180,7 @@ include::{example-dir-event}/DefaultEntityListener.java[tags=events-default-list
 
 [source, XML, indent=0]
 ----
-include::{example-dir-event}/DefaultEntityListener-orm.xml[tags=events-default-listener-mapping-example]
+include::{example-dir-event-resources}/DefaultEntityListener-orm.xml[tags=events-default-listener-mapping-example]
 ----
 ====
 

@@ -6,18 +6,12 @@
  */
 package org.hibernate.sql.ast.tree.update;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.sql.ast.SqlAstWalker;
-import org.hibernate.sql.ast.spi.SqlAstTreeHelper;
-import org.hibernate.sql.ast.tree.AbstractMutationStatement;
 import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.cte.CteContainer;
-import org.hibernate.sql.ast.tree.cte.CteStatement;
 import org.hibernate.sql.ast.tree.expression.ColumnReference;
 import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
@@ -74,50 +68,6 @@ public class UpdateStatement extends AbstractUpdateOrDeleteStatement {
 
 	public List<Assignment> getAssignments() {
 		return assignments;
-	}
-
-	public static class UpdateStatementBuilder {
-		private final NamedTableReference targetTableRef;
-		private List<Assignment> assignments;
-		private Predicate restriction;
-
-		public UpdateStatementBuilder(NamedTableReference targetTableRef) {
-			this.targetTableRef = targetTableRef;
-		}
-
-		public UpdateStatementBuilder addAssignment(Assignment assignment) {
-			if ( assignments == null ) {
-				assignments = new ArrayList<>();
-			}
-			assignments.add( assignment );
-
-			return this;
-		}
-
-		public UpdateStatementBuilder addRestriction(Predicate restriction) {
-			this.restriction = SqlAstTreeHelper.combinePredicates( this.restriction, restriction );
-			return this;
-		}
-
-		public UpdateStatementBuilder setRestriction(Predicate restriction) {
-			this.restriction = restriction;
-			return this;
-		}
-
-//		public SqlAstUpdateDescriptor createUpdateDescriptor() {
-//			return new SqlAstUpdateDescriptorImpl(
-//					createUpdateAst(),
-//					Collections.singleton( targetTableRef.getTable().getTableExpression() )
-//			);
-//		}
-
-		public UpdateStatement createUpdateAst() {
-			if ( assignments == null || assignments.isEmpty() ) {
-				return null;
-			}
-
-			return new UpdateStatement( targetTableRef, new FromClause(), assignments, restriction );
-		}
 	}
 
 	@Override

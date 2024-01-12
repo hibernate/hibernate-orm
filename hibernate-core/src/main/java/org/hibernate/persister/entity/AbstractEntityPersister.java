@@ -104,6 +104,9 @@ import org.hibernate.generator.EventType;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
 import org.hibernate.generator.internal.VersionGeneration;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.internal.GeneratedValuesHelper;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.graph.spi.RootGraphImplementor;
 import org.hibernate.id.Assigned;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
@@ -112,7 +115,6 @@ import org.hibernate.id.IdentifierGenerator;
 import org.hibernate.id.OptimizableGenerator;
 import org.hibernate.id.PostInsertIdentityPersister;
 import org.hibernate.id.enhanced.Optimizer;
-import org.hibernate.id.insert.InsertGeneratedIdentifierDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.FilterAliasGenerator;
@@ -162,7 +164,6 @@ import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMappingsList;
 import org.hibernate.metamodel.mapping.AttributeMappingsMap;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatedAssociationModelPart;
 import org.hibernate.metamodel.mapping.DiscriminatorConverter;
 import org.hibernate.metamodel.mapping.DiscriminatorType;
@@ -215,6 +216,7 @@ import org.hibernate.persister.entity.mutation.DeleteCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 import org.hibernate.persister.entity.mutation.EntityTableMapping;
 import org.hibernate.persister.entity.mutation.InsertCoordinator;
+import org.hibernate.persister.entity.mutation.InsertCoordinatorStandard;
 import org.hibernate.persister.entity.mutation.MergeCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinator;
 import org.hibernate.persister.entity.mutation.UpdateCoordinatorNoOp;
@@ -316,6 +318,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toObjectArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toTypeArray;
+import static org.hibernate.internal.util.collections.CollectionHelper.combine;
 import static org.hibernate.internal.util.collections.CollectionHelper.isNotEmpty;
 import static org.hibernate.internal.util.collections.CollectionHelper.setOfSize;
 import static org.hibernate.internal.util.collections.CollectionHelper.toSmallList;
@@ -426,10 +429,13 @@ public abstract class AbstractEntityPersister
 	private final FilterHelper filterHelper;
 	private volatile Set<String> affectingFetchProfileNames;
 
+	protected List<? extends ModelPart> insertGeneratedProperties;
+	protected List<? extends ModelPart> updateGeneratedProperties;
 	private GeneratedValuesProcessor insertGeneratedValuesProcessor;
 	private GeneratedValuesProcessor updateGeneratedValuesProcessor;
 
-	private InsertGeneratedIdentifierDelegate identityDelegate;
+	private GeneratedValuesMutationDelegate insertDelegate;
+	private GeneratedValuesMutationDelegate updateDelegate;
 	private String identitySelectString;
 
 	private boolean[] tableHasColumns;
@@ -1045,22 +1051,22 @@ public abstract class AbstractEntityPersister
 		return lazyLoadPlanByFetchGroup.get( fetchGroup );
 	}
 
-	@Internal
+	@Override
 	public InsertCoordinator getInsertCoordinator() {
 		return insertCoordinator;
 	}
 
-	@Internal
+	@Override
 	public UpdateCoordinator getUpdateCoordinator() {
 		return updateCoordinator;
 	}
 
-	@Internal
+	@Override
 	public DeleteCoordinator getDeleteCoordinator() {
 		return deleteCoordinator;
 	}
 
-	@Internal
+	@Override
 	public UpdateCoordinator getMergeCoordinator() {
 		return mergeCoordinator;
 	}
@@ -1901,7 +1907,7 @@ public abstract class AbstractEntityPersister
 			// Ignore plural attributes
 			if ( !( fetchable instanceof PluralAttributeMapping ) ) {
 				final FetchTiming fetchTiming = fetchable.getMappedFetchOptions().getTiming();
-				if ( fetchable instanceof BasicValuedModelPart ) {
+				if ( fetchable.asBasicValuedModelPart() != null ) {
 					// Ignore lazy basic columns
 					if ( fetchTiming == FetchTiming.DELAYED ) {
 						continue;
@@ -2008,8 +2014,10 @@ public abstract class AbstractEntityPersister
 		return select.addRestriction( rootTableKeyColumnNames ).toStatementString();
 	}
 
-	private GeneratedValuesProcessor createGeneratedValuesProcessor(EventType timing) {
-		return new GeneratedValuesProcessor( this, timing, getFactory() );
+	private GeneratedValuesProcessor createGeneratedValuesProcessor(
+			EventType timing,
+			List<AttributeMapping> generatedAttributes) {
+		return new GeneratedValuesProcessor( this, generatedAttributes, timing, getFactory() );
 	}
 
 	@Override
@@ -2088,7 +2096,9 @@ public abstract class AbstractEntityPersister
 		final Object nextVersion = getVersionJavaType().next(
 				currentVersion,
 				versionMapping.getLength(),
-				versionMapping.getPrecision(),
+				versionMapping.getTemporalPrecision() != null
+						? versionMapping.getTemporalPrecision()
+						: versionMapping.getPrecision(),
 				versionMapping.getScale(),
 				session
 		);
@@ -2793,58 +2803,15 @@ public abstract class AbstractEntityPersister
 		return select.toStatementString();
 	}
 
-	/**
-	 * Update an object
-	 */
 	@Override
-	public void update(
-			final Object id,
-			final Object[] values,
-			int[] dirtyAttributeIndexes,
-			final boolean hasDirtyCollection,
-			final Object[] oldValues,
-			final Object oldVersion,
-			final Object object,
-			final Object rowId,
-			final SharedSessionContractImplementor session) throws HibernateException {
-		updateCoordinator.coordinateUpdate(
-				object,
-				id,
-				rowId,
-				values,
-				oldVersion,
-				oldValues,
-				dirtyAttributeIndexes,
-				hasDirtyCollection,
-				session
-		);
-	}
-
-	/**
-	 * Merge an object
-	 */
-	@Override
-	public void merge(
-			final Object id,
-			final Object[] values,
-			int[] dirtyAttributeIndexes,
-			final boolean hasDirtyCollection,
-			final Object[] oldValues,
-			final Object oldVersion,
-			final Object object,
-			final Object rowId,
-			final SharedSessionContractImplementor session) throws HibernateException {
-		mergeCoordinator.coordinateUpdate(
-				object,
-				id,
-				rowId,
-				values,
-				oldVersion,
-				oldValues,
-				dirtyAttributeIndexes,
-				hasDirtyCollection,
-				session
-		);
+	public String getSelectByUniqueKeyString(String[] propertyNames, String[] columnNames) {
+		final SimpleSelect select = new SimpleSelect( getFactory() )
+				.setTableName( getTableName( 0 ) )
+				.addColumns( columnNames );
+		for ( final String propertyName : propertyNames ) {
+			select.addRestriction( getPropertyColumnNames( propertyName ) );
+		}
+		return select.toStatementString();
 	}
 
 	@Internal
@@ -2859,18 +2826,13 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
-	public InsertGeneratedIdentifierDelegate getIdentityInsertDelegate() {
-		return identityDelegate;
+	public GeneratedValuesMutationDelegate getInsertDelegate() {
+		return insertDelegate;
 	}
 
 	@Override
-	public Object insert(Object[] fields, Object object, SharedSessionContractImplementor session) {
-		return insertCoordinator.coordinateInsert( null, fields, object, session );
-	}
-
-	@Override
-	public void insert(Object id, Object[] fields, Object object, SharedSessionContractImplementor session) {
-		insertCoordinator.coordinateInsert( id, fields, object, session );
+	public GeneratedValuesMutationDelegate getUpdateDelegate() {
+		return updateDelegate;
 	}
 
 	protected EntityTableMapping[] getTableMappings() {
@@ -2976,7 +2938,7 @@ public abstract class AbstractEntityPersister
 	 */
 	@Override
 	public void delete(Object id, Object version, Object object, SharedSessionContractImplementor session) {
-		deleteCoordinator.coordinateDelete( object, id, version, session );
+		deleteCoordinator.delete( object, id, version, session );
 	}
 
 	/**
@@ -2998,7 +2960,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			{
-				final MutationOperationGroup staticInsertGroup = insertCoordinator.getStaticInsertGroup();
+				final MutationOperationGroup staticInsertGroup = insertCoordinator.getStaticMutationOperationGroup();
 				if ( staticInsertGroup != null ) {
 					for ( int i = 0; i < staticInsertGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticInsertGroup.getOperation( i );
@@ -3010,7 +2972,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			{
-				final MutationOperationGroup staticUpdateGroup = updateCoordinator.getStaticUpdateGroup();
+				final MutationOperationGroup staticUpdateGroup = updateCoordinator.getStaticMutationOperationGroup();
 				if ( staticUpdateGroup != null ) {
 					for ( int i = 0; i < staticUpdateGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticUpdateGroup.getOperation( i );
@@ -3022,7 +2984,7 @@ public abstract class AbstractEntityPersister
 			}
 
 			{
-				final MutationOperationGroup staticDeleteGroup = deleteCoordinator.getStaticDeleteGroup();
+				final MutationOperationGroup staticDeleteGroup = deleteCoordinator.getStaticMutationOperationGroup();
 				if ( staticDeleteGroup != null ) {
 					for ( int i = 0; i < staticDeleteGroup.getNumberOfOperations(); i++ ) {
 						final MutationOperation mutation = staticDeleteGroup.getOperation( i );
@@ -3037,7 +2999,7 @@ public abstract class AbstractEntityPersister
 
 	public abstract Map<Object, String> getSubclassByDiscriminatorValue();
 
-	protected abstract boolean needsDiscriminator();
+	public abstract boolean needsDiscriminator();
 
 	protected boolean isDiscriminatorFormula() {
 		return false;
@@ -3117,6 +3079,10 @@ public abstract class AbstractEntityPersister
 						creationState.getSqlExpressionResolver()
 				);
 				additionalPredicateCollectorAccess.get().accept( softDeletePredicate );
+				if ( tableReference != rootTableReference && creationState.supportsEntityNameUsage() ) {
+					// Register entity name usage for the hierarchy root table to avoid pruning
+					creationState.registerEntityNameUsage( tableGroup, EntityNameUse.EXPRESSION, getRootEntityName() );
+				}
 			}
 		}
 
@@ -3130,7 +3096,25 @@ public abstract class AbstractEntityPersister
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
 		if ( needsDiscriminator() ) {
-			pruneForSubclasses( tableGroup, Collections.singletonMap( getEntityName(), EntityNameUse.TREAT ) );
+			assert !creationState.supportsEntityNameUsage() : "Entity name usage should have been used instead";
+			final Map<String, EntityNameUse> entityNameUseMap;
+			final Collection<EntityMappingType> subMappingTypes = getSubMappingTypes();
+			if ( subMappingTypes.isEmpty() ) {
+				entityNameUseMap = Collections.singletonMap( getEntityName(), EntityNameUse.TREAT );
+			}
+			else {
+				entityNameUseMap = new HashMap<>( 1 + subMappingTypes.size() );
+				entityNameUseMap.put( getEntityName(), EntityNameUse.TREAT );
+				// We need to register TREAT uses for all subtypes when pruning
+				for ( EntityMappingType subMappingType : subMappingTypes ) {
+					entityNameUseMap.put( subMappingType.getEntityName(), EntityNameUse.TREAT );
+				}
+				if ( isInherited() ) {
+					// Make sure the table group includes the root table when needed for TREAT
+					tableGroup.resolveTableReference( getRootTableName() );
+				}
+			}
+			pruneForSubclasses( tableGroup, entityNameUseMap );
 		}
 	}
 
@@ -3402,13 +3386,36 @@ public abstract class AbstractEntityPersister
 	}
 
 	private void doLateInit() {
+		tableMappings = buildTableMappings();
+
+		final List<AttributeMapping> insertGeneratedAttributes = hasInsertGeneratedProperties() ?
+				GeneratedValuesProcessor.getGeneratedAttributes( this, INSERT )
+				: Collections.emptyList();
+		final List<AttributeMapping> updateGeneratedAttributes = hasUpdateGeneratedProperties() ?
+				GeneratedValuesProcessor.getGeneratedAttributes( this, UPDATE )
+				: Collections.emptyList();
+
+		insertGeneratedProperties = initInsertGeneratedProperties( insertGeneratedAttributes );
+		updateGeneratedProperties = initUpdateGeneratedProperties( updateGeneratedAttributes );
+
 		if ( isIdentifierAssignedByInsert() ) {
 			final OnExecutionGenerator generator = (OnExecutionGenerator) getGenerator();
-			identityDelegate = generator.getGeneratedIdentifierDelegate( this );
+			insertDelegate = generator.getGeneratedIdentifierDelegate( this );
 			identitySelectString = getIdentitySelectString( factory.getJdbcServices().getDialect() );
 		}
+		else {
+			insertDelegate = GeneratedValuesHelper.getGeneratedValuesDelegate( this, INSERT );
+		}
 
-		tableMappings = buildTableMappings();
+		updateDelegate = GeneratedValuesHelper.getGeneratedValuesDelegate( this, UPDATE );
+
+		if ( hasInsertGeneratedProperties() ) {
+			insertGeneratedValuesProcessor = createGeneratedValuesProcessor( INSERT, insertGeneratedAttributes );
+		}
+		if ( hasUpdateGeneratedProperties() ) {
+			updateGeneratedValuesProcessor = createGeneratedValuesProcessor( UPDATE, updateGeneratedAttributes );
+		}
+
 		insertCoordinator = buildInsertCoordinator();
 		updateCoordinator = buildUpdateCoordinator();
 		deleteCoordinator = buildDeleteCoordinator();
@@ -3624,7 +3631,7 @@ public abstract class AbstractEntityPersister
 	protected abstract boolean isIdentifierTable(String tableExpression);
 
 	protected InsertCoordinator buildInsertCoordinator() {
-		return new InsertCoordinator( this, factory );
+		return new InsertCoordinatorStandard( this, factory );
 	}
 
 	protected UpdateCoordinator buildUpdateCoordinator() {
@@ -4664,11 +4671,39 @@ public abstract class AbstractEntityPersister
 			Object id,
 			Object entity,
 			Object[] state,
+			GeneratedValues generatedValues,
 			SharedSessionContractImplementor session) {
 		if ( insertGeneratedValuesProcessor == null ) {
 			throw new UnsupportedOperationException( "Entity has no insert-generated properties - `" + getEntityName() + "`" );
 		}
-		insertGeneratedValuesProcessor.processGeneratedValues( entity, id, state, session );
+		insertGeneratedValuesProcessor.processGeneratedValues( entity, id, state, generatedValues, session );
+	}
+
+	protected List<? extends ModelPart> initInsertGeneratedProperties(List<AttributeMapping> generatedAttributes) {
+		final int originalSize = generatedAttributes.size();
+		final List<ModelPart> generatedBasicAttributes = new ArrayList<>( originalSize );
+		for ( AttributeMapping generatedAttribute : generatedAttributes ) {
+			// todo (7.0) : support non selectable mappings? Component, ToOneAttributeMapping, ...
+			if ( generatedAttribute.asBasicValuedModelPart() != null
+					&& generatedAttribute.getContainingTableExpression().equals( getSubclassTableName( 0 ) ) ) {
+				generatedBasicAttributes.add( generatedAttribute );
+			}
+		}
+
+		final List<ModelPart> identifierList = isIdentifierAssignedByInsert() ?
+				List.of( getIdentifierMapping() ) :
+				Collections.emptyList();
+		if ( originalSize > 0 && generatedBasicAttributes.size() == originalSize ) {
+			return Collections.unmodifiableList( combine( identifierList, generatedBasicAttributes ) );
+		}
+		else  {
+			return identifierList;
+		}
+	}
+
+	@Override
+	public List<? extends ModelPart> getInsertGeneratedProperties() {
+		return insertGeneratedProperties;
 	}
 
 	@Override
@@ -4676,11 +4711,35 @@ public abstract class AbstractEntityPersister
 			Object id,
 			Object entity,
 			Object[] state,
+			GeneratedValues generatedValues,
 			SharedSessionContractImplementor session) {
 		if ( updateGeneratedValuesProcessor == null ) {
 			throw new AssertionFailure( "Entity has no update-generated properties - `" + getEntityName() + "`" );
 		}
-		updateGeneratedValuesProcessor.processGeneratedValues( entity, id, state, session );
+		updateGeneratedValuesProcessor.processGeneratedValues( entity, id, state, generatedValues, session );
+	}
+
+	protected List<? extends ModelPart> initUpdateGeneratedProperties(List<AttributeMapping> generatedAttributes) {
+		final int originalSize = generatedAttributes.size();
+		final List<ModelPart> generatedBasicAttributes = new ArrayList<>( originalSize );
+		for ( AttributeMapping generatedAttribute : generatedAttributes ) {
+			if ( generatedAttribute instanceof SelectableMapping
+					&& ( (SelectableMapping) generatedAttribute ).getContainingTableExpression().equals( getSubclassTableName( 0 ) ) ) {
+				generatedBasicAttributes.add( generatedAttribute );
+			}
+		}
+
+		if ( generatedBasicAttributes.size() == originalSize ) {
+			return Collections.unmodifiableList( generatedBasicAttributes );
+		}
+		else  {
+			return Collections.emptyList();
+		}
+	}
+
+	@Override
+	public List<? extends ModelPart> getUpdateGeneratedProperties() {
+		return updateGeneratedProperties;
 	}
 
 	@Override
@@ -4996,12 +5055,6 @@ public abstract class AbstractEntityPersister
 					visitSubTypeAttributeMappings( builder::add );
 					assert superMappingType != null || builder.assertFetchableIndexes();
 					staticFetchableList = builder.build();
-					if ( hasInsertGeneratedProperties() ) {
-						insertGeneratedValuesProcessor = createGeneratedValuesProcessor( INSERT );
-					}
-					if ( hasUpdateGeneratedProperties() ) {
-						updateGeneratedValuesProcessor = createGeneratedValuesProcessor( UPDATE );
-					}
 					return true;
 				}
 		);
@@ -5506,6 +5559,7 @@ public abstract class AbstractEntityPersister
 				column.getLength(),
 				column.getPrecision(),
 				column.getScale(),
+				column.getTemporalPrecision(),
 				basicTypeResolution.getLegacyResolvedBasicType(),
 				entityPersister,
 				creationProcess
@@ -5551,6 +5605,7 @@ public abstract class AbstractEntityPersister
 					column.getLength(),
 					column.getPrecision(),
 					column.getScale(),
+					column.getTemporalPrecision(),
 					column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() ),
 					column.isNullable(),
 					value.isColumnInsertable( 0 ),
@@ -5570,6 +5625,7 @@ public abstract class AbstractEntityPersister
 			final Long length;
 			final Integer precision;
 			final Integer scale;
+			final Integer temporalPrecision;
 			final boolean isLob;
 			final boolean nullable;
 
@@ -5582,6 +5638,7 @@ public abstract class AbstractEntityPersister
 				columnDefinition = column.getSqlType();
 				length = column.getLength();
 				precision = column.getPrecision();
+				temporalPrecision = column.getTemporalPrecision();
 				scale = column.getScale();
 				isLob = column.isSqlTypeLob( creationProcess.getCreationContext().getMetadata() );
 				nullable = column.isNullable();
@@ -5609,6 +5666,7 @@ public abstract class AbstractEntityPersister
 					columnDefinition = column.getSqlType();
 					length = column.getLength();
 					precision = column.getPrecision();
+					temporalPrecision = column.getTemporalPrecision();
 					scale = column.getScale();
 					nullable = column.isNullable();
 					isLob = column.isSqlTypeLob( creationContext.getMetadata() );
@@ -5622,6 +5680,7 @@ public abstract class AbstractEntityPersister
 					columnDefinition = null;
 					length = null;
 					precision = null;
+					temporalPrecision = null;
 					scale = null;
 					nullable = true;
 					isLob = false;
@@ -5646,6 +5705,7 @@ public abstract class AbstractEntityPersister
 					length,
 					precision,
 					scale,
+					temporalPrecision,
 					isLob,
 					nullable,
 					value.isColumnInsertable( 0 ),
@@ -6308,7 +6368,7 @@ public abstract class AbstractEntityPersister
 	@Deprecated(forRemoval = true)
 	@Remove
 	public String[] getSQLDeleteStrings() {
-		return extractSqlStrings( deleteCoordinator.getStaticDeleteGroup() );
+		return extractSqlStrings( deleteCoordinator.getStaticMutationOperationGroup() );
 	}
 
 	private String[] extractSqlStrings(MutationOperationGroup operationGroup) {
@@ -6330,7 +6390,7 @@ public abstract class AbstractEntityPersister
 	@Deprecated(forRemoval = true)
 	@Remove
 	public String[] getSQLUpdateStrings() {
-		return extractSqlStrings( updateCoordinator.getStaticUpdateGroup() );
+		return extractSqlStrings( updateCoordinator.getStaticMutationOperationGroup() );
 	}
 
 	/**

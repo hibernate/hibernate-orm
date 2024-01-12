@@ -6,6 +6,7 @@
  */
 package org.hibernate.sql.model;
 
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.persister.entity.mutation.EntityMutationTarget;
 
 public interface EntityMutationOperationGroup extends MutationOperationGroup {
@@ -22,4 +23,7 @@ public interface EntityMutationOperationGroup extends MutationOperationGroup {
 		return this;
 	}
 
+	default GeneratedValuesMutationDelegate getMutationDelegate() {
+		return getMutationTarget().getMutationDelegate( getMutationType() );
+	}
 }

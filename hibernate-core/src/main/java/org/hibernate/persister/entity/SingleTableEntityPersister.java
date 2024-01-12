@@ -548,7 +548,7 @@ public class SingleTableEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected boolean needsDiscriminator() {
+	public boolean needsDiscriminator() {
 		return forceDiscriminator || isInherited();
 	}
 

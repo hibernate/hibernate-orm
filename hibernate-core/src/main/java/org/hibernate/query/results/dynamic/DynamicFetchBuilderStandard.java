@@ -83,7 +83,8 @@ public class DynamicFetchBuilderStandard
 		final Fetchable attributeMapping = (Fetchable) parent.getReferencedMappingContainer().findSubPart( fetchableName, null );
 		final SqlExpressionResolver sqlExpressionResolver = domainResultCreationState.getSqlAstCreationState().getSqlExpressionResolver();
 
-		if ( attributeMapping instanceof BasicValuedModelPart ) {
+		final BasicValuedModelPart basicPart = attributeMapping.asBasicValuedModelPart();
+		if ( basicPart != null ) {
 			attributeMapping.forEachSelectable(
 					getSelectableConsumer(
 							fetchPath,
@@ -92,7 +93,7 @@ public class DynamicFetchBuilderStandard
 							creationStateImpl,
 							ownerTableGroup,
 							sqlExpressionResolver,
-							(BasicValuedModelPart) attributeMapping
+							basicPart
 					)
 			);
 			return parent.generateFetchableFetch(

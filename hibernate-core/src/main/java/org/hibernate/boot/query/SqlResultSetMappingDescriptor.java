@@ -347,14 +347,9 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 
 			final ModelPart subPart = entityMapping.findSubPart( propertyPath, null );
 
-			//noinspection StatementWithEmptyBody
-			if ( subPart == null ) {
-				// throw an exception
-			}
-
-			if ( subPart instanceof BasicValuedModelPart ) {
+			final BasicValuedModelPart basicPart = subPart != null ? subPart.asBasicValuedModelPart() : null;
+			if ( basicPart != null ) {
 				assert columnNames.size() == 1;
-				final BasicValuedModelPart basicPart = (BasicValuedModelPart) subPart;
 
 				return new ModelPartResultMementoBasicImpl( path, basicPart, columnNames.get( 0 ) );
 			}
@@ -405,10 +400,9 @@ public class SqlResultSetMappingDescriptor implements NamedResultSetMappingDescr
 		}
 
 		private FetchMemento getFetchMemento(NavigablePath navigablePath, ModelPart subPart) {
-			if ( subPart instanceof BasicValuedModelPart ) {
+			final BasicValuedModelPart basicPart = subPart.asBasicValuedModelPart();
+			if ( basicPart != null ) {
 				assert columnNames.size() == 1;
-				final BasicValuedModelPart basicPart = (BasicValuedModelPart) subPart;
-
 				return new FetchMementoBasicStandard( navigablePath, basicPart, columnNames.get( 0 ) );
 			}
 			else if ( subPart instanceof EntityValuedFetchable ) {

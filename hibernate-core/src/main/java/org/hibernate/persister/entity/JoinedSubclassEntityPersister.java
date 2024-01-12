@@ -43,7 +43,6 @@ import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityVersionMapping;
-import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.TableDetails;
 import org.hibernate.metamodel.mapping.internal.BasicEntityIdentifierMappingImpl;
 import org.hibernate.metamodel.mapping.internal.CaseStatementDiscriminatorMappingImpl;
@@ -75,7 +74,6 @@ import org.hibernate.type.spi.TypeConfiguration;
 import org.jboss.logging.Logger;
 
 import static java.util.Collections.emptyMap;
-import static org.hibernate.internal.util.collections.ArrayHelper.indexOf;
 import static org.hibernate.internal.util.collections.ArrayHelper.to2DStringArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toIntArray;
 import static org.hibernate.internal.util.collections.ArrayHelper.toStringArray;
@@ -744,7 +742,7 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	protected boolean needsDiscriminator() {
+	public boolean needsDiscriminator() {
 		return forceDiscriminator;
 	}
 
@@ -1325,15 +1323,17 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				final String[] subclassTableNames = persister.getSubclassTableNames();
 				// Build the intersection of all tables names that are of the class or super class
 				// These are the tables that can be safely inner joined
-				if ( tablesToInnerJoin.isEmpty() ) {
-					for ( int i = 0; i < subclassTableNames.length; i++ ) {
-						if ( persister.isClassOrSuperclassTable[i] ) {
-							tablesToInnerJoin.add( subclassTableNames[i] );
-						}
+				final Set<String> classOrSuperclassTables = new HashSet<>( subclassTableNames.length );
+				for ( int i = 0; i < subclassTableNames.length; i++ ) {
+					if ( persister.isClassOrSuperclassTable[i] ) {
+						classOrSuperclassTables.add( subclassTableNames[i] );
 					}
 				}
+				if ( tablesToInnerJoin.isEmpty() ) {
+					tablesToInnerJoin.addAll( classOrSuperclassTables );
+				}
 				else {
-					tablesToInnerJoin.retainAll( Arrays.asList( subclassTableNames ) );
+					tablesToInnerJoin.retainAll( classOrSuperclassTables );
 				}
 				if ( useKind == EntityNameUse.UseKind.FILTER && explicitDiscriminatorColumnName == null ) {
 					// If there is no discriminator column,

@@ -8,14 +8,15 @@ package org.hibernate.query.sqm.mutation.internal.cte;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 import org.hibernate.boot.model.naming.Identifier;
 import org.hibernate.dialect.Dialect;
-import org.hibernate.dialect.temptable.TemporaryTable;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.id.BulkInsertionCapableIdentifierGenerator;
@@ -37,6 +38,7 @@ import org.hibernate.query.results.TableGroupImpl;
 import org.hibernate.query.spi.DomainQueryExecutionContext;
 import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.SetOperator;
 import org.hibernate.query.sqm.internal.DomainParameterXref;
 import org.hibernate.query.sqm.internal.SqmJdbcExecutionContextAdapter;
 import org.hibernate.query.sqm.internal.SqmUtil;
@@ -46,9 +48,11 @@ import org.hibernate.query.sqm.mutation.internal.SqmInsertStrategyHelper;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
 import org.hibernate.query.sqm.sql.BaseSqmToSqlAstConverter;
 import org.hibernate.query.sqm.sql.internal.SqmPathInterpretation;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.expression.SqmStar;
+import org.hibernate.query.sqm.tree.insert.SqmConflictClause;
 import org.hibernate.query.sqm.tree.insert.SqmInsertSelectStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertStatement;
 import org.hibernate.query.sqm.tree.insert.SqmInsertValuesStatement;
@@ -70,21 +74,32 @@ import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.expression.QueryLiteral;
 import org.hibernate.sql.ast.tree.expression.SelfRenderingSqlFragmentExpression;
+import org.hibernate.sql.ast.tree.expression.SqlTuple;
+import org.hibernate.sql.ast.tree.expression.Star;
+import org.hibernate.sql.ast.tree.from.DerivedTableReference;
+import org.hibernate.sql.ast.tree.from.FromClause;
 import org.hibernate.sql.ast.tree.from.NamedTableReference;
+import org.hibernate.sql.ast.tree.from.QueryPartTableGroup;
+import org.hibernate.sql.ast.tree.from.StandardTableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.ast.tree.from.TableGroupJoin;
 import org.hibernate.sql.ast.tree.from.TableReference;
 import org.hibernate.sql.ast.tree.from.TableReferenceJoin;
 import org.hibernate.sql.ast.tree.from.UnionTableReference;
 import org.hibernate.sql.ast.tree.from.ValuesTableGroup;
+import org.hibernate.sql.ast.tree.insert.ConflictClause;
 import org.hibernate.sql.ast.tree.insert.InsertSelectStatement;
 import org.hibernate.sql.ast.tree.insert.Values;
 import org.hibernate.sql.ast.tree.predicate.ComparisonPredicate;
+import org.hibernate.sql.ast.tree.predicate.ExistsPredicate;
+import org.hibernate.sql.ast.tree.predicate.Predicate;
+import org.hibernate.sql.ast.tree.select.QueryGroup;
 import org.hibernate.sql.ast.tree.select.QueryPart;
 import org.hibernate.sql.ast.tree.select.QuerySpec;
 import org.hibernate.sql.ast.tree.select.SelectStatement;
 import org.hibernate.sql.ast.tree.select.SortSpecification;
 import org.hibernate.sql.ast.tree.update.Assignment;
+import org.hibernate.sql.ast.tree.update.UpdateStatement;
 import org.hibernate.sql.exec.spi.JdbcOperationQuerySelect;
 import org.hibernate.sql.exec.spi.JdbcParameterBindings;
 import org.hibernate.sql.results.graph.DomainResult;
@@ -92,6 +107,7 @@ import org.hibernate.sql.results.graph.basic.BasicResult;
 import org.hibernate.sql.results.internal.SqlSelectionImpl;
 import org.hibernate.sql.results.spi.ListResultsConsumer;
 import org.hibernate.generator.Generator;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 /**
@@ -191,12 +207,6 @@ public class CteInsertHandler implements InsertHandler {
 		final int size = sqmStatement.getInsertionTargetPaths().size();
 		final List<Map.Entry<List<CteColumn>, Assignment>> targetPathColumns = new ArrayList<>( size );
 		final List<CteColumn> targetPathCteColumns = new ArrayList<>( size );
-		final NamedTableReference entityTableReference = new NamedTableReference(
-				cteTable.getTableExpression(),
-				TemporaryTable.DEFAULT_ALIAS,
-				true
-		);
-		final InsertSelectStatement insertStatement = new InsertSelectStatement( entityTableReference );
 
 		final BaseSqmToSqlAstConverter.AdditionalInsertValues additionalInsertValues = sqmConverter.visitInsertionTargetPaths(
 				(assignable, columnReferences) -> {
@@ -211,7 +221,6 @@ public class CteInsertHandler implements InsertHandler {
 					final int end = offset + pathInterpretation.getExpressionType().getJdbcTypeCount();
 					// Find a matching cte table column and set that at the current index
 					final List<CteColumn> columns = cteTable.getCteColumns().subList( offset, end );
-					insertStatement.addTargetColumnReferences( columnReferences );
 					targetPathCteColumns.addAll( columns );
 					targetPathColumns.add(
 							new AbstractMap.SimpleEntry<>(
@@ -245,17 +254,6 @@ public class CteInsertHandler implements InsertHandler {
 						if ( additionalInsertValues.applySelections( querySpec, sessionFactory ) ) {
 							final CteColumn rowNumberColumn = cteTable.getCteColumns()
 									.get( cteTable.getCteColumns().size() - 1 );
-							final ColumnReference columnReference = new ColumnReference(
-									(String) null,
-									rowNumberColumn.getColumnExpression(),
-									false,
-									null,
-									rowNumberColumn.getJdbcMapping()
-							);
-							insertStatement.getTargetColumns().set(
-									insertStatement.getTargetColumns().size() - 1,
-									columnReference
-							);
 							targetPathCteColumns.set(
 									targetPathCteColumns.size() - 1,
 									rowNumberColumn
@@ -326,14 +324,6 @@ public class CteInsertHandler implements InsertHandler {
 			// Add the row number to the assignments
 			final CteColumn rowNumberColumn = cteTable.getCteColumns()
 					.get( cteTable.getCteColumns().size() - 1 );
-			final ColumnReference columnReference = new ColumnReference(
-					(String) null,
-					rowNumberColumn.getColumnExpression(),
-					false,
-					null,
-					rowNumberColumn.getJdbcMapping()
-			);
-			insertStatement.getTargetColumns().add( columnReference );
 			targetPathCteColumns.add( rowNumberColumn );
 		}
 
@@ -743,11 +733,13 @@ public class CteInsertHandler implements InsertHandler {
 			throw new IllegalStateException( "There must be at least a single root table assignment" );
 		}
 
+		final ConflictClause conflictClause = sqmConverter.visitConflictClause( sqmStatement.getConflictClause() );
+
 		final int tableSpan = persister.getTableSpan();
 		final String[] rootKeyColumns = persister.getKeyColumns( 0 );
 		final List<CteColumn> keyCteColumns = queryCte.getCteTable().getCteColumns().subList( 0, rootKeyColumns.length );
-		for ( int i = 0; i < tableSpan; i++ ) {
-			final String tableExpression = persister.getTableName( i );
+		for ( int tableIndex = 0; tableIndex < tableSpan; tableIndex++ ) {
+			final String tableExpression = persister.getTableName( tableIndex );
 			final TableReference updatingTableReference = updatingTableGroup.getTableReference(
 					updatingTableGroup.getNavigablePath(),
 					tableExpression,
@@ -758,7 +750,7 @@ public class CteInsertHandler implements InsertHandler {
 					updatingTableReference,
 					tableExpression
 			);
-			final String[] keyColumns = persister.getKeyColumns( i );
+			final String[] keyColumns = persister.getKeyColumns( tableIndex );
 			final List<ColumnReference> returningColumnReferences = new ArrayList<>(
 					keyColumns.length + ( assignmentList == null ? 0 : assignmentList.size() )
 			);
@@ -766,7 +758,7 @@ public class CteInsertHandler implements InsertHandler {
 			final QuerySpec insertSelectSpec = new QuerySpec( true );
 			CteStatement finalCteStatement = null;
 			final CteTable dmlResultCte;
-			if ( i == 0 && !assignsId && identifierGenerator.generatedOnExecution() ) {
+			if ( tableIndex == 0 && !assignsId && identifierGenerator.generatedOnExecution() ) {
 				// Special handling for identity generation
 				final String cteTableName = getCteTableName( tableExpression, "base_" );
 				if ( statement.getCteStatement( cteTableName ) != null ) {
@@ -999,16 +991,375 @@ public class CteInsertHandler implements InsertHandler {
 				}
 			}
 			dmlStatement.setSourceSelectStatement( insertSelectSpec );
-			statement.addCteStatement( new CteStatement( dmlResultCte, dmlStatement ) );
+			if ( conflictClause != null ) {
+				if ( conflictClause.isDoNothing() && conflictClause.getConstraintColumnNames().isEmpty() ) {
+					// Conflict clauses that use a constraint name and do nothing can just use the conflict clause as it is
+					handleConflictClause( dmlResultCte, dmlStatement, queryCte, tableIndex, conflictClause, statement );
+				}
+				else {
+					final List<Assignment> compatibleAssignments = getCompatibleAssignments( dmlStatement, conflictClause );
+					if ( isIdentifierConflictClause( sqmStatement ) ) {
+						// If the identifier is used in the SqmInsert, use the key columns of the respective table
+						handleConflictClause(
+								dmlResultCte,
+								dmlStatement,
+								queryCte,
+								tableIndex,
+								new ConflictClause(
+										conflictClause.getConstraintName(),
+										Arrays.asList( keyColumns ),
+										compatibleAssignments,
+										compatibleAssignments.isEmpty() ? null : conflictClause.getPredicate()
+								),
+								statement
+						);
+					}
+					else if ( targetColumnsContainAllConstraintColumns( dmlStatement, conflictClause ) ) {
+						// Also apply the conflict clause if the insert target columns contain the constraint columns
+						handleConflictClause(
+								dmlResultCte,
+								dmlStatement,
+								queryCte,
+								tableIndex,
+								new ConflictClause(
+										conflictClause.getConstraintName(),
+										conflictClause.getConstraintColumnNames(),
+										compatibleAssignments,
+										compatibleAssignments.isEmpty() ? null : conflictClause.getPredicate()
+								),
+								statement
+						);
+					}
+					else {
+						statement.addCteStatement( new CteStatement( dmlResultCte, dmlStatement ) );
+					}
+				}
+			}
+			else {
+				statement.addCteStatement( new CteStatement( dmlResultCte, dmlStatement ) );
+			}
 			if ( finalCteStatement != null ) {
 				statement.addCteStatement( finalCteStatement );
 			}
-			if ( i == 0 && !assignsId && identifierGenerator.generatedOnExecution() ) {
+			if ( tableIndex == 0 && !assignsId && identifierGenerator.generatedOnExecution() ) {
 				// Special handling for identity generation
 				statement.addCteStatement( queryCte );
 			}
 		}
 		return getCteTableName( rootTableName );
+	}
+
+	private void handleConflictClause(
+			CteTable dmlResultCte,
+			InsertSelectStatement insertStatement,
+			CteStatement queryCte,
+			int tableIndex,
+			ConflictClause conflictClause,
+			CteContainer statement) {
+		if ( sessionFactory.getJdbcServices().getDialect().supportsConflictClauseForInsertCTE() ) {
+			insertStatement.setConflictClause( conflictClause );
+			statement.addCteStatement( new CteStatement( dmlResultCte, insertStatement ) );
+		}
+		else {
+			// Build an exists subquery clause to only insert if no row with a matching constraint column value exists i.e.
+			// insert into target (c1, c2)
+			// select e.c1, e.c2 from HTE_target e
+			// where not exists (select 1 from target excluded where e.c1=excluded.c1 and e.c2=excluded.c2)
+			final BasicType<Boolean> booleanType = sessionFactory.getNodeBuilder().getBooleanType();
+			final List<String> constraintColumnNames = conflictClause.getConstraintColumnNames();
+			final QuerySpec insertQuerySpec = (QuerySpec) insertStatement.getSourceSelectStatement();
+			final QuerySpec subquery = new QuerySpec( false, 1 );
+			// This is the table group we use in the subquery to check no row for the given constraint columns exists.
+			// We name it "excluded" because the predicates we build for this check are reused for the
+			// check in the update statement below.
+			// "excluded" is our well known name to refer to data that was not inserted
+			final TableGroup tableGroup = new StandardTableGroup(
+					false,
+					new NavigablePath( "excluded" ),
+					entityDescriptor,
+					null,
+					new NamedTableReference(
+							insertStatement.getTargetTable().getTableExpression(),
+							"excluded"
+					),
+					null,
+					sessionFactory
+			);
+			subquery.getSelectClause().addSqlSelection(
+					new SqlSelectionImpl( new QueryLiteral<>( 1, sessionFactory.getNodeBuilder().getIntegerType() ) )
+			);
+			subquery.getFromClause().addRoot( tableGroup );
+			List<String> columnsToMatch;
+			if ( constraintColumnNames.isEmpty() ) {
+				// Assume the primary key columns
+				final AbstractEntityPersister aep = (AbstractEntityPersister) entityDescriptor;
+				Predicate predicate = buildColumnMatchPredicate(
+						columnsToMatch = Arrays.asList( aep.getKeyColumns( tableIndex ) ),
+						insertStatement,
+						false,
+						true
+				);
+				if ( predicate == null ) {
+					throw new IllegalArgumentException( "Couldn't infer conflict constraint columns" );
+				}
+				subquery.applyPredicate( predicate );
+			}
+			else {
+				columnsToMatch = constraintColumnNames;
+				subquery.applyPredicate( buildColumnMatchPredicate( constraintColumnNames, insertStatement, true, true ) );
+			}
+
+			insertQuerySpec.applyPredicate( new ExistsPredicate( subquery, true, booleanType ) );
+
+			// Emulate the conflict do update clause by creating a separate update CTEs
+			if ( conflictClause.isDoUpdate() ) {
+				final TableGroup temporaryTableGroup = insertQuerySpec.getFromClause().getRoots().get( 0 );
+				final QuerySpec renamingSubquery = new QuerySpec( false, 1 );
+				final List<String> columnNames = buildCteRenaming(
+						renamingSubquery,
+						temporaryTableGroup,
+						queryCte
+				);
+				renamingSubquery.getFromClause().addRoot( temporaryTableGroup );
+				final QueryPartTableGroup excludedTableGroup = new QueryPartTableGroup(
+						new NavigablePath( "excluded" ),
+						null,
+						new SelectStatement( renamingSubquery ),
+						"excluded",
+						columnNames,
+						false,
+						false,
+						sessionFactory
+				);
+
+				final UpdateStatement updateStatement;
+				if ( sessionFactory.getJdbcServices().getDialect().supportsFromClauseInUpdate() ) {
+					final FromClause fromClause = new FromClause( 1 );
+					final TableGroup updateTableGroup = new StandardTableGroup(
+							false,
+							new NavigablePath( "updated" ),
+							entityDescriptor,
+							null,
+							insertStatement.getTargetTable(),
+							null,
+							sessionFactory
+					);
+					fromClause.addRoot( updateTableGroup );
+					updateStatement = new UpdateStatement(
+							insertStatement.getTargetTable(),
+							fromClause,
+							conflictClause.getAssignments(),
+							conflictClause.getPredicate(),
+							insertStatement.getReturningColumns()
+					);
+					updateTableGroup.addTableGroupJoin(
+							new TableGroupJoin(
+									excludedTableGroup.getNavigablePath(),
+									SqlAstJoinType.INNER,
+									excludedTableGroup,
+									buildColumnMatchPredicate(
+											columnsToMatch,
+											insertStatement,
+											true,
+											false
+									)
+							)
+					);
+				}
+				else {
+					final List<Assignment> assignments = conflictClause.getAssignments();
+					final List<ColumnReference> assignmentColumns = new ArrayList<>( assignments.size() );
+					final QuerySpec updateSubquery = new QuerySpec( false, 1 );
+					for ( Assignment assignment : assignments ) {
+						assignmentColumns.add( (ColumnReference) assignment.getAssignable() );
+						updateSubquery.getSelectClause().addSqlSelection(
+								new SqlSelectionImpl( assignment.getAssignedValue() )
+						);
+					}
+					updateSubquery.getFromClause().addRoot( excludedTableGroup );
+					updateSubquery.applyPredicate( buildColumnMatchPredicate(
+							columnsToMatch,
+							insertStatement,
+							true,
+							false
+					) );
+					final QuerySpec matchCteSubquery = new QuerySpec( false, 1 );
+					matchCteSubquery.getSelectClause().addSqlSelection(
+							new SqlSelectionImpl( new QueryLiteral<>(
+									1,
+									sessionFactory.getNodeBuilder().getIntegerType()
+							) )
+					);
+					matchCteSubquery.getFromClause().addRoot( updateSubquery.getFromClause().getRoots().get( 0 ) );
+					matchCteSubquery.applyPredicate( updateSubquery.getWhereClauseRestrictions() );
+					updateStatement = new UpdateStatement(
+							insertStatement.getTargetTable(),
+							List.of( new Assignment(
+									new SqlTuple( assignmentColumns, null ),
+									new SelectStatement( updateSubquery )
+							) ),
+							Predicate.combinePredicates(
+									new ExistsPredicate( matchCteSubquery, false, booleanType ),
+									conflictClause.getPredicate()
+							),
+							insertStatement.getReturningColumns()
+					);
+				}
+
+				final CteTable updateCte = dmlResultCte.withName( dmlResultCte.getTableExpression() + "_upd" );
+				statement.addCteStatement( new CteStatement( updateCte, updateStatement ) );
+
+				final CteTable insertCte = dmlResultCte.withName( dmlResultCte.getTableExpression() + "_ins" );
+				statement.addCteStatement( new CteStatement( insertCte, insertStatement ) );
+
+				// Union the update and inserted ids together to be able to determine the effective update count
+				final List<QueryPart> queryParts = new ArrayList<>( 2 );
+				final QuerySpec dmlCombinationQ1 = new QuerySpec( false, 1 );
+				final QuerySpec dmlCombinationQ2 = new QuerySpec( false, 1 );
+				dmlCombinationQ1.getSelectClause().addSqlSelection( new SqlSelectionImpl( new Star() ) );
+				dmlCombinationQ2.getSelectClause().addSqlSelection( new SqlSelectionImpl( new Star() ) );
+				dmlCombinationQ1.getFromClause().addRoot( new CteTableGroup( new NamedTableReference( updateCte.getTableExpression(), "t" ) ) );
+				dmlCombinationQ2.getFromClause().addRoot( new CteTableGroup( new NamedTableReference( insertCte.getTableExpression(), "t" ) ) );
+				queryParts.add( dmlCombinationQ1 );
+				queryParts.add( dmlCombinationQ2 );
+				final SelectStatement dmlCombinationStatement = new SelectStatement( new QueryGroup( true, SetOperator.UNION_ALL, queryParts ) );
+				statement.addCteStatement( new CteStatement( dmlResultCte, dmlCombinationStatement ) );
+			}
+			else {
+				statement.addCteStatement( new CteStatement( dmlResultCte, insertStatement ) );
+			}
+		}
+	}
+
+	private List<String> buildCteRenaming(
+			QuerySpec renamingSubquery,
+			TableGroup temporaryTableGroup,
+			CteStatement queryCte) {
+		final List<CteColumn> cteColumns = queryCte.getCteTable().getCteColumns();
+		for ( CteColumn cteColumn : cteColumns ) {
+			renamingSubquery.getSelectClause().addSqlSelection(
+					new SqlSelectionImpl(
+							new ColumnReference(
+									temporaryTableGroup.getPrimaryTableReference(),
+									cteColumn.getColumnExpression(),
+									cteColumn.getJdbcMapping()
+							)
+					)
+			);
+		}
+		final SelectStatement selectStatement = (SelectStatement) queryCte.getCteDefinition();
+		final QuerySpec querySpec = (QuerySpec) selectStatement.getQueryPart();
+		final DerivedTableReference tableReference = (DerivedTableReference) querySpec.getFromClause()
+				.getRoots()
+				.get( 0 )
+				.getPrimaryTableReference();
+		return tableReference.getColumnNames();
+	}
+
+	private Predicate buildColumnMatchPredicate(
+			List<String> constraintColumnNames,
+			InsertSelectStatement dmlStatement,
+			boolean errorIfMissing,
+			boolean compareAgainstSelectItems) {
+		final BasicType<Boolean> booleanType = sessionFactory.getNodeBuilder().getBooleanType();
+		final QuerySpec insertQuerySpec = (QuerySpec) dmlStatement.getSourceSelectStatement();
+		Predicate predicate = null;
+		OUTER: for ( String constraintColumnName : constraintColumnNames ) {
+			final List<ColumnReference> targetColumns = dmlStatement.getTargetColumns();
+			for ( int i = 0; i < targetColumns.size(); i++ ) {
+				final ColumnReference columnReference = targetColumns.get( i );
+				if ( columnReference.getColumnExpression().equals( constraintColumnName ) ) {
+					if ( compareAgainstSelectItems ) {
+						predicate = Predicate.combinePredicates(
+								predicate,
+								new ComparisonPredicate(
+										new ColumnReference(
+												"excluded",
+												columnReference.getColumnExpression(),
+												false,
+												null,
+												columnReference.getJdbcMapping()
+										),
+										ComparisonOperator.EQUAL,
+										insertQuerySpec.getSelectClause()
+												.getSqlSelections()
+												.get( i )
+												.getExpression(),
+										booleanType
+								)
+						);
+					}
+					else {
+						predicate = Predicate.combinePredicates(
+								predicate,
+								new ComparisonPredicate(
+										columnReference,
+										ComparisonOperator.EQUAL,
+										new ColumnReference(
+												"excluded",
+												columnReference.getColumnExpression(),
+												false,
+												null,
+												columnReference.getJdbcMapping()
+										),
+										booleanType
+								)
+						);
+					}
+					continue OUTER;
+				}
+			}
+			if ( errorIfMissing ) {
+				// Should never happen
+				final List<String> targetColumnNames = targetColumns.stream()
+						.map( ColumnReference::getColumnExpression )
+						.collect( Collectors.toList() );
+				throw new IllegalArgumentException( "Couldn't find conflict constraint column [" + constraintColumnName + "] in insert target columns: " + targetColumnNames );
+			}
+			return null;
+		}
+		return predicate;
+	}
+
+	private List<Assignment> getCompatibleAssignments(InsertSelectStatement dmlStatement, ConflictClause conflictClause) {
+		if ( conflictClause.isDoNothing() ) {
+			return Collections.emptyList();
+		}
+		List<Assignment> compatibleAssignments = null;
+		final List<Assignment> assignments = conflictClause.getAssignments();
+		for ( Assignment assignment : assignments ) {
+			for ( ColumnReference targetColumn : dmlStatement.getTargetColumns() ) {
+				if ( targetColumn.equals( assignment.getAssignable() ) ) {
+					if ( compatibleAssignments == null ) {
+						compatibleAssignments = new ArrayList<>( assignments.size() );
+					}
+					compatibleAssignments.add( assignment );
+					break;
+				}
+			}
+		}
+		return compatibleAssignments == null ? Collections.emptyList() : compatibleAssignments;
+	}
+
+	private boolean isIdentifierConflictClause(SqmInsertStatement<?> sqmStatement) {
+		final SqmConflictClause<?> conflictClause = sqmStatement.getConflictClause();
+		assert conflictClause != null;
+		final List<SqmPath<?>> constraintPaths = conflictClause.getConstraintPaths();
+		return constraintPaths.size() == 1
+				&& constraintPaths.get( 0 ).getReferencedPathSource() == sqmStatement.getTarget().getModel().getIdentifierDescriptor();
+	}
+
+	private boolean targetColumnsContainAllConstraintColumns(InsertSelectStatement statement, ConflictClause conflictClause) {
+		OUTER: for ( String constraintColumnName : conflictClause.getConstraintColumnNames() ) {
+			for ( ColumnReference targetColumn : statement.getTargetColumns() ) {
+				if ( targetColumn.getColumnExpression().equals( constraintColumnName ) ) {
+					continue OUTER;
+				}
+			}
+			return false;
+		}
+
+		return true;
 	}
 
 	protected NamedTableReference resolveUnionTableReference(

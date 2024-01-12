@@ -1513,4 +1513,14 @@ public class MySQLDialect extends Dialect {
 	public String getEnableConstraintsStatement() {
 		return "set foreign_key_checks = 1";
 	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
+	}
+
+	@Override
+	public boolean supportsFromClauseInUpdate() {
+		return true;
+	}
 }

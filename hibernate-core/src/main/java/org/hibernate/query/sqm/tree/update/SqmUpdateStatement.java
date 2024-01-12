@@ -6,11 +6,12 @@
  */
 package org.hibernate.query.sqm.tree.update;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.hibernate.query.SemanticException;
 import org.hibernate.query.criteria.JpaCriteriaUpdate;
+import org.hibernate.query.criteria.JpaRoot;
 import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SemanticQueryWalker;
 import org.hibernate.query.sqm.SqmQuerySource;
@@ -19,9 +20,12 @@ import org.hibernate.query.sqm.tree.AbstractSqmRestrictedDmlStatement;
 import org.hibernate.query.sqm.tree.SqmCopyContext;
 import org.hibernate.query.sqm.tree.SqmDeleteOrUpdateStatement;
 import org.hibernate.query.sqm.tree.cte.SqmCteStatement;
+import org.hibernate.query.sqm.tree.delete.SqmDeleteStatement;
 import org.hibernate.query.sqm.tree.domain.SqmPath;
+import org.hibernate.query.sqm.tree.domain.SqmPolymorphicRootDescriptor;
 import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
+import org.hibernate.query.sqm.tree.from.SqmFromClause;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
 
 import jakarta.persistence.criteria.Expression;
@@ -40,20 +44,32 @@ public class SqmUpdateStatement<T>
 	private boolean versioned;
 	private SqmSetClause setClause;
 
-	public SqmUpdateStatement(SqmRoot<T> target, NodeBuilder nodeBuilder) {
-		this( target, SqmQuerySource.HQL, nodeBuilder );
+	public SqmUpdateStatement(NodeBuilder nodeBuilder) {
+		super( SqmQuerySource.HQL, nodeBuilder );
 	}
 
+	/**
+	 * @deprecated was previously used for HQL. Use {@link SqmUpdateStatement#SqmUpdateStatement(NodeBuilder)} instead
+	 */
+	@Deprecated(forRemoval = true)
+	public SqmUpdateStatement(SqmRoot<T> target, NodeBuilder nodeBuilder) {
+		super( target, SqmQuerySource.HQL, nodeBuilder );
+	}
+
+	/**
+	 * @deprecated was previously used for Criteria. Use {@link SqmUpdateStatement#SqmUpdateStatement(Class, SqmCriteriaNodeBuilder)} instead.
+	 */
+	@Deprecated(forRemoval = true)
 	public SqmUpdateStatement(SqmRoot<T> target, SqmQuerySource querySource, NodeBuilder nodeBuilder) {
 		super( target, querySource, nodeBuilder );
 	}
 
 	public SqmUpdateStatement(Class<T> targetEntity, SqmCriteriaNodeBuilder nodeBuilder) {
-		this(
+		super(
 				new SqmRoot<>(
 						nodeBuilder.getDomainModel().entity( targetEntity ),
 						null,
-						false,
+						!nodeBuilder.isJpaQueryComplianceEnabled(),
 						nodeBuilder
 				),
 				SqmQuerySource.CRITERIA,
@@ -159,6 +175,19 @@ public class SqmUpdateStatement<T>
 	}
 
 	@Override
+	public void setTarget(JpaRoot<T> root) {
+		if ( root.getModel() instanceof SqmPolymorphicRootDescriptor<?> ) {
+			throw new SemanticException(
+					String.format(
+							"Target type '%s' is not an entity",
+							root.getModel().getHibernateEntityName()
+					)
+			);
+		}
+		super.setTarget( root );
+	}
+
+	@Override
 	public SqmUpdateStatement<T> where(Expression<Boolean> restriction) {
 		setWhere( restriction );
 		return this;
@@ -176,10 +205,14 @@ public class SqmUpdateStatement<T>
 	}
 
 	public <Y> void applyAssignment(SqmPath<Y> targetPath, SqmExpression<? extends Y> value) {
+		applyAssignment( new SqmAssignment<>( targetPath, value ) );
+	}
+
+	public <Y> void applyAssignment(SqmAssignment<Y> assignment) {
 		if ( setClause == null ) {
 			setClause = new SqmSetClause();
 		}
-		setClause.addAssignment( new SqmAssignment<>( targetPath, value ) );
+		setClause.addAssignment( assignment );
 	}
 
 	@Override
@@ -189,22 +222,13 @@ public class SqmUpdateStatement<T>
 		if ( versioned ) {
 			sb.append( "versioned " );
 		}
-		sb.append( getTarget().getEntityName() );
-		sb.append( ' ' ).append( getTarget().resolveAlias() );
-		sb.append( " set " );
-		final List<SqmAssignment<?>> assignments = setClause.getAssignments();
-		appendAssignment( assignments.get( 0 ), sb );
-		for ( int i = 1; i < assignments.size(); i++ ) {
-			sb.append( ", " );
-			appendAssignment( assignments.get( i ), sb );
-		}
+		final SqmRoot<T> root = getTarget();
+		sb.append( root.getEntityName() );
+		sb.append( ' ' ).append( root.resolveAlias() );
+		SqmFromClause.appendJoins( root, sb );
+		SqmFromClause.appendTreatJoins( root, sb );
+		setClause.appendHqlString( sb );
 
 		super.appendHqlString( sb );
-	}
-
-	private static void appendAssignment(SqmAssignment<?> sqmAssignment, StringBuilder sb) {
-		sqmAssignment.getTargetPath().appendHqlString( sb );
-		sb.append( " = " );
-		sqmAssignment.getValue().appendHqlString( sb );
 	}
 }

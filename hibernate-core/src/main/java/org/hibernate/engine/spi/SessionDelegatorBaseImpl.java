@@ -53,6 +53,7 @@ import org.hibernate.procedure.ProcedureCall;
 import org.hibernate.query.MutationQuery;
 import org.hibernate.query.SelectionQuery;
 import org.hibernate.query.criteria.HibernateCriteriaBuilder;
+import org.hibernate.query.criteria.JpaCriteriaInsert;
 import org.hibernate.query.criteria.JpaCriteriaInsertSelect;
 import org.hibernate.query.spi.QueryImplementor;
 import org.hibernate.query.spi.QueryProducerImplementor;
@@ -509,6 +510,12 @@ public class SessionDelegatorBaseImpl implements SessionImplementor {
 
 	@Override
 	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsertSelect insertSelect) {
+		//noinspection resource
+		return delegate().createMutationQuery( insertSelect );
+	}
+
+	@Override
+	public MutationQuery createMutationQuery(@SuppressWarnings("rawtypes") JpaCriteriaInsert insertSelect) {
 		//noinspection resource
 		return delegate().createMutationQuery( insertSelect );
 	}

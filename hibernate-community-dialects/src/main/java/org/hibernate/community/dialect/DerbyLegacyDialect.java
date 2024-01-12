@@ -15,6 +15,7 @@ import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DatabaseVersion;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.DmlTargetColumnQualifierSupport;
 import org.hibernate.dialect.NationalizationSupport;
 import org.hibernate.dialect.RowLockStrategy;
 import org.hibernate.dialect.function.CaseLeastGreatestEmulation;
@@ -39,8 +40,11 @@ import org.hibernate.engine.jdbc.dialect.spi.DialectResolutionInfo;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelper;
 import org.hibernate.engine.jdbc.env.spi.IdentifierHelperBuilder;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockTimeoutException;
 import org.hibernate.exception.spi.SQLExceptionConversionDelegate;
+import org.hibernate.exception.spi.TemplatedViolatedConstraintNameExtractor;
+import org.hibernate.exception.spi.ViolatedConstraintNameExtractor;
 import org.hibernate.internal.util.JdbcExceptionHelper;
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
@@ -707,16 +711,44 @@ public class DerbyLegacyDialect extends Dialect {
 	}
 
 	@Override
+	public ViolatedConstraintNameExtractor getViolatedConstraintNameExtractor() {
+		return new TemplatedViolatedConstraintNameExtractor( sqle -> {
+			final String sqlState = JdbcExceptionHelper.extractSqlState( sqle );
+			if ( sqlState != null ) {
+				switch ( sqlState ) {
+					case "23505":
+						return TemplatedViolatedConstraintNameExtractor.extractUsingTemplate(
+								"'", "'",
+								sqle.getMessage()
+						);
+				}
+			}
+			return null;
+		} );
+	}
+
+	@Override
 	public SQLExceptionConversionDelegate buildSQLExceptionConversionDelegate() {
 		return (sqlException, message, sql) -> {
 			final String sqlState = JdbcExceptionHelper.extractSqlState( sqlException );
 //				final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
+			final String constraintName;
 
 			if ( sqlState != null ) {
 				switch ( sqlState ) {
+					case "23505":
+						// Unique constraint violation
+						constraintName = getViolatedConstraintNameExtractor().extractConstraintName(sqlException);
+						return new ConstraintViolationException(
+								message,
+								sqlException,
+								sql,
+								ConstraintViolationException.ConstraintKind.UNIQUE,
+								constraintName
+						);
 					case "40XL1":
 					case "40XL2":
-						throw new LockTimeoutException( message, sqlException, sql );
+						return new LockTimeoutException( message, sqlException, sql );
 				}
 			}
 			return null;
@@ -1023,5 +1055,10 @@ public class DerbyLegacyDialect extends Dialect {
 			throws SQLException {
 		builder.setAutoQuoteInitialUnderscore(true);
 		return super.buildIdentifierHelper(builder, dbMetaData);
+	}
+
+	@Override
+	public DmlTargetColumnQualifierSupport getDmlTargetColumnQualifierSupport() {
+		return DmlTargetColumnQualifierSupport.TABLE_ALIAS;
 	}
 }

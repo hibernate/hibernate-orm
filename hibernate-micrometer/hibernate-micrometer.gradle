@@ -16,7 +16,7 @@ sourceSets {
     // resources inherently exclude sources
     test {
         resources {
-            setSrcDirs( ['src/test/java','src/test/resources'] )
+            setSrcDirs( ['src/test/resources'] )
         }
     }
 }

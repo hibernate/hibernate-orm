@@ -6,6 +6,8 @@
  */
 package org.hibernate.orm.test.jpa.criteria;
 
+import java.util.Map;
+
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -14,6 +16,7 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.dialect.MySQLDialect;
 import org.hibernate.orm.test.jpa.metamodel.AbstractMetamodelSpecificTest;
 import org.hibernate.orm.test.jpa.metamodel.Customer;
@@ -30,6 +33,11 @@ import static org.junit.jupiter.api.Assertions.fail;
  * @author Steve Ebersole
  */
 public class ManipulationCriteriaTest extends AbstractMetamodelSpecificTest {
+	@Override
+	protected void addConfigOptions(Map options) {
+		options.put( AvailableSettings.JPA_COMPLIANCE, "true" );
+	}
+
 	@Test
 	public void basicTest() {
 		EntityManager em = getOrCreateEntityManager();

@@ -9,6 +9,7 @@ package org.hibernate.persister.entity.mutation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.Supplier;
 
 import org.hibernate.AssertionFailure;
 import org.hibernate.HibernateException;
@@ -29,6 +30,8 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.generator.BeforeExecutionGenerator;
 import org.hibernate.generator.Generator;
 import org.hibernate.generator.OnExecutionGenerator;
+import org.hibernate.generator.values.GeneratedValues;
+import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
 import org.hibernate.internal.CoreLogging;
 import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.collections.CollectionHelper;
@@ -45,7 +48,7 @@ import org.hibernate.sql.model.MutationType;
 import org.hibernate.sql.model.ast.MutatingTableReference;
 import org.hibernate.sql.model.ast.builder.AbstractTableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
-import org.hibernate.sql.model.ast.builder.RestrictedTableMutationBuilder;
+import org.hibernate.sql.model.ast.builder.TableMutationBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilder;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderSkipped;
 import org.hibernate.sql.model.ast.builder.TableUpdateBuilderStandard;
@@ -65,7 +68,7 @@ import static org.hibernate.internal.util.collections.ArrayHelper.trim;
 /**
  * Coordinates the updating of an entity.
  *
- * @see #coordinateUpdate
+ * @see #update
  *
  * @author Steve Ebersole
  */
@@ -122,7 +125,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	@Override
-	public MutationOperationGroup getStaticUpdateGroup() {
+	public MutationOperationGroup getStaticMutationOperationGroup() {
 		return staticUpdateGroup;
 	}
 
@@ -164,7 +167,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 	}
 
 	@Override
-	public void coordinateUpdate(
+	public GeneratedValues update(
 			Object entity,
 			Object id,
 			Object rowId,
@@ -176,7 +179,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			SharedSessionContractImplementor session) {
 		final EntityVersionMapping versionMapping = entityPersister().getVersionMapping();
 		if ( versionMapping != null ) {
-			final boolean isForcedVersionIncrement = handlePotentialImplicitForcedVersionIncrement(
+			final Supplier<GeneratedValues> generatedValuesAccess = handlePotentialImplicitForcedVersionIncrement(
 					entity,
 					id,
 					values,
@@ -185,8 +188,8 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 					session,
 					versionMapping
 			);
-			if ( isForcedVersionIncrement ) {
-				return;
+			if ( generatedValuesAccess != null ) {
+				return generatedValuesAccess.get();
 			}
 		}
 
@@ -239,7 +242,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 
 
-		performUpdate(
+		return performUpdate(
 				entity,
 				id,
 				rowId,
@@ -255,7 +258,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 	}
 
-	protected void performUpdate(
+	protected GeneratedValues performUpdate(
 			Object entity,
 			Object id,
 			Object rowId,
@@ -307,9 +310,10 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		//noinspection StatementWithEmptyBody
 		if ( valuesAnalysis.tablesNeedingUpdate.isEmpty() ) {
 			// nothing to do
+			return null;
 		}
 		else if ( valuesAnalysis.needsDynamicUpdate() ) {
-			doDynamicUpdate(
+			return doDynamicUpdate(
 					entity,
 					id,
 					rowId,
@@ -321,7 +325,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 			);
 		}
 		else {
-			doStaticUpdate(
+			return doStaticUpdate(
 					entity,
 					id,
 					rowId,
@@ -395,7 +399,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	protected boolean handlePotentialImplicitForcedVersionIncrement(
+	protected Supplier<GeneratedValues> handlePotentialImplicitForcedVersionIncrement(
 			Object entity,
 			Object id,
 			Object[] values,
@@ -437,11 +441,11 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		if ( isSimpleVersionUpdate ) {
 			// we have just the version being updated - use the special handling
 			assert newVersion != null;
-			doVersionUpdate( entity, id, newVersion, oldVersion, session );
-			return true;
+			final GeneratedValues generatedValues = doVersionUpdate( entity, id, newVersion, oldVersion, session );
+			return () -> generatedValues;
 		}
 		else {
-			return false;
+			return null;
 		}
 	}
 
@@ -466,16 +470,16 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 				: entityPersister().getPropertyUpdateability();
 	}
 
-	protected void doVersionUpdate(
+	protected GeneratedValues doVersionUpdate(
 			Object entity,
 			Object id,
 			Object version,
 			Object oldVersion,
 			SharedSessionContractImplementor session) {
-		doVersionUpdate( entity, id, version, oldVersion, true, session );
+		return doVersionUpdate( entity, id, version, oldVersion, true, session );
 	}
 
-	protected void doVersionUpdate(
+	protected GeneratedValues doVersionUpdate(
 			Object entity,
 			Object id,
 			Object version,
@@ -521,7 +525,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 
 		try {
-			mutationExecutor.execute(
+			return mutationExecutor.execute(
 					entity,
 					null,
 					(tableMapping) -> tableMapping.getTableName().equals( entityPersister().getIdentifierTableName() ),
@@ -749,7 +753,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 	}
 
-	protected void doStaticUpdate(
+	protected GeneratedValues doStaticUpdate(
 			Object entity,
 			Object id,
 			Object rowId,
@@ -774,8 +778,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		bindPartitionColumnValueBindings( oldValues, session, mutationExecutor.getJdbcValueBindings() );
 
 		try {
-			//noinspection SuspiciousMethodCalls
-			mutationExecutor.execute(
+			return mutationExecutor.execute(
 					entity,
 					valuesAnalysis,
 					valuesAnalysis.tablesNeedingUpdate::contains,
@@ -926,7 +929,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		}
 	}
 
-	protected void doDynamicUpdate(
+	protected GeneratedValues doDynamicUpdate(
 			Object entity,
 			Object id,
 			Object rowId,
@@ -962,7 +965,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		bindPartitionColumnValueBindings( oldValues, session, mutationExecutor.getJdbcValueBindings() );
 
 		try {
-			mutationExecutor.execute(
+			return mutationExecutor.execute(
 					entity,
 					valuesAnalysis,
 					(tableMapping) -> {
@@ -1040,14 +1043,14 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		entityPersister().forEachMutableTable( (tableMapping) -> {
 			final MutatingTableReference tableReference = new MutatingTableReference( tableMapping );
-			final RestrictedTableMutationBuilder<?,?> tableUpdateBuilder;
+			final TableMutationBuilder<?> tableUpdateBuilder;
 			//noinspection SuspiciousMethodCalls
 			if ( ! valuesAnalysis.tablesNeedingUpdate.contains( tableReference.getTableMapping() ) ) {
 				// this table does not need updating
 				tableUpdateBuilder = new TableUpdateBuilderSkipped( tableReference );
 			}
 			else {
-				tableUpdateBuilder = newTableUpdateBuilder( tableMapping );
+				tableUpdateBuilder = createTableUpdateBuilder( tableMapping );
 			}
 			updateGroupBuilder.addTableDetailsBuilder( tableUpdateBuilder );
 		} );
@@ -1063,6 +1066,18 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 
 		return createOperationGroup( valuesAnalysis, updateGroupBuilder.buildMutationGroup() );
+	}
+
+	private TableMutationBuilder<?> createTableUpdateBuilder(EntityTableMapping tableMapping) {
+		final GeneratedValuesMutationDelegate delegate = tableMapping.isIdentifierTable() ?
+				entityPersister().getUpdateDelegate() :
+				null;
+		if ( delegate != null ) {
+			return delegate.createTableMutationBuilder( tableMapping.getInsertExpectation(), factory() );
+		}
+		else {
+			return newTableUpdateBuilder( tableMapping );
+		}
 	}
 
 	protected <O extends MutationOperation> AbstractTableUpdateBuilder<O> newTableUpdateBuilder(EntityTableMapping tableMapping) {
@@ -1624,7 +1639,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 
 		entityPersister().forEachMutableTable( (tableMapping) -> {
 			// NOTE : TableUpdateBuilderStandard handles custom sql-update mappings
-			updateGroupBuilder.addTableDetailsBuilder( newTableUpdateBuilder( tableMapping ) );
+			updateGroupBuilder.addTableDetailsBuilder( createTableUpdateBuilder( tableMapping ) );
 		} );
 
 		// next, iterate each attribute and build the SET and WHERE clauses

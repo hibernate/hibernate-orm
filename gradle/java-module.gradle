@@ -95,6 +95,7 @@ dependencies {
 	//Databases
 	testRuntimeOnly dbLibs.h2
 	testRuntimeOnly dbLibs.derby
+	testRuntimeOnly dbLibs.derbyTools
 	testRuntimeOnly dbLibs.hsqldb
 	testRuntimeOnly dbLibs.postgresql
 	testRuntimeOnly dbLibs.mssql
@@ -245,13 +246,6 @@ tasks.withType( Test.class ).each { test ->
 sourceSets {
 	test {
 		resources {
-			// add `src/test/java` as a test-resources dir
-			configure( srcDir('src/test/java') ) {
-				filter {
-					include '**/*.properties'
-					include '**/*.xml'
-				}
-			}
 			configure( srcDir('src/test/resources') ) {
 				filter {
 					include '*.properties'
@@ -269,6 +263,7 @@ processTestResources {
 	duplicatesStrategy DuplicatesStrategy.INCLUDE
 	inputs.property( "db", db )
 	inputs.property( "dbHost", dbHost )
+	inputs.file( rootProject.file( "gradle/databases.gradle" ) )
 	doLast {
 		copy {
 			from( sourceSets.test.java.srcDirs ) {

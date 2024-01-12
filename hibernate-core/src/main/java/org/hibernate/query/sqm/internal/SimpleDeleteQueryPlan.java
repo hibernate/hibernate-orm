@@ -172,12 +172,7 @@ public class SimpleDeleteQueryPlan implements NonSelectQueryPlan {
 							tableGroup
 					);
 
-					matchingIdSubQuery.applyPredicate( SqmMutationStrategyHelper.getIdSubqueryPredicate(
-							sqmInterpretation.getSqlAst().getRestriction(),
-							entityDescriptor,
-							tableGroup,
-							session
-					) );
+					matchingIdSubQuery.applyPredicate( sqmInterpretation.getSqlAst().getRestriction() );
 
 					return Predicate.combinePredicates(
 							additionalPredicate.get(),

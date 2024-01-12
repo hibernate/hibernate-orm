@@ -16,24 +16,39 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.jdbc.spi.StatementPreparer;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.generator.EventType;
+import org.hibernate.generator.values.AbstractGeneratedValuesMutationDelegate;
+import org.hibernate.generator.values.GeneratedValues;
 import org.hibernate.id.PostInsertIdentityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.pretty.MessageHelper;
 
 import static java.sql.Statement.NO_GENERATED_KEYS;
-import static org.hibernate.id.IdentifierGeneratorHelper.getGeneratedIdentity;
+import static org.hibernate.generator.values.internal.GeneratedValuesHelper.getGeneratedValues;
 
 /**
- * Abstract {@link InsertGeneratedIdentifierDelegate} implementation where
+ * Abstract {@link org.hibernate.generator.values.GeneratedValuesMutationDelegate} implementation where
  * the underlying strategy requires a subsequent {@code select} after the
  * {@code insert} to determine the generated identifier.
  *
  * @author Steve Ebersole
  */
-public abstract class AbstractSelectingDelegate implements InsertGeneratedIdentifierDelegate {
-	private final PostInsertIdentityPersister persister;
-
+public abstract class AbstractSelectingDelegate extends AbstractGeneratedValuesMutationDelegate
+		implements InsertGeneratedIdentifierDelegate {
+	/**
+	 * @deprecated Use {@link #AbstractSelectingDelegate(EntityPersister, EventType, boolean, boolean)} instead.
+	 */
+	@Deprecated( forRemoval = true, since = "6.5" )
 	protected AbstractSelectingDelegate(PostInsertIdentityPersister persister) {
-		this.persister = persister;
+		super( persister, EventType.INSERT );
+	}
+
+	protected AbstractSelectingDelegate(
+			EntityPersister persister,
+			EventType timing,
+			boolean supportsArbitraryValues,
+			boolean supportsRowId) {
+		super( persister, timing, supportsArbitraryValues, supportsRowId );
 	}
 
 	/**
@@ -48,11 +63,21 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	}
 
 	/**
+	 * @deprecated No substitute.
+	 */
+	@Deprecated( forRemoval = true, since = "6.5" )
+	protected Object extractGeneratedValues(ResultSet resultSet, SharedSessionContractImplementor session)
+			throws SQLException {
+		final GeneratedValues generatedValues = extractReturningValues( resultSet, session );
+		return generatedValues.getGeneratedValue( persister.getIdentifierMapping() );
+	}
+
+	/**
 	 * Extract the generated key value from the given result set after execution of {@link #getSelectSQL()}.
 	 */
-	protected Object extractGeneratedValue(ResultSet resultSet, SharedSessionContractImplementor session)
+	private GeneratedValues extractReturningValues(ResultSet resultSet, SharedSessionContractImplementor session)
 			throws SQLException {
-		return getGeneratedIdentity( persister.getNavigableRole().getFullPath(), resultSet, persister, session );
+		return getGeneratedValues( resultSet, persister, getTiming(), session );
 	}
 
 	@Override
@@ -61,19 +86,19 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	}
 
 	@Override
-	public Object performInsert(
-			PreparedStatementDetails insertStatementDetails,
+	public GeneratedValues performMutation(
+			PreparedStatementDetails statementDetails,
 			JdbcValueBindings jdbcValueBindings,
 			Object entity,
 			SharedSessionContractImplementor session) {
 		final JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		final JdbcServices jdbcServices = session.getJdbcServices();
 
-		jdbcServices.getSqlStatementLogger().logStatement( insertStatementDetails.getSqlString() );
-		jdbcValueBindings.beforeStatement( insertStatementDetails );
+		jdbcServices.getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
+		jdbcValueBindings.beforeStatement( statementDetails );
 
 		jdbcCoordinator.getResultSetReturn()
-				.executeUpdate( insertStatementDetails.resolveStatement(), insertStatementDetails.getSqlString() );
+				.executeUpdate( statementDetails.resolveStatement(), statementDetails.getSqlString() );
 
 		// the insert is complete, select the generated id...
 
@@ -84,7 +109,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 
 			final ResultSet resultSet = session.getJdbcCoordinator().getResultSetReturn().extract( idSelect, idSelectSql );
 			try {
-				return extractGeneratedValue( resultSet, session );
+				return extractReturningValues( resultSet, session );
 			}
 			catch (SQLException e) {
 				throw jdbcServices.getSqlExceptionHelper().convert(
@@ -108,15 +133,15 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 	}
 
 	@Override
-	public final Object performInsert(String insertSQL, SharedSessionContractImplementor session, Binder binder) {
+	public final GeneratedValues performInsertReturning(String sql, SharedSessionContractImplementor session, Binder binder) {
 		JdbcCoordinator jdbcCoordinator = session.getJdbcCoordinator();
 		StatementPreparer statementPreparer = jdbcCoordinator.getStatementPreparer();
 		try {
 			// prepare and execute the insert
-			PreparedStatement insert = statementPreparer.prepareStatement( insertSQL, NO_GENERATED_KEYS );
+			PreparedStatement insert = statementPreparer.prepareStatement( sql, NO_GENERATED_KEYS );
 			try {
 				binder.bindValues( insert );
-				jdbcCoordinator.getResultSetReturn().executeUpdate( insert, insertSQL );
+				jdbcCoordinator.getResultSetReturn().executeUpdate( insert, sql );
 			}
 			finally {
 				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insert );
@@ -127,7 +152,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 			throw session.getJdbcServices().getSqlExceptionHelper().convert(
 					sqle,
 					"could not insert: " + MessageHelper.infoString( persister ),
-					insertSQL
+					sql
 			);
 		}
 
@@ -140,7 +165,7 @@ public abstract class AbstractSelectingDelegate implements InsertGeneratedIdenti
 				bindParameters( binder.getEntity(), idSelect, session );
 				ResultSet resultSet = jdbcCoordinator.getResultSetReturn().extract( idSelect, selectSQL );
 				try {
-					return extractGeneratedValue( resultSet, session );
+					return extractReturningValues( resultSet, session );
 				}
 				finally {
 					jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, idSelect );

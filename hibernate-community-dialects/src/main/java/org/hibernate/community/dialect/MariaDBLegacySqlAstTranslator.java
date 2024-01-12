@@ -250,4 +250,13 @@ public class MariaDBLegacySqlAstTranslator<T extends JdbcOperation> extends Abst
 			super.visitCastTarget( castTarget );
 		}
 	}
+
+	@Override
+	protected void renderStringContainsExactlyPredicate(Expression haystack, Expression needle) {
+		// MariaDB can't cope with NUL characters in the position function, so we use a like predicate instead
+		haystack.accept( this );
+		appendSql( " like concat('%',replace(replace(replace(" );
+		needle.accept( this );
+		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
+	}
 }

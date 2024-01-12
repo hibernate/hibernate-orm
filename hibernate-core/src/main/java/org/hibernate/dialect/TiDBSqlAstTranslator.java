@@ -201,4 +201,13 @@ public class TiDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 			super.visitCastTarget( castTarget );
 		}
 	}
+
+	@Override
+	protected void renderStringContainsExactlyPredicate(Expression haystack, Expression needle) {
+		// TiDB can't cope with NUL characters in the position function, so we use a like predicate instead
+		haystack.accept( this );
+		appendSql( " like concat('%',replace(replace(replace(" );
+		needle.accept( this );
+		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
+	}
 }

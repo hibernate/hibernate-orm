@@ -470,4 +470,15 @@ public class SQLServerLegacySqlAstTranslator<T extends JdbcOperation> extends Ab
 		TOP_ONLY,
 		EMULATED;
 	}
+
+	@Override
+	protected void renderStringContainsExactlyPredicate(Expression haystack, Expression needle) {
+		// SQL Server ignores NUL characters in string on case-insensitive collations, so we force a binary collation.
+		// This is needed for the emulation of cycle detection in recursive queries
+		appendSql( "charindex(" );
+		needle.accept( this );
+		appendSql( " collate Latin1_General_100_BIN2," );
+		haystack.accept( this );
+		append( ")>0" );
+	}
 }

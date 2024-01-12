@@ -14,6 +14,8 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.query.sqm.FetchClauseType;
+import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -450,5 +452,16 @@ public class SQLServerSqlAstTranslator<T extends JdbcOperation> extends SqlAstTr
 	protected void renderMergeStatement(OptionalTableUpdate optionalTableUpdate) {
 		super.renderMergeStatement( optionalTableUpdate );
 		appendSql( ";" );
+	}
+
+	@Override
+	protected void renderStringContainsExactlyPredicate(Expression haystack, Expression needle) {
+		// SQL Server ignores NUL characters in string on case-insensitive collations, so we force a binary collation.
+		// This is needed for the emulation of cycle detection in recursive queries
+		appendSql( "charindex(" );
+		needle.accept( this );
+		appendSql( " collate Latin1_General_100_BIN2," );
+		haystack.accept( this );
+		append( ")>0" );
 	}
 }

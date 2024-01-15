@@ -7,12 +7,18 @@
 package org.hibernate.orm.test.type.contributor.usertype;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.Currency;
 
+import org.hibernate.boot.model.TypeContributor;
+import org.hibernate.orm.test.mapping.basic.MonetaryAmount;
 import org.hibernate.type.CustomType;
 import org.hibernate.type.Type;
 import org.hibernate.type.UserComponentType;
 
+import org.hibernate.testing.orm.junit.BootstrapServiceRegistry;
 import org.hibernate.testing.orm.junit.DomainModel;
+import org.hibernate.testing.orm.junit.Jira;
 import org.hibernate.testing.orm.junit.JiraKey;
 import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
@@ -29,11 +35,26 @@ import jakarta.persistence.Id;
 		annotatedClasses = {
 				ContributedUserTypeTest.StringWrapperTestEntity.class,
 				ContributedUserTypeTest.MyCompositeValueTestEntity.class,
+				ContributedUserTypeTest.Wallet.class
 		},
 		typeContributors = { StringWrapperTypeContributor.class, MyCompositeValueTypeContributor.class }
 )
 @SessionFactory
+@BootstrapServiceRegistry(
+		javaServices = {
+				@BootstrapServiceRegistry.JavaService( role = TypeContributor.class, impl = ServiceLoadedCustomUserTypeTypeContributor.class)
+		}
+)
 public class ContributedUserTypeTest {
+
+	public void tearDown(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					session.createMutationQuery( "delete from Wallet" ).executeUpdate();
+				}
+		);
+	}
+
 	@Test
 	@JiraKey( "HHH-14408" )
 	public void test(SessionFactoryScope scope) {
@@ -81,6 +102,28 @@ public class ContributedUserTypeTest {
 		);
 	}
 
+	@Test
+	@Jira( value = "https://hibernate.atlassian.net/browse/HHH-17635" )
+	public void testServiceLoadedCustomUserType(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					Wallet wallet = new Wallet();
+					wallet.setId( 1L );
+					wallet.setMoney( new MonetaryAmount( new BigDecimal( 1000 ), Currency.getInstance("EUR")) );
+					session.persist( wallet );
+				}
+		);
+		scope.inTransaction(
+				session -> {
+					Wallet w = session.createSelectionQuery( "from Wallet", Wallet.class ).getSingleResult();
+					MonetaryAmount amount = w.getMoney();
+					Assertions.assertNotNull( amount );
+					Assertions.assertEquals( 1000, amount.getAmount().intValue() );
+					Assertions.assertEquals( "EUR", amount.getCurrency().getCurrencyCode() );
+				}
+		);
+	}
+
 	@Entity( name = "StringWrapperTestEntity" )
 	public static class StringWrapperTestEntity implements Serializable {
 		@Id
@@ -94,4 +137,30 @@ public class ContributedUserTypeTest {
 		private Integer id;
 		private MyCompositeValue compositeValue;
 	}
+
+	@Entity(name = "Wallet")
+	public static class Wallet {
+
+		@Id
+		private Long id;
+
+		private MonetaryAmount money;
+
+		public Long getId() {
+			return id;
+		}
+
+		public void setId(Long id) {
+			this.id = id;
+		}
+
+		public MonetaryAmount getMoney() {
+			return money;
+		}
+
+		public void setMoney(MonetaryAmount money) {
+			this.money = money;
+		}
+	}
+
 }

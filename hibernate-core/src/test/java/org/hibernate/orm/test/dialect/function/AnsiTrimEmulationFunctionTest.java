@@ -49,12 +49,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @ServiceRegistry
 public class AnsiTrimEmulationFunctionTest  {
 	private static final String trimSource = "a.column";
-	private static final String LEADING = "substring(?1,patindex('%[^'+?2+']%',?1),len(?1)-patindex('%[^'+?2+']%',?1)+1)";
-	private static final String TRAILING = "substring(?1,1,len(?1)-patindex('%[^'+?2+']%',reverse(?1))+1)";
-	private static final String BOTH = "substring(?1,patindex('%[^'+?2+']%',?1),len(?1)-patindex('%[^'+?2+']%',?1)-patindex('%[^'+?2+']%',reverse(?1))+2)";
+	private static final String LEADING = "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)+1)";
+	private static final String TRAILING = "substring(?1,1,len(?1+'x')-1-patindex('%[^'+?2+']%',reverse(?1))+1)";
+	private static final String BOTH = "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)-patindex('%[^'+?2+']%',reverse(?1))+2)";
 
     @Test
-	@RequiresDialect( SQLServerDialect.class )
+//	@RequiresDialect( SQLServerDialect.class )
 	public void testBasicSqlServerProcessing(ServiceRegistryScope scope) {
 		Dialect dialect = new SQLServerDialect();
 		TrimFunction function = new TrimFunction( dialect, new TypeConfiguration() );
@@ -78,7 +78,7 @@ public class AnsiTrimEmulationFunctionTest  {
 	}
 
     @Test
-	@RequiresDialect( SybaseDialect.class )
+//	@RequiresDialect( SybaseDialect.class )
 	public void testBasicSybaseProcessing(ServiceRegistryScope scope) {
 		Dialect dialect = new SybaseDialect();
 		TrimFunction function = new TrimFunction( dialect, new TypeConfiguration() );

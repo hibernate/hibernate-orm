@@ -27,13 +27,13 @@ import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.Literal;
 import org.hibernate.sql.ast.tree.expression.TrimSpecification;
-import org.hibernate.type.SqlTypes;
 import org.hibernate.type.StandardBasicTypes;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.STRING;
 import static org.hibernate.query.sqm.produce.function.FunctionParameterType.TRIM_SPEC;
+import static org.hibernate.type.SqlTypes.isCharacterType;
 
 /**
  * ANSI SQL-standard {@code trim()} function, which has a funny syntax
@@ -100,9 +100,9 @@ public class TrimFunction extends AbstractSqmSelfRenderingFunctionDescriptor {
 			final JdbcType jdbcType = ( (SqmParameterInterpretation) trimCharacter ).getExpressionType()
 					.getSingleJdbcMapping()
 					.getJdbcType();
-			if ( jdbcType.getJdbcTypeCode() != SqlTypes.CHAR ) {
+			if ( !isCharacterType( jdbcType.getJdbcTypeCode() ) ) {
 				throw new FunctionArgumentException( String.format(
-						"Expected parameter used as trim character to be Character typed, instead was [%s]",
+						"Expected parameter used as trim character to be character typed, instead was [%s]",
 						jdbcType.getFriendlyName()
 				) );
 			}

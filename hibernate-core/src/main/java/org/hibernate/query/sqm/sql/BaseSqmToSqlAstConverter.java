@@ -7972,21 +7972,33 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						fetchablePath,
 						np -> {
 							// generate the join
+							final TableGroup tableGroup;
 							final TableGroup lhs = fromClauseIndex.getTableGroup( fetchParent.getNavigablePath() );
-							final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) fetchable ).createTableGroupJoin(
-									fetchablePath,
-									lhs,
-									alias,
-									null,
-									null,
-									true,
-									false,
-									BaseSqmToSqlAstConverter.this
+							final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) fetchable;
+							final TableGroup compatibleTableGroup = lhs.findCompatibleJoinedGroup(
+									joinProducer,
+									joinProducer.determineSqlJoinType( lhs, null, true )
 							);
-							lhs.addTableGroupJoin( tableGroupJoin );
+							if ( compatibleTableGroup == null ) {
+								final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
+										fetchablePath,
+										lhs,
+										alias,
+										null,
+										null,
+										true,
+										false,
+										BaseSqmToSqlAstConverter.this
+								);
+								lhs.addTableGroupJoin( tableGroupJoin );
+								tableGroup = tableGroupJoin.getJoinedGroup();
+							}
+							else {
+								tableGroup = compatibleTableGroup;
+							}
 
 							// and return the joined group
-							return tableGroupJoin.getJoinedGroup();
+							return tableGroup;
 						}
 				);
 			}

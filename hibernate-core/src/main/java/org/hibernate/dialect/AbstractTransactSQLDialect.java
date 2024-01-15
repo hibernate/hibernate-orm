@@ -183,15 +183,15 @@ public abstract class AbstractTransactSQLDialect extends Dialect {
 			case LEADING:
 				return isWhitespace
 						? "ltrim(?1)"
-						: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1)-patindex('%[^'+?2+']%',?1)+1)";
+						: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)+1)";
 			case TRAILING:
 				return isWhitespace
 						? "rtrim(?1)"
-						: "substring(?1,1,len(?1)-patindex('%[^'+?2+']%',reverse(?1))+1)";
+						: "substring(?1,1,len(?1+'x')-1-patindex('%[^'+?2+']%',reverse(?1))+1)";
 			default:
 				return isWhitespace
 						? "ltrim(rtrim(?1))"
-						: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1)-patindex('%[^'+?2+']%',?1)-patindex('%[^'+?2+']%',reverse(?1))+2)";
+						: "substring(?1,patindex('%[^'+?2+']%',?1),len(?1+'x')-1-patindex('%[^'+?2+']%',?1)-patindex('%[^'+?2+']%',reverse(?1))+2)";
 		}
 	}
 

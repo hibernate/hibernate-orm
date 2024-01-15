@@ -706,7 +706,10 @@ expression
 	: LEFT_PAREN expression RIGHT_PAREN												# GroupedExpression
 	| LEFT_PAREN expressionOrPredicate (COMMA expressionOrPredicate)+ RIGHT_PAREN	# TupleExpression
 	| LEFT_PAREN subquery RIGHT_PAREN												# SubqueryExpression
+	| DOUBLE_PIPE expression DOUBLE_PIPE INTEGER_LITERAL?							# NormExpression
+	| PIPE expression PIPE															# AbsExpression
 	| primaryExpression 															# BarePrimaryExpression
+	| expression CARET expression													# PowExpression
 	| signOperator numericLiteral													# UnaryNumericLiteralExpression
 	| signOperator expression														# UnaryExpression
 	| expression datetimeField  													# ToDurationExpression

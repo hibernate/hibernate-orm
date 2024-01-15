@@ -2248,4 +2248,24 @@ public class FunctionTests {
 				}
 		);
 	}
+
+	@Test
+	public void testAbsOperator(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(15, session.createSelectionQuery("select |-15|", Integer.class).getSingleResult());
+					assertEquals(1.0, session.createSelectionQuery("select |-1.0|", Double.class).getSingleResult());
+				}
+		);
+	}
+
+	@Test
+	public void testPowOperator(SessionFactoryScope scope) {
+		scope.inTransaction(
+				session -> {
+					assertEquals(8.0, session.createSelectionQuery("select 2^3", Double.class).getSingleResult(), 1e-5);
+					assertEquals(0.5, session.createSelectionQuery("select 2.0^(-1)", Double.class).getSingleResult(), 1e-5);
+				}
+		);
+	}
 }

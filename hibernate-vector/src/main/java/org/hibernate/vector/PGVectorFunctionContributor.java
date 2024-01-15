@@ -72,6 +72,7 @@ public class PGVectorFunctionContributor implements FunctionContributor {
 					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
 					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( doubleType ) )
 					.register();
+			functionRegistry.registerAlternateKey("dot", "inner_product");
 			functionRegistry.namedDescriptorBuilder( "vector_dims" )
 					.setArgumentsValidator( StandardArgumentsValidators.composite(
 							StandardArgumentsValidators.exactly( 1 ),
@@ -80,6 +81,7 @@ public class PGVectorFunctionContributor implements FunctionContributor {
 					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
 					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( integerType ) )
 					.register();
+			functionRegistry.registerAlternateKey("dim", "vector_dims");
 			functionRegistry.namedDescriptorBuilder( "vector_norm" )
 					.setArgumentsValidator( StandardArgumentsValidators.composite(
 							StandardArgumentsValidators.exactly( 1 ),
@@ -88,6 +90,7 @@ public class PGVectorFunctionContributor implements FunctionContributor {
 					.setArgumentTypeResolver( VectorArgumentTypeResolver.INSTANCE )
 					.setReturnTypeResolver( StandardFunctionReturnTypeResolvers.invariant( doubleType ) )
 					.register();
+			functionRegistry.registerAlternateKey("norm", "vector_norm");
 		}
 	}
 

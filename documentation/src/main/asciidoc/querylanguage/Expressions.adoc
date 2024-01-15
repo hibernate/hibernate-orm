@@ -261,11 +261,13 @@ The operator precedence is given by this table, from highest to lowest precedenc
 |===
 | Precedence class | Type | Operators
 
-| Grouping and tuple instantiation | | `( ... )` and `(x, y, z)`
+| Grouping and tuple instantiation | Fencing | `( ... )` and `( ..., ..., ... )`
+| Absolute value and norm | Fencing | `\| ... \|` and `\|\| ... \|\|`
 | Case lists |  | `case ... end`
 | Member reference | Binary infix | `a.b`
 | Function application | Postfix | `f(x,y)`
 | Indexing | Postfix | `a[i]`
+| Exponentiation | Binary infix | `^`
 | Unary numeric | Unary prefix | `+`, `-`
 | Duration conversions | Unary postfix | `by day` and friends
 | Binary multiplicative | Binary infix | `*`, `/`, `%`
@@ -308,7 +310,7 @@ Many more operations on strings are defined below, in <<exp-functions>>.
 [[numeric-arithmetic]]
 ==== Numeric arithmetic
 
-The basic SQL arithmetic operators, `+`,`-`,`*`, and `/` are joined by the remainder operator `%`.
+The basic SQL arithmetic operators, `+`,`-`,`*`, and `/` are joined by the remainder operator `%` and the exponentiation operator `^`.
 
 [[numeric-arithmetic-example]]
 [source, hql]
@@ -317,6 +319,10 @@ select (1.0 + :taxRate) * sum(item.book.price * item.quantity)
 from Order as ord
     join ord.items as item
 where ord.id = :oid
+----
+[source, hql]
+----
+select (x^2 + y^2)^0.5 from Point
 ----
 
 When both operands of a binary numeric operator have the same type, the result type of the whole expression is the same as the operands.
@@ -336,6 +342,13 @@ When the operands are of different type, one of the operands is implicitly conve
 - `Integer`
 - `Short`
 - `Byte`
+
+The absolute value operator is a synonym for the function `abs()`:
+
+[source, hql]
+----
+select |p.x-q.x|, |p.y-q.y| from Point p, Point q
+----
 
 Many more numeric operations are defined below, in <<exp-functions>>.
 
@@ -1089,6 +1102,31 @@ Try setting the log category `org.hibernate.HQL_FUNCTIONS` to debug.
 Then at startup Hibernate will log a list of type signatures of all registered functions.
 ====
 
+[[vector-functions]]
+.Vector functions and operators
+****
+
+:vector-doc: {doc-user-guide-url}#vector-module
+
+link:{vector-doc}[Hibernate Vector] is a new add-on package for Hibernate which supplies support for vector data types.
+It adds the following functions and operators to HQL:
+
+[[vector-module-functions-overview]]
+[cols="25,^15,~,^15"]
+|===
+| Function | Operator | Purpose | JPA standard
+
+||`x + y`| Vector addition | ✖
+||`x - y`| Vector subtraction | ✖
+||`x * y`| Elementwise multiplication | ✖
+| `norm(x)` | `\|\|x\|\|` or `\|\|x\|\|2` | https://en.wikipedia.org/wiki/Euclidean_space#Euclidean_norm[Euclidean norm] | ✖
+| `euclidean_distance(x,y)` or `l2_distance(x,y)` | `\|\|x-y\|\|` or `\|\|x-y\|\|2` | https://en.wikipedia.org/wiki/Euclidean_distance[Euclidean metric] | ✖
+| `taxicab_distance(x,y)` or `l1_distance(x,y)` | `\|\|x-y\|\|1` | https://en.wikipedia.org/wiki/Taxicab_geometry["Manhattan" or "taxicab" metric] | ✖
+| `cosine_distance(x,y)` | | https://en.wikipedia.org/wiki/Cosine_similarity[Cosine distance] | ✖
+| `dot(x,y)` | | https://en.wikipedia.org/wiki/Dot_product[Euclidean scalar or "dot" product] | ✖
+| `dim(x)` | | The dimension of a vector | ✖
+|===
+****
 
 [[function-sql]]
 ==== Embedding native SQL in HQL

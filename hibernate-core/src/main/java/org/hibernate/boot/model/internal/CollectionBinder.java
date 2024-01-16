@@ -1512,7 +1512,10 @@ public abstract class CollectionBinder {
 		switch ( fetchMode ) {
 			case JOIN:
 				collection.setFetchMode( FetchMode.JOIN );
-				collection.setLazy( false );
+				if ( collection.isLazy() ) {
+					throw new AnnotationException("Collection '" + safeCollectionRole()
+							+ "' is mapped 'fetch=LAZY' and '@Fetch(JOIN)' (join fetching is always eager)");
+				}
 				break;
 			case SELECT:
 				collection.setFetchMode( FetchMode.SELECT );

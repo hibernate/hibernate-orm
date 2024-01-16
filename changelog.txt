@@ -3,6 +3,18 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.2.20.Final (January 16, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32239
+
+** Bug
+    * [HHH-17643] - Allow uninitialized proxy serialization even when a SessionFactory is not available
+
+** Task
+    * [HHH-17536] - Update MySQL JDBC driver to 8.2.0
+
+
 Changes in 6.2.19.Final (January 10, 2024)
 ------------------------------------------------------------------------------------------------------------------------
 

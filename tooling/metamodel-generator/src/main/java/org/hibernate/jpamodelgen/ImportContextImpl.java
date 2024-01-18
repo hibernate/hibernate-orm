@@ -167,6 +167,7 @@ public class ImportContextImpl implements ImportContext {
 		for ( String next : imports ) {
 			// don't add automatically "imported" stuff
 			if ( !isAutoImported( next ) ) {
+				next = next.replaceAll( ">+$", "" );
 				if ( staticImports.contains( next ) ) {
 					builder.append( "import static " ).append( next ).append( ";" ).append( System.lineSeparator() );
 				}

@@ -3,6 +3,58 @@ Hibernate 6 Changelog
 
 Note: Please refer to JIRA to learn more about each issue.
 
+Changes in 6.4.2.Final (January 18, 2024)
+------------------------------------------------------------------------------------------------------------------------
+
+https://hibernate.atlassian.net/projects/HHH/versions/32228
+
+** Bug
+    * [HHH-17639] - CTE query cycle attribute still evaluated incorrectly on MSSQL using collation "Latin1_General_CI_AS"
+    * [HHH-17635] - UnsupportedOperationException when registering CompositeUserType with TypeContributor.contributeType
+    * [HHH-17632] - AssertionError when updating entity with lazy loading property and bytecode enhancement
+    * [HHH-17623] - Ordering collection @OrderBy based on association fails
+    * [HHH-17621] - UnsupportedOperationException when merging an entity with a @Any mapping 
+    * [HHH-17619] - Discriminator-based multitenancy filter is not enabled in a stateless session
+    * [HHH-17618] - After upgrading to to hibernate 6.3.2 finding relations with non abstract parent class fails.
+    * [HHH-17615] - @SoftDelete query problem with Joined Inheritance hierarchy structure
+    * [HHH-17606] - Cannot resolve path of nested generic mapped-superclass joins
+    * [HHH-17578] - ClassCastException when calling generic typed method on proxy
+    * [HHH-17574] - Exception on query: Could not convert ‘java.util.Currency’ to ‘java.util.Currency’ using ‘org.hibernate.type.descriptor.java.CurrencyJavaType’ to wrap
+    * [HHH-17572] - Persist of entity with ToOne association which contains an embeddable with associated collection fails with SemanticException
+    * [HHH-17566] - addNamedQuery leads to "Named query exists, but did not specify a resultClass"
+    * [HHH-17560] - ArrayIndexOutOfBoundsException in DirtyHelper.isModified()
+    * [HHH-17530] - Criteria query with nested dynamic instantiations and sorting is not working
+    * [HHH-17528] - Explicit selection of an @Embeddable property containing associated collections doesn't work
+    * [HHH-17515] - DynamicInstantiationResult wrong java type constructor selected
+    * [HHH-17511] - The @SoftDelete HQL join entity does not generate a delete condition
+    * [HHH-17507] - Could not convert 'java.time.Year' to 'java.time.Year' using 'org.hibernate.type.descriptor.java.YearJavaType' to wrap
+    * [HHH-17496] - Inconsistent handling of enum fields
+    * [HHH-17492] - IN predicate with numeric/decimal parameter types leads to Binding is multi-valued; illegal call to #getBindValue
+    * [HHH-17490] - NOT IN clause does not work with empty list
+    * [HHH-17483] - Nested subtypes filtered out in bidirectional OneToMany association load
+    * [HHH-17481] - OneToMany load empty collection due to discriminator in Polymorphic relationship
+    * [HHH-17467] - QueryArgumentException when using a proxy as parameter value in a query 
+    * [HHH-17463] - UnsupportedOperationException when using JAKARTA_JDBC_URL
+    * [HHH-17435] - Trim function not escaping single quotes and not allowing input parameters as trim character
+    * [HHH-17395] - Refresh with PESSIMISTIC_WRITE ignored for lazy loaded entity
+    * [HHH-17327] - Adding support for Union All in IncrementGenerator
+    * [HHH-17307] - Hibernate 6 ListResultsConsumer.Results#addUnique really slow for ElementCollections
+    * [HHH-17253] - Stackoverflow error on jpamodelgen generation
+    * [HHH-17106] - Varchar(1) column for Java Enum fails with ClassCastException
+    * [HHH-16881] - Envers RevisionListener is not created when Hibernate CDI Extensions are enabled
+    * [HHH-16526] - Query toHqlString() loses function arguments
+    * [HHH-14821] - EntityKey 'null identifier' should not happen
+    * [HHH-14358] - Support binding null UUID sql parameter with PostgreSQL
+    * [HHH-1645] - refresh with LockMode on an unitialized proxy does not work
+
+** Improvement
+    * [HHH-17396] - Fix typos in javadoc
+    * [HHH-17303] - More realistic testcase for HHH-16180
+
+** Task
+    * [HHH-17616] - Move resources to the src/resources folders
+
+
 Changes in 6.4.1.Final (December 15, 2023)
 ------------------------------------------------------------------------------------------------------------------------
 

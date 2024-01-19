@@ -67,6 +67,7 @@ import org.hibernate.annotations.Where;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -116,6 +117,7 @@ import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -1015,14 +1017,22 @@ public class EntityBinder {
 		for ( PropertyData propertyAnnotatedElement : elementsToProcess.getElements() ) {
 			final String propertyName = propertyAnnotatedElement.getPropertyName();
 			if ( !idPropertiesIfIdClass.contains( propertyName ) ) {
+				final XProperty property = propertyAnnotatedElement.getProperty();
+				boolean hasIdAnnotation = hasIdAnnotation( property );
 				if ( !idPropertiesIfIdClass.isEmpty() && !isIgnoreIdAnnotations()
-						&& hasIdAnnotation( propertyAnnotatedElement.getProperty() ) ) {
+						&& hasIdAnnotation ) {
 					missingEntityProperties.add( propertyName );
 				}
 				else {
 					boolean subclassAndSingleTableStrategy =
 							inheritanceState.getType() == InheritanceType.SINGLE_TABLE
 									&& inheritanceState.hasParents();
+					if ( !hasIdAnnotation && property.isAnnotationPresent( GeneratedValue.class ) ) {
+						throw new AnnotationException(
+								"Property '"
+										+ BinderHelper.getPath( propertyHolder, propertyAnnotatedElement )
+										+ "' is annotated @GeneratedValue but is not part of an identifier" );
+					}
 					processElementAnnotations(
 							propertyHolder,
 							subclassAndSingleTableStrategy

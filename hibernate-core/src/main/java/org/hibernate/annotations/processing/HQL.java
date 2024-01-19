@@ -80,6 +80,7 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * <ul>
  * <li>an entity type,
  * <li>{@link java.util.List},
+ * <li>{@code io.smallrye.mutiny.Uni}, when used with Hibernate Reactive,
  * <li>{@link org.hibernate.query.Query},
  * <li>{@link org.hibernate.query.SelectionQuery},
  * <li>{@link jakarta.persistence.Query}, or

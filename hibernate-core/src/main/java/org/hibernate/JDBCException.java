@@ -42,7 +42,7 @@ public class JDBCException extends HibernateException {
 	 * @param sql The sql being executed when the exception occurred
 	 */
 	public JDBCException(String message, SQLException cause, String sql) {
-		super( message + " [" + sql + "]", cause );
+		super( sql == null ? message : message + " [" + sql + "]", cause );
 		this.message = message;
 		this.sqlException = cause;
 		this.sql = sql;

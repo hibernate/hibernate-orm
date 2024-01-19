@@ -127,11 +127,12 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 	);
 
 	protected JDBCException convertSqlException(String message, SQLException e) {
+		final String fullMessage = message + " [" + e.getMessage() + "]";
 		try {
 			// if JdbcServices#getSqlExceptionHelper is available, use it...
 			final JdbcServices jdbcServices = serviceRegistry.getService( JdbcServices.class );
 			if ( jdbcServices != null && jdbcServices.getSqlExceptionHelper() != null ) {
-				return jdbcServices.getSqlExceptionHelper().convert( e, message, null );
+				return jdbcServices.getSqlExceptionHelper().convert( e, fullMessage );
 			}
 		}
 		catch (ServiceException se) {
@@ -140,7 +141,7 @@ public abstract class BasicConnectionCreator implements ConnectionCreator {
 
 		// likely we are still in the process of initializing the ServiceRegistry, so use the simplified
 		// SQLException conversion
-		return simpleConverterAccess.getValue().convert( e, message, null );
+		return simpleConverterAccess.getValue().convert( e, fullMessage, null );
 	}
 
 	protected abstract Connection makeConnection(String url, Properties connectionProps);

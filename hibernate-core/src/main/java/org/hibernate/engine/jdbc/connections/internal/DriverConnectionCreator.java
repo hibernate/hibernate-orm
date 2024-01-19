@@ -40,7 +40,7 @@ public class DriverConnectionCreator extends BasicConnectionCreator {
 			return driver.connect( url, connectionProps );
 		}
 		catch (SQLException e) {
-			throw convertSqlException( "Error calling Driver#connect", e );
+			throw convertSqlException( "Error calling Driver.connect()", e );
 		}
 	}
 }

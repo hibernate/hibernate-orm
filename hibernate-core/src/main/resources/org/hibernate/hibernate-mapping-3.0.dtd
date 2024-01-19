@@ -135,6 +135,7 @@ arbitrary number of queries, and import declarations of arbitrary classes.
 <!ELEMENT filter-def (#PCDATA|filter-param)*>
 	<!ATTLIST filter-def name CDATA #REQUIRED> <!-- The filter name -->
 	<!ATTLIST filter-def condition CDATA #IMPLIED>
+	<!ATTLIST filter-def applied-on-find (true|false) "false">
 
 <!--
 	FILTER-PARAM element; qualifies parameters found within a FILTER-DEF

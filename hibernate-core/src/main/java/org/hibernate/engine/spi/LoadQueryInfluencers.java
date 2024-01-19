@@ -13,6 +13,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import org.hibernate.Filter;
 import org.hibernate.Internal;
@@ -159,6 +160,20 @@ public class LoadQueryInfluencers implements Serializable {
 			}
 			return enabledFilters;
 		}
+	}
+
+	/**
+	 * Returns a Map of enabled filters that have the appliedOnFind
+	 * flag set to true
+	 * @return a Map of enabled filters that have the appliedOnFind
+	 * flag set to true
+	 */
+	public Map<String, Filter> getEnabledFiltersForFind() {
+		return getEnabledFilters()
+				.entrySet()
+				.stream()
+				.filter(f -> f.getValue().isAppliedOnFind())
+				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
 	}
 
 	/**

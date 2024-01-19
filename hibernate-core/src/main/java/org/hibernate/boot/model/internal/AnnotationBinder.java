@@ -681,7 +681,7 @@ public final class AnnotationBinder {
 			}
 		}
 		final FilterDefinition filterDefinition =
-				new FilterDefinition( name, filterDef.defaultCondition(), explicitParamJaMappings );
+				new FilterDefinition( name, filterDef.defaultCondition(), explicitParamJaMappings, filterDef.appliedOnFind() );
 		LOG.debugf( "Binding filter definition: %s", filterDefinition.getFilterName() );
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}

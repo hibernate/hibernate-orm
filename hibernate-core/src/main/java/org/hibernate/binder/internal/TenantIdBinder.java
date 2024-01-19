@@ -54,7 +54,8 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 					new FilterDefinition(
 							FILTER_NAME,
 							"",
-							singletonMap( PARAMETER_NAME, tenantIdType )
+							singletonMap( PARAMETER_NAME, tenantIdType ),
+							false
 					)
 			);
 		}

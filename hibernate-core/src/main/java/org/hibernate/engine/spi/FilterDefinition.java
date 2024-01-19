@@ -32,18 +32,20 @@ public class FilterDefinition implements Serializable {
 	private final String filterName;
 	private final String defaultFilterCondition;
 	private final Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
+	private final boolean appliedOnFind;
 
 	/**
 	 * Construct a new FilterDefinition instance.
 	 *
 	 * @param name The name of the filter for which this configuration is in effect.
 	 */
-	public FilterDefinition(String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings) {
+	public FilterDefinition(String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings, boolean appliedOnFind) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
 		if ( explicitParamJaMappings != null ) {
 			this.explicitParamJaMappings.putAll( explicitParamJaMappings );
 		}
+		this.appliedOnFind = appliedOnFind;
 	}
 
 	/**
@@ -79,6 +81,16 @@ public class FilterDefinition implements Serializable {
 
 	public String getDefaultFilterCondition() {
 		return defaultFilterCondition;
+	}
+
+	/**
+	 * Get a flag that defines if the filter should be applied
+	 * on direct fetches or not.
+	 *
+	 * @return The flag value.
+	 */
+	public boolean isAppliedOnFind() {
+		return appliedOnFind;
 	}
 
 	/**

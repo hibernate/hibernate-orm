@@ -90,4 +90,13 @@ public @interface FilterDef {
 	 * The names and types of the parameters of the filter.
 	 */
 	ParamDef[] parameters() default {};
+
+	/**
+	 * The flag used to decide if the filter will
+	 * be applied on direct fetches or not.
+	 * <p>
+	 * If the flag is true, the filter will be
+	 * applied on direct fetches, such as findById().
+	 */
+	boolean appliedOnFind() default false;
 }

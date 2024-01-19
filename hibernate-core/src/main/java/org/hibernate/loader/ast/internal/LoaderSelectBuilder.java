@@ -7,7 +7,6 @@
 package org.hibernate.loader.ast.internal;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,7 +28,6 @@ import org.hibernate.loader.ast.spi.Loadable;
 import org.hibernate.loader.ast.spi.Loader;
 import org.hibernate.metamodel.CollectionClassification;
 import org.hibernate.metamodel.mapping.AttributeMapping;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.CollectionPart;
 import org.hibernate.metamodel.mapping.EntityIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
@@ -747,8 +745,8 @@ public class LoaderSelectBuilder {
 				querySpec::applyPredicate,
 				tableGroup,
 				true,
-				// HHH-16179 Session.find should not apply filters
-				Collections.emptyMap(),//loadQueryInfluencers.getEnabledFilters(),
+				// HHH-16830 Session.find should apply filters only if specified on the filter definition
+				loadQueryInfluencers.getEnabledFiltersForFind(),
 				null,
 				astCreationState
 		);

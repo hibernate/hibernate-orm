@@ -74,7 +74,7 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  *     session object, instead of having a parameter of type
  *     {@code EntityManager}, and
  * <li>the generated static metamodel class will actually implement
- *     the type which declares the method annotated {@code @SQL}.
+ *     the type which declares the method annotated {@code @Find}.
  * </ul>
  * <p>
  * Thus, the generated method may be called according to the following
@@ -91,6 +91,7 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  * or one of the following types:
  * <ul>
  * <li>{@link java.util.List java.util.List&lt;E&gt;},
+ * <li>{@code io.smallrye.mutiny.Uni&lt;E&gt;}, when used with Hibernate Reactive,
  * <li>{@link org.hibernate.query.Query org.hibernate.query.Query&lt;E&gt;},
  * <li>{@link org.hibernate.query.SelectionQuery org.hibernate.query.SelectionQuery&lt;E&gt;},
  * <li>{@link jakarta.persistence.Query jakarta.persistence.Query&lt;E&gt;}, or
@@ -105,8 +106,14 @@ import static java.lang.annotation.RetentionPolicy.CLASS;
  *     {@code @EmbeddedId} field of the entity, the finder method uses
  *     {@link jakarta.persistence.EntityManager#find(Class, Object)}
  *     to retrieve the entity.
+ * <li>Similarly, if there is one parameter, and its type matches the
+ *     type of the {@link jakarta.persistence.IdClass IdClass} of the
+ *     entity, the finder method uses
+ *     {@link jakarta.persistence.EntityManager#find(Class, Object)}
+ *     to retrieve the entity. In this case the parameter name is not
+ *     significant.
  * <li>If the parameters match exactly with the {@code @NaturalId}
- *     field of the entity, the finder method uses
+ *     field or fields of the entity, the finder method uses
  *     {@link org.hibernate.Session#byNaturalId(Class)} to retrieve the
  *     entity.
  * <li>Otherwise, the finder method builds and executes a

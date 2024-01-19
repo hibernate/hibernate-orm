@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.hibernate.jpamodelgen.model.ImportContext;
 
@@ -21,6 +23,8 @@ import org.hibernate.jpamodelgen.model.ImportContext;
  * @author Emmanuel Bernard
  */
 public class ImportContextImpl implements ImportContext {
+
+	private static final Pattern P_IMPORT = Pattern.compile( "(\\?\\s+\\w+\\s+)(.+)" );
 
 	private final Set<String> imports = new TreeSet<>();
 	private final Set<String> staticImports = new TreeSet<>();
@@ -66,11 +70,18 @@ public class ImportContextImpl implements ImportContext {
 
 		// strip off type annotations and '? super' or '? extends'
 		String preamble = "";
-		if ( result.startsWith("@") || result.startsWith("?") ) {
+		if ( result.startsWith( "@" ) ) {
 			int index = result.lastIndexOf(' ');
 			if ( index > 0 ) {
 				preamble = result.substring( 0, index+1 );
 				result = result.substring( index+1 );
+			}
+		}
+		else if ( result.startsWith( "?" ) ) {
+			final Matcher m = P_IMPORT.matcher( result );
+			if ( m.matches() ) {
+				preamble = m.group( 1 );
+				result = Objects.requireNonNullElse( m.group( 2 ), "" );
 			}
 		}
 
@@ -123,11 +134,24 @@ public class ImportContextImpl implements ImportContext {
 	private String importTypes(String originalArgList) {
 		String[] args = originalArgList.split(",");
 		StringBuilder argList = new StringBuilder();
+		StringBuilder acc = new StringBuilder();
 		for ( String arg : args ) {
+			if ( acc.length() > 0 ) {
+				acc.append( ',' );
+			}
+			acc.append( arg );
+			final int count = acc.chars().reduce(
+					0,
+					(left, right) -> left + ( right == '<' ? 1 : right == '>' ? -1 : 0 )
+			);
+			if ( count > 0 ) {
+				continue;
+			}
 			if ( argList.length() > 0 ) {
 				argList.append(',');
 			}
-			argList.append( importType( arg ) );
+			argList.append( importType( acc.toString() ) );
+			acc.setLength( 0 );
 		}
 		return argList.toString();
 	}

@@ -3647,7 +3647,10 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		if ( sqmPath instanceof SqmEntityValuedSimplePath<?>
 				|| sqmPath instanceof SqmEmbeddedValuedSimplePath<?>
 				|| sqmPath instanceof SqmAnyValuedSimplePath<?> ) {
-			final TableGroup existingTableGroup = fromClauseIndex.findTableGroupForGetOrCreate( sqmPath.getNavigablePath() );
+			final TableGroup existingTableGroup = fromClauseIndex.findTableGroupForGetOrCreate(
+					sqmPath.getNavigablePath(),
+					allowLeftJoins
+			);
 			if ( existingTableGroup == null ) {
 				final TableGroup createdTableGroup = createTableGroup(
 						getActualTableGroup(
@@ -3900,9 +3903,9 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 	private boolean isMappedByOrNotFoundToOne(TableGroupJoinProducer joinProducer) {
 		if ( joinProducer instanceof ToOneAttributeMapping ) {
 			final ToOneAttributeMapping toOne = (ToOneAttributeMapping) joinProducer;
-			if ( toOne.hasNotFoundAction() || toOne.getReferencedPropertyName() != null ) {
-				return true;
-			}
+			return toOne.hasNotFoundAction() ||
+					// ToOne( mappedBy = "..." ) always has a referenced property name and is the target side
+					( toOne.getReferencedPropertyName() != null && toOne.getSideNature() == ForeignKeyDescriptor.Nature.TARGET );
 		}
 		return false;
 	}

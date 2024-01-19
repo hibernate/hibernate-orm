@@ -76,3 +76,27 @@ Finally, the `SelfRenderingFunctionSqlAstExpression.getRenderer()` method was de
 == Supported Dialects
 
 Please also do have a look at the link:{versionDocBase}/dialect/dialect.html[Supported Dialects] document to check for potential upgrades to the minimum version of the databases underpinning the dialects that Hibernate currently supports.
+
+[[GeneratedValues]]
+== Generated Values
+
+Previous versions of Hibernate silently ignored annotations `@GeneratedValue` applied to non identifier fields.
+
+E.g.
+
+```
+@Entity
+class Entity{
+
+    @Id
+    Integer id,
+
+
+
+    @GeneratedValue // Ignored in Hibernate versions < 6.4, since 6.4 an AnnotationException is thrown
+    String name;
+}
+
+```
+
+From 6.4 this mapping is not allowed anymore and an `AnnotationException` will be raised.

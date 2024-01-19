@@ -8,7 +8,6 @@ package org.hibernate.resource.beans.internal;
 
 import org.hibernate.internal.log.SubSystemLogging;
 import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 
 import org.jboss.logging.Logger;
 import org.jboss.logging.annotations.LogMessage;
@@ -16,6 +15,7 @@ import org.jboss.logging.annotations.Message;
 import org.jboss.logging.annotations.MessageLogger;
 import org.jboss.logging.annotations.ValidIdRange;
 
+import static org.jboss.logging.Logger.Level.DEBUG;
 import static org.jboss.logging.Logger.Level.INFO;
 import static org.jboss.logging.Logger.Level.WARN;
 
@@ -31,7 +31,6 @@ import static org.jboss.logging.Logger.Level.WARN;
 public interface BeansMessageLogger {
 	String LOGGER_NAME = SubSystemLogging.BASE + ".beans";
 
-	Logger BEANS_LOGGER = Logger.getLogger( LOGGER_NAME );
 	BeansMessageLogger BEANS_MSG_LOGGER = Logger.getMessageLogger( BeansMessageLogger.class, LOGGER_NAME );
 
 	@LogMessage( level = WARN )
@@ -51,17 +50,10 @@ public interface BeansMessageLogger {
 	)
 	void noBeanManagerButCdiAvailable();
 
-	@LogMessage( level = INFO )
-	@Message(
-			id = 10005003,
-			value = "Stopping ManagedBeanRegistry : %s"
-	)
-	void stoppingManagedBeanRegistry(ManagedBeanRegistry registry);
-
-	@LogMessage( level = INFO )
+	@LogMessage( level = DEBUG )
 	@Message(
 			id = 10005004,
-			value = "Stopping BeanContainer : %s"
+			value = "Stopping BeanContainer: %s"
 	)
 	void stoppingBeanContainer(BeanContainer beanContainer);
 }

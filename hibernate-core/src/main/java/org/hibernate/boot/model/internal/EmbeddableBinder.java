@@ -388,7 +388,15 @@ public class EmbeddableBinder {
 
 			final XProperty property = propertyAnnotatedElement.getProperty();
 			if ( property.isAnnotationPresent( GeneratedValue.class ) ) {
-				processGeneratedId( context, component, property );
+				if ( isIdClass || subholder.isOrWithinEmbeddedId() ) {
+					processGeneratedId( context, component, property );
+				}
+				else {
+					throw new AnnotationException(
+							"Property '" + property.getName() + "' of '"
+									+ getPath( propertyHolder, inferredData )
+									+ "' is annotated '@GeneratedValue' but is not part of an identifier" );
+				}
 			}
 		}
 

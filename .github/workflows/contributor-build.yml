@@ -82,6 +82,7 @@ jobs:
       - name: Run build script
         env:
           RDBMS: ${{ matrix.rdbms }}
+          POPULATE_REMOTE_GRADLE_CACHE: true
           GRADLE_ENTERPRISE_ACCESS_KEY: "${{ secrets.DEVELOCITY_ACCESS_TOKEN }}"
         run: ./ci/build-github.sh
         shell: bash

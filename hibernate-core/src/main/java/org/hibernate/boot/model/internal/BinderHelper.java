@@ -448,9 +448,16 @@ public class BinderHelper {
 		// which are mapped to that column. (There might be multiple such
 		// properties for each column.)
 		if ( columnOwner instanceof PersistentClass ) {
-			PersistentClass persistentClass = (PersistentClass) columnOwner;
+			final PersistentClass persistentClass = (PersistentClass) columnOwner;
+			// Process ToOne associations after Components, Basic and Id properties
+			final List<Property> toOneProperties = new ArrayList<>();
 			for ( Property property : persistentClass.getReferenceableProperties() ) {
-				matchColumnsByProperty( property, columnsToProperty );
+				if ( property.getValue() instanceof ToOne ) {
+					toOneProperties.add( property );
+				}
+				else {
+					matchColumnsByProperty( property, columnsToProperty );
+				}
 			}
 			if ( persistentClass.hasIdentifierProperty() ) {
 				matchColumnsByProperty( persistentClass.getIdentifierProperty(), columnsToProperty );
@@ -461,6 +468,9 @@ public class BinderHelper {
 				for ( Property p : key.getProperties() ) {
 					matchColumnsByProperty( p, columnsToProperty );
 				}
+			}
+			for ( Property property : toOneProperties ) {
+				matchColumnsByProperty( property, columnsToProperty );
 			}
 		}
 		else {

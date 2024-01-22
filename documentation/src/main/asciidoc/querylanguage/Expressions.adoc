@@ -917,8 +917,6 @@ In case 2, application of the function produces an <<implicit-collection-join,im
 The next group of functions always accept a compound path referring to a collection or many-valued association of an entity.
 They're interpreted as referring to the collection as a whole.
 
-Application of one of these function produces implicit subquery.
-
 [[collective-collection-functions]]
 [cols="15,20,~,^15"]
 |===
@@ -929,6 +927,7 @@ Application of one of these function produces implicit subquery.
 | `keys()` | Maps | The keys of a map, collectively | ✖
 | `values()` | Maps | The values of a map, collectively | ✖
 |===
+Application of one of these function produces an implicit subquery or implicit join.
 
 This query has an implicit join:
 
@@ -945,6 +944,9 @@ This query has an implicit subquery:
 ----
 select title from Book where 'hibernate' in elements(tags)
 ----
+
+NOTE: It never makes sense to apply the functions `elements()`, `indices()`, `keys()`, or `values()` to an identification variable or single-valued path expression.
+These functions must be applied to a reference to a many-valued path expression.
 
 [discrete]
 ===== Collection sizes

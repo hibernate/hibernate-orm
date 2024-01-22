@@ -1630,9 +1630,12 @@ public class ToOneAttributeMapping
 		final boolean selectByUniqueKey = isSelectByUniqueKey( side );
 
 		// Consider all associations annotated with @NotFound as EAGER
+		// and LAZY one-to-one that are not instrumented and not  optional
 		if ( fetchTiming == FetchTiming.IMMEDIATE
 				|| hasNotFoundAction()
-				|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null ) {
+				|| getAssociatedEntityMappingType().getSoftDeleteMapping() != null
+				|| ( !entityMappingType.getEntityPersister().isInstrumented()
+				&& cardinality == Cardinality.ONE_TO_ONE && isOptional ) ) {
 			return buildEntityFetchSelect(
 					fetchParent,
 					this,

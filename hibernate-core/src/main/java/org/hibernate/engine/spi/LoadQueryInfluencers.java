@@ -72,6 +72,13 @@ public class LoadQueryInfluencers implements Serializable {
 		this.sessionFactory = sessionFactory;
 		batchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
+		for (FilterDefinition filterDefinition : sessionFactory.getAutoEnabledFilters()) {
+			FilterImpl filter = new FilterImpl( filterDefinition );
+			if ( enabledFilters == null ) {
+				this.enabledFilters = new HashMap<>();
+			}
+			enabledFilters.put( filterDefinition.getFilterName(), filter );
+		}
 	}
 
 	public EffectiveEntityGraph applyEntityGraph(@Nullable RootGraphImplementor<?> rootGraph, @Nullable GraphSemantic graphSemantic) {

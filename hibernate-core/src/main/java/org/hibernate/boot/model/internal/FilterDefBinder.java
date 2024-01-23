@@ -38,6 +38,7 @@ import java.lang.reflect.ParameterizedType;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import static java.util.Collections.emptyMap;
 import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
@@ -57,12 +58,16 @@ class FilterDefBinder {
 		if ( context.getMetadataCollector().getFilterDefinition( name ) != null ) {
 			throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + name + "'" );
 		}
+
 		final Map<String, JdbcMapping> explicitParamJaMappings;
+		final Map<String, ManagedBean<? extends Supplier>> parameterResolvers;
 		if ( filterDef.parameters().length == 0 ) {
 			explicitParamJaMappings = emptyMap();
+			parameterResolvers = emptyMap();
 		}
 		else {
 			explicitParamJaMappings = new HashMap<>();
+			parameterResolvers = new HashMap<>();
 			for ( ParamDef paramDef : filterDef.parameters() ) {
 				final JdbcMapping jdbcMapping = resolveFilterParamType( paramDef.type(), context );
 				if ( jdbcMapping == null ) {
@@ -76,12 +81,29 @@ class FilterDefBinder {
 					);
 				}
 				explicitParamJaMappings.put( paramDef.name(), jdbcMapping );
+
+				if ( paramDef.resolver() != Supplier.class ) {
+					parameterResolvers.put( paramDef.name(), resolveParamResolver( paramDef, context ) );
+				}
 			}
 		}
-		final FilterDefinition filterDefinition =
-				new FilterDefinition( name, filterDef.defaultCondition(), explicitParamJaMappings );
+		final FilterDefinition filterDefinition = new FilterDefinition(
+				name,
+				filterDef.defaultCondition(),
+				explicitParamJaMappings,
+				parameterResolvers,
+				filterDef.autoEnabled()
+		);
 		LOG.debugf( "Binding filter definition: %s", filterDefinition.getFilterName() );
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
+	}
+
+	private static ManagedBean<? extends Supplier> resolveParamResolver(ParamDef paramDef, MetadataBuildingContext context) {
+		Class<? extends Supplier> clazz = paramDef.resolver();
+		assert clazz != Supplier.class;
+
+		final ManagedBeanRegistry beanRegistry = context.getBootstrapContext().getServiceRegistry().getService( ManagedBeanRegistry.class );
+		return beanRegistry.getBean( clazz, context.getBootstrapContext().getCustomTypeProducer() );
 	}
 
 	@SuppressWarnings("unchecked")

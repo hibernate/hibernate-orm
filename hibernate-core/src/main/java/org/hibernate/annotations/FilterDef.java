@@ -90,4 +90,9 @@ public @interface FilterDef {
 	 * The names and types of the parameters of the filter.
 	 */
 	ParamDef[] parameters() default {};
+
+	/**
+	 * The flag used to auto-enable the filter on the session.
+	 */
+	boolean autoEnabled() default false;
 }

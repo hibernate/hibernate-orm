@@ -148,7 +148,7 @@ public class FilterImpl implements Filter, Serializable {
 		return parameters.get( name );
 	}
 
-	public Class<? extends Supplier> getParameterResolver(String name) {
+	public Supplier getParameterResolver(String name) {
 		return definition.getParameterResolver(name);
 	}
 
@@ -163,8 +163,8 @@ public class FilterImpl implements Filter, Serializable {
 		// has been set or a resolver has been implemented and specified
 
 		for ( final String parameterName : definition.getParameterNames() ) {
-			Class<? extends Supplier> parameterResolver = getParameterResolver( parameterName );
-			if ( parameters.get( parameterName ) == null && parameterResolver.isInterface() ) {
+			if ( parameters.get( parameterName ) == null &&
+					(getParameterResolver( parameterName ) == null || getParameterResolver( parameterName ).getClass().isInterface()) ) {
 				throw new HibernateException(
 						"Either value and resolver for filter [" + getName() + "] parameter [" + parameterName + "] not set"
 				);

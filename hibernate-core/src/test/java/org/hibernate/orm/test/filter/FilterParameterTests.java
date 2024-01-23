@@ -198,24 +198,6 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@ParameterizedTest
 	@MethodSource("transactionKind")
 	public void testAutoEnableWithResolver() {
-		scope.inTransaction( (session) -> {
-			session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
-			final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
-					.setParameter( "id", 1 )
-					.getSingleResultOrNull();
-			assertThat( first_a ).isNotNull();
-			assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
-			session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "SECOND_A"  );
-			final EntityFour second = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
-					.setParameter( "id", 3 )
-					.getSingleResultOrNull();
-			assertThat( second ).isNull();
-		} );
-	}
-
-	@ParameterizedTest
-	@MethodSource("transactionKind")
-	public void testAutoEnableWithBeanResolver() {
 		final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
 				.disableDiscovery()
 				.addBeanClasses( EntityFourDepartmentResolver.class );
@@ -242,14 +224,20 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
 			try {
 				inTransaction(
-						sessionFactory,
-						session -> {
-							session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
-							final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
-									.setParameter( "id", 1 )
-									.getSingleResultOrNull();
-							assertThat( first_a ).isNotNull();
-						}
+					sessionFactory,
+					session -> {
+						session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
+						final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+								.setParameter( "id", 1 )
+								.getSingleResultOrNull();
+						assertThat( first_a ).isNotNull();
+						assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
+						session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "SECOND_A"  );
+						final EntityFour second = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+								.setParameter( "id", 3 )
+								.getSingleResultOrNull();
+						assertThat( second ).isNull();
+					}
 				);
 			}
 			finally {
@@ -261,18 +249,51 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@ParameterizedTest
 	@MethodSource("transactionKind")
 	public void testAutoEnableWithoutResolver() {
-		scope.inTransaction( (session) -> {
-			session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
-			final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
-					.setParameter( "id", 1 )
-					.getSingleResultOrNull();
-			assertThat( first_a ).isNotNull();
-			assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
-			final EntityFour first_b = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
-					.setParameter( "id", 2 )
-					.getSingleResultOrNull();
-			assertThat( first_b ).isNull();
-		} );
+		final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
+				.disableDiscovery()
+				.addBeanClasses( EntityFourDepartmentResolver.class );
+		try ( final SeContainer cdiContainer = cdiInitializer.initialize() ) {
+			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
+
+			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
+					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
+					.build();
+
+			final SessionFactoryImplementor sessionFactory;
+
+			try {
+				sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
+						.addAnnotatedClass( EntityFour.class )
+						.buildMetadata()
+						.getSessionFactoryBuilder()
+						.build();
+			}
+			catch ( Exception e ) {
+				StandardServiceRegistryBuilder.destroy( ssr );
+				throw e;
+			}
+
+			try {
+				inTransaction(
+					sessionFactory,
+					session -> {
+						session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
+						final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+								.setParameter( "id", 1 )
+								.getSingleResultOrNull();
+						assertThat( first_a ).isNotNull();
+						assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
+						final EntityFour first_b = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+								.setParameter( "id", 2 )
+								.getSingleResultOrNull();
+						assertThat( first_b ).isNull();
+					}
+				);
+			}
+			finally {
+				sessionFactory.close();
+			}
+		}
 	}
 
 

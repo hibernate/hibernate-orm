@@ -27,6 +27,7 @@ import org.hibernate.loader.ast.spi.CascadingFetchProfile;
 import org.hibernate.persister.collection.CollectionPersister;
 import org.hibernate.persister.entity.EntityPersister;
 
+import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static java.util.Collections.emptySet;
@@ -72,6 +73,13 @@ public class LoadQueryInfluencers implements Serializable {
 		this.sessionFactory = sessionFactory;
 		batchSize = options.getDefaultBatchFetchSize();
 		subselectFetchEnabled = options.isSubselectFetchEnabled();
+		sessionFactory.getAutoEnabledFilters().forEach( (filterName, filterDefinition) -> {
+			FilterImpl filter = new FilterImpl( filterDefinition );
+			if ( enabledFilters == null ) {
+				this.enabledFilters = new HashMap<>();
+			}
+			enabledFilters.put( filterName, filter );
+		});
 	}
 
 	public EffectiveEntityGraph applyEntityGraph(@Nullable RootGraphImplementor<?> rootGraph, @Nullable GraphSemantic graphSemantic) {

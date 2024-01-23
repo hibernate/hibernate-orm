@@ -320,7 +320,6 @@ public class HbmXmlTransformer {
 			final JaxbFilterDef filterDef = new JaxbFilterDef();
 			ormRoot.getFilterDefinitions().add( filterDef );
 			filterDef.setName( hbmFilterDef.getName() );
-			filterDef.setAutoEnabled( hbmFilterDef.isAutoEnabled() );
 
 			boolean foundCondition = false;
 			for ( Object content : hbmFilterDef.getContent() ) {

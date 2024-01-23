@@ -548,10 +548,8 @@ include::{extrasdir}/pc-filter-entity-query-example.sql[]
 ====
 
 A parameter's value can be explicitly set on the filter itself, or can be
-resolved by using a custom `Supplier`. The custom resolver can be
-created as a bean, and in this case it will be retrieved from the context,
-or it will be instantiated anew by the filter. The resolver must implement
-the interface `java.util.function.Supplier`.
+resolved by using a custom `Supplier`. The resolver must implement
+the interface `java.util.function.Supplier` and must be defined as a managed bean.
 
 [source, JAVA, indent=0]
 ----

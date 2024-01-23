@@ -57,6 +57,7 @@ import org.hibernate.internal.CoreMessageLogger;
 import org.hibernate.internal.util.GenericsHelper;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
 import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.resource.beans.spi.ManagedBean;
 import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
@@ -661,7 +662,7 @@ public final class AnnotationBinder {
 			throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + name + "'" );
 		}
 		final Map<String, JdbcMapping> explicitParamJaMappings;
-		final Map<String, Class<? extends Supplier>> parameterResolverMap;
+		final Map<String, ManagedBean<? extends Supplier>> parameterResolverMap;
 		if ( filterDef.parameters().length == 0 ) {
 			explicitParamJaMappings = emptyMap();
 			parameterResolverMap = emptyMap();
@@ -682,7 +683,7 @@ public final class AnnotationBinder {
 					);
 				}
 				explicitParamJaMappings.put( paramDef.name(), jdbcMapping );
-				parameterResolverMap.put(paramDef.name(), paramDef.resolver());
+				parameterResolverMap.put(paramDef.name(), resolveParamResolver(paramDef, context));
 			}
 		}
 		final FilterDefinition filterDefinition =
@@ -803,6 +804,15 @@ public final class AnnotationBinder {
 		final JavaType<?> jtd = getJavaType( type, context, typeConfiguration );
 		final JdbcType jdbcType = jtd.getRecommendedJdbcType( typeConfiguration.getCurrentBaseSqlTypeIndicators() );
 		return typeConfiguration.getBasicTypeRegistry().resolve( jtd, jdbcType );
+	}
+
+	private static ManagedBean<? extends Supplier> resolveParamResolver(ParamDef paramDef, MetadataBuildingContext context) {
+		Class<? extends Supplier> clazz = paramDef.resolver();
+		if (clazz.isInterface()) {
+			return null;
+		}
+		final ManagedBeanRegistry beanRegistry = context.getBootstrapContext().getServiceRegistry().getService( ManagedBeanRegistry.class );
+		return beanRegistry.getBean( clazz, context.getBootstrapContext().getCustomTypeProducer() );
 	}
 
 	private static JavaType<?> getJavaType(

@@ -178,8 +178,7 @@ public class FilterHelper {
 			final String filterName = filterNames[i];
 			final FilterImpl enabledFilter = (FilterImpl) enabledFilters.get( filterName );
 			if ( enabledFilter != null ) {
-				final BeanContainer beanContainer = creationState.getCreationContext().getServiceRegistry().getService( ManagedBeanRegistry.class ).getBeanContainer();
-				filterPredicate.applyFragment( render( aliasGenerator, i, tableGroup, creationState ), enabledFilter, parameterNames[i], beanContainer );
+				filterPredicate.applyFragment( render( aliasGenerator, i, tableGroup, creationState ), enabledFilter, parameterNames[i] );
 			}
 		}
 

@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
@@ -1087,6 +1088,14 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			throw new UnknownFilterException( filterName );
 		}
 		return def;
+	}
+
+	@Override
+	public Map<String, FilterDefinition> getAutoEnabledFilters() {
+		return filters.entrySet()
+				.stream()
+				.filter( entry -> entry.getValue().isAutoEnabled() )
+				.collect(Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ));
 	}
 
 	public boolean containsFetchProfileDefinition(String name) {

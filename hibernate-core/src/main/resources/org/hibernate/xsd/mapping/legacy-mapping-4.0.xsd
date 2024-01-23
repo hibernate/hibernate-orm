@@ -119,7 +119,6 @@
         </xs:sequence>
         <xs:attribute name="condition" type="xs:string"/>
         <xs:attribute name="name" use="required" type="xs:string"/>
-        <xs:attribute name="auto-enabled" type="xs:boolean" default="false"/>
     </xs:complexType>
 
     <xs:complexType name="FilterParameterType">

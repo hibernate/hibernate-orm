@@ -7,6 +7,8 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
+import java.util.Map;
+import java.util.Set;
 
 import org.hibernate.CustomEntityDirtinessStrategy;
 import org.hibernate.HibernateException;
@@ -163,6 +165,8 @@ public interface SessionFactoryImplementor
 	SessionFactoryOptions getSessionFactoryOptions();
 
 	FilterDefinition getFilterDefinition(String filterName);
+
+	Map<String, FilterDefinition> getAutoEnabledFilters();
 
 
 

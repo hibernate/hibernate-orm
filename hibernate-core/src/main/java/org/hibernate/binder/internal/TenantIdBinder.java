@@ -57,7 +57,7 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 							FILTER_NAME,
 							"",
 							singletonMap( PARAMETER_NAME, tenantIdType ),
-							singletonMap( PARAMETER_NAME, Supplier.class ),
+							singletonMap( PARAMETER_NAME, null ),
 							true
 					)
 			);

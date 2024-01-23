@@ -171,6 +171,11 @@ public class SessionFactoryDelegatingImpl implements SessionFactoryImplementor, 
 	}
 
 	@Override
+	public Map<String, FilterDefinition> getAutoEnabledFilters() {
+		return delegate.getAutoEnabledFilters();
+	}
+
+	@Override
 	public boolean containsFetchProfileDefinition(String name) {
 		return delegate.containsFetchProfileDefinition( name );
 	}

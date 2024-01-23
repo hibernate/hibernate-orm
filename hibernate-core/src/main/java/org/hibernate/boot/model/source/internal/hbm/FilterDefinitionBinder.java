@@ -17,6 +17,7 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterParameterType;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
+import org.hibernate.resource.beans.spi.ManagedBean;
 
 import org.jboss.logging.Logger;
 
@@ -39,7 +40,7 @@ class FilterDefinitionBinder {
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmFilterDefinitionType jaxbFilterDefinitionMapping) {
 		Map<String, JdbcMapping> parameterMap = null;
-		Map<String, Class<? extends Supplier>> parameterResolverMap = null;
+		Map<String, ManagedBean<? extends Supplier>> parameterResolverMap = null;
 		String condition = jaxbFilterDefinitionMapping.getCondition();
 
 		for ( Serializable content : jaxbFilterDefinitionMapping.getContent() ) {
@@ -92,7 +93,7 @@ class FilterDefinitionBinder {
 						condition,
 						parameterMap,
 						parameterResolverMap,
-						jaxbFilterDefinitionMapping.isAutoEnabled()
+						false
 				)
 		);
 

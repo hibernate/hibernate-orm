@@ -9,6 +9,7 @@ package org.hibernate.orm.test.pc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -360,4 +361,69 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
     //tag::pc-filter-Account-example[]
     }
     //end::pc-filter-Account-example[]
+
+
+    @Entity(name = "AutoFilteredAccount")
+    @Table(name = "autofilteredaccount")
+    //tag::pc-filter-auto-enabled-Account-example[]
+    @FilterDef(
+            name="activeAccount",
+            parameters = @ParamDef(
+                    name="active",
+                    type=Boolean.class
+            ),
+            autoEnabled = true
+    )
+    //end::pc-filter-auto-enabled-Account-example[]
+    @Filter(
+            name="activeAccount",
+            condition="active_status = :active"
+    )
+    //tag::pc-filter-resolver-Account-example[]
+    @FilterDef(
+            name="activeAccountWithResolver",
+            parameters = @ParamDef(
+                    name="active",
+                    type=Boolean.class,
+                    resolver = AccountIsActiveResolver.class
+            ),
+            autoEnabled = true
+    )
+    //end::pc-filter-resolver-Account-example[]
+    public static class AutoFilteredAccount {
+
+        @Id
+        private Long id;
+
+        @Column(name = "active_status")
+        private boolean active;
+
+        public Long getId() {
+            return id;
+        }
+
+        public AutoFilteredAccount setId(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public boolean isActive() {
+            return active;
+        }
+
+        public AutoFilteredAccount setActive(boolean active) {
+            this.active = active;
+            return this;
+        }
+    }
+
+    //tag::pc-filter-resolver-Account-example[]
+
+    public static class AccountIsActiveResolver implements Supplier<Boolean> {
+        @Override
+        public Boolean get() {
+            return true;
+        }
+    }
+    //end::pc-filter-resolver-Account-example[]
 }

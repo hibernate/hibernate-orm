@@ -8,13 +8,17 @@ package org.hibernate.sql.ast.tree.predicate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
+import org.hibernate.MappingException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
@@ -116,7 +120,7 @@ public class FilterPredicate implements Predicate {
 				parameters = CollectionHelper.arrayList( parameterNames.size() );
 				for ( int i = 0; i < parameterNames.size(); i++ ) {
 					final String paramName = parameterNames.get( i );
-					final Object paramValue = filter.getParameter( paramName );
+					final Object paramValue = retrieveParamValue(filter, paramName);
 					final FilterDefinition filterDefinition = filter.getFilterDefinition();
 					final JdbcMapping jdbcMapping = filterDefinition.getParameterJdbcMapping( paramName );
 
@@ -154,6 +158,16 @@ public class FilterPredicate implements Predicate {
 		@Override
 		public boolean isEmpty() {
 			return false;
+		}
+
+		private Object retrieveParamValue(FilterImpl filter, String paramName) {
+			Object value = filter.getParameter(paramName);
+			if (value != null) {
+				return value;
+			}
+
+			final Supplier filterParamResolver = filter.getParameterResolver( paramName );
+			return filterParamResolver == null ? null : filterParamResolver.get();
 		}
 	}
 }

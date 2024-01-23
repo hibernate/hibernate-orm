@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.Filter;
 import org.hibernate.HibernateException;
@@ -30,6 +31,7 @@ public class FilterImpl implements Filter, Serializable {
 	private transient FilterDefinition definition;
 	private final String filterName;
 	private final Map<String,Object> parameters = new HashMap<>();
+	private final boolean autoEnabled;
 	
 	void afterDeserialize(SessionFactoryImplementor factory) {
 		definition = factory.getFilterDefinition( filterName );
@@ -44,6 +46,7 @@ public class FilterImpl implements Filter, Serializable {
 	public FilterImpl(FilterDefinition configuration) {
 		this.definition = configuration;
 		filterName = definition.getFilterName();
+		this.autoEnabled = definition.isAutoEnabled();
 	}
 
 	public FilterDefinition getFilterDefinition() {
@@ -57,6 +60,15 @@ public class FilterImpl implements Filter, Serializable {
 	 */
 	public String getName() {
 		return definition.getFilterName();
+	}
+
+	/**
+	 * Get a flag that defines if the filter should be enabled by default.
+	 *
+	 * @return The flag value.
+	 */
+	public boolean isAutoEnabled() {
+		return autoEnabled;
 	}
 	
 	public Map<String,?> getParameters() {
@@ -136,6 +148,10 @@ public class FilterImpl implements Filter, Serializable {
 		return parameters.get( name );
 	}
 
+	public Supplier getParameterResolver(String name) {
+		return definition.getParameterResolver(name);
+	}
+
 	/**
 	 * Perform validation of the filter state.  This is used to verify the
 	 * state of the filter after its enablement and before its use.
@@ -144,12 +160,13 @@ public class FilterImpl implements Filter, Serializable {
 	 */
 	public void validate() throws HibernateException {
 		// for each of the defined parameters, make sure its value
-		// has been set
+		// has been set or a resolver has been implemented and specified
 
 		for ( final String parameterName : definition.getParameterNames() ) {
-			if ( parameters.get( parameterName ) == null ) {
+			if ( parameters.get( parameterName ) == null &&
+					(getParameterResolver( parameterName ) == null || getParameterResolver( parameterName ).getClass().isInterface()) ) {
 				throw new HibernateException(
-						"Filter [" + getName() + "] parameter [" + parameterName + "] value not set"
+						"Either value and resolver for filter [" + getName() + "] parameter [" + parameterName + "] not set"
 				);
 			}
 		}

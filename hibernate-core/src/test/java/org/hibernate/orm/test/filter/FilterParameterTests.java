@@ -9,19 +9,18 @@ package org.hibernate.orm.test.filter;
 import java.sql.Types;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-
-import jakarta.persistence.Basic;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import java.util.function.Supplier;
 
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.boot.registry.BootstrapServiceRegistry;
+import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.community.dialect.AltibaseDialect;
 import org.hibernate.community.dialect.FirebirdDialect;
 import org.hibernate.dialect.AbstractHANADialect;
@@ -43,10 +42,20 @@ import org.hibernate.type.YesNoConverter;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.hibernate.testing.orm.junit.SkipForDialect;
+import org.hibernate.testing.util.ServiceRegistryUtil;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+
+import jakarta.enterprise.inject.se.SeContainer;
+import jakarta.enterprise.inject.se.SeContainerInitializer;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -57,7 +66,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DomainModel( annotatedClasses = {
 		FilterParameterTests.EntityOne.class,
 		FilterParameterTests.EntityTwo.class,
-		FilterParameterTests.EntityThree.class
+		FilterParameterTests.EntityThree.class,
+		FilterParameterTests.EntityFour.class
 } )
 public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
@@ -65,11 +75,13 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@MethodSource("transactionKind")
 	public void testYesNo(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
+			session.disableFilter( "subDepartmentFilter" );
 			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
 		inTransaction.accept( scope, session -> {
+			session.disableFilter( "subDepartmentFilter" );
 			session.enableFilter( "filterYesNoConverter" ).setParameter( "yesNo", Boolean.FALSE );
 
 			final EntityOne loaded = session.createQuery( "from EntityOne e where e.id = :id", EntityOne.class )
@@ -97,11 +109,13 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, reason = "Oracle 23 interprets Y and T as true and N and F as false, so this works")
 	public void testYesNoMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
+			session.disableFilter( "subDepartmentFilter" );
 			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
 		inTransaction.accept( scope, session -> {
+			session.disableFilter( "subDepartmentFilter" );
 			session.enableFilter( "filterYesNoBoolean" ).setParameter( "yesNo", Boolean.FALSE );
 
 			assertThatThrownBy( () -> session.createQuery( "from EntityOne e where e.id = :id", EntityOne.class )
@@ -115,11 +129,13 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@MethodSource("transactionKind")
 	public void testNumeric(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
+			session.disableFilter( "subDepartmentFilter" );
 			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
 		inTransaction.accept( scope, session -> {
+			session.disableFilter( "subDepartmentFilter" );
 			session.enableFilter( "filterNumberConverter" ).setParameter( "zeroOne", Boolean.FALSE );
 
 			final EntityTwo loaded = session.createQuery( "from EntityTwo e where e.id = :id", EntityTwo.class )
@@ -146,11 +162,13 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, matchSubTypes = true, reason = "Firebird silently converts a boolean to integral types")
 	public void testNumericMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
+			session.disableFilter( "subDepartmentFilter" );
 			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
 		inTransaction.accept( scope, session -> {
+			session.disableFilter( "subDepartmentFilter" );
 			session.enableFilter( "filterNumberBoolean" ).setParameter( "zeroOne", Boolean.FALSE );
 
 			assertThatThrownBy( () -> session.createQuery( "from EntityTwo e where e.id = :id", EntityTwo.class )
@@ -168,11 +186,13 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus silently converts strings to integral types")
 	public void testMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
+			session.disableFilter( "subDepartmentFilter" );
 			final EntityThree loaded = session.byId( EntityThree.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
 		inTransaction.accept( scope, session -> {
+			session.disableFilter( "subDepartmentFilter" );
 			session.enableFilter( "filterMismatchConverter" ).setParameter( "mismatch", Boolean.FALSE );
 
 			assertThatThrownBy( () -> session.createQuery( "from EntityThree e where e.id = :id", EntityThree.class )
@@ -182,6 +202,73 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 		} );
 	}
 
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	public void testAutoEnableWithResolver() {
+		final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
+				.disableDiscovery()
+				.addBeanClasses( EntityFourDepartmentResolver.class );
+		try ( final SeContainer cdiContainer = cdiInitializer.initialize() ) {
+			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
+
+			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
+					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
+					.build();
+
+			try {
+				scope.inTransaction( (session) -> {
+					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
+					final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+							.setParameter( "id", 1 )
+							.getSingleResultOrNull();
+					assertThat( first_a ).isNotNull();
+					assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
+					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "SECOND_A"  );
+					final EntityFour second = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+							.setParameter( "id", 3 )
+							.getSingleResultOrNull();
+					assertThat( second ).isNull();
+				} );
+			}
+			finally {
+				StandardServiceRegistryBuilder.destroy( ssr );
+			}
+		}
+	}
+
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	public void testAutoEnableWithoutResolver() {
+		final SeContainerInitializer cdiInitializer = SeContainerInitializer.newInstance()
+				.disableDiscovery()
+				.addBeanClasses( EntityFourDepartmentResolver.class );
+		try ( final SeContainer cdiContainer = cdiInitializer.initialize() ) {
+			BootstrapServiceRegistry bsr = new BootstrapServiceRegistryBuilder().build();
+
+			final StandardServiceRegistry ssr = ServiceRegistryUtil.serviceRegistryBuilder( bsr )
+					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
+					.build();
+
+			try {
+				scope.inTransaction( (session) -> {
+					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
+					final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+							.setParameter( "id", 1 )
+							.getSingleResultOrNull();
+					assertThat( first_a ).isNotNull();
+					assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
+					final EntityFour first_b = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+							.setParameter( "id", 2 )
+							.getSingleResultOrNull();
+					assertThat( first_b ).isNull();
+				} );
+			}
+			finally {
+				StandardServiceRegistryBuilder.destroy( ssr );
+			}
+		}
+	}
+
 
 	@BeforeEach
 	public void prepareTestData() {
@@ -189,15 +276,21 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 			session.persist( new EntityOne( 1, "one" ) );
 			session.persist( new EntityTwo( 1, "two" ) );
 			session.persist( new EntityThree( 1, "three" ) );
+			session.persist( new EntityFour( 1, "four", "FIRST", "FIRST_A" ) );
+			session.persist( new EntityFour( 2, "four", "FIRST", "FIRST_B" ) );
+			session.persist( new EntityFour( 3, "four", "SECOND", "SECOND_A" ) );
 		} );
 	}
 
 	@AfterEach
 	public void dropTestData() {
 		scope.inTransaction( (session) -> {
+			session.disableFilter( "subDepartmentFilter" );
+			session.disableFilter( "departmentFilter" );
 			session.createMutationQuery( "delete EntityOne" ).executeUpdate();
 			session.createMutationQuery( "delete EntityTwo" ).executeUpdate();
 			session.createMutationQuery( "delete EntityThree" ).executeUpdate();
+			session.createMutationQuery( "delete EntityFour" ).executeUpdate();
 		} );
 	}
 
@@ -355,6 +448,77 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 
 		public void setMismatch(boolean mismatch) {
 			this.mismatch = mismatch;
+		}
+	}
+
+	@FilterDef(
+			name = "departmentFilter",
+			defaultCondition = "department = :department",
+			parameters = @ParamDef( name = "department", type = String.class, resolver = EntityFourDepartmentResolver.class),
+			autoEnabled = true
+	)
+	@Filter( name = "departmentFilter" )
+	@FilterDef(
+			name = "subDepartmentFilter",
+			defaultCondition = "subdepartment = :subdepartment",
+			parameters = @ParamDef( name = "subdepartment", type = String.class ),
+			autoEnabled = true
+	)
+	@Filter( name = "subDepartmentFilter" )
+	@Entity( name = "EntityFour" )
+	@Table( name = "EntityFour" )
+	public static class EntityFour {
+		@Id
+		private Integer id;
+		@Basic
+		private String name;
+		private String department;
+		private String subdepartment;
+
+		private EntityFour() {
+			// for use by Hibernate
+		}
+
+		public EntityFour(Integer id, String name, String department, String subdepartment) {
+			this.id = id;
+			this.name = name;
+			this.department = department;
+			this.subdepartment = subdepartment;
+		}
+
+		public Integer getId() {
+			return id;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getDepartment() {
+			return department;
+		}
+
+		public void setDepartment(String department) {
+			this.department = department;
+		}
+
+		public String getSubdepartment() {
+			return subdepartment;
+		}
+
+		public void setSubdepartment(String subdepartment) {
+			this.subdepartment = subdepartment;
+		}
+	}
+
+	public static class EntityFourDepartmentResolver implements Supplier<String> {
+		@Override
+		public String get() {
+			return "FIRST";
 		}
 	}
 }

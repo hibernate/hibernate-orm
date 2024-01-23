@@ -72,7 +72,10 @@ public class TruncFunction extends AbstractSqmFunctionDescriptor {
 				"trunc",
 				new TruncArgumentsValidator(),
 				StandardFunctionReturnTypeResolvers.useArgType( 1 ),
-				StandardFunctionArgumentTypeResolvers.ARGUMENT_OR_IMPLIED_RESULT_TYPE
+				StandardFunctionArgumentTypeResolvers.byArgument(
+						StandardFunctionArgumentTypeResolvers.IMPLIED_RESULT_TYPE,
+						StandardFunctionArgumentTypeResolvers.NULL
+				)
 		);
 		this.numericRenderingSupport = new TruncRenderingSupport(
 				new PatternRenderer( truncPattern ),

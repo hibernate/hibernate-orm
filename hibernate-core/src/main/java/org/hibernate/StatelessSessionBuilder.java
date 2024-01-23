@@ -8,6 +8,8 @@ package org.hibernate;
 
 import java.sql.Connection;
 
+import org.hibernate.resource.jdbc.spi.StatementInspector;
+
 /**
  * Allows creation of a new {@link StatelessSession} with specific options.
  *
@@ -50,4 +52,13 @@ public interface StatelessSessionBuilder {
 	 * @since 6.4
 	 */
 	StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier);
+
+	/**
+	 * Applies the given {@link StatementInspector} to the stateless session.
+	 *
+	 * @param statementInspector The StatementInspector to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 */
+	StatelessSessionBuilder statementInspector(StatementInspector statementInspector);
 }

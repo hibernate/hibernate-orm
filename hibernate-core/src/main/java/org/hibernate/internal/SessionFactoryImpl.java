@@ -1469,11 +1469,13 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 	public static class StatelessSessionBuilderImpl implements StatelessSessionBuilder, SessionCreationOptions {
 		private final SessionFactoryImpl sessionFactory;
+		private StatementInspector statementInspector;
 		private Connection connection;
 		private Object tenantIdentifier;
 
 		public StatelessSessionBuilderImpl(SessionFactoryImpl sessionFactory) {
 			this.sessionFactory = sessionFactory;
+			this.statementInspector = sessionFactory.getSessionFactoryOptions().getStatementInspector();
 
 			CurrentTenantIdentifierResolver<Object> tenantIdentifierResolver = sessionFactory.getCurrentTenantIdentifierResolver();
 			if ( tenantIdentifierResolver != null ) {
@@ -1501,6 +1503,12 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 		@Override
 		public StatelessSessionBuilder tenantIdentifier(Object tenantIdentifier) {
 			this.tenantIdentifier = tenantIdentifier;
+			return this;
+		}
+
+		@Override
+		public StatelessSessionBuilder statementInspector(StatementInspector statementInspector) {
+			this.statementInspector = statementInspector;
 			return this;
 		}
 
@@ -1547,7 +1555,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 
 		@Override
 		public StatementInspector getStatementInspector() {
-			return null;
+			return statementInspector;
 		}
 
 		@Override

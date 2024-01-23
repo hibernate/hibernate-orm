@@ -203,4 +203,22 @@ public class ArrayJdbcType implements JdbcType {
 	public String toString() {
 		return "ArrayTypeDescriptor";
 	}
+
+	/**
+	 * Check equality. Needed so that ArrayJdbcType in collections correctly match each other.
+	 *
+	 * @param o other object
+	 * @return true if the two array types share the same element type
+	 */
+	@Override
+	public boolean equals(Object o) {
+		return o != null &&
+				getClass() == o.getClass() &&
+				getElementJdbcType().equals( ((ArrayJdbcType) o).getElementJdbcType() );
+	}
+
+	@Override
+	public int hashCode() {
+		return getJdbcTypeCode() + getElementJdbcType().hashCode();
+	}
 }

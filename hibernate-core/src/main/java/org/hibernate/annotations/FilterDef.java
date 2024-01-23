@@ -92,11 +92,7 @@ public @interface FilterDef {
 	ParamDef[] parameters() default {};
 
 	/**
-	 * The flag used to decide if the filter will
-	 * be applied on direct fetches or not.
-	 * <p>
-	 * If the flag is true, the filter will be
-	 * applied on direct fetches, such as findById().
+	 * The flag used to auto-enable the filter on the session.
 	 */
-	boolean appliedOnFind() default false;
+	boolean autoEnabled() default false;
 }

@@ -6,6 +6,9 @@
  */
 package org.hibernate.binder.internal;
 
+import java.util.Collections;
+import java.util.function.Supplier;
+
 import org.hibernate.MappingException;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.binder.AttributeBinder;
@@ -55,6 +58,7 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 							FILTER_NAME,
 							"",
 							singletonMap( PARAMETER_NAME, tenantIdType ),
+							Collections.emptyMap(),
 							true
 					)
 			);

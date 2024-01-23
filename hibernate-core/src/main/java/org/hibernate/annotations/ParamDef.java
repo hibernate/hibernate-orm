@@ -8,6 +8,7 @@ package org.hibernate.annotations;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.util.function.Supplier;
 
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
@@ -52,4 +53,14 @@ public @interface ParamDef {
 	 * </ul>
 	 */
 	Class<?> type();
+
+	/**
+	 * The resolver to use when retrieving the parameter value.
+	 * <p>
+	 * The parameter value can either be defined using the {@link org.hibernate.Filter setParameter}
+	 * method or by providing a resolver, that will be executed to retrieve the value.
+	 * <p>
+	 * The supplied Class must implement {@link Supplier}
+	 */
+	Class<? extends Supplier> resolver() default Supplier.class;
 }

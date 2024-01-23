@@ -89,10 +89,10 @@ public interface Filter {
 	void validate() throws HibernateException;
 
 	/**
-	 * Get the associated {@link FilterDefinition appliedOnFilter} of this
+	 * Get the associated {@link FilterDefinition autoEnabled} of this
 	 * named filter.
 	 *
 	 * @return The flag value
 	 */
-	boolean isAppliedOnFind();
+	boolean isAutoEnabled();
 }

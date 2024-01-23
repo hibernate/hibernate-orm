@@ -9,8 +9,8 @@ package org.hibernate.orm.test.filter;
 import java.sql.Types;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-import org.hibernate.FilterParamResolver;
 import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -523,9 +523,9 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 		}
 	}
 
-	public static class EntityFourDepartmentResolver implements FilterParamResolver {
+	public static class EntityFourDepartmentResolver implements Supplier<String> {
 		@Override
-		public Object resolve() {
+		public String get() {
 			return "FIRST";
 		}
 	}

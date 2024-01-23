@@ -11,9 +11,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.AnnotationException;
-import org.hibernate.FilterParamResolver;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.CollectionTypeRegistrations;
@@ -661,7 +661,7 @@ public final class AnnotationBinder {
 			throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + name + "'" );
 		}
 		final Map<String, JdbcMapping> explicitParamJaMappings;
-		final Map<String, Class<? extends FilterParamResolver>> parameterResolverMap;
+		final Map<String, Class<? extends Supplier>> parameterResolverMap;
 		if ( filterDef.parameters().length == 0 ) {
 			explicitParamJaMappings = emptyMap();
 			parameterResolverMap = emptyMap();

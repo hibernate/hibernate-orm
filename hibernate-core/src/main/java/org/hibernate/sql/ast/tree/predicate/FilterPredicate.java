@@ -8,8 +8,8 @@ package org.hibernate.sql.ast.tree.predicate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
-import org.hibernate.FilterParamResolver;
 import org.hibernate.MappingException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.FilterImpl;
@@ -161,12 +161,12 @@ public class FilterPredicate implements Predicate {
 		}
 
 		private Object retrieveParamValue(FilterImpl filter, String paramName, BeanContainer beanContainer) {
-			Class<? extends FilterParamResolver> clazz = filter.getParameterResolver( paramName );
+			Class<? extends Supplier> clazz = filter.getParameterResolver( paramName );
 			if (clazz.isInterface()) {
 				return filter.getParameter( paramName );
 			}
 
-			FilterParamResolver filterParamResolver = null;
+			Supplier filterParamResolver = null;
 			if (beanContainer == null) {
 				try {
 					filterParamResolver = clazz.getConstructor().newInstance();
@@ -188,7 +188,7 @@ public class FilterPredicate implements Predicate {
 				}, FallbackBeanInstanceProducer.INSTANCE ).getBeanInstance();
 			}
 
-			return filterParamResolver.resolve();
+			return filterParamResolver.get();
 		}
 	}
 }

@@ -11,9 +11,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import org.hibernate.Filter;
-import org.hibernate.FilterParamResolver;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -148,7 +148,7 @@ public class FilterImpl implements Filter, Serializable {
 		return parameters.get( name );
 	}
 
-	public Class<? extends FilterParamResolver> getParameterResolver(String name) {
+	public Class<? extends Supplier> getParameterResolver(String name) {
 		return definition.getParameterResolver(name);
 	}
 
@@ -163,7 +163,7 @@ public class FilterImpl implements Filter, Serializable {
 		// has been set or a resolver has been implemented and specified
 
 		for ( final String parameterName : definition.getParameterNames() ) {
-			Class<? extends FilterParamResolver> parameterResolver = getParameterResolver( parameterName );
+			Class<? extends Supplier> parameterResolver = getParameterResolver( parameterName );
 			if ( parameters.get( parameterName ) == null && parameterResolver.isInterface() ) {
 				throw new HibernateException(
 						"Either value and resolver for filter [" + getName() + "] parameter [" + parameterName + "] not set"

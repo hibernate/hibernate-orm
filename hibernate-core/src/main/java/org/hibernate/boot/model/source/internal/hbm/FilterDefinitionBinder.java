@@ -9,8 +9,8 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
-import org.hibernate.FilterParamResolver;
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterDefinitionType;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterParameterType;
@@ -39,7 +39,7 @@ class FilterDefinitionBinder {
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmFilterDefinitionType jaxbFilterDefinitionMapping) {
 		Map<String, JdbcMapping> parameterMap = null;
-		Map<String, Class<? extends FilterParamResolver>> parameterResolverMap = null;
+		Map<String, Class<? extends Supplier>> parameterResolverMap = null;
 		String condition = jaxbFilterDefinitionMapping.getCondition();
 
 		for ( Serializable content : jaxbFilterDefinitionMapping.getContent() ) {

@@ -9,6 +9,7 @@ package org.hibernate.orm.test.pc;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -22,7 +23,6 @@ import jakarta.persistence.NoResultException;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import org.hibernate.FilterParamResolver;
 import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -419,9 +419,9 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
 
     //tag::pc-filter-resolver-Account-example[]
 
-    public static class AccountIsActiveResolver implements FilterParamResolver {
+    public static class AccountIsActiveResolver implements Supplier<Boolean> {
         @Override
-        public Object resolve() {
+        public Boolean get() {
             return true;
         }
     }

@@ -248,6 +248,14 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 		}
 	}
 
+	protected final void setupAutoEnabledFilters(SessionFactoryImplementor factory, LoadQueryInfluencers loadQueryInfluencers) {
+		factory.getDefinedFilterNames()
+			.stream()
+			.map( filterName -> factory.getFilterDefinition( filterName ) )
+			.filter( filterDefinition -> filterDefinition.isAutoEnabled() )
+			.forEach( filterDefinition -> loadQueryInfluencers.enableFilter( filterDefinition.getFilterName() ) );
+	}
+
 	private void logInconsistentOptions(SharedSessionCreationOptions sharedOptions) {
 		if ( sharedOptions.shouldAutoJoinTransactions() ) {
 			log.debug(

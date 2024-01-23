@@ -65,11 +65,13 @@ arbitrary number of queries, and import declarations of arbitrary classes.
                 <xs:complexType>
                   <xs:attribute name="name" use="required" type="xs:string"/> <!-- The parameter name -->
                   <xs:attribute name="type" use="required" type="xs:string"/> <!-- The parameter type -->
+                  <xs:attribute name="resolver" type="xs:string"/> <!-- The parameter resolver -->
                 </xs:complexType>
               </xs:element>
             </xs:sequence>
             <xs:attribute name="condition" type="xs:string"/>
             <xs:attribute name="name" use="required" type="xs:string"/> <!-- The filter name -->
+            <xs:attribute name="auto-enabled" type="xs:boolean" default="false"/>
           </xs:complexType>
         </xs:element>
         <!--

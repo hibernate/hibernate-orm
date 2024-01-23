@@ -267,6 +267,7 @@ public class SessionImpl
 		}
 
 		setUpMultitenancy( factory, loadQueryInfluencers );
+		setupAutoEnabledFilters(factory, loadQueryInfluencers);
 
 		if ( log.isTraceEnabled() ) {
 			log.tracef( "Opened Session [%s] at timestamp: %s", getSessionIdentifier(), currentTimeMillis() );

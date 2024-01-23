@@ -9,12 +9,16 @@ package org.hibernate.sql.ast.tree.predicate;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.FilterParamResolver;
+import org.hibernate.MappingException;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.FilterImpl;
 import org.hibernate.internal.FilterJdbcParameter;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
+import org.hibernate.resource.beans.container.spi.BeanContainer;
+import org.hibernate.resource.beans.internal.FallbackBeanInstanceProducer;
 import org.hibernate.sql.ast.SqlAstWalker;
 
 /**
@@ -36,8 +40,8 @@ public class FilterPredicate implements Predicate {
 		fragments.add( predicate );
 	}
 
-	public void applyFragment(String processedFragment, FilterImpl filter, List<String> parameterNames) {
-		fragments.add( new FilterFragmentPredicate( processedFragment, filter, parameterNames ) );
+	public void applyFragment(String processedFragment, FilterImpl filter, List<String> parameterNames, BeanContainer beanContainer) {
+		fragments.add( new FilterFragmentPredicate( processedFragment, filter, parameterNames, beanContainer ) );
 	}
 
 	public void applyParameter(FilterJdbcParameter parameter) {
@@ -105,7 +109,7 @@ public class FilterPredicate implements Predicate {
 		private final String sqlFragment;
 		private final List<FilterFragmentParameter> parameters;
 
-		public FilterFragmentPredicate(String sqlFragment, FilterImpl filter, List<String> parameterNames) {
+		public FilterFragmentPredicate(String sqlFragment, FilterImpl filter, List<String> parameterNames, BeanContainer beanContainer) {
 			this.filter = filter;
 			this.sqlFragment = sqlFragment;
 
@@ -116,7 +120,7 @@ public class FilterPredicate implements Predicate {
 				parameters = CollectionHelper.arrayList( parameterNames.size() );
 				for ( int i = 0; i < parameterNames.size(); i++ ) {
 					final String paramName = parameterNames.get( i );
-					final Object paramValue = filter.getParameter( paramName );
+					final Object paramValue = retrieveParamValue(filter, paramName, beanContainer);
 					final FilterDefinition filterDefinition = filter.getFilterDefinition();
 					final JdbcMapping jdbcMapping = filterDefinition.getParameterJdbcMapping( paramName );
 
@@ -154,6 +158,37 @@ public class FilterPredicate implements Predicate {
 		@Override
 		public boolean isEmpty() {
 			return false;
+		}
+
+		private Object retrieveParamValue(FilterImpl filter, String paramName, BeanContainer beanContainer) {
+			Class<? extends FilterParamResolver> clazz = filter.getParameterResolver( paramName );
+			if (clazz.isInterface()) {
+				return filter.getParameter( paramName );
+			}
+
+			FilterParamResolver filterParamResolver = null;
+			if (beanContainer == null) {
+				try {
+					filterParamResolver = clazz.getConstructor().newInstance();
+				}
+				catch ( Exception e ) {
+					throw new MappingException( String.format( "Could not instantiate filter param resolver [resolver=%s]", clazz.getName() ), e );
+				}
+			} else {
+				filterParamResolver = beanContainer.getBean( clazz, new BeanContainer.LifecycleOptions() {
+					@Override
+					public boolean canUseCachedReferences() {
+						return false;
+					}
+
+					@Override
+					public boolean useJpaCompliantCreation() {
+						return true;
+					}
+				}, FallbackBeanInstanceProducer.INSTANCE ).getBeanInstance();
+			}
+
+			return filterParamResolver.resolve();
 		}
 	}
 }

@@ -13,6 +13,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.hibernate.AnnotationException;
+import org.hibernate.FilterParamResolver;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.CollectionTypeRegistration;
 import org.hibernate.annotations.CollectionTypeRegistrations;
@@ -660,11 +661,14 @@ public final class AnnotationBinder {
 			throw new AnnotationException( "Multiple '@FilterDef' annotations define a filter named '" + name + "'" );
 		}
 		final Map<String, JdbcMapping> explicitParamJaMappings;
+		final Map<String, Class<? extends FilterParamResolver>> parameterResolverMap;
 		if ( filterDef.parameters().length == 0 ) {
 			explicitParamJaMappings = emptyMap();
+			parameterResolverMap = emptyMap();
 		}
 		else {
 			explicitParamJaMappings = new HashMap<>();
+			parameterResolverMap = new HashMap<>();
 			for ( ParamDef paramDef : filterDef.parameters() ) {
 				final JdbcMapping jdbcMapping = resolveFilterParamType( paramDef.type(), context );
 				if ( jdbcMapping == null ) {
@@ -678,10 +682,11 @@ public final class AnnotationBinder {
 					);
 				}
 				explicitParamJaMappings.put( paramDef.name(), jdbcMapping );
+				parameterResolverMap.put(paramDef.name(), paramDef.resolver());
 			}
 		}
 		final FilterDefinition filterDefinition =
-				new FilterDefinition( name, filterDef.defaultCondition(), explicitParamJaMappings );
+				new FilterDefinition( name, filterDef.defaultCondition(), explicitParamJaMappings, parameterResolverMap, filterDef.autoEnabled() );
 		LOG.debugf( "Binding filter definition: %s", filterDefinition.getFilterName() );
 		context.getMetadataCollector().addFilterDefinition( filterDefinition );
 	}

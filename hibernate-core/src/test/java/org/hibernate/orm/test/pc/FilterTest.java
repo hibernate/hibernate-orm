@@ -22,6 +22,7 @@ import jakarta.persistence.NoResultException;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import org.hibernate.FilterParamResolver;
 import org.hibernate.Session;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
@@ -360,4 +361,69 @@ public class FilterTest extends BaseEntityManagerFunctionalTestCase {
     //tag::pc-filter-Account-example[]
     }
     //end::pc-filter-Account-example[]
+
+
+    @Entity(name = "AutoFilteredAccount")
+    @Table(name = "autofilteredaccount")
+    //tag::pc-filter-auto-enabled-Account-example[]
+    @FilterDef(
+            name="activeAccount",
+            parameters = @ParamDef(
+                    name="active",
+                    type=Boolean.class
+            ),
+            autoEnabled = true
+    )
+    //end::pc-filter-auto-enabled-Account-example[]
+    @Filter(
+            name="activeAccount",
+            condition="active_status = :active"
+    )
+    //tag::pc-filter-resolver-Account-example[]
+    @FilterDef(
+            name="activeAccountWithResolver",
+            parameters = @ParamDef(
+                    name="active",
+                    type=Boolean.class,
+                    resolver = AccountIsActiveResolver.class
+            ),
+            autoEnabled = true
+    )
+    //end::pc-filter-resolver-Account-example[]
+    public static class AutoFilteredAccount {
+
+        @Id
+        private Long id;
+
+        @Column(name = "active_status")
+        private boolean active;
+
+        public Long getId() {
+            return id;
+        }
+
+        public AutoFilteredAccount setId(Long id) {
+            this.id = id;
+            return this;
+        }
+
+        public boolean isActive() {
+            return active;
+        }
+
+        public AutoFilteredAccount setActive(boolean active) {
+            this.active = active;
+            return this;
+        }
+    }
+
+    //tag::pc-filter-resolver-Account-example[]
+
+    public static class AccountIsActiveResolver implements FilterParamResolver {
+        @Override
+        public Object resolve() {
+            return true;
+        }
+    }
+    //end::pc-filter-resolver-Account-example[]
 }

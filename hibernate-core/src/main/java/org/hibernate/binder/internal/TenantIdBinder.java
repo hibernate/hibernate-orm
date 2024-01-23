@@ -6,6 +6,7 @@
  */
 package org.hibernate.binder.internal;
 
+import org.hibernate.FilterParamResolver;
 import org.hibernate.MappingException;
 import org.hibernate.annotations.TenantId;
 import org.hibernate.binder.AttributeBinder;
@@ -54,7 +55,9 @@ public class TenantIdBinder implements AttributeBinder<TenantId> {
 					new FilterDefinition(
 							FILTER_NAME,
 							"",
-							singletonMap( PARAMETER_NAME, tenantIdType )
+							singletonMap( PARAMETER_NAME, tenantIdType ),
+							singletonMap( PARAMETER_NAME, FilterParamResolver.class ),
+							true
 					)
 			);
 		}

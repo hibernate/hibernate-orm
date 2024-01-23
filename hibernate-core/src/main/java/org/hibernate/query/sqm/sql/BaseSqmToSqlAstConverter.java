@@ -91,7 +91,6 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.ReturnableType;
@@ -3183,9 +3182,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			registerEntityNameUsage( tableGroup, EntityNameUse.PROJECTION, persister.getEntityName(), true );
 		}
 		else {
-			// Avoid doing this for single table entity persisters, as the table span includes secondary tables,
-			// which we don't want to resolve, though we know that there is only a single table anyway
-			if ( persister instanceof SingleTableEntityPersister ) {
+			// Avoid resolving subclass tables for persisters with physical discriminators as we won't need them
+			if ( persister.getDiscriminatorMapping().hasPhysicalColumn() ) {
 				return;
 			}
 			final int subclassTableSpan = persister.getSubclassTableSpan();
@@ -7578,46 +7576,56 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			return;
 		}
-		if ( literalExpression == null ) {
+		handleTypeComparison(
+				typeExpression,
+				literalExpression != null ? singletonList( literalExpression ) : null,
+				inclusive
+		);
+	}
+
+	private void handleTypeComparison(
+			DiscriminatorPathInterpretation<?> typeExpression,
+			List<EntityTypeLiteral> literalExpressions,
+			boolean inclusive) {
+		final TableGroup tableGroup = getFromClauseIndex().getTableGroup( typeExpression.getNavigablePath().getParent() );
+		final EntityMappingType entityMappingType = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
+		if ( entityMappingType.getDiscriminatorMapping().hasPhysicalColumn() ) {
+			// Prevent pruning of the root type's table reference containing the physical discriminator column
+			registerEntityNameUsage(
+					tableGroup,
+					EntityNameUse.EXPRESSION,
+					entityMappingType.getRootEntityDescriptor().getEntityName()
+			);
+		}
+		if ( literalExpressions == null ) {
 			// We have to assume all types are possible and can't do optimizations
-			final TableGroup tableGroup = getFromClauseIndex().getTableGroup( typeExpression.getNavigablePath().getParent() );
-			final EntityMappingType entityMappingType = (EntityMappingType)  tableGroup.getModelPart().getPartMappingType();
 			registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, entityMappingType.getEntityName() );
 			for ( EntityMappingType subMappingType : entityMappingType.getSubMappingTypes() ) {
 				registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, subMappingType.getEntityName() );
 			}
 		}
 		else {
-			handleTypeComparison( typeExpression, Collections.singletonList( literalExpression ), inclusive );
-		}
-	}
-
-	private void handleTypeComparison(
-			DiscriminatorPathInterpretation typeExpression,
-			List<EntityTypeLiteral> literalExpressions,
-			boolean inclusive) {
-		final TableGroup tableGroup = getFromClauseIndex().getTableGroup( typeExpression.getNavigablePath().getParent() );
-		if ( inclusive ) {
-			for ( EntityTypeLiteral literalExpr : literalExpressions ) {
-				registerEntityNameUsage(
-						tableGroup,
-						EntityNameUse.FILTER,
-						literalExpr.getEntityTypeDescriptor().getEntityName()
-				);
+			if ( inclusive ) {
+				for ( EntityTypeLiteral literalExpr : literalExpressions ) {
+					registerEntityNameUsage(
+							tableGroup,
+							EntityNameUse.FILTER,
+							literalExpr.getEntityTypeDescriptor().getEntityName()
+					);
+				}
 			}
-		}
-		else {
-			final EntityMappingType entityMappingType = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
-			final Set<String> excludedEntityNames = new HashSet<>(entityMappingType.getSubMappingTypes().size());
-			for ( EntityTypeLiteral literalExpr : literalExpressions ) {
-				excludedEntityNames.add( literalExpr.getEntityTypeDescriptor().getEntityName() );
-			}
-			if ( !excludedEntityNames.contains( entityMappingType.getEntityName() ) ) {
-				registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, entityMappingType.getEntityName() );
-			}
-			for ( EntityMappingType subMappingType : entityMappingType.getSubMappingTypes() ) {
-				if ( !excludedEntityNames.contains( subMappingType.getEntityName() ) ) {
-					registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, subMappingType.getEntityName() );
+			else {
+				final Set<String> excludedEntityNames = new HashSet<>( entityMappingType.getSubMappingTypes().size() );
+				for ( EntityTypeLiteral literalExpr : literalExpressions ) {
+					excludedEntityNames.add( literalExpr.getEntityTypeDescriptor().getEntityName() );
+				}
+				if ( !excludedEntityNames.contains( entityMappingType.getEntityName() ) ) {
+					registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, entityMappingType.getEntityName() );
+				}
+				for ( EntityMappingType subMappingType : entityMappingType.getSubMappingTypes() ) {
+					if ( !excludedEntityNames.contains( subMappingType.getEntityName() ) ) {
+						registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, subMappingType.getEntityName() );
+					}
 				}
 			}
 		}
@@ -7873,26 +7881,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					break;
 				}
 			}
-			if ( containsNonLiteral ) {
-				// We have to assume all types are possible and can't do optimizations
-				final TableGroup tableGroup = getFromClauseIndex().getTableGroup(
-						typeExpression.getNavigablePath().getParent()
-				);
-				final EntityMappingType entityMappingType = (EntityMappingType) tableGroup.getModelPart()
-						.getPartMappingType();
-				registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, entityMappingType.getEntityName() );
-				for ( EntityMappingType subMappingType : entityMappingType.getSubMappingTypes() ) {
-					registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, subMappingType.getEntityName() );
-				}
-			}
-			else {
-				//noinspection unchecked
-				handleTypeComparison(
-						typeExpression,
-						(List<EntityTypeLiteral>) (List<?>) inPredicate.getListExpressions(),
-						!inPredicate.isNegated()
-				);
-			}
+			//noinspection unchecked
+			handleTypeComparison(
+					typeExpression,
+					containsNonLiteral ? null : (List<EntityTypeLiteral>) (List<?>) inPredicate.getListExpressions(),
+					!inPredicate.isNegated()
+			);
 		}
 	}
 

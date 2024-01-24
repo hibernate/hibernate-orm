@@ -19,6 +19,10 @@ public interface RefreshContext {
 
 	boolean add(Object entity);
 
+	default boolean isEmpty() {
+		return false;
+	}
+
 	static RefreshContext create() {
 		// use extension to avoid creating
 		// a useless wrapper object
@@ -31,6 +35,11 @@ public interface RefreshContext {
 			@Override
 			public boolean add(Object entity) {
 				return put(entity,entity)==null;
+			}
+
+			@Override
+			public boolean isEmpty() {
+				return size() == 0;
 			}
 		}
 		return new Impl();

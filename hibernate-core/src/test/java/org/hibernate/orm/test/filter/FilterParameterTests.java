@@ -16,7 +16,6 @@ import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ParamDef;
-import org.hibernate.boot.MetadataSources;
 import org.hibernate.boot.registry.BootstrapServiceRegistry;
 import org.hibernate.boot.registry.BootstrapServiceRegistryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -37,7 +36,6 @@ import org.hibernate.dialect.PostgresPlusDialect;
 import org.hibernate.dialect.SQLServerDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.dialect.TiDBDialect;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.type.NumericBooleanConverter;
 import org.hibernate.type.YesNoConverter;
 
@@ -61,7 +59,6 @@ import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.hibernate.testing.transaction.TransactionUtil2.inTransaction;
 
 /**
  * @author Steve Ebersole
@@ -78,11 +75,13 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@MethodSource("transactionKind")
 	public void testYesNo(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
+			session.disableFilter( "subDepartmentFilter" );
 			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
 		inTransaction.accept( scope, session -> {
+			session.disableFilter( "subDepartmentFilter" );
 			session.enableFilter( "filterYesNoConverter" ).setParameter( "yesNo", Boolean.FALSE );
 
 			final EntityOne loaded = session.createQuery( "from EntityOne e where e.id = :id", EntityOne.class )
@@ -110,11 +109,13 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@SkipForDialect(dialectClass = OracleDialect.class, majorVersion = 23, reason = "Oracle 23 interprets Y and T as true and N and F as false, so this works")
 	public void testYesNoMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
+			session.disableFilter( "subDepartmentFilter" );
 			final EntityOne loaded = session.byId( EntityOne.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
 		inTransaction.accept( scope, session -> {
+			session.disableFilter( "subDepartmentFilter" );
 			session.enableFilter( "filterYesNoBoolean" ).setParameter( "yesNo", Boolean.FALSE );
 
 			assertThatThrownBy( () -> session.createQuery( "from EntityOne e where e.id = :id", EntityOne.class )
@@ -128,11 +129,13 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@MethodSource("transactionKind")
 	public void testNumeric(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
+			session.disableFilter( "subDepartmentFilter" );
 			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
 		inTransaction.accept( scope, session -> {
+			session.disableFilter( "subDepartmentFilter" );
 			session.enableFilter( "filterNumberConverter" ).setParameter( "zeroOne", Boolean.FALSE );
 
 			final EntityTwo loaded = session.createQuery( "from EntityTwo e where e.id = :id", EntityTwo.class )
@@ -159,11 +162,13 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@SkipForDialect(dialectClass = FirebirdDialect.class, matchSubTypes = true, reason = "Firebird silently converts a boolean to integral types")
 	public void testNumericMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
+			session.disableFilter( "subDepartmentFilter" );
 			final EntityTwo loaded = session.byId( EntityTwo.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
 		inTransaction.accept( scope, session -> {
+			session.disableFilter( "subDepartmentFilter" );
 			session.enableFilter( "filterNumberBoolean" ).setParameter( "zeroOne", Boolean.FALSE );
 
 			assertThatThrownBy( () -> session.createQuery( "from EntityTwo e where e.id = :id", EntityTwo.class )
@@ -181,11 +186,13 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 	@SkipForDialect(dialectClass = PostgresPlusDialect.class, reason = "PostgresPlus silently converts strings to integral types")
 	public void testMismatch(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
 		scope.inTransaction( (session) -> {
+			session.disableFilter( "subDepartmentFilter" );
 			final EntityThree loaded = session.byId( EntityThree.class ).load( 1 );
 			assertThat( loaded ).isNotNull();
 		} );
 
 		inTransaction.accept( scope, session -> {
+			session.disableFilter( "subDepartmentFilter" );
 			session.enableFilter( "filterMismatchConverter" ).setParameter( "mismatch", Boolean.FALSE );
 
 			assertThatThrownBy( () -> session.createQuery( "from EntityThree e where e.id = :id", EntityThree.class )
@@ -208,40 +215,23 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 					.build();
 
-			final SessionFactoryImplementor sessionFactory;
-
 			try {
-				sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
-						.addAnnotatedClass( EntityFour.class )
-						.buildMetadata()
-						.getSessionFactoryBuilder()
-						.build();
-			}
-			catch ( Exception e ) {
-				StandardServiceRegistryBuilder.destroy( ssr );
-				throw e;
-			}
-
-			try {
-				inTransaction(
-					sessionFactory,
-					session -> {
-						session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
-						final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
-								.setParameter( "id", 1 )
-								.getSingleResultOrNull();
-						assertThat( first_a ).isNotNull();
-						assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
-						session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "SECOND_A"  );
-						final EntityFour second = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
-								.setParameter( "id", 3 )
-								.getSingleResultOrNull();
-						assertThat( second ).isNull();
-					}
-				);
+				scope.inTransaction( (session) -> {
+					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
+					final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+							.setParameter( "id", 1 )
+							.getSingleResultOrNull();
+					assertThat( first_a ).isNotNull();
+					assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
+					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "SECOND_A"  );
+					final EntityFour second = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+							.setParameter( "id", 3 )
+							.getSingleResultOrNull();
+					assertThat( second ).isNull();
+				} );
 			}
 			finally {
-				sessionFactory.close();
+				StandardServiceRegistryBuilder.destroy( ssr );
 			}
 		}
 	}
@@ -259,39 +249,22 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 					.applySetting( AvailableSettings.CDI_BEAN_MANAGER, cdiContainer.getBeanManager() )
 					.build();
 
-			final SessionFactoryImplementor sessionFactory;
-
 			try {
-				sessionFactory = (SessionFactoryImplementor) new MetadataSources( ssr )
-						.addAnnotatedClass( EntityFour.class )
-						.buildMetadata()
-						.getSessionFactoryBuilder()
-						.build();
-			}
-			catch ( Exception e ) {
-				StandardServiceRegistryBuilder.destroy( ssr );
-				throw e;
-			}
-
-			try {
-				inTransaction(
-					sessionFactory,
-					session -> {
-						session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
-						final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
-								.setParameter( "id", 1 )
-								.getSingleResultOrNull();
-						assertThat( first_a ).isNotNull();
-						assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
-						final EntityFour first_b = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
-								.setParameter( "id", 2 )
-								.getSingleResultOrNull();
-						assertThat( first_b ).isNull();
-					}
-				);
+				scope.inTransaction( (session) -> {
+					session.getEnabledFilter("subDepartmentFilter").setParameter("subdepartment", "FIRST_A"  );
+					final EntityFour first_a = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+							.setParameter( "id", 1 )
+							.getSingleResultOrNull();
+					assertThat( first_a ).isNotNull();
+					assertThat( first_a.getDepartment() ).isEqualTo( "FIRST" );
+					final EntityFour first_b = session.createQuery( "from EntityFour e where e.id = :id", EntityFour.class )
+							.setParameter( "id", 2 )
+							.getSingleResultOrNull();
+					assertThat( first_b ).isNull();
+				} );
 			}
 			finally {
-				sessionFactory.close();
+				StandardServiceRegistryBuilder.destroy( ssr );
 			}
 		}
 	}
@@ -318,8 +291,6 @@ public class FilterParameterTests extends AbstractStatefulStatelessFilterTest {
 			session.createMutationQuery( "delete EntityTwo" ).executeUpdate();
 			session.createMutationQuery( "delete EntityThree" ).executeUpdate();
 			session.createMutationQuery( "delete EntityFour" ).executeUpdate();
-			session.enableFilter( "subDepartmentFilter" );
-			session.enableFilter( "departmentFilter" );
 		} );
 	}
 

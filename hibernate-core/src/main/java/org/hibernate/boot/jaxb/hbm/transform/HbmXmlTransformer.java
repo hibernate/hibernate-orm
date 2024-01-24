@@ -336,7 +336,6 @@ public class HbmXmlTransformer {
 					filterDef.getFilterParam().add( param );
 					param.setName( hbmFilterParam.getParameterName() );
 					param.setType( hbmFilterParam.getParameterValueTypeName() );
-					param.setResolver( hbmFilterParam.getResolver() );
 				}
 			}
 

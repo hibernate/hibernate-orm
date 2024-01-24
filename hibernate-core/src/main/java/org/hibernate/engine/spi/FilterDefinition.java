@@ -7,6 +7,7 @@
 package org.hibernate.engine.spi;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -34,7 +35,7 @@ public class FilterDefinition implements Serializable {
 	private final String filterName;
 	private final String defaultFilterCondition;
 	private final Map<String, JdbcMapping> explicitParamJaMappings = new HashMap<>();
-	private final Map<String, ManagedBean<? extends  Supplier>> parameterResolverMap = new HashMap<>();
+	private final Map<String, ManagedBean<? extends Supplier>> parameterResolverMap = new HashMap<>();
 	private final boolean autoEnabled;
 
 	/**
@@ -42,8 +43,12 @@ public class FilterDefinition implements Serializable {
 	 *
 	 * @param name The name of the filter for which this configuration is in effect.
 	 */
+	public FilterDefinition(String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings) {
+		this( name, defaultCondition, explicitParamJaMappings, Collections.emptyMap(), false);
+	}
+
 	public FilterDefinition(String name, String defaultCondition, @Nullable Map<String, JdbcMapping> explicitParamJaMappings,
-							@Nullable Map<String, ManagedBean<? extends  Supplier>> parameterResolverMap, boolean autoEnabled) {
+							Map<String, ManagedBean<? extends  Supplier>> parameterResolverMap, boolean autoEnabled) {
 		this.filterName = name;
 		this.defaultFilterCondition = defaultCondition;
 		if ( explicitParamJaMappings != null ) {
@@ -87,10 +92,8 @@ public class FilterDefinition implements Serializable {
 	}
 
 	public @Nullable Supplier getParameterResolver(String parameterName) {
-		if ( !parameterResolverMap.containsKey(parameterName) ) {
-			return null;
-		}
-		return parameterResolverMap.get( parameterName ).getBeanInstance();
+		final ManagedBean<? extends Supplier> resolver = parameterResolverMap.get( parameterName );
+		return resolver == null ? null : resolver.getBeanInstance();
 	}
 
 	public String getDefaultFilterCondition() {

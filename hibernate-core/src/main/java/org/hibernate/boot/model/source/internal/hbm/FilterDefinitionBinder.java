@@ -9,7 +9,6 @@ package org.hibernate.boot.model.source.internal.hbm;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Supplier;
 
 import org.hibernate.boot.MappingException;
 import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterDefinitionType;
@@ -17,7 +16,6 @@ import org.hibernate.boot.jaxb.hbm.spi.JaxbHbmFilterParameterType;
 import org.hibernate.engine.spi.FilterDefinition;
 import org.hibernate.internal.util.StringHelper;
 import org.hibernate.metamodel.mapping.JdbcMapping;
-import org.hibernate.resource.beans.spi.ManagedBean;
 
 import org.jboss.logging.Logger;
 
@@ -40,7 +38,6 @@ class FilterDefinitionBinder {
 			HbmLocalMetadataBuildingContext context,
 			JaxbHbmFilterDefinitionType jaxbFilterDefinitionMapping) {
 		Map<String, JdbcMapping> parameterMap = null;
-		Map<String, ManagedBean<? extends Supplier>> parameterResolverMap = null;
 		String condition = jaxbFilterDefinitionMapping.getCondition();
 
 		for ( Serializable content : jaxbFilterDefinitionMapping.getContent() ) {
@@ -75,15 +72,11 @@ class FilterDefinitionBinder {
 				if ( parameterMap == null ) {
 					parameterMap = new HashMap<>();
 				}
-				if ( parameterResolverMap == null ) {
-					parameterResolverMap = new HashMap<>();
-				}
 
 				parameterMap.put(
 						jaxbParameterMapping.getParameterName(),
 						context.getMetadataCollector().getTypeConfiguration().getBasicTypeRegistry().getRegisteredType( jaxbParameterMapping.getParameterValueTypeName() )
 				);
-				parameterResolverMap.put( jaxbParameterMapping.getParameterName(), null );
 			}
 		}
 
@@ -91,9 +84,7 @@ class FilterDefinitionBinder {
 				new FilterDefinition(
 						jaxbFilterDefinitionMapping.getName(),
 						condition,
-						parameterMap,
-						parameterResolverMap,
-						false
+						parameterMap
 				)
 		);
 

@@ -21,7 +21,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import javax.naming.Reference;
 import javax.naming.StringRefAddr;
 
@@ -193,6 +192,7 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	// todo : move to MetamodelImpl
 	private final transient Map<String, Generator> identifierGenerators;
 	private final transient Map<String, FilterDefinition> filters;
+	private final transient java.util.Collection<FilterDefinition> autoEnabledFilters = new HashSet<>();
 	private final transient Map<String, FetchProfile> fetchProfiles;
 	private final transient JavaType<Object> tenantIdentifierJavaType;
 
@@ -260,6 +260,11 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 			assert jdbcMapping != null;
 			//noinspection unchecked
 			tenantIdentifierJavaType = jdbcMapping.getJavaTypeDescriptor();
+		}
+		for (Map.Entry<String, FilterDefinition> filterEntry : filters.entrySet()) {
+			if (filterEntry.getValue().isAutoEnabled()) {
+				autoEnabledFilters.add( filterEntry.getValue() );
+			}
 		}
 
 		entityNameResolver = new CoordinatingEntityNameResolver( this, getInterceptor() );
@@ -1091,11 +1096,8 @@ public class SessionFactoryImpl extends QueryParameterBindingTypeResolverImpl im
 	}
 
 	@Override
-	public Map<String, FilterDefinition> getAutoEnabledFilters() {
-		return filters.entrySet()
-				.stream()
-				.filter( entry -> entry.getValue().isAutoEnabled() )
-				.collect(Collectors.toMap( Map.Entry::getKey, Map.Entry::getValue ));
+	public java.util.Collection<FilterDefinition> getAutoEnabledFilters() {
+		return autoEnabledFilters;
 	}
 
 	public boolean containsFetchProfileDefinition(String name) {

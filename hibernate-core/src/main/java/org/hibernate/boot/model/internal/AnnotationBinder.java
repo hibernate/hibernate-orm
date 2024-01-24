@@ -808,7 +808,7 @@ public final class AnnotationBinder {
 
 	private static ManagedBean<? extends Supplier> resolveParamResolver(ParamDef paramDef, MetadataBuildingContext context) {
 		Class<? extends Supplier> clazz = paramDef.resolver();
-		if (clazz.isInterface()) {
+		if (clazz == Supplier.class) {
 			return null;
 		}
 		final ManagedBeanRegistry beanRegistry = context.getBootstrapContext().getServiceRegistry().getService( ManagedBeanRegistry.class );

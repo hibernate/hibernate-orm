@@ -124,7 +124,6 @@
     <xs:complexType name="FilterParameterType">
         <xs:attribute name="name" use="required" type="xs:string"/>
         <xs:attribute name="type" use="required" type="xs:string"/>
-        <xs:attribute name="resolver" type="xs:string"/>
     </xs:complexType>
 
     <xs:complexType name="ClassRenameType">

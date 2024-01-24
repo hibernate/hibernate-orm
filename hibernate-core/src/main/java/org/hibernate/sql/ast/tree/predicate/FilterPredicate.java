@@ -167,7 +167,7 @@ public class FilterPredicate implements Predicate {
 			}
 
 			final Supplier filterParamResolver = filter.getParameterResolver( paramName );
-			return filterParamResolver.get();
+			return filterParamResolver.get() == null ? null : filterParamResolver.get();
 		}
 	}
 }

@@ -65,7 +65,6 @@ arbitrary number of queries, and import declarations of arbitrary classes.
                 <xs:complexType>
                   <xs:attribute name="name" use="required" type="xs:string"/> <!-- The parameter name -->
                   <xs:attribute name="type" use="required" type="xs:string"/> <!-- The parameter type -->
-                  <xs:attribute name="resolver" type="xs:string"/> <!-- The parameter resolver -->
                 </xs:complexType>
               </xs:element>
             </xs:sequence>

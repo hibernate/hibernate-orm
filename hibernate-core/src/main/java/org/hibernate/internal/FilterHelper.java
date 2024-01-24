@@ -20,8 +20,6 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.internal.util.collections.CollectionHelper;
 import org.hibernate.metamodel.mapping.Restrictable;
 import org.hibernate.persister.entity.EntityNameUse;
-import org.hibernate.resource.beans.container.spi.BeanContainer;
-import org.hibernate.resource.beans.spi.ManagedBeanRegistry;
 import org.hibernate.sql.Template;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -174,6 +172,7 @@ public class FilterHelper {
 			TableGroup tableGroup,
 			SqlAstCreationState creationState) {
 		final FilterPredicate filterPredicate = new FilterPredicate();
+
 		for ( int i = 0, max = filterNames.length; i < max; i++ ) {
 			final String filterName = filterNames[i];
 			final FilterImpl enabledFilter = (FilterImpl) enabledFilters.get( filterName );

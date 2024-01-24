@@ -515,6 +515,7 @@ public class StatefulPersistenceContext implements PersistenceContext {
 		if ( holder != null ) {
 			final Object entity = holder.entity;
 			if ( holder.proxy != null ) {
+				holder.entity = null;
 				entitiesByKey.put( key, holder );
 			}
 			return entity;

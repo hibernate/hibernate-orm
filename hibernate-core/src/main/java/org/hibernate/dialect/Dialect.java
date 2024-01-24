@@ -725,22 +725,18 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 			int scale,
 			JdbcTypeRegistry jdbcTypeRegistry) {
 		if ( jdbcTypeCode == ARRAY ) {
-			final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
-			if ( jdbcTypeConstructor != null ) {
-				// Special handling for array types, because we need the proper element/component type
-				// To determine the element JdbcType, we pass the database reported type to #resolveSqlTypeCode
-				final int arraySuffixIndex = columnTypeName.toLowerCase( Locale.ROOT ).indexOf( " array" );
-				if ( arraySuffixIndex != -1 ) {
-					final String componentTypeName = columnTypeName.substring( 0, arraySuffixIndex );
-					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
-					if ( sqlTypeCode != null ) {
-						return jdbcTypeConstructor.resolveType(
-								jdbcTypeRegistry.getTypeConfiguration(),
-								this,
-								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
-								ColumnTypeInformation.EMPTY
-						);
-					}
+			// Special handling for array types, because we need the proper element/component type
+			// To determine the element JdbcType, we pass the database reported type to #resolveSqlTypeCode
+			final int arraySuffixIndex = columnTypeName.toLowerCase( Locale.ROOT ).indexOf( " array" );
+			if ( arraySuffixIndex != -1 ) {
+				final String componentTypeName = columnTypeName.substring( 0, arraySuffixIndex );
+				final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
+				if ( sqlTypeCode != null ) {
+					return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+							jdbcTypeCode,
+							jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
+							ColumnTypeInformation.EMPTY
+					);
 				}
 			}
 		}

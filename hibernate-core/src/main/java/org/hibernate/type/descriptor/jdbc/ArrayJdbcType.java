@@ -214,11 +214,11 @@ public class ArrayJdbcType implements JdbcType {
 	public boolean equals(Object o) {
 		return o != null &&
 				getClass() == o.getClass() &&
-				getElementJdbcType().equals( ((ArrayJdbcType) o).getElementJdbcType() );
+				getElementJdbcType().equals( ( (ArrayJdbcType) o ).getElementJdbcType() );
 	}
 
 	@Override
 	public int hashCode() {
-		return getJdbcTypeCode() + getElementJdbcType().hashCode();
+		return getJdbcTypeCode() + 31 * getElementJdbcType().hashCode();
 	}
 }

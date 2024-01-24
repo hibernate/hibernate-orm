@@ -17,9 +17,7 @@ import org.hibernate.type.BasicType;
 import org.hibernate.type.ConvertedBasicArrayType;
 import org.hibernate.type.descriptor.converter.spi.BasicValueConverter;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeIndicators;
-import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.internal.BasicTypeImpl;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -41,11 +39,9 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 	@Override
 	public JdbcType getRecommendedJdbcType(JdbcTypeIndicators indicators) {
 		// Always determine the recommended type to make sure this is a valid basic java type
-		return getArrayJdbcType(
-				indicators.getTypeConfiguration(),
-				indicators.getDialect(),
+		return indicators.getTypeConfiguration().getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
 				indicators.getPreferredSqlTypeCodeForArray(),
-				new BasicTypeImpl<>( getElementJavaType(), componentJavaType.getRecommendedJdbcType( indicators ) ),
+				new BasicTypeImpl<>( componentJavaType, componentJavaType.getRecommendedJdbcType( indicators ) ),
 				ColumnTypeInformation.EMPTY
 		);
 	}
@@ -86,9 +82,7 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 		final JavaType<?> relationalJavaType = typeConfiguration.getJavaTypeRegistry().getDescriptor( convertedArrayClass );
 		return new ConvertedBasicArrayType<>(
 				elementType,
-				getArrayJdbcType(
-						typeConfiguration,
-						dialect,
+				typeConfiguration.getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
 						stdIndicators.getExplicitJdbcTypeCode(),
 						elementType,
 						columnTypeInformation
@@ -105,9 +99,7 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 			BasicType<E> elementType,
 			ColumnTypeInformation columnTypeInformation,
 			JdbcTypeIndicators stdIndicators) {
-		final JdbcType arrayJdbcType = getArrayJdbcType(
-				typeConfiguration,
-				dialect,
+		final JdbcType arrayJdbcType = typeConfiguration.getJdbcTypeRegistry().resolveTypeConstructorDescriptor(
 				stdIndicators.getExplicitJdbcTypeCode(),
 				elementType,
 				columnTypeInformation
@@ -117,53 +109,6 @@ public abstract class AbstractArrayJavaType<T, E> extends AbstractClassJavaType<
 				arrayJdbcType,
 				() -> new BasicArrayType<>( elementType, arrayJdbcType, arrayJavaType )
 		);
-//		return typeConfiguration.getBasicTypeRegistry().getRegisteredType( elementType.getName() ) == elementType
-//				? typeConfiguration.standardBasicTypeForJavaType(
-//						arrayJavaType.getJavaType(),
-//						javaType -> basicArrayType( typeConfiguration, dialect, elementType, columnTypeInformation, stdIndicators, arrayJavaType )
-//				)
-//				: basicArrayType( typeConfiguration, dialect, elementType, columnTypeInformation, stdIndicators, arrayJavaType );
 	}
 
-//	BasicType<T> basicArrayType(
-//			TypeConfiguration typeConfiguration,
-//			Dialect dialect,
-//			BasicType<E> elementType,
-//			ColumnTypeInformation columnTypeInformation,
-//			JdbcTypeIndicators stdIndicators,
-//			JavaType<T> javaType) {
-//		return new BasicArrayType<>(
-//				elementType,
-//				getArrayJdbcType(
-//						typeConfiguration,
-//						dialect,
-//						stdIndicators.getExplicitJdbcTypeCode(),
-//						elementType,
-//						columnTypeInformation
-//				),
-//				javaType
-//		);
-//	}
-
-	static JdbcType getArrayJdbcType(
-			TypeConfiguration typeConfiguration,
-			Dialect dialect,
-			int preferredSqlTypeCodeForArray,
-			BasicType<?> elementType,
-			ColumnTypeInformation columnTypeInformation) {
-		final JdbcTypeRegistry jdbcTypeRegistry = typeConfiguration.getJdbcTypeRegistry();
-		final JdbcTypeConstructor arrayJdbcTypeConstructor =
-				jdbcTypeRegistry.getConstructor( preferredSqlTypeCodeForArray );
-		if ( arrayJdbcTypeConstructor != null ) {
-			return arrayJdbcTypeConstructor.resolveType(
-					typeConfiguration,
-					dialect,
-					elementType,
-					columnTypeInformation
-			);
-		}
-		else {
-			return jdbcTypeRegistry.getDescriptor( preferredSqlTypeCodeForArray );
-		}
-	}
 }

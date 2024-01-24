@@ -100,7 +100,6 @@ import org.hibernate.type.descriptor.java.PrimitiveByteArrayJavaType;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
 import org.hibernate.type.descriptor.jdbc.BlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
-import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.OracleJsonBlobJdbcType;
 import org.hibernate.type.descriptor.jdbc.NullJdbcType;
 import org.hibernate.type.descriptor.jdbc.ObjectNullAsNullTypeJdbcType;
@@ -760,15 +759,11 @@ public class OracleLegacyDialect extends Dialect {
 				break;
 			case ARRAY:
 				if ( "MDSYS.SDO_ORDINATE_ARRAY".equals( columnTypeName ) ) {
-					final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
-					if ( jdbcTypeConstructor != null ) {
-						return jdbcTypeConstructor.resolveType(
-								jdbcTypeRegistry.getTypeConfiguration(),
-								this,
-								jdbcTypeRegistry.getDescriptor( NUMERIC ),
-								ColumnTypeInformation.EMPTY
-						);
-					}
+					return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+							jdbcTypeCode,
+							jdbcTypeRegistry.getDescriptor( NUMERIC ),
+							ColumnTypeInformation.EMPTY
+					);
 				}
 				break;
 			case Types.NUMERIC:

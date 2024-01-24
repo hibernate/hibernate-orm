@@ -318,15 +318,13 @@ public class CockroachDialect extends Dialect {
 				}
 				break;
 			case ARRAY:
-				final JdbcTypeConstructor jdbcTypeConstructor = jdbcTypeRegistry.getConstructor( jdbcTypeCode );
 				// PostgreSQL names array types by prepending an underscore to the base name
-				if ( jdbcTypeConstructor != null && columnTypeName.charAt( 0 ) == '_' ) {
+				if ( columnTypeName.charAt( 0 ) == '_' ) {
 					final String componentTypeName = columnTypeName.substring( 1 );
 					final Integer sqlTypeCode = resolveSqlTypeCode( componentTypeName, jdbcTypeRegistry.getTypeConfiguration() );
 					if ( sqlTypeCode != null ) {
-						return jdbcTypeConstructor.resolveType(
-								jdbcTypeRegistry.getTypeConfiguration(),
-								this,
+						return jdbcTypeRegistry.resolveTypeConstructorDescriptor(
+								jdbcTypeCode,
 								jdbcTypeRegistry.getDescriptor( sqlTypeCode ),
 								ColumnTypeInformation.EMPTY
 						);

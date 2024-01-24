@@ -7,13 +7,20 @@
 package org.hibernate.type.descriptor.jdbc.spi;
 
 import java.io.Serializable;
+import java.sql.Types;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.hibernate.boot.model.TruthValue;
+import org.hibernate.dialect.Dialect;
 import org.hibernate.metamodel.mapping.EmbeddableMappingType;
 import org.hibernate.metamodel.spi.RuntimeModelCreationContext;
+import org.hibernate.tool.schema.extract.spi.ColumnTypeInformation;
+import org.hibernate.type.BasicType;
 import org.hibernate.type.descriptor.JdbcTypeNameMapper;
 import org.hibernate.type.descriptor.jdbc.AggregateJdbcType;
+import org.hibernate.type.descriptor.jdbc.ArrayJdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcType;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeConstructor;
 import org.hibernate.type.descriptor.jdbc.JdbcTypeFamilyInformation;
@@ -22,6 +29,8 @@ import org.hibernate.type.descriptor.jdbc.internal.JdbcTypeBaseline;
 import org.hibernate.type.spi.TypeConfiguration;
 
 import org.jboss.logging.Logger;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * A registry mapping {@link org.hibernate.type.SqlTypes JDBC type codes}
@@ -39,6 +48,13 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 	private final ConcurrentHashMap<Integer, JdbcType> descriptorMap = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<Integer, JdbcTypeConstructor> descriptorConstructorMap = new ConcurrentHashMap<>();
 	private final ConcurrentHashMap<String, AggregateJdbcType> aggregateDescriptorMap = new ConcurrentHashMap<>();
+	/**
+	 * A registry for storing the constructed {@link JdbcType} for both
+	 * {@link JdbcTypeConstructor#resolveType(TypeConfiguration, Dialect, JdbcType, ColumnTypeInformation)} and
+	 * {@link JdbcTypeConstructor#resolveType(TypeConfiguration, Dialect, BasicType, ColumnTypeInformation)} in a single
+	 * map.
+ 	 */
+	private final ConcurrentHashMap<TypeConstructedJdbcTypeKey, JdbcType> typeConstructorDescriptorMap = new ConcurrentHashMap<>();
 
 	public JdbcTypeRegistry(TypeConfiguration typeConfiguration) {
 		this.typeConfiguration = typeConfiguration;
@@ -174,6 +190,68 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 		return aggregateDescriptorMap.get( typeName.toLowerCase( Locale.ROOT ) );
 	}
 
+	/**
+	 * Construct a {@link JdbcType} via {@link JdbcTypeConstructor#resolveType(TypeConfiguration, Dialect, BasicType, ColumnTypeInformation)}
+	 * or return a compatible one from this registry.
+	 */
+	public JdbcType resolveTypeConstructorDescriptor(
+			int jdbcTypeConstructorCode,
+			BasicType<?> elementType,
+			@Nullable ColumnTypeInformation columnTypeInformation) {
+		return resolveTypeConstructorDescriptor( jdbcTypeConstructorCode, (Object) elementType, columnTypeInformation );
+	}
+
+	/**
+	 * Construct a {@link JdbcType} via {@link JdbcTypeConstructor#resolveType(TypeConfiguration, Dialect, JdbcType, ColumnTypeInformation)}
+	 * or return a compatible one from this registry.
+	 */
+	public JdbcType resolveTypeConstructorDescriptor(
+			int jdbcTypeConstructorCode,
+			JdbcType elementType,
+			@Nullable ColumnTypeInformation columnTypeInformation) {
+		return resolveTypeConstructorDescriptor( jdbcTypeConstructorCode, (Object) elementType, columnTypeInformation );
+	}
+
+	private JdbcType resolveTypeConstructorDescriptor(
+			int jdbcTypeConstructorCode,
+			Object elementType,
+			@Nullable ColumnTypeInformation columnTypeInformation) {
+		final TypeConstructedJdbcTypeKey key = new TypeConstructedJdbcTypeKey(
+				jdbcTypeConstructorCode,
+				elementType,
+				columnTypeInformation
+		);
+		final JdbcType descriptor = typeConstructorDescriptorMap.get( key );
+		if ( descriptor != null ) {
+			return descriptor;
+		}
+		final JdbcTypeConstructor jdbcTypeConstructor = getConstructor( jdbcTypeConstructorCode );
+		if ( jdbcTypeConstructor != null ) {
+			final JdbcType jdbcType;
+			if ( elementType instanceof BasicType<?> ) {
+				jdbcType = jdbcTypeConstructor.resolveType(
+						typeConfiguration,
+						typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
+						(BasicType<?>) elementType,
+						columnTypeInformation
+				);
+			}
+			else {
+				jdbcType = jdbcTypeConstructor.resolveType(
+						typeConfiguration,
+						typeConfiguration.getCurrentBaseSqlTypeIndicators().getDialect(),
+						(JdbcType) elementType,
+						columnTypeInformation
+				);
+			}
+			final JdbcType existingType = typeConstructorDescriptorMap.putIfAbsent( key, jdbcType );
+			return existingType != null ? existingType : jdbcType;
+		}
+		else {
+			return getDescriptor( jdbcTypeConstructorCode );
+		}
+	}
+
 	public boolean hasRegisteredDescriptor(int jdbcTypeCode) {
 		return descriptorMap.containsKey( jdbcTypeCode )
 			|| JdbcTypeNameMapper.isStandardTypeCode( jdbcTypeCode )
@@ -190,5 +268,81 @@ public class JdbcTypeRegistry implements JdbcTypeBaseline.BaselineTarget, Serial
 
 	public void addTypeConstructor(JdbcTypeConstructor jdbcTypeConstructor) {
 		addTypeConstructor( jdbcTypeConstructor.getDefaultSqlTypeCode(), jdbcTypeConstructor );
+	}
+
+	private static final class TypeConstructedJdbcTypeKey {
+		private final int typeConstructorTypeCode;
+		private final Object jdbcTypeOrBasicType;
+		private final TruthValue nullable;
+		private final int typeCode;
+		private final @Nullable String typeName;
+		private final int columnSize;
+		private final int decimalDigits;
+
+		public TypeConstructedJdbcTypeKey(
+				int typeConstructorTypeCode,
+				Object jdbcTypeOrBasicType,
+				@Nullable ColumnTypeInformation columnTypeInformation) {
+			this.typeConstructorTypeCode = typeConstructorTypeCode;
+			this.jdbcTypeOrBasicType = jdbcTypeOrBasicType;
+			if ( columnTypeInformation == null ) {
+				this.nullable = TruthValue.UNKNOWN;
+				this.typeCode = Types.OTHER;
+				this.typeName = null;
+				this.columnSize = 0;
+				this.decimalDigits = 0;
+			}
+			else {
+				this.nullable = columnTypeInformation.getNullable();
+				this.typeCode = columnTypeInformation.getTypeCode();
+				this.typeName = columnTypeInformation.getTypeName();
+				this.columnSize = columnTypeInformation.getColumnSize();
+				this.decimalDigits = columnTypeInformation.getDecimalDigits();
+			}
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if ( this == o ) {
+				return true;
+			}
+			if ( o == null || getClass() != o.getClass() ) {
+				return false;
+			}
+
+			TypeConstructedJdbcTypeKey that = (TypeConstructedJdbcTypeKey) o;
+
+			if ( typeConstructorTypeCode != that.typeConstructorTypeCode ) {
+				return false;
+			}
+			if ( typeCode != that.typeCode ) {
+				return false;
+			}
+			if ( columnSize != that.columnSize ) {
+				return false;
+			}
+			if ( decimalDigits != that.decimalDigits ) {
+				return false;
+			}
+			if ( !jdbcTypeOrBasicType.equals( that.jdbcTypeOrBasicType ) ) {
+				return false;
+			}
+			if ( nullable != that.nullable ) {
+				return false;
+			}
+			return Objects.equals( typeName, that.typeName );
+		}
+
+		@Override
+		public int hashCode() {
+			int result = typeConstructorTypeCode;
+			result = 31 * result + jdbcTypeOrBasicType.hashCode();
+			result = 31 * result + ( nullable != null ? nullable.hashCode() : 0 );
+			result = 31 * result + typeCode;
+			result = 31 * result + ( typeName != null ? typeName.hashCode() : 0 );
+			result = 31 * result + columnSize;
+			result = 31 * result + decimalDigits;
+			return result;
+		}
 	}
 }

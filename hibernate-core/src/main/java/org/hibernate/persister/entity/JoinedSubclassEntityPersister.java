@@ -1379,8 +1379,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				// We allow multiple joined subclasses to use the same table if they define a discriminator column.
 				// In this case, we might need to add a discriminator condition to make sure we filter the correct subtype,
 				// see SingleTableEntityPersister#pruneForSubclasses for more details on this condition
-				needsTreatDiscriminator = needsTreatDiscriminator || !persister.isAbstract() &&
-						!isTypeOrSuperType( persister ) && useKind == EntityNameUse.UseKind.TREAT;
+				needsTreatDiscriminator = needsTreatDiscriminator || !persister.isAbstract()
+						&& useKind == EntityNameUse.UseKind.TREAT && ( isInherited() || !isTypeOrSuperType( persister ) );
 			}
 		}
 		// If no tables to inner join have been found, we add at least the super class tables of this persister
@@ -1411,11 +1411,13 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						entityNameUses,
 						metamodel
 				);
-				for ( int i = 0; !applied && i < tableReferenceJoins.size(); i++ ) {
+				int i = 0;
+				for ( ; !applied && i < tableReferenceJoins.size(); i++ ) {
 					final TableReferenceJoin join = tableReferenceJoins.get( i );
 					applied = applyDiscriminatorPredicate( join, join.getJoinedTableReference(), entityNameUses, metamodel );
 				}
 				assert applied : "Could not apply treat discriminator predicate to root table join";
+				assert i == 0 || retainedTableReferences.contains( tableReferenceJoins.get( i - 1 ).getJoinedTableReference() );
 			}
 		}
 		if ( tableReferenceJoins.isEmpty() ) {

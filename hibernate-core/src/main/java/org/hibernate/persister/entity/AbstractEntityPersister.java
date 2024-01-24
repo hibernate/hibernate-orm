@@ -3137,20 +3137,21 @@ public abstract class AbstractEntityPersister
 			assert !creationState.supportsEntityNameUsage() : "Entity name usage should have been used instead";
 			final Map<String, EntityNameUse> entityNameUseMap;
 			final Collection<EntityMappingType> subMappingTypes = getSubMappingTypes();
+			entityNameUseMap = new HashMap<>( 1 + subMappingTypes.size() + ( isInherited() ? 1 : 0 ) );
 			if ( subMappingTypes.isEmpty() ) {
-				entityNameUseMap = Collections.singletonMap( getEntityName(), EntityNameUse.TREAT );
+				entityNameUseMap.put( getEntityName(), EntityNameUse.TREAT );
 			}
 			else {
-				entityNameUseMap = new HashMap<>( 1 + subMappingTypes.size() );
 				entityNameUseMap.put( getEntityName(), EntityNameUse.TREAT );
 				// We need to register TREAT uses for all subtypes when pruning
 				for ( EntityMappingType subMappingType : subMappingTypes ) {
 					entityNameUseMap.put( subMappingType.getEntityName(), EntityNameUse.TREAT );
 				}
-				if ( isInherited() ) {
-					// Make sure the table group includes the root table when needed for TREAT
-					tableGroup.resolveTableReference( getRootTableName() );
-				}
+			}
+			if ( isInherited() ) {
+				// Make sure the table group includes the root table when needed for TREAT
+				tableGroup.resolveTableReference( getRootTableName() );
+				entityNameUseMap.put( getRootEntityName(), EntityNameUse.EXPRESSION );
 			}
 			pruneForSubclasses( tableGroup, entityNameUseMap );
 		}

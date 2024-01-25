@@ -78,6 +78,7 @@ import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -117,6 +118,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * A legacy {@linkplain Dialect SQL dialect} for H2.
  *
  * @author Thomas Mueller
+ * @author Jürgen Kreitler
  */
 public class H2LegacyDialect extends Dialect {
 	private static final CoreMessageLogger LOG = CoreLogging.messageLogger( H2LegacyDialect.class );
@@ -262,6 +264,7 @@ public class H2LegacyDialect extends Dialect {
 				ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
 			}
 		}
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this ) );
 	}
 
 	@Override
@@ -289,6 +292,7 @@ public class H2LegacyDialect extends Dialect {
 		if ( getVersion().isSameOrAfter( 1, 4, 200 ) ) {
 			jdbcTypeRegistry.addDescriptorIfAbsent( H2FormatJsonJdbcType.INSTANCE );
 		}
+		jdbcTypeRegistry.addDescriptor( new MySQLEnumJdbcType() );
 	}
 
 	@Override
@@ -930,6 +934,18 @@ public class H2LegacyDialect extends Dialect {
 	@Override
 	public String getEnableConstraintsStatement() {
 		return "set referential_integrity true";
+	}
+
+	@Override
+	public String getEnumTypeDeclaration(String name, String[] values) {
+		StringBuilder type = new StringBuilder();
+		type.append( "enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			type.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
+		}
+		return type.append( ')' ).toString();
 	}
 
 	@Override

@@ -11,7 +11,6 @@ import java.util.Objects;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
-import org.hibernate.metamodel.mapping.SqlExpressible;
 import org.hibernate.sql.ast.SqlAstWalker;
 import org.hibernate.sql.ast.spi.SqlExpressionAccess;
 import org.hibernate.sql.ast.spi.SqlSelection;
@@ -93,7 +92,10 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 	}
 
 	private static ValueExtractor determineValueExtractor(Expression sqlExpression, JavaType<?> jdbcJavaType) {
-		final JdbcMapping jdbcMapping = sqlExpression.getExpressionType().getSingleJdbcMapping();
+		final JdbcMappingContainer expressionType = sqlExpression.getExpressionType();
+		final JdbcMapping jdbcMapping = expressionType == null
+				? JavaObjectType.INSTANCE
+				: expressionType.getSingleJdbcMapping();
 		if ( jdbcJavaType == null || jdbcMapping.getMappedJavaType() == jdbcJavaType ) {
 			return jdbcMapping.getJdbcValueExtractor();
 		}
@@ -101,6 +103,7 @@ public class SqlSelectionImpl implements SqlSelection, SqlExpressionAccess {
 			return jdbcMapping.getJdbcType().getExtractor( jdbcJavaType );
 		}
 	}
+
 
 	@Override
 	public Expression getExpression() {

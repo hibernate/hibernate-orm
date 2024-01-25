@@ -2248,4 +2248,22 @@ public class FunctionTests {
 				}
 		);
 	}
+
+	@Test
+	@SkipForDialect(dialectClass = H2Dialect.class)
+	@SkipForDialect(dialectClass = DerbyDialect.class)
+	@SkipForDialect(dialectClass = HSQLDialect.class)
+	@SkipForDialect(dialectClass = DB2Dialect.class)
+	public void testNullInCoalesce(SessionFactoryScope scope) {
+		scope.inTransaction(s -> {
+			assertEquals("hello",
+					s.createQuery("select coalesce(null, :word)", String.class)
+							.setParameter("word", "hello")
+							.getSingleResultOrNull());
+			assertEquals("hello",
+					s.createQuery("select coalesce(:word, null)", String.class)
+							.setParameter("word", "hello")
+							.getSingleResultOrNull());
+        });
+	}
 }

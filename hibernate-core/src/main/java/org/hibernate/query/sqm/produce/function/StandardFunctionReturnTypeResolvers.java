@@ -12,16 +12,15 @@ import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.hibernate.Internal;
-import org.hibernate.QueryException;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.metamodel.mapping.MappingModelExpressible;
-import org.hibernate.metamodel.model.domain.EntityDomainType;
 import org.hibernate.query.ReturnableType;
 import org.hibernate.query.sqm.SqmExpressible;
 import org.hibernate.query.sqm.SqmPathSource;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
+import org.hibernate.query.sqm.tree.expression.NullSqmExpressible;
 import org.hibernate.sql.ast.tree.SqlAstNode;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.type.BasicType;
@@ -252,7 +251,10 @@ public class StandardFunctionReturnTypeResolvers {
 			int position) {
 		final SqmTypedNode<?> specifiedArgument = arguments.get( position - 1 );
 		final SqmExpressible<?> specifiedArgType = getArgumentExpressible( specifiedArgument );
-		if ( specifiedArgType != null && !(specifiedArgType instanceof ReturnableType ) ) {
+		if ( specifiedArgType == null || specifiedArgType instanceof NullSqmExpressible ) {
+			return null;
+		}
+		else if ( !(specifiedArgType instanceof ReturnableType) ) {
 			throw new FunctionArgumentException(
 					String.format(
 							Locale.ROOT,
@@ -263,8 +265,9 @@ public class StandardFunctionReturnTypeResolvers {
 					)
 			);
 		}
-
-		return (ReturnableType<?>) specifiedArgType;
+		else {
+			return (ReturnableType<?>) specifiedArgType;
+		}
 	}
 
 	private static SqmExpressible<?> getArgumentExpressible(SqmTypedNode<?> specifiedArgument) {
@@ -272,9 +275,9 @@ public class StandardFunctionReturnTypeResolvers {
 		final SqmExpressible<?> specifiedArgType = expressible instanceof SqmTypedNode<?>
 				? ( (SqmTypedNode<?>) expressible ).getNodeType()
 				: expressible;
-		return specifiedArgType instanceof SqmPathSource ?
-				( (SqmPathSource<?>) specifiedArgType ).getSqmPathType() :
-				specifiedArgType;
+		return specifiedArgType instanceof SqmPathSource
+				? ( (SqmPathSource<?>) specifiedArgType ).getSqmPathType()
+				: specifiedArgType;
 	}
 
 	public static JdbcMapping extractArgumentJdbcMapping(

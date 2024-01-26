@@ -14,6 +14,9 @@ import org.hibernate.query.sqm.produce.function.FunctionReturnTypeResolver;
 import org.hibernate.query.sqm.tree.SqmTypedNode;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmOrderByClause;
+import org.hibernate.sql.ast.SqlAstTranslator;
+import org.hibernate.sql.ast.spi.SqlAppender;
+import org.hibernate.sql.ast.tree.SqlAstNode;
 
 import java.util.List;
 
@@ -42,6 +45,15 @@ public abstract class AbstractSqmSelfRenderingFunctionDescriptor
 			FunctionArgumentTypeResolver argumentTypeResolver) {
 		super( name, argumentsValidator, returnTypeResolver, argumentTypeResolver );
 		this.functionKind = functionKind;
+	}
+
+	@Override
+	public void render(
+			SqlAppender sqlAppender,
+			List<? extends SqlAstNode> sqlAstArguments,
+			ReturnableType<?> returnType,
+			SqlAstTranslator<?> walker) {
+		render( sqlAppender, sqlAstArguments, walker );
 	}
 
 	@Override

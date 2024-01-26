@@ -9,6 +9,7 @@ package org.hibernate.sql.results.graph.instantiation.internal;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -71,6 +72,13 @@ public class DynamicInstantiationResultImpl<R> implements DynamicInstantiationRe
 		}
 
 		return false;
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		for ( ArgumentDomainResult<?> argumentResult : argumentResults ) {
+			argumentResult.collectValueIndexesToCache( valueIndexes );
+		}
 	}
 
 	@Override

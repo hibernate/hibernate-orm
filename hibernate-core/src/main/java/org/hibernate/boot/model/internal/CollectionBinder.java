@@ -22,6 +22,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.Bag;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.Cascade;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
@@ -63,6 +64,7 @@ import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.OptimisticLock;
 import org.hibernate.annotations.Parameter;
 import org.hibernate.annotations.Persister;
+import org.hibernate.annotations.QueryCacheLayout;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
 import org.hibernate.annotations.SQLInsert;
@@ -214,6 +216,7 @@ public abstract class CollectionBinder {
 	private String cascadeStrategy;
 	private String cacheConcurrencyStrategy;
 	private String cacheRegionName;
+	private CacheLayout queryCacheLayout;
 	private boolean oneToMany;
 	protected IndexColumn indexColumn;
 	protected OnDeleteAction onDeleteAction;
@@ -288,6 +291,7 @@ public abstract class CollectionBinder {
 		collectionBinder.setNaturalSort( property.getAnnotation( SortNatural.class ) );
 		collectionBinder.setComparatorSort( property.getAnnotation( SortComparator.class ) );
 		collectionBinder.setCache( property.getAnnotation( Cache.class ) );
+		collectionBinder.setQueryCacheLayout( property.getAnnotation( QueryCacheLayout.class ) );
 		collectionBinder.setPropertyHolder(propertyHolder);
 
 		collectionBinder.setNotFoundAction( notFoundAction( propertyHolder, inferredData, property, manyToManyAnn ) );
@@ -1251,6 +1255,7 @@ public abstract class CollectionBinder {
 			collection.setCacheConcurrencyStrategy( cacheConcurrencyStrategy );
 			collection.setCacheRegionName( cacheRegionName );
 		}
+		collection.setQueryCacheLayout( queryCacheLayout );
 	}
 
 	private void bindExplicitTypes() {
@@ -1936,6 +1941,10 @@ public abstract class CollectionBinder {
 			cacheConcurrencyStrategy = null;
 			cacheRegionName = null;
 		}
+	}
+
+	public void setQueryCacheLayout(QueryCacheLayout queryCacheLayout) {
+		this.queryCacheLayout = queryCacheLayout == null ? null : queryCacheLayout.layout();
 	}
 
 	public void setOneToMany(boolean oneToMany) {

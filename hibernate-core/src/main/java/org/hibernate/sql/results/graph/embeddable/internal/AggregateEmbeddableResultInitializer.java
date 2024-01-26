@@ -63,6 +63,11 @@ public class AggregateEmbeddableResultInitializer extends AbstractEmbeddableInit
 	}
 
 	@Override
+	public boolean isResultInitializer() {
+		return true;
+	}
+
+	@Override
 	public NestedRowProcessingState wrapProcessingState(RowProcessingState processingState) {
 		if ( nestedRowProcessingState != null ) {
 			return nestedRowProcessingState;

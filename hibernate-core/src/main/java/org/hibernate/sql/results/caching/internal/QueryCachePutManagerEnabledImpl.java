@@ -7,7 +7,6 @@
 package org.hibernate.sql.results.caching.internal;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.hibernate.cache.spi.QueryKey;
@@ -46,26 +45,19 @@ public class QueryCachePutManagerEnabledImpl implements QueryCachePutManager {
 	}
 
 	@Override
-	public void registerJdbcRow(Object[] values) {
-
-		// todo (6.0) : verify whether we really need to copy these..
-		//		`RowProcessingStateStandardImpl` (see `#finishRowProcessing`) already creates new array
-		//		instances for each row
-//		dataToCache.add( values );
-		dataToCache.add( Arrays.copyOf( values, values.length ) );
+	public void registerJdbcRow(Object values) {
+		dataToCache.add( values );
 	}
 
 	@Override
 	public void finishUp(SharedSessionContractImplementor session) {
-		if ( queryKey != null ) {
-			final boolean put = queryCache.put(
-					queryKey,
-					dataToCache,
-					session
-			);
-			if ( put && statistics.isStatisticsEnabled() ) {
-				statistics.queryCachePut( queryIdentifier, queryCache.getRegion().getName() );
-			}
+		final boolean put = queryCache.put(
+				queryKey,
+				dataToCache,
+				session
+		);
+		if ( put && statistics.isStatisticsEnabled() ) {
+			statistics.queryCachePut( queryIdentifier, queryCache.getRegion().getName() );
 		}
 	}
 }

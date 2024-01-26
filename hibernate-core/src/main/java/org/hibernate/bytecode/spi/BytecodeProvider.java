@@ -11,6 +11,7 @@ import java.util.Map;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
 import org.hibernate.property.access.spi.PropertyAccess;
+import org.hibernate.service.JavaServiceLoadable;
 import org.hibernate.service.Service;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -25,6 +26,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  *
  * @author Steve Ebersole
  */
+@JavaServiceLoadable
 public interface BytecodeProvider extends Service {
 	/**
 	 * Retrieve the specific factory for this provider capable of

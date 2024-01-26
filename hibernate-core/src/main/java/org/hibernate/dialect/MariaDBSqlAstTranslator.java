@@ -384,4 +384,13 @@ public class MariaDBSqlAstTranslator<T extends JdbcOperation> extends AbstractSq
 		}
 	}
 
+	@Override
+	protected void renderStringContainsExactlyPredicate(Expression haystack, Expression needle) {
+		// MariaDB can't cope with NUL characters in the position function, so we use a like predicate instead
+		haystack.accept( this );
+		appendSql( " like concat('%',replace(replace(replace(" );
+		needle.accept( this );
+		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
+	}
+
 }

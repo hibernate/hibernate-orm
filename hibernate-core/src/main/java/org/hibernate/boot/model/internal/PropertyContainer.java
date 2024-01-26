@@ -19,6 +19,7 @@ import java.util.TreeMap;
 
 import org.hibernate.AnnotationException;
 import org.hibernate.annotations.JavaType;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.Target;
 import org.hibernate.annotations.Type;
@@ -434,6 +435,9 @@ public class PropertyContainer {
 			return true;
 		}
 		else if ( property.isAnnotationPresent( JavaType.class ) ) {
+			return true;
+		}
+		else if ( property.isAnnotationPresent( JdbcTypeCode.class ) ) {
 			return true;
 		}
 		else if ( property.isAnnotationPresent( Target.class ) ) {

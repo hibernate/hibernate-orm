@@ -6,9 +6,6 @@
  */
 package org.hibernate.sql.results.graph.collection.internal;
 
-import java.util.Collections;
-import java.util.List;
-
 import org.hibernate.LockMode;
 import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.collection.spi.CollectionSemantics;
@@ -25,6 +22,7 @@ import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
 import org.hibernate.sql.results.graph.FetchableContainer;
+import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.collection.CollectionInitializer;
 import org.hibernate.sql.results.graph.collection.CollectionResultGraphNode;
 import org.hibernate.sql.results.graph.internal.ImmutableFetchList;
@@ -33,7 +31,8 @@ import org.hibernate.type.descriptor.java.JavaType;
 /**
  * @author Steve Ebersole
  */
-public class CollectionDomainResult implements DomainResult, CollectionResultGraphNode, FetchParent {
+public class CollectionDomainResult implements DomainResult, CollectionResultGraphNode, FetchParent,
+		InitializerProducer<CollectionDomainResult> {
 	private final NavigablePath loadingPath;
 	private final PluralAttributeMapping loadingAttribute;
 
@@ -93,25 +92,29 @@ public class CollectionDomainResult implements DomainResult, CollectionResultGra
 	public DomainResultAssembler createResultAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final CollectionInitializer initializer = (CollectionInitializer) creationState.resolveInitializer(
-				getNavigablePath(),
-				getReferencedModePart(),
-				() -> {
-					final DomainResultAssembler fkAssembler = fkResult.createResultAssembler( null, creationState );
+		return new CollectionAssembler( loadingAttribute, creationState.resolveInitializer( this, parentAccess, this ).asCollectionInitializer() );
+	}
 
-					return initializerProducer.produceInitializer(
-							loadingPath,
-							loadingAttribute,
-							null,
-							LockMode.READ,
-							fkAssembler,
-							fkAssembler,
-							creationState
-					);
-				}
+	@Override
+	public CollectionInitializer createInitializer(
+			CollectionDomainResult resultGraphNode,
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
+		return resultGraphNode.createInitializer( parentAccess, creationState );
+	}
+
+	@Override
+	public CollectionInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+		return initializerProducer.produceInitializer(
+				loadingPath,
+				loadingAttribute,
+				parentAccess,
+				LockMode.READ,
+				fkResult,
+				fkResult,
+				true,
+				creationState
 		);
-
-		return new EagerCollectionAssembler( loadingAttribute, initializer );
 	}
 
 	@Override

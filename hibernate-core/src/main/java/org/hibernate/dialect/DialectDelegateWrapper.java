@@ -291,6 +291,11 @@ public class DialectDelegateWrapper extends Dialect {
 	}
 
 	@Override
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
+		return wrapped.trimPattern( specification, isWhitespace );
+	}
+
+	@Override
 	public boolean supportsFractionalTimestampArithmetic() {
 		return wrapped.supportsFractionalTimestampArithmetic();
 	}

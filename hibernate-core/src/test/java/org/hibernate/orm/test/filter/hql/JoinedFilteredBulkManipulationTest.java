@@ -6,7 +6,12 @@
  */
 package org.hibernate.orm.test.filter.hql;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import java.util.Date;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -15,21 +20,20 @@ import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
 import jakarta.persistence.Table;
 
+import org.hibernate.SharedSessionContract;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.ParamDef;
+import org.hibernate.orm.test.filter.AbstractStatefulStatelessFilterTest;
 
 import org.hibernate.testing.orm.junit.DialectFeatureChecks;
 import org.hibernate.testing.orm.junit.DomainModel;
 import org.hibernate.testing.orm.junit.RequiresDialectFeature;
-import org.hibernate.testing.orm.junit.SessionFactory;
 import org.hibernate.testing.orm.junit.SessionFactoryScope;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
 
 /**
  * @author Steve Ebersole
@@ -43,11 +47,10 @@ import static org.junit.Assert.assertThat;
 				JoinedFilteredBulkManipulationTest.Customer.class
 		}
 )
-@SessionFactory
-public class JoinedFilteredBulkManipulationTest {
+public class JoinedFilteredBulkManipulationTest extends AbstractStatefulStatelessFilterTest {
 
 	@BeforeEach
-	void setUp(SessionFactoryScope scope) {
+	void setUp() {
 		scope.inTransaction( session -> {
 			session.save( new Employee( "John", 'M', "john", new Date() ) );
 			session.save( new Employee( "Jane", 'F', "jane", new Date() ) );
@@ -56,65 +59,71 @@ public class JoinedFilteredBulkManipulationTest {
 		} );
 	}
 
-	@Test
-	void testFilteredJoinedSubclassHqlDeleteRoot(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testFilteredJoinedSubclassHqlDeleteRoot(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
 			final int count = session.createQuery( "delete Person" ).executeUpdate();
-			assertThat( count, is( 2 ) );
+			assertThat( count ).isEqualTo( 2 );
 		} );
 	}
 
-	@Test
-	void testFilteredJoinedSubclassHqlDeleteNonLeaf(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testFilteredJoinedSubclassHqlDeleteNonLeaf(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
 			final int count = session.createQuery( "delete User" ).executeUpdate();
-			assertThat( count, is( 2 ) );
+			assertThat( count ).isEqualTo( 2 );
 		} );
 	}
 
-	@Test
-	void testFilteredJoinedSubclassHqlDeleteLeaf(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testFilteredJoinedSubclassHqlDeleteLeaf(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
 			final int count = session.createQuery( "delete Employee" ).executeUpdate();
-			assertThat( count, is( 1 ) );
+			assertThat( count ).isEqualTo( 1 );
 		} );
 	}
 
-	@Test
-	void testFilteredJoinedSubclassHqlUpdateRoot(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testFilteredJoinedSubclassHqlUpdateRoot(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
 			final int count = session.createQuery( "update Person p set p.name = '<male>'" ).executeUpdate();
-			assertThat( count, is( 2 ) );
+			assertThat( count ).isEqualTo( 2 );
 		} );
 	}
 
-	@Test
-	void testFilteredJoinedSubclassHqlUpdateNonLeaf(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testFilteredJoinedSubclassHqlUpdateNonLeaf(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
 			final int count = session.createQuery( "update User u set u.username = :un where u.name = :n" )
 					.setParameter( "un", "charlie" )
 					.setParameter( "n", "Wanda" )
 					.executeUpdate();
-			assertThat( count, is( 0 ) );
+			assertThat( count ).isZero();
 		} );
 	}
 
-	@Test
-	void testFilteredJoinedSubclassHqlUpdateLeaf(SessionFactoryScope scope) {
-		scope.inTransaction( session -> {
+	@ParameterizedTest
+	@MethodSource("transactionKind")
+	void testFilteredJoinedSubclassHqlUpdateLeaf(BiConsumer<SessionFactoryScope, Consumer<? extends SharedSessionContract>> inTransaction) {
+		inTransaction.accept( scope, session -> {
 			session.enableFilter( "sex" ).setParameter( "sexCode", 'M' );
 			final int count = session.createQuery( "update Customer c set c.company = 'XYZ'" ).executeUpdate();
-			assertThat( count, is( 1 ) );
+			assertThat( count ).isEqualTo( 1 );
 		} );
 	}
 
 	@AfterEach
-	void tearDown(SessionFactoryScope scope) {
+	void tearDown() {
 		scope.inTransaction( session -> {
 			session.createQuery( "delete Person" ).executeUpdate();
 		} );

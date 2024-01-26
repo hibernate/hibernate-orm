@@ -11,6 +11,7 @@ import org.hibernate.collection.spi.CollectionInitializerProducer;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
@@ -39,16 +40,29 @@ public class SetInitializerProducer implements CollectionInitializerProducer {
 			DomainResultAssembler<?> collectionKeyAssembler,
 			DomainResultAssembler<?> collectionValueKeyAssembler,
 			AssemblerCreationState creationState) {
-		final DomainResultAssembler<?> elementAssembler = elementFetch.createAssembler( parentAccess, creationState );
+		throw new UnsupportedOperationException( "Use the non-deprecated method variant instead." );
+	}
 
+	@Override
+	public CollectionInitializer produceInitializer(
+			NavigablePath navigablePath,
+			PluralAttributeMapping attribute,
+			FetchParentAccess parentAccess,
+			LockMode lockMode,
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState) {
 		return new SetInitializer(
 				navigablePath,
 				setDescriptor,
 				parentAccess,
 				lockMode,
-				collectionKeyAssembler,
-				collectionValueKeyAssembler,
-				elementAssembler
+				collectionKeyResult,
+				collectionValueKeyResult,
+				elementFetch,
+				isResultInitializer,
+				creationState
 		);
 	}
 }

@@ -167,7 +167,8 @@ public class TimestampdiffFunction
 
 		@Override
 		public String getReturnType() {
-			return longType + "|" + doubleType;
+			return longType.getJavaType().getSimpleName()
+				+ "|" + doubleType.getJavaType().getSimpleName();
 		}
 	}
 

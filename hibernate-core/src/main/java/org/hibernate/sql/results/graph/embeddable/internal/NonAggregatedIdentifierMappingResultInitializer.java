@@ -27,6 +27,11 @@ public class NonAggregatedIdentifierMappingResultInitializer extends AbstractNon
 	}
 
 	@Override
+	public boolean isResultInitializer() {
+		return true;
+	}
+
+	@Override
 	public String toString() {
 		return "EmbeddableResultInitializer(" + getNavigablePath() + ")";
 	}

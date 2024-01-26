@@ -14,6 +14,7 @@ import org.hibernate.Incubating;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactory;
 import org.hibernate.SessionFactoryObserver;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.cache.spi.TimestampsCacheFactory;
 import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.jpa.spi.JpaCompliance;
@@ -444,6 +445,19 @@ public interface SessionFactoryBuilder {
 	 * @see org.hibernate.cfg.AvailableSettings#USE_QUERY_CACHE
 	 */
 	SessionFactoryBuilder applyQueryCacheSupport(boolean enabled);
+
+	/**
+	 * Specifies the default {@link CacheLayout} to use for query cache entries.
+	 *
+	 * @param cacheLayout The cache layout to use.
+	 *
+	 * @return {@code this}, for method chaining
+	 *
+	 * @see org.hibernate.cfg.AvailableSettings#QUERY_CACHE_LAYOUT
+	 * @since 6.5
+	 */
+	@Incubating
+	SessionFactoryBuilder applyQueryCacheLayout(CacheLayout cacheLayout);
 
 	/**
 	 * Specifies a {@link org.hibernate.cache.spi.TimestampsCacheFactory}.

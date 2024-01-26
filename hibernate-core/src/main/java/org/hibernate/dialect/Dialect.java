@@ -1484,11 +1484,29 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 	 *
 	 * @param specification {@code leading} or {@code trailing}
 	 * @param character the character to trim
+	 *
+	 * @deprecated Use {@link #trimPattern(TrimSpec, boolean)} instead.
 	 */
+	@Deprecated( forRemoval = true )
 	public String trimPattern(TrimSpec specification, char character) {
-		return character == ' '
-				? "trim(" + specification + " from ?1)"
-				: "trim(" + specification + " '" + character + "' from ?1)";
+		return trimPattern( specification, character == ' ' );
+	}
+
+	/**
+	 * Obtain a pattern for the SQL equivalent to a
+	 * {@code trim()} function call. The resulting
+	 * pattern must contain a ?1 placeholder for the
+	 * argument of type {@link String} and a ?2 placeholder
+	 * for the trim character if {@code isWhitespace}
+	 * was false.
+	 *
+	 * @param specification {@linkplain TrimSpec#LEADING leading}, {@linkplain TrimSpec#TRAILING trailing}
+	 * or {@linkplain TrimSpec#BOTH both}
+	 * @param isWhitespace {@code true} if the trim character is a whitespace and can be omitted,
+	 * {@code false} if it must be explicit and a ?2 placeholder should be included in the pattern
+	 */
+	public String trimPattern(TrimSpec specification, boolean isWhitespace) {
+		return "trim(" + specification + ( isWhitespace ? "" : " ?2" ) + " from ?1)";
 	}
 
 	/**
@@ -4759,6 +4777,15 @@ public abstract class Dialect implements ConversionContext, TypeContributor, Fun
 		//precision, with the exception of DB2 which
 		//accepts up to 12 digits!
 		return 6; //microseconds!
+	}
+
+	/**
+	 * Does this dialect round a temporal when converting from a precision higher to a lower one?
+	 *
+	 * @return true if rounding is applied, false if truncation is applied
+	 */
+	public boolean doesRoundTemporalOnOverflow() {
+		return true;
 	}
 
 	/**

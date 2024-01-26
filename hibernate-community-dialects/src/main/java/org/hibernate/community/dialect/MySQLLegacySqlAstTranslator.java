@@ -15,6 +15,8 @@ import org.hibernate.dialect.MySQLSqlAstTranslator;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.internal.util.collections.Stack;
 import org.hibernate.query.sqm.ComparisonOperator;
+import org.hibernate.query.sqm.function.AbstractSqmSelfRenderingFunctionDescriptor;
+import org.hibernate.query.sqm.function.SelfRenderingFunctionSqlAstExpression;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.tree.MutationStatement;
@@ -413,5 +415,14 @@ public class MySQLLegacySqlAstTranslator<T extends JdbcOperation> extends Abstra
 		else {
 			super.visitCastTarget( castTarget );
 		}
+	}
+
+	@Override
+	protected void renderStringContainsExactlyPredicate(Expression haystack, Expression needle) {
+		// MySQL can't cope with NUL characters in the position function, so we use a like predicate instead
+		haystack.accept( this );
+		appendSql( " like concat('%',replace(replace(replace(" );
+		needle.accept( this );
+		appendSql( ",'~','~~'),'?','~?'),'%','~%'),'%') escape '~'" );
 	}
 }

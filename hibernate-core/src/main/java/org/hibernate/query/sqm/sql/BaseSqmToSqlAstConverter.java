@@ -91,7 +91,6 @@ import org.hibernate.metamodel.spi.MappingMetamodelImplementor;
 import org.hibernate.persister.entity.AbstractEntityPersister;
 import org.hibernate.persister.entity.EntityNameUse;
 import org.hibernate.persister.entity.EntityPersister;
-import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.QueryLogging;
 import org.hibernate.query.ReturnableType;
@@ -3106,7 +3105,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			actualTableGroup.resolveTableReference( null, persister.getTableName() );
 		}
 
-		final EntityNameUse.UseKind useKind = finalEntityNameUse.getKind();
 		if ( projection ) {
 			EntityMappingType superMappingType = persister;
 			while ( ( superMappingType = superMappingType.getSuperMappingType() ) != null ) {
@@ -3117,18 +3115,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				);
 			}
 		}
+
 		// If we encounter a treat or projection use, we also want register the use for all subtypes.
 		// We do this here to not have to expand entity name uses during pruning later on
+		final EntityNameUse.UseKind useKind = finalEntityNameUse.getKind();
 		if ( useKind == EntityNameUse.UseKind.TREAT ) {
 			for ( EntityMappingType subType : persister.getSubMappingTypes() ) {
 				entityNameUses.compute(
 						subType.getEntityName(),
 						(s, existingUse) -> finalEntityNameUse.stronger( existingUse )
 				);
-			}
-			if ( persister.isInherited() && persister.needsDiscriminator() ) {
-				// Make sure the table group includes the root table when needed for TREAT
-				actualTableGroup.resolveTableReference( persister.getRootTableName() );
 			}
 		}
 		else if ( useKind == EntityNameUse.UseKind.PROJECTION ) {
@@ -3183,9 +3179,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			registerEntityNameUsage( tableGroup, EntityNameUse.PROJECTION, persister.getEntityName(), true );
 		}
 		else {
-			// Avoid doing this for single table entity persisters, as the table span includes secondary tables,
-			// which we don't want to resolve, though we know that there is only a single table anyway
-			if ( persister instanceof SingleTableEntityPersister ) {
+			// Avoid resolving subclass tables for persisters with physical discriminators as we won't need them
+			if ( persister.getDiscriminatorMapping().hasPhysicalColumn() ) {
 				return;
 			}
 			final int subclassTableSpan = persister.getSubclassTableSpan();
@@ -3376,7 +3371,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// This is a non-treated join with an entity which is an inheritance subtype,
 				// register a TREAT entity name use to filter only the entities of the correct type.
 				registerEntityNameUsage(
-						getActualTableGroup( joinedTableGroup, sqmJoin ),
+						elementTableGroup,
 						EntityNameUse.TREAT,
 						entityDomainType.getHibernateEntityName()
 				);
@@ -5949,7 +5944,8 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				final JdbcMapping paramJdbcMapping = paramModelType.getSingleJdbcMapping();
 				final JdbcMapping inferredJdbcMapping = inferredValueMapping.getSingleJdbcMapping();
 				// Only use the inferred mapping as parameter type when the JavaType accepts values of the bind type
-				if ( inferredJdbcMapping.getMappedJavaType().isWider( paramJdbcMapping.getMappedJavaType() )
+				if ( ( inferredJdbcMapping.getMappedJavaType() == paramJdbcMapping.getMappedJavaType()
+						|| inferredJdbcMapping.getMappedJavaType().isWider( paramJdbcMapping.getMappedJavaType() ) )
 						// and the bind type is not explicit or the bind type has the same JDBC type
 						&& ( !bindingTypeExplicit || canUseInferredType( paramJdbcMapping, inferredJdbcMapping ) ) ) {
 					return resolveInferredValueMappingForParameter( inferredValueMapping );
@@ -7577,46 +7573,56 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 		else {
 			return;
 		}
-		if ( literalExpression == null ) {
+		handleTypeComparison(
+				typeExpression,
+				literalExpression != null ? singletonList( literalExpression ) : null,
+				inclusive
+		);
+	}
+
+	private void handleTypeComparison(
+			DiscriminatorPathInterpretation<?> typeExpression,
+			List<EntityTypeLiteral> literalExpressions,
+			boolean inclusive) {
+		final TableGroup tableGroup = getFromClauseIndex().getTableGroup( typeExpression.getNavigablePath().getParent() );
+		final EntityMappingType entityMappingType = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
+		if ( entityMappingType.getDiscriminatorMapping().hasPhysicalColumn() ) {
+			// Prevent pruning of the root type's table reference containing the physical discriminator column
+			registerEntityNameUsage(
+					tableGroup,
+					EntityNameUse.EXPRESSION,
+					entityMappingType.getRootEntityDescriptor().getEntityName()
+			);
+		}
+		if ( literalExpressions == null ) {
 			// We have to assume all types are possible and can't do optimizations
-			final TableGroup tableGroup = getFromClauseIndex().getTableGroup( typeExpression.getNavigablePath().getParent() );
-			final EntityMappingType entityMappingType = (EntityMappingType)  tableGroup.getModelPart().getPartMappingType();
 			registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, entityMappingType.getEntityName() );
 			for ( EntityMappingType subMappingType : entityMappingType.getSubMappingTypes() ) {
 				registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, subMappingType.getEntityName() );
 			}
 		}
 		else {
-			handleTypeComparison( typeExpression, Collections.singletonList( literalExpression ), inclusive );
-		}
-	}
-
-	private void handleTypeComparison(
-			DiscriminatorPathInterpretation typeExpression,
-			List<EntityTypeLiteral> literalExpressions,
-			boolean inclusive) {
-		final TableGroup tableGroup = getFromClauseIndex().getTableGroup( typeExpression.getNavigablePath().getParent() );
-		if ( inclusive ) {
-			for ( EntityTypeLiteral literalExpr : literalExpressions ) {
-				registerEntityNameUsage(
-						tableGroup,
-						EntityNameUse.FILTER,
-						literalExpr.getEntityTypeDescriptor().getEntityName()
-				);
+			if ( inclusive ) {
+				for ( EntityTypeLiteral literalExpr : literalExpressions ) {
+					registerEntityNameUsage(
+							tableGroup,
+							EntityNameUse.FILTER,
+							literalExpr.getEntityTypeDescriptor().getEntityName()
+					);
+				}
 			}
-		}
-		else {
-			final EntityMappingType entityMappingType = (EntityMappingType) tableGroup.getModelPart().getPartMappingType();
-			final Set<String> excludedEntityNames = new HashSet<>(entityMappingType.getSubMappingTypes().size());
-			for ( EntityTypeLiteral literalExpr : literalExpressions ) {
-				excludedEntityNames.add( literalExpr.getEntityTypeDescriptor().getEntityName() );
-			}
-			if ( !excludedEntityNames.contains( entityMappingType.getEntityName() ) ) {
-				registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, entityMappingType.getEntityName() );
-			}
-			for ( EntityMappingType subMappingType : entityMappingType.getSubMappingTypes() ) {
-				if ( !excludedEntityNames.contains( subMappingType.getEntityName() ) ) {
-					registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, subMappingType.getEntityName() );
+			else {
+				final Set<String> excludedEntityNames = new HashSet<>( entityMappingType.getSubMappingTypes().size() );
+				for ( EntityTypeLiteral literalExpr : literalExpressions ) {
+					excludedEntityNames.add( literalExpr.getEntityTypeDescriptor().getEntityName() );
+				}
+				if ( !excludedEntityNames.contains( entityMappingType.getEntityName() ) ) {
+					registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, entityMappingType.getEntityName() );
+				}
+				for ( EntityMappingType subMappingType : entityMappingType.getSubMappingTypes() ) {
+					if ( !excludedEntityNames.contains( subMappingType.getEntityName() ) ) {
+						registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, subMappingType.getEntityName() );
+					}
 				}
 			}
 		}
@@ -7872,26 +7878,12 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 					break;
 				}
 			}
-			if ( containsNonLiteral ) {
-				// We have to assume all types are possible and can't do optimizations
-				final TableGroup tableGroup = getFromClauseIndex().getTableGroup(
-						typeExpression.getNavigablePath().getParent()
-				);
-				final EntityMappingType entityMappingType = (EntityMappingType) tableGroup.getModelPart()
-						.getPartMappingType();
-				registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, entityMappingType.getEntityName() );
-				for ( EntityMappingType subMappingType : entityMappingType.getSubMappingTypes() ) {
-					registerEntityNameUsage( tableGroup, EntityNameUse.FILTER, subMappingType.getEntityName() );
-				}
-			}
-			else {
-				//noinspection unchecked
-				handleTypeComparison(
-						typeExpression,
-						(List<EntityTypeLiteral>) (List<?>) inPredicate.getListExpressions(),
-						!inPredicate.isNegated()
-				);
-			}
+			//noinspection unchecked
+			handleTypeComparison(
+					typeExpression,
+					containsNonLiteral ? null : (List<EntityTypeLiteral>) (List<?>) inPredicate.getListExpressions(),
+					!inPredicate.isNegated()
+			);
 		}
 	}
 
@@ -8174,21 +8166,33 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 						fetchablePath,
 						np -> {
 							// generate the join
+							final TableGroup tableGroup;
 							final TableGroup lhs = fromClauseIndex.getTableGroup( fetchParent.getNavigablePath() );
-							final TableGroupJoin tableGroupJoin = ( (TableGroupJoinProducer) fetchable ).createTableGroupJoin(
-									fetchablePath,
-									lhs,
-									alias,
-									null,
-									null,
-									true,
-									false,
-									BaseSqmToSqlAstConverter.this
+							final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) fetchable;
+							final TableGroup compatibleTableGroup = lhs.findCompatibleJoinedGroup(
+									joinProducer,
+									joinProducer.determineSqlJoinType( lhs, null, true )
 							);
-							lhs.addTableGroupJoin( tableGroupJoin );
+							if ( compatibleTableGroup == null ) {
+								final TableGroupJoin tableGroupJoin = joinProducer.createTableGroupJoin(
+										fetchablePath,
+										lhs,
+										alias,
+										null,
+										null,
+										true,
+										false,
+										BaseSqmToSqlAstConverter.this
+								);
+								lhs.addTableGroupJoin( tableGroupJoin );
+								tableGroup = tableGroupJoin.getJoinedGroup();
+							}
+							else {
+								tableGroup = compatibleTableGroup;
+							}
 
 							// and return the joined group
-							return tableGroupJoin.getJoinedGroup();
+							return tableGroup;
 						}
 				);
 			}

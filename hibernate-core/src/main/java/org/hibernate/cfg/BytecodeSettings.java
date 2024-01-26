@@ -20,7 +20,12 @@ public interface BytecodeSettings {
 	 * At present only bytebuddy is supported, bytebuddy being the default since version 5.3.
 	 *
 	 * @settingDefault {@code "bytebuddy"}
+	 * @deprecated Will be removed, Hibernate ORM will use the BytecodeProvider implementation it finds on the
+	 * classpath loading it via the standard ServiceLoader mechanism. Currently, there is only a single
+	 * implementation which is included in Hibernate ORM, so it's not possible to override this.
+	 * See HHH-17643
 	 */
+	@Deprecated( forRemoval = true )
 	String BYTECODE_PROVIDER = "hibernate.bytecode.provider";
 
 	/**

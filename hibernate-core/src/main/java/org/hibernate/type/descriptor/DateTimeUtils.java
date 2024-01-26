@@ -14,6 +14,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.Calendar;
@@ -451,6 +452,32 @@ public final class DateTimeUtils {
 	 * Do the same conversion that databases do when they encounter a timestamp with a higher precision
 	 * than what is supported by a column, which is to round the excess fractions.
 	 */
+	public static <T extends Temporal> T adjustToDefaultPrecision(T temporal, Dialect d) {
+		return adjustToPrecision( temporal, d.getDefaultTimestampPrecision(), d );
+	}
+
+	public static <T extends Temporal> T adjustToPrecision(T temporal, int precision, Dialect d) {
+		return d.doesRoundTemporalOnOverflow()
+				? roundToSecondPrecision( temporal, precision )
+				: truncateToPrecision( temporal, precision );
+	}
+
+	public static <T extends Temporal> T truncateToPrecision(T temporal, int precision) {
+		if ( precision >= 9 || !temporal.isSupported( ChronoField.NANO_OF_SECOND ) ) {
+			return temporal;
+		}
+		final long factor = pow10( 9 - precision );
+		//noinspection unchecked
+		return (T) temporal.with(
+				ChronoField.NANO_OF_SECOND,
+				temporal.get( ChronoField.NANO_OF_SECOND ) / factor * factor
+		);
+	}
+
+	/**
+	 * Do the same conversion that databases do when they encounter a timestamp with a higher precision
+	 * than what is supported by a column, which is to round the excess fractions.
+	 */
 	public static <T extends Temporal> T roundToDefaultPrecision(T temporal, Dialect d) {
 		final int defaultTimestampPrecision = d.getDefaultTimestampPrecision();
 		if ( defaultTimestampPrecision >= 9 || !temporal.isSupported( ChronoField.NANO_OF_SECOND ) ) {
@@ -464,6 +491,12 @@ public final class DateTimeUtils {
 	}
 
 	public static <T extends Temporal> T roundToSecondPrecision(T temporal, int precision) {
+		if ( precision == 0 ) {
+			//noinspection unchecked
+			return temporal.get( ChronoField.NANO_OF_SECOND ) >= 500_000_000L
+					? (T) temporal.plus( 1, ChronoUnit.SECONDS ).with( ChronoField.NANO_OF_SECOND, 0L )
+					: (T) temporal.with( ChronoField.NANO_OF_SECOND, 0L );
+		}
 		//noinspection unchecked
 		return (T) temporal.with(
 				ChronoField.NANO_OF_SECOND,
@@ -472,9 +505,9 @@ public final class DateTimeUtils {
 	}
 
 	public static long roundToPrecision(int nano, int precision) {
-		assert precision < 9 : "Precision (scale) should be less-than 9 - " + precision;
-		if ( precision == 0 ) {
-			return 0;
+		assert precision > 0 : "Can't round fractional seconds to less-than 0";
+		if ( precision >= 9 ) {
+			return nano;
 		}
 		final int precisionMask = pow10( 9 - precision );
 		final int nanosToRound = nano % precisionMask;

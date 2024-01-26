@@ -66,15 +66,6 @@ public interface JdbcValues {
 	boolean last(RowProcessingState rowProcessingState);
 
 	/**
-	 * Get the JDBC values for the row currently positioned at within
-	 * this source.
-	 *
-	 * @return The current row's JDBC values, or {@code null} if the position
-	 * is beyond the end of the available results.
-	 */
-	Object[] getCurrentRowValuesArray();
-
-	/**
 	 * Get the JDBC value at the given index for the row currently positioned at within
 	 * this source.
 	 *
@@ -83,7 +74,15 @@ public interface JdbcValues {
 	 */
 	Object getCurrentRowValue(int valueIndex);
 
+	/**
+	 * @deprecated Use {@link #finishRowProcessing(RowProcessingState, boolean)} instead
+	 */
+	@Deprecated(forRemoval = true)
 	void finishRowProcessing(RowProcessingState rowProcessingState);
+
+	default void finishRowProcessing(RowProcessingState rowProcessingState, boolean wasAdded) {
+		finishRowProcessing( rowProcessingState );
+	}
 
 	/**
 	 * Give implementations a chance to finish processing

@@ -62,12 +62,16 @@ import org.hibernate.mapping.ToOne;
 import org.hibernate.mapping.Value;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.ForeignKey;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 
+import static jakarta.persistence.ConstraintMode.NO_CONSTRAINT;
+import static jakarta.persistence.ConstraintMode.PROVIDER_DEFAULT;
 import static org.hibernate.boot.model.internal.AnnotatedColumn.buildColumnOrFormulaFromAnnotation;
 import static org.hibernate.boot.model.internal.HCANNHelper.findAnnotation;
 import static org.hibernate.internal.util.StringHelper.isEmpty;
@@ -448,9 +452,16 @@ public class BinderHelper {
 		// which are mapped to that column. (There might be multiple such
 		// properties for each column.)
 		if ( columnOwner instanceof PersistentClass ) {
-			PersistentClass persistentClass = (PersistentClass) columnOwner;
+			final PersistentClass persistentClass = (PersistentClass) columnOwner;
+			// Process ToOne associations after Components, Basic and Id properties
+			final List<Property> toOneProperties = new ArrayList<>();
 			for ( Property property : persistentClass.getReferenceableProperties() ) {
-				matchColumnsByProperty( property, columnsToProperty );
+				if ( property.getValue() instanceof ToOne ) {
+					toOneProperties.add( property );
+				}
+				else {
+					matchColumnsByProperty( property, columnsToProperty );
+				}
 			}
 			if ( persistentClass.hasIdentifierProperty() ) {
 				matchColumnsByProperty( persistentClass.getIdentifierProperty(), columnsToProperty );
@@ -461,6 +472,9 @@ public class BinderHelper {
 				for ( Property p : key.getProperties() ) {
 					matchColumnsByProperty( p, columnsToProperty );
 				}
+			}
+			for ( Property property : toOneProperties ) {
+				matchColumnsByProperty( property, columnsToProperty );
 			}
 		}
 		else {
@@ -1123,6 +1137,17 @@ public class BinderHelper {
 			referencedClass = referencedClass.getSuperPersistentClass();
 		}
 		return false;
+	}
+
+	public static boolean noConstraint(ForeignKey foreignKey, boolean noConstraintByDefault) {
+		if ( foreignKey == null ) {
+			return false;
+		}
+		else {
+			final ConstraintMode mode = foreignKey.value();
+			return mode == NO_CONSTRAINT
+					|| mode == PROVIDER_DEFAULT && noConstraintByDefault;
+		}
 	}
 
 	/**

@@ -23,6 +23,7 @@ import org.hibernate.MappingException;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.annotations.Check;
 import org.hibernate.annotations.Checks;
 import org.hibernate.annotations.DiscriminatorFormula;
@@ -31,7 +32,6 @@ import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.Filters;
-import org.hibernate.annotations.ForeignKey;
 import org.hibernate.annotations.HQLSelect;
 import org.hibernate.annotations.Immutable;
 import org.hibernate.annotations.Loader;
@@ -44,6 +44,7 @@ import org.hibernate.annotations.Persister;
 import org.hibernate.annotations.Polymorphism;
 import org.hibernate.annotations.PolymorphismType;
 import org.hibernate.annotations.Proxy;
+import org.hibernate.annotations.QueryCacheLayout;
 import org.hibernate.annotations.RowId;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLDeleteAll;
@@ -67,6 +68,7 @@ import org.hibernate.annotations.Where;
 import org.hibernate.annotations.common.reflection.ReflectionManager;
 import org.hibernate.annotations.common.reflection.XAnnotatedElement;
 import org.hibernate.annotations.common.reflection.XClass;
+import org.hibernate.annotations.common.reflection.XProperty;
 import org.hibernate.binder.TypeBinder;
 import org.hibernate.boot.model.IdentifierGeneratorDefinition;
 import org.hibernate.boot.model.NamedEntityGraphDefinition;
@@ -116,6 +118,8 @@ import jakarta.persistence.ConstraintMode;
 import jakarta.persistence.DiscriminatorColumn;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.IdClass;
 import jakarta.persistence.Inheritance;
 import jakarta.persistence.InheritanceType;
@@ -137,6 +141,7 @@ import static org.hibernate.boot.model.internal.BinderHelper.getMappedSuperclass
 import static org.hibernate.boot.model.internal.BinderHelper.getOverridableAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.hasToOneAnnotation;
 import static org.hibernate.boot.model.internal.BinderHelper.isDefault;
+import static org.hibernate.boot.model.internal.BinderHelper.noConstraint;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasEntityMap;
 import static org.hibernate.boot.model.internal.BinderHelper.toAliasTableMap;
 import static org.hibernate.boot.model.internal.EmbeddableBinder.fillEmbeddable;
@@ -198,6 +203,7 @@ public class EntityBinder {
 	private String cacheRegion;
 	private boolean cacheLazyProperty;
 	private String naturalIdCacheRegion;
+	private CacheLayout queryCacheLayout;
 
 	/**
 	 * Bind an entity class. This can be done in a single pass.
@@ -841,34 +847,38 @@ public class EntityBinder {
 	}
 
 	private static void handleForeignKeys(XClass clazzToProcess, MetadataBuildingContext context, DependantValue key) {
-		final ForeignKey foreignKey = clazzToProcess.getAnnotation( ForeignKey.class );
-		if ( foreignKey != null && !foreignKey.name().isEmpty() ) {
-			key.setForeignKeyName( foreignKey.name() );
+		final PrimaryKeyJoinColumn pkJoinColumn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
+		final PrimaryKeyJoinColumns pkJoinColumns = clazzToProcess.getAnnotation( PrimaryKeyJoinColumns.class );
+		final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
+		if ( pkJoinColumn != null && noConstraint( pkJoinColumn.foreignKey(), noConstraintByDefault )
+				|| pkJoinColumns != null && noConstraint( pkJoinColumns.foreignKey(), noConstraintByDefault ) ) {
+			key.disableForeignKey();
 		}
 		else {
-			final PrimaryKeyJoinColumn pkJoinColumn = clazzToProcess.getAnnotation( PrimaryKeyJoinColumn.class );
-			final PrimaryKeyJoinColumns pkJoinColumns = clazzToProcess.getAnnotation( PrimaryKeyJoinColumns.class );
-			final boolean noConstraintByDefault = context.getBuildingOptions().isNoConstraintByDefault();
-			if ( pkJoinColumns != null && ( pkJoinColumns.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
-					|| pkJoinColumns.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) {
-				// don't apply a constraint based on ConstraintMode
-				key.disableForeignKey();
+			final org.hibernate.annotations.ForeignKey fk =
+					clazzToProcess.getAnnotation( org.hibernate.annotations.ForeignKey.class );
+			if ( fk != null && isNotEmpty( fk.name() ) ) {
+				key.setForeignKeyName( fk.name() );
 			}
-			else if ( pkJoinColumns != null && isNotEmpty( pkJoinColumns.foreignKey().name() ) ) {
-				key.setForeignKeyName( pkJoinColumns.foreignKey().name() );
-				if ( !pkJoinColumns.foreignKey().foreignKeyDefinition().isEmpty() ) {
-					key.setForeignKeyDefinition( pkJoinColumns.foreignKey().foreignKeyDefinition() );
+			else {
+				final ForeignKey foreignKey = clazzToProcess.getAnnotation( ForeignKey.class );
+				if ( noConstraint( foreignKey, noConstraintByDefault ) ) {
+					key.disableForeignKey();
 				}
-			}
-			else if ( pkJoinColumn != null && ( pkJoinColumn.foreignKey().value() == ConstraintMode.NO_CONSTRAINT
-					|| pkJoinColumn.foreignKey().value() == ConstraintMode.PROVIDER_DEFAULT && noConstraintByDefault ) ) {
-				// don't apply a constraint based on ConstraintMode
-				key.disableForeignKey();
-			}
-			else if ( pkJoinColumn != null && isNotEmpty( pkJoinColumn.foreignKey().name() ) ) {
-				key.setForeignKeyName( pkJoinColumn.foreignKey().name() );
-				if ( !pkJoinColumn.foreignKey().foreignKeyDefinition().isEmpty() ) {
-					key.setForeignKeyDefinition( pkJoinColumn.foreignKey().foreignKeyDefinition() );
+				else if ( foreignKey != null ) {
+					key.setForeignKeyName( nullIfEmpty( foreignKey.name() ) );
+					key.setForeignKeyDefinition( nullIfEmpty( foreignKey.foreignKeyDefinition() ) );
+				}
+				else if ( noConstraintByDefault ) {
+					key.disableForeignKey();
+				}
+				else if ( pkJoinColumns != null ) {
+					key.setForeignKeyName( nullIfEmpty( pkJoinColumns.foreignKey().name() ) );
+					key.setForeignKeyDefinition( nullIfEmpty( pkJoinColumns.foreignKey().foreignKeyDefinition() ) );
+				}
+				else if ( pkJoinColumn != null ) {
+					key.setForeignKeyName( nullIfEmpty( pkJoinColumn.foreignKey().name() ) );
+					key.setForeignKeyDefinition( nullIfEmpty( pkJoinColumn.foreignKey().foreignKeyDefinition() ) );
 				}
 			}
 		}
@@ -1015,14 +1025,22 @@ public class EntityBinder {
 		for ( PropertyData propertyAnnotatedElement : elementsToProcess.getElements() ) {
 			final String propertyName = propertyAnnotatedElement.getPropertyName();
 			if ( !idPropertiesIfIdClass.contains( propertyName ) ) {
+				final XProperty property = propertyAnnotatedElement.getProperty();
+				boolean hasIdAnnotation = hasIdAnnotation( property );
 				if ( !idPropertiesIfIdClass.isEmpty() && !isIgnoreIdAnnotations()
-						&& hasIdAnnotation( propertyAnnotatedElement.getProperty() ) ) {
+						&& hasIdAnnotation ) {
 					missingEntityProperties.add( propertyName );
 				}
 				else {
 					boolean subclassAndSingleTableStrategy =
 							inheritanceState.getType() == InheritanceType.SINGLE_TABLE
 									&& inheritanceState.hasParents();
+					if ( !hasIdAnnotation && property.isAnnotationPresent( GeneratedValue.class ) ) {
+						throw new AnnotationException(
+								"Property '"
+										+ BinderHelper.getPath( propertyHolder, propertyAnnotatedElement )
+										+ "' is annotated @GeneratedValue but is not part of an identifier" );
+					}
 					processElementAnnotations(
 							propertyHolder,
 							subclassAndSingleTableStrategy
@@ -1256,6 +1274,7 @@ public class EntityBinder {
 		persistentClass.setEntityName( annotatedClass.getName() );
 		persistentClass.setCached( isCached );
 		persistentClass.setLazy( lazy );
+		persistentClass.setQueryCacheLayout( queryCacheLayout );
 		if ( proxyClass != null ) {
 			persistentClass.setProxyInterfaceName( proxyClass.getName() );
 		}
@@ -1584,6 +1603,7 @@ public class EntityBinder {
 		cacheConcurrentStrategy = null;
 		cacheRegion = null;
 		cacheLazyProperty = true;
+		queryCacheLayout = null;
 		final SharedCacheMode sharedCacheMode  = context.getBuildingOptions().getSharedCacheMode();
 		if ( persistentClass instanceof RootClass ) {
 			bindRootClassCache( sharedCacheMode, context );
@@ -1628,6 +1648,9 @@ public class EntityBinder {
 		cacheConcurrentStrategy = resolveCacheConcurrencyStrategy( effectiveCache.usage() );
 		cacheRegion = effectiveCache.region();
 		cacheLazyProperty = isCacheLazy( effectiveCache, annotatedClass );
+
+		final QueryCacheLayout queryCache = annotatedClass.getAnnotation( QueryCacheLayout.class );
+		queryCacheLayout = queryCache == null ? null : queryCache.layout();
 	}
 
 	private static boolean isCacheLazy(Cache effectiveCache, XClass annotatedClass) {

@@ -14,6 +14,7 @@ import jakarta.persistence.criteria.CriteriaUpdate;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import org.hibernate.CacheMode;
+import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -650,5 +651,20 @@ public class SharedSessionDelegatorBaseImpl implements SharedSessionContractImpl
 	@Override
 	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
 		return delegate.getEntityGraphs( entityClass );
+	}
+
+	@Override
+	public Filter enableFilter(String filterName) {
+		return delegate.enableFilter( filterName );
+	}
+
+	@Override
+	public Filter getEnabledFilter(String filterName) {
+		return delegate.getEnabledFilter( filterName );
+	}
+
+	@Override
+	public void disableFilter(String filterName) {
+		delegate.disableFilter( filterName );
 	}
 }

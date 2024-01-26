@@ -195,18 +195,18 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		return new MySqmJdbcExecutionContextAdapter( executionContext, jdbcSelect, subSelectFetchKeyHandler, hql );
 	}
 
-	private static Class<?> singleSelectionType(SqmSelectStatement<?> sqm) {
+	private static SqmSelection<?> singleSelection(SqmSelectStatement<?> sqm) {
 		final List<SqmSelection<?>> selections = sqm.getQueryPart()
 				.getFirstQuerySpec()
 				.getSelectClause()
 				.getSelections();
-		if ( selections.size() == 1 ) {
-			final SqmSelection<?> sqmSelection = selections.get( 0 );
-			return sqmSelection.getSelectableNode().isCompoundSelection() ?
-					null :
-					sqmSelection.getNodeJavaType().getJavaTypeClass();
-		}
-		return null;
+		return selections.size() == 1 ? selections.get( 0 ) : null;
+	}
+
+	private static Class<?> selectionType(SqmSelection<?> selection) {
+		return selection != null && !selection.getSelectableNode().isCompoundSelection() ?
+				selection.getNodeJavaType().getJavaTypeClass()
+				: null;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -221,37 +221,40 @@ public class ConcreteSqmSelectQueryPlan<R> implements SelectQueryPlan<R> {
 		else if ( resultType == null ) {
 			return RowTransformerStandardImpl.instance();
 		}
-		else if ( resultType == Object[].class ) {
-			return (RowTransformer<T>) RowTransformerArrayImpl.instance();
-		}
-		else if ( resultType == List.class && resultType != singleSelectionType( sqm ) ) {
-			return (RowTransformer<T>) RowTransformerListImpl.instance();
-		}
 		else {
-			// NOTE : if we get here :
-			// 		1) there is no TupleTransformer specified
-			// 		2) an explicit result-type, other than an array or List, was specified
-
-			if ( tupleMetadata == null ) {
-				if ( sqm.getQueryPart().getFirstQuerySpec().getSelectClause().getSelections().size() == 1 ) {
-					return RowTransformerSingularReturnImpl.instance();
-				}
-				else {
-					throw new AssertionFailure( "Query defined multiple selections, should have had TupleMetadata" );
-				}
+			final SqmSelection<?> selection = singleSelection( sqm );
+			if ( resultType.isArray() && resultType != selectionType( selection ) ) {
+				return (RowTransformer<T>) RowTransformerArrayImpl.instance();
+			}
+			else if ( resultType == List.class && resultType != selectionType( selection ) ) {
+				return (RowTransformer<T>) RowTransformerListImpl.instance();
 			}
 			else {
-				if ( Tuple.class.equals( resultType ) ) {
-					return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
-				}
-				else if ( Map.class.equals( resultType ) ) {
-					return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
-				}
-				else if ( isClass( resultType ) ) {
-					return new RowTransformerConstructorImpl<>( resultType, tupleMetadata );
+				// NOTE : if we get here :
+				// 		1) there is no TupleTransformer specified
+				// 		2) an explicit result-type, other than an array or List, was specified
+
+				if ( tupleMetadata == null ) {
+					if ( selection != null ) {
+						return RowTransformerSingularReturnImpl.instance();
+					}
+					else {
+						throw new AssertionFailure( "Query defined multiple selections, should have had TupleMetadata" );
+					}
 				}
 				else {
-					throw new InstantiationException( "Query result type is not instantiable", resultType );
+					if ( Tuple.class.equals( resultType ) ) {
+						return (RowTransformer<T>) new RowTransformerJpaTupleImpl( tupleMetadata );
+					}
+					else if ( Map.class.equals( resultType ) ) {
+						return (RowTransformer<T>) new RowTransformerMapImpl( tupleMetadata );
+					}
+					else if ( isClass( resultType ) ) {
+						return new RowTransformerConstructorImpl<>( resultType, tupleMetadata );
+					}
+					else {
+						throw new InstantiationException( "Query result type is not instantiable", resultType );
+					}
 				}
 			}
 		}

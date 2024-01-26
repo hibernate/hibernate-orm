@@ -73,6 +73,7 @@ import org.hibernate.type.descriptor.jdbc.TimestampUtcAsInstantJdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 import org.hibernate.type.descriptor.jdbc.spi.JdbcTypeRegistry;
 import org.hibernate.type.descriptor.sql.internal.DdlTypeImpl;
+import org.hibernate.type.descriptor.sql.internal.NativeEnumDdlTypeImpl;
 import org.hibernate.type.descriptor.sql.spi.DdlTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
@@ -106,6 +107,7 @@ import static org.hibernate.type.descriptor.DateTimeUtils.appendAsTimestampWithN
  * A {@linkplain Dialect SQL dialect} for H2.
  *
  * @author Thomas Mueller
+ * @author Jürgen Kreitler
  */
 public class H2Dialect extends Dialect {
 	private static final DatabaseVersion MINIMUM_VERSION = DatabaseVersion.make( 2, 1, 214 );
@@ -222,6 +224,7 @@ public class H2Dialect extends Dialect {
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( GEOMETRY, "geometry", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( INTERVAL_SECOND, "interval second($p,$s)", this ) );
 		ddlTypeRegistry.addDescriptor( new DdlTypeImpl( JSON, "json", this ) );
+		ddlTypeRegistry.addDescriptor( new NativeEnumDdlTypeImpl( this) );
 	}
 
 	@Override
@@ -236,6 +239,7 @@ public class H2Dialect extends Dialect {
 		jdbcTypeRegistry.addDescriptorIfAbsent( UUIDJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2DurationIntervalSecondJdbcType.INSTANCE );
 		jdbcTypeRegistry.addDescriptorIfAbsent( H2FormatJsonJdbcType.INSTANCE );
+		jdbcTypeRegistry.addDescriptor( new MySQLEnumJdbcType() );
 	}
 
 	@Override
@@ -892,6 +896,18 @@ public class H2Dialect extends Dialect {
 	@Override
 	public String getEnableConstraintsStatement() {
 		return "set referential_integrity true";
+	}
+
+	@Override
+	public String getEnumTypeDeclaration(String name, String[] values) {
+		StringBuilder type = new StringBuilder();
+		type.append( "enum (" );
+		String separator = "";
+		for ( String value : values ) {
+			type.append( separator ).append('\'').append( value ).append('\'');
+			separator = ",";
+		}
+		return type.append( ')' ).toString();
 	}
 
 	@Override

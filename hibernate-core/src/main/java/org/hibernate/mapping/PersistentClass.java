@@ -17,6 +17,7 @@ import java.util.StringTokenizer;
 
 import org.hibernate.Internal;
 import org.hibernate.MappingException;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.CustomSql;
 import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
@@ -120,6 +121,7 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	private OptimisticLockStyle optimisticLockStyle;
 
 	private boolean isCached;
+	private CacheLayout queryCacheLayout;
 
 	public PersistentClass(MetadataBuildingContext buildingContext) {
 		this.metadataBuildingContext = buildingContext;
@@ -335,6 +337,14 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 	@Deprecated(forRemoval = true)
 	public void setCachingExplicitlyRequested(boolean cached) {
 		setCached( cached );
+	}
+
+	public CacheLayout getQueryCacheLayout() {
+		return queryCacheLayout;
+	}
+
+	public void setQueryCacheLayout(CacheLayout queryCacheLayout) {
+		this.queryCacheLayout = queryCacheLayout;
 	}
 
 	public abstract String getCacheConcurrencyStrategy();
@@ -931,6 +941,9 @@ public abstract class PersistentClass implements IdentifiableTypeClass, Attribut
 		}
 		if ( isDiscriminatorInsertable() && getDiscriminator() != null ) {
 			getDiscriminator().checkColumnDuplication( cols, owner );
+		}
+		if ( getRootClass().getSoftDeleteColumn() != null ) {
+			getRootClass().getSoftDeleteColumn().getValue().checkColumnDuplication( cols, owner );
 		}
 		checkPropertyColumnDuplication( cols, getNonDuplicatedProperties(), owner );
 		for ( Join join : getJoins() ) {

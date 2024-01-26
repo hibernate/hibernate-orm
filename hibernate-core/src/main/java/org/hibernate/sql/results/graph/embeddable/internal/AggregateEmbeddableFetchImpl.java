@@ -28,6 +28,7 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParent;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Fetchable;
+import org.hibernate.sql.results.graph.InitializerProducer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableInitializer;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableResultGraphNode;
 import org.hibernate.sql.results.graph.embeddable.EmbeddableValuedFetchable;
@@ -40,7 +41,8 @@ import org.hibernate.type.spi.TypeConfiguration;
  * uses {@link org.hibernate.sql.results.graph.DomainResultCreationState#visitNestedFetches(FetchParent)}
  * for creating the fetches for the attributes of the embeddable.
  */
-public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements EmbeddableResultGraphNode, Fetch {
+public class AggregateEmbeddableFetchImpl extends AbstractFetchParent
+		implements EmbeddableResultGraphNode, Fetch, InitializerProducer<AggregateEmbeddableFetchImpl> {
 	private final FetchParent fetchParent;
 	private final FetchTiming fetchTiming;
 	private final TableGroup tableGroup;
@@ -155,20 +157,25 @@ public class AggregateEmbeddableFetchImpl extends AbstractFetchParent implements
 	public DomainResultAssembler createAssembler(
 			FetchParentAccess parentAccess,
 			AssemblerCreationState creationState) {
-		final EmbeddableInitializer initializer = creationState.resolveInitializer(
-				getNavigablePath(),
-				getReferencedModePart(),
-				() -> new AggregateEmbeddableFetchInitializer(
-						parentAccess,
-						this,
-						creationState,
-						aggregateSelection
-				)
-		).asEmbeddableInitializer();
+		return new EmbeddableAssembler( creationState.resolveInitializer( this, parentAccess, this ).asEmbeddableInitializer() );
+	}
 
-		assert initializer != null;
+	@Override
+	public EmbeddableInitializer createInitializer(
+			AggregateEmbeddableFetchImpl resultGraphNode,
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
+		return resultGraphNode.createInitializer( parentAccess, creationState );
+	}
 
-		return new EmbeddableAssembler( initializer );
+	@Override
+	public EmbeddableInitializer createInitializer(FetchParentAccess parentAccess, AssemblerCreationState creationState) {
+		return new AggregateEmbeddableFetchInitializer(
+				parentAccess,
+				this,
+				creationState,
+				aggregateSelection
+		);
 	}
 
 	@Override

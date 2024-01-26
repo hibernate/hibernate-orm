@@ -63,7 +63,6 @@ import org.hibernate.sql.model.ast.builder.MutationGroupBuilder;
 import org.hibernate.sql.model.ast.builder.TableInsertBuilder;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
-import org.hibernate.sql.results.graph.entity.internal.EntityResultJoinedSubclassImpl;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.BasicTypeRegistry;
 import org.hibernate.type.CompositeType;
@@ -1282,28 +1281,6 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 	}
 
 	@Override
-	public <T> DomainResult<T> createDomainResult(
-			NavigablePath navigablePath,
-			TableGroup tableGroup,
-			String resultVariable,
-			DomainResultCreationState creationState) {
-		if ( hasSubclasses() ) {
-			final EntityResultJoinedSubclassImpl entityResultJoinedSubclass = new EntityResultJoinedSubclassImpl(
-					navigablePath,
-					this,
-					tableGroup,
-					resultVariable
-			);
-			entityResultJoinedSubclass.afterInitialize( entityResultJoinedSubclass, creationState );
-			//noinspection unchecked
-			return entityResultJoinedSubclass;
-		}
-		else {
-			return super.createDomainResult( navigablePath, tableGroup, resultVariable, creationState );
-		}
-	}
-
-	@Override
 	public void pruneForSubclasses(TableGroup tableGroup, Map<String, EntityNameUse> entityNameUses) {
 		final Set<TableReference> retainedTableReferences = new HashSet<>( entityNameUses.size() );
 		final MappingMetamodelImplementor metamodel = getFactory().getRuntimeMetamodels().getMappingMetamodel();
@@ -1377,8 +1354,8 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 				// We allow multiple joined subclasses to use the same table if they define a discriminator column.
 				// In this case, we might need to add a discriminator condition to make sure we filter the correct subtype,
 				// see SingleTableEntityPersister#pruneForSubclasses for more details on this condition
-				needsTreatDiscriminator = needsTreatDiscriminator || !persister.isAbstract() &&
-						!isTypeOrSuperType( persister ) && useKind == EntityNameUse.UseKind.TREAT;
+				needsTreatDiscriminator = needsTreatDiscriminator || !persister.isAbstract()
+						&& useKind == EntityNameUse.UseKind.TREAT && ( isInherited() || !isTypeOrSuperType( persister ) );
 			}
 		}
 		// If no tables to inner join have been found, we add at least the super class tables of this persister
@@ -1409,11 +1386,16 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 						entityNameUses,
 						metamodel
 				);
-				for ( int i = 0; !applied && i < tableReferenceJoins.size(); i++ ) {
+				int i = 0;
+				for ( ; !applied && i < tableReferenceJoins.size(); i++ ) {
 					final TableReferenceJoin join = tableReferenceJoins.get( i );
 					applied = applyDiscriminatorPredicate( join, join.getJoinedTableReference(), entityNameUses, metamodel );
 				}
 				assert applied : "Could not apply treat discriminator predicate to root table join";
+				if ( i != 0 ) {
+					// Always retain the root table reference join where the discriminator was applied
+					retainedTableReferences.add( tableReferenceJoins.get( i - 1 ).getJoinedTableReference() );
+				}
 			}
 		}
 		if ( tableReferenceJoins.isEmpty() ) {

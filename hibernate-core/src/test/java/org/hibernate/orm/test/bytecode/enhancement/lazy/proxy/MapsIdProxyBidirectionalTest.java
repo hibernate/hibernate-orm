@@ -14,18 +14,15 @@ import jakarta.persistence.MapsId;
 import jakarta.persistence.OneToOne;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.LazyToOne;
-import org.hibernate.annotations.LazyToOneOption;
 import org.hibernate.boot.SessionFactoryBuilder;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.AvailableSettings;
 import org.hibernate.stat.Statistics;
 
-import org.hibernate.testing.FailureExpected;
-import org.hibernate.testing.TestForIssue;
 import org.hibernate.testing.bytecode.enhancement.BytecodeEnhancerRunner;
 import org.hibernate.testing.bytecode.enhancement.EnhancementOptions;
 import org.hibernate.testing.junit4.BaseNonConfigCoreFunctionalTestCase;
+import org.hibernate.testing.orm.junit.JiraKey;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -42,13 +39,12 @@ import static org.junit.Assert.assertTrue;
  * @author Gail Badner
  */
 
-@TestForIssue(jiraKey = "HHH-13814")
+@JiraKey("HHH-13814")
 @RunWith( BytecodeEnhancerRunner.class )
 @EnhancementOptions( lazyLoading = true )
 public class MapsIdProxyBidirectionalTest extends BaseNonConfigCoreFunctionalTestCase {
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13814")
 	public void testAssociation() {
 		inTransaction(
 				session -> {
@@ -71,7 +67,6 @@ public class MapsIdProxyBidirectionalTest extends BaseNonConfigCoreFunctionalTes
 	}
 
 	@Test
-	@TestForIssue(jiraKey = "HHH-13814")
 	public void testMappedByAssociation() {
 		inTransaction(
 				session -> {

@@ -17,6 +17,7 @@ import org.hibernate.cfg.MappingSettings;
 import org.hibernate.dialect.DB2Dialect;
 import org.hibernate.dialect.DerbyDialect;
 import org.hibernate.dialect.Dialect;
+import org.hibernate.dialect.HANADialect;
 import org.hibernate.dialect.OracleDialect;
 import org.hibernate.dialect.SybaseDialect;
 import org.hibernate.mapping.BasicValue;
@@ -175,7 +176,8 @@ public class JavaTimeJdbcTypeTests {
 	}
 
 	@Test
-	@SkipForDialect( dialectClass = OracleDialect.class, reason = "Oracle drivers truncate fractional seconds from the LocalTime", matchSubTypes = true)
+	@SkipForDialect(dialectClass = OracleDialect.class, reason = "Oracle drivers truncate fractional seconds from the LocalTime", matchSubTypes = true)
+	@SkipForDialect(dialectClass = HANADialect.class, reason = "HANA time type does not support fractional seconds", matchSubTypes = true)
 	void testLocalTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 		final LocalTime startTime = roundToDefaultPrecision( LocalTime.now(), dialect );

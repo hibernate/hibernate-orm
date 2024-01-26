@@ -15,6 +15,7 @@ import org.hibernate.EntityNameResolver;
 import org.hibernate.Interceptor;
 import org.hibernate.SessionFactoryObserver;
 import org.hibernate.TimeZoneStorageStrategy;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.SchemaAutoTooling;
 import org.hibernate.boot.TempTableDdlTransactionHandling;
 import org.hibernate.boot.registry.StandardServiceRegistry;
@@ -251,6 +252,11 @@ public class AbstractDelegatingSessionFactoryOptions implements SessionFactoryOp
 	@Override
 	public boolean isQueryCacheEnabled() {
 		return delegate.isQueryCacheEnabled();
+	}
+
+	@Override
+	public CacheLayout getQueryCacheLayout() {
+		return delegate.getQueryCacheLayout();
 	}
 
 	@Override

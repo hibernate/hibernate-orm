@@ -9,7 +9,8 @@ package org.hibernate.sql.results.graph.collection.internal;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
@@ -22,9 +23,9 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 			NavigablePath fetchedPath,
 			PluralAttributeMapping fetchedMapping,
 			FetchParentAccess parentAccess,
-			DomainResultAssembler<?> collectionKeyResultAssembler) {
-		super( fetchedPath, fetchedMapping, parentAccess, collectionKeyResultAssembler );
-		assert collectionKeyResultAssembler != null;
+			DomainResult<?> collectionKeyResult,
+			AssemblerCreationState creationState) {
+		super( fetchedPath, fetchedMapping, parentAccess, collectionKeyResult, false, creationState );
 	}
 
 	@Override
@@ -37,14 +38,17 @@ public class DelayedCollectionInitializer extends AbstractCollectionInitializer 
 	}
 
 	@Override
-	public String toString() {
-		return "DelayedCollectionInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
+	public void finishUpRow(RowProcessingState rowProcessingState) {
+		super.finishUpRow( rowProcessingState );
+		// Chances are pretty low that we can reuse the collection key,
+		// so set it to null in order to avoid an additional equals collection key comparison
+		collectionKey = null;
+		collectionInstance = null;
 	}
 
 	@Override
-	public void finishUpRow(RowProcessingState rowProcessingState) {
-		super.finishUpRow( rowProcessingState );
-		collectionInstance = null;
+	public String toString() {
+		return "DelayedCollectionInitializer(" + LoggingHelper.toLoggableString( getNavigablePath() ) + ")";
 	}
 
 }

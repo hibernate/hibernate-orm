@@ -6,10 +6,13 @@
  */
 package org.hibernate.sql.results.graph.entity;
 
+import java.util.BitSet;
+
 import org.hibernate.metamodel.mapping.EntityMappingType;
 import org.hibernate.metamodel.mapping.EntityRowIdMapping;
 import org.hibernate.metamodel.mapping.EntityValuedModelPart;
 import org.hibernate.persister.entity.AbstractEntityPersister;
+import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.tree.from.TableGroup;
 import org.hibernate.sql.results.graph.AbstractFetchParent;
@@ -99,6 +102,24 @@ public abstract class AbstractEntityResultGraphNode extends AbstractFetchParent 
 
 	public DomainResult<Object> getRowIdResult() {
 		return rowIdResult;
+	}
+
+	@Override
+	public void collectValueIndexesToCache(BitSet valueIndexes) {
+		final EntityPersister entityPersister = fetchContainer.getEntityMappingType().getEntityPersister();
+		identifierFetch.collectValueIndexesToCache( valueIndexes );
+		if ( !entityPersister.useShallowQueryCacheLayout() ) {
+			if ( discriminatorFetch != null ) {
+				discriminatorFetch.collectValueIndexesToCache( valueIndexes );
+			}
+			if ( rowIdResult != null ) {
+				rowIdResult.collectValueIndexesToCache( valueIndexes );
+			}
+			super.collectValueIndexesToCache( valueIndexes );
+		}
+		else if ( entityPersister.storeDiscriminatorInShallowQueryCacheLayout() && discriminatorFetch != null ) {
+			discriminatorFetch.collectValueIndexesToCache( valueIndexes );
+		}
 	}
 
 }

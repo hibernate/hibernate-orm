@@ -65,21 +65,39 @@ public class DefaultRefreshEventListener implements RefreshEventListener {
 		final Object object = event.getObject();
 		if ( persistenceContext.reassociateIfUninitializedProxy( object ) ) {
 			final boolean isTransient = isTransient( event, source, object );
+			// If refreshAlready is not empty then the refresh is the result of a
+			// cascade refresh and the refresh of the parent will take care of initializing the lazy
+			// entity and setting the correct lock on it, this is needed only when the refresh is called directly on a lazy entity
+			if ( refreshedAlready.isEmpty() ) {
+				final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
+				final EntityPersister persister;
+				if ( lazyInitializer != null ) {
+					persister = source.getEntityPersister( lazyInitializer.getEntityName(), object );
+				}
+				else if ( !isTransient ) {
+					final EntityEntry entry = persistenceContext.getEntry( object );
+					persister = entry.getPersister();
+				}
+				else {
+					persister = source.getEntityPersister( source.guessEntityName( object ), object );
+				}
 
-			final LazyInitializer lazyInitializer = HibernateProxy.extractLazyInitializer( object );
-			final EntityPersister persister = source.getEntityPersister( lazyInitializer.getEntityName(), object );
-			refresh(
-					event,
-					null,
-					source,
-					persister,
-					lazyInitializer,
-					null,
-					persister.getIdentifier( object, event.getSession() ),
-					persistenceContext
-			);
+				refresh(
+						event,
+						null,
+						source,
+						persister,
+						lazyInitializer,
+						null,
+						persister.getIdentifier( object, event.getSession() ),
+						persistenceContext
+				);
+				if ( lazyInitializer != null ) {
+					refreshedAlready.add( lazyInitializer.getImplementation() );
+				}
+			}
 
-			if ( isTransient  ) {
+			if ( isTransient ) {
 				source.setReadOnly( object, source.isDefaultReadOnly() );
 			}
 		}

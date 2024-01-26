@@ -19,6 +19,8 @@ import org.hibernate.engine.spi.EntityEntry;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.generator.EventType;
 import org.hibernate.generator.values.GeneratedValuesMutationDelegate;
+import org.hibernate.id.insert.AbstractReturningDelegate;
+import org.hibernate.id.insert.AbstractSelectingDelegate;
 import org.hibernate.id.insert.UniqueKeySelectingDelegate;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.sql.model.MutationType;
@@ -73,7 +75,7 @@ public class MutationDelegateIdentityTest {
 			assertThat( entity.getName() ).isNull();
 
 			assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "insert" );
-			inspector.assertExecutedCount( delegate != null ? 1 : 2 );
+			inspector.assertExecutedCount( delegate instanceof AbstractReturningDelegate ? 1 : 2 );
 		} );
 	}
 
@@ -97,7 +99,9 @@ public class MutationDelegateIdentityTest {
 
 			assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "insert" );
 			inspector.assertExecutedCount(
-					delegate != null && delegate.supportsArbitraryValues() ? 1 : 2
+					delegate instanceof AbstractSelectingDelegate
+							? 3
+							: delegate != null && delegate.supportsArbitraryValues() ? 1 : 2
 			);
 		} );
 	}
@@ -110,7 +114,7 @@ public class MutationDelegateIdentityTest {
 				MutationType.UPDATE
 		);
 		final SQLStatementInspector inspector = scope.getCollectingStatementInspector();
-		final Integer id = scope.fromTransaction( session -> {
+		final Long id = scope.fromTransaction( session -> {
 			final IdentityAndValues entity = new IdentityAndValues();
 			session.persist( entity );
 			session.flush();
@@ -154,7 +158,9 @@ public class MutationDelegateIdentityTest {
 
 			assertThat( inspector.getSqlQueries().get( 0 ) ).contains( "insert" );
 			inspector.assertExecutedCount(
-					delegate != null && delegate.supportsArbitraryValues() ? 1 : 2
+					delegate instanceof AbstractSelectingDelegate
+							? 3
+							: delegate != null && delegate.supportsArbitraryValues() ? 1 : 2
 			);
 
 			final boolean shouldHaveRowId = delegate != null && delegate.supportsRowId()
@@ -210,7 +216,7 @@ public class MutationDelegateIdentityTest {
 			);
 			if ( isUniqueKeyDelegate ) {
 				inspector.assertNumberOfOccurrenceInQueryNoSpace( 1, "data", 1 );
-				inspector.assertNumberOfOccurrenceInQueryNoSpace( 1, "id_column", 0 );
+				inspector.assertNumberOfOccurrenceInQueryNoSpace( 1, "id_column", 1 );
 			}
 
 			final boolean shouldHaveRowId = delegate != null && delegate.supportsRowId()
@@ -238,11 +244,11 @@ public class MutationDelegateIdentityTest {
 	public static class IdentityOnly {
 		@Id
 		@GeneratedValue( strategy = GenerationType.IDENTITY )
-		private Integer id;
+		private Long id;
 
 		private String name;
 
-		public Integer getId() {
+		public Long getId() {
 			return id;
 		}
 
@@ -256,7 +262,7 @@ public class MutationDelegateIdentityTest {
 	public static class IdentityAndValues {
 		@Id
 		@GeneratedValue( strategy = GenerationType.IDENTITY )
-		private Integer id;
+		private Long id;
 
 		@Generated( event = EventType.INSERT )
 		@ColumnDefault( "'default_name'" )
@@ -267,7 +273,7 @@ public class MutationDelegateIdentityTest {
 
 		private String data;
 
-		public Integer getId() {
+		public Long getId() {
 			return id;
 		}
 
@@ -291,7 +297,7 @@ public class MutationDelegateIdentityTest {
 		@Id
 		@Column( name = "id_column" )
 		@GeneratedValue( strategy = GenerationType.IDENTITY )
-		private Integer id;
+		private Long id;
 
 		@Generated( event = EventType.INSERT )
 		@ColumnDefault( "'default_name'" )
@@ -302,7 +308,7 @@ public class MutationDelegateIdentityTest {
 
 		private String data;
 
-		public Integer getId() {
+		public Long getId() {
 			return id;
 		}
 
@@ -326,7 +332,7 @@ public class MutationDelegateIdentityTest {
 		@Id
 		@Column( name = "id_column" )
 		@GeneratedValue( strategy = GenerationType.IDENTITY )
-		private Integer id;
+		private Long id;
 
 		@Generated( event = EventType.INSERT )
 		@ColumnDefault( "'default_name'" )
@@ -342,7 +348,7 @@ public class MutationDelegateIdentityTest {
 			this.data = data;
 		}
 
-		public Integer getId() {
+		public Long getId() {
 			return id;
 		}
 

@@ -9,6 +9,8 @@ package org.hibernate.tool.enhance;
 import org.apache.tools.ant.BuildException;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.Task;
+import org.apache.tools.ant.types.FileSet;
+import org.apache.tools.ant.types.Resource;
 import org.hibernate.bytecode.enhance.spi.DefaultEnhancementContext;
 import org.hibernate.bytecode.enhance.spi.EnhancementContext;
 import org.hibernate.bytecode.enhance.spi.Enhancer;
@@ -30,6 +32,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDefaultBytecodeProvider;
@@ -47,15 +50,23 @@ import static org.hibernate.bytecode.internal.BytecodeProviderInitiator.buildDef
  *         <classpath path="<your-classes-path>"/>
  *     </taskdef>
  *     <enhance base="${base}" dir="${base}" failOnError="true" enableLazyInitialization="true" enableDirtyTracking="false" enableAssociationManagement="false" enableExtendedEnhancement="false" />
+ *     <enhance base="${base}" failOnError="true" enableLazyInitialization="true" enableDirtyTracking="false" enableAssociationManagement="false" enableExtendedEnhancement="false" >
+ *       <fileset dir="${classes.dir}">
+ *         <include name="com/acme/model/Foo.class"/>
+ *         <include name="com/acme/model/Bar.class"/>
+ *       </fileset>
+ *     </enhance>
  * </target>
  * }</pre>
  *
  * @author Luis Barreiro
  * @author Taro App
+ * @author Yanming Zhou
  * @see org.hibernate.engine.spi.Managed
  */
 public class EnhancementTask extends Task {
 
+	private List<FileSet> filesets = new ArrayList<FileSet>();
 	private String base;
 	private String dir;
 
@@ -65,6 +76,10 @@ public class EnhancementTask extends Task {
 	private boolean enableAssociationManagement = false;
 	private boolean enableExtendedEnhancement = false;
 	private List<File> sourceSet = new ArrayList<>();
+
+	public void addFileset(FileSet set) {
+		this.filesets.add( set );
+	}
 
 	public void setBase(String base) {
 		this.base = base;
@@ -111,23 +126,49 @@ public class EnhancementTask extends Task {
 			return;
 		}
 
-		if ( !dir.startsWith( base ) ) {
-			throw new BuildException( "The enhancement directory 'dir' (" + dir + ") is no subdirectory of 'base' (" + base + ")" );
+		if ( base == null ) {
+			throw new BuildException( "The enhancement directory 'base' should be present" );
 		}
 
-		// Perform a depth first search for sourceSet
-		File root = new File( dir );
-		if ( !root.exists() ) {
-			log( "Skipping Hibernate enhancement task execution since there is no classes dir " + dir, Project.MSG_INFO );
-			return;
-		}
-		walkDir( root );
-		if ( sourceSet.isEmpty() ) {
-			log( "Skipping Hibernate enhancement task execution since there are no classes to enhance on " + dir, Project.MSG_INFO );
-			return;
+		if ( !filesets.isEmpty() && dir != null ) {
+			throw new BuildException( "Please remove the enhancement directory 'dir' if 'fileset' is using" );
 		}
 
-		log( "Starting Hibernate enhancement task for classes on " + dir, Project.MSG_INFO );
+		if ( dir == null ) {
+			for ( FileSet fileSet : filesets ) {
+				Iterator<Resource> it = fileSet.iterator();
+				while ( it.hasNext() ) {
+					File file = new File( it.next().toString() );
+					if ( file.isFile() ) {
+						sourceSet.add( file );
+					}
+				}
+			}
+
+			if ( sourceSet.isEmpty() ) {
+				log( "Skipping Hibernate enhancement task execution since there are no classes to enhance in the filesets " + filesets, Project.MSG_INFO );
+				return;
+			}
+			log( "Starting Hibernate enhancement task for classes in filesets " + filesets, Project.MSG_INFO );
+		}
+		else {
+			if ( !dir.startsWith( base ) ) {
+				throw new BuildException( "The enhancement directory 'dir' (" + dir + ") is no subdirectory of 'base' (" + base + ")" );
+			}
+			// Perform a depth first search for sourceSet
+			File root = new File( dir );
+			if ( !root.exists() ) {
+				log( "Skipping Hibernate enhancement task execution since there is no classes dir " + dir, Project.MSG_INFO );
+				return;
+			}
+			walkDir( root );
+			if ( sourceSet.isEmpty() ) {
+				log( "Skipping Hibernate enhancement task execution since there are no classes to enhance on " + dir, Project.MSG_INFO );
+				return;
+			}
+			log( "Starting Hibernate enhancement task for classes on " + dir, Project.MSG_INFO );
+		}
+
 		ClassLoader classLoader = toClassLoader( Collections.singletonList( new File( base ) ) );
 
 		EnhancementContext enhancementContext = new DefaultEnhancementContext() {

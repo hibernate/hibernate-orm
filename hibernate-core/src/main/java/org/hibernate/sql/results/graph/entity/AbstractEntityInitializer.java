@@ -36,6 +36,7 @@ import org.hibernate.internal.util.StringHelper;
 import org.hibernate.loader.ast.internal.CacheEntityLoaderHelper;
 import org.hibernate.metamodel.mapping.AttributeMapping;
 import org.hibernate.metamodel.mapping.AttributeMetadata;
+import org.hibernate.metamodel.mapping.CompositeIdentifierMapping;
 import org.hibernate.metamodel.mapping.EntityDiscriminatorMapping;
 import org.hibernate.metamodel.mapping.DiscriminatorValueDetails;
 import org.hibernate.metamodel.mapping.EntityMappingType;
@@ -56,6 +57,7 @@ import org.hibernate.sql.results.graph.AssemblerCreationState;
 import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
 import org.hibernate.sql.results.graph.Fetch;
+import org.hibernate.sql.results.graph.FetchParentAccess;
 import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.graph.basic.BasicResultAssembler;
 import org.hibernate.sql.results.graph.embeddable.internal.EmbeddableAssembler;
@@ -65,6 +67,8 @@ import org.hibernate.sql.results.jdbc.spi.JdbcValuesSourceProcessingState;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 import org.hibernate.stat.spi.StatisticsImplementor;
 import org.hibernate.type.Type;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.bytecode.enhance.spi.LazyPropertyInitializer.UNFETCHED_PROPERTY;
 import static org.hibernate.engine.internal.ManagedTypeHelper.asPersistentAttributeInterceptable;
@@ -90,6 +94,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	private final EntityPersister rootEntityDescriptor;
 	private final NavigablePath navigablePath;
 	private final LockMode lockMode;
+	private final FetchParentAccess parentAccess;
+	private final FetchParentAccess owningParent;
+	private final EntityMappingType ownedModelPartDeclaringType;
+	private final boolean isPartOfKey;
 
 	private final DomainResultAssembler<?> identifierAssembler;
 	private final BasicResultAssembler<?> discriminatorAssembler;
@@ -98,19 +106,22 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	private final DomainResultAssembler<?>[][] assemblers;
 
+	private boolean shallowCached;
+
 	// per-row state
 	private EntityPersister concreteDescriptor;
 	private EntityKey entityKey;
 	private Object version;
 	private Object entityInstance;
 	private Object entityInstanceForNotify;
-	protected boolean missing;
-	boolean isInitialized;
+	protected State state = State.UNINITIALIZED;
 	private boolean isOwningInitializer;
 	private Object[] resolvedEntityState;
 
-	// todo (6.0) : ^^ need a better way to track whether we are loading the entity state or if something else is/has
-
+	/**
+	 * @deprecated Use {@link AbstractEntityInitializer#AbstractEntityInitializer(EntityResultGraphNode, NavigablePath, LockMode, Fetch, Fetch, DomainResult, FetchParentAccess, AssemblerCreationState)} instead.
+	 */
+	@Deprecated(forRemoval = true)
 	protected AbstractEntityInitializer(
 			EntityResultGraphNode resultDescriptor,
 			NavigablePath navigablePath,
@@ -119,8 +130,19 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			Fetch discriminatorFetch,
 			DomainResult<Object> rowIdResult,
 			AssemblerCreationState creationState) {
-		super();
+		this( resultDescriptor, navigablePath, lockMode, identifierFetch, discriminatorFetch, rowIdResult, null, creationState );
+	}
 
+	// todo (6.0) : ^^ need a better way to track whether we are loading the entity state or if something else is/has
+	protected AbstractEntityInitializer(
+			EntityResultGraphNode resultDescriptor,
+			NavigablePath navigablePath,
+			LockMode lockMode,
+			Fetch identifierFetch,
+			Fetch discriminatorFetch,
+			DomainResult<Object> rowIdResult,
+			FetchParentAccess parentAccess,
+			AssemblerCreationState creationState) {
 		referencedModelPart = resultDescriptor.getEntityValuedModelPart();
 		entityDescriptor = (EntityPersister) referencedModelPart.getEntityMappingType();
 
@@ -131,12 +153,18 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 		this.navigablePath = navigablePath;
 		this.lockMode = lockMode;
+		this.parentAccess = parentAccess;
 		assert lockMode != null;
+		this.isPartOfKey = Initializer.isPartOfKey( navigablePath, parentAccess );
+		this.owningParent = FetchParentAccess.determineOwningParent( parentAccess );
+		this.ownedModelPartDeclaringType = FetchParentAccess.determineOwnedModelPartDeclaringType( referencedModelPart, parentAccess, owningParent );
 
+		assert identifierFetch != null || isResultInitializer() : "Identifier must be fetched, unless this is a result initializer";
 		identifierAssembler = identifierFetch != null
 				? identifierFetch.createAssembler( this, creationState )
 				: null;
 
+		assert entityDescriptor.hasSubclasses() == (discriminatorFetch != null) : "Discriminator should only be fetched if the entity has subclasses";
 		discriminatorAssembler = discriminatorFetch != null
 				? (BasicResultAssembler<?>) discriminatorFetch.createAssembler( this, creationState )
 				: null;
@@ -223,16 +251,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		return identifierAssembler;
 	}
 
-	protected boolean isMissing() {
-		return missing;
-	}
-
-	protected void setMissing(boolean missing) {
-		this.missing = missing;
-	}
-
-	protected abstract boolean isEntityReturn();
-
 	@Override
 	public EntityPersister getEntityDescriptor() {
 		return entityDescriptor;
@@ -241,6 +259,10 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	@Override
 	public Object getEntityInstance() {
 		return entityInstance;
+	}
+
+	protected void setEntityInstance(Object entityInstance) {
+		this.entityInstance = entityInstance;
 	}
 
 	@SuppressWarnings("unused")
@@ -259,8 +281,23 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	@Override
+	public FetchParentAccess getFetchParentAccess() {
+		return parentAccess;
+	}
+
+	@Override
+	public @Nullable FetchParentAccess getOwningParent() {
+		return owningParent;
+	}
+
+	@Override
+	public @Nullable EntityMappingType getOwnedModelPartDeclaringType() {
+		return ownedModelPartDeclaringType;
+	}
+
+	@Override
 	public void registerResolutionListener(Consumer<Object> listener) {
-		if ( entityInstanceForNotify != null ) {
+		if ( state == State.RESOLVED || state == State.INITIALIZED ) {
 			listener.accept( entityInstanceForNotify );
 		}
 		else {
@@ -268,7 +305,33 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	// todo (6.0) : how to best handle possibility of null association?
+	@Override
+	public void startLoading(RowProcessingState rowProcessingState) {
+		if ( rowProcessingState.isQueryCacheHit() && entityDescriptor.useShallowQueryCacheLayout() && !isParentShallowCached() ) {
+			shallowCached = true;
+			// Inform sub-initializers if this is a query cache hit for a shallow entry
+			markSubInitializersAsShallowCached();
+		}
+	}
+
+	@Override
+	public void markShallowCached() {
+		super.markShallowCached();
+		markSubInitializersAsShallowCached();
+	}
+
+	private void markSubInitializersAsShallowCached() {
+		for ( DomainResultAssembler<?>[] subtypeAssemblers : assemblers ) {
+			for ( DomainResultAssembler<?> assembler : subtypeAssemblers ) {
+				if ( assembler != null ) {
+					final Initializer initializer = assembler.getInitializer();
+					if ( initializer != null ) {
+						initializer.markShallowCached();
+					}
+				}
+			}
+		}
+	}
 
 	@Override
 	public void resolveKey(RowProcessingState rowProcessingState) {
@@ -276,7 +339,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		// 		- see AbstractEntityPersister#hasSequentialSelect and
 		//			AbstractEntityPersister#getSequentialSelect in 5.2
 
-		if ( entityKey == null ) {
+		if ( state == State.UNINITIALIZED ) {
 			if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isTraceEnabled() ) {
 				EntityLoadingLogging.ENTITY_LOADING_LOGGER.tracef(
 						"(%s) Beginning Initializer#resolveKey process for entity : %s",
@@ -285,29 +348,27 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 				);
 			}
 
-			concreteDescriptor = determineConcreteEntityDescriptor( rowProcessingState );
-			if ( concreteDescriptor == null ) {
-				missing = true;
+			final Object id = initializeIdentifier( rowProcessingState );
+			if ( id == null ) {
+				state = State.MISSING;
+				EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
+						"(%s) EntityKey (%s) is null",
+						getSimpleConcreteImplName(),
+						getNavigablePath()
+				);
 			}
-			else {
-				resolveEntityKey( rowProcessingState );
-				if ( entityKey == null ) {
+			else if ( concreteDescriptor != null
+					|| ( concreteDescriptor = determineConcreteEntityDescriptor( rowProcessingState ) ) != null ) {
+				// 2) build the EntityKey
+				entityKey = new EntityKey( id, concreteDescriptor );
+				state = State.KEY_RESOLVED;
+				if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
 					EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
-							"(%s) EntityKey (%s) is null",
+							"(%s) Hydrated EntityKey (%s): %s",
 							getSimpleConcreteImplName(),
-							getNavigablePath()
+							getNavigablePath(),
+							entityKey.getIdentifier()
 					);
-					assert missing;
-				}
-				else {
-					if ( EntityLoadingLogging.ENTITY_LOADING_LOGGER.isDebugEnabled() ) {
-						EntityLoadingLogging.ENTITY_LOADING_LOGGER.debugf(
-								"(%s) Hydrated EntityKey (%s): %s",
-								getSimpleConcreteImplName(),
-								getNavigablePath(),
-								entityKey.getIdentifier()
-						);
-					}
 				}
 			}
 		}
@@ -315,10 +376,12 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	private EntityPersister determineConcreteEntityDescriptor(RowProcessingState rowProcessingState)
 			throws WrongClassException {
-		if ( discriminatorAssembler == null ) {
+		if ( discriminatorAssembler == null
+				|| rowProcessingState.isQueryCacheHit() && !entityDescriptor.storeDiscriminatorInShallowQueryCacheLayout() ) {
 			return entityDescriptor;
 		}
 		else {
+			assert entityDescriptor.hasSubclasses() : "Reading a discriminator from a result set should only happen if the entity has subclasses";
 			final EntityDiscriminatorMapping discriminatorMapping = entityDescriptor.getDiscriminatorMapping();
 			assert discriminatorMapping != null;
 			final Object discriminator = discriminatorAssembler.extractRawValue( rowProcessingState );
@@ -343,31 +406,16 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			}
 		}
 	}
-
-	protected void resolveEntityKey(RowProcessingState rowProcessingState) {
-		if ( entityKey == null ) {
-			// it has not yet been resolved
-			// 1) resolve the hydrated identifier value(s) into its identifier representation
-			final Object id = initializeIdentifier( rowProcessingState );
-			if ( id == null ) {
-				missing = true;
-			}
-			else {
-				// 2) build the EntityKey
-				entityKey = new EntityKey( id, concreteDescriptor );
-			}
-		}
-	}
-
 	private Object initializeIdentifier(RowProcessingState rowProcessingState) {
 		final JdbcValuesSourceProcessingState jdbcValuesSourceProcessingState =
 				rowProcessingState.getJdbcValuesSourceProcessingState();
 		final Object id = jdbcValuesSourceProcessingState.getProcessingOptions().getEffectiveOptionalId();
-		if ( useEmbeddedIdentifierInstanceAsEntity( id ) ) {
-			entityInstance = id;
+		if ( useEmbeddedIdentifierInstanceAsEntity( id, rowProcessingState ) ) {
+			entityInstance = entityInstanceForNotify = id;
 			return id;
 		}
 		else if ( identifierAssembler == null ) {
+			assert id != null : "Initializer requires a not null id for loading";
 			return id;
 		}
 		else {
@@ -378,18 +426,23 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 	}
 
-	private boolean useEmbeddedIdentifierInstanceAsEntity(Object id) {
-		return id != null
-			&& id.getClass().equals( concreteDescriptor.getJavaType().getJavaType() );
+	private boolean useEmbeddedIdentifierInstanceAsEntity(Object id, RowProcessingState rowProcessingState) {
+		return id != null && isResultInitializer()
+				// The id can only be the entity instance if this is a non-aggregated id that has no containing class
+				&& entityDescriptor.getIdentifierMapping() instanceof CompositeIdentifierMapping
+				&& !( (CompositeIdentifierMapping) entityDescriptor.getIdentifierMapping() ).hasContainingClass()
+				&& ( concreteDescriptor = determineConcreteEntityDescriptor( rowProcessingState ) ) != null
+				&& concreteDescriptor.isInstance( id );
 	}
 
 	@Override
 	public void resolveInstance(RowProcessingState rowProcessingState) {
-		if ( !missing && !isInitialized ) {
-			if ( shouldSkipResolveInstance( rowProcessingState ) ) {
-				missing = true;
-				return;
-			}
+		if ( state == State.KEY_RESOLVED ) {
+			// Note that entities are always resolved to be initialized,
+			// even if a parent fetch parent access is "missing".
+			// We loaded the data already, so let's put it into the persistence context,
+			// even if the parent instance will not refer to this entity.
+
 			final PersistenceContext persistenceContext = rowProcessingState.getSession().getPersistenceContextInternal();
 			final EntityHolder holder = persistenceContext.claimEntityHolderIfPossible(
 					entityKey,
@@ -397,99 +450,36 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 					rowProcessingState.getJdbcValuesSourceProcessingState(),
 					this
 			);
+			state = State.RESOLVED;
 			isOwningInitializer = holder.getEntityInitializer() == this;
 
 			if ( entityInstance == null ) {
 				resolveEntityInstance( rowProcessingState, holder, entityKey.getIdentifier() );
+				if ( isResultInitializer() ) {
+					final String uniqueKeyAttributePath = rowProcessingState.getEntityUniqueKeyAttributePath();
+					if ( uniqueKeyAttributePath != null ) {
+						final SharedSessionContractImplementor session = rowProcessingState.getSession();
+						final EntityUniqueKey euk = new EntityUniqueKey(
+								getConcreteDescriptor().getEntityName(),
+								uniqueKeyAttributePath,
+								rowProcessingState.getEntityUniqueKey(),
+								getConcreteDescriptor().getPropertyType( uniqueKeyAttributePath ),
+								session.getFactory()
+						);
+						session.getPersistenceContextInternal().addEntity( euk, getEntityInstance() );
+					}
+				}
 			}
 			else if ( !isOwningInitializer ) {
 				entityInstance = holder.getManagedObject();
-				isInitialized = true;
+				entityInstanceForNotify = holder.getEntity();
+				state = State.INITIALIZED;
+			}
+			notifyResolutionListeners( entityInstanceForNotify );
+			if ( shallowCached ) {
+				initializeSubInstancesFromParent( rowProcessingState );
 			}
 		}
-	}
-
-	protected boolean shouldSkipResolveInstance(RowProcessingState rowProcessingState) {
-		if ( navigablePath.getParent() != null ) {
-			Initializer parentInitializer = rowProcessingState.resolveInitializer( navigablePath.getParent() );
-			if ( parentInitializer != null ) {
-				ModelPart modelPart = referencedModelPart;
-				NavigablePath currentNavigablePath = navigablePath;
-				// Walk back initializers until we find an EntityInitializer
-				while ( parentInitializer != null && !parentInitializer.isEntityInitializer() ) {
-					modelPart = parentInitializer.getInitializedPart();
-					currentNavigablePath = currentNavigablePath.getParent();
-					parentInitializer = rowProcessingState.resolveInitializer( currentNavigablePath.getParent() );
-				}
-				if ( modelPart.isEntityIdentifierMapping() ) {
-					return false;
-				}
-				else if ( parentInitializer != null && parentInitializer.asEntityInitializer()
-						.getEntityDescriptor()
-						.getEntityMetamodel()
-						.isPolymorphic() ) {
-					parentInitializer.resolveKey( rowProcessingState );
-					return !isReferencedModelPartInConcreteParent(
-							modelPart,
-							currentNavigablePath,
-							parentInitializer
-					);
-				}
-			}
-		}
-		return false;
-	}
-
-	private boolean isReferencedModelPartInConcreteParent(
-			ModelPart modelPart,
-			NavigablePath partNavigablePath,
-			Initializer parentInitializer) {
-		final EntityPersister parentConcreteDescriptor = parentInitializer.asEntityInitializer()
-				.getConcreteDescriptor();
-		if ( parentConcreteDescriptor != null && parentConcreteDescriptor.getEntityMetamodel().isPolymorphic() ) {
-			final EntityMappingType entityType = modelPart.asAttributeMapping() != null ?
-					modelPart.asAttributeMapping().getDeclaringType().findContainingEntityMapping() :
-					modelPart.asEntityMappingType();
-			final ModelPart concreteModelPart = parentConcreteDescriptor.findSubPart(
-					partNavigablePath.getLocalName(),
-					entityType
-			);
-			if ( concreteModelPart == null
-					|| !modelPart.getJavaType().getJavaTypeClass()
-					.isAssignableFrom( concreteModelPart.getJavaType().getJavaTypeClass() ) ) {
-		/*
-			Given:
-
-			class Message{
-
-				@ManyToOne
-				Address address;
-			}
-
-			@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-			class Address{
-			}
-
-			class AddressA extends Address {
-				@OneToOne(mappedBy = "addressA")
-				UserA userA;
-			}
-
-			class AddressB extends Address{
-			@OneToOne(mappedBy = "addressB")
-				UserB userB;
-			}
-
-			when we try to initialize the messages of Message.address,
-			there will be one EntityJoinedFetchInitializer for UserA and one for UserB so
-			when resolving AddressA we have to skip resolving the EntityJoinedFetchInitializer of UserB
-			and for AddressB skip resolving the EntityJoinedFetchInitializer of UserA
-
-		 */
-				return false;
-			}
-		}
-		return true;
 	}
 
 	protected void resolveEntityInstance(
@@ -513,7 +503,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		final Object entityFromExecutionContext;
 		if ( !unwrapProxy && isProxyInstance( proxy ) ) {
 			if ( ( entityFromExecutionContext = getEntityFromExecutionContext( rowProcessingState ) ) != null ) {
-				entityInstance = entityFromExecutionContext;
+				entityInstance = entityInstanceForNotify = entityFromExecutionContext;
 				// If the entity comes from the execution context, it is treated as not initialized
 				// so that we can refresh the data as requested
 				registerReloadedEntity( rowProcessingState, holder );
@@ -521,52 +511,55 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			else {
 				entityInstance = proxy;
 				if ( Hibernate.isInitialized( entityInstance ) ) {
+					state = State.INITIALIZED;
+					entityInstanceForNotify = Hibernate.unproxy( entityInstance );
 					registerReloadedEntity( rowProcessingState, holder );
-					if ( rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
+					if ( !rowProcessingState.isQueryCacheHit() && rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
 						// We need to read result set values to correctly populate the query cache
 						resolveState( rowProcessingState );
 					}
-					this.isInitialized = true;
 				}
-				else if ( isOwningInitializer ) {
-					// Resolve the real entity instance for this proxy early so that potentially nested calls
-					// for eager association loading can leverage the real instance if needed
-					assert holder.getEntity() == null;
-					resolveEntityInstance( entityIdentifier, rowProcessingState );
+				else {
+					final LazyInitializer lazyInitializer = extractLazyInitializer( entityInstance );
+					assert lazyInitializer != null;
+					entityInstanceForNotify = resolveInstance( entityIdentifier, holder, rowProcessingState );
+					lazyInitializer.setImplementation( entityInstanceForNotify );
 				}
 			}
 		}
 		else {
 			final Object existingEntity = holder.getEntity();
 			if ( existingEntity != null ) {
-				entityInstance = existingEntity;
+				entityInstance = entityInstanceForNotify = existingEntity;
 				if ( holder.getEntityInitializer() == null ) {
 					if ( isExistingEntityInitialized( existingEntity ) ) {
+						state = State.INITIALIZED;
 						registerReloadedEntity( rowProcessingState, holder );
-						notifyResolutionListeners( entityInstance );
-						if ( rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
+						if ( !rowProcessingState.isQueryCacheHit() && rowProcessingState.getQueryOptions().isResultCachingEnabled() == Boolean.TRUE ) {
 							// We need to read result set values to correctly populate the query cache
 							resolveState( rowProcessingState );
 						}
-						this.isInitialized = true;
 					}
-					else {
-						registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
+					else if ( isResultInitializer() ) {
+						registerLoadingEntity( rowProcessingState, entityInstance );
 					}
 				}
 				else if ( !isOwningInitializer ) {
-					this.isInitialized = true;
+					state = State.INITIALIZED;
 				}
 			}
 			else if ( ( entityFromExecutionContext = getEntityFromExecutionContext( rowProcessingState ) ) != null ) {
-				entityInstance = entityFromExecutionContext;
-				registerLoadingEntityInstanceFromExecutionContext( rowProcessingState, entityInstance );
+				// This is the entity to refresh, so don't set the state to initialized
+				entityInstance = entityInstanceForNotify = entityFromExecutionContext;
+				if ( isResultInitializer() ) {
+					registerLoadingEntity( rowProcessingState, entityInstance );
+				}
 			}
 			else {
 				// look to see if another initializer from a parent load context or an earlier
 				// initializer is already loading the entity
-				entityInstance = resolveInstance( entityIdentifier, holder, rowProcessingState );
-				if ( isOwningInitializer && !isInitialized && identifierAssembler instanceof EmbeddableAssembler ) {
+				entityInstance = entityInstanceForNotify = resolveInstance( entityIdentifier, holder, rowProcessingState );
+				if ( isOwningInitializer && !isEntityInitialized() && identifierAssembler instanceof EmbeddableAssembler ) {
 					// If this is the owning initializer and the returned object is not initialized,
 					// this means that the entity instance was just instantiated.
 					// In this case, we want to call "assemble" and hence "initializeInstance" on the initializer
@@ -577,10 +570,6 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		}
 		upgradeLockMode( rowProcessingState );
 	}
-
-	protected abstract void registerLoadingEntityInstanceFromExecutionContext(
-			RowProcessingState rowProcessingState,
-			Object instance);
 
 	protected Object getEntityFromExecutionContext(RowProcessingState rowProcessingState) {
 		final ExecutionContext executionContext = rowProcessingState.getJdbcValuesSourceProcessingState()
@@ -670,13 +659,28 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 			return resolved;
 		}
 		else {
+			if ( rowProcessingState.isQueryCacheHit() && entityDescriptor.useShallowQueryCacheLayout() ) {
+				// We must load the entity this way, because the query cache entry contains only the primary key
+				state = State.INITIALIZED;
+				final SharedSessionContractImplementor session = rowProcessingState.getSession();
+				assert isOwningInitializer;
+				// If this initializer owns the entity, we have to remove the entity holder,
+				// because the subsequent loading process will claim the entity
+				session.getPersistenceContextInternal().removeEntityHolder( entityKey );
+				return session.internalLoad(
+						concreteDescriptor.getEntityName(),
+						entityIdentifier,
+						true,
+						false
+				);
+			}
 			// We have to query the second level cache if reference cache entries are used
-			if ( entityDescriptor.canUseReferenceCacheEntries() ) {
+			else if ( entityDescriptor.canUseReferenceCacheEntries() ) {
 				final Object cached = resolveInstanceFromCache( rowProcessingState );
 				if ( cached != null ) {
 					// EARLY EXIT!!!
 					// because the second level cache has reference cache entries, the entity is initialized
-					isInitialized = true;
+					state = State.INITIALIZED;
 					registerReloadedEntity( rowProcessingState );
 					return cached;
 				}
@@ -701,7 +705,7 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	private Object resolveToOptionalInstance(RowProcessingState rowProcessingState) {
-		if ( isEntityReturn() ) {
+		if ( isResultInitializer() ) {
 			// this isEntityReturn bit is just for entity loaders, not hql/criteria
 			final JdbcValuesSourceProcessingOptions processingOptions =
 					rowProcessingState.getJdbcValuesSourceProcessingState().getProcessingOptions();
@@ -755,55 +759,9 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 
 	@Override
 	public void initializeInstance(RowProcessingState rowProcessingState) {
-		if ( !missing && !isInitialized ) {
-			final LazyInitializer lazyInitializer = extractLazyInitializer( entityInstance );
-			final SharedSessionContractImplementor session = rowProcessingState.getSession();
-			final PersistenceContext persistenceContext = session.getPersistenceContextInternal();
-			if ( lazyInitializer != null ) {
-				final EntityHolder holder = persistenceContext.getEntityHolder( entityKey );
-				final Object instance = holder.getEntity();
-				assert instance != null : "The real entity instance must be resolved in the `resolveInstance()` phase";
-				if ( holder.getEntityInitializer() == this ) {
-					initializeEntity( instance, rowProcessingState );
-				}
-				lazyInitializer.setImplementation( instance );
-				entityInstanceForNotify = instance;
-			}
-			else {
-				if ( entityDescriptor.canReadFromCache() ) {
-					/*
-						@Cache
-						class Child {
-
-							@ManyToOne
-							private Parent parent;
-						}
-
-						@Cache
-						class Parent {
-							@OneToOne
-							private Parent parent;
-
-						}
-
-						when the query "select c from Child c" is executed and the second level cache (2LC) contains
-						an instance of Child and Parent
-						then when the EntitySelectFetchInitializer#initializeInstance() is executed before the EntityResultInitializer one
-						the persistence context will contain the instances retrieved form the 2LC
-					 */
-					assert persistenceContext.getEntityHolder( entityKey ).getEntityInitializer() == this;
-					initializeEntity( entityInstance, rowProcessingState );
-					entityInstanceForNotify = entityInstance;
-				}
-				else {
-					initializeEntity( entityInstance, rowProcessingState );
-					entityInstanceForNotify = entityInstance;
-				}
-			}
-
-			notifyResolutionListeners( entityInstanceForNotify );
-
-			isInitialized = true;
+		if ( state == State.KEY_RESOLVED || state == State.RESOLVED ) {
+			initializeEntity( entityInstanceForNotify, rowProcessingState );
+			state = State.INITIALIZED;
 		}
 	}
 
@@ -1051,8 +1009,8 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	protected void registerPossibleUniqueKeyEntries(final Object toInitialize, final SharedSessionContractImplementor session) {
 		for ( UniqueKeyEntry entry : concreteDescriptor.uniqueKeyEntries() ) {
 			final String ukName = entry.getUniqueKeyName();
-			final int index = entry.getStateArrayPosition();//concreteDescriptor.findAttributeMapping( ukName ).getStateArrayPosition();
-			final Type type = entry.getPropertyType();//concreteDescriptor.getPropertyTypes()[index];
+			final int index = entry.getStateArrayPosition();
+			final Type type = entry.getPropertyType();
 
 			// polymorphism not really handled completely correctly,
 			// perhaps...well, actually its ok, assuming that the
@@ -1155,49 +1113,34 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 	}
 
 	@Override
+	public boolean isPartOfKey() {
+		return isPartOfKey;
+	}
+
+	@Override
 	public boolean isEntityInitialized() {
-		return isInitialized;
-	}
-
-	protected void setEntityInitialized(boolean isInitialized) {
-		this.isInitialized = isInitialized;
-	}
-
-	protected void setEntityInstanceForNotify(Object entityInstanceForNotify) {
-		this.entityInstanceForNotify = entityInstanceForNotify;
-	}
-
-	protected Object getEntityInstanceForNotify() {
-		return entityInstanceForNotify;
-	}
-
-	protected void setResolvedEntityState(Object[] resolvedEntityState) {
-		this.resolvedEntityState = resolvedEntityState;
-	}
-
-	protected Object[] getResolvedEntityState() {
-		return resolvedEntityState;
+		return state == State.INITIALIZED;
 	}
 
 	@Override
 	public EntityPersister getConcreteDescriptor() {
+		assert state != State.UNINITIALIZED;
 		return concreteDescriptor == null ? entityDescriptor : concreteDescriptor;
 	}
 
-	protected DomainResultAssembler<?> getVersionAssembler() {
-		return versionAssembler;
-	}
-
-	protected DomainResultAssembler<Object> getRowIdAssembler() {
-		return rowIdAssembler;
-	}
-
-	protected LockMode getLockMode() {
-		return lockMode;
-	}
-
-	protected DomainResultAssembler<?>[][] getAssemblers() {
-		return assemblers;
+	protected void initializeSubInstancesFromParent(RowProcessingState rowProcessingState) {
+		if ( entityInstanceForNotify != null ) {
+			for ( DomainResultAssembler<?>[] subtypeAssemblers : getAssemblers() ) {
+				for ( DomainResultAssembler<?> assembler : subtypeAssemblers ) {
+					if ( assembler != null ) {
+						final Initializer initializer = assembler.getInitializer();
+						if ( initializer != null ) {
+							initializer.initializeInstanceFromParent( entityInstanceForNotify, rowProcessingState );
+						}
+					}
+				}
+			}
+		}
 	}
 
 	@Override
@@ -1221,9 +1164,58 @@ public abstract class AbstractEntityInitializer extends AbstractFetchParentAcces
 		version = null;
 		entityInstance = null;
 		entityInstanceForNotify = null;
-		missing = false;
 		resolvedEntityState = null;
-		isInitialized = false;
+		state = State.UNINITIALIZED;
 		clearResolutionListeners();
+	}
+
+	@Override
+	public void endLoading(ExecutionContext executionContext) {
+		super.endLoading( executionContext );
+		shallowCached = false;
+	}
+
+	protected enum State {
+		UNINITIALIZED,
+		MISSING,
+		KEY_RESOLVED,
+		RESOLVED,
+		INITIALIZED
+	}
+
+	//#########################
+	// For Hibernate Reactive
+	//#########################
+
+	protected void setEntityInstanceForNotify(Object entityInstanceForNotify) {
+		this.entityInstanceForNotify = entityInstanceForNotify;
+	}
+
+	protected Object getEntityInstanceForNotify() {
+		return entityInstanceForNotify;
+	}
+
+	protected void setResolvedEntityState(Object[] resolvedEntityState) {
+		this.resolvedEntityState = resolvedEntityState;
+	}
+
+	protected Object[] getResolvedEntityState() {
+		return resolvedEntityState;
+	}
+
+	protected DomainResultAssembler<?> getVersionAssembler() {
+		return versionAssembler;
+	}
+
+	protected DomainResultAssembler<Object> getRowIdAssembler() {
+		return rowIdAssembler;
+	}
+
+	protected LockMode getLockMode() {
+		return lockMode;
+	}
+
+	protected DomainResultAssembler<?>[][] getAssemblers() {
+		return assemblers;
 	}
 }

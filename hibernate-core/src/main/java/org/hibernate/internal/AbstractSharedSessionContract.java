@@ -21,6 +21,7 @@ import java.util.function.Function;
 import jakarta.persistence.EntityGraph;
 import org.hibernate.CacheMode;
 import org.hibernate.EntityNameResolver;
+import org.hibernate.Filter;
 import org.hibernate.FlushMode;
 import org.hibernate.HibernateException;
 import org.hibernate.Interceptor;
@@ -29,7 +30,9 @@ import org.hibernate.SessionEventListener;
 import org.hibernate.SessionException;
 import org.hibernate.Transaction;
 import org.hibernate.UnknownEntityTypeException;
+import org.hibernate.binder.internal.TenantIdBinder;
 import org.hibernate.cache.spi.CacheTransactionSynchronization;
+import org.hibernate.context.spi.CurrentTenantIdentifierResolver;
 import org.hibernate.engine.internal.SessionEventListenerManagerImpl;
 import org.hibernate.engine.jdbc.LobCreator;
 import org.hibernate.engine.jdbc.connections.spi.JdbcConnectionAccess;
@@ -38,6 +41,7 @@ import org.hibernate.engine.jdbc.spi.JdbcCoordinator;
 import org.hibernate.engine.jdbc.spi.JdbcServices;
 import org.hibernate.engine.spi.EntityKey;
 import org.hibernate.engine.spi.ExceptionConverter;
+import org.hibernate.engine.spi.LoadQueryInfluencers;
 import org.hibernate.engine.spi.SessionEventListenerManager;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
@@ -224,6 +228,24 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	private static boolean isTransactionCoordinatorShared(SessionCreationOptions options) {
 		return options instanceof SharedSessionCreationOptions
 			&& ( (SharedSessionCreationOptions) options ).isTransactionCoordinatorShared();
+	}
+
+	protected final void setUpMultitenancy(SessionFactoryImplementor factory, LoadQueryInfluencers loadQueryInfluencers) {
+		if ( factory.getDefinedFilterNames().contains( TenantIdBinder.FILTER_NAME ) ) {
+			final Object tenantIdentifier = getTenantIdentifierValue();
+			if ( tenantIdentifier == null ) {
+				throw new HibernateException( "SessionFactory configured for multi-tenancy, but no tenant identifier specified" );
+			}
+			else {
+				final CurrentTenantIdentifierResolver<Object> resolver = factory.getCurrentTenantIdentifierResolver();
+				if ( resolver==null || !resolver.isRoot( tenantIdentifier ) ) {
+					// turn on the filter, unless this is the "root" tenant with access to all partitions
+					loadQueryInfluencers
+							.enableFilter( TenantIdBinder.FILTER_NAME )
+							.setParameter( TenantIdBinder.PARAMETER_NAME, tenantIdentifier );
+				}
+			}
+		}
 	}
 
 	private void logInconsistentOptions(SharedSessionCreationOptions sharedOptions) {
@@ -1468,6 +1490,28 @@ public abstract class AbstractSharedSessionContract implements SharedSessionCont
 	public <T> List<EntityGraph<? super T>> getEntityGraphs(Class<T> entityClass) {
 		checkOpen();
 		return getFactory().findEntityGraphsByType( entityClass );
+	}
+
+	// filter support ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+	@Override
+	public Filter getEnabledFilter(String filterName) {
+		pulseTransactionCoordinator();
+		return getLoadQueryInfluencers().getEnabledFilter( filterName );
+	}
+
+	@Override
+	public Filter enableFilter(String filterName) {
+		checkOpen();
+		pulseTransactionCoordinator();
+		return getLoadQueryInfluencers().enableFilter( filterName );
+	}
+
+	@Override
+	public void disableFilter(String filterName) {
+		checkOpen();
+		pulseTransactionCoordinator();
+		getLoadQueryInfluencers().disableFilter( filterName );
 	}
 
 	private void writeObject(ObjectOutputStream oos) throws IOException {

@@ -14,7 +14,6 @@ import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.basic.BasicFetch;
 import org.hibernate.sql.results.graph.entity.AbstractEntityInitializer;
 import org.hibernate.sql.results.graph.entity.EntityResultGraphNode;
-import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
 
 /**
  * Initializer for cases where the entity is a root domain selection
@@ -39,6 +38,7 @@ public class EntityResultInitializer extends AbstractEntityInitializer {
 				identifierFetch,
 				discriminatorFetch,
 				rowIdResult,
+				null,
 				creationState
 		);
 	}
@@ -49,20 +49,19 @@ public class EntityResultInitializer extends AbstractEntityInitializer {
 	}
 
 	@Override
-	protected boolean isEntityReturn() {
-		return true;
-	}
-
-	@Override
 	public String toString() {
 		return CONCRETE_NAME + "(" + getNavigablePath() + ")";
 	}
 
 	@Override
-	protected void registerLoadingEntityInstanceFromExecutionContext(
-			RowProcessingState rowProcessingState,
-			Object instance) {
-		registerLoadingEntity( rowProcessingState, instance );
+	public boolean isPartOfKey() {
+		// The entity result itself can never be part of the key
+		return false;
+	}
+
+	@Override
+	public boolean isResultInitializer() {
+		return true;
 	}
 
 }

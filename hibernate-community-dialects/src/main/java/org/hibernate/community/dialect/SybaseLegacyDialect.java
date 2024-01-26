@@ -426,12 +426,6 @@ public class SybaseLegacyDialect extends AbstractTransactSQLDialect {
 	}
 
 	@Override
-	public String trimPattern(TrimSpec specification, char character) {
-		return super.trimPattern(specification, character)
-				.replace("replace", "str_replace");
-	}
-
-	@Override
 	public void appendDatetimeFormat(SqlAppender appender, String format) {
 		throw new UnsupportedOperationException( "format() function not supported on Sybase");
 	}

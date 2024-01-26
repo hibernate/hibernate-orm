@@ -12,7 +12,7 @@ import org.hibernate.engine.spi.SharedSessionContractImplementor;
  * @author Steve Ebersole
  */
 public interface QueryCachePutManager {
-	void registerJdbcRow(Object[] values);
+	void registerJdbcRow(Object values);
 
 	void finishUp(SharedSessionContractImplementor session);
 }

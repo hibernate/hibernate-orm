@@ -45,6 +45,7 @@ import org.hibernate.QueryException;
 import org.hibernate.Remove;
 import org.hibernate.StaleObjectStateException;
 import org.hibernate.StaleStateException;
+import org.hibernate.annotations.CacheLayout;
 import org.hibernate.boot.Metadata;
 import org.hibernate.boot.model.internal.SoftDeleteHelper;
 import org.hibernate.boot.model.relational.SqlStringGenerationContext;
@@ -424,6 +425,8 @@ public abstract class AbstractEntityPersister
 	private final boolean invalidateCache;
 	private final boolean isLazyPropertiesCacheable;
 	private final boolean useReferenceCacheEntries;
+	private final boolean useShallowQueryCacheLayout;
+	private final boolean storeDiscriminatorInShallowQueryCacheLayout;
 
 	// dynamic filters attached to the class-level
 	private final FilterHelper filterHelper;
@@ -803,6 +806,14 @@ public abstract class AbstractEntityPersister
 		) : null;
 
 		useReferenceCacheEntries = shouldUseReferenceCacheEntries( creationContext.getSessionFactoryOptions() );
+		useShallowQueryCacheLayout = shouldUseShallowCacheLayout(
+				persistentClass.getQueryCacheLayout(),
+				creationContext.getSessionFactoryOptions()
+		);
+		storeDiscriminatorInShallowQueryCacheLayout = shouldStoreDiscriminatorInShallowQueryCacheLayout(
+				persistentClass.getQueryCacheLayout(),
+				creationContext.getSessionFactoryOptions()
+		);
 		cacheEntryHelper = buildCacheEntryHelper( creationContext.getSessionFactoryOptions() );
 		invalidateCache = sessionFactoryOptions.isSecondLevelCacheEnabled()
 				&& canWriteToCache
@@ -944,6 +955,29 @@ public abstract class AbstractEntityPersister
 			}
 			return true;
 		}
+	}
+
+	private boolean shouldUseShallowCacheLayout(CacheLayout entityQueryCacheLayout, SessionFactoryOptions options) {
+		final CacheLayout queryCacheLayout;
+		if ( entityQueryCacheLayout == null ) {
+			queryCacheLayout = options.getQueryCacheLayout();
+		}
+		else {
+			queryCacheLayout = entityQueryCacheLayout;
+		}
+		return queryCacheLayout == CacheLayout.SHALLOW || queryCacheLayout == CacheLayout.SHALLOW_WITH_DISCRIMINATOR
+				|| queryCacheLayout == CacheLayout.AUTO && ( canUseReferenceCacheEntries() || canReadFromCache() );
+	}
+
+	private boolean shouldStoreDiscriminatorInShallowQueryCacheLayout(CacheLayout entityQueryCacheLayout, SessionFactoryOptions options) {
+		final CacheLayout queryCacheLayout;
+		if ( entityQueryCacheLayout == null ) {
+			queryCacheLayout = options.getQueryCacheLayout();
+		}
+		else {
+			queryCacheLayout = entityQueryCacheLayout;
+		}
+		return queryCacheLayout == CacheLayout.SHALLOW_WITH_DISCRIMINATOR;
 	}
 
 	@Override
@@ -1203,6 +1237,16 @@ public abstract class AbstractEntityPersister
 	}
 
 	@Override
+	public boolean useShallowQueryCacheLayout() {
+		return useShallowQueryCacheLayout;
+	}
+
+	@Override
+	public boolean storeDiscriminatorInShallowQueryCacheLayout() {
+		return storeDiscriminatorInShallowQueryCacheLayout;
+	}
+
+	@Override
 	public Iterable<UniqueKeyEntry> uniqueKeyEntries() {
 		if ( this.uniqueKeyEntries == null ) {
 			this.uniqueKeyEntries = initUniqueKeyEntries( this );
@@ -1211,7 +1255,7 @@ public abstract class AbstractEntityPersister
 	}
 
 	private static List<UniqueKeyEntry> initUniqueKeyEntries(final AbstractEntityPersister aep) {
-		ArrayList<UniqueKeyEntry> uniqueKeys = new ArrayList();
+		final ArrayList<UniqueKeyEntry> uniqueKeys = new ArrayList<>();
 		for ( Type propertyType : aep.getPropertyTypes() ) {
 			if ( propertyType instanceof AssociationType ) {
 				final AssociationType associationType = (AssociationType) propertyType;
@@ -3099,20 +3143,21 @@ public abstract class AbstractEntityPersister
 			assert !creationState.supportsEntityNameUsage() : "Entity name usage should have been used instead";
 			final Map<String, EntityNameUse> entityNameUseMap;
 			final Collection<EntityMappingType> subMappingTypes = getSubMappingTypes();
+			entityNameUseMap = new HashMap<>( 1 + subMappingTypes.size() + ( isInherited() ? 1 : 0 ) );
 			if ( subMappingTypes.isEmpty() ) {
-				entityNameUseMap = Collections.singletonMap( getEntityName(), EntityNameUse.TREAT );
+				entityNameUseMap.put( getEntityName(), EntityNameUse.TREAT );
 			}
 			else {
-				entityNameUseMap = new HashMap<>( 1 + subMappingTypes.size() );
 				entityNameUseMap.put( getEntityName(), EntityNameUse.TREAT );
 				// We need to register TREAT uses for all subtypes when pruning
 				for ( EntityMappingType subMappingType : subMappingTypes ) {
 					entityNameUseMap.put( subMappingType.getEntityName(), EntityNameUse.TREAT );
 				}
-				if ( isInherited() ) {
-					// Make sure the table group includes the root table when needed for TREAT
-					tableGroup.resolveTableReference( getRootTableName() );
-				}
+			}
+			if ( isInherited() ) {
+				// Make sure the table group includes the root table when needed for TREAT
+				tableGroup.resolveTableReference( getRootTableName() );
+				entityNameUseMap.put( getRootEntityName(), EntityNameUse.EXPRESSION );
 			}
 			pruneForSubclasses( tableGroup, entityNameUseMap );
 		}

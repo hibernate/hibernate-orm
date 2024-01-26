@@ -7,6 +7,7 @@
 package org.hibernate.sql.results.graph.collection.internal;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.hibernate.HibernateException;
 import org.hibernate.LockMode;
@@ -15,9 +16,15 @@ import org.hibernate.engine.spi.CollectionKey;
 import org.hibernate.internal.log.LoggingHelper;
 import org.hibernate.metamodel.mapping.PluralAttributeMapping;
 import org.hibernate.spi.NavigablePath;
+import org.hibernate.sql.results.graph.AssemblerCreationState;
+import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultAssembler;
+import org.hibernate.sql.results.graph.Fetch;
 import org.hibernate.sql.results.graph.FetchParentAccess;
+import org.hibernate.sql.results.graph.Initializer;
 import org.hibernate.sql.results.jdbc.spi.RowProcessingState;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
  * CollectionInitializer for PersistentList loading
@@ -37,20 +44,25 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 			PluralAttributeMapping attributeMapping,
 			FetchParentAccess parentAccess,
 			LockMode lockMode,
-			DomainResultAssembler<?> collectionKeyAssembler,
-			DomainResultAssembler<?> collectionValueKeyAssembler,
-			DomainResultAssembler<Integer> listIndexAssembler,
-			DomainResultAssembler<?> elementAssembler) {
+			DomainResult<?> collectionKeyResult,
+			DomainResult<?> collectionValueKeyResult,
+			Fetch listIndexFetch,
+			Fetch elementFetch,
+			boolean isResultInitializer,
+			AssemblerCreationState creationState) {
 		super(
 				navigablePath,
 				attributeMapping,
 				parentAccess,
 				lockMode,
-				collectionKeyAssembler,
-				collectionValueKeyAssembler
+				collectionKeyResult,
+				collectionValueKeyResult,
+				isResultInitializer,
+				creationState
 		);
-		this.listIndexAssembler = listIndexAssembler;
-		this.elementAssembler = elementAssembler;
+		//noinspection unchecked
+		this.listIndexAssembler = (DomainResultAssembler<Integer>) listIndexFetch.createAssembler( this, creationState );
+		this.elementAssembler = elementFetch.createAssembler( this, creationState );
 		this.listIndexBase = attributeMapping.getIndexMetadata().getListIndexBase();
 	}
 
@@ -60,7 +72,13 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 	}
 
 	@Override
-	public PersistentList<?> getCollectionInstance() {
+	protected void forEachAssembler(Consumer<DomainResultAssembler<?>> consumer) {
+		consumer.accept( listIndexAssembler );
+		consumer.accept( elementAssembler );
+	}
+
+	@Override
+	public @Nullable PersistentList<?> getCollectionInstance() {
 		return (PersistentList<?>) super.getCollectionInstance();
 	}
 
@@ -90,6 +108,18 @@ public class ListInitializer extends AbstractImmediateCollectionInitializer {
 		}
 
 		loadingState.set( index, element );
+	}
+
+	@Override
+	protected void initializeSubInstancesFromParent(RowProcessingState rowProcessingState) {
+		final Initializer initializer = elementAssembler.getInitializer();
+		if ( initializer != null ) {
+			final PersistentList<?> list = getCollectionInstance();
+			assert list != null;
+			for ( Object element : list ) {
+				initializer.initializeInstanceFromParent( element, rowProcessingState );
+			}
+		}
 	}
 
 	@Override

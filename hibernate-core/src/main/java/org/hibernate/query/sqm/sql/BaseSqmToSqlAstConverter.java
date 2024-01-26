@@ -3105,7 +3105,6 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 			actualTableGroup.resolveTableReference( null, persister.getTableName() );
 		}
 
-		final EntityNameUse.UseKind useKind = finalEntityNameUse.getKind();
 		if ( projection ) {
 			EntityMappingType superMappingType = persister;
 			while ( ( superMappingType = superMappingType.getSuperMappingType() ) != null ) {
@@ -3116,18 +3115,16 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				);
 			}
 		}
+
 		// If we encounter a treat or projection use, we also want register the use for all subtypes.
 		// We do this here to not have to expand entity name uses during pruning later on
+		final EntityNameUse.UseKind useKind = finalEntityNameUse.getKind();
 		if ( useKind == EntityNameUse.UseKind.TREAT ) {
 			for ( EntityMappingType subType : persister.getSubMappingTypes() ) {
 				entityNameUses.compute(
 						subType.getEntityName(),
 						(s, existingUse) -> finalEntityNameUse.stronger( existingUse )
 				);
-			}
-			if ( persister.isInherited() && persister.needsDiscriminator() ) {
-				// Make sure the table group includes the root table when needed for TREAT
-				actualTableGroup.resolveTableReference( persister.getRootTableName() );
 			}
 		}
 		else if ( useKind == EntityNameUse.UseKind.PROJECTION ) {
@@ -3374,7 +3371,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// This is a non-treated join with an entity which is an inheritance subtype,
 				// register a TREAT entity name use to filter only the entities of the correct type.
 				registerEntityNameUsage(
-						getActualTableGroup( joinedTableGroup, sqmJoin ),
+						elementTableGroup,
 						EntityNameUse.TREAT,
 						entityDomainType.getHibernateEntityName()
 				);

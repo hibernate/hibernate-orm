@@ -1417,7 +1417,10 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 					applied = applyDiscriminatorPredicate( join, join.getJoinedTableReference(), entityNameUses, metamodel );
 				}
 				assert applied : "Could not apply treat discriminator predicate to root table join";
-				assert i == 0 || retainedTableReferences.contains( tableReferenceJoins.get( i - 1 ).getJoinedTableReference() );
+				if ( i != 0 ) {
+					// Always retain the root table reference join where the discriminator was applied
+					retainedTableReferences.add( tableReferenceJoins.get( i - 1 ).getJoinedTableReference() );
+				}
 			}
 		}
 		if ( tableReferenceJoins.isEmpty() ) {

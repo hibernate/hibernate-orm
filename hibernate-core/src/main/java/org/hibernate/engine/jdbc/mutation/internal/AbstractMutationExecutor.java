@@ -125,9 +125,10 @@ public abstract class AbstractMutationExecutor implements MutationExecutor {
 
 		// If we get here the statement is needed - make sure it is resolved
 		session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
-		valueBindings.beforeStatement( statementDetails );
 
 		try {
+			valueBindings.beforeStatement( statementDetails );
+
 			final int affectedRowCount = session.getJdbcCoordinator()
 					.getResultSetReturn()
 					.executeUpdate( statementDetails.getStatement(), statementDetails.getSqlString() );

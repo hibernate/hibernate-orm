@@ -100,10 +100,10 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 
 		jdbcServices.getSqlStatementLogger().logStatement( insertSql );
 
-		final PreparedStatement insertStatement = insertStatementDetails.resolveStatement();
-		jdbcValueBindings.beforeStatement( insertStatementDetails );
-
 		try {
+			final PreparedStatement insertStatement = insertStatementDetails.resolveStatement();
+			jdbcValueBindings.beforeStatement( insertStatementDetails );
+
 			jdbcCoordinator.getResultSetReturn().executeUpdate( insertStatement, insertSql );
 
 			try {
@@ -131,16 +131,20 @@ public class GetGeneratedKeysDelegate extends AbstractReturningDelegate {
 					}
 				}
 			}
-			finally {
-				jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( insertStatement );
+			catch (SQLException e) {
+				throw jdbcServices.getSqlExceptionHelper().convert(
+						e,
+						"Unable to extract generated-keys ResultSet",
+						insertSql
+				);
 			}
 		}
-		catch (SQLException e) {
-			throw jdbcServices.getSqlExceptionHelper().convert(
-					e,
-					"Unable to extract generated-keys ResultSet",
-					insertSql
-			);
+		finally {
+			if ( insertStatementDetails.getStatement() != null ) {
+				insertStatementDetails.releaseStatement( session );
+			}
+			jdbcValueBindings.afterStatement( insertStatementDetails.getMutatingTableDetails() );
+			jdbcCoordinator.afterStatementExecution();
 		}
 	}
 

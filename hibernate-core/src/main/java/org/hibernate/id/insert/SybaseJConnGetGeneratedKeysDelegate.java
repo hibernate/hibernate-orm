@@ -73,9 +73,5 @@ public class SybaseJConnGetGeneratedKeysDelegate extends GetGeneratedKeysDelegat
 					insertSql
 			);
 		}
-		finally {
-			jdbcCoordinator.getLogicalConnection().getResourceRegistry().release( resultSet, insertStatement );
-			jdbcCoordinator.afterStatementExecution();
-		}
 	}
 }

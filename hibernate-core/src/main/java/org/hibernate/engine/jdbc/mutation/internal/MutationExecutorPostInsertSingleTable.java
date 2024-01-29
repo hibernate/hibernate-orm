@@ -112,7 +112,8 @@ public class MutationExecutorPostInsertSingleTable implements MutationExecutor, 
 
 	@Override
 	public void release() {
-		identityInsertStatementDetails.releaseStatement( session );
+		// Nothing to do - the mutation delegate already releases the identity insert statement
+		assert identityInsertStatementDetails.getStatement() == null;
 	}
 
 	@Override

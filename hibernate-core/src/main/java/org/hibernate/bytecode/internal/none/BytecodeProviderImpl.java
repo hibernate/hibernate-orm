@@ -45,7 +45,7 @@ public final class BytecodeProviderImpl implements BytecodeProvider {
 
 	@Override
 	public @Nullable ReflectionOptimizer getReflectionOptimizer(Class<?> clazz, Map<String, PropertyAccess> propertyAccessMap) {
-		throw new HibernateException( "Using the ReflectionOptimizer is not possible when the configured BytecodeProvider is 'none'. Use a different BytecodeProvider" );
+		return null;
 	}
 
 	@Override

@@ -85,8 +85,8 @@
         <base>${project.build.outputDirectory}</base>
         <dir>${project.build.outputDirectory}</dir>
         <failOnError>true</failOnError>
-        <enableLazyInitialization>false</enableLazyInitialization>
-        <enableDirtyTracking>false</enableDirtyTracking>
+        <enableLazyInitialization>true</enableLazyInitialization>
+        <enableDirtyTracking>true</enableDirtyTracking>
         <enableAssociationManagement>false</enableAssociationManagement>
         <enableExtendedEnhancement>false</enableExtendedEnhancement>
       </configuration>

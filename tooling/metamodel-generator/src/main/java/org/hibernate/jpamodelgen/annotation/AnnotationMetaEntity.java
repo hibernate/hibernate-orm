@@ -302,7 +302,9 @@ public class AnnotationMetaEntity extends AnnotationMeta {
 	}
 
 	private void findSessionGetter(TypeElement type) {
-		if ( !containsAnnotation( type, Constants.ENTITY ) ) {
+		if ( !containsAnnotation( type, Constants.ENTITY )
+				&& !containsAnnotation( type, Constants.MAPPED_SUPERCLASS )
+				&& !containsAnnotation( type, Constants.EMBEDDABLE ) ) {
 			for ( ExecutableElement method : methodsIn( type.getEnclosedElements() ) ) {
 				if ( isSessionGetter( method ) ) {
 					dao = true;

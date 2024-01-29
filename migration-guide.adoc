@@ -62,3 +62,12 @@ the global property `hibernate.cache.query_cache_layout=SHALLOW`.
 
 Note that even with the shallow cache layout, the association eagerness implied through join fetches will be respected,
 and associations will be eagerly initialized, so there is no change of behavior when choosing a different cache layout.
+
+[[ddl-implicit-datatype-enum]]
+== Datatype for enums
+Hibernate ORM 6.5 now uses the `ENUM` datatype for `@Enumerated(EnumType.STRING)` enumeration mappings by default on H2,
+just like link:{docsBase}/6.2/migration-guide/migration-guide.html#ddl-implicit-datatype-enum[ORM 6.2 already started doing for MySQL/MariaDB].
+
+The change is backwards compatible, though schema validation might produce an error now as the expected type is `enum`,
+whereas it was `varchar` of `char` before. To revert to the original mapping,
+annotate the enum attribute with `@JdbcTypeCode(SqlTypes.VARCHAR)` or `@Column(columnDefinition = "varchar(255)")`.

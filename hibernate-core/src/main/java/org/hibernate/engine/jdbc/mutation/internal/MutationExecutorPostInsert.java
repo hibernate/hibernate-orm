@@ -204,9 +204,10 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 		);
 
 		session.getJdbcServices().getSqlStatementLogger().logStatement( statementDetails.getSqlString() );
-		valueBindings.beforeStatement( statementDetails );
 
 		try {
+			valueBindings.beforeStatement( statementDetails );
+
 			final int affectedRowCount = session.getJdbcCoordinator()
 					.getResultSetReturn()
 					.executeUpdate( statementDetails.getStatement(), statementDetails.getSqlString() );
@@ -224,6 +225,8 @@ public class MutationExecutorPostInsert implements MutationExecutor, JdbcValueBi
 
 	@Override
 	public void release() {
+		// The mutation delegate already releases the identity insert statement
+		assert identityInsertStatementDetails.getStatement() == null;
 		secondaryTablesStatementGroup.release();
 	}
 

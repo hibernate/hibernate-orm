@@ -67,5 +67,6 @@ public class MutationExecutorSingleNonBatched extends AbstractSingleMutationExec
 	@Override
 	public void release() {
 		// nothing to do - `#performNonBatchedMutation` already releases the statement
+		assert statementGroup.getSingleStatementDetails().getStatement() == null;
 	}
 }

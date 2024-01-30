@@ -76,7 +76,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 	}
 
 	@Override
-	protected void renderTableReferenceJoins(TableGroup tableGroup) {
+	protected void renderTableReferenceJoins(TableGroup tableGroup, int swappedJoinIndex, boolean forceLeftJoin) {
 		// When we are in a recursive CTE, we can't render joins on DB2...
 		// See https://modern-sql.com/feature/with-recursive/db2/error-345-state-42836
 		if ( isInRecursiveQueryPart() ) {
@@ -103,7 +103,7 @@ public class DB2LegacySqlAstTranslator<T extends JdbcOperation> extends Abstract
 			}
 		}
 		else {
-			super.renderTableReferenceJoins( tableGroup );
+			super.renderTableReferenceJoins( tableGroup, swappedJoinIndex, forceLeftJoin );
 		}
 	}
 

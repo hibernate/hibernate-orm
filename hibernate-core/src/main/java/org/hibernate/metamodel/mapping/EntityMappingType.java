@@ -322,6 +322,14 @@ public interface EntityMappingType
 	EntityIdentifierMapping getIdentifierMapping();
 
 	/**
+	 * Mapping details for the entity's identifier.  This is shared across all
+	 * entity mappings within an inheritance hierarchy.
+	 */
+	default EntityIdentifierMapping getIdentifierMappingForJoin() {
+		return getIdentifierMapping();
+	}
+
+	/**
 	 * Mapping details for the entity's discriminator.  This is shared across all
 	 * entity mappings within an inheritance hierarchy.
 	 */

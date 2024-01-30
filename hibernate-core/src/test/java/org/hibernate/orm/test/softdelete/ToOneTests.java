@@ -111,6 +111,23 @@ public class ToOneTests {
 		} );
 	}
 
+	@Test
+	void fkAccessTest(SessionFactoryScope scope) {
+		final SQLStatementInspector sqlInspector = scope.getCollectingStatementInspector();
+		sqlInspector.clear();
+
+		scope.inTransaction( (session) -> {
+			final Integer issue2Reporter = session.createQuery( "select i.reporter.id from Issue i where i.id = 2", Integer.class ).getSingleResultOrNull();
+			assertThat( issue2Reporter ).isNull();
+
+			assertThat( sqlInspector.getSqlQueries() ).hasSize( 1 );
+			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( " join " );
+			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).contains( ".reporter_fk" );
+			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsAnyOf( ".active='Y'", ".active=N'Y'" );
+			assertThat( sqlInspector.getSqlQueries().get( 0 ) ).containsOnlyOnce( "active" );
+		} );
+	}
+
 	@Entity(name="Issue")
 	@Table(name="issues")
 	public static class Issue {

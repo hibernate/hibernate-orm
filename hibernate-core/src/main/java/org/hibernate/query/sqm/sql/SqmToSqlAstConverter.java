@@ -18,6 +18,7 @@ import org.hibernate.query.sqm.tree.expression.SqmExpression;
 import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.SqlAstCreationState;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -37,6 +38,12 @@ public interface SqmToSqlAstConverter extends SemanticQueryWalker<Object>, SqlAs
 	SqmQueryPart<?> getCurrentSqmQueryPart();
 
 	void registerQueryTransformer(QueryTransformer transformer);
+
+	/**
+	 * Returns the {@link SqlAstJoinType} of the currently processing join if there is one, or {@code null}.
+	 * This is used to determine the join type for implicit joins happening in the {@code ON} clause.
+	 */
+	@Nullable SqlAstJoinType getCurrentlyProcessingJoinType();
 
 	/**
 	 * Returns whether the state of the translation is currently in type inference mode.

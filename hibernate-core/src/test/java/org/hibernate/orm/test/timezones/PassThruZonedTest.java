@@ -57,12 +57,12 @@ public class PassThruZonedTest {
 			ZoneOffset systemOffset = systemZone.getRules().getOffset( Instant.now() );
 			final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( nowZoned.toInstant(), dialect ),
-					DateTimeUtils.roundToDefaultPrecision( z.zonedDateTime.toInstant(), dialect )
+					DateTimeUtils.adjustToDefaultPrecision( nowZoned.toInstant(), dialect ),
+					DateTimeUtils.adjustToDefaultPrecision( z.zonedDateTime.toInstant(), dialect )
 			);
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( nowOffset.toInstant(), dialect ),
-					DateTimeUtils.roundToDefaultPrecision( z.offsetDateTime.toInstant(), dialect )
+					DateTimeUtils.adjustToDefaultPrecision( nowOffset.toInstant(), dialect ),
+					DateTimeUtils.adjustToDefaultPrecision( z.offsetDateTime.toInstant(), dialect )
 			);
 			assertEquals( systemZone, z.zonedDateTime.getZone() );
 			assertEquals( systemOffset, z.offsetDateTime.getOffset() );

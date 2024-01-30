@@ -63,9 +63,18 @@ public class OneToManyTableGroup extends AbstractColumnReferenceQualifier implem
 	}
 
 	public void registerIndexTableGroup(TableGroupJoin indexTableGroupJoin) {
+		registerIndexTableGroup( indexTableGroupJoin, true );
+	}
+
+	public void registerIndexTableGroup(TableGroupJoin indexTableGroupJoin, boolean nested) {
 		assert this.indexTableGroup == null;
 		this.indexTableGroup = indexTableGroupJoin.getJoinedGroup();
-		addNestedTableGroupJoin( indexTableGroupJoin );
+		if ( nested ) {
+			addNestedTableGroupJoin( indexTableGroupJoin );
+		}
+		else {
+			addTableGroupJoin( indexTableGroupJoin );
+		}
 	}
 
 	@Override

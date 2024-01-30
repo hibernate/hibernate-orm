@@ -16,7 +16,6 @@ import java.util.function.BiConsumer;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.BasicValuedMapping;
-import org.hibernate.metamodel.mapping.BasicValuedModelPart;
 import org.hibernate.metamodel.mapping.JdbcMapping;
 import org.hibernate.query.BindableType;
 import org.hibernate.query.spi.QueryParameterBinding;
@@ -94,7 +93,7 @@ public class JdbcParameterBindingsImpl implements JdbcParameterBindings {
 						for ( Object bindValue : bindValues ) {
 							final JdbcParameterImpl jdbcParameter = new JdbcParameterImpl( jdbcMapping );
 							jdbcParameterBinders.add( jdbcParameter );
-							lastBindValue = bindValue == null ? null : valueConverter.toRelationalValue( bindValue );
+							lastBindValue = valueConverter.toRelationalValue( bindValue );
 							addBinding( jdbcParameter, new JdbcParameterBindingImpl( jdbcMapping, lastBindValue ) );
 						}
 						if ( bindValueMaxCount != bindValueCount ) {

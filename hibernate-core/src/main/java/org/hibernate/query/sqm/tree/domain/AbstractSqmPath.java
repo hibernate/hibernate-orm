@@ -63,12 +63,6 @@ public abstract class AbstractSqmPath<T> extends AbstractSqmExpression<T> implem
 	protected void copyTo(AbstractSqmPath<T> target, SqmCopyContext context) {
 		assert navigablePathsMatch( target );
 		super.copyTo( target, context );
-		if ( reusablePaths != null ) {
-			target.reusablePaths = new HashMap<>( reusablePaths.size() );
-			for ( Map.Entry<String, SqmPath<?>> entry : reusablePaths.entrySet() ) {
-				target.reusablePaths.put( entry.getKey(), entry.getValue().copy( context ) );
-			}
-		}
 	}
 
 	// meant for assertions only

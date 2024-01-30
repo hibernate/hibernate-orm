@@ -13,6 +13,7 @@ import java.sql.Types;
 
 import org.hibernate.LockMode;
 import org.hibernate.LockOptions;
+import org.hibernate.QueryTimeoutException;
 import org.hibernate.boot.model.TypeContributions;
 import org.hibernate.dialect.pagination.LimitHandler;
 import org.hibernate.dialect.pagination.TopLimitHandler;
@@ -655,6 +656,8 @@ public class SybaseASEDialect extends SybaseDialect {
 			final int errorCode = JdbcExceptionHelper.extractErrorCode( sqlException );
 			if ( sqlState != null ) {
 				switch ( sqlState ) {
+					case "HY008":
+						return new QueryTimeoutException( message, sqlException, sql );
 					case "JZ0TO":
 					case "JZ006":
 						return new LockTimeoutException( message, sqlException, sql );

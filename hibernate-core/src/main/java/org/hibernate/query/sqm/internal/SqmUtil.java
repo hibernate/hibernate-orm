@@ -44,7 +44,6 @@ import org.hibernate.query.sqm.NodeBuilder;
 import org.hibernate.query.sqm.SqmQuerySource;
 import org.hibernate.query.sqm.spi.JdbcParameterBySqmParameterAccess;
 import org.hibernate.query.sqm.spi.SqmParameterMappingModelResolutionAccess;
-import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.query.sqm.tree.SqmDmlStatement;
 import org.hibernate.query.sqm.tree.SqmJoinType;
 import org.hibernate.query.sqm.tree.SqmStatement;
@@ -57,12 +56,10 @@ import org.hibernate.query.sqm.tree.from.SqmFrom;
 import org.hibernate.query.sqm.tree.from.SqmJoin;
 import org.hibernate.query.sqm.tree.from.SqmQualifiedJoin;
 import org.hibernate.query.sqm.tree.from.SqmRoot;
-import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.query.sqm.tree.select.SqmSelectStatement;
 import org.hibernate.query.sqm.tree.select.SqmSelectableNode;
 import org.hibernate.query.sqm.tree.select.SqmSortSpecification;
 import org.hibernate.spi.NavigablePath;
-import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlTreeCreationException;
 import org.hibernate.sql.ast.tree.expression.JdbcParameter;
 import org.hibernate.sql.ast.tree.from.TableGroup;
@@ -350,18 +347,6 @@ public class SqmUtil {
 						expansionPosition++;
 					}
 				}
-				else if ( domainParamBinding.getBindValue() == null ) {
-					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
-						final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
-						for ( int j = 0; j < jdbcParams.size(); j++ ) {
-							final JdbcParameter jdbcParameter = jdbcParams.get( j );
-							jdbcParameterBindings.addBinding(
-									jdbcParameter,
-									new JdbcParameterBindingImpl( null, null )
-							);
-						}
-					}
-				}
 				else {
 					final JdbcMapping jdbcMapping;
 					if ( domainParamBinding.getType() instanceof JdbcMapping ) {
@@ -377,7 +362,6 @@ public class SqmUtil {
 					final BasicValueConverter valueConverter = jdbcMapping == null ? null : jdbcMapping.getValueConverter();
 					if ( valueConverter != null ) {
 						final Object convertedValue = valueConverter.toRelationalValue( domainParamBinding.getBindValue() );
-
 						for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
 							final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
 							assert jdbcParams.size() == 1;
@@ -387,23 +371,37 @@ public class SqmUtil {
 									new JdbcParameterBindingImpl( jdbcMapping, convertedValue )
 							);
 						}
-
-						continue;
 					}
+					else {
+						final Object bindValue = domainParamBinding.getBindValue();
+						if ( bindValue == null ) {
+							for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+								final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
+								for ( int j = 0; j < jdbcParams.size(); j++ ) {
+									final JdbcParameter jdbcParameter = jdbcParams.get( j );
+									jdbcParameterBindings.addBinding(
+											jdbcParameter,
+											new JdbcParameterBindingImpl( jdbcMapping, bindValue )
+									);
+								}
+							}
+						}
+						else {
 
-					final Object bindValue = domainParamBinding.getBindValue();
-					for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
-						final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
-						createValueBindings(
-								jdbcParameterBindings,
-								queryParam,
-								domainParamBinding,
-								parameterType,
-								jdbcParams,
-								bindValue,
-								tableGroupLocator,
-								session
-						);
+							for ( int i = 0; i < jdbcParamsBinds.size(); i++ ) {
+								final JdbcParametersList jdbcParams = jdbcParamsBinds.get( i );
+								createValueBindings(
+										jdbcParameterBindings,
+										queryParam,
+										domainParamBinding,
+										parameterType,
+										jdbcParams,
+										bindValue,
+										tableGroupLocator,
+										session
+								);
+							}
+						}
 					}
 				}
 			}

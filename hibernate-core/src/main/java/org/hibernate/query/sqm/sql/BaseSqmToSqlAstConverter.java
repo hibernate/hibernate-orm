@@ -6,6 +6,7 @@
  */
 package org.hibernate.query.sqm.sql;
 
+import jakarta.annotation.Nullable;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
@@ -3925,7 +3926,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							this
 					);
 					// Implicit joins in the ON clause need to be added as nested table group joins
-					final boolean nested = currentClauseStack.getCurrent() == Clause.FROM;
+					final boolean nested = currentlyProcessingJoin != null;
 					if ( nested ) {
 						parentTableGroup.addNestedTableGroupJoin( tableGroupJoin );
 					}
@@ -3997,6 +3998,13 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				);
 			}
 		}
+	}
+
+	@Override
+	public @Nullable SqlAstJoinType getCurrentlyProcessingJoinType() {
+		return currentlyProcessingJoin == null
+				? null
+				: currentlyProcessingJoin.getSqmJoinType().getCorrespondingSqlJoinType();
 	}
 
 	// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -4128,8 +4136,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 				// When the inferred mapping is null, we try to resolve to the FK by default, which is fine because
 				// expansion to all target columns for select and group by clauses is handled in EntityValuedPathInterpretation
 				if ( entityValuedModelPart instanceof EntityAssociationMapping
-						&& ( (EntityAssociationMapping) entityValuedModelPart ).isFkOptimizationAllowed()
-						&& isFkOptimizationAllowed( path ) ) {
+						&& isFkOptimizationAllowed( path, (EntityAssociationMapping) entityValuedModelPart ) ) {
 					// If the table group uses an association mapping that is not a one-to-many,
 					// we make use of the FK model part - unless the path is a non-optimizable join,
 					// for which we should always use the target's identifier to preserve semantics
@@ -8404,7 +8411,7 @@ public abstract class BaseSqmToSqlAstConverter<T extends Statement> extends Base
 							final TableGroupJoinProducer joinProducer = (TableGroupJoinProducer) fetchable;
 							final TableGroup compatibleTableGroup = lhs.findCompatibleJoinedGroup(
 									joinProducer,
-									joinProducer.determineSqlJoinType( lhs, null, true )
+									joinProducer.getDefaultSqlAstJoinType( lhs )
 							);
 							final SqmQueryPart<?> queryPart = getCurrentSqmQueryPart();
 							if ( compatibleTableGroup == null

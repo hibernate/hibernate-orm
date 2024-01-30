@@ -477,7 +477,10 @@ public final class DateTimeUtils {
 	/**
 	 * Do the same conversion that databases do when they encounter a timestamp with a higher precision
 	 * than what is supported by a column, which is to round the excess fractions.
+	 *
+	 * @deprecated Use {@link #adjustToDefaultPrecision(Temporal, Dialect)} instead
 	 */
+	@Deprecated(forRemoval = true, since = "6.6.1")
 	public static <T extends Temporal> T roundToDefaultPrecision(T temporal, Dialect d) {
 		final int defaultTimestampPrecision = d.getDefaultTimestampPrecision();
 		if ( defaultTimestampPrecision >= 9 || !temporal.isSupported( ChronoField.NANO_OF_SECOND ) ) {
@@ -491,6 +494,9 @@ public final class DateTimeUtils {
 	}
 
 	public static <T extends Temporal> T roundToSecondPrecision(T temporal, int precision) {
+		if ( precision >= 9 || !temporal.isSupported( ChronoField.NANO_OF_SECOND ) ) {
+			return temporal;
+		}
 		if ( precision == 0 ) {
 			//noinspection unchecked
 			return temporal.get( ChronoField.NANO_OF_SECOND ) >= 500_000_000L

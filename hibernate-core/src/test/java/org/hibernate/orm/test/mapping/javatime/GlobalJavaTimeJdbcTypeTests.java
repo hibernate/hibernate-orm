@@ -44,7 +44,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hibernate.type.descriptor.DateTimeUtils.roundToDefaultPrecision;
+import static org.hibernate.type.descriptor.DateTimeUtils.adjustToDefaultPrecision;
 
 /**
  * Tests for "direct" JDBC handling of {@linkplain java.time Java Time} types.
@@ -84,7 +84,7 @@ public class GlobalJavaTimeJdbcTypeTests {
 	@Test
 	void testInstant(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		final Instant start = roundToDefaultPrecision( Instant.EPOCH, dialect );
+		final Instant start = adjustToDefaultPrecision( Instant.EPOCH, dialect );
 
 		scope.inTransaction( (session) -> {
 			final EntityWithJavaTimeValues entity = new EntityWithJavaTimeValues();
@@ -114,7 +114,7 @@ public class GlobalJavaTimeJdbcTypeTests {
 	@Test
 	void testLocalDateTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		final LocalDateTime start = roundToDefaultPrecision( LocalDateTime.now(), dialect );
+		final LocalDateTime start = adjustToDefaultPrecision( LocalDateTime.now(), dialect );
 
 		scope.inTransaction( (session) -> {
 			final EntityWithJavaTimeValues entity = new EntityWithJavaTimeValues();
@@ -144,7 +144,7 @@ public class GlobalJavaTimeJdbcTypeTests {
 	@Test
 	void testLocalDate(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		final LocalDate startTime = roundToDefaultPrecision( LocalDate.now(), dialect );
+		final LocalDate startTime = adjustToDefaultPrecision( LocalDate.now(), dialect );
 
 		scope.inTransaction( (session) -> {
 			final EntityWithJavaTimeValues entity = new EntityWithJavaTimeValues();
@@ -177,7 +177,7 @@ public class GlobalJavaTimeJdbcTypeTests {
 	@SkipForDialect(dialectClass = AltibaseDialect.class, reason = "Altibase drivers truncate fractional seconds from the LocalTime")
 	void testLocalTime(SessionFactoryScope scope) {
 		final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
-		final LocalTime startTime = roundToDefaultPrecision( LocalTime.now(), dialect );
+		final LocalTime startTime = adjustToDefaultPrecision( LocalTime.now(), dialect );
 
 		scope.inTransaction( (session) -> {
 			final EntityWithJavaTimeValues entity = new EntityWithJavaTimeValues();

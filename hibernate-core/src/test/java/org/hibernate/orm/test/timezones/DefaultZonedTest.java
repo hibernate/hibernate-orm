@@ -51,12 +51,12 @@ public class DefaultZonedTest {
 			Zoned z = s.find(Zoned.class, id);
 			final Dialect dialect = scope.getSessionFactory().getJdbcServices().getDialect();
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( nowZoned.toInstant(), dialect ),
-					DateTimeUtils.roundToDefaultPrecision( z.zonedDateTime.toInstant(), dialect )
+					DateTimeUtils.adjustToDefaultPrecision( nowZoned.toInstant(), dialect ),
+					DateTimeUtils.adjustToDefaultPrecision( z.zonedDateTime.toInstant(), dialect )
 			);
 			assertEquals(
-					DateTimeUtils.roundToDefaultPrecision( nowOffset.toInstant(), dialect ),
-					DateTimeUtils.roundToDefaultPrecision( z.offsetDateTime.toInstant(), dialect )
+					DateTimeUtils.adjustToDefaultPrecision( nowOffset.toInstant(), dialect ),
+					DateTimeUtils.adjustToDefaultPrecision( z.offsetDateTime.toInstant(), dialect )
 			);
 			if ( dialect.getTimeZoneSupport() == TimeZoneSupport.NATIVE ) {
 				assertEquals( nowZoned.toOffsetDateTime().getOffset(), z.zonedDateTime.toOffsetDateTime().getOffset() );

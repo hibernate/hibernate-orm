@@ -70,6 +70,8 @@ import org.hibernate.sql.results.graph.DomainResult;
 import org.hibernate.sql.results.graph.DomainResultCreationState;
 import org.hibernate.type.descriptor.java.JavaType;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static java.util.Objects.requireNonNullElse;
 import static org.hibernate.internal.util.collections.CollectionHelper.arrayList;
 
@@ -245,14 +247,13 @@ public class AnonymousTupleEntityValuedModelPart
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
 		final SqlAstJoinType joinType = requireNonNullElse( requestedJoinType, SqlAstJoinType.INNER );
-
 		final LazyTableGroup lazyTableGroup = createRootTableGroupJoin(
 				navigablePath,
 				lhs,
@@ -441,11 +442,11 @@ public class AnonymousTupleEntityValuedModelPart
 	public LazyTableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType sqlAstJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType sqlAstJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
+			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
 		final SqlAliasBase sqlAliasBase = SqlAliasBase.from(
 				explicitSqlAliasBase,

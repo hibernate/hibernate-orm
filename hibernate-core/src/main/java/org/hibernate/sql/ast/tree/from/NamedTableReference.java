@@ -12,6 +12,7 @@ import java.util.Locale;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import org.hibernate.Internal;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.sql.ast.SqlAstWalker;
 
@@ -61,30 +62,25 @@ public class NamedTableReference extends AbstractTableReference {
 	}
 
 	@Override
-	public void applyAffectedTableNames(Consumer<String> nameCollector) {
-		nameCollector.accept( getTableExpression() );
-	}
-
-	@Override
 	public List<String> getAffectedTableNames() {
-		return Collections.singletonList( getTableExpression() );
+		return Collections.singletonList( tableExpression );
 	}
 
 	@Override
 	public boolean containsAffectedTableName(String requestedName) {
-		return isEmpty( requestedName ) || getTableExpression().contains( requestedName );
+		return isEmpty( requestedName ) || tableExpression.equals( requestedName );
 	}
 
 	@Override
 	public Boolean visitAffectedTableNames(Function<String, Boolean> nameCollector) {
-		return nameCollector.apply( getTableExpression() );
+		return nameCollector.apply( tableExpression );
 	}
 
 	@Override
 	public TableReference resolveTableReference(
 			NavigablePath navigablePath,
 			String tableExpression) {
-		if ( tableExpression.equals( getTableExpression() ) ) {
+		if ( this.tableExpression.equals( tableExpression ) ) {
 			return this;
 		}
 

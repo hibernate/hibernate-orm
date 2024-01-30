@@ -65,14 +65,33 @@ public class EntityTableMapping implements TableMapping {
 			boolean cascadeDeleteEnabled,
 			Expectation deleteExpectation,
 			String deleteCustomSql,
-			boolean deleteCallable) {
+			boolean deleteCallable,
+			boolean dynamicUpdate,
+			boolean dynamicInsert) {
 		this.tableName = tableName;
 		this.relativePosition = relativePosition;
 		this.keyMapping = keyMapping;
 		this.attributeIndexes = attributeIndexes;
-		this.insertDetails = new MutationDetails( MutationType.INSERT, insertExpectation, insertCustomSql, insertCallable );
-		this.updateDetails = new MutationDetails( MutationType.UPDATE, updateExpectation, updateCustomSql, updateCallable );
-		this.deleteDetails = new MutationDetails( MutationType.DELETE, deleteExpectation, deleteCustomSql, deleteCallable );
+		this.insertDetails = new MutationDetails(
+				MutationType.INSERT,
+				insertExpectation,
+				insertCustomSql,
+				insertCallable,
+				dynamicInsert
+		);
+		this.updateDetails = new MutationDetails(
+				MutationType.UPDATE,
+				updateExpectation,
+				updateCustomSql,
+				updateCallable,
+				dynamicUpdate
+		);
+		this.deleteDetails = new MutationDetails(
+				MutationType.DELETE,
+				deleteExpectation,
+				deleteCustomSql,
+				deleteCallable
+		);
 
 		if ( isOptional ) {
 			flags.set( Flag.OPTIONAL.ordinal() );

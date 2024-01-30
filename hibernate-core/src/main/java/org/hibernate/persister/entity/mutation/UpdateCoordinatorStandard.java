@@ -305,7 +305,7 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 		);
 
 		//noinspection StatementWithEmptyBody
-		if ( valuesAnalysis.tablesNeedingUpdate.isEmpty() ) {
+		if ( valuesAnalysis.tablesNeedingUpdate.isEmpty() && valuesAnalysis.tablesNeedingDynamicUpdate.isEmpty() ) {
 			// nothing to do
 		}
 		else if ( valuesAnalysis.needsDynamicUpdate() ) {
@@ -969,7 +969,9 @@ public class UpdateCoordinatorStandard extends AbstractMutationCoordinator imple
 						if ( tableMapping.isOptional()
 								&& !valuesAnalysis.tablesWithNonNullValues.contains( tableMapping ) ) {
 							// the table is optional, and we have null values for all of its columns
-							// todo (6.0) : technically we might need to delete row here
+							if ( valuesAnalysis.dirtyAttributeIndexes.length > 0 ) {
+								return true;
+							}
 							return false;
 						}
 						else {

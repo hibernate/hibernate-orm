@@ -128,9 +128,15 @@ public class OptionalTableUpdate
 
 	@Override
 	public MutationOperation createMutationOperation(ValuesAnalysis valuesAnalysis, SessionFactoryImplementor factory) {
-		if ( getMutatingTable().getTableMapping().getInsertDetails().getCustomSql() != null
-				|| getMutatingTable().getTableMapping().getDeleteDetails().getCustomSql() != null ) {
+		final TableMapping tableMapping = getMutatingTable().getTableMapping();
+		if ( tableMapping.getInsertDetails().getCustomSql() != null
+				|| tableMapping.getInsertDetails().isDynamicMutation()
+				|| tableMapping.getDeleteDetails().getCustomSql() != null
+				|| tableMapping.getUpdateDetails().getCustomSql() != null
+				|| tableMapping.getUpdateDetails().isDynamicMutation() ) {
 			// Fallback to the optional table mutation operation because we have to execute user specified SQL
+			// and with dynamic update insert we have to avoid using merge for optional table because
+			// it can cause the deletion of the row when an attribute is set to null
 			return new OptionalTableUpdateOperation( getMutationTarget(), this, factory );
 		}
 		return factory.getJdbcServices().getDialect().createOptionalTableUpdateOperation(

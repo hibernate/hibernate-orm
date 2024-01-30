@@ -67,9 +67,6 @@ public class UnionTableReference extends NamedTableReference {
 	}
 
 	private boolean hasTableExpression(String tableExpression) {
-		if ( tableExpression.equals( getTableExpression() ) ) {
-			return true;
-		}
 		for ( String expression : subclassTableSpaceExpressions ) {
 			if ( tableExpression.equals( expression ) ) {
 				return true;

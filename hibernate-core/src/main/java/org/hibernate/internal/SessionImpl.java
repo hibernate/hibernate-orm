@@ -404,28 +404,31 @@ public class SessionImpl
 
 		// todo : we want this check if usage is JPA, but not native Hibernate usage
 		final SessionFactoryImplementor sessionFactory = getSessionFactory();
-		if ( sessionFactory.getSessionFactoryOptions().isJpaBootstrap() ) {
-			// Original hibernate-entitymanager EM#close behavior
-			checkSessionFactoryOpen();
-			checkOpenOrWaitingForAutoClose();
-			if ( fastSessionServices.discardOnClose || !isTransactionInProgressAndNotMarkedForRollback() ) {
-				super.close();
+		try {
+			if ( sessionFactory.getSessionFactoryOptions().isJpaBootstrap() ) {
+				// Original hibernate-entitymanager EM#close behavior
+				checkSessionFactoryOpen();
+				checkOpenOrWaitingForAutoClose();
+				if ( fastSessionServices.discardOnClose || !isTransactionInProgressAndNotMarkedForRollback() ) {
+					super.close();
+				}
+				else {
+					//Otherwise, session auto-close will be enabled by shouldAutoCloseSession().
+					prepareForAutoClose();
+				}
 			}
 			else {
-				//Otherwise, session auto-close will be enabled by shouldAutoCloseSession().
-				prepareForAutoClose();
+				super.close();
 			}
 		}
-		else {
-			super.close();
-		}
+		finally {
+			final StatisticsImplementor statistics = sessionFactory.getStatistics();
+			if ( statistics.isStatisticsEnabled() ) {
+				statistics.closeSession();
+			}
 
-		final StatisticsImplementor statistics = sessionFactory.getStatistics();
-		if ( statistics.isStatisticsEnabled() ) {
-			statistics.closeSession();
+			eventManager.completeSessionClosedEvent( sessionClosedEvent, this );
 		}
-
-		eventManager.completeSessionClosedEvent( sessionClosedEvent, this );
 	}
 
 	private boolean isTransactionInProgressAndNotMarkedForRollback() {

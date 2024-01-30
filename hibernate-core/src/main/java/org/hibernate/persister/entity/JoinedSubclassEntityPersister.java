@@ -1331,6 +1331,15 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 		}
 	}
 
+	@Override
+	public EntityIdentifierMapping getIdentifierMappingForJoin() {
+		// If the joined subclass has a physical discriminator and has subtypes
+		// we must use the root table identifier mapping for joining to allow table group elimination to work
+		return isPhysicalDiscriminator() && !getSubMappingTypes().isEmpty()
+				? getRootEntityDescriptor().getIdentifierMapping()
+				: super.getIdentifierMappingForJoin();
+	}
+
 	private boolean applyDiscriminatorPredicate(
 			TableReferenceJoin join,
 			NamedTableReference tableReference,
@@ -1341,9 +1350,11 @@ public class JoinedSubclassEntityPersister extends AbstractEntityPersister {
 			final String discriminatorPredicate = getPrunedDiscriminatorPredicate(
 					entityNameUses,
 					metamodel,
-					tableReference.getIdentificationVariable()
+					"t"
+//					tableReference.getIdentificationVariable()
 			);
-			join.applyPredicate( new SqlFragmentPredicate( discriminatorPredicate ) );
+			tableReference.setPrunedTableExpression( "(select * from " + getRootTableName() + " t where " + discriminatorPredicate + ")" );
+//			join.applyPredicate( new SqlFragmentPredicate( discriminatorPredicate ) );
 			return true;
 		}
 		return false;

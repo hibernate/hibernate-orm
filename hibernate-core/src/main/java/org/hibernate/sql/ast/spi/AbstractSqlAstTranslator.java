@@ -88,6 +88,7 @@ import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.SqlAstTranslator;
 import org.hibernate.sql.ast.SqlTreeCreationException;
+import org.hibernate.sql.ast.internal.TableGroupHelper;
 import org.hibernate.sql.ast.internal.ParameterMarkerStrategyStandard;
 import org.hibernate.sql.ast.tree.AbstractUpdateOrDeleteStatement;
 import org.hibernate.sql.ast.tree.MutationStatement;
@@ -6034,10 +6035,60 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderTableGroup(TableGroup tableGroup, Predicate predicate, List<TableGroupJoin> tableGroupJoinCollector) {
-		// Without reference joins or nested join groups, even a real table group does not need parenthesis
-		final boolean realTableGroup = tableGroup.isRealTableGroup()
-				&& ( CollectionHelper.isNotEmpty( tableGroup.getTableReferenceJoins() )
-				|| hasNestedTableGroupsToRender( tableGroup.getNestedTableGroupJoins() ) );
+		final boolean realTableGroup;
+		int swappedJoinIndex = -1;
+		boolean forceLeftJoin = false;
+		if ( tableGroup.isRealTableGroup() ) {
+			if ( hasNestedTableGroupsToRender( tableGroup.getNestedTableGroupJoins() ) ) {
+				// If there are nested table groups, we need to render a real table group
+				realTableGroup = true;
+			}
+			else {
+				// Determine the reference join indexes of the table reference used in the predicate
+				final int referenceJoinIndexForPredicateSwap = TableGroupHelper.findReferenceJoinForPredicateSwap(
+						tableGroup,
+						predicate
+				);
+				if ( referenceJoinIndexForPredicateSwap == TableGroupHelper.REAL_TABLE_GROUP_REQUIRED ) {
+					// Means that real table group rendering is necessary
+					realTableGroup = true;
+				}
+				else if ( referenceJoinIndexForPredicateSwap == TableGroupHelper.NO_TABLE_GROUP_REQUIRED ) {
+					// Means that no swap is necessary to avoid the table group rendering
+					realTableGroup = false;
+					forceLeftJoin = !tableGroup.canUseInnerJoins();
+				}
+				else {
+					// Means that real table group rendering can be avoided if the primary table reference is swapped
+					// with the table reference join at the given index
+					realTableGroup = false;
+					forceLeftJoin = !tableGroup.canUseInnerJoins();
+					swappedJoinIndex = referenceJoinIndexForPredicateSwap;
+
+					// Render the table reference of the table reference join first
+					final TableReferenceJoin tableReferenceJoin = tableGroup.getTableReferenceJoins().get( swappedJoinIndex );
+					renderNamedTableReference( tableReferenceJoin.getJoinedTableReference(), LockMode.NONE );
+					// along with the predicate for the table group
+					if ( predicate != null ) {
+						appendSql( " on " );
+						predicate.accept( this );
+					}
+
+					// Then render the join syntax and fall through to rendering the primary table reference
+					appendSql( WHITESPACE );
+					if ( tableGroup.canUseInnerJoins() ) {
+						appendSql( tableReferenceJoin.getJoinType().getText() );
+					}
+					else {
+						append( "left " );
+					}
+					appendSql( "join " );
+				}
+			}
+		}
+		else {
+			realTableGroup = false;
+		}
 		if ( realTableGroup ) {
 			appendSql( OPEN_PARENTHESIS );
 		}
@@ -6065,7 +6116,8 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 			tableGroupJoins = null;
 		}
 
-		if ( predicate != null ) {
+		// Predicate was already rendered when swappedJoinIndex is not equal to -1
+		if ( predicate != null && swappedJoinIndex == -1 ) {
 			appendSql( " on " );
 			predicate.accept( this );
 		}
@@ -6083,7 +6135,7 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 		}
 
 		if ( !realTableGroup ) {
-			renderTableReferenceJoins( tableGroup );
+			renderTableReferenceJoins( tableGroup, swappedJoinIndex, forceLeftJoin );
 			processNestedTableGroupJoins( tableGroup, tableGroupJoinCollector );
 		}
 		if ( tableGroupJoinCollector != null ) {
@@ -6362,21 +6414,43 @@ public abstract class AbstractSqlAstTranslator<T extends JdbcOperation> implemen
 	}
 
 	protected void renderTableReferenceJoins(TableGroup tableGroup) {
+		renderTableReferenceJoins( tableGroup, -1, false );
+	}
+
+	protected void renderTableReferenceJoins(TableGroup tableGroup, int swappedJoinIndex, boolean forceLeftJoin) {
 		final List<TableReferenceJoin> joins = tableGroup.getTableReferenceJoins();
 		if ( joins == null || joins.isEmpty() ) {
 			return;
 		}
 
-		for ( TableReferenceJoin tableJoin : joins ) {
-			appendSql( WHITESPACE );
-			appendSql( tableJoin.getJoinType().getText() );
-			appendSql( "join " );
-
-			renderNamedTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
-
-			if ( tableJoin.getPredicate() != null && !tableJoin.getPredicate().isEmpty() ) {
+		if ( swappedJoinIndex != -1 ) {
+			// Finish the join against the primary table reference after the swap
+			final TableReferenceJoin swappedJoin = joins.get( swappedJoinIndex );
+			if ( swappedJoin.getPredicate() != null && !swappedJoin.getPredicate().isEmpty() ) {
 				appendSql( " on " );
-				tableJoin.getPredicate().accept( this );
+				swappedJoin.getPredicate().accept( this );
+			}
+		}
+
+		for ( int i = 0; i < joins.size(); i++ ) {
+			// Skip the swapped join since it was already rendered
+			if ( swappedJoinIndex != i ) {
+				final TableReferenceJoin tableJoin = joins.get( i );
+				appendSql( WHITESPACE );
+				if ( forceLeftJoin ) {
+					append( "left " );
+				}
+				else {
+					appendSql( tableJoin.getJoinType().getText() );
+				}
+				appendSql( "join " );
+
+				renderNamedTableReference( tableJoin.getJoinedTableReference(), LockMode.NONE );
+
+				if ( tableJoin.getPredicate() != null && !tableJoin.getPredicate().isEmpty() ) {
+					appendSql( " on " );
+					tableJoin.getPredicate().accept( this );
+				}
 			}
 		}
 	}

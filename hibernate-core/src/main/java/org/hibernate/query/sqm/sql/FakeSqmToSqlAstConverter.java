@@ -21,6 +21,7 @@ import org.hibernate.query.sqm.tree.expression.SqmParameter;
 import org.hibernate.query.sqm.tree.predicate.SqmPredicate;
 import org.hibernate.query.sqm.tree.select.SqmQueryPart;
 import org.hibernate.sql.ast.Clause;
+import org.hibernate.sql.ast.SqlAstJoinType;
 import org.hibernate.sql.ast.spi.FromClauseAccess;
 import org.hibernate.sql.ast.spi.SqlAliasBaseGenerator;
 import org.hibernate.sql.ast.spi.SqlAstCreationContext;
@@ -30,6 +31,8 @@ import org.hibernate.sql.ast.spi.SqlExpressionResolver;
 import org.hibernate.sql.ast.tree.expression.Expression;
 import org.hibernate.sql.ast.tree.expression.QueryTransformer;
 import org.hibernate.sql.ast.tree.predicate.Predicate;
+
+import jakarta.annotation.Nullable;
 
 /**
  *
@@ -99,6 +102,11 @@ public class FakeSqmToSqlAstConverter extends BaseSemanticQueryWalker implements
 
 	@Override
 	public void registerQueryTransformer(QueryTransformer transformer) {
+	}
+
+	@Override
+	public @Nullable SqlAstJoinType getCurrentlyProcessingJoinType() {
+		return null;
 	}
 
 	@Override

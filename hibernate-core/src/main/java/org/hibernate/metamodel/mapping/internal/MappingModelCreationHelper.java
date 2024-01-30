@@ -116,6 +116,8 @@ import org.hibernate.type.descriptor.java.MutabilityPlan;
 import org.hibernate.type.descriptor.java.spi.JavaTypeRegistry;
 import org.hibernate.type.spi.TypeConfiguration;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import static org.hibernate.internal.util.NullnessUtil.castNonNull;
 import static org.hibernate.metamodel.mapping.MappingModelCreationLogging.MAPPING_MODEL_CREATION_MESSAGE_LOGGER;
 import static org.hibernate.sql.ast.spi.SqlExpressionResolver.createColumnReferenceKey;
@@ -775,7 +777,8 @@ public class MappingModelCreationHelper {
 		}
 
 		if ( isReferenceToPrimaryKey ) {
-			fkTargetPart = collectionDescriptor.getOwnerEntityPersister().getIdentifierMapping();
+			fkTargetPart = collectionDescriptor.getOwnerEntityPersister().getIdentifierMappingForJoin();
+//			fkTargetPart = collectionDescriptor.getOwnerEntityPersister().getIdentifierMapping();
 		}
 		else {
 			fkTargetPart = declaringType.findContainingEntityMapping().findSubPart( lhsPropertyName );
@@ -928,7 +931,8 @@ public class MappingModelCreationHelper {
 
 		final ModelPart fkTarget;
 		if ( bootValueMapping.isReferenceToPrimaryKey() ) {
-			fkTarget = referencedEntityDescriptor.getIdentifierMapping();
+			fkTarget = referencedEntityDescriptor.getIdentifierMappingForJoin();
+//			fkTarget = referencedEntityDescriptor.getIdentifierMapping();
 		}
 		else {
 			fkTarget = referencedEntityDescriptor.findByPath( bootValueMapping.getReferencedPropertyName() );
@@ -1677,9 +1681,9 @@ public class MappingModelCreationHelper {
 						public TableGroupJoin createTableGroupJoin(
 								NavigablePath navigablePath,
 								TableGroup lhs,
-								String explicitSourceAlias,
-								SqlAliasBase explicitSqlAliasBase,
-								SqlAstJoinType sqlAstJoinType,
+								@Nullable String explicitSourceAlias,
+								@Nullable SqlAliasBase explicitSqlAliasBase,
+								@Nullable SqlAstJoinType sqlAstJoinType,
 								boolean fetched,
 								boolean addsPredicate,
 								SqlAstCreationState creationState) {
@@ -1690,11 +1694,11 @@ public class MappingModelCreationHelper {
 						public TableGroup createRootTableGroupJoin(
 								NavigablePath navigablePath,
 								TableGroup lhs,
-								String explicitSourceAlias,
-								SqlAliasBase explicitSqlAliasBase,
-								SqlAstJoinType sqlAstJoinType,
+								@Nullable String explicitSourceAlias,
+								@Nullable SqlAliasBase explicitSqlAliasBase,
+								@Nullable SqlAstJoinType sqlAstJoinType,
 								boolean fetched,
-								Consumer<Predicate> predicateConsumer,
+								@Nullable Consumer<Predicate> predicateConsumer,
 								SqlAstCreationState creationState) {
 							return null;
 						}

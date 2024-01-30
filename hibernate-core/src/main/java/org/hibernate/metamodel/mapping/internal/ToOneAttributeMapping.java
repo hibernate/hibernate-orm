@@ -66,6 +66,7 @@ import org.hibernate.persister.entity.JoinedSubclassEntityPersister;
 import org.hibernate.property.access.spi.PropertyAccess;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
+import org.hibernate.query.sqm.sql.SqmToSqlAstConverter;
 import org.hibernate.spi.EntityIdentifierNavigablePath;
 import org.hibernate.spi.NavigablePath;
 import org.hibernate.spi.TreatedNavigablePath;
@@ -106,12 +107,13 @@ import org.hibernate.sql.results.graph.entity.internal.EntityFetchSelectImpl;
 import org.hibernate.sql.results.internal.NullValueAssembler;
 import org.hibernate.sql.results.internal.domain.CircularBiDirectionalFetchImpl;
 import org.hibernate.sql.results.internal.domain.CircularFetchImpl;
-import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.EmbeddedComponentType;
 import org.hibernate.type.EntityType;
 import org.hibernate.type.Type;
 import org.hibernate.type.descriptor.java.JavaType;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import static org.hibernate.boot.model.internal.SoftDeleteHelper.createNonSoftDeletedRestriction;
 
@@ -855,6 +857,7 @@ public class ToOneAttributeMapping
 		// 		* the association does not force a join (`@NotFound`, nullable 1-1, ...)
 		// Otherwise we need to join to the associated entity table(s)
 		final boolean forceJoin = hasNotFoundAction()
+				|| entityMappingType.getSoftDeleteMapping() != null
 				|| ( cardinality == Cardinality.ONE_TO_ONE && isNullable() );
 		this.canUseParentTableGroup = ! forceJoin
 				&& sideNature == ForeignKeyDescriptor.Nature.KEY
@@ -1978,9 +1981,9 @@ public class ToOneAttributeMapping
 	public TableGroupJoin createTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
 			boolean addsPredicate,
 			SqlAstCreationState creationState) {
@@ -2072,7 +2075,11 @@ public class ToOneAttributeMapping
 
 		final TableGroupJoin join = new TableGroupJoin(
 				navigablePath,
-				joinType,
+				// Avoid checking for nested joins in here again, since this is already done in createRootTableGroupJoin
+				// and simply rely on the canUseInnerJoins flag instead for override the join type to LEFT
+				requestedJoinType == null && !lazyTableGroup.canUseInnerJoins()
+						? SqlAstJoinType.LEFT
+						: joinType,
 				lazyTableGroup,
 				null
 		);
@@ -2144,7 +2151,7 @@ public class ToOneAttributeMapping
 	}
 
 	@Override
-	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, SqlAstJoinType requestedJoinType, boolean fetched) {
+	public SqlAstJoinType determineSqlJoinType(TableGroup lhs, @Nullable SqlAstJoinType requestedJoinType, boolean fetched) {
 		if ( requestedJoinType != null ) {
 			return requestedJoinType;
 		}
@@ -2160,11 +2167,11 @@ public class ToOneAttributeMapping
 	public LazyTableGroup createRootTableGroupJoin(
 			NavigablePath navigablePath,
 			TableGroup lhs,
-			String explicitSourceAlias,
-			SqlAliasBase explicitSqlAliasBase,
-			SqlAstJoinType requestedJoinType,
+			@Nullable String explicitSourceAlias,
+			@Nullable SqlAliasBase explicitSqlAliasBase,
+			@Nullable SqlAstJoinType requestedJoinType,
 			boolean fetched,
-			Consumer<Predicate> predicateConsumer,
+			@Nullable Consumer<Predicate> predicateConsumer,
 			SqlAstCreationState creationState) {
 		final SqlAliasBase sqlAliasBase = SqlAliasBase.from(
 				explicitSqlAliasBase,
@@ -2174,18 +2181,16 @@ public class ToOneAttributeMapping
 		);
 
 		final SoftDeleteMapping softDeleteMapping = getAssociatedEntityMappingType().getSoftDeleteMapping();
-
 		final boolean canUseInnerJoin;
-		if ( ! lhs.canUseInnerJoins() ) {
-			canUseInnerJoin = false;
-		}
-		else if ( isNullable
-				|| hasNotFoundAction()
-				|| softDeleteMapping != null ) {
+		final SqlAstJoinType currentlyProcessingJoinType = creationState instanceof SqmToSqlAstConverter
+				? ( (SqmToSqlAstConverter) creationState ).getCurrentlyProcessingJoinType()
+				: null;
+		if ( currentlyProcessingJoinType != null && currentlyProcessingJoinType != SqlAstJoinType.INNER ) {
+			// Don't change the join type though, as that has implications for eager initialization of a LazyTableGroup
 			canUseInnerJoin = false;
 		}
 		else {
-			canUseInnerJoin = requestedJoinType == SqlAstJoinType.INNER;
+			canUseInnerJoin = determineSqlJoinType( lhs, requestedJoinType, fetched ) == SqlAstJoinType.INNER;
 		}
 
 		TableGroup realParentTableGroup = lhs;

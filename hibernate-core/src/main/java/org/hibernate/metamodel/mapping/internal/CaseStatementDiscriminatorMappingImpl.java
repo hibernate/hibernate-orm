@@ -6,7 +6,9 @@
  */
 package org.hibernate.metamodel.mapping.internal;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 
 import org.hibernate.engine.FetchTiming;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -253,6 +255,24 @@ public class CaseStatementDiscriminatorMappingImpl extends AbstractDiscriminator
 
 		public CaseStatementDiscriminatorExpression(TableGroup entityTableGroup) {
 			this.entityTableGroup = entityTableGroup;
+		}
+
+		public List<TableReference> getUsedTableReferences() {
+			final ArrayList<TableReference> usedTableReferences = new ArrayList<>( tableDiscriminatorDetailsMap.size() );
+			tableDiscriminatorDetailsMap.forEach(
+					(tableName, tableDiscriminatorDetails) -> {
+						final TableReference tableReference = entityTableGroup.getTableReference(
+								entityTableGroup.getNavigablePath(),
+								tableName,
+								false
+						);
+
+						if ( tableReference != null ) {
+							usedTableReferences.add( tableReference );
+						}
+					}
+			);
+			return usedTableReferences;
 		}
 
 		@Override

@@ -40,6 +40,8 @@ public interface UpdateValuesAnalysis extends ValuesAnalysis {
 	 */
 	TableSet getTablesWithPreviousNonNullValues();
 
+	TableSet getTablesNeedingDynamicUpdate();
+
 	/**
 	 * Descriptors for the analysis of each attribute
 	 */

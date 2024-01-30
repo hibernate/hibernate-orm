@@ -86,10 +86,10 @@ public class UTCNormalizedInstantTest {
 		});
 		scope.inSession( s-> {
 			final Zoned z = s.find(Zoned.class, id);
-				Instant expected = DateTimeUtils.adjustToDefaultPrecision( z.utcInstant, dialect );
+			Instant expected = DateTimeUtils.adjustToDefaultPrecision( z.utcInstant, dialect );
 			Instant actual = DateTimeUtils.adjustToDefaultPrecision( instant, dialect );
 				assertEquals(
-						expected,
+					expected,
 					actual
 			);
 			expected = DateTimeUtils.adjustToDefaultPrecision( z.localInstant, dialect );

@@ -12,14 +12,12 @@ import java.util.function.Consumer;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metamodel.mapping.JdbcMappingContainer;
 import org.hibernate.query.IllegalQueryOperationException;
-import org.hibernate.query.sqm.BinaryArithmeticOperator;
 import org.hibernate.query.sqm.ComparisonOperator;
 import org.hibernate.sql.ast.Clause;
 import org.hibernate.sql.ast.SqlAstNodeRenderingMode;
 import org.hibernate.sql.ast.spi.AbstractSqlAstTranslator;
 import org.hibernate.sql.ast.spi.SqlSelection;
 import org.hibernate.sql.ast.tree.Statement;
-import org.hibernate.sql.ast.tree.expression.BinaryArithmeticExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSearchedExpression;
 import org.hibernate.sql.ast.tree.expression.CaseSimpleExpression;
 import org.hibernate.sql.ast.tree.expression.Expression;
@@ -152,8 +150,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	protected void visitAnsiCaseSearchedExpression(
 			CaseSearchedExpression expression,
 			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( expression )
-				|| areAllResultsPlainParametersOrLiterals( expression ) ) {
+		if ( areAllResultsPlainParametersOrStringLiterals( expression ) ) {
 			final List<CaseSearchedExpression.WhenFragment> whenFragments = expression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
 			super.visitAnsiCaseSearchedExpression(
@@ -177,8 +174,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 	protected void visitAnsiCaseSimpleExpression(
 			CaseSimpleExpression expression,
 			Consumer<Expression> resultRenderer) {
-		if ( getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT && areAllResultsParameters( expression )
-				|| areAllResultsPlainParametersOrLiterals( expression ) ) {
+		if ( areAllResultsPlainParametersOrStringLiterals( expression ) ) {
 			final List<CaseSimpleExpression.WhenFragment> whenFragments = expression.getWhenFragments();
 			final Expression firstResult = whenFragments.get( 0 ).getResult();
 			super.visitAnsiCaseSimpleExpression(
@@ -198,11 +194,11 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		}
 	}
 
-	protected boolean areAllResultsPlainParametersOrLiterals(CaseSearchedExpression caseSearchedExpression) {
+	protected boolean areAllResultsPlainParametersOrStringLiterals(CaseSearchedExpression caseSearchedExpression) {
 		final List<CaseSearchedExpression.WhenFragment> whenFragments = caseSearchedExpression.getWhenFragments();
 		final Expression firstResult = whenFragments.get( 0 ).getResult();
 		if ( isParameter( firstResult ) && getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
-				|| isLiteral( firstResult ) ) {
+				|| isStringLiteral( firstResult ) ) {
 			for ( int i = 1; i < whenFragments.size(); i++ ) {
 				final Expression result = whenFragments.get( i ).getResult();
 				if ( isParameter( result ) ) {
@@ -210,7 +206,7 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 						return false;
 					}
 				}
-				else if ( !isLiteral( result ) ) {
+				else if ( !isStringLiteral( result ) ) {
 					return false;
 				}
 			}
@@ -219,11 +215,11 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 		return false;
 	}
 
-	protected boolean areAllResultsPlainParametersOrLiterals(CaseSimpleExpression caseSimpleExpression) {
+	protected boolean areAllResultsPlainParametersOrStringLiterals(CaseSimpleExpression caseSimpleExpression) {
 		final List<CaseSimpleExpression.WhenFragment> whenFragments = caseSimpleExpression.getWhenFragments();
 		final Expression firstResult = whenFragments.get( 0 ).getResult();
 		if ( isParameter( firstResult ) && getParameterRenderingMode() == SqlAstNodeRenderingMode.DEFAULT
-				|| isLiteral( firstResult ) ) {
+				|| isStringLiteral( firstResult ) ) {
 			for ( int i = 1; i < whenFragments.size(); i++ ) {
 				final Expression result = whenFragments.get( i ).getResult();
 				if ( isParameter( result ) ) {
@@ -231,11 +227,18 @@ public class HSQLSqlAstTranslator<T extends JdbcOperation> extends AbstractSqlAs
 						return false;
 					}
 				}
-				else if ( !isLiteral( result ) ) {
+				else if ( !isStringLiteral( result ) ) {
 					return false;
 				}
 			}
 			return true;
+		}
+		return false;
+	}
+
+	private boolean isStringLiteral( Expression expression ) {
+		if ( expression instanceof Literal ) {
+			return ( (Literal) expression ).getJdbcMapping().getJdbcType().isStringLike();
 		}
 		return false;
 	}

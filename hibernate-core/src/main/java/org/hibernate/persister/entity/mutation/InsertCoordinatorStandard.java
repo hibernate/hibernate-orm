@@ -153,7 +153,7 @@ public class InsertCoordinatorStandard extends AbstractMutationCoordinator imple
 		return foundStateDependentGenerator;
 	}
 
-	protected static class InsertValuesAnalysis implements ValuesAnalysis {
+	public static class InsertValuesAnalysis implements ValuesAnalysis {
 		private final List<TableMapping> tablesWithNonNullValues = new ArrayList<>();
 
 		public InsertValuesAnalysis(EntityMutationTarget mutationTarget, Object[] values) {

@@ -3479,6 +3479,8 @@ public abstract class AbstractEntityPersister
 		private final Expectation deleteExpectation;
 		private final String customDeleteSql;
 		private final boolean deleteCallable;
+		private final boolean dynamicUpdate;
+		private final boolean dynamicInsert;
 
 		private final List<Integer> attributeIndexes = new ArrayList<>();
 
@@ -3498,7 +3500,9 @@ public abstract class AbstractEntityPersister
 				boolean cascadeDeleteEnabled,
 				Expectation deleteExpectation,
 				String customDeleteSql,
-				boolean deleteCallable) {
+				boolean deleteCallable,
+				boolean dynamicUpdate,
+				boolean dynamicInsert) {
 			this.tableName = tableName;
 			this.relativePosition = relativePosition;
 			this.keyMapping = keyMapping;
@@ -3515,6 +3519,8 @@ public abstract class AbstractEntityPersister
 			this.deleteExpectation = deleteExpectation;
 			this.customDeleteSql = customDeleteSql;
 			this.deleteCallable = deleteCallable;
+			this.dynamicUpdate = dynamicUpdate;
+			this.dynamicInsert = dynamicInsert;
 		}
 
 		private EntityTableMapping build() {
@@ -3535,7 +3541,9 @@ public abstract class AbstractEntityPersister
 					cascadeDeleteEnabled,
 					deleteExpectation,
 					customDeleteSql,
-					deleteCallable
+					deleteCallable,
+					dynamicUpdate,
+					dynamicInsert
 			);
 		}
 	}
@@ -3592,7 +3600,9 @@ public abstract class AbstractEntityPersister
 						isTableCascadeDeleteEnabled( relativePosition ),
 						deleteExpectations[ relativePosition ],
 						customDeleteSql,
-						deleteCallable[ relativePosition ]
+						deleteCallable[ relativePosition ],
+						entityMetamodel.isDynamicUpdate(),
+						entityMetamodel.isDynamicInsert()
 				);
 
 				tableBuilderMap.put( tableExpression, tableMappingBuilder );
